@@ -28,7 +28,7 @@ H\. Nishimura "*TRACY, A Tool for Accelerator Design and Analysis*" `EPAC 1988.`
 
 .. _`EPAC 1988.`: https://accelconf.web.cern.ch/e88/PDF/EPAC1988_0803.PDF
 
-for which the *beam dynamics model* was based on the linearized quadratic Hamiltonian::
+for which the *beam dynamics model* was based on the linearized quadratic Hamiltonian:
 
 .. image:: images/H_2.png
 
