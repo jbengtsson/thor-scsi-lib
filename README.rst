@@ -32,7 +32,7 @@ for which the *beam dynamics model* was based on the linearized quadratic Hamilt
 
 .. image:: images/H_2.png
 
-for linear optics design; i.e., for a *bare lattice* with *mid-plane symmetry*. In particular, because the prototype was implemented by extending the *standard procedures & functions* for the *Pascal-S compiler/interpreter* by N. Wirth::
+for linear optics design; i.e., for a *bare lattice* with *mid-plane symmetry*. In other words, the one thing we liked was that the prototype model/code was implemented by extending the *standard procedures & functions* for the *Pascal-S compiler/interpreter* by N. Wirth::
 
 N\. Wirth *PASCAL-S: A Subset and its Implementation* `Institut für Informatik (1975).`_
 
