@@ -30,6 +30,7 @@ H\. Nishimura "*TRACY, A Tool for Accelerator Design and Analysis*" `EPAC 1988.`
 
 for which the *beam dynamics model* was based on the linearized quadratic Hamiltonian::
 
+
 .. image:: images/H_2.png
 
 for linear optics design. In particular, because the prototype was implemented by extending the *standard procedures & functions* for the *Pascal-S compiler/interpreter* by N. Wirth::
