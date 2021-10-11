@@ -8,11 +8,18 @@ Self-Consistent Symplectic Integrator for Charged Particle Beam Dynamics
 
 The symplectic integrator for realistic modeling of magnetic lattices for
 ring-based synchrotrons was initially implemented in Pascal as a *beam dynamics library*,
-by the author, 1990; with care taken for the software architecture & resulting records/modules
-– akin to *objects* although not explicitly supported by the grammar –  to reflect the structure of the mathematical objects describing
+by the author 1990 for an *on-line model* to guide the ALS commissioning. In particular,
+care was taken for the software architecture & resulting records/modules
+– akin to *objects* although not explicitly supported by the grammar – to reflect the structure of the mathematical objects describing
 the underlying *beam dynamics model*.
 
-The resulting C code, see below, has now been re-factored by introducing a C++ "*beam line class*";
+The code was benchmarked & calibrated as part of the ALS commissioning::
+
+J\. Bengtsson, M. Meddahi *Modeling of Beam Dynamics and Comparison with Measurements for the Advanced Light Source (ALS)* `EPAC 1994.`_
+
+.. _`EPAC 1994.`: https://accelconf.web.cern.ch/e94/PDF/EPAC1994_1021.PDF
+
+The resulting C code, see below, has now been re-factored by introducing a C++ *beam line class*;
 i.e., to recover the transparency & simplicity of the original *beam dynamics model*.
 
 Nota Bene: Although the *beam dynamics model* had to be replaced & the model/code re-architectured & structured – for a reusable approach – as a *Pascal beam dynamics libary*, the code was named Tracy-2, i.e., after the demo/prototype Tracy::
@@ -27,12 +34,17 @@ for which the *beam dynamics model* was based on the linearized quadratic Hamilt
 
 for linear optics design. In particular, because the prototype was implemented by extending the *standard procedures & functions* for the *Pascal-S compiler/interpreter* by N. Wirth::
 
-N\. Wirth *PASCAL-S:: A Subset and its Implementation* `Institut für Informatik (1975).`_
+N\. Wirth *PASCAL-S: A Subset and its Implementation* `Institut für Informatik (1975).`_
 
 .. _`Institut für Informatik (1975).`: http://pascal.hansotten.com/uploads/pascals/PASCAL-S%20A%20subset%20and%20its%20Implementation%20012.pdf
 
+DA-Pascal
+The CERN Classic collaboration -> Thor, 1992, by implementing a *polymorphic number class with reference counting*.
+Forest PTC (*Polymorphic Tracking Code*) in Fortran-90::
 
-The CERN Classic collaboration -> Thor
+E\. Forest, F. Schmidt, E. McIntosh *Introduction to the Polymorphic Tracking Code* `CERN-SL-2002-044 (AP), KEK-Report 2002-3 (2002).`_
+
+.. _`CERN-SL-2002-044 (AP), KEK-Report 2002-3 (2002).`: https://cds.cern.ch/record/573082/files/CERN-SL-2002-044-AP.pdf
 
 Contributions
 -------------
@@ -68,7 +80,7 @@ Contributions
 
   A\. Terebilo *Accelerator Toolbox for MATLAB* `SLAC-PUB-8732 (2001).`_
   
-  .. `SLAC-PUB-8732 (2001).`_: http://www-public.slac.stanford.edu/sciDoc/docMeta.aspx?slacPubNumber=SLAC-PUB-8732
+  .. _`SLAC-PUB-8732 (2001).`: http://www-public.slac.stanford.edu/sciDoc/docMeta.aspx?slacPubNumber=SLAC-PUB-8732
 
 * Python interface::
 
