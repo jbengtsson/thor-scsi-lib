@@ -6,6 +6,65 @@ Author: Johan Bengtsson
 Self-Consistent Symplectic Integrator for Charged Particle Beam Dynamics
 ------------------------------------------------------------------------
 
+Having implemented *DA-Pascal* in the early 1990s, see ref. below, for beam dynamics analysis by to arbitrary order
+by utilizing *Truncated Power Serias Algegra* (TPSA) & *Lie series* on a *beam line object*;
+as a Pascal module/library as an extension of the standard procedures. In 1992, rather than pursuing the
+*CLASSIC collaboration*, we instead simply implemented a C++ *beam line class* based on a *polymorphic number object
+with reference counting*; since C++ does not provide *garbage collection* a la e.g. *Lisp* & *Smalltalk*.
+
+To quote Forest
+
+  *Therefore the proper implementation of a fibre bundle was a sine qua non, non-negotiable point, which
+  Forest and Bengtsson insisted upon in the early days of pre-CLASSIC C++ collaborations. A quick look
+  at CLASSIC (MAD9) shows that the CLASSIC structure does not satisfy this condition. In particular,
+  patches are derived from the beam element class and are thus of the same nature as the element. Patches
+  are generally a figment of one’s mathematical imagination, useful tools, but they are not physical elements
+  which can be ordered from a factory. We believe this is a major flaw in the CLASSIC design. It is perhaps
+  the result of placing too much emphasis on implementation using C++ capabilities, rather than the basic
+  mathematical framework. We believe this accounts for the excessive number of classes and the complexity
+  of CLASSIC (MAD9).
+  ...
+  TRACYII was based on the belief that a dumb user interface should be built on the foundation of a smart
+  user interface. In this way complex situations could always be handled. This was so successful that, in the
+  2 years of the PEPB design, Robin and Bengtsson recompiled TRACYII no more than 2 or 3 times.
+  ...
+  In the case of TRACYII, this was realized by separating the lattice input file (dumb user) from the
+  command input file (smart user). This idea, originally from Nishimura, was turned into an uncompromising
+  product by Bengtsson. In PTC the same can be achieved by stripping all the core routines from any dumb
+  user idiosyncracies. One example common to TRACYII and PTC is the absence of quadrupoles in the core. 
+  ...
+  In addition, as we shall see, if some user’s algorithm uses PTC extended definition
+  of the ray to compute the equivalent of the “synchrotron integrals,” then it will be correctly computed under
+  any possible mispowering and misaligning of the elements. PTC is a faithful representation of a part of
+  nature, just as Seurat’s painting is a faithful representation of some aspect of a scene. In addition, just as
+  pointillism adds to the natural setting a seemingly unnatural element, PTC adds properties to the ray being
+  tracked which do not exist in nature. In the case of PTC, thanks to a polymorphic type first dreamt up by
+  Bengtsson, the electron carries with itself a potential Taylor Series whose variable space is nearly infinite.
+  ...
+  My views have been, at least since the C++ business got underway, that the flow through the magnet
+  must be elevated to the status of a mathematical object. And then, it must find its counterpart on the
+  silicon canvas, whether painted in C+—+ or any other language. Polymorphism, Bengtsson’s pointillism, will
+  take care of the rest. This is achieved by a local “s” -dependent theory which is shaped around individual
+  magnets. The global system is then patched together. The mathematicians gave us the tools to manipulate
+  this object: the fibre bundle. PTC simply creates a restricted fibre bundle on the computer, one which is
+  relevant to particle accelerators. This structure is incompatible with standard Courant-Snyder theory and
+  other similar constructs like Sand’s integrals.
+  ...
+  Besides the two individuals whose names appear on this paper and Aimin Xiao who collaborated on the very
+first prototype, I would like to thank Johan Bengtsson (of parts unknown) for convincing me that, at least
+in C=—H, one could go ahead and make a reasonable job of polymorphism and fibre bundles.*
+
+in:
+
+  E\. Forest, F. Schmidt, E. McIntosh *Introduction to the Polymorphic Tracking Code* `CERN-SL-2002-044 (AP), KEK-Report 2002-3 (2002).`_
+
+  .. _`CERN-SL-2002-044 (AP), KEK-Report 2002-3 (2002).`: https://cds.cern.ch/record/573082/files/CERN-SL-2002-044-AP.pdf
+
+I.e., eventually, he re-implemented the strategy/approach in *Fortran-90*; which provides for *operator overloading*.
+
+Tracy-2
+=======
+
 The symplectic integrator for realistic modeling of magnetic lattices for
 ring-based synchrotrons was initially coded in Pascal as a *beam dynamics library*,
 by the author 1990, for an *on-line model* to guide the ALS commissioning. In particular,
@@ -22,7 +81,9 @@ Hence, the code was also benchmarked & calibrated as part of the ALS commissioni
 The resulting C code, see below, has now been re-factored by introducing a C++ *beam line class*;
 i.e., to recover the transparency & simplicity of the original *beam dynamics model*.
 
-Nota Bene: Although the *beam dynamics model* had to be replaced & the model/code re-architectured & structured – for a reusable approach – as a *Pascal beam dynamics libary* (standard practise in software engineering), the code was named *Tracy-2*, i.e., after the demo/prototype *Tracy*:
+Nota Bene: Although the *beam dynamics model* had to be replaced & the model/code re-architectured & structured
+– for a reusable approach – as a *Pascal beam dynamics libary* (standard practise in software engineering),
+the code was named *Tracy-2*, i.e., inspired by the demo/prototype *Tracy*:
 
   H\. Nishimura "*TRACY, A Tool for Accelerator Design and Analysis*" `EPAC 1988.`_
 
@@ -32,19 +93,18 @@ Nota Bene: Although the *beam dynamics model* had to be replaced & the model/cod
 
   .. image:: images/H_2.png
 
-for linear optics design; i.e., for a *bare lattice* with *mid-plane symmetry*. Hence, the one thing we found useful & adopted was the implementation of the prototype model/code as an extension of the *standard procedures & functions* for the *Pascal-S compiler/interpreter* by N. Wirth:
+for linear optics design; i.e., for a *bare lattice* with *mid-plane symmetry*. Hence, the one thing we found useful & adopted
+was the implementation of the prototype model/code as an extension of the *standard procedures & functions*
+for the *Pascal-S compiler/interpreter* by N. Wirth:
 
   N\. Wirth *PASCAL-S: A Subset and its Implementation* `Institut für Informatik (1975).`_
 
   .. _`Institut für Informatik (1975).`: http://pascal.hansotten.com/uploads/pascals/PASCAL-S%20A%20subset%20and%20its%20Implementation%20012.pdf
 
-DA-Pascal
-The CERN Classic collaboration -> Thor, 1992, by implementing a *polymorphic number class with reference counting*.
-Forest PTC (*Polymorphic Tracking Code*) in Fortran-90:
-
-  E\. Forest, F. Schmidt, E. McIntosh *Introduction to the Polymorphic Tracking Code* `CERN-SL-2002-044 (AP), KEK-Report 2002-3 (2002).`_
-
-  .. _`CERN-SL-2002-044 (AP), KEK-Report 2002-3 (2002).`: https://cds.cern.ch/record/573082/files/CERN-SL-2002-044-AP.pdf
+In other words, since 1992 our *toolkit* – althout it based on one model: the *Hamiltonian for a charged particle
+in an external electromagnetic field* & a *symplectic intrator* for *magnetic multipoles* & *insertion devices*
+for ditto – it was implemented as two different codes: Tracy-2 & Thor. Hence, eventually, these were consolidated by using C++ *templates* for
+the *polymorphich number object* and *beam line class*; aka Tracy-2,3.
 
 Contributions
 -------------
