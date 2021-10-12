@@ -56,7 +56,7 @@ Contributions
 
   was implemented by Laurent Nadolski, SOLEIL, 2002.
 
-* The original Pascal library/code was machine translated to C and re-used to implement a *model server* for the SLS commissioning:
+* The original •Pascal library/code• was machine translated to C and re-used to implement a *model server* for the SLS commissioning:
 
     M\. Böge *Update on TRACY-2 Documentation* `SLS Tech Note SLS-TME-TA-1999-0002 (1999).`_
 
