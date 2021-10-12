@@ -32,7 +32,7 @@ To quote Forest in:
   
   ...
   
-  *Here, in PTC, as well as in the original C + + classes that Bengtsson dreamt up in collaboration with
+  *Here, in PTC, as well as in the original C++ classes that Bengtsson dreamt up in collaboration with
   Forest, the geometrical nature of the fibre reigns supreme. The next step is to introduce a magnet, namely
   EL and/or ELP. The propagator of the full fibre, if well-defined, inherits properties from the chart itself.
   In other words a magnet exists first as a piece of material junk. It can be rotated, translated and drawn.
@@ -66,7 +66,7 @@ To quote Forest in:
   
   *My views have been, at least since the C++ business got underway, that the flow through the magnet
   must be elevated to the status of a mathematical object. And then, it must find its counterpart on the
-  silicon canvas, whether painted in C+—+ or any other language. Polymorphism, Bengtsson’s pointillism, will
+  silicon canvas, whether painted in C++ or any other language. Polymorphism, Bengtsson’s pointillism, will
   take care of the rest. This is achieved by a local “s” -dependent theory which is shaped around individual
   magnets. The global system is then patched together. The mathematicians gave us the tools to manipulate
   this object: the fibre bundle. PTC simply creates a restricted fibre bundle on the computer, one which is
