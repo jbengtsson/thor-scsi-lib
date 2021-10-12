@@ -6,15 +6,15 @@ Author: Johan Bengtsson
 Self-Consistent Symplectic Integrator for Charged Particle Beam Dynamics
 ------------------------------------------------------------------------
 
-Having implemented *DA-Pascal* in the early 1990s, see ref. below, based on a *recursive*
-– i.e., *automatable* by an *universal Turing machine* – (any modern *digital computer*)
-approach for *nonlinear beam dynamics analysis* by utilizing *Lie series* on a *beam line object*;
+Having implemented *DA-Pascal* in the early 1990s, see ref. below, based on a *recursive* approach
+– i.e., *automatable* by an *universal Turing machine* (any modern *digital computer*) –
+for *nonlinear beam dynamics analysis* by utilizing *Lie series* on a *beam line object*;
 *automated* to arbitrary order by  *Truncated Power Serias Algegra* (TPSA). In particular, implemented
-as a *Pascal module/library* by estending the *standard procedures & functions* for N. Wirth's *Pascal-S*.
-Hence, in 1992, rather than participating in a "talkshop", etc. for the *CLASSIC collaboration*,
-we instead prototyped & implemented a C++ *beam line class* based on a *polymorphic number object
-with reference counting*. For which the latter mechism provides for *garbage collection*;
-i.e., not provided by C++ vs. e.g. *Lisp* & *Smalltalk*.
+as a *Pascal module/software library* by extending the *standard procedures & functions* for
+N. Wirth's *Pascal-S compiler/interpreter*. Hence, in 1992, rather than participating in a "talkshop"
+for the *CLASSIC collaboration*, we instead prototyped & implemented a C++ *beam line class* based on
+a *polymorphic number object with reference counting*. For which the latter mechism provides for
+*garbage collection*; since it is not provided by C++, vs. e.g. *Lisp* & *Smalltalk*.
 
 To quote Forest in:
 
