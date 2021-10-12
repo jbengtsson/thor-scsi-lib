@@ -12,7 +12,11 @@ as a *Pascal module/library* as an extension of the standard procedures. In 1992
 *CLASSIC collaboration*, we instead simply implemented a C++ *beam line class* based on a *polymorphic number object
 with reference counting*; since C++ does not provide *garbage collection* a la e.g. *Lisp* & *Smalltalk*.
 
-To quote Forest
+To quote Forest in:
+
+  E\. Forest, F. Schmidt, E. McIntosh *Introduction to the Polymorphic Tracking Code* `CERN-SL-2002-044 (AP), KEK-Report 2002-3 (2002).`_
+
+  .. _`CERN-SL-2002-044 (AP), KEK-Report 2002-3 (2002).`: https://cds.cern.ch/record/573082/files/CERN-SL-2002-044-AP.pdf
 
   *Therefore the proper implementation of a fibre bundle was a sine qua non, non-negotiable point, which
   Forest and Bengtsson insisted upon in the early days of pre-CLASSIC C++ collaborations. A quick look
@@ -72,12 +76,6 @@ To quote Forest
   *Besides the two individuals whose names appear on this paper and Aimin Xiao who collaborated on the very
   first prototype, I would like to thank Johan Bengtsson (of parts unknown) for convincing me that, at least
   in C=—H, one could go ahead and make a reasonable job of polymorphism and fibre bundles.*
-
-in:
-
-  E\. Forest, F. Schmidt, E. McIntosh *Introduction to the Polymorphic Tracking Code* `CERN-SL-2002-044 (AP), KEK-Report 2002-3 (2002).`_
-
-  .. _`CERN-SL-2002-044 (AP), KEK-Report 2002-3 (2002).`: https://cds.cern.ch/record/573082/files/CERN-SL-2002-044-AP.pdf
 
 I.e., eventually, he re-implemented the strategy/approach in *Fortran-90*; which provides for *operator overloading*.
 
