@@ -22,37 +22,47 @@ To quote Forest
   which can be ordered from a factory. We believe this is a major flaw in the CLASSIC design. It is perhaps
   the result of placing too much emphasis on implementation using C++ capabilities, rather than the basic
   mathematical framework. We believe this accounts for the excessive number of classes and the complexity
-  of CLASSIC (MAD9).
+  of CLASSIC (MAD9).*
+  
   ...
-  TRACYII was based on the belief that a dumb user interface should be built on the foundation of a smart
+  
+  *TRACYII was based on the belief that a dumb user interface should be built on the foundation of a smart
   user interface. In this way complex situations could always be handled. This was so successful that, in the
-  2 years of the PEPB design, Robin and Bengtsson recompiled TRACYII no more than 2 or 3 times.
+  2 years of the PEPB design, Robin and Bengtsson recompiled TRACYII no more than 2 or 3 times.**
+  
   ...
-  In the case of TRACYII, this was realized by separating the lattice input file (dumb user) from the
+  
+  *In the case of TRACYII, this was realized by separating the lattice input file (dumb user) from the
   command input file (smart user). This idea, originally from Nishimura, was turned into an uncompromising
   product by Bengtsson. In PTC the same can be achieved by stripping all the core routines from any dumb
-  user idiosyncracies. One example common to TRACYII and PTC is the absence of quadrupoles in the core. 
+  user idiosyncracies. One example common to TRACYII and PTC is the absence of quadrupoles in the core.* 
+  
   ...
-  In addition, as we shall see, if some user’s algorithm uses PTC extended definition
+  
+  *In addition, as we shall see, if some user’s algorithm uses PTC extended definition
   of the ray to compute the equivalent of the “synchrotron integrals,” then it will be correctly computed under
   any possible mispowering and misaligning of the elements. PTC is a faithful representation of a part of
   nature, just as Seurat’s painting is a faithful representation of some aspect of a scene. In addition, just as
   pointillism adds to the natural setting a seemingly unnatural element, PTC adds properties to the ray being
   tracked which do not exist in nature. In the case of PTC, thanks to a polymorphic type first dreamt up by
-  Bengtsson, the electron carries with itself a potential Taylor Series whose variable space is nearly infinite.
+  Bengtsson, the electron carries with itself a potential Taylor Series whose variable space is nearly infinite.*
+  
   ...
-  My views have been, at least since the C++ business got underway, that the flow through the magnet
+  
+  *My views have been, at least since the C++ business got underway, that the flow through the magnet
   must be elevated to the status of a mathematical object. And then, it must find its counterpart on the
   silicon canvas, whether painted in C+—+ or any other language. Polymorphism, Bengtsson’s pointillism, will
   take care of the rest. This is achieved by a local “s” -dependent theory which is shaped around individual
   magnets. The global system is then patched together. The mathematicians gave us the tools to manipulate
   this object: the fibre bundle. PTC simply creates a restricted fibre bundle on the computer, one which is
   relevant to particle accelerators. This structure is incompatible with standard Courant-Snyder theory and
-  other similar constructs like Sand’s integrals.
+  other similar constructs like Sand’s integrals.*
+  
   ...
-  Besides the two individuals whose names appear on this paper and Aimin Xiao who collaborated on the very
-first prototype, I would like to thank Johan Bengtsson (of parts unknown) for convincing me that, at least
-in C=—H, one could go ahead and make a reasonable job of polymorphism and fibre bundles.*
+  
+  *Besides the two individuals whose names appear on this paper and Aimin Xiao who collaborated on the very
+  first prototype, I would like to thank Johan Bengtsson (of parts unknown) for convincing me that, at least
+  in C=—H, one could go ahead and make a reasonable job of polymorphism and fibre bundles.*
 
 in:
 
