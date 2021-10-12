@@ -48,7 +48,7 @@ Forest PTC (*Polymorphic Tracking Code*) in Fortran-90:
 
 Contributions
 -------------
-* The symplectic integrator for RADIA kick maps:
+* The symplectic integrator for *RADIA kick maps*:
 
     P\. Elleaume *A New Approach to the Electron Beam Dynamics in Undulators and Wigglers”* `EPAC 1992.`_
 
