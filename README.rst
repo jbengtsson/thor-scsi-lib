@@ -85,7 +85,7 @@ To quote Forest in:
 
   .. image:: images/seurat.png
 
-I.e., eventually, he re-implemented the strategy/approach in *Fortran-90*; which provides for *operator overloading*.
+I.e., eventually, he re-implemented the strategy/approach in *Fortran-90*; since by then its *grammar* provided for *operator overloading*.
 
 Tracy-2
 =======
