@@ -26,9 +26,18 @@ To quote Forest
   
   ...
   
+  *Here, in PTC, as well as in the original C + + classes that Bengtsson dreamt up in collaboration with
+  Forest, the geometrical nature of the fibre reigns supreme. The next step is to introduce a magnet, namely
+  EL and/or ELP. The propagator of the full fibre, if well-defined, inherits properties from the chart itself.
+  In other words a magnet exists first as a piece of material junk. It can be rotated, translated and drawn.
+  The chart provides the connection between this magnet/junk and the external three dimensional space.
+  Obviously this exists independently of the existence of single particle propagators associated to EL and/or
+  ELP. It is a remarkable mathematical feature that these propagators, under certain conditions, inherit the
+  transformational properties of the chart. Of course PTC is set up to take advantage of this.*
+  
   *TRACYII was based on the belief that a dumb user interface should be built on the foundation of a smart
   user interface. In this way complex situations could always be handled. This was so successful that, in the
-  2 years of the PEPB design, Robin and Bengtsson recompiled TRACYII no more than 2 or 3 times.**
+  2 years of the PEPB design (SLAC), Robin and Bengtsson recompiled TRACYII no more than 2 or 3 times.*
   
   ...
   
