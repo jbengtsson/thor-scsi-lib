@@ -8,12 +8,12 @@ Self-Consistent Symplectic Integrator for Charged Particle Beam Dynamics
 
 The symplectic integrator for realistic modeling of magnetic lattices for
 ring-based synchrotrons was initially coded in Pascal as a *beam dynamics library*,
-by the author 1990 for an *on-line model* to guide the ALS commissioning. In particular,
+by the author 1990, for an *on-line model* to guide the ALS commissioning. In particular,
 care was taken for the software architecture & resulting records/modules
 – akin to *objects* although not explicitly supported by the grammar – to reflect the structure of the mathematical objects describing
 the underlying *beam dynamics model*.
 
-The code was benchmarked & calibrated as part of the ALS commissioning:
+Hence, the code was also benchmarked & calibrated as part of the ALS commissioning:
 
   J\. Bengtsson, M. Meddahi *Modeling of Beam Dynamics and Comparison with Measurements for the Advanced Light Source (ALS)* `EPAC 1994.`_
 
@@ -22,7 +22,7 @@ The code was benchmarked & calibrated as part of the ALS commissioning:
 The resulting C code, see below, has now been re-factored by introducing a C++ *beam line class*;
 i.e., to recover the transparency & simplicity of the original *beam dynamics model*.
 
-Nota Bene: Although the *beam dynamics model* had to be replaced & the model/code re-architectured & structured – for a reusable approach – as a *Pascal beam dynamics libary*, the code was named Tracy-2, i.e., after the demo/prototype Tracy:
+Nota Bene: Although the *beam dynamics model* had to be replaced & the model/code re-architectured & structured – for a reusable approach – as a *Pascal beam dynamics libary* (standard practise in software engineering), the code was named *Tracy-2*, i.e., after the demo/prototype *Tracy*:
 
   H\. Nishimura "*TRACY, A Tool for Accelerator Design and Analysis*" `EPAC 1988.`_
 
@@ -37,8 +37,6 @@ for linear optics design; i.e., for a *bare lattice* with *mid-plane symmetry*. 
   N\. Wirth *PASCAL-S: A Subset and its Implementation* `Institut für Informatik (1975).`_
 
   .. _`Institut für Informatik (1975).`: http://pascal.hansotten.com/uploads/pascals/PASCAL-S%20A%20subset%20and%20its%20Implementation%20012.pdf
-
-However, it still needed to be restructored/redesigned into a *Pascal beam dynamics library*; standard practise in software engineering.
 
 DA-Pascal
 The CERN Classic collaboration -> Thor, 1992, by implementing a *polymorphic number class with reference counting*.
