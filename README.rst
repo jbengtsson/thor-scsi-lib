@@ -206,34 +206,33 @@ and to clone the tree into the tracy-3.5 directory.
 
    mkdir git_repos
    cd git_repos
-   git clone git@github.com:jbengtsson/tracy-3.5.git
-   cd tracy-3.5
+   git clone git@github.com:jbengtsson/Thor_scsi.git
+   cd Thor_scsi
 
 Then select the proper tree by
 
 .. code:: shell
 
-   git checkout tracy-3.5_scsi
+   git checkout Thor_scsi
 
 
 
 C++ library
 ~~~~~~~~~~~
 
-
 First create environment variable $TRACY_LIB. This will be the prefix where the
 built library and include files will be installed later on e.g:
 
 .. code:: shell
 
-   export TRACY_LIB=$HOME/git_repos/tracy-3.5
+   export TRACY_LIB=$HOME/git_repos/Thor_scsi
 
 
 To build the library use:
 
 .. code:: shell
 
-   cd tracy-3.5
+   cd Thor_scsi
    libtoolize
    ./bootstrap
    ./configure --prefix=$TRACY_LIB
@@ -254,7 +253,7 @@ requires to select the proper directory
 .. code:: shell
 
   cd git_repos
-  cd tracy-3.5/python
+  cd Thor_scsi/python
 
 Install proper dependencies
 
