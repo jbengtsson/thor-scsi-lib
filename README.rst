@@ -7,7 +7,7 @@ Self-Consistent Symplectic Integrator for Charged Particle Beam Dynamics
 ------------------------------------------------------------------------
 
 Having implemented *DA-Pascal* in the early 1990s, see ref. below, based on a *recursive*
-– i.e., *automatable* by a *Turing machine* –
+– i.e., *automatable* by a * Universal Turing machine* – (any modern *digital computer*)
 approach for *nonlinear beam dynamics analysis* by utilizing *Lie series* on a *beam line object*;
 *automated* to arbitrary order by  *Truncated Power Serias Algegra* (TPSA). In particular, implemented
 as a *Pascal module/library* by estending the *standard procedures & functions* for N. Wirth's *Pascal-S*.
