@@ -233,7 +233,7 @@ To build the library use:
 .. code:: shell
 
    cd Thor_scsi
-   libtoolize
+   (g)libtoolize
    ./bootstrap
    ./configure --prefix=$TRACY_LIB
    make
