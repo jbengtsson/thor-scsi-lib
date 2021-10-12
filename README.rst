@@ -91,12 +91,11 @@ extended to support *operator overloading*.
 Tracy-2
 =======
 
-The symplectic integrator for realistic modeling of magnetic lattices for
-ring-based synchrotrons was initially coded in Pascal as a *beam dynamics library*,
-by the author 1990, for an *on-line model* to guide the ALS commissioning. In particular,
-care was taken for the software architecture & resulting records/modules
-– akin to *objects* although not explicitly supported by the grammar – to reflect the structure of the mathematical objects describing
-the underlying *beam dynamics model*.
+The symplectic integrator for realistic modeling of magnetic lattices for ring-based synchrotrons was initially
+implemented as a *Pascal module/beam dynamics software library*, by the author 1990, as an *on-line model* to
+guide the ALS commissioning. In particular, care was taken for the software architecture & resulting records/modules
+– akin to *objects* although not explicitly supported by the grammar – to reflect the structure of the mathematical
+objects describing the underlying *beam dynamics model*.
 
 Hence, the code was also benchmarked & calibrated as part of the ALS commissioning:
 
