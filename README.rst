@@ -235,7 +235,7 @@ To build the library use:
    cd Thor_scsi
    (g)libtoolize
    ./bootstrap
-   ./configure --prefix=$TRACY_LIB
+   ./configure --prefix=$Thor_scsi_LIB
    make
    make install
 
