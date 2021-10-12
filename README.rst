@@ -7,7 +7,7 @@ Self-Consistent Symplectic Integrator for Charged Particle Beam Dynamics
 ------------------------------------------------------------------------
 
 The symplectic integrator for realistic modeling of magnetic lattices for
-ring-based synchrotrons was initially implemented in Pascal as a *beam dynamics library*,
+ring-based synchrotrons was initially coded in Pascal as a *beam dynamics library*,
 by the author 1990 for an *on-line model* to guide the ALS commissioning. In particular,
 care was taken for the software architecture & resulting records/modules
 – akin to *objects* although not explicitly supported by the grammar – to reflect the structure of the mathematical objects describing
@@ -56,39 +56,39 @@ Contributions
 
   was implemented by Laurent Nadolski, SOLEIL, 2002.
 
-* The original Pascal library/code was machine translated to C and re-used to implement a *model server* for the SLS commissioning::
+* The original Pascal library/code was machine translated to C and re-used to implement a *model server* for the SLS commissioning:
 
-  M\. Böge *Update on TRACY-2 Documentation* `SLS Tech Note SLS-TME-TA-1999-0002 (1999).`_
+    M\. Böge *Update on TRACY-2 Documentation* `SLS Tech Note SLS-TME-TA-1999-0002 (1999).`_
 
-  .. _`SLS Tech Note SLS-TME-TA-1999-0002 (1999).`: http://ados.web.psi.ch/slsnotes/tmeta9902.pdf
+    .. _`SLS Tech Note SLS-TME-TA-1999-0002 (1999).`: http://ados.web.psi.ch/slsnotes/tmeta9902.pdf
 
-  M\. Böge, J. Chrin *A CORBA Based Client-Server Model for Beam Dynamics Applications* `ICALEPS 1999.`_
+    M\. Böge, J. Chrin *A CORBA Based Client-Server Model for Beam Dynamics Applications* `ICALEPS 1999.`_
 
-  .. _`ICALEPS 1999.`: https://accelconf.web.cern.ch/ica99/papers/mc1p61.pdf
+    .. _`ICALEPS 1999.`: https://accelconf.web.cern.ch/ica99/papers/mc1p61.pdf
 
   with `p2c.`_
 
-  .. _`p2c.`: http://users.fred.net/tds/lab/p2c/historic/daves.index-2012Jul25-20-44-55.html
+    .. _`p2c.`: http://users.fred.net/tds/lab/p2c/historic/daves.index-2012Jul25-20-44-55.html
 
-* Similarly, James Rowland re-used the C version to implement a *Virtual Accelerator* interfaced to EPICS as a *Virtual Input Output Controller* (VIOC)::
+* Similarly, James Rowland re-used the C version to implement a *Virtual Accelerator* interfaced to EPICS as a *Virtual Input Output Controller* (VIOC):
 
-  M\. Heron, J. Rowland, et al *Progress on the Implementation of the DIAMOND Control System* `ICALEPCS 2005.`_
+    M\. Heron, J. Rowland, et al *Progress on the Implementation of the DIAMOND Control System* `ICALEPCS 2005.`_
 
-  .. _`ICALEPCS 2005.`: https://accelconf.web.cern.ch/ica05/proceed-ings/pdf/P1_018.pdf
+    .. _`ICALEPCS 2005.`: https://accelconf.web.cern.ch/ica05/proceed-ings/pdf/P1_018.pdf
 
-* Besides, the internal *numerical engine* was manually translated to C and re-used for::
+* Besides, the internal *numerical engine* was manually translated to C and re-used for:
 
-  A\. Terebilo *Accelerator Toolbox for MATLAB* `SLAC-PUB-8732 (2001).`_
+    A\. Terebilo *Accelerator Toolbox for MATLAB* `SLAC-PUB-8732 (2001).`_
   
-  .. _`SLAC-PUB-8732 (2001).`: http://www-public.slac.stanford.edu/sciDoc/docMeta.aspx?slacPubNumber=SLAC-PUB-8732
+    .. _`SLAC-PUB-8732 (2001).`: http://www-public.slac.stanford.edu/sciDoc/docMeta.aspx?slacPubNumber=SLAC-PUB-8732
 
 * Python interface::
 
-  Initial demo/prototype & guidelines by Jan Chrin, PSI, 2017.
+  Initial demo/prototype & guidelines by Jan Chrin, PSI, 2017:
   
-  J\. Chrin *Channel Access from Cython (and other Cython use cases)* `EPICS Collaboration Meeting 2017.`_
+    J\. Chrin *Channel Access from Cython (and other Cython use cases)* `EPICS Collaboration Meeting 2017.`_
   
-  .. _`EPICS Collaboration Meeting 2017.`: https://indico.esss.lu.se/event/889/contributions/7038/attachments/6800/9762/Cython_EpicsTM_Oct2017_Barcelona.pdf
+    .. _`EPICS Collaboration Meeting 2017.`: https://indico.esss.lu.se/event/889/contributions/7038/attachments/6800/9762/Cython_EpicsTM_Oct2017_Barcelona.pdf
 
   Guidelines & automated regression testing bootstrapped by Pierre Schnizer.
 
