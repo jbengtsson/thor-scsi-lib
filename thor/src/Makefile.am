@@ -1,10 +1,10 @@
 
 #lib_LIBRARIES          = libtracy.a libtracy_ptc.a
 #lib_LIBRARIES          = libtracy.a
-lib_LTLIBRARIES        = libtracy.la
+lib_LTLIBRARIES        = libthor.la
 
 #libtracy_a_SOURCES     = tracy_lib.cc
-libtracy_la_SOURCES     = tracy_lib.cc
+libthor_la_SOURCES     = tracy_lib.cc
 
 #libtracy_ptc_a_SOURCES = tracy_ptc_lib.cc
 

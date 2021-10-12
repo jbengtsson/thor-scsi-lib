@@ -55,7 +55,7 @@
 // #include "nsls-ii_lib.cc"
 
 #if 0
-#include "../../python/src/tracy_py.cc"
+#include "../../python/src/thor_py.cc"
 #endif
 
 

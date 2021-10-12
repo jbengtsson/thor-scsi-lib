@@ -6,17 +6,17 @@ export CC
 
 # link command
 g++ -Wl,-no_compact_unwind -bundle -undefined dynamic_lookup -isysroot \
-    /Library/Developer/CommandLineTools/SDKs/MacOSX10.14.sdk build/temp.macosx-10.14-x86_64-3.9/src/tracy_py.o \
-    -L../tracy/src/.libs \
+    /Library/Developer/CommandLineTools/SDKs/MacOSX10.14.sdk build/temp.macosx-10.14-x86_64-3.9/src/thor_py.o \
+    -L../thor/src/.libs \
     -L../TPSA \
     -L/usr/local/Cellar/gsl/2.7/lib \
     -L/usr/local/lib \
     -L/usr/local/opt/openssl@1.1/lib \
     -L/usr/local/opt/sqlite/lib \
-    -ltracy \
+    -lthor \
     -lTPSALib -lLieLib \
     -lgsl  -lgslcblas \
-    -o build/lib.macosx-10.14-x86_64-3.9/libtracy.cpython-39-darwin.so \
+    -o build/lib.macosx-10.14-x86_64-3.9/libthor.cpython-39-darwin.so \
     -mmacosx-version-min=10.14
 
 # install it locally

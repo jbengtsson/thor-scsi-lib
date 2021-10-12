@@ -39,26 +39,26 @@ LDFLAGS:     $LDFLAGS
 LDLIBS:      $LDLIBS
 EOF
 
-# include a check that if TRACY LIB is set
-if [ -z "$TRACY_LIB" ]
+# include a check that if Thor_scsi LIB is set
+if [ -z "$Thor_scsi_LIB" ]
 then
-    echo '$TRACY_LIB has to be defined!'
+    echo '$Thor_scsi_LIB has to be defined!'
     exit 1
 fi
 
 dir=`pwd`
 
-cd "$TRACY_LIB"
+cd "$Thor_scsi_LIB"
 
 # clean up build up
 rm -rf autom4te.cache
 rm -rf aclocal.m4
-rm -rf tracy/lib/*
+rm -rf thor/lib/*
 
 make distclean
 
 ./bootstrap
-./configure --prefix=$TRACY_LIB/tracy
+./configure --prefix=$Thor_scsi_LIB/thor
 make install
 
 

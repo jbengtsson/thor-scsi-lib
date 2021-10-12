@@ -1,9 +1,9 @@
 # C macro processor.
 AC_CONFIG_MACRO_DIRS([m4])
-AC_CONFIG_SRCDIR([tracy/src/t2elem.cc])
-AC_INIT([Tracy],[2.0])
+AC_CONFIG_SRCDIR([thor/src/t2elem.cc])
+AC_INIT([Thor],[2.0])
 AC_CONFIG_AUX_DIR(config)
-AC_CONFIG_SRCDIR(tracy/src/t2elem.cc)
+AC_CONFIG_SRCDIR(thor/src/t2elem.cc)
 
 
 # search for GSL see https://www.gnu.org/software/gsl/doc/html/autoconf.html
@@ -48,5 +48,5 @@ AC_TYPE_SIZE_T
 # Checks for library functions.
 AC_CONFIG_FILES([Makefile
 		 TPSA/Makefile
-		 tracy/Makefile tracy/src/Makefile])
+		 thor/Makefile thor/src/Makefile])
 AC_OUTPUT

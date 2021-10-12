@@ -25,16 +25,16 @@ ext_modules = [
     # ),
     Pybind11Extension(
         "lib",
-        sorted(["src/tracy_py.cc"]),
-        include_dirs=["../tracy/inc"] + [d["gsl_include"]],
+        sorted(["src/thor_py.cc"]),
+        include_dirs=["../thor/inc"] + [d["gsl_include"]],
         define_macros=[("_GLIBCXX_DEBUG", 1), ("_GLIBCXX_DEBUG_PEDANTIC", 1)],
-        library_dirs=["../tracy/src/.libs"] + [d["gsl_lib_dir"]],
-        libraries=["tracy"] + d["gsl_libs"],
+        library_dirs=["../thor/src/.libs"] + [d["gsl_lib_dir"]],
+        libraries=["thor"] + d["gsl_libs"],
     ),
 ]
 
 
 setup(cmdclass={"build_ext": build_ext},
-      ext_package='tracy',
+      ext_package='thor',
       ext_modules=ext_modules
 )
