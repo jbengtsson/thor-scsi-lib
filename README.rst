@@ -32,11 +32,13 @@ Nota Bene: Although the *beam dynamics model* had to be replaced & the model/cod
 
   .. image:: images/H_2.png
 
-for linear optics design; i.e., for a *bare lattice* with *mid-plane symmetry*. In other words, the one thing we liked & adopted was that the prototype model/code was implemented by extending the *standard procedures & functions* for the *Pascal-S compiler/interpreter* by N. Wirth:
+for linear optics design; i.e., for a *bare lattice* with *mid-plane symmetry*. Hence, the one thing we found useful & adopted was the implementation of the prototype model/code as an extension of the *standard procedures & functions* for the *Pascal-S compiler/interpreter* by N. Wirth:
 
   N\. Wirth *PASCAL-S: A Subset and its Implementation* `Institut für Informatik (1975).`_
 
   .. _`Institut für Informatik (1975).`: http://pascal.hansotten.com/uploads/pascals/PASCAL-S%20A%20subset%20and%20its%20Implementation%20012.pdf
+
+However, it still needed to be restructored/redesigned into a *Pascal beam dynamics library*; standard practise in software engineering.
 
 DA-Pascal
 The CERN Classic collaboration -> Thor, 1992, by implementing a *polymorphic number class with reference counting*.
