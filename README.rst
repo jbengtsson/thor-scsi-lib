@@ -114,11 +114,11 @@ the code was named *Tracy-2*, i.e., inspired by the demo/prototype *Tracy*:
 
   .. _`EPAC 1988.`: https://accelconf.web.cern.ch/e88/PDF/EPAC1988_0803.PDF
 
-  for which the *beam dynamics model* was based on the linearized quadratic Hamiltonian:
+  for which the *beam dynamics model* was based on the *linearized quadratic Hamiltonian*:
 
   .. image:: images/H_2.png
 
-for linear optics design; i.e., for a *bare lattice* with *mid-plane symmetry*. Hence, the one thing we found useful & adopted
+for *linear optics design*; i.e., for a *bare lattice* with *mid-plane symmetry*. Hence, the one thing we found useful & adopted
 was the implementation of the prototype model/code as an extension of the *standard procedures & functions*
 for the *Pascal-S compiler/interpreter* by N. Wirth:
 
