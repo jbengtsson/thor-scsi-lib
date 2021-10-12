@@ -6,7 +6,7 @@ Author: Johan Bengtsson
 Self-Consistent Symplectic Integrator for Charged Particle Beam Dynamics
 ------------------------------------------------------------------------
 
-Having implemented *DA-Pascal* in the early 1990s, see ref. below, based on a *recursive* – *automatable* by a *Turing machine* –
+Having implemented *DA-Pascal* in the early 1990s, see ref. below, based on a *recursive* – i.e., *automatable* by a *Turing machine* –
 approach for *nonlinear beam dynamics analysis* by utilizing *Lie series* on a *beam line object*
 *automated* to arbitrary order by  *Truncated Power Serias Algegra* (TPSA);
 as a *Pascal module/library* as an extension of the standard procedures. In 1992, rather than going to a "talkshop", etc. for the
