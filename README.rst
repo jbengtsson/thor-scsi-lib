@@ -22,7 +22,7 @@ J\. Bengtsson, M. Meddahi *Modeling of Beam Dynamics and Comparison with Measure
 The resulting C code, see below, has now been re-factored by introducing a C++ *beam line class*;
 i.e., to recover the transparency & simplicity of the original *beam dynamics model*.
 
-Nota Bene: Although the *beam dynamics model* had to be replaced & the model/code re-architectured & structured – for a reusable approach – as a *Pascal beam dynamics libary*, the code was named Tracy-2, i.e., after the demo/prototype Tracy::
+Nota Bene: Although the *beam dynamics model* had to be replaced & the model/code re-architectured & structured – for a reusable approach – as a *Pascal beam dynamics libary*, the code was named Tracy-2, i.e., after the demo/prototype Tracy:
 
   H\. Nishimura "*TRACY, A Tool for Accelerator Design and Analysis*" `EPAC 1988.`_
 
