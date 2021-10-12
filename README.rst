@@ -24,9 +24,9 @@ i.e., to recover the transparency & simplicity of the original *beam dynamics mo
 
 Nota Bene: Although the *beam dynamics model* had to be replaced & the model/code re-architectured & structured – for a reusable approach – as a *Pascal beam dynamics libary*, the code was named Tracy-2, i.e., after the demo/prototype Tracy::
 
-H\. Nishimura "*TRACY, A Tool for Accelerator Design and Analysis*" `EPAC 1988.`_
+  H\. Nishimura "*TRACY, A Tool for Accelerator Design and Analysis*" `EPAC 1988.`_
 
-.. _`EPAC 1988.`: https://accelconf.web.cern.ch/e88/PDF/EPAC1988_0803.PDF
+  .. _`EPAC 1988.`: https://accelconf.web.cern.ch/e88/PDF/EPAC1988_0803.PDF
 
 for which the *beam dynamics model* was based on the linearized quadratic Hamiltonian:
 
