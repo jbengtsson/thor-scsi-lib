@@ -41,6 +41,8 @@ To quote Forest in:
   ELP. It is a remarkable mathematical feature that these propagators, under certain conditions, inherit the
   transformational properties of the chart. Of course PTC is set up to take advantage of this.*
   
+  ...
+  
   *TRACYII was based on the belief that a dumb user interface should be built on the foundation of a smart
   user interface. In this way complex situations could always be handled. This was so successful that, in the
   2 years of the PEPB design (SLAC), Robin and Bengtsson recompiled TRACYII no more than 2 or 3 times.*
@@ -77,7 +79,7 @@ To quote Forest in:
   
   *Besides the two individuals whose names appear on this paper and Aimin Xiao who collaborated on the very
   first prototype, I would like to thank Johan Bengtsson (of parts unknown) for convincing me that, at least
-  in C=—H, one could go ahead and make a reasonable job of polymorphism and fibre bundles.*
+  in C++, one could go ahead and make a reasonable job of polymorphism and fibre bundles.*
 
 I.e., eventually, he re-implemented the strategy/approach in *Fortran-90*; which provides for *operator overloading*.
 
