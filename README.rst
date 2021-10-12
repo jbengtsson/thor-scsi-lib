@@ -83,6 +83,8 @@ To quote Forest in:
   first prototype, I would like to thank Johan Bengtsson (of parts unknown) for convincing me that, at least
   in C++, one could go ahead and make a reasonable job of polymorphism and fibre bundles.*
 
+  .. image:: images/seurat.png
+
 I.e., eventually, he re-implemented the strategy/approach in *Fortran-90*; which provides for *operator overloading*.
 
 Tracy-2
