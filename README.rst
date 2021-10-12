@@ -13,11 +13,11 @@ care was taken for the software architecture & resulting records/modules
 – akin to *objects* although not explicitly supported by the grammar – to reflect the structure of the mathematical objects describing
 the underlying *beam dynamics model*.
 
-The code was benchmarked & calibrated as part of the ALS commissioning::
+The code was benchmarked & calibrated as part of the ALS commissioning:
 
-J\. Bengtsson, M. Meddahi *Modeling of Beam Dynamics and Comparison with Measurements for the Advanced Light Source (ALS)* `EPAC 1994.`_
+  J\. Bengtsson, M. Meddahi *Modeling of Beam Dynamics and Comparison with Measurements for the Advanced Light Source (ALS)* `EPAC 1994.`_
 
-.. _`EPAC 1994.`: https://accelconf.web.cern.ch/e94/PDF/EPAC1994_1021.PDF
+  .. _`EPAC 1994.`: https://accelconf.web.cern.ch/e94/PDF/EPAC1994_1021.PDF
 
 The resulting C code, see below, has now been re-factored by introducing a C++ *beam line class*;
 i.e., to recover the transparency & simplicity of the original *beam dynamics model*.
