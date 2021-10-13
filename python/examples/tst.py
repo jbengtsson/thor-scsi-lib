@@ -1,10 +1,11 @@
 import os, sys
 import numpy as np
 
-tracy_dir = os.getenv('TRACY_LIB')
-sys.path.append(tracy_dir+'/tracy/lib')
+#thor_dir = os.getenv('Thor_scsi_LIB')
+#sys.path.append(thor_dir+'/thor/lib')
 
-import tracy.lib as scsi
+# Set $PYTHONPATH to: ../Thor_scsi/python
+import thor.lib as scsi
 
 
 # Constants.

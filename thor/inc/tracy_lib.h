@@ -31,9 +31,9 @@
 #include <iomanip>
 #include <fstream>
 #if 0
-#include <string>
+  #include <string>
 #else
-#include <debug/string>
+  #include <debug/string>
 #endif
 #include <algorithm>
 
@@ -41,23 +41,29 @@
 // Must be defined before armadillo.
 // #include <carma>
 #include <armadillo>
-
 #include <vector>
-
 
 using namespace std;
 
+
+#define STR(x)  #x
+#define XSTR(x) STR(x)
 
 // Tracy-3
 #include "tracy_config.h"
 #include "field.h"
 
-#if NO_TPSA == 1
+#ifndef NO_TPSA
+  // Abort.
+  #include <"tracy_lib.h: NO_TPSA undefined!!!">
+#elif NO_TPSA == 1
   // linear TPSA
+  #pragma message("tracy_lib.h: NO_TPSA = " XSTR(NO_TPSA)) 
   #include "tpsa_lin.h"
   #include "tpsa_lin_pm.h"
 #else
   // interface to M. Berz' TPSA
+  #pragma message("tracy_lib.h: NO_TPSA = " XSTR(NO_TPSA)) 
   #include "tpsa_for.h"
   #include "tpsa_for_pm.h"
 #endif
