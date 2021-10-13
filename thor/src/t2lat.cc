@@ -1480,6 +1480,13 @@ static void InsideParent(long k4, struct LOC_GetBlock *LINK)
 }
 
 
+void prt_bool(const string &fmt, const bool b)
+{
+  // Avoid compiler warnings with %d type code.
+  printf(fmt.c_str(), (b)? "true " : "false");
+}
+
+
 static void Doinverse(struct LOC_GetBlock *LINK)
 {
   bool    rev;
@@ -1514,13 +1521,13 @@ static void Doinverse(struct LOC_GetBlock *LINK)
 	  CheckBLOCKStable(
 	    LINK->LINK->LINK->BlockS[LINK->LINK->LINK->NoB-1].Bname,
 	    LINK->LINK->LINK);
-	printf("  Doinverse:       |%s| 2%ld %2ld %2ld %1d %2ld %1d\n",
+	printf("  Doinverse:       |%s| 2%ld %2ld %2ld",
 	       LINK->LINK->LINK->BlockS[LINK->LINK->LINK->NoB-1].Bname,
 	       block_no, LINK->LINK->LINK->NoB,
-	       LINK->LINK->LINK->Bstack[b],
-	       LINK->LINK->LINK->Reverse_stack[b],
-	       LINK->LINK->LINK->Bstack[b2-k1-1],
-	       LINK->LINK->LINK->Reverse_stack[b2-k1-1]);
+	       LINK->LINK->LINK->Bstack[b]);
+	prt_bool(" %-5s", LINK->LINK->LINK->Reverse_stack[b]);
+	printf(" %2ld", LINK->LINK->LINK->Bstack[b2-k1-1]);
+	prt_bool(" %-5s\n", LINK->LINK->LINK->Reverse_stack[b2-k1-1]);
       }
 
       k1++;
@@ -1535,11 +1542,11 @@ static void Doinverse(struct LOC_GetBlock *LINK)
 	CheckBLOCKStable(
 	  LINK->LINK->LINK->BlockS[LINK->LINK->LINK->NoB-1].Bname,
 	  LINK->LINK->LINK);
-      printf("  Doinverse (odd): |%s| 2%ld %2ld %2ld %1d\n",
+      printf("  Doinverse (odd): |%s| 2%ld %2ld %2ld",
 	     LINK->LINK->LINK->BlockS[LINK->LINK->LINK->NoB-1].Bname,
 	     block_no, LINK->LINK->LINK->NoB,
-	     LINK->LINK->LINK->Bstack[b2-k1-1],
-	     LINK->LINK->LINK->Reverse_stack[b2-k1-1]);
+	     LINK->LINK->LINK->Bstack[b2-k1-1]);
+      prt_bool(" %-5s\n", LINK->LINK->LINK->Reverse_stack[b2-k1-1]);
     }
   }
   test_(P_expset(SET, 1 << ((long)rparent)), "<)> expected", LINK->LINK);

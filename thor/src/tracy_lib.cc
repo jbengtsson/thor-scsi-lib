@@ -17,7 +17,7 @@
   #include "tpsa_lin.cc"
   #include "tpsa_lin_pm.cc"
 #else
-  // interface to M. Berz' TPSA
+  // interface to M. Berz' F77 TPSA
   #include "tpsa_for_pm.cc"
 #endif
 
@@ -54,7 +54,7 @@
 // NSLS-II.
 // #include "nsls-ii_lib.cc"
 
-#if 1
+#if 0
   #pragma message("tracy_lib.cc: including thor_py.cc")
   #include "../../python/src/thor_py.cc"
 #endif
