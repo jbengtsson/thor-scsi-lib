@@ -26,7 +26,8 @@ void Cell_Twiss(long i0, long i1, ss_vect<tps> &Ascr, bool chroma, bool ring,
 
 void Ring_Getchrom(double dP);
 
-void Ring_GetTwiss(bool chroma, double dP);
+// Not implemented code?
+// void Ring_GetTwiss(bool chroma, double dP);
 
 #if 0
 void Ring_Fittune(std::vector<double> &nu, double eps, std::vector<int> &nq,

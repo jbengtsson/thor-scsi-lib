@@ -88,7 +88,7 @@ void GetNu(std::vector<double> &nu, std::vector< std::vector<double> > &M)
 
   M1 = stlmattomat(M);
   for (i = 0; i < n; i++)
-    M1(i, i) -= 1e0;   
+    M1(i, i) -= 1e0;
   detp = det(M1);
   for (i = 0; i < n; i++)
     M1(i, i) += 2e0;
@@ -233,7 +233,7 @@ void LatticeType::Cell_Twiss(long i0, long i1, ss_vect<tps> &Ascr, bool chroma,
   const int n = 4;
 
   for (k = 0; k < 2; k++) {
-    nu1.push_back(0e0); dnu.push_back(0e0); 
+    nu1.push_back(0e0); dnu.push_back(0e0);
   }
 
   if (conf.radiation) conf.dE = 0e0;
@@ -300,10 +300,10 @@ void LatticeType::Ring_Getchrom(double dP)
     gamma = {0.0, 0.0},
     nu    = {0.0, 0.0},
     nu0   = {0.0, 0.0};
-  
+
   if (dP != 0e0)
     printf("\nRing_Getchrom: linear chromaticity for delta = %e\n", dP);
-  
+
   GetCOD(conf.CODimax, conf.CODeps, dP-conf.dPcommon*0.5, lastpos);
   if (!conf.codflag) {
     printf("\nRing_Getchrom: closed orbit finder failed\n");
@@ -314,7 +314,7 @@ void LatticeType::Ring_Getchrom(double dP)
     printf("\nRing_Getchrom: unstable\n");
     return;
   }
-  
+
   GetCOD(conf.CODimax, conf.CODeps, dP+conf.dPcommon*0.5, lastpos);
   if (!conf.codflag) {
     printf("\nRing_Getchrom: closed orbit finder failed");
@@ -328,7 +328,7 @@ void LatticeType::Ring_Getchrom(double dP)
 
   for (k = 0; k < 2; k++)
     conf.Chrom[k] = (nu[k]-nu0[k])/conf.dPcommon;
-  
+
   conf.chromflag = true;
 }
 
@@ -553,7 +553,7 @@ void LatticeType::Elem_Pass_Lin(ss_vect<T> ps)
   MpoleType *Mp;
 
   for (k = 0; k <= conf.Cell_nLoc; k++) {
-    if (elems[k]->Pkind == Mpole) { 
+    if (elems[k]->Pkind == Mpole) {
       Mp = dynamic_cast<MpoleType*>(elems[k]);
       ps = mat_pass(Mp->M_elem, ps);
 
@@ -952,8 +952,8 @@ void write_misalignments(const LatticeType &lat, const char* filename) {
     clp = lat.elems[n];
     fprintf(fp, "\n%li %i %.8e %.8e %.8e %.8e",
 	    n, clp->Pkind, clp->dS[X_], clp->dS[Y_], clp->dT[X_],
-	    clp->dT[Y_]); 
-    
+	    clp->dT[Y_]);
+
     switch(clp->Pkind) {
       case 2: // multipole
 	M = dynamic_cast<MpoleType*>(clp);
@@ -962,7 +962,7 @@ void write_misalignments(const LatticeType &lat, const char* filename) {
           fprintf(fp, " %.8e", M->PB[j]);
         break;
       default:
-        break;  
+        break;
     }
   }
   fclose(fp);
@@ -1360,8 +1360,8 @@ void findcod(LatticeType &lat, double dP)
 
   // initializations
   for (k = 0; k <= 5; k++)
-    vcod[k] = 0.0;  
-    
+    vcod[k] = 0.0;
+
   if (lat.conf.Cavity_on){
     fprintf(stdout,"warning looking for cod in 6D\n");
     dim = 6;
@@ -1369,14 +1369,14 @@ void findcod(LatticeType &lat, double dP)
     dim = 4;
     vcod[0] = lat.elems[0]->Eta[0]*dP; vcod[1] = lat.elems[0]->Etap[0]*dP;
     vcod[2] = lat.elems[0]->Eta[1]*dP; vcod[3] = lat.elems[0]->Etap[1]*dP;
-    vcod[4] = dP;  // energy offset 
+    vcod[4] = dP;  // energy offset
   }
-  
+
   Newton_Raphson(lat, dim, vcod, ntrial, tolx);
 
   if (lat.conf.codflag == false)
     fprintf(stdout, "Error No COD found\n");
-  
+
   lat.conf.CODvect = pstostlvec(vcod); // save closed orbit at the ring entrance
 
   if (lat.conf.trace) {
@@ -1512,7 +1512,7 @@ double GetKpar(LatticeType &lat, int Fnum, int Knum, int Order)
 
   loc = lat.Elem_GetPos(Fnum, Knum);
   M = dynamic_cast<MpoleType*>(lat.elems[loc]);
-  return M->PBpar[Order+HOMmax];
+  return M->GetKpar(Order);
 }
 
 
@@ -1554,7 +1554,7 @@ void Trac(LatticeType &lat, double x, double px, double y, double py, double dp,
   if (lastpos != pos) {
     printf("Trac: Particle lost \n");
     fprintf(stdout, "turn:%6ld plane: %1d"
-	    " %+10.5g %+10.5g %+10.5g %+10.5g %+10.5g %+10.5g \n", 
+	    " %+10.5g %+10.5g %+10.5g %+10.5g %+10.5g %+10.5g \n",
 	    lastn, lat.conf.lossplane, x1[0], x1[1], x1[2], x1[3], x1[4],
 	    x1[5]);
   }
@@ -1581,7 +1581,7 @@ void LatticeType::print(const string &str)
   printf(" Chambre_On   = %s     \n", conf.chambre ? "TRUE " : "FALSE");
   printf("  hcorr        =  %3d        vcorr        = %3d\n\n",
 	 conf.hcorr, conf.vcorr);
-  printf("  alphac       =   %22.16e\n", conf.Alphac); 
+  printf("  alphac       =   %22.16e\n", conf.Alphac);
   printf("  nux          =  %19.16f      nuz  =  %19.16f",
          conf.TotalTune[X_], conf.TotalTune[Y_]);
   if (conf.Cavity_on)
@@ -1828,10 +1828,10 @@ void computeFandJ(LatticeType &lat, int n, ss_vect<double> &x, arma::mat &fjac,
   const double deps = 1e-8;
 
   x0 = x;
-  
+
   lat.Cell_Pass(0, lat.conf.Cell_nLoc, x0, lastpos);
   fvect = x0;
-  
+
   // compute Jacobian matrix by numerical differentiation
   for (k = 0; k < n; k++) {
     x0 = x;
@@ -1884,9 +1884,9 @@ int Newton_Raphson(LatticeType &lat, int n, ss_vect<double> &x, int ntrial,
     for (i = 0; i < n; i++) {
       // update solution
       errx += fabs(bet[i]);
-      x[i] += bet[i]; 
+      x[i] += bet[i];
     }
-    
+
     if (lat.conf.trace)
       fprintf(stdout,
          "%02d: cod2 % .5e % .5e % .5e % .5e % .5e % .5e  errx =% .5e\n",
@@ -1981,7 +1981,7 @@ void dynap(FILE *fp, LatticeType &lat, double r, const double delta,
   x_min = 0.0; x_max = 0.0; y_min = 0.0; y_max = 0.0;
   for (i = 0; i < npoint; i++) {
     phi = i*M_PI/(npoint-1);
-    if (i == 0) 
+    if (i == 0)
       phi = 1e-3;
     else if (i == npoint-1)
       phi -= 1e-3;
