@@ -26,9 +26,9 @@
 #define cube(x)     ((x)*(x)*(x))
 
 #define fract(x)    ((x)-(int)(x))
-#define nint(x)     ((x) < 0 ? ((long)(x-0.5)) : ((long)(x+0.5))) 
+#define nint(x)     ((x) < 0 ? ((long)(x-0.5)) : ((long)(x+0.5)))
 
-#define sgn(n)      ((n > 0) ? 1 : ((n < 0) ? -1 : 0)) 
+#define sgn(n)      ((n > 0) ? 1 : ((n < 0) ? -1 : 0))
 
 
 // Inline functions.
@@ -237,7 +237,7 @@ class ConfigType {
        {0e0, 0e0, 0e0, 0e0, 0e0, 0e0, 0e0},
        {0e0, 0e0, 0e0, 0e0, 0e0, 0e0, 0e0},
        {0e0, 0e0, 0e0, 0e0, 0e0, 0e0, 0e0}},
-  
+
     Vi                            //               Imaginary part.
       {{0e0, 0e0, 0e0, 0e0, 0e0, 0e0, 0e0},
        {0e0, 0e0, 0e0, 0e0, 0e0, 0e0, 0e0},
@@ -293,6 +293,27 @@ class CellType {
        {0e0, 0e0, 0e0, 0e0, 0e0, 0e0}};
     CellType
       *next_ptr;               // pointer to next cell (for tracking).
+
+  inline const double getDx(void){
+    return this->dS[0];
+  }
+  inline const double getDy(void){
+    return this->dS[1];
+  }
+  inline void setDx(double value){
+    this->dS[0] = value;
+  }
+  inline void setDy(double value){
+    this->dS[1] = value;
+  }
+  inline double getRoll(void){
+    // how needs that to be implemented
+    ;
+  }
+  inline void setRoll(double roll){
+    // how needs that to be implemented
+    ;
+  }
 };
 
 // Element virtual base class.
@@ -550,6 +571,15 @@ class MpoleType : public ElemType {
   { Mpole_Pass(conf, ps); };
   void Elem_Pass(ConfigType &conf, ss_vect<tps> &ps)
   { Mpole_Pass(conf, ps); };
+
+  inline double GetKpar(int order){
+    return PBpar[order+HOMmax];
+  }
+
+  inline void SetKpar(int order, double val){
+    PBpar[order+HOMmax] = val;
+  }
+
 };
 
 class CavityType : public ElemType {
@@ -581,6 +611,13 @@ class CavityType : public ElemType {
   { Cavity_Pass(conf, ps); };
   void Elem_Pass(ConfigType &conf, ss_vect<tps> &ps)
   { Cavity_Pass(conf, ps); };
+
+  inline void setVoltage(double val){this->Pvolt = val;}
+  inline double getVoltage(void){return this->Pvolt;}
+
+  inline void setFrequency(double val){this->Pfreq = val;}
+  inline double getFrequency(void){return this->Pfreq;}
+
 };
 
 class MarkerType : public ElemType {
