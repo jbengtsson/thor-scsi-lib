@@ -10,12 +10,12 @@ namespace py = pybind11;
 
 
 #ifndef NO_TPSA
-#error "NO_TPSA not defined: code most probably will not work"
+  #error "NO_TPSA not defined"
+  // Abort compilation.
+  #include <stop here>
+#else
+  #pragma message("thor_py.cc: NO_TPSA = " XSTR(NO_TPSA))
 #endif
-
-#if NO_TPSA != 1
-#warning "NO TPSA is expected to be defined as 1. "
-#endif /* NO_TPSA != 1 */
 
 // Polymorphic number template class wrapper.
 
