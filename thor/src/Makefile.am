@@ -3,7 +3,7 @@
 lib_LTLIBRARIES        = libthor.la
 
 #libtracy_a_SOURCES     = tracy_lib.cc
-libthor_la_SOURCES     = tracy_lib.cc
+libthor_la_SOURCES     = thor_lib.cc
 
 # AM_LDFLAGS flags:
 #  {-static | -shared}

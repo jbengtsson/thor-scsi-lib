@@ -50,12 +50,12 @@ using namespace std;
 #define XSTR(x) STR(x)
 
 // Tracy-3
-#include "tracy_config.h"
+#include "thor_config.h"
 #include "field.h"
 
 #ifndef NO_TPSA
   // Abort.
-  #include <"tracy_lib.h: NO_TPSA undefined!!!">
+  #include <"thor_lib.h: NO_TPSA undefined!!!">
 #elif NO_TPSA == 1
   // linear TPSA
   #pragma message("tracy_lib.h: NO_TPSA = " XSTR(NO_TPSA)) 
@@ -71,7 +71,7 @@ using namespace std;
 #include "ety.h"
 #include "eigenv.h"
 
-#include "tracy.h"
+#include "thor.h"
 
 #include "t2elem.h"
 #include "t2cell.h"
