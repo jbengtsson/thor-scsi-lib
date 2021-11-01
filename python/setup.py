@@ -1,3 +1,9 @@
+# Build command:
+#
+#   unset CC
+#   unset CXX
+#   CC=`pwd`/gcc_clang_stub.sh python3 setup.py build_ext -i
+
 import logging
 import os
 from setuptools import setup
