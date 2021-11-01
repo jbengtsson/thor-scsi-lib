@@ -1,4 +1,4 @@
-# Build command:
+# Build command on MacBook:
 #
 #   unset CC
 #   unset CXX
