@@ -1,6 +1,7 @@
 #!/bin/sh
 
 CC=g++-11
+#CXX=g++-11
 
 COLLECTED_ARGS=""
 for i in $*

@@ -518,8 +518,8 @@ void LatticeType::GDiag(int n_, double C, arma::mat &A, arma::mat &Ainv,
 
   this->conf.Vr = mattostlmat(Vrmat);
   this->conf.Vi = mattostlmat(Vimat);
-  this->conf.wr = vectostlvec(wr);
-  this->conf.wi = vectostlvec(wi);
+  this->conf.wr = vectostl(wr);
+  this->conf.wi = vectostl(wi);
 
   V.Ainv.eye(ps_dim, ps_dim);
   GetAinv(V);

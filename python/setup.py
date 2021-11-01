@@ -7,12 +7,17 @@ from pybind11.setup_helpers import Pybind11Extension, build_ext
 
 import gsl_conf
 
+# Command line:
+#   \rm -rf build
+#   CC=g++-11 python3 setup.py <build|build_ext|install|--help>
+
 # Make a copy of README.rst ... required by setup.cfg
 t_dir = os.path.dirname(__file__)
 par_dir = os.path.normpath(os.path.join(t_dir, os.pardir))
 readme_name = "README.rst"
 copy_file(
-    os.path.join(par_dir, readme_name), os.path.join(t_dir, readme_name), update=True
+    os.path.join(par_dir, readme_name), os.path.join(t_dir, readme_name),
+    update=True
 )
 
 d = gsl_conf.gsl_config()

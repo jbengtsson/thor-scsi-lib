@@ -420,7 +420,7 @@ void LatticeType::TraceABN(long i0, long i1, const std::vector<double> &alpha,
     conf.CODvect[i] = 0e0;
   conf.CODvect[delta_] = dP;
 
-  Ascr += stlvectops(conf.CODvect);
+  Ascr += stltops(conf.CODvect);
   Cell_Twiss(i0, i1, Ascr, false, false, dP);
 
   conf.Ascr = maptostlmat(Ascr);
@@ -603,7 +603,7 @@ void LatticeType::get_eps_x(double &eps_x, double &sigma_delta, double &U_0,
 
   conf.Cavity_on = false; conf.emittance = false;
   Ring_GetTwiss(false, 0.0);
-  A = stlmattomap(conf.Ascr); A += stlvectops(conf.CODvect);
+  A = stlmattomap(conf.Ascr); A += stltops(conf.CODvect);
   conf.emittance = true;
   Elem_Pass_Lin(A);
   get_I(I, false);
@@ -1377,7 +1377,7 @@ void findcod(LatticeType &lat, double dP)
   if (lat.conf.codflag == false)
     fprintf(stdout, "Error No COD found\n");
 
-  lat.conf.CODvect = pstostlvec(vcod); // save closed orbit at the ring entrance
+  lat.conf.CODvect = pstostl(vcod); // save closed orbit at the ring entrance
 
   if (lat.conf.trace) {
     fprintf(stdout,
@@ -1642,7 +1642,7 @@ void LatticeType::GetEmittance(const int Fnum, const bool prt)
     *tan(M_PI-phi0))/(fabs(conf.Alphac)*M_PI*h_RF*1e9*conf.Energy));
 
   // Compute diffusion coeffs. for eigenvectors [sigma_xx, sigma_yy, sigma_zz]
-  Ascr_map = stlmattomap(conf.Ascr); Ascr_map += stlvectops(conf.CODvect);
+  Ascr_map = stlmattomap(conf.Ascr); Ascr_map += stltops(conf.CODvect);
 
   Cell_Pass(0, conf.Cell_nLoc, Ascr_map, lastpos);
 

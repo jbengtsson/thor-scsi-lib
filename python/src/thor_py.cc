@@ -4,7 +4,7 @@
 #include <vector>
 #include <tuple>
 
-#include "tracy_lib.h"
+#include "thor_lib.h"
 
 namespace py = pybind11;
 
