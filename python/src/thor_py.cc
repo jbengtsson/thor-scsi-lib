@@ -255,7 +255,11 @@ PYBIND11_MODULE(lib, scsi) {
       // Virtual class: no constructor.
       // .def(py::init<>())
       .def("prt_elem", &ElemType::prt_elem)
+      .def("repr_elem", &ElemType::repr_elem)
+      .def("repr", &ElemType::repr)
+      .def("__repr__", &ElemType::repr)
       .def("print",    &ElemType::print);
+    //
 
     py::class_<ElemFamType>(scsi, "ElemFamType")
       // ElemType
@@ -301,6 +305,7 @@ PYBIND11_MODULE(lib, scsi) {
     py::class_<DriftType, ElemType>(scsi, "DriftType")
       .def(py::init<>());
 
+
     py::class_<MpoleType, ElemType>(scsi, "MpoleType")
       // int
       .def_readwrite("Pmethod",  &MpoleType::Pmethod)
@@ -334,6 +339,7 @@ PYBIND11_MODULE(lib, scsi) {
       // std::vector< std::vector<double> >
       .def_readwrite("M_elem",   &MpoleType::M_elem)
       .def(py::init<>());
+
 
     py::class_<CavityType,     ElemType>(scsi, "CavityType")
       .def(py::init<>());
