@@ -328,6 +328,11 @@ class ElemType : public CellType {
   PartsKind
     Pkind;                     // Enumeration for magnet types.
 
+
+  // representation similar to prt_elem but a bit more pythonic
+  std::string repr_elem(void);
+  virtual std::string repr() = 0;
+
   void prt_elem(const string &);
 
   virtual ElemType* Elem_Init(const ConfigType &conf, const bool reverse)
@@ -499,6 +504,7 @@ class DriftType : public ElemType {
   friend DriftType* Drift_Alloc(void);
   ElemType* Elem_Init(const ConfigType &conf, const bool reverse);
   void print(const string &);
+  std::string repr(void);
 
   void SetdS(void) {};
   void SetdT(void) {};
@@ -558,6 +564,10 @@ class MpoleType : public ElemType {
   friend MpoleType* Mpole_Alloc(void);
   ElemType* Elem_Init(const ConfigType &conf, const bool reverse);
   void print(const string &);
+  std::string repr(void);
+  // additional information of mpole for mpole
+  // more than just solely type name
+  std::string repr_add(void);
 
   void SetdS(void);
   void SetdT(void);
@@ -598,6 +608,7 @@ class CavityType : public ElemType {
   friend CavityType* Cavity_Alloc(void);
   ElemType* Elem_Init(const ConfigType &conf, const bool reverse);
   void print(const string &);
+  std::string repr(void);
 
   void SetdS(void) {};
   void SetdT(void) {};
@@ -625,6 +636,7 @@ class MarkerType : public ElemType {
   friend MarkerType* Marker_Alloc(void);
   ElemType* Elem_Init(const ConfigType &conf, const bool reverse);
   void print(const string &);
+  std::string repr(void);
 
   void SetdS(void) {};
   void SetdT(void) {};
@@ -669,6 +681,7 @@ class WigglerType : public ElemType {
   friend WigglerType* Wiggler_Alloc(void);
   ElemType* Elem_Init(const ConfigType &conf, const bool reverse);
   void print(const string &);
+  std::string repr(void);
 
   void SetdS(void);
   void SetdT(void);
@@ -739,6 +752,7 @@ class InsertionType : public ElemType {
   friend InsertionType* Insertion_Alloc(void);
   ElemType* Elem_Init(const ConfigType &conf, const bool reverse);
   void print(const string &);
+  std::string repr(void);
 
   void SetdS(void) {};
   void SetdT(void) {};
@@ -778,6 +792,7 @@ class FieldMapType : public ElemType {
   friend FieldMapType* FieldMap_Alloc(void);
   ElemType* Elem_Init(const ConfigType &conf, const bool reverse);
   void print(const string &);
+  std::string repr(void);
 
   void SetdS(void) {};
   void SetdT(void) {};
@@ -803,6 +818,7 @@ class SpreaderType : public ElemType {
   friend SpreaderType* Spreader_Alloc(void);
   ElemType* Elem_Init(const ConfigType &conf, const bool reverse);
   void print(const string &);
+  std::string repr(void);
 
   void SetdS(void) {};
   void SetdT(void) {};
@@ -827,6 +843,7 @@ class RecombinerType : public ElemType {
   friend RecombinerType* Recombiner_Alloc(void);
   ElemType* Elem_Init(const ConfigType &conf, const bool reverse);
   void print(const string &);
+  std::string repr(void);
 
   void SetdS(void) {};
   void SetdT(void) {};
@@ -861,6 +878,7 @@ class SolenoidType : public ElemType {
   friend SolenoidType* Solenoid_Alloc(void);
   ElemType* Elem_Init(const ConfigType &conf, const bool reverse);
   void print(const string &);
+  std::string repr(void);
 
   void SetdS(void) {};
   void SetdT(void) {};
@@ -891,6 +909,7 @@ class MapType : public ElemType {
   friend MapType* Map_Alloc(void);
   ElemType* Elem_Init(const ConfigType &conf, const bool reverse);
   void print(const string &);
+  std::string repr(void);
 
   void SetdS(void) {};
   void SetdT(void) {};

@@ -8,6 +8,9 @@
 
    Element propagators.                                                      */
 
+#include <iomanip>
+
+
 bool          first_FM = true;
 double        C_u, C_gamma, C_q, cl_rad, q_fluct, I[6];
 double        c_1, d_1, c_2, d_2;
@@ -713,7 +716,7 @@ void Cav_Focus(const double L, const T delta, const bool entrance,
            ss_vect<U> &ps)
 {
   double sgn;
- 
+
   sgn = (entrance)? -1e0 : 1e0;
 
   ps[px_] += sgn*ps[x_]*delta/(2e0*L);
@@ -801,7 +804,7 @@ void CavityType::Cavity_Pass(ss_vect<T> &ps)
   ss_vect<T> ps0;
 
   const bool RandS = false;
- 
+
   L = PL;
   phi = phi;
   Lambda = c0/Pfreq;
@@ -855,7 +858,7 @@ void CavityType::Cavity_Pass(ss_vect<T> &ps)
     ps[y_] =
       cos(alpha)*ps0[y_]
       + 2e0*sqrt(2e0)*gamma*L*sin(alpha)
-      /(dgammaMax*(1e0+ps0[delta_]))*ps0[py_]; 
+      /(dgammaMax*(1e0+ps0[delta_]))*ps0[py_];
     ps[py_] =
       -dgammaMax/(2e0*sqrt(2e0)*L*gamma1)*sin(alpha)*(1e0+ps0[delta_])*ps0[y_]
       + gamma/gamma1*cos(alpha)*ps0[py_];
@@ -1298,7 +1301,7 @@ void Wiggler_pass_EF3(ConfigType &conf, ElemType *elem, ss_vect<T> &ps)
   double     h, z, irho, curly_dH_x;
   T          hd, AxoBrho, AyoBrho, dAxoBrho[3], dAyoBrho[3], dpy, dpx, B[3];
   ss_vect<T> ps1;
- 
+
   const WigglerType *W = dynamic_cast<const WigglerType*>(elem);
 
   h = elem->PL/W->PN; z = 0e0;
@@ -2309,6 +2312,28 @@ void LatticeType::SI_init()
   q_fluct = C_q*C_gamma/(M_PI*sqr(1e-9*m_e))*pow(conf.Energy, 5e0);
 }
 
+std::string ElemType::repr_elem(void)
+{
+
+  std::stringstream oss;
+  oss.setf(std::ios::fixed, std::ios::floatfield );
+  oss << std::fixed;
+  oss << "Name='" << Name << "', "
+      << "S=" <<std::setw(6) << std::setprecision(3) << S << ", "
+      << "Pkind=" << Pkind <<  ", "
+      << "PL=" << std::setw(6) << std::setprecision(3) << PL << ", "
+      << "Fnum=" << Fnum << ", "
+      << "Knum=" << Knum;
+
+  return oss.str();
+}
+
+/*
+std::string ElemType::repr(void)
+{
+   return "Element(" + repr_elem() +") XXX Should never be called XX";
+}
+*/
 
 void ElemType::prt_elem(const string &str)
 {
@@ -2325,11 +2350,16 @@ void DriftType::print(const string &str)
   printf(" drift \n");
 }
 
+std::string DriftType::repr(void)
+{
+  return "Drift(" + repr_elem() +")";
+}
 
 double get_phi(MpoleType *elem)
 {
   return (elem->Pirho != 0e0)? radtodeg(elem->Pirho*elem->PL) : 0e0;
 }
+
 
 void MpoleType::print(const string &str)
 {
@@ -2340,6 +2370,32 @@ void MpoleType::print(const string &str)
 	 get_phi(this), PTx1, PTx2, PB[Quad+HOMmax], PB[Sext+HOMmax]);
 }
 
+std::string MpoleType::repr_add(void)
+{
+
+  std::stringstream oss;
+  oss.setf(std::ios::fixed, std::ios::floatfield );
+  oss << std::fixed;
+  oss << "method=" << Pmethod << ", "
+      << "n_step=" << PN << ", "
+      << "n_max=" << Porder << ", "
+      << "n_design=" << n_design << ", "
+      << "reverse=" << Reverse << ", "
+      << std::scientific
+      << "phi="   <<  std::setw(10) << std::setprecision(3) << get_phi(this) << ", "
+      << "phi_1=" <<  std::setw(10) << std::setprecision(3) << PTx1 << ", "
+      << "phi_2=" <<  std::setw(10) << std::setprecision(3) << PTx2 << ", "
+      << "b2="    <<  std::setw(10) << std::setprecision(3) << PB[Quad+HOMmax] << ", "
+      << "b3="    <<  std::setw(10) << std::setprecision(3) << PB[Sext+HOMmax];
+
+  return oss.str();
+
+}
+
+std::string MpoleType::repr(void)
+{
+   return "Mpole(" + repr_elem() + ", " + repr_add() +")";
+}
 
 void CavityType::print(const string &str)
 {
@@ -2347,11 +2403,20 @@ void CavityType::print(const string &str)
   printf(" cavity\n");
 }
 
+std::string CavityType::repr(void)
+{
+  return "Cavity(" + repr_elem() +")";
+}
 
 void MarkerType::print(const string &str)
 {
   prt_elem(str);
   printf(" marker\n");
+}
+
+std::string MarkerType::repr(void)
+{
+  return "Marker(" + repr_elem() +")";
 }
 
 
@@ -2361,6 +2426,10 @@ void WigglerType::print(const string &str)
   printf(" wiggl \n");
 }
 
+std::string WigglerType::repr(void)
+{
+  return "Wiggler(" + repr_elem() +")";
+}
 
 void InsertionType::print(const string &str)
 {
@@ -2368,11 +2437,20 @@ void InsertionType::print(const string &str)
   printf(" ID    \n");
 }
 
+std::string InsertionType::repr(void)
+{
+  return "Insertion(" + repr_elem() +")";
+}
 
 void FieldMapType::print(const string &str)
 {
   prt_elem(str);
   printf(" FM    \n");
+}
+
+std::string FieldMapType::repr(void)
+{
+  return "FieldMap(" + repr_elem() +")";
 }
 
 
@@ -2383,10 +2461,21 @@ void SpreaderType::print(const string &str)
 }
 
 
+std::string SpreaderType::repr(void)
+{
+  return "Spreader(" + repr_elem() +")";
+}
+
+
 void RecombinerType::print(const string &str)
 {
   prt_elem(str);
   printf(" recomb\n");
+}
+
+std::string RecombinerType::repr(void)
+{
+  return "Recombiner(" + repr_elem() +")";
 }
 
 
@@ -2397,12 +2486,23 @@ void SolenoidType::print(const string &str)
 }
 
 
+
+std::string SolenoidType::repr(void)
+{
+  return "Solenoid(" + repr_elem() +")";
+}
+
+
 void MapType::print(const string &str)
 {
   prt_elem(str);
   printf(" map   \n");
 }
 
+std::string MapType::repr(void)
+{
+  return "Map(" + repr_elem() +")";
+}
 
 void LatticeType::prt_fams(void)
 {
@@ -2460,7 +2560,7 @@ MpoleType* Mpole_Alloc(void)
     Mp->PBrnd.push_back(0e0);
     Mp->PB.push_back(0e0);
   }
-  
+
   Mp->Pmethod = Meth_Fourth; Mp->PN = 0;
   /* Displacement errors */
   for (j = 0; j <= 1; j++) {
@@ -2726,7 +2826,7 @@ arma::mat get_sbend_mat(const ElemType *elem, const double delta)
       mat(py_, py_)  = cosh(psi_y);
     } else
       mat(y_, py_)   = L/(1e0+delta);
- 
+
     mat(ct_, x_)     = sin(psi_x)*sqrt(1e0+delta)*h/sqrt(K_x);
     mat(ct_, px_)    = (1e0-cos(psi_x))*h/K_x;
     mat(ct_, delta_) =
@@ -3756,7 +3856,7 @@ double MpoleType::GetPB(const int n)
   //  Return multipole strength of order n:
   //        /  2, normal quadrupole
   //    n = |
-  //        \ -2, skew quadrupole                                      
+  //        \ -2, skew quadrupole
 
   return PB[n+HOMmax];
 }
@@ -3790,7 +3890,7 @@ double WigglerType::GetPB(const int n)
   //  Return multipole strength of order n:
   //        /  2, normal quadrupole
   //    n = |
-  //        \ -2, skew quadrupole                                      
+  //        \ -2, skew quadrupole
 
   return sqrt(2e0*PBW[n+HOMmax]);
 }
