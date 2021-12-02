@@ -276,7 +276,7 @@ void wtf()
   long int jj[ss_dim];
   int      k;
   tps      g_re, g_im, K_re, K_im;
-  
+
   Ring_GetTwiss(true, 0.0); printglob();
 
   get_map(false);

@@ -81,7 +81,7 @@ public:
     nu_cos[2], nu_sin[2],
     nu_ref[2],                     // Desired cell tune.
     nu_cos_ref[2], nu_sin_ref[2],  // Matrix element.
-    nu_cos_ref_scl[2], 
+    nu_cos_ref_scl[2],
 
     ksi1_ctrl_scl[3],
     phi_scl,
@@ -92,7 +92,7 @@ public:
     alpha_c_scl,                   // alpha_c.
     L_scl,
     L0;                            // Cell length.
-  std::vector<double> 
+  std::vector<double>
     ksi1_ctrl;
   std::vector< std::vector<double> >
     value,
@@ -405,7 +405,7 @@ void phi_corr(constr_type &constr)
     - (phi-constr.phi0)
     /GetnKid(constr.Fnum_b1[constr.n_b1-1]);
   set_phi(constr.Fnum_b1[constr.n_b1-1], phi1);
- 
+
   constr.phi_tot = get_phi(constr);
 
   if (prt) {
@@ -806,7 +806,7 @@ void constr_type::get_Jacobian(param_type &lat_prms)
   for (j = 0; j < n_loc; j++)
     for (k = 0; k < n_type; k++)
       if (value_scl[j][k] != 0e0) n_constr++;
-    
+
   Jacobian = dmatrix(1, n_constr, 1, lat_prms.n_prm);
 
   printf("\nget_Jacobian: %d %d\n", n_constr, lat_prms.n_prm);
@@ -824,7 +824,7 @@ void constr_type::get_Jacobian(param_type &lat_prms)
 	  ind++;
 	}
     }
- 
+
     constr_dparam(lat_prms.Fnum[i], lat_prms.n[i], -2e0*eps);
     get_lin_opt(lat_constr);
     for (j = 0; j < n_loc; j++) {
@@ -946,7 +946,7 @@ double constr_type::get_chi2(const double twoJ[], const double delta,
     if (prt) printf("  alpha_c        =  %10.3e\n", dchi2[X_]);
   }
 
-  if (prt && (n_loc > 0)) printf("\n"); 
+  if (prt && (n_loc > 0)) printf("\n");
   for (j = 0; j < n_loc; j++) {
     if (prt) {
       printf("  ");
@@ -1032,7 +1032,7 @@ double constr_type::get_chi2(const double twoJ[], const double delta,
     if (prt) printf("  ksi1_ctrl =       [%10.3e, %10.3e, %10.3e]\n",
 		    dchi2[0], dchi2[1], dchi2[2]);
   }
-  
+
   if ((mI_scl[X_] != 0e0) || (mI_scl[Y_] != 0e0)) {
     get_mI(lat_constr);
     if (prt) printf("\n");
@@ -1106,7 +1106,7 @@ void constr_type::get_dchi2(const double twoJ[], const double delta,
 
 int not_zero(const double a)
 {
-  return (a != 0e0)? 1 : 0; 
+  return (a != 0e0)? 1 : 0;
 }
 
 

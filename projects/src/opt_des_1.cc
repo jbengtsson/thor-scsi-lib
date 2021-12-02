@@ -121,7 +121,7 @@ public:
   std::vector< std::vector<int> >
     grad_dip_Fnum_b1,
     Fnum_beta_eta_x;
-  
+
 
   constr_type(void) {
     n_iter = 0; chi2 = 1e30; chi2_prt = 1e30;
@@ -370,7 +370,7 @@ void phi_corr(constr_type &constr)
     - (phi-constr.phi0)
     /GetnKid(constr.Fnum_b1[constr.n_b1-1]);
   set_phi(constr.Fnum_b1[constr.n_b1-1], phi1);
- 
+
   constr.phi_tot = get_phi(constr);
 
   if (prt) {
@@ -738,7 +738,7 @@ void constr_type::get_Jacobian(param_type &lat_prms)
   for (j = 0; j < n_loc; j++)
     for (k = 0; k < n_type; k++)
       if (value_scl[j][k] != 0e0) n_constr++;
-    
+
   Jacobian = dmatrix(1, n_constr, 1, lat_prms.n_prm);
 
   printf("\nget_Jacobian: %d %d\n", n_constr, lat_prms.n_prm);
@@ -756,7 +756,7 @@ void constr_type::get_Jacobian(param_type &lat_prms)
 	  ind++;
 	}
     }
- 
+
     constr_dparam(lat_prms.Fnum[i], lat_prms.n[i], -2e0*eps);
     get_lin_opt(lat_constr);
     for (j = 0; j < n_loc; j++) {
@@ -795,7 +795,7 @@ double constr_type::get_chi2(void) const
 
   const bool prt = false;
 
-  chi2 = 0e0; 
+  chi2 = 0e0;
   chi2 += eps_x_scl*sqr(eps_x-eps0_x);
   for (k = 0; k < n_loc; k++) {
     chi2 += value_scl[k][0]*sqr(Cell[loc[k]].Alpha[X_]-value[k][0]);
@@ -865,7 +865,7 @@ void constr_type::get_dchi2(double *df) const
 
 int not_zero(const double a)
 {
-  return (a != 0e0)? 1 : 0; 
+  return (a != 0e0)? 1 : 0;
 }
 
 
@@ -935,7 +935,7 @@ void prt_beta_eta_x(const std::vector<int> &Fnum_beta_eta_x,
 		    const std::vector<double> &beta_eta_x, const bool hor)
 {
   int k, n;
-  
+
   n = Fnum_beta_eta_x.size();
   if (hor)
     printf("    beta_x*eta_x = [");
@@ -1799,7 +1799,7 @@ void match_ls(param_type &prms, constr_type &constr)
   const int    n_ic        = 4;
   const double ic[n_ic][2] =
     {{0.0, 0.0}, {2.0965943400, 2.1785445942}, {0.0189930126, 0.0}, {0.0, 0.0}};
- 
+
   // Long Straight.
   prms.add_prm("qf1_c1",   2, -20.0, 20.0, 1.0);
   prms.add_prm("qd2_c1",   2,   0.0, 20.0, 1.0);
@@ -1914,7 +1914,7 @@ void match_ms(param_type &prms, constr_type &constr)
   const int    n_ic        = 4;
   const double ic[n_ic][2] =
     {{0.0, 0.0}, {7.08276, 3.03915}, {0.0, 0.0}, {0.0, 0.0}};
- 
+
   // Standard Straight.
   grad_dip_scl.push_back(0.129665);
   grad_dip_scl.push_back(0.149256);

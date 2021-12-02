@@ -72,16 +72,16 @@ void get_cod_rms(const double dx, const double dy,
     for (k = 0; k < 6; k++) {
       x1[k].push_back(0e0); x2[k].push_back(0e0);
     }
-  
+
   fp = file_write("cod_rms.out");
-  
+
   n_cod = 0;
   for (i = 0; i < n_seed; i++) {
     printf("\norb_corr: seed no %d\n", i+1);
 
     misalign_rms_type(Dip,  dx, dy, 0e0, true);
     misalign_rms_type(Quad, dx, dy, 0e0, true);
-    
+
     cod = orb_corr(n_cod_corr);
 
     if (cod) {
@@ -123,7 +123,7 @@ void get_cod_rms(const double dx, const double dy,
 	      1e3*x_mean[y_][n-1], 1e3*x_sigma[y_][n-1]);
     } else
       fprintf(fp, "%8.3f %6.2f\n", Cell[j].S, get_code(Cell[j]));
-  
+
   fclose(fp);
 }
 
@@ -147,7 +147,7 @@ void track(const double Ax, const double Ay)
 	  globval.CODvect[2], globval.CODvect[3],
 	  globval.CODvect[4], globval.CODvect[5]);
 
-  xt.zero(); xt[x_] = Ax; xt[y_] = Ay; 
+  xt.zero(); xt[x_] = Ax; xt[y_] = Ay;
 
   fprintf(fd, "start %22.14e %22.14e %22.14e %22.14e %22.14e %22.14e\n",
 	  xt[0], xt[1], xt[2], xt[3], xt[4], xt[5] );
@@ -513,7 +513,7 @@ void chk_high_ord_achr(const int lat_case)
   // M-6HBA-0-.-.  3.
 
   Ring_GetTwiss(true, 0e0);
- 
+
   switch (lat_case) {
   case 1:
     dnu[X_] = 19.0/8.0; dnu[Y_] = 15.0/16.0;
@@ -543,8 +543,8 @@ void chk_high_ord_achr(const int lat_case)
   for (k = 1; k < (int)loc.size(); k++)
     printf(" %9.5f %8.5f %8.5f %7.5f [%7.5f, %7.5f]\n",
 	   Cell[loc[k]].S, Cell[loc[k]].Alpha[X_], Cell[loc[k]].Alpha[Y_],
-	   Cell[loc[k]].S-Cell[loc[k-1]].S, 
-	   Cell[loc[k]].Nu[X_]-Cell[loc[k-1]].Nu[X_], 
+	   Cell[loc[k]].S-Cell[loc[k-1]].S,
+	   Cell[loc[k]].Nu[X_]-Cell[loc[k-1]].Nu[X_],
 	   Cell[loc[k]].Nu[Y_]-Cell[loc[k-1]].Nu[Y_]);
 }
 
@@ -558,7 +558,7 @@ void chk_mI_trans(const int lat_case)
   // M-6HBA-0-.-.  3.
 
   Ring_GetTwiss(true, 0e0);
- 
+
   switch (lat_case) {
   case 1:
     Fnum = ElemIndex("dispbumpcenter");
@@ -581,7 +581,7 @@ void chk_mI_trans(const int lat_case)
     loc0 = Elem_GetPos(Fnum, k-1); loc1 = Elem_GetPos(Fnum, k);
     printf(" %8s %7.3f [%7.5f, %7.5f]\n",
 	   Cell[loc1].Elem.PName, Cell[loc1].S,
-	   Cell[loc1].Nu[X_]-Cell[loc0].Nu[X_], 
+	   Cell[loc1].Nu[X_]-Cell[loc0].Nu[X_],
 	   Cell[loc1].Nu[Y_]-Cell[loc0].Nu[Y_]);
   }
 }
@@ -592,13 +592,13 @@ void chk_lin_chrom(void)
   int Fnum, loc0, loc1;
 
   Ring_GetTwiss(true, 0e0);
- 
+
   printf("\nchk_lin_chrom:\n");
   Fnum = ElemIndex("sf1");
   loc0 = Elem_GetPos(Fnum, 2); loc1 = Elem_GetPos(Fnum, 3);
   printf(" %8s [%7.5f, %7.5f]\n",
 	 Cell[loc1].Elem.PName,
-	 Cell[loc1].Nu[X_]-Cell[loc0].Nu[X_], 
+	 Cell[loc1].Nu[X_]-Cell[loc0].Nu[X_],
 	 Cell[loc1].Nu[Y_]-Cell[loc0].Nu[Y_]);
   loc1 = Elem_GetPos(Fnum, 1);
   printf(" %8s [%7.5f, %7.5f]\n",
@@ -611,7 +611,7 @@ void chk_drv_terms(void)
   int k;
 
   Ring_GetTwiss(true, 0e0);
- 
+
   printf("\nh_10200 phase advance:\n");
   for (k = 0; k <= globval.Cell_nLoc; k++)
     if ((Cell[k].Elem.Pkind == Mpole) && (Cell[k].Elem.M->Porder == Sext))
@@ -670,7 +670,7 @@ void chk_mpole(void)
   }
 
   Ring_GetTwiss(true, 0e0);
- 
+
   printf("\nSextupole Scheme:\n");
   for (k = 0; k < (int)Fnum.size(); k++)
     chk_mpole_Fam(Fnum[k], false);
@@ -683,7 +683,7 @@ void chk_dip(void)
   double L, phi, L_sum, phi_sum;
 
   Ring_GetTwiss(true, 0e0);
- 
+
   printf("\nLong grad dipole:\n");
   L_sum = 0e0; phi_sum = 0e0;
   for (k = 0; k <= globval.Cell_nLoc; k++) {
@@ -722,7 +722,7 @@ void dnu_mpole(void)
   }
 
   Ring_GetTwiss(true, 0e0);
- 
+
   printf("\nMultipole Phase Advances:\n");
   for (n = 1; n <= GetnKid(Fnum[0]); n++) {
     loc1 = Elem_GetPos(Fnum[0], n);
@@ -994,9 +994,9 @@ void track(const string fname, const int n, const double x, const double p_x,
   ps[x_] = x; ps[px_] = p_x; ps[y_] = y; ps[py_] = p_y; ps[delta_] = delta;
 
   outf << std::scientific << std::setprecision(6)
-       << "\n" << std::setw(14) << ps << "\n"; 
+       << "\n" << std::setw(14) << ps << "\n";
   for (k = 1; k <= n; k++) {
-    Cell_Pass(0, globval.Cell_nLoc, ps, lastpos);  
+    Cell_Pass(0, globval.Cell_nLoc, ps, lastpos);
     outf << std::scientific << std::setprecision(6)
 	 << std::setw(14) << ps << "\n";
   }
@@ -1399,7 +1399,7 @@ void wtf(void)
     -globval.Ascr[ct_][ct_]*globval.Ascr[delta_][ct_]
     - globval.Ascr[ct_][delta_]*globval.Ascr[delta_][delta_];
   globval.beta_z = sqr(globval.Ascr[ct_][ct_]) + sqr(globval.Ascr[ct_][delta_]);
- 
+
   printf("\nLattice Parameters:\n  alpha = [%9.5f, %9.5f, %9.5f]\n",
 	 Cell[0].Alpha[X_], Cell[0].Alpha[Y_], globval.alpha_z);
   printf("  beta  = [%9.5f, %9.5f, %9.5f]\n",
@@ -1816,7 +1816,7 @@ int main(int argc, char *argv[])
     chk_lin_chrom();
     // exit(0);
   }
-  
+
   if (prt_dt) {
     printf("Lattice Case (1..3)? ");
     scanf("%d", &lat_case);
@@ -1914,7 +1914,7 @@ int main(int argc, char *argv[])
 	   Cell[loc].Elem.PName,
 	   Cell[loc].Alpha[X_], Cell[loc].Beta[X_],
 	   Cell[loc].Alpha[Y_], Cell[loc].Beta[Y_],
-	   Cell[loc].Eta[X_], Cell[loc].Etap[X_], 
+	   Cell[loc].Eta[X_], Cell[loc].Etap[X_],
 	   Cell[loc].Eta[Y_], Cell[loc].Etap[Y_]);
     exit(0);
   }

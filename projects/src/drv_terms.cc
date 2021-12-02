@@ -140,7 +140,7 @@ void get_quad(const double L,
     h_c += r*cos(phi); h_s += -r*sin(phi);
 
     propagate_drift(h/2e0, A1);
-    
+
     if ((rho_inv != 0e0) || (b2 != 0e0)) {
       if (!true && prt)
 	printf("     1/rho^2 = %5.3f, b2 = %5.3f\n", sqr(rho_inv), b2);
@@ -151,7 +151,7 @@ void get_quad(const double L,
     for (k = 0; k <= 1; k++)
       nu[k] += dnu[k];
     A1 = get_A_CS(2, A1, dnu);
-    
+
     if (prt) {
       printf("  %7.3f %6.3f %5.3f %6.3f %6.3f %7.3f %6.3f %5.3f\n",
 	     alpha[X_], beta[X_], nu[X_], eta[X_], etap[X_],
@@ -168,7 +168,7 @@ void get_quad(const double L,
     for (k = 0; k <= 1; k++)
       nu[k] += dnu[k];
     A1 = get_A_CS(2, A1, dnu);
-    
+
     if (prt) {
       printf("  %7.3f %6.3f %5.3f %6.3f %6.3f %7.3f %6.3f %5.3f\n",
 	     alpha[X_], beta[X_], nu[X_], eta[X_], etap[X_],
@@ -215,7 +215,7 @@ void get_h_ijklm(const int i, const int j, const int k, const int l,
 	   alpha[X_], beta[X_], nu[X_], eta[X_], etap[X_],
 	   alpha[Y_], beta[Y_], nu[Y_]);
 
-  phi = 2e0*M_PI*((i-j)*nu[X_]+(k-l)*nu[Y_]); 
+  phi = 2e0*M_PI*((i-j)*nu[X_]+(k-l)*nu[Y_]);
   ampl = pow(beta[X_], (i+j)/2e0)*pow(beta[Y_], (k+l)/2e0);
   if (m >= 1) {
     ampl *= -pow(eta[X_], m);
@@ -255,7 +255,7 @@ void get_twiss(const int n, double alpha[], double beta[], double eta[],
 }
 
 
-void get_lin_map(const int n_step, const double delta, const elemtype &Elem, 
+void get_lin_map(const int n_step, const double delta, const elemtype &Elem,
 		 ss_vect<tps> &M1, ss_vect<tps> &M2, ss_vect<tps> &M)
 {
 
@@ -304,7 +304,7 @@ void get_mult(const int loc, const int n_step, const double delta,
 }
 
 
-void sxt_1(const double scl, const double twoJ[], const double delta, 
+void sxt_1(const double scl, const double twoJ[], const double delta,
 	   const int i, const int j, const int k, const int l, const int m,
 	   double &h_c, double &h_s, const bool incl_b3)
 {
@@ -318,7 +318,7 @@ void sxt_1(const double scl, const double twoJ[], const double delta,
     prt = false;
   const int
     n_step = 3;
-  const int  
+  const int
     m_x = i+j,
     m_y = k+l,
     n_x = i-j,
@@ -361,7 +361,7 @@ void sxt_2(const double scl,
   double   b3L1, a3L1, b3L2, a3L2, dnu, A1, A2, phi, c, s;
   CellType *cp;
 
-  const int  
+  const int
     m_x[] = {i1+j1, i2+j2},
     m_y[] = {k1+l1, k2+l2},
     n_x[] = {i1-j1, i2-j2},
@@ -655,7 +655,7 @@ void second_order(const double twoJ[], std::vector<string> &h_label,
   sxt_2(-1e0/64e0, 2, 1, 0, 0, 3, 0, 0, 0, c, s);
   c *= sqr(twoJ[X_]); s *= sqr(twoJ[X_]);
   h_2("h_40000", c, s, h_label, h_c, h_s);
-  
+
   c = s = 0e0;
   sxt_2(-1e0/16e0, 1, 2, 0, 0, 3, 0, 0, 0, c, s);
   c *= sqr(twoJ[X_]); s *= sqr(twoJ[X_]);
@@ -673,7 +673,7 @@ void second_order(const double twoJ[], std::vector<string> &h_label,
   sxt_2(-4e0/32e0, 1, 0, 1, 1, 1, 0, 2, 0, c, s);
   c *= twoJ[X_]*twoJ[Y_]; s *= twoJ[X_]*twoJ[Y_];
   h_2("h_20200", c, s, h_label, h_c, h_s);
-  
+
   c = s = 0e0;
   sxt_2(-1e0/16e0, 1, 0, 2, 0, 1, 2, 0, 0, c, s);
   sxt_2(-1e0/16e0, 2, 1, 0, 0, 0, 1, 2, 0, c, s);
@@ -681,14 +681,14 @@ void second_order(const double twoJ[], std::vector<string> &h_label,
   sxt_2(-2e0/16e0, 1, 0, 1, 1, 0, 1, 2, 0, c, s);
   c *= twoJ[X_]*twoJ[Y_]; s *= twoJ[X_]*twoJ[Y_];
   h_2("h_11200", c, s, h_label, h_c, h_s);
-    
+
   c = s = 0e0;
   sxt_2(-1e0/16e0, 3, 0, 0, 0, 0, 1, 1, 1, c, s);
   sxt_2(-1e0/16e0, 1, 0, 1, 1, 2, 1, 0, 0, c, s);
   sxt_2(-1e0/8e0, 1, 0, 0, 2, 1, 0, 2, 0, c, s);
   c *= twoJ[X_]*twoJ[Y_]; s *= twoJ[X_]*twoJ[Y_];
   h_2("h_20110", c, s, h_label, h_c, h_s);
-  
+
   c = s = 0e0;
   sxt_2(-1e0/8e0, 1, 0, 1, 1, 1, 2, 0, 0, c, s);
   sxt_2(-1e0/8e0, 2, 1, 0, 0, 0, 1, 1, 1, c, s);
@@ -696,13 +696,13 @@ void second_order(const double twoJ[], std::vector<string> &h_label,
   sxt_2(-1e0/8e0, 1, 0, 0, 2, 0, 1, 2, 0, c, s);
   c *= twoJ[X_]*twoJ[Y_]; s *= twoJ[X_]*twoJ[Y_];
   h_2("h_11110", c, s, h_label, h_c, h_s);
-  
+
   c = s = 0e0;
   sxt_2(-1e0/32e0, 0, 1, 2, 0, 1, 0, 1, 1, c, s);
   sxt_2(-1e0/32e0, 0, 1, 1, 1, 1, 0, 2, 0, c, s);
   c *= sqr(twoJ[Y_]); s *= sqr(twoJ[Y_]);
   h_2("h_00310", c, s, h_label, h_c, h_s);
-  
+
   c = s = 0e0;
   sxt_2(-1e0/32e0, 1, 0, 0, 2, 2, 1, 0, 0, c, s);
   sxt_2(-1e0/32e0, 3, 0, 0, 0, 0, 1, 0, 2, c, s);
@@ -747,7 +747,7 @@ void tune_fp(const double delta_eps, const double twoJ[], const double delta,
   h_s.push_back(sqr(delta)*ksi[2][Y_]);
 
   h_label.push_back("nu(deltaˆ3)    ");
-  h_c.push_back(cube(delta)*ksi[3][X_]); 
+  h_c.push_back(cube(delta)*ksi[3][X_]);
   h_s.push_back(cube(delta)*ksi[3][Y_]);
 
   h_label.push_back("nu(2J_x)       ");

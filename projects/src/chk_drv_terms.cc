@@ -23,7 +23,7 @@ void get_h_ijklm(const int i, const int j, const int k, const int l,
 	   alpha[X_], beta[X_], nu[X_], eta[X_], etap[X_],
 	   alpha[Y_], beta[Y_], nu[Y_]);
 
-  phi = 2e0*M_PI*((i-j)*nu[X_]+(k-l)*nu[Y_]); 
+  phi = 2e0*M_PI*((i-j)*nu[X_]+(k-l)*nu[Y_]);
   ampl = pow(beta[X_], (i+j)/2e0)*pow(beta[Y_], (k+l)/2e0);
   if (m >= 1) {
     ampl *= -pow(eta[X_], m);
@@ -144,7 +144,7 @@ void get_quad(const double L,
     h_c += r*cos(phi); h_s += -r*sin(phi);
 
     propagate_drift(h/2e0, A1);
-    
+
     if ((rho_inv != 0e0) || (b2 != 0e0)) {
       if (!true && prt)
 	printf("     1/rho^2 = %5.3f, b2 = %5.3f\n", sqr(rho_inv), b2);
@@ -155,7 +155,7 @@ void get_quad(const double L,
     for (k = 0; k <= 1; k++)
       nu[k] += dnu[k];
     A1 = get_A_CS(2, A1, dnu);
-    
+
     if (prt) {
       printf("  %7.3f %6.3f %5.3f %6.3f %6.3f %7.3f %6.3f %5.3f\n",
 	     alpha[X_], beta[X_], nu[X_], eta[X_], etap[X_],
@@ -172,7 +172,7 @@ void get_quad(const double L,
     for (k = 0; k <= 1; k++)
       nu[k] += dnu[k];
     A1 = get_A_CS(2, A1, dnu);
-    
+
     if (prt) {
       printf("  %7.3f %6.3f %5.3f %6.3f %6.3f %7.3f %6.3f %5.3f\n",
 	     alpha[X_], beta[X_], nu[X_], eta[X_], etap[X_],
@@ -216,7 +216,7 @@ void get_twiss(const int n, double alpha[], double beta[], double eta[],
 }
 
 
-void get_lin_map(const int n_step, const double delta, const elemtype &Elem, 
+void get_lin_map(const int n_step, const double delta, const elemtype &Elem,
 		 ss_vect<tps> &M1, ss_vect<tps> &M2, ss_vect<tps> &M)
 {
 
@@ -265,7 +265,7 @@ void get_mult(const int loc, const int n_step, const double delta,
 }
 
 
-void sxt_1(const double scl, const double twoJ[], const double delta, 
+void sxt_1(const double scl, const double twoJ[], const double delta,
 	   const int i, const int j, const int k, const int l, const int m,
 	   double &h_c, double &h_s, const bool incl_b3, const int loc)
 {
@@ -279,7 +279,7 @@ void sxt_1(const double scl, const double twoJ[], const double delta,
     prt = false;
   const int
     n_step = 3;
-  const int  
+  const int
     m_x = i+j,
     m_y = k+l,
     n_x = i-j,

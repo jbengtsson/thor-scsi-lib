@@ -231,14 +231,14 @@ void get_quad(const double L,
     h_c += r*cos(phi); h_s += -r*sin(phi);
 
     propagate_drift(h/2.0, A1);
-    
+
     if ((rho_inv != 0.0) || (b2 != 0.0)) {
       if (prt) printf("1/rho^2 = %5.3f, b2 = %5.3f\n", sqr(rho_inv), b2);
       propagate_thin_kick(h, rho_inv, b2, A1);
     }
 
     get_Twiss(A0, A1, alpha, beta, nu, eta, etap); cpy_mat(A1, A0);
-    
+
     if (prt) {
       printf("%6.3f %6.3f %5.3f %6.3f %6.3f %6.3f %6.3f %5.3f\n",
 	     alpha[X_], beta[X_], nu[X_], eta[X_], etap[X_],
@@ -252,7 +252,7 @@ void get_quad(const double L,
     propagate_drift(h/2.0, A1);
 
     get_Twiss(A0, A1, alpha, beta, nu, eta, etap); cpy_mat(A1, A0);
-    
+
     if (prt) {
       printf("%6.3f %6.3f %5.3f %6.3f %6.3f %6.3f %6.3f %5.3f\n",
 	     alpha[X_], beta[X_], nu[X_], eta[X_], etap[X_],
@@ -279,7 +279,7 @@ void get_quad(const double L,
 
 
 void get_quad1(const double L,
-	      const double rho_inv, const double phi1, const double phi2, 
+	      const double rho_inv, const double phi1, const double phi2,
 	      const double b2,
 	      sp_vec alpha3[], sp_vec beta3[], sp_vec nu3[],
 	      sp_vec eta3[], sp_vec etap3[],
@@ -292,7 +292,7 @@ void get_quad1(const double L,
   double   A, phi;
 
 //  get_Twiss3(L, rho_inv, phi1, phi2, b2, alpha3, beta3, nu3, eta3, etap3);
-    
+
   h_c = 0.0; h_s = 0.0;
   for (k = 0; k <= 2; k++) {
     phi = 2.0*M_PI*(n_x*nu3[k][X_]+n_y*nu3[k][Y_]);
@@ -365,7 +365,7 @@ void sxt_1(const double scl,
 	  beta[k1] = beta0[k1]; nu[k1] = nu0[k1];
 	  eta[k1] = eta0[k1];
 	}
-	b3L = get_bnL(Cell[n], Sext); phi = 2.0*M_PI*(n_x*nu[X_]+n_y*nu[Y_]); 
+	b3L = get_bnL(Cell[n], Sext); phi = 2.0*M_PI*(n_x*nu[X_]+n_y*nu[Y_]);
 	A = scl*b3L*pow(beta[X_], m_x/2.0)*pow(beta[Y_], m_y/2.0);
 	if (m >= 1) {
 	  A *= -pow(eta[X_], m);
@@ -403,7 +403,7 @@ void sxt_2(const double scl,
       for (k = 0; k <= 1; k++) {
 	beta1[k] = beta0[k]; nu1[k] = nu0[k];
       }
-      b3L1 = get_bnL(Cell[n1], Sext); dnu = (i1-j1)*nu1[X_] + (k1-l1)*nu1[Y_]; 
+      b3L1 = get_bnL(Cell[n1], Sext); dnu = (i1-j1)*nu1[X_] + (k1-l1)*nu1[Y_];
       A1 = b3L1*pow(beta1[X_], (i1+j1)/2.0)*pow(twoJy*beta1[Y_], (k1+l1)/2.0);
       for (n2 = 0; n2 <= globval.Cell_nLoc; n2++) {
 	if ((Cell[n2].Elem.Pkind == Mpole) &&
@@ -544,7 +544,7 @@ void sext_terms(const double twoJx, const double twoJy)
   sxt_2(-1.0/32.0, 2, 1, 0, 0, 3, 0, 0, 0, h_c, h_s);
   h_c *= sqr(twoJx); h_s *= sqr(twoJx);
   printf("  h_40000: %23.16e %23.16e\n", h_c/2.0, h_s/2.0);
-  
+
   sxt_2(-1.0/16.0, 1, 2, 0, 0, 3, 0, 0, 0, h_c, h_s);
   h_c *= sqr(twoJx); h_s *= sqr(twoJx);
   printf("  h_31000: %23.16e %23.16e\n", h_c/2.0, h_s/2.0);
@@ -555,7 +555,7 @@ void sext_terms(const double twoJx, const double twoJy)
   h_c += c; h_s += s;
   h_c *= sqr(twoJx); h_s *= sqr(twoJx);
   printf("  h_22000: %23.16e %23.16e\n", h_c/2.0, h_s/2.0);
-  
+
   sxt_2(-1.0/32.0, 3, 0, 0, 0, 0, 1, 2, 0, c, s);
   h_c = c; h_s = s;
   sxt_2(-1.0/32.0, 1, 0, 2, 0, 2, 1, 0, 0, c, s);
@@ -564,7 +564,7 @@ void sext_terms(const double twoJx, const double twoJy)
   h_c += c; h_s += s;
   h_c *= twoJx*twoJy; h_s *= twoJx*twoJy;
   printf("  h_20200: %23.16e %23.16e\n", h_c/2.0, h_s/2.0);
-  
+
   sxt_2(-1.0/16.0, 1, 0, 2, 0, 1, 2, 0, 0, c, s);
   h_c = c; h_s = s;
   sxt_2(-1.0/16.0, 2, 1, 0, 0, 0, 1, 2, 0, c, s);
@@ -575,7 +575,7 @@ void sext_terms(const double twoJx, const double twoJy)
   h_c += c; h_s += s;
   h_c *= twoJx*twoJy; h_s *= twoJx*twoJy;
   printf("  h_11200: %23.16e %23.16e\n", h_c/2.0, h_s/2.0);
-    
+
   sxt_2(-1.0/16.0, 3, 0, 0, 0, 0, 1, 1, 1, c, s);
   h_c = c; h_s = s;
   sxt_2(-1.0/16.0, 1, 0, 1, 1, 2, 1, 0, 0, c, s);
@@ -584,7 +584,7 @@ void sext_terms(const double twoJx, const double twoJy)
   h_c += c; h_s += s;
   h_c *= twoJx*twoJy; h_s *= twoJx*twoJy;
   printf("  h_20110: %23.16e %23.16e\n", h_c/2.0, h_s/2.0);
-  
+
   sxt_2(-1.0/8.0, 1, 0, 1, 1, 1, 2, 0, 0, c, s);
   h_c = c; h_s = s;
   sxt_2(-1.0/8.0, 2, 1, 0, 0, 0, 1, 1, 1, c, s);
@@ -595,14 +595,14 @@ void sext_terms(const double twoJx, const double twoJy)
   h_c += c; h_s += s;
   h_c *= twoJx*twoJy; h_s *= twoJx*twoJy;
   printf("  h_11110: %23.16e %23.16e\n", h_c/2.0, h_s/2.0);
-  
+
   sxt_2(-1.0/16.0, 0, 1, 2, 0, 1, 0, 1, 1, c, s);
   h_c = c; h_s = s;
   sxt_2(-1.0/16.0, 0, 1, 1, 1, 1, 0, 2, 0, c, s);
   h_c += c; h_s += s;
   h_c *= sqr(twoJy); h_s *= sqr(twoJy);
   printf("  h_00310: %23.16e %23.16e\n", h_c/2.0, h_s/2.0);
-  
+
   sxt_2(-1.0/32.0, 1, 0, 0, 2, 2, 1, 0, 0, c, s);
   h_c = c; h_s = s;
   sxt_2(-1.0/32.0, 3, 0, 0, 0, 0, 1, 0, 2, c, s);
@@ -688,7 +688,7 @@ double f_sxt(double p[])
   // h_40000
   sxt_2(-1.0/32.0, 2, 1, 0, 0, 3, 0, 0, 0, h_c, h_s);
   f += scl_geom*sqr(twoJx)*sqr(h_c);
-  
+
   // h_31000
   sxt_2(-1.0/16.0, 1, 2, 0, 0, 3, 0, 0, 0, h_c, h_s);
   f += scl_geom*sqr(twoJx)*sqr(h_c);
@@ -701,7 +701,7 @@ double f_sxt(double p[])
   sxt_2(-1.0/8.0, 1, 0, 0, 2, 1, 0, 2, 0, c, s);
   h_c += c; h_s += s;
   f += scl_geom*twoJx*twoJy*sqr(h_c);
-  
+
   // h_20020
   sxt_2(-1.0/32.0, 1, 0, 0, 2, 2, 1, 0, 0, c, s);
   h_c = c; h_s = s;
@@ -719,7 +719,7 @@ double f_sxt(double p[])
   sxt_2(-4.0/32.0, 1, 0, 1, 1, 1, 0, 2, 0, c, s);
   h_c += c; h_s += s;
   f += scl_geom*twoJx*twoJy*sqr(h_c);
-  
+
   // h_11200
   sxt_2(-1.0/16.0, 1, 0, 2, 0, 1, 2, 0, 0, c, s);
   h_c = c; h_s = s;
@@ -730,14 +730,14 @@ double f_sxt(double p[])
   sxt_2(-2.0/16.0, 1, 0, 1, 1, 0, 1, 2, 0, c, s);
   h_c += c; h_s += s;
   f += scl_geom*twoJx*twoJy*sqr(h_c);
-    
+
   // h_00310
   sxt_2(-1.0/16.0, 0, 1, 2, 0, 1, 0, 1, 1, c, s);
   h_c = c; h_s = s;
   sxt_2(-1.0/16.0, 0, 1, 1, 1, 1, 0, 2, 0, c, s);
   h_c += c; h_s += s;
   f += scl_geom*sqr(twoJy)*sqr(h_c);
-  
+
   // h_00400
   sxt_2(-1.0/32.0, 0, 1, 2, 0, 1, 0, 2, 0, h_c, h_s);
   f += scl_geom*twoJx*twoJy*sqr(h_c);
@@ -748,7 +748,7 @@ double f_sxt(double p[])
   sxt_2(-3.0/32.0, 1, 2, 0, 0, 2, 1, 0, 0, c, s);
   h_c += c; h_s += s;
   f += scl_dnu*sqr(twoJx)*sqr(h_c);
-  
+
   // h_11110
   sxt_2(-1.0/8.0, 1, 0, 1, 1, 1, 2, 0, 0, c, s);
   h_c = c; h_s = s;
@@ -759,7 +759,7 @@ double f_sxt(double p[])
   sxt_2(-1.0/8.0, 1, 0, 0, 2, 0, 1, 2, 0, c, s);
   h_c += c; h_s += s;
   f += scl_dnu*twoJx*twoJy*sqr(h_c);
-  
+
   // h_00220
   sxt_2(-1.0/8.0, 0, 1, 1, 1, 1, 0, 1, 1, c, s);
   h_c = c; h_s = s;
@@ -789,7 +789,7 @@ void h_min(void)
   const double  ftol = 1e-6;
 
   p = dvector(1, n_b3_max); xi = dmatrix(1, n_b3_max, 1, n_b3_max);
-  
+
   n_b3 = 0;
   b3s[n_b3++] = ElemIndex("s4");  b3s[n_b3++] = ElemIndex("s6");
   b3s[n_b3++] = ElemIndex("s13"); b3s[n_b3++] = ElemIndex("s19");

@@ -783,7 +783,7 @@ void match_disp(param_type &prms, constr_type &constr)
   //   Quadrupole   2.
   int j, k;
 
-  // Perturbed symmetry at end of Dipole Cell: 
+  // Perturbed symmetry at end of Dipole Cell:
   //   1. Initialize with: [Qf1, Qd2, Qd3].
   //   2. Exclude for 1st pass: pert_dip_cell = false.
   //   3. Include for fine tuning.
@@ -880,7 +880,7 @@ void match_straight(param_type &prms, constr_type &constr)
   //   Quadrupole   2.
   int j, k;
 
-  // Perturbed symmetry at end of Dipole Cell: 
+  // Perturbed symmetry at end of Dipole Cell:
   //   1. Initialize with: [Qf1, Qd2, Qd3].
   //   2. Exclude for 1st pass: pert_dip_cell = false.
   //   3. Include for fine tuning.

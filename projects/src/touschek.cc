@@ -15,7 +15,7 @@ void err_and_corr(const string &param_file)
   FILE            *fp;
 
   // DIAMOND-II: I_b = 300 mA, h = 934.
-  const int 
+  const int
     Nb          = 934;
   const double
     C           = 560.571,
@@ -62,11 +62,11 @@ void err_and_corr(const string &param_file)
   if (cod) {
     printf("\nerr_and_corr: orbit correction completed\n");
     prt_cod("cod.out", globval.bpm, true);
- 
+
     globval.delta_RF = delta_RF; globval.Cavity_on = true;
 
     Touschek(Qb, globval.delta_RF, eps[X_], eps[Y_], sigma_delta, sigma_s);
-      
+
     double  sum_delta[globval.Cell_nLoc+1][2];
     double  sum2_delta[globval.Cell_nLoc+1][2];
 //    double  mean_delta_s[globval.Cell_nLoc+1][2];
@@ -76,12 +76,12 @@ void err_and_corr(const string &param_file)
       sum_delta[j][X_] = 0e0; sum_delta[j][Y_] = 0e0;
       sum2_delta[j][X_] = 0e0; sum2_delta[j][Y_] = 0e0;
     }
- 
+
     Touschek(Qb, globval.delta_RF, false,
 	     eps[X_], eps[Y_], sigma_delta, sigma_s,
 	     params.n_track_DA, false, sum_delta, sum2_delta);
 
-    fp = file_write(file_name.c_str()); 
+    fp = file_write(file_name.c_str());
     for(j = 0; j <= globval.Cell_nLoc; j++)
       fprintf(fp, "%4d %7.2f %5.3f %6.3f\n",
 	      j, Cell[j].S, 1e2*sum_delta[j][X_], 1e2*sum_delta[j][Y_]);

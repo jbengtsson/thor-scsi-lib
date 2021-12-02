@@ -165,7 +165,7 @@ void tst_ss_vect(LatticeType &lat)
   if (!false) {
     ss_vect<double> ps;
     ss_vect<tps>    Id;
-    
+
     printf("\nTest of ss_vect<double/tps> <-> vector/matrix:\n\n");
     fflush(stdout);
 

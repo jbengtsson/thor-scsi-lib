@@ -444,7 +444,7 @@ void get_nus(const int n_bpm, const int cut, const int n,
   cout << scientific << setprecision(3)
        << "twoJ = [" << twoJ_mean[X_] << "+/-" << twoJ_sigma[X_]
        << ", " << twoJ_mean[Y_] << "+/-" << twoJ_sigma[Y_] << "]"
-       << fixed 
+       << fixed
        << ", phi0 = [" << phi0_mean[X_] << "+/-" << phi0_sigma[X_]
        << ", " << phi0_mean[Y_] << "+/-" << phi0_sigma[Y_] << "]" << endl;
   cout << fixed << setprecision(3)
@@ -484,7 +484,7 @@ void get_nus(const int n_bpm, const int cut, const int n,
 	   << setw(3) << i+1
 	   << "  ["
 	   << setw(6) << 1e3*As[i][X_] << ", "
-	   << setw(5) << 1e3*As[i][Y_] << "]  [" 
+	   << setw(5) << 1e3*As[i][Y_] << "]  ["
 	   << setw(6) << nus[i][X_] << ", "
 	   << setw(5) << nus[i][Y_] << "]  ["
 	   << setw(6) << Cell[loc].Nu[X_]-(int)Cell[loc].Nu[X_] << ", "
@@ -536,11 +536,11 @@ void get_stats(const int n_bpm)
   for (j = 0; j < n_bpm; j++) {
     for (k = 0; k < 2; k++) {
       betas_mean[j][k] = betas_sum[j][k]/n_stats;
-      betas_sigma[j][k] = 
+      betas_sigma[j][k] =
 	sqrt((n_stats*betas_sum2[j][k]-sqr(betas_sum[j][k]))
 	     /(n_stats*(n_stats-1e0)));
       dnus_mean[j][k] = dnus_sum[j][k]/n_stats;
-      dnus_sigma[j][k] = 
+      dnus_sigma[j][k] =
 	sqrt((n_stats*dnus_sum2[j][k]-sqr(dnus_sum[j][k]))
 	     /(n_stats*(n_stats-1e0)));
     }
@@ -551,7 +551,7 @@ void get_stats(const int n_bpm)
 	   << setw(5) << betas_mean[j][X_] << "+/-"
 	   << setw(5) << betas_sigma[j][X_] << ", "
 	   << setw(4) << betas_mean[j][Y_] << "+/-"
-	   << setw(5) << betas_sigma[j][Y_] << "]  [" 
+	   << setw(5) << betas_sigma[j][Y_] << "]  ["
 	   << setw(5) << dnus_mean[j][X_] << "+/-"
 	   << setw(5) << dnus_sigma[j][X_] << ", "
 	   << setw(4) << dnus_mean[j][Y_] << "+/-"
@@ -686,7 +686,7 @@ void ss_est(const int n_bpm, const int cut, const int n)
     jj[k] = (k < 4)? 1 : 0;
 
   loc1 = Elem_GetPos(ElemIndex(bpm_names[prt_bpm-1]), 1);
-	
+
   cout << endl;
   cout << "Logging at: " << Cell[loc1].Elem.PName << endl;
 
@@ -750,7 +750,7 @@ void ss_est(const int n_bpm, const int cut, const int n)
       Kalman_Filter2(ps[i], z[i]);
 
       loc1 = Elem_GetPos(ElemIndex(bpm_names[i]), 1);
-	
+
       for (k = 0; k < 2; k++)
 	if (true) data[i][k][j] = ps[i][2*k];
 
@@ -774,7 +774,7 @@ void ss_est(const int n_bpm, const int cut, const int n)
 
       if (i == prt_bpm-1) {
 	dps = ps[i] - z[i];
-	
+
 	outf1 << setw(4) << j+1;
 	for (k = 0; k < 2*n_DOF; k++)
 	  outf1 << scientific << setprecision(5) << setw(13) << ps[i][k];
@@ -793,10 +793,10 @@ void ss_est(const int n_bpm, const int cut, const int n)
 
     for (k = 0; k < n_DOF; k++) {
       twoJ_mean[k] = twoJ_sum[k]/n_bpm;
-      twoJ_sigma[k] = 
+      twoJ_sigma[k] =
 	sqrt((n_bpm*twoJ_sum2[k]-sqr(twoJ_sum[k]))/(n_bpm*(n_bpm-1e0)));
       phi_mean[k] = phi_sum[k]/n_bpm;
-      phi_sigma[k] = 
+      phi_sigma[k] =
 	sqrt((n_bpm*phi_sum2[k]-sqr(phi_sum[k]))/(n_bpm*(n_bpm-1e0)));
     }
 
@@ -1027,17 +1027,17 @@ int main(int argc, char *argv[])
     rd_tbt("sls_tbt/tbt_090513_215619.log");
     ss_est(n_bpm, cut, n_turn);
     get_nus(n_bpm, cut, n_turn, window);
-    
+
     n_stats += 1;
     rd_tbt("sls_tbt/tbt_090513_215631.log");
     ss_est(n_bpm, cut, n_turn);
     get_nus(n_bpm, cut, n_turn, window);
-    
+
     n_stats += 1;
     rd_tbt("sls_tbt/tbt_090513_215652.log");
     ss_est(n_bpm, cut, n_turn);
     get_nus(n_bpm, cut, n_turn, window);
-    
+
     outf_optics.close();
 
     get_stats(n_bpm);

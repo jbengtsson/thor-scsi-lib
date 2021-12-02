@@ -13,10 +13,10 @@ ss_vect<tps> get_fix_point(const int Fnum)
   long int     lastpos, loc;
   int          j;
   FieldMapType *FM;
-  
+
   const int  n_iter = 3;
 
-  
+
   loc = Elem_GetPos(Fnum, 1); FM = Cell[loc].Elem.FM;
 
   FM->Ld = 0.0; FM->L1 = 0.0;
@@ -73,7 +73,7 @@ int main(int argc, char *argv[])
   Matrix       M;
   ss_vect<tps> map;
 
-    
+
   globval.H_exact    = false; globval.quad_fringe = false;
   globval.Cavity_on  = false; globval.radiation   = false;
   globval.emittance  = false; globval.IBS         = false;
@@ -130,6 +130,6 @@ int main(int argc, char *argv[])
 
     Ring_GetTwiss(true, 0.0); printglob();
 
-    prt_lat("linlat.out", globval.bpm, true);  
+    prt_lat("linlat.out", globval.bpm, true);
   }
 }

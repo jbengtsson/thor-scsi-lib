@@ -13,7 +13,7 @@ void prt_lin_map(const int n_DOF, const ss_vect<tps> &map)
   cout << endl;
   for (i = 1; i <= 2*n_DOF; i++) {
     for (j = 1; j <= 2*n_DOF; j++)
-      if (true) 
+      if (true)
 	cout << scientific << setprecision(6)
 	     << setw(15) << getmat(map, i, j);
       else
@@ -207,7 +207,7 @@ ss_vect<tps> get_A_nl_inv(const tps g)
 
 tps get_g(const tps nu_x, const tps nu_y, const tps &h)
 {
-  // Compute g = (1-R)^-1 * h 
+  // Compute g = (1-R)^-1 * h
 
   int           i, j, k, l, m;
   iVector       jj1, jj2;

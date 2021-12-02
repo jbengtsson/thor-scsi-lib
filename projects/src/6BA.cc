@@ -416,7 +416,7 @@ double f_match(double *b2)
   // get_dnu_delta(loc[0], loc[5], ic[0], ic[1], eps_delta, dksi);
 
   chi2 = 0e0;
-  
+
   // Downstream of 10 degree dipole.
   chi2 += 1e8*sqr(Cell[loc[1]].Eta[X_]);
   chi2 += 1e8*sqr(Cell[loc[1]].Etap[X_]);
@@ -430,7 +430,7 @@ double f_match(double *b2)
   // Center of 2nd straight.
   chi2 += 1e5*sqr(Cell[loc[3]].Alpha[X_]);
   chi2 += 1e5*sqr(Cell[loc[3]].Alpha[Y_]);
-  chi2 += 1e3*sqr(Cell[loc[3]].Beta[X_]-8.0); 
+  chi2 += 1e3*sqr(Cell[loc[3]].Beta[X_]-8.0);
 
   for (i = 1; i <= b2_prms.n_prm; i++) {
     loc1 = Elem_GetPos(b2_prms.Fnum[i-1], 1);
@@ -566,7 +566,7 @@ void fit_match(param_type &b2_prms)
 void chk_straights()
 {
   int loc1, loc2;
-  
+
   loc1 = Elem_GetPos(ElemIndex("s_s_1"), 1);
   loc2 = Elem_GetPos(ElemIndex("s_s_1"), 2);
   printf("\nLength of 1st straight: %6.3f m\n", Cell[loc2].S-Cell[loc1].S);

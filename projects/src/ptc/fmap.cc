@@ -29,7 +29,7 @@ void get_A(void)
   for (j = no_tps; j >= 3; j--) {
     gn = Take(MNF.g, j); A = A*LieExp(gn, Id);
   }
-  
+
   for (j = 0; j < nv_tps; j++)
     jj[j] = (j < 4)? 1 : 0;
 
@@ -38,7 +38,7 @@ void get_A(void)
 
 
 void get_twoJ(const ss_vect<double> &ps, double twoJ[])
-{   
+{
   int             j;
   ss_vect<double> z;
   ss_vect<tps>    Id;
@@ -48,7 +48,7 @@ void get_twoJ(const ss_vect<double> &ps, double twoJ[])
   for (j = 0; j < 2; j++)
     twoJ[j] = sqr(z[2*j]) + sqr(z[2*j+1]);
 }
-  
+
 
 void fmap(const double Ax, const double Ay)
 {

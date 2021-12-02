@@ -38,16 +38,16 @@ void get_cod_rms(const double dx, const double dy,
     for (k = 0; k < 6; k++) {
       x1[k].push_back(0e0); x2[k].push_back(0e0);
     }
-  
+
   fp = file_write("cod_rms.out");
-  
+
   n_cod = 0;
   for (i = 0; i < n_seed; i++) {
     printf("\norb_corr: seed no %d\n", i+1);
 
     misalign_rms_type(Dip,  dx, dy, 0e0, true);
     misalign_rms_type(Quad, dx, dy, 0e0, true);
-    
+
     cod = orb_corr(n_cod_corr);
 
     if (cod) {
@@ -89,7 +89,7 @@ void get_cod_rms(const double dx, const double dy,
 	      1e3*x_mean[y_][n-1], 1e3*x_sigma[y_][n-1]);
     } else
       fprintf(fp, "%8.3f %6.2f\n", Cell[j].S, get_code(Cell[j]));
-  
+
   fclose(fp);
 }
 
@@ -113,7 +113,7 @@ void track(const double Ax, const double Ay)
 	  globval.CODvect[2], globval.CODvect[3],
 	  globval.CODvect[4], globval.CODvect[5]);
 
-  xt.zero(); xt[x_] = Ax; xt[y_] = Ay; 
+  xt.zero(); xt[x_] = Ax; xt[y_] = Ay;
 
   fprintf(fd, "start %22.14e %22.14e %22.14e %22.14e %22.14e %22.14e\n",
 	  xt[0], xt[1], xt[2], xt[3], xt[4], xt[5] );
@@ -331,7 +331,7 @@ int main(int argc, char *argv[])
     // 	  0, 0*f_rf);
     // track("track.out", 1e-6, 0e0, 1.9e-3, 0e0, 0e0, n_turn, lastn, lastpos,
     // 	  0, 0*f_rf);
-    
+
     // track("track.out", 1e-3, 0e0, 1e-3, 0e0, 0e0, 10*n_turn, lastn, lastpos,
     // 	  0, f_rf);
 

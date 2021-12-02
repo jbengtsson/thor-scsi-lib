@@ -54,7 +54,7 @@ void prt_H_long(const int n, const double phi_max, const double delta_max,
 	     /(alphac[0]*pi*h_rf*globval.Energy*1e9));
   std::cout << std::endl << std::fixed << std::setprecision(1)
 	    << "U0     = " << 1e-3*U0 << " keV" << std::endl;
-  if (!neg_alphac) 
+  if (!neg_alphac)
     std::cout << std::fixed << std::setprecision(2)
 	      << "phi0 = " << fabs(phi0)*180e0/pi-180e0
 	      << " deg" << std::endl;
