@@ -17,7 +17,7 @@ arma::vec arrtovec(const double a[])
 void vectoarr(const arma::vec &a_vec, double a[])
 {
   int k;
-  
+
   for (k = 0; k < PS_DIM; k++)
     a[k] = a_vec(k);
 }
@@ -38,7 +38,7 @@ arma::mat arrtomat(const double a[])
 void mattoarr(const arma::mat &A, double a[])
 {
   int j, k;
- 
+
   for (j = 0; j < PS_DIM; j++)
     for (k = 0; k < PS_DIM; k++)
       a[j*PS_DIM+k] = A(j, k);
@@ -50,7 +50,7 @@ void IdentityPass(double ps_n[],
 		  const double r1[], const double r2[],
 		  const double limits[], const double *axesptr,
 		  const int num_particles)
-{	
+{
   int       j, k;
   arma::vec ps(PS_DIM);
 

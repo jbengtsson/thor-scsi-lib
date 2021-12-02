@@ -4,7 +4,7 @@
                  SLS, PSI      1995 - 1997
    M. Boege      SLS, PSI      1998          C translation
    L. Nadolski   SOLEIL        2002          Link to NAFF, Radia field maps
-   J. Bengtsson  NSLS-II, BNL  2004 -        
+   J. Bengtsson  NSLS-II, BNL  2004 -
 
 */
 
@@ -19,7 +19,7 @@ inline bool ElemType::CheckAmpl(ConfigType &conf, const ss_vect<T> &ps)
 
   if (conf.Aperture_on)
     not_lost = is_double<T>::cst(ps[x_]) > maxampl[X_][0] &&
-               is_double<T>::cst(ps[x_]) < maxampl[X_][1] && 
+               is_double<T>::cst(ps[x_]) < maxampl[X_][1] &&
                fabs(is_double<T>::cst(ps[y_])) < maxampl[Y_][1];
   else
     not_lost = is_double<T>::cst(ps[x_]) > -max_ampl &&
@@ -146,7 +146,7 @@ bool LatticeType::Cell_getCOD(long imax, double eps, double dP, long &lastpos)
   ss_vect<tps>    I, dx0, map;
 
   no = no_tps; danot_(1);
-  
+
   if (conf.mat_meth && (dP != conf.dPparticle))
     // Recompute transport matrices.
     get_transp_mats(dP);
@@ -158,7 +158,7 @@ bool LatticeType::Cell_getCOD(long imax, double eps, double dP, long &lastpos)
   x0.zero(); x0[delta_] = dP;
 
   // if (n == 4) {
-  //   // For 2 1/2 D.O.F.: eta*dP. 
+  //   // For 2 1/2 D.O.F.: eta*dP.
   //   x0[x_] = elems[0]->Eta[X_]*dP; x0[px_] = elems[0]->Etap[X_]*dP;
   //   x0[y_] = elems[0]->Eta[Y_]*dP; x0[py_] = elems[0]->Etap[Y_]*dP;
   // }
@@ -178,7 +178,7 @@ bool LatticeType::Cell_getCOD(long imax, double eps, double dP, long &lastpos)
   do {
     n_iter++; map.identity(); map += x0;
 
-    Cell_Pass(0, conf.Cell_nLoc, map, lastpos); 
+    Cell_Pass(0, conf.Cell_nLoc, map, lastpos);
 
     if (lastpos == conf.Cell_nLoc) {
       x1 = map.cst(); dx = x0 - x1;
@@ -219,7 +219,7 @@ bool LatticeType::Cell_getCOD(long imax, double eps, double dP, long &lastpos)
   }
 
   danot_(no);
-  
+
   return conf.codflag;
 }
 

@@ -23,7 +23,7 @@ def prt_mat(str, a):
         for k in range(0, len(a[0])):
             print('{:14.6e}'.format(a[j][k]), end='')
         print()
-    
+
 
 def get_optics(ring, plot):
     [elemdata0, beamdata, elemdata] = \

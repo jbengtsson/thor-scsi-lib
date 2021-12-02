@@ -23,7 +23,7 @@ int    param_data_type::n_meth     = 0;
 int    param_data_type::n_bits     = 20;
 
 double param_data_type::ID_s_cut    = 1e1;
-  
+
 double param_data_type::VDweight    = 1e3,
        param_data_type::HVweight    = 1e0,
        param_data_type::VHweight    = 1e0,
@@ -92,18 +92,18 @@ void param_data_type::GirderSetup(LatticeType &lat) {
 // allocate the girders (if any)
 // also enter mid pos and angle in lattice structure}
   ngir = 0;
-  circ = 0; giropen=false;  
+  circ = 0; giropen=false;
   for (i = 0; i <= lat.conf.Cell_nLoc; i++) {
- 
+
     if (i == ilatmax) {
       printf("i %ld exceeds %d\n", i, ilatmax-1);
       exit(1);
     }
 
     Lattice[i].igir=-1;
- 
+
     lat.getelem(i, &cell);
-    
+
     circ=circ+cell.PL;
 
     if ((cell.PName[0] == 'g') && (cell.PName[1]=='t')
@@ -117,7 +117,7 @@ void param_data_type::GirderSetup(LatticeType &lat) {
 	  Girder[ngir-1].gco[1]=0;
 	else
 	  {Girder[ngir-1].gco[1]=1;}
-        Girder[ngir-1].gsp[1]=circ;  
+        Girder[ngir-1].gsp[1]=circ;
         Girder[ngir-1].ilat[1]=i;
       } else {
 // if girder is not open, open a new girder:
@@ -126,18 +126,18 @@ void param_data_type::GirderSetup(LatticeType &lat) {
           printf("ngir %ld exceeds %d\n", ngir, igrmax-1); exit(1);
         }
         giropen=true;
-        Girder[ngir-1].gdx[0]=0; 
-        Girder[ngir-1].gdx[1]=0; 
-        Girder[ngir-1].gdy[0]=0; 
-        Girder[ngir-1].gdy[1]=0; 
+        Girder[ngir-1].gdx[0]=0;
+        Girder[ngir-1].gdx[1]=0;
+        Girder[ngir-1].gdy[0]=0;
+        Girder[ngir-1].gdy[1]=0;
         Girder[ngir-1].gdt=0;
         if (cell.PName[4]=='0')
 	  Girder[ngir-1].gco[0]=0;
 	else
 	  Girder[ngir-1].gco[0]=1;
-        Girder[ngir-1].gsp[0]=circ;  
+        Girder[ngir-1].gsp[0]=circ;
         Girder[ngir-1].ilat[0]=i;
-        Girder[ngir-1].igir[0]=-1; 
+        Girder[ngir-1].igir[0]=-1;
         Girder[ngir-1].igir[1]=-1;
         Girder[ngir-1].level=1;
       }
@@ -150,12 +150,12 @@ void param_data_type::GirderSetup(LatticeType &lat) {
       Lattice[ic].igir=i;
 
   NGirderLevel[0]=ngir;
-  
+
   // find compounds, i.e. elements which are to be treated as one block w.r.t.
   // misalignment two types: bracketed by girder type 2,3 or series of magnets
   // w/o space between. first select all compound elements, defined by bracket
   // of type 2,3 girders:
-   
+
   s1=0; s2=0; giropen=false;
   for (i = 0; i <= lat.conf.Cell_nLoc; i++) {
 
@@ -170,24 +170,24 @@ void param_data_type::GirderSetup(LatticeType &lat) {
         giropen=false;
         Girder[ngir-1].gsp[1]=s2;
         Girder[ngir-1].ilat[1]=i;
-        Girder[ngir-1].igir[1]=Lattice[i].igir; 
+        Girder[ngir-1].igir[1]=Lattice[i].igir;
         if (cell.PName[4]=='2')
 	  Girder[ngir-1].gco[1]=2;
 	else
-	  Girder[ngir-1].gco[1]=3; 
+	  Girder[ngir-1].gco[1]=3;
       } else {
 	// if compound is not open, open a new one:
         ngir++;
         giropen=true;
         Girder[ngir-1].gsp[0]=s2;
         Girder[ngir-1].ilat[0]=i;
-        Girder[ngir-1].igir[0]=Lattice[i].igir; 
+        Girder[ngir-1].igir[0]=Lattice[i].igir;
         Girder[ngir-1].gco[0]=0;
         Girder[ngir-1].level=2;
         if (cell.PName[4]=='2')
 	  Girder[ngir-1].gco[0]=2;
 	else
-	  Girder[ngir-1].gco[0]=3; 
+	  Girder[ngir-1].gco[0]=3;
       }
     }
     s1=s2;
@@ -206,7 +206,7 @@ void param_data_type::GirderSetup(LatticeType &lat) {
   for (i = 0; i <= lat.conf.Cell_nLoc; i++) {
     lat.getelem(i, &cell);
     s2=s1+cell.PL;
- 
+
     ismag= (cell.Pkind==Mpole);
 
     if (giropen) {
@@ -226,10 +226,10 @@ void param_data_type::GirderSetup(LatticeType &lat) {
           Girder[ngir-1].gco[1]=0;
           Girder[ngir-1].level=3;
 	  //          countmag=0;
-        } 
+        }
         countmag=0;
         giropen=false;
-      } 
+      }
     } else {
       if (ismag) {
         giropen=true; //start a new merge
@@ -254,12 +254,12 @@ void param_data_type::GirderSetup(LatticeType &lat) {
   if (reportflag) {
     if (ngir>0) {
       for (i=0;i<ngir;i++) {
-        printf( "gir %ld lev %ld igir %ld %ld co %ld %ld sp %f %f \n", 
+        printf( "gir %ld lev %ld igir %ld %ld co %ld %ld sp %f %f \n",
 		i, Girder[i].level,Girder[i].igir[0],Girder[i].igir[1],
 		Girder[i].gco[0],Girder[i].gco[1],Girder[i].gsp[0],
 		Girder[i].gsp[1]);
       }
-    } 
+    }
     for (i = 0; i <= lat.conf.Cell_nLoc; i++) {
       lat.getelem(i, &cell);
       TracyStrcpy( elem, cell.PName);
@@ -267,7 +267,7 @@ void param_data_type::GirderSetup(LatticeType &lat) {
        printf("pos %ld %s %f gir %ld lev %ld",
 	      i, elem, Lattice[i].smid, Lattice[i].igir,
 	      Girder[Lattice[i].igir].level);
-        if (Girder[Lattice[i].igir].level >=2){ 
+        if (Girder[Lattice[i].igir].level >=2){
           printf(" --> %ld %ld \n", Girder[Lattice[i].igir].igir[0],
 		 Girder[Lattice[i].igir].igir[1]);
         } else { printf("\n");}
@@ -277,17 +277,17 @@ void param_data_type::GirderSetup(LatticeType &lat) {
     if (plotflag) {
       strcpy(fname, "gsetup.plt");
       outf = fopen(fname,"w" );
- 
+
       if (ngir>0) {
         fprintf(outf, "%ld %ld %ld %ld %f3 \n",
 		lat.conf.Cell_nLoc, NGirderLevel[0], NGirderLevel[1],
 		NGirderLevel[2], s2);
         for (i=0;i<ngir;i++)
-          fprintf(outf, "%ld %ld %ld %ld %ld %ld %f3 %f3 \n", 
+          fprintf(outf, "%ld %ld %ld %ld %ld %ld %f3 %f3 \n",
 		  i, Girder[i].level, Girder[i].igir[0],Girder[i].igir[1],
 		  Girder[i].gco[0],Girder[i].gco[1],Girder[i].gsp[0],
 		  Girder[i].gsp[1]);
-      } 
+      }
 
       s1=0;
       for (i = 0; i <= lat.conf.Cell_nLoc; i++) {
@@ -298,7 +298,7 @@ void param_data_type::GirderSetup(LatticeType &lat) {
           TracyStrcpy( elem, cell.PName);
           fprintf(outf, "%ld %ld %f3 %f3 %s\n",
 		  i, Lattice[i].igir, s1, s2, elem);
-        } 
+        }
 	s1=s2;
       }
       if (outf != NULL) fclose(outf);
@@ -328,7 +328,7 @@ void param_data_type::SetCorMis(LatticeType &lat, double gxrms, double gyrms,
 
   /*
      set misalignments to girder ends:
-     simple shortcut for joints: just use prev girder and add +/- joint play 
+     simple shortcut for joints: just use prev girder and add +/- joint play
      if prev-girder-end and this-girder-start both have link flag gco=1
      no further options like in OPA
   */
@@ -363,11 +363,11 @@ void param_data_type::SetCorMis(LatticeType &lat, double gxrms, double gyrms,
   supporting girders,
   and elements may receive additional individual errors later]
   */
-  ggxrms=jxrms; 
+  ggxrms=jxrms;
   ggyrms=jyrms;
 
   for (i=NGirderLevel[0]; i<NGirderLevel[1];i++) {
-    isup= Girder[i].igir[0]; 
+    isup= Girder[i].igir[0];
     if (isup > -1) {
       r = (Girder[i].gsp[0]-Girder[isup].gsp[0])
 	/(Girder[isup].gsp[1]-Girder[isup].gsp[0]);
@@ -388,7 +388,7 @@ void param_data_type::SetCorMis(LatticeType &lat, double gxrms, double gyrms,
       // 	     isup, Girder[isup].gsp[0], Girder[isup].gsp[1],
       // 	     Girder[isup].gdx[0]*1e6, Girder[isup].gdx[1]*1e6);
 
-      /* 
+      /*
 	 contact 3 (2-point) transmits roll error from supporting girder,
 	 contact 2 (1-point) is free.
 	 if contact 2 -> set gdt, but will be overwritten if other end is
@@ -406,7 +406,7 @@ void param_data_type::SetCorMis(LatticeType &lat, double gxrms, double gyrms,
       setrancut(rancutt);
       Girder[i].gdt    = gtrms*normranf();
     }
-    isup= Girder[i].igir[1]; 
+    isup= Girder[i].igir[1];
     if (isup > -1) {
       r=(Girder[i].gsp[1]-Girder[isup].gsp[0])
 	/(Girder[isup].gsp[1]-Girder[isup].gsp[0]);
@@ -436,7 +436,7 @@ void param_data_type::SetCorMis(LatticeType &lat, double gxrms, double gyrms,
 
   // set misalignment for level 3 girder, which are compound elements, which
   // have common element displacement error.
-  
+
   gelatt=1.0;
 
   for (i=NGirderLevel[1]; i< NGirderLevel[2];i++) {
@@ -446,7 +446,7 @@ void param_data_type::SetCorMis(LatticeType &lat, double gxrms, double gyrms,
     g3dy = eyrms*normranf()*gelatt;
     setrancut(rancutt);
     g3dt = etrms*normranf()*gelatt;
-    isup= Girder[i].igir[0]; 
+    isup= Girder[i].igir[0];
     if (isup > -1) {
       r=(Girder[i].gsp[0]-Girder[isup].gsp[0])
 	/(Girder[isup].gsp[1]-Girder[isup].gsp[0]);
@@ -462,7 +462,7 @@ void param_data_type::SetCorMis(LatticeType &lat, double gxrms, double gyrms,
       setrancut(rancutt);
       Girder[i].gdt    =etrms*normranf();
     }
-    isup= Girder[i].igir[1]; 
+    isup= Girder[i].igir[1];
     if (isup > -1) {
       r =(Girder[i].gsp[1]-Girder[isup].gsp[0])
 	/(Girder[isup].gsp[1]-Girder[isup].gsp[0]);
@@ -484,7 +484,7 @@ void param_data_type::SetCorMis(LatticeType &lat, double gxrms, double gyrms,
   for (i = 0; i <= lat.conf.Cell_nLoc; i++) {
     lat.getelem(i, &cell);
     M = dynamic_cast<MpoleType*>(&cell);
-      
+
     if (cell.Pkind==Mpole) {
       if ((cell.Fnum != lat.conf.hcorr) && (cell.Fnum != lat.conf.vcorr)) {
         setrancut(rancutx);
@@ -526,12 +526,12 @@ void param_data_type::SetCorMis(LatticeType &lat, double gxrms, double gyrms,
 	      lat.conf.Cell_nLoc, NGirderLevel[0], NGirderLevel[1],
 	      NGirderLevel[2]);
       for (i=0;i<NGirderLevel[2];i++) {
-        fprintf(outf, "%ld %f %f %f %f %f %f %f  \n", 
+        fprintf(outf, "%ld %f %f %f %f %f %f %f  \n",
          Girder[i].level, Girder[i].gsp[0],Girder[i].gsp[1],
 		Girder[i].gdx[0]*1e6,Girder[i].gdx[1]*1e6,
 		Girder[i].gdy[0]*1e6,Girder[i].gdy[1]*1e6, Girder[i].gdt*1e6);
       }
-    } 
+    }
 
 
     s1=0;
@@ -544,7 +544,7 @@ void param_data_type::SetCorMis(LatticeType &lat, double gxrms, double gyrms,
         dt = atan(cell.dT[1]/cell.dT[0]);
         TracyStrcpy( elem, cell.PName);
         fprintf(outf,"%ld %f %f %f %f %f %s \n", i,  s1, s2, dx*1e6, dy*1e6,
-		dt*1e6, elem); 
+		dt*1e6, elem);
       }
       s1=s2;
     }
@@ -564,7 +564,7 @@ void param_data_type::CorMis_in(double *gdxrms, double *gdzrms, double *gdarms,
   long i;
   bool includeMON;
   FILE *cinf;
-  
+
   cinf = fopen( "cormis.dat" , "r");
 
   printf("Apply errors also to BPMs (name=MON)? (Y/n) \n");
@@ -911,7 +911,7 @@ void param_data_type::FindSQ_SVDmat(double **SkewRespMat, double **U,
 }
 
 // Read eta values from the file
-void param_data_type::ReadEta(const char *TolFileName) 
+void param_data_type::ReadEta(const char *TolFileName)
 {
   char    line[128], Name[32];
   int     j;
@@ -923,7 +923,7 @@ void param_data_type::ReadEta(const char *TolFileName)
   do
     fgets(line, 128, tolfile);
   while (strstr(line, "#") != NULL);
-  
+
   printf("\nReading target eta values from file %s:\n",TolFileName);
   j=1;
   do {
@@ -1067,7 +1067,7 @@ void param_data_type::FindMatrix(LatticeType &lat, double **SkewRespMat,
     eta_y[j] = (eta_y[j] - eta_y_min)/(eta_y_max - eta_y_min);
     eta_y[j]+=deta_y_offset;
   }
-  
+
   fprintf(fp, "# nbpm %d SQ_per_scell %d etaymin %10.3e mm etaymax %10.3e mm"
 	  " detaymax %10.3e mm detayoffset %10.3e mm\n",
 	  N_BPM, SQ_per_scell, 1e3*eta_y_min, 1e3*eta_y_max, 1e3*deta_y_max,
@@ -1230,7 +1230,7 @@ void param_data_type::SkewStat(LatticeType &lat, double VertCouple[],
     outf = file_write(fname);
     fprintf(outf, "# qt s [m] etax [m] name kl [1/m]\n");
   }
-  
+
   // statistics for skew quadrupoles
   max = 0.0; rms = mean = 0.0;
   for(i = 1; i <= N_SKEW; i++) {
@@ -1246,14 +1246,14 @@ void param_data_type::SkewStat(LatticeType &lat, double VertCouple[],
   }
   mean = mean/N_SKEW;
   rms = sqrt(-mean*mean+rms/N_SKEW);
-    
+
   if (cnt>=0)
     fprintf(outf,"# Max Mean Rms skew strength: %8.2e/%8.2e+/-%8.2e 1/m\n",
 	    max, mean, rms);
   else
     printf("Max Mean Rms skew strength: %8.2e/%8.2e+/-%8.2e 1/m\n",
 	   max, mean, rms);
-  
+
   // statistics for vertical dispersion function
   max = 0.0; rms = mean = 0.0;
   for(i = 1; i <= N_BPM; i++) {
@@ -1270,7 +1270,7 @@ void param_data_type::SkewStat(LatticeType &lat, double VertCouple[],
   else
     printf("Max Mean Rms vertical dispersion: %8.2e/%8.2e+/-%8.2e mm\n",
 	   1e3*max, 1e3*mean,1e3*rms);
-  
+
   // statistics for off diagonal terms of response matrix (trims->bpms)
   max = 0.0; rms = mean = 0.0;
   for(i = N_BPM+1; i <= N_BPM*(1+N_HCOR); i++) {
@@ -1315,10 +1315,10 @@ void param_data_type::corr_eps_y(LatticeType &lat, const int cnt)
   double    qtpos, qtkl, qteta;
   MpoleType *M;
   FILE      *cinf, *outf;
-  
+
   // Clear skew quad setpoints
   set_bnL_design_fam(lat, lat.conf.qt, Quad, 0.0, 0.0);
-  
+
   // Find coupling vector
   printf("\n");
   printf("Looking for coupling error\n");
@@ -1391,7 +1391,7 @@ void param_data_type::corr_eps_y(LatticeType &lat, const int cnt)
     printf("After application of skew values from file 'qt_file.dat'\n");
     SkewStat(lat, VertCouple, -1);
   }
-      
+
   SkewStat(lat, VertCouple, cnt);
 
   sprintf(fname,"%s_%d.out",eta_y_FileName,cnt);
@@ -1889,14 +1889,14 @@ bool param_data_type::ID_corr(LatticeType &lat, const int N_calls,
   char fname[30];
 
   a2L=b2L=L=0.;
-  
+
   printf("\n");
   printf("ID matching begins!\n");
 
 
   sprintf(fname,"ID_corr_%d.out",cnt);
   outf = file_write(fname);
-  
+
   for (i = 1; i <= N_steps; i++) { //This brings ID strength in steps
     if (IDs) set_IDs(lat, (double)i/(double)N_steps);
 
@@ -2004,7 +2004,7 @@ void param_data_type::ReadCorMis(LatticeType &lat, const bool Scale_it,
   const char cormisout[] = "cormis.out";
 
   dxbn06=dybn06=dtbn06=0.;
-  
+
   /* Opening file */
   if ((fo = fopen(cormisout, "w")) == NULL) {
     fprintf(stdout, "cormisout: error while opening file %s\n", cormisout);
@@ -2015,7 +2015,7 @@ void param_data_type::ReadCorMis(LatticeType &lat, const bool Scale_it,
     fprintf(stdout, "cormisin: error while opening file %s\n", cormisin);
     exit_(1);
   }
-  
+
   for (i = 0; i <= lat.conf.Cell_nLoc; i++)
   {
     lat.getelem(i, &Cell);
@@ -2037,7 +2037,7 @@ void param_data_type::ReadCorMis(LatticeType &lat, const bool Scale_it,
 	if ((strcmp("vb",elem) == 0) || (strcmp("vbm",elem)) ==0 ) {
 	  dx=dxbn06; dy=dybn06; dt=dtbn06;
 	}
-	
+
         M->PdSsys[0] = dx;
         M->PdSsys[1] = dy;
         M->PdTsys    = dt;
@@ -2336,7 +2336,7 @@ void param_data_type::Align_BPMs(LatticeType &lat, const int n,
 	if (bdxrms >=0.) {
 	  M->PdSrms[0] = bdxrms;
 	  M->PdSrnd[0] = normranf();
-	} 
+	}
 	if (bdzrms >=0.) {
 	  M->PdSrms[1] = bdzrms;
 	  M->PdSrnd[1] = normranf();
@@ -2359,7 +2359,7 @@ void param_data_type::Align_BPMs(LatticeType &lat, const int n,
 	if (bdxrms >=0.) {
 	  M->PdSrms[0] = bdxrms;
 	  M->PdSrnd[0] = normranf();
-	} 
+	}
 	if (bdzrms >=0.) {
 	  M->PdSrms[1] = bdzrms;
 	  M->PdSrnd[1] = normranf();
@@ -2419,7 +2419,7 @@ bool param_data_type::CorrectCOD_N(LatticeType &lat, const int n_orbit,
     }
 
     // get_traject();
-    
+
     cod = CorrectCOD(lat, n_orbit, 1e0);
 
     if (!cod) break;
@@ -2520,7 +2520,7 @@ bool param_data_type::cod_corr(LatticeType &lat, const int n_cell,
   }
 
   cod = cod_correct(lat, n_orbit, scl, orb_corr);
-  
+
   get_dbeta_dnu(lat, m_dbeta, s_dbeta, m_dnu, s_dnu);
   printf("\ncod_corr: rms dbeta_x/beta_x = %4.2f%%"
 	 ",   dbeta_y/beta_y = %4.2f%%\n",
@@ -2528,7 +2528,7 @@ bool param_data_type::cod_corr(LatticeType &lat, const int n_cell,
   printf("          rms dnu_x          = %7.5f, dnu_y          = %7.5f\n",
 	 s_dnu[X_], s_dnu[Y_]);
 
-  prt_cod(lat, "cod.out", true);    
+  prt_cod(lat, "cod.out", true);
 
   return cod;
 }
@@ -2651,7 +2651,7 @@ void param_data_type::err_and_corr_init(LatticeType &lat,
   fitvect  sfbuf, sdbuf;
 
   long i;
-  
+
   lat.conf.Cavity_on   = false; lat.conf.radiation = false;
   lat.conf.Aperture_on = false;
 

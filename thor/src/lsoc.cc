@@ -4,11 +4,11 @@
                  SLS, PSI      1995 - 1997
    M. Boege      SLS, PSI      1998          C translation
    L. Nadolski   SOLEIL        2002          Link to NAFF, Radia field maps
-   J. Bengtsson  NSLS-II, BNL  2004 -        
+   J. Bengtsson  NSLS-II, BNL  2004 -
 
 */
 
-  
+
 static bool       first_h[] = {true, true}, first_v[] = {true, true};
 int               n_bpm_[2], n_corr_[2];
 std::vector<int>  bpms_[2], corrs_[2];
@@ -214,7 +214,7 @@ void lsoc(LatticeType &lat, const int plane, const double scl)
     loc = bpms_[k][j];
     gsl_vector_set(b, j, -lat.elems[loc]->BeamPos[2*k]+lat.elems[loc]->dS[k]);
   }
-      
+
   gsl_linalg_SV_solve(U_lsoc[k], V_lsoc[k], w_lsoc[k], b, x);
 
   for (j = 0; j < n_corr_[k]; j++) {

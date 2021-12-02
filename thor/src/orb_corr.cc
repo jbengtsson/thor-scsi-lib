@@ -136,7 +136,7 @@ void orb_corr_type::get_orm_mat(LatticeType &lat)
       loc_corr = corrs[j];
       betaj = lat.elems[loc_corr]->Beta[plane];
       nuj = lat.elems[loc_corr]->Nu[plane];
-      A[i+1][j+1] = 
+      A[i+1][j+1] =
 	sqrt(betai*betaj)/(2.0*spiq)*cos(nu*M_PI-fabs(2.0*M_PI*(nui-nuj)));
     }
   }
@@ -239,7 +239,7 @@ void orb_corr_type::solve(LatticeType &lat, const double scl) const
     loc = bpms[j];
     b[j+1] = -lat.elems[loc]->BeamPos[2*plane] + lat.elems[loc]->dS[plane];
   }
-      
+
   dsvbksb(U, w, V, m, n, b, x);
 
   for (j = 0; j < n; j++) {

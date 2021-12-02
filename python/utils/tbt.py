@@ -403,7 +403,7 @@ def get_nus(outf, cut, n,  window, bpm_data,  lin_opt,  est_lin_opt):
 	loc = bpm_data.loc[i]
 	for j in range(2):
 	    x = bpm_data.data[j, i, cut:n+cut]; rm_mean(n, x)
- 
+
 	    [tunes[i, j], As[i, j], phis[i, j], delta[j], alpha[j]] = \
                 get_nu2(n, x, window)
 
@@ -564,7 +564,7 @@ def ss_est(cut, n, bpm1, bpm2, bpm_data, lin_opt):
         fprintf(outf, '%13.5e %13.5e %13.5e %13.5e %13.5e %13.5e\n',
                 ps[x_], ps[px_], ps[y_], ps[py_], twoJ[X_], twoJ[Y_])
     outf.close()
-    
+
 
 def prt_name(outf, name):
     strlen = len(name); j = 0

@@ -58,12 +58,12 @@ using namespace std;
   #include <"thor_lib.h: NO_TPSA undefined!!!">
 #elif NO_TPSA == 1
   // linear TPSA
-  #pragma message("tracy_lib.h: NO_TPSA = " XSTR(NO_TPSA)) 
+  #pragma message("tracy_lib.h: NO_TPSA = " XSTR(NO_TPSA))
   #include "tpsa_lin.h"
   #include "tpsa_lin_pm.h"
 #else
   // interface to M. Berz' TPSA
-  #pragma message("tracy_lib.h: NO_TPSA = " XSTR(NO_TPSA)) 
+  #pragma message("tracy_lib.h: NO_TPSA = " XSTR(NO_TPSA))
   #include "tpsa_for.h"
   #include "tpsa_for_pm.h"
 #endif
