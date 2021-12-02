@@ -10,7 +10,7 @@
 
 
 #define debug false
-
+#include <cassert>
 
 template<typename T>
 inline bool ElemType::CheckAmpl(ConfigType &conf, const ss_vect<T> &ps)
@@ -170,10 +170,10 @@ bool LatticeType::Cell_getCOD(long imax, double eps, double dP, long &lastpos)
     std::cout << std::scientific << std::setprecision(1)
 	      << "\nCell_getCOD: imax = " << setw(1) << imax
 	      << " eps = " << setw(7) << eps
-	      << " dP =" << setw(7) << dP << "\n"
+	      << " dP =" << setw(7) << dP << std::endl
 	      << std::scientific << std::setprecision(5)
 	      << "  0                        x0 ="
-	      << std::setw(13) << x0 << "\n";
+	      << std::setw(13) << x0 << std::endl;
   n_iter = 0; I.identity();
   do {
     n_iter++; map.identity(); map += x0;
@@ -193,7 +193,7 @@ bool LatticeType::Cell_getCOD(long imax, double eps, double dP, long &lastpos)
 	<< std::scientific << std::setprecision(1)
 	<< std::setw(3) << n_iter
 	<< " err = " << std::setw(7) << dxabs << "/" << std::setw(7) << eps
-	<< std::setprecision(5)	<< "  x0 =" << std::setw(13) << x0 << "\n";
+	<< std::setprecision(5)	<< "  x0 =" << std::setw(13) << x0 << std::endl;
   } while ((dxabs >= eps) && (n_iter <= imax));
 
   conf.codflag = dxabs < eps;
@@ -202,21 +202,35 @@ bool LatticeType::Cell_getCOD(long imax, double eps, double dP, long &lastpos)
     conf.CODvect = pstostl(x0); conf.OneTurnMat = get_stlmat(map);
     Cell_Pass(0, conf.Cell_nLoc, x0, lastpos);
   } else {
-    std::cout << std::scientific << std::setprecision(5)
-	      << "\nCell_getCOD: failed to converge after " << n_iter
-	      << " iterations:\n"
+    auto tpos = lastpos;
+    if(tpos > 0){
+      tpos = tpos-1;
+    }else if(tpos == 0){
+      /* use this position: assuming that at least one element exists */
+    }else{
+      std::cerr << "Last position negative: " << lastpos << std::endl
+		<< "Can't process further at "<< __FILE__ << ":" << __LINE__ << std::endl;
+      assert(0);
+    }
+    std::cout << std::scientific << std::setprecision(5) << std::endl
+	      << "Cell_getCOD: failed to converge after " << n_iter
+	      << " iterations:"<< std::endl
 	      << "  dP =" << std::setw(12) << dP
-	      << ", particle lost at element " << lastpos << "\n"
+	      << ", particle lost at element " << lastpos
+	      << " (using " << tpos <<  ")" << std::endl
 	      << std::scientific << std::setprecision(5)
-	      << "  x_0   =" << std::setw(13) << x0 << "\n"
+	      << "  x_0   =" << std::setw(13) << x0 << std::endl
 	      << std::scientific << std::setprecision(5)
 	      << "  x_k-1 =";
-    for (j = 0; j < (int)elems[lastpos-1]->BeamPos.size(); j++)
-      std::cout << std::setw(13) << elems[lastpos-1]->BeamPos[j];
-    std::cout << "\n"
-	      << std::scientific << std::setprecision(5)
-	      << "  x_k   =" << std::setw(13) << map.cst() << "\n";
+
+    for (j = 0; j < (int)elems[tpos]->BeamPos.size(); j++){
+      std::cout << std::setw(13) << elems[tpos]->BeamPos[j];
+    }
   }
+  std::cout // << "cst_end>" //<< std::endl
+	    << std::scientific << std::setprecision(5)
+	    << "  x_k   =" << std::setw(13) << map.cst() // << "<cst_end"
+	    << std::endl;
 
   danot_(no);
 
