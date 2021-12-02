@@ -4117,7 +4117,8 @@ void PrintResult(struct LOC_Lat_Read *LINK)
   newtime = GetTime();
 
   printf("\n");
-  printf("  TRACY III v. 3.5 compiled on %s\n",__DATE__);
+  printf("  Thor_scsi v. %d.%d.%d compiled on %s\n", thor_version_major,
+	 thor_version_minor, thor_version_micro,  __DATE__);
   printf("\n");
   printf("  LATTICE Statistics for today %s \n\n", asctime2(newtime));
   printf("  Number of constants: UDIC                 =%5ld\n", LINK->UDIC);

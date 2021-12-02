@@ -1,6 +1,7 @@
 
 #ifndef TRACY_H
 #define TRACY_H
+#include "thor_version.h"
 
 #define Cell_nLocMax    20000 // maximum number of LEGO blocks (Cell_nLoc).
 
