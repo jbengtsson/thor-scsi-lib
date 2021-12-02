@@ -182,7 +182,7 @@ void fit_nu(const std::vector<int> &Fnum_b2,
     if (prt) printf(" %9.5f", b[j]);
   }
   if (prt) printf("\n");
-    
+
 
   dmcopy(A, m, n_b2, U); dsvdcmp(U, m, n_b2, w, V);
 

@@ -118,7 +118,7 @@ double f_opt(double prms[])
 
     f_ref = f;
   }
-  
+
   return f;
 }
 
@@ -243,7 +243,7 @@ void get_optics(const string &line)
   } else if (line.compare("arc1") == 0) {
     beta[X_] = 1.2413; beta[Y_] = 1.4246;
   }
- 
+
   ttwiss(alpha, beta, eta, etap, 0e0);
 
   get_nu(0e0, nu); get_ksi(ksi);

@@ -152,7 +152,7 @@ ss_vect<tps> PoincareMap::GetMap(const bool cav, const bool rad)
   // 	 delta_rad, delta_rad2, globval.CODvect[delta_]);
 
   M = GetLat();
-  
+
   if (rad) M = GetDelta(delta_rad)*M;
   if (cav) M = GetCav()*M;
   if (rad) M = GetRad()*M;

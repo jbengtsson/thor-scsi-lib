@@ -46,7 +46,7 @@ void LoadAlignTol(const char *AlignFile, const bool Scale_it,
 	sscanf(line, "%*s %d", &seed_val);
 	seed_val += 2*seed;
 	printf("setting random seed to %d\n", seed_val);
-	iniranf(seed_val); 
+	iniranf(seed_val);
       } else {
 	sscanf(line,"%*s %s %lf %lf %lf", type, &dx, &dy, &dr);
 	dr_deg = dr*180.0/M_PI;
@@ -72,7 +72,7 @@ void LoadAlignTol(const char *AlignFile, const bool Scale_it,
 
 	if (Scale_it) {
 	  dx *= Scale; dy *= Scale; dr *= Scale;
-	} 
+	}
 
 	if (strcmp("all", Name) == 0) {
 	  printf("misaligning all:         dx = %e, dy = %e, dr = %e\n",
@@ -132,7 +132,7 @@ void LoadAlignTol(const char *AlignFile, const bool Scale_it,
 	      misalign_rms_fam(Fnum, dx, dy, dr_deg, new_rnd);
 	    else
 	      misalign_sys_fam(Fnum, dx, dy, dr_deg);
-	  } else 
+	  } else
 	    printf("LoadAlignTol: undefined element %s\n", Name);
 	}
       }
@@ -167,8 +167,8 @@ char* get_prm_scl(void)
 
 //copied here form nsls-ii_lib.cc to add incrementing seed value
 void LoadFieldErr_scl(const char *FieldErrorFile, const bool Scale_it,
-		      const double Scale, const bool new_rnd, const int m) 
-{  
+		      const double Scale, const bool new_rnd, const int m)
+{
   bool    rms, set_rnd;
   char    line[max_str], name[max_str], type[max_str], *prm;
   int     k, n, seed_val;
@@ -179,18 +179,18 @@ void LoadFieldErr_scl(const char *FieldErrorFile, const bool Scale_it,
 
   inf = file_read(FieldErrorFile);
 
-  set_rnd = false; 
+  set_rnd = false;
   printf("\n");
   while (fgets(line, max_str, inf) != NULL) {
     if (strstr(line, "#") == NULL) {
       // check for whether to set new seed
-      sscanf(line, "%s", name); 
+      sscanf(line, "%s", name);
       if (strcmp("seed", name) == 0) {
 	set_rnd = true;
-	sscanf(line, "%*s %d", &seed_val); 
+	sscanf(line, "%*s %d", &seed_val);
 	seed_val += 2*m;
 	printf("setting random seed to %d\n", seed_val);
-	iniranf(seed_val); 
+	iniranf(seed_val);
       } else {
 	sscanf(line, "%*s %s %lf", type, &r0);
 	printf("%-4s %3s %7.1le", name, type, r0);
@@ -208,7 +208,7 @@ void LoadFieldErr_scl(const char *FieldErrorFile, const bool Scale_it,
 	  sscanf(prm, "%d", &n);
 	  prm = get_prm_scl();
 	  sscanf(prm, "%lf", &Bn);
-	  prm = get_prm_scl(); 
+	  prm = get_prm_scl();
 	  sscanf(prm, "%lf", &An);
 	  if (Scale_it)
 	    {Bn *= Scale; An *= Scale;}
@@ -255,14 +255,14 @@ bool orb_corr_scl(const int n_orbit)
     n_orbit2 = 1;
   } else
     n_orbit2 = n_orbit;
-  
+
   globval.CODvect.zero();
   for (i = 1; i <= n_orbit2; i++) {
     cod = getcod(0.0, lastpos);
     if (cod) {
       codstat(xmean, xsigma, xmax, globval.Cell_nLoc, false); //false = take values only at BPM positions
       printf("\n");
-      printf("RMS orbit [mm]: %8.1e +/- %7.1e, %8.1e +/- %7.1e\n", 
+      printf("RMS orbit [mm]: %8.1e +/- %7.1e, %8.1e +/- %7.1e\n",
 	     1e3*xmean[X_], 1e3*xsigma[X_], 1e3*xmean[Y_], 1e3*xsigma[Y_]);
       if (n_orbit != 0) {
 	// J.B. 08/24/17 ->
@@ -276,7 +276,7 @@ bool orb_corr_scl(const int n_orbit)
 	cod = getcod(0.0, lastpos);
 	if (cod) {
 	  codstat(xmean, xsigma, xmax, globval.Cell_nLoc, false); //false = take values only at BPM positions
-	  printf("RMS orbit [mm]: %8.1e +/- %7.1e, %8.1e +/- %7.1e\n", 
+	  printf("RMS orbit [mm]: %8.1e +/- %7.1e, %8.1e +/- %7.1e\n",
 		 1e3*xmean[X_], 1e3*xsigma[X_], 1e3*xmean[Y_], 1e3*xsigma[Y_]);
 	} else
 	  printf("orb_corr: failed\n");
@@ -284,7 +284,7 @@ bool orb_corr_scl(const int n_orbit)
     } else
       printf("orb_corr: failed\n");
   }
-  
+
   prt_cod("orb_corr.out", ElemIndex("bpm_m"), true);  //updated from older T3 version
 
   return cod;
@@ -369,7 +369,7 @@ void track_fft(const int n_turn,
       fprintf(fp, "%1d %8.5f %9.3e %2d %2d %8.5f\n",
 	     i+1, nu[X_][i], A[X_][i], n_x, n_y, fabs(nu[X_][i])-f);
     }
-    
+
     fprintf(fp, "\n");
     fprintf(fp, "Vertical plane:\n");
     fprintf(fp, "\n");
@@ -403,7 +403,7 @@ void track_fft(const int n_turn,
 
 int main(int argc, char *argv[])
 {
-  
+
   globval.H_exact    = false; globval.quad_fringe = false;
   globval.Cavity_on  = false; globval.radiation   = false;
   globval.emittance  = false;
@@ -436,9 +436,9 @@ int main(int argc, char *argv[])
   delta0    = -0.5e-2;
   n_turn    = 1000;
   f_rf      = Cell[Elem_GetPos(ElemIndex("cav"), 1)].Elem.C->Pfreq;
-  
-  
-  
+
+
+
   if (false) {
     const long  seed = 1121;
     iniranf(seed); setrancut(2.0);
@@ -455,7 +455,7 @@ int main(int argc, char *argv[])
     // use orb_corr_scl(3) to correct orbit in 3 iterations
     GetEmittance(ElemIndex("cav"), true);
   }
-  
+
 
 
   // FOR TxT TRACKING AND FFT (results given in action-angle coordinates)
@@ -474,28 +474,28 @@ int main(int argc, char *argv[])
     //        1 = floquet space          (x^, px^, y^, py^, delta, ct)
     //        2 = action-angle variables (2Jx, phix, 2Jy, phiy, delta, ct)
   }
-  
-  
+
+
   // FOR ELEMENTxELEMENT TRACKING
   if (!false) {
 
     long int  j, lastn, lastpos;
     struct    tm *newtime;
     FILE      *fp;
-    
+
     globval.Cavity_on  = true; globval.radiation   = true;
     track("track_fft.out", x0, px0, y0, py0, delta0, 1, lastn, lastpos, 0, f_rf); // track_fft.out makes no sense here
-    
+
     fp = file_write("track_ExE.out");
-    
+
     newtime = GetTime();
-    
+
     fprintf(fp,"# TRACY III v.3.5 -- %s -- %s \n",
 	    "track_ExE.out", asctime2(newtime));
     fprintf(fp,"#         s   name              code  x          xp         y          yp         delta      ctau\n");
     fprintf(fp,"#        [m]                          [mm]       [mrad]     [mm]       [mrad]     [%%]        [?]\n");
     fprintf(fp, "#\n");
-    
+
     for (j = 0; j <= globval.Cell_nLoc; j++){
       fprintf(fp, "%4li %8.3f %s %6.2f %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e\n",
 	      j, Cell[j].S, Cell[j].Elem.PName, get_code(Cell[j]),
@@ -503,9 +503,9 @@ int main(int argc, char *argv[])
 	      Cell[j].BeamPos[2]*1e3, Cell[j].BeamPos[3]*1e3,
 	      Cell[j].BeamPos[4]*100, Cell[j].BeamPos[5]);
 	}
-    
+
     fclose(fp);
-    
+
   }
-  
+
 }

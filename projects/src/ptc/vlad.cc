@@ -143,7 +143,7 @@ double f_opt(double prms[])
 
     f_ref = f;
   }
-  
+
   return f;
 }
 
@@ -264,7 +264,7 @@ void get_optics()
   // beta[X_] = 4e0; beta[Y_] = 4e0;
   // ARC3.
   // beta[X_] = 5.9942; beta[Y_] = 1.8373;
- 
+
   ttwiss(alpha, beta, eta, etap, 0e0);
 
   printf("\nalpha = [%13.6e, %13.6e]\n",

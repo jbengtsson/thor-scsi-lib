@@ -85,7 +85,7 @@ void LoadAlignTol(const char *AlignFile, const bool Scale_it,
 	sscanf(line, "%*s %d", &seed_val);
 	seed_val += 2*seed;
 	printf("setting random seed to %d\n", seed_val);
-	iniranf(seed_val); 
+	iniranf(seed_val);
       } else {
 	sscanf(line,"%*s %s %lf %lf %lf", type, &dx, &dy, &dr);
 	dr_deg = dr*180.0/M_PI;
@@ -111,7 +111,7 @@ void LoadAlignTol(const char *AlignFile, const bool Scale_it,
 
 	if (Scale_it) {
 	  dx *= Scale; dy *= Scale; dr *= Scale;
-	} 
+	}
 
 	if (strcmp("all", Name) == 0) {
 	  printf("misaligning all:         dx = %e, dy = %e, dr = %e\n",
@@ -171,7 +171,7 @@ void LoadAlignTol(const char *AlignFile, const bool Scale_it,
 	      misalign_rms_fam(Fnum, dx, dy, dr_deg, new_rnd);
 	    else
 	      misalign_sys_fam(Fnum, dx, dy, dr_deg);
-	  } else 
+	  } else
 	    printf("LoadAlignTol: undefined element %s\n", Name);
 	}
       }
@@ -203,8 +203,8 @@ char* get_prm_scl(void)
 
 //copied here from nsls-ii_lib.cc to add incrementing seed value
 void LoadFieldErr_scl(const char *FieldErrorFile, const bool Scale_it,
-		      const double Scale, const bool new_rnd, const int m) 
-{  
+		      const double Scale, const bool new_rnd, const int m)
+{
   bool    rms, set_rnd;
   char    line[max_str], name[max_str], type[max_str], *prm;
   int     k, n, seed_val;
@@ -215,18 +215,18 @@ void LoadFieldErr_scl(const char *FieldErrorFile, const bool Scale_it,
 
   inf = file_read(FieldErrorFile);
 
-  set_rnd = false; 
+  set_rnd = false;
   printf("\n");
   while (fgets(line, max_str, inf) != NULL) {
     if (strstr(line, "#") == NULL) {
       // check for whether to set new seed
-      sscanf(line, "%s", name); 
+      sscanf(line, "%s", name);
       if (strcmp("seed", name) == 0) {
 	set_rnd = true;
-	sscanf(line, "%*s %d", &seed_val); 
+	sscanf(line, "%*s %d", &seed_val);
 	seed_val += 2*m;
 	printf("setting random seed to %d\n", seed_val);
-	iniranf(seed_val); 
+	iniranf(seed_val);
       } else {
 	sscanf(line, "%*s %s %lf", type, &r0);
 	printf("%-4s %3s %7.1le", name, type, r0);
@@ -244,7 +244,7 @@ void LoadFieldErr_scl(const char *FieldErrorFile, const bool Scale_it,
 	  sscanf(prm, "%d", &n);
 	  prm = get_prm_scl();
 	  sscanf(prm, "%lf", &Bn);
-	  prm = get_prm_scl(); 
+	  prm = get_prm_scl();
 	  sscanf(prm, "%lf", &An);
 	  if (Scale_it)
 	    {Bn *= Scale; An *= Scale;}
@@ -282,22 +282,22 @@ void get_cod_rms_data(const int n_seed, const int nfam, const int fnums[], const
       theta1[j][k] = 0;
       theta2[j][k] = 0;
     }
-  }  
-   
+  }
+
   for (i = 0; i < n_seed; i++) {
     // reset orbit trims
     zero_trims();
 
     for (j = 0; j < nfam; j++)
       misalign_rms_fam(fnums[j], dx, dy, dr, true);
-    
+
     cod = orb_corr(3);
-    
+
     if (cod) {
-      
+
       for (k = 0; k < 2; k++)
 	ncorr[k] = 0;
-      
+
       for (j = 0; j <= globval.Cell_nLoc; j++){ // read back beam pos at bpm
 
 	if ( (Cell[j].Elem.Pkind == Mpole) || (Cell[j].Elem.Pkind == drift) ) {
@@ -305,7 +305,7 @@ void get_cod_rms_data(const int n_seed, const int nfam, const int fnums[], const
 	    x1[j][k] += Cell[j].BeamPos[k];
 	    x2[j][k] += sqr(Cell[j].BeamPos[k]);
 	  }
-	  
+
 	  if ( (Cell[j].Fnum == ElemIndex("corr_h")) || (Cell[j].Fnum == ElemIndex("corr_v")) ){ // read back corr strength at corr
 	    get_bnL_design_elem(Cell[j].Fnum, Cell[j].Knum, Dip, b1L, a1L);
 	    if ( Cell[j].Fnum == ElemIndex("corr_h") ){
@@ -320,29 +320,29 @@ void get_cod_rms_data(const int n_seed, const int nfam, const int fnums[], const
 	  }
 	}
       }
-      
+
     } else
-      printf("orb_corr: failed\n");    
+      printf("orb_corr: failed\n");
   }
-  
+
   for (k = 0; k < 2; k++)
     ncorr[k] = 0;
-  
+
   for (j = 0; j <= globval.Cell_nLoc; j++){
-        
+
     if ( (Cell[j].Elem.Pkind == Mpole) || (Cell[j].Elem.Pkind == drift) ) {
       for (k = 0; k < 6; k++) {
 	x_mean[j][k] = x1[j][k]/n_seed;
 	x_sigma[j][k] = sqrt((n_seed*x2[j][k]-sqr(x1[j][k]))
 			     /(n_seed*(n_seed-1.0)));
       }
-      
+
       if ( Cell[j].Fnum == ElemIndex("corr_h") ){
 	ncorr[X_]++;
 	theta_mean[ncorr[X_]-1][X_] = theta1[ncorr[X_]-1][X_]/n_seed;
 	theta_sigma[ncorr[X_]-1][X_] = sqrt((n_seed*theta2[ncorr[X_]-1][X_]-sqr(theta1[ncorr[X_]-1][X_]))
 					    /(n_seed*(n_seed-1.0)));
-	
+
       } else if ( Cell[j].Fnum == ElemIndex("corr_v") ){
 	ncorr[Y_]++;
 	theta_mean[ncorr[Y_]-1][Y_] = theta1[ncorr[Y_]-1][Y_]/n_seed;
@@ -379,14 +379,14 @@ void prt_cod_rms_data(const char name[], double x_mean[][6], double x_sigma[][6]
 
   for (k = 0; k < 2; k++)
     ncorr[k] = 0;
-  
+
   for (j = 0; j <= globval.Cell_nLoc; j++){
-   
+
     fprintf(fp, "%4li %8.3f %s %6.2f %10.3e +/- %10.3e %10.3e +/- %10.3e",
 	    j, Cell[j].S, Cell[j].Elem.PName, get_code(Cell[j]),
 	    1e3*x_mean[j][x_], 1e3*x_sigma[j][x_],
 	    1e3*x_mean[j][y_], 1e3*x_sigma[j][y_]);
-   
+
     if ( Cell[j].Fnum == ElemIndex("corr_h") ){
       ncorr[X_]++;
       fprintf(fp, " %10.3e +/- %10.3e %10.3e +/- %10.3e\n",
@@ -396,7 +396,7 @@ void prt_cod_rms_data(const char name[], double x_mean[][6], double x_sigma[][6]
       ncorr[Y_]++;
       fprintf(fp, " %10.3e +/- %10.3e %10.3e +/- %10.3e\n",
 	      0.0, 0.0, 1e3*theta_mean[ncorr[Y_]-1][Y_], 1e3*theta_sigma[ncorr[Y_]-1][Y_]);
-    } else 
+    } else
       fprintf(fp, " %10.3e +/- %10.3e %10.3e +/- %10.3e\n",
 	      0.0, 0.0, 0.0, 0.0);
   }
@@ -412,7 +412,7 @@ void add_family( const char *name, int &nfam, int fnums[] )
   if (fnum != 0)
     fnums[nfam++] = fnum;
   else {                  // hence this is useless
-    printf("Family not defined. %s %d\n", name, fnum);  
+    printf("Family not defined. %s %d\n", name, fnum);
     exit(1);
   }
 }
@@ -424,7 +424,7 @@ void get_cod_rms_scl(const double dx, const double dy, const double dr,
 {
   const int  n_elem = globval.Cell_nLoc+1;
 
-  int      fnums[25], nfam; 
+  int      fnums[25], nfam;
   double   x_mean[n_elem][6], x_sigma[n_elem][6], theta_mean[n_elem][2], theta_sigma[n_elem][2];
 
   nfam = 0;
@@ -477,14 +477,14 @@ bool orb_corr_scl(const int n_orbit)
     n_orbit2 = 1;
   } else
     n_orbit2 = n_orbit;
-  
+
   globval.CODvect.zero();
   for (i = 1; i <= n_orbit2; i++) {
     cod = getcod(0.0, lastpos);
     if (cod) {
       codstat(xmean, xsigma, xmax, globval.Cell_nLoc, false); //false = take values only at BPM positions
       printf("\n");
-      printf("RMS orbit [mm]: %8.1e +/- %7.1e, %8.1e +/- %7.1e\n", 
+      printf("RMS orbit [mm]: %8.1e +/- %7.1e, %8.1e +/- %7.1e\n",
 	     1e3*xmean[X_], 1e3*xsigma[X_], 1e3*xmean[Y_], 1e3*xsigma[Y_]);
       if (n_orbit != 0) {
 	// J.B. 08/24/17 ->
@@ -498,7 +498,7 @@ bool orb_corr_scl(const int n_orbit)
 	cod = getcod(0.0, lastpos);
 	if (cod) {
 	  codstat(xmean, xsigma, xmax, globval.Cell_nLoc, false); //false = take values only at BPM positions
-	  printf("RMS orbit [mm]: %8.1e +/- %7.1e, %8.1e +/- %7.1e\n", 
+	  printf("RMS orbit [mm]: %8.1e +/- %7.1e, %8.1e +/- %7.1e\n",
 		 1e3*xmean[X_], 1e3*xsigma[X_], 1e3*xmean[Y_], 1e3*xsigma[Y_]);
 	} else
 	  printf("orb_corr: failed\n");
@@ -506,7 +506,7 @@ bool orb_corr_scl(const int n_orbit)
     } else
       printf("orb_corr: failed\n");
   }
-  
+
   prt_cod("orb_corr.out", ElemIndex("bpm_m"), true);  //updated from older T3 version
 
   return cod;
@@ -528,9 +528,9 @@ bool orb_corr_scl(const int n_orbit)
 //this is repeated for n_seed seeds and overall statistics saved in cod_rms.out
 void get_cod_rms_scl_new(const int n_seed)
 {
-  
+
   const int  n_elem = globval.Cell_nLoc+1;
-  
+
   double     x_mean[n_elem][6], x_sigma[n_elem][6], theta_mean[n_elem][2], theta_sigma[n_elem][2];
   bool       cod;
   long int   j;
@@ -548,7 +548,7 @@ void get_cod_rms_scl_new(const int n_seed)
   double  avgyoverx[n_elem], avgtwist[n_elem];
   double  sigyoverx[n_elem], sigtwist[n_elem];
   /////////////////////////////////////////////////////////////////////
-  
+
 
   for (j = 0; j <= globval.Cell_nLoc; j++){
     for (k = 0; k < 6; k++) {
@@ -558,18 +558,18 @@ void get_cod_rms_scl_new(const int n_seed)
       theta1[j][k] = 0;
       theta2[j][k] = 0;
     }
-  }  
-  
+  }
+
   for (i = 0; i < n_seed; i++) {
-    
+
     cout << endl << "*** COD ITERATION " << i+1 << " of " << n_seed << " ***" << endl;
-    
+
     // reset orbit trims
     zero_trims();
-    
+
     LoadFieldErr_scl("lattice/FieldErr.alsu.dat", false, 1.0, true, i);
     LoadAlignTol("lattice/AlignErr.alsu-20171002.dat", false, 1.0, true, i);
-    
+
     // if COD fails because of large misalignments, introduce intermediate steps to approach solution
     if (true) {
       int  steps = 3;
@@ -604,7 +604,7 @@ void get_cod_rms_scl_new(const int n_seed)
 			Cell[k].sigma[x_][x_]-Cell[k].sigma[y_][y_])/2e0*180.0/M_PI) > abs(maxtwist[k]) )
 	  maxtwist[k] = abs(atan2(2e0*Cell[k].sigma[x_][y_],
 			      Cell[k].sigma[x_][x_]-Cell[k].sigma[y_][y_])/2e0*180.0/M_PI);
-      }    
+      }
       // then (after final seed) calculate statistics
       if ( i == (n_seed-1) ) {
 	// get averages and rms from sums and sums of squares, respectively
@@ -632,21 +632,21 @@ void get_cod_rms_scl_new(const int n_seed)
       }
     }
     /////////////////////////////////////////////////////////////////////
-    
-    
+
+
     if (cod) {
-      
+
       for (k = 0; k < 2; k++)
 	ncorr[k] = 0;
-      
+
       for (j = 0; j <= globval.Cell_nLoc; j++){ // read back beam pos at bpm
-	
+
 	if ( (Cell[j].Elem.Pkind == Mpole) || (Cell[j].Elem.Pkind == drift) ) {
 	  for (k = 0; k < 6; k++) {
 	    x1[j][k] += Cell[j].BeamPos[k];
 	    x2[j][k] += sqr(Cell[j].BeamPos[k]);
 	  }
-	  
+
 	  if ( (Cell[j].Fnum == ElemIndex("corr_h") ) || (Cell[j].Fnum == ElemIndex("corr_v")) ){ // read back corr strength at corr
 	    get_bnL_design_elem(Cell[j].Fnum, Cell[j].Knum, Dip, b1L, a1L);
 	    if ( Cell[j].Fnum == ElemIndex("corr_h") ){
@@ -661,29 +661,29 @@ void get_cod_rms_scl_new(const int n_seed)
 	  }
 	}
       }
-      
+
     } else
-      printf("error: orb_corr: failed\n");    
+      printf("error: orb_corr: failed\n");
   }
-  
+
   for (k = 0; k < 2; k++)
     ncorr[k] = 0;
-  
+
   for (j = 0; j <= globval.Cell_nLoc; j++){
-    
+
     if ( (Cell[j].Elem.Pkind == Mpole) || (Cell[j].Elem.Pkind == drift) ) {
       for (k = 0; k < 6; k++) {
 	x_mean[j][k] = x1[j][k]/n_seed;
 	x_sigma[j][k] = sqrt((n_seed*x2[j][k]-sqr(x1[j][k]))
 			     /(n_seed*(n_seed-1.0)));
       }
-      
+
       if ( Cell[j].Fnum == ElemIndex("corr_h") ){
 	ncorr[X_]++;
 	theta_mean[ncorr[X_]-1][X_] = theta1[ncorr[X_]-1][X_]/n_seed;
 	theta_sigma[ncorr[X_]-1][X_] = sqrt((n_seed*theta2[ncorr[X_]-1][X_]-sqr(theta1[ncorr[X_]-1][X_]))
 					    /(n_seed*(n_seed-1.0)));
-	
+
       } else if ( Cell[j].Fnum == ElemIndex("corr_v") ){
 	ncorr[Y_]++;
 	theta_mean[ncorr[Y_]-1][Y_] = theta1[ncorr[Y_]-1][Y_]/n_seed;
@@ -692,10 +692,10 @@ void get_cod_rms_scl_new(const int n_seed)
       }
     }
   }
-  
+
   prt_cod_rms_data("cod_rms.out", x_mean, x_sigma, theta_mean, theta_sigma);
   // this writes the statictics over N seeds to file
-  
+
 }
 
 
@@ -757,12 +757,12 @@ double get_dynap_scl(const double delta, const int n_track2)
 void get_matching_params_scl()
 {
   double nux, nuy, betax, betay;
-  
+
   nux = globval.TotalTune[X_];
   nuy = globval.TotalTune[Y_];
   betax = globval.OneTurnMat[0][1]/sin(2*pi*nux);
   betay = globval.OneTurnMat[2][3]/sin(2*pi*nuy);
-  
+
   printf("\n");
   printf("beta_x* = %10.9e\n", betax);
   printf("beta_y* = %10.9e\n", betay);
@@ -823,12 +823,12 @@ int main(int argc, char *argv[])
   // IDs accounted too if: wiggler model and symplectic integrator (method = 1)
   globval.H_exact      = false; globval.quad_fringe = false;
   globval.Cavity_on    = false; globval.radiation   = false;
-  globval.emittance    = false; 
+  globval.emittance    = false;
   globval.pathlength   = false; //globval.bpm         = 0;
 
   reverse_elem = false; // true=inverted lattice elements are properly inverted (bend entr/exit angles)
 
-  
+
   //// overview, on energy: 6-4 (60x40 takes ~40 min)
   //const double  x_max_FMA = 6e-3, y_max_FMA = 4e-3;
   //const int     n_x = 60, n_y = 40, n_tr = 2046;
@@ -867,7 +867,7 @@ int main(int argc, char *argv[])
   //get_alphac2_scl();
   //GetEmittance(ElemIndex("cav"), true); // call GetEmittance last since it screws up linlat output
   //prt_beamsizes(); // writes beam_envelope.out; contains sigmamatrix(s), theta(s)
-    
+
   //globval.Aperture_on = true;
   //LoadApers("lattice/Apertures_wSeptum.dat", 1, 1);
   //prt_ZAP(); //writes input file for ZAP
@@ -886,7 +886,7 @@ int main(int argc, char *argv[])
     //prints a specific closed orbit with corrector strengths
     //getcod(0.0, lastpos);
     //prt_cod("cod.out", ElemIndex("bpm_m"), true);  //updated from older T3 version
-   
+
 
     // compute response matrix (needed for OCO)
     gcmat(ElemIndex("bpm_m"), ElemIndex("corr_h"), 1); gcmat(ElemIndex("bpm_m"), ElemIndex("corr_v"), 2);
@@ -907,23 +907,23 @@ int main(int argc, char *argv[])
     //finds a specific closed orbit with corrector strengths and prints all to file
     //getcod(0.0, lastpos);
     //prt_cod("cod_err.out", ElemIndex("bpm_m"), true);  //updated from older T3 version
-     
+
     // load alignment errors and field errors, correct orbit, repeat N times, and get statistics
     get_cod_rms_scl_new(20); //trim coils aren't reset when finished
-    
+
     // for aperture limitations use LoadApers (in nsls_ii_lib.cc) and Apertures.dat
     //globval.Aperture_on = true;
     //LoadApers("lattice/Apertures.dat", 1, 1);
-    
+
   }
-  
+
   if (false) {
     cout << endl;
     cout << "computing tune shifts" << endl;
     dnu_dA(4e-3, 3e-3, 0.0, 25);  // the final argument 25 defines the number of amplitude steps
     get_ksi2(6.0e-2); // this gets the chromas (up to +/-delta) and writes them into chrom2.out
   }
-  
+
   if (false) {
     //fmap(n_x, n_y, n_tr, x_max_FMA, y_max_FMA, 0.0, true, false);
     fmapdp(n_x, n_dp, n_tr, x_max_FMA, -delta_FMA, 0.1e-3, true, false); // always use -delta_FMA (+delta_FMA appears broken)
@@ -934,9 +934,9 @@ int main(int argc, char *argv[])
     //LoadApers("lattice/Apertures.dat", 1, 1);
     //get_dynap_scl(3*1.0e-2, 512); // first argument is +/-delta for off-mom DA
   }
-  
 
-  
+
+
   //
   // IBS & TOUSCHEK
   //
@@ -944,19 +944,19 @@ int main(int argc, char *argv[])
   double  sigma_s, sigma_delta, tau, eps[3];
   FILE    *outf;
   const double  Qb   = 1.151e-9; // 500 mA * 195.936m / 2.9979e8 m/s / 284 populated bunches
-  
+
   if (true) {
     double  sum_delta[globval.Cell_nLoc+1][2];
     double  sum2_delta[globval.Cell_nLoc+1][2];
-    
+
     GetEmittance(ElemIndex("cav"), true);
-    
+
     // initialize momentum aperture arrays
     for(k = 0; k <= globval.Cell_nLoc; k++){
       sum_delta[k][0] = 0.0; sum_delta[k][1] = 0.0;
       sum2_delta[k][0] = 0.0; sum2_delta[k][1] = 0.0;
     }
-    
+
     globval.eps[X_] = 74e-12;
     globval.eps[Y_] = 74e-12;
     sigma_delta     = 1.073e-03;
@@ -982,15 +982,15 @@ int main(int argc, char *argv[])
       globval.eps[Z_] *= bunchLengthening;
       globval.beta_z *= bunchLengthening;  // gamma_z does not change, alpha_z still assumed ~= 0
     }
-    
+
     globval.delta_RF = 3.5e-2; //globval.delta_RF given by cav voltage in lattice file
 
     Touschek(Qb, globval.delta_RF, globval.eps[X_], globval.eps[Y_],
     	     sigma_delta, sigma_s);
-          
+
 
     // IBS
-    if (false) {       
+    if (false) {
       // initialize eps_IBS with eps_SR
       for(k = 0; k < 3; k++)
 	eps[k] = globval.eps[k];
@@ -999,37 +999,37 @@ int main(int argc, char *argv[])
 	IBS_BM(Qb, globval.eps, eps, true, true);  // use IBS_BM instead of old IBS // 20170814: results likely cannot be trusted
       }
     }
-    
-    
+
+
     // TOUSCHEK TRACKING
-    if (true) {       
+    if (true) {
       //globval.eps[X_] = 80e-12;
       //globval.eps[Y_] = 80e-12;
       //sigma_delta     = 1.2e-03;
       //sigma_s         = 13e-3;
 
       //Touschek(Qb, globval.delta_RF, globval.eps[X_], globval.eps[Y_], sigma_delta, sigma_s);
-      
+
       n_turns = 578; // track for one synchr.osc. -> 1/nu_s (ALS-U 7BA bare @ 0.83MV)
-      
+
       globval.Aperture_on = true;
       //LoadApers("lattice/Apertures.dat", 1, 1);
-      
+
       //globval.delta_RF = 15e-2; //set globval.delta_RF very high to get lattice MA only
-      
+
       tau = Touschek(Qb, globval.delta_RF, false,
 		     globval.eps[X_], globval.eps[Y_],
 		     sigma_delta, sigma_s,
 		     n_turns, true, sum_delta, sum2_delta); //the TRUE flag requires apertures loaded
-      
+
       printf("Touschek lifetime = %10.3e hrs\n", tau/3600.0);
-      
+
       outf = file_write("mom_aper.out");
       for(k = 0; k <= globval.Cell_nLoc; k++)
 	fprintf(outf, "%4d %7.2f %5.3f %6.3f\n",
 		k, Cell[k].S, 1e2*sum_delta[k][0], 1e2*sum_delta[k][1]);
       fclose(outf);
     }
-  
+
   }
 }

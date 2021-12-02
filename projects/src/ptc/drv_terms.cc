@@ -131,7 +131,7 @@ void get_drv_terms(const double twoJ[], const double delta)
   ofstream     outf;
 
   const string str = "drv_terms.out";
-  
+
   outf.open(str.c_str(), ios::out);
 
   Id.identity();

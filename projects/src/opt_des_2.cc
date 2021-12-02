@@ -39,7 +39,7 @@ const double
    {0.0140286929, 0.0000000000},
    {0.0, 0.0}},                    // From Center of Mid Straight:
                                    // alpha, beta, eta, eta'.
- 
+
 #if 0
   eps0_x                = 0.087,
 #else
@@ -881,7 +881,7 @@ void match_ls(param_type &prms, constr_type &constr)
   //   Quadrupole   2.
   int j, k;
 
-  // Perturbed symmetry at end of Dipole Cell: 
+  // Perturbed symmetry at end of Dipole Cell:
   //   1. Initialize with: [Qf1, Qd2, Qd3].
   //   2. Exclude for 1st pass: pert_dip_cell = false.
   //   3. Include for fine tuning.
@@ -958,7 +958,7 @@ void match_ss(param_type &prms, constr_type &constr)
   //   Quadrupole   2.
   int j, k;
 
-  // Perturbed symmetry at end of Dipole Cell: 
+  // Perturbed symmetry at end of Dipole Cell:
   //   1. Initialize with: [Qf1, Qd2, Qd3].
   //   2. Exclude for 1st pass: pert_dip_cell = false.
   //   3. Include for fine tuning.
@@ -1357,7 +1357,7 @@ void match_als_u(param_type &prms, constr_type &constr)
   const int    n_ic        = 4;
   const double ic[n_ic][2] =
     {{0.0, 0.0}, {0.1153496843, 3.2620137331}, {0.0002943186, 0.0}, {0.0, 0.0}};
- 
+
   prms.add_prm("q1",   2, -20.0, 20.0, 1.0);
   prms.add_prm("q2",   2, -20.0, 20.0, 1.0);
   prms.add_prm("q3",   2, -20.0, 20.0, 1.0);
@@ -1491,7 +1491,7 @@ void match_ms(param_type &prms, constr_type &constr)
   const int    n_ic        = 4;
   const double ic[n_ic][2] =
     {{0.0, 0.0}, {7.08276, 3.03915}, {0.0, 0.0}, {0.0, 0.0}};
- 
+
   // Standard Straight.
   grad_dip_scl.push_back(0.129665);
   grad_dip_scl.push_back(0.149256);

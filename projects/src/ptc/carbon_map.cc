@@ -14,10 +14,10 @@ ss_vect<tps> get_fix_point(const int Fnum)
   long int     lastpos, loc;
   int          j;
   FieldMapType *FM;
-  
+
   const int  n_iter = 3;
 
-  
+
   loc = Elem_GetPos(Fnum, 1); FM = Cell[loc].Elem.FM;
 
   FM->Ld = 0.0; FM->L1 = 0.0;
@@ -161,7 +161,7 @@ void bend_fringe(const double L, const double phi, const double e1,
 
   rho = L*180e0/(phi*M_PI);
 
-  p_rot(e1, ps); 
+  p_rot(e1, ps);
 
   coeff = -1e0/(2e0*rho);
   ps1 = ps;
@@ -412,6 +412,6 @@ int main(int argc, char *argv[])
 
     Ring_GetTwiss(true, 0.0); printglob();
 
-    prt_lat("linlat.out", globval.bpm, true);  
+    prt_lat("linlat.out", globval.bpm, true);
   }
 }

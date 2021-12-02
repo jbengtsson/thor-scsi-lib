@@ -64,7 +64,7 @@ void get_map_normal_form()
   cout << endl;
   cout << "COD" << endl;
   for (i = 0; i < 2*nd_tps; i++)
-    if (true) 
+    if (true)
       cout << scientific << setprecision(5)
 	   << setw(13) << globval.CODvect[i];
     else
@@ -90,7 +90,7 @@ void prt_lin_map(const int n_DOF, const ss_vect<tps> &map)
   cout << endl;
   for (i = 1; i <= 2*n_DOF; i++) {
     for (j = 1; j <= 2*n_DOF; j++)
-      if (true) 
+      if (true)
 	cout << scientific << setprecision(5)
 	     << setw(13) << getmat(map, i, j);
       else
@@ -109,7 +109,7 @@ void get_sigma()
   iVector          jj;
   ss_vect<double>  x0, x1, dx, sigma[6];
   ss_vect<tps>     I, dx0, map;
-  
+
   const double  i_max =    10;
   const double  eps   = 1e-10;
 
@@ -123,7 +123,7 @@ void get_sigma()
   danot_(2);
   n_iter = 0; I.identity();
   for (i = 0; i < i_max; i++) {
-    map.identity(); map += x0; Cell_Pass(0, globval.Cell_nLoc, map, lastpos); 
+    map.identity(); map += x0; Cell_Pass(0, globval.Cell_nLoc, map, lastpos);
 
     x1 = map.cst(); dx = x0 - x1; dx0 = PInv(map-I-x1, jj)*dx;
 
@@ -392,7 +392,7 @@ bool track(const double x, const double px, const double y, const double py,
 	 << setw(4) << 0
 	 << setw(24) << 1e3*ps[x_] << setw(24) << 1e3*ps[px_]
 	 << setw(24) << 1e3*ps[y_] << setw(24) << 1e3*ps[py_]
-	 << setw(24) << 1e2*ps[delta_] 
+	 << setw(24) << 1e2*ps[delta_]
 	 << setw(24) << 1e3*ps[ct_] << endl;
     } else {
       os << "#         [mm]        [mrad]       [mm]         [mrad]"
@@ -401,7 +401,7 @@ bool track(const double x, const double px, const double y, const double py,
 	 << setw(4) << 0
 	 << setw(24) << 1e3*ps[x_] << setw(24) << 1e3*ps[px_]
 	 << setw(24) << 1e3*ps[y_] << setw(24) << 1e3*ps[py_]
-	 << setw(24) << 1e2*ps[delta_] 
+	 << setw(24) << 1e2*ps[delta_]
 	 << setw(24) << 2.0*f_rf*180.0*ps[ct_]/c0 << endl;
     }
     os << "#" << endl;
@@ -416,14 +416,14 @@ bool track(const double x, const double px, const double y, const double py,
 	     << setw(4) << i
 	     << setw(24) << 1e3*ps[x_] << setw(24) << 1e3*ps[px_]
 	     << setw(24) << 1e3*ps[y_] << setw(24) << 1e3*ps[py_]
-	     << setw(24) << 1e2*ps[delta_] 
+	     << setw(24) << 1e2*ps[delta_]
 	     << setw(24) << 1e3*ps[ct_] << endl;
 	else
 	  os << scientific << setprecision(16)
 	     << setw(4) << i
 	     << setw(24) << 1e3*ps[x_] << setw(24) << 1e3*ps[px_]
 	     << setw(24) << 1e3*ps[y_] << setw(24) << 1e3*ps[py_]
-	     << setw(24) << 1e2*ps[delta_] 
+	     << setw(24) << 1e2*ps[delta_]
 	     << setw(24) << 2.0*f_rf*180.0*ps[ct_]/c0 << endl;
     } else
       return false;
@@ -512,7 +512,7 @@ double get_dynap(const double r, const double delta, const int n,
        << setw(4) << 1e3*x_max[Y_] << " mm" << endl;
 
   return DA;
-} 
+}
 
 
 void prt_scan(const int n, const double nu_x, const double nu_y,
@@ -541,11 +541,11 @@ bool eng_tol(const bool config, const int n_orbit)
     globval.hcorr = ElemIndex("ch"); globval.vcorr = ElemIndex("cv");
 
     // Clear trim setpoints
-    for (i = 1; i <= GetnKid(globval.vcorr); i++) 
+    for (i = 1; i <= GetnKid(globval.vcorr); i++)
       SetKLpar(globval.vcorr, i, -Dip, 0.0);
-    for (i = 1; i <= GetnKid(globval.hcorr); i++) 
+    for (i = 1; i <= GetnKid(globval.hcorr); i++)
       SetKLpar(globval.hcorr, i, Dip, 0.0);
-    
+
     gcmat(globval.bpm, globval.hcorr, 1); gcmat(globval.bpm, globval.vcorr, 2);
   }
 
@@ -626,7 +626,7 @@ void get_DA(const char *file_dir, const int n,
   cout << endl;
   cout << fixed << setprecision(5)
        << "#n = " << setw(4) << n
-       << ", nu_x = " << nu_x << ", nu_y = " << nu_y << ", "; 
+       << ", nu_x = " << nu_x << ", nu_y = " << nu_y << ", ";
   if (cod)
     DA = get_dynap(10e-3, -delta, n_track, 0.1e-3, n_aper, x_min, x_max);
   else
@@ -639,9 +639,9 @@ void get_DA(const char *file_dir, const int n,
 
   cout << fixed << setprecision(5)
        << "#n = " << setw(4) << n
-       << ", nu_x = " << nu_x << ", nu_y = " << nu_y << ", "; 
+       << ", nu_x = " << nu_x << ", nu_y = " << nu_y << ", ";
   if (cod)
-    DA = get_dynap(10e-3, delta, n_track, 0.1e-3, n_aper, x_min, x_max); 
+    DA = get_dynap(10e-3, delta, n_track, 0.1e-3, n_aper, x_min, x_max);
   else
     DA = 0.0;
   DA_sum += DA;
@@ -649,12 +649,12 @@ void get_DA(const char *file_dir, const int n,
     tune_out << "#";
     prt_scan(n, nu_x, nu_y, DA, x_min, x_max);
   }
-	
+
   cout << fixed << setprecision(5)
        << " n = " << setw(4) << n
-       << ", nu_x = " << nu_x << ", nu_y = " << nu_y << ", "; 
+       << ", nu_x = " << nu_x << ", nu_y = " << nu_y << ", ";
   if (cod)
-    DA = get_dynap(10e-3, 0.0, n_track, 0.1e-3, n_aper, x_min, x_max); 
+    DA = get_dynap(10e-3, 0.0, n_track, 0.1e-3, n_aper, x_min, x_max);
   else
     DA = 0.0;
   DA_sum += DA; DA = DA_sum/3.0;
@@ -721,7 +721,7 @@ void get_curly_H(long int k1, long int k2)
   Cell_Pass(0, k1-1, ps, lastpos); Cell_Pass(0, k1-1, A, lastpos);
 
   A = get_A_CS(A, dnu);
-  
+
   for (k = k1-1; k <= k2; k++) {
     Cell_Pass(k-1, k, ps, lastpos); Cell_Pass(k-1, k, A, lastpos);
 
@@ -1313,15 +1313,15 @@ void get_cod_rms(const double dx, const double dy,
     for (k = 0; k < 6; k++) {
       x1[j][k] = 0.0; x2[j][k] = 0.0;
     }
-  
+
   fp = file_write("cod_rms.out");
-  
+
   for (i = 0; i < n_seed; i++) {
     misalign_rms_fam(ElemIndex("dip"), dx, dy, 0.0, true);
     misalign_rms_fam(ElemIndex("qf"), dx, dy, 0.0, true);
     misalign_rms_fam(ElemIndex("qfend"), dx, dy, 0.0, true);
     misalign_rms_fam(ElemIndex("qdend"), dx, dy, 0.0, true);
-    
+
     cod = orb_corr(3);
 
     if (cod) {
@@ -1342,7 +1342,7 @@ void get_cod_rms(const double dx, const double dy,
     set_bn_design_fam(globval.hcorr, Dip, 0.0, 0.0);
     set_bn_design_fam(globval.vcorr, Dip, 0.0, 0.0);
   }
-  
+
   n = 0;
   for (j = 0; j <= globval.Cell_nLoc; j++)
     if (all || ((Cell[j].Elem.Pkind == Mpole) &&
@@ -1359,7 +1359,7 @@ void get_cod_rms(const double dx, const double dy,
 	      1e3*x_mean[n-1][y_], 1e3*x_sigma[n-1][y_]);
     } else
       fprintf(fp, "%8.3f %6.2f\n", Cell[j].S, get_code(Cell[j]));
-  
+
   fclose(fp);
 }
 
@@ -1876,7 +1876,7 @@ int main(int argc, char *argv[])
 	exit(1);
 	break;
       }
-	
+
       qf = ElemIndex("qh2"); qd = ElemIndex("qh3");
 
       FitTune(qf, qd, nu_x, nu_y);
@@ -1929,7 +1929,7 @@ int main(int argc, char *argv[])
 	if (!IDs)
 //	    get_bn(strcat(str2, "/sext_3.bare_7"), 0, true);
 	  get_bn(strcat(str2, "/sext_3.bare_7_2"), 0, true);
-	else 
+	else
 //	    get_bn(strcat(str2, "/sext_3.DW_7"), 0, true);
 	  get_bn(strcat(str2, "/sext_3.DW_7.2"), 0, true);
 	break;
@@ -2060,8 +2060,8 @@ int main(int argc, char *argv[])
 
   GetEmittance(ElemIndex("cav"), true);
 
-  sigma_s = sqrt(Cell[0].sigma[ct_][ct_]); 
-  sigma_delta = sqrt(Cell[0].sigma[delta_][delta_]); 
+  sigma_s = sqrt(Cell[0].sigma[ct_][ct_]);
+  sigma_delta = sqrt(Cell[0].sigma[delta_][delta_]);
 
   if (false)
     LoadFieldErr("/home/bengtsson/projects/in/Field_Err/jb.dat",
@@ -2116,8 +2116,8 @@ int main(int argc, char *argv[])
 
   GetEmittance(ElemIndex("cav"), true);
 
-  sigma_s = sqrt(Cell[0].sigma[ct_][ct_]); 
-  sigma_delta = sqrt(Cell[0].sigma[delta_][delta_]); 
+  sigma_s = sqrt(Cell[0].sigma[ct_][ct_]);
+  sigma_delta = sqrt(Cell[0].sigma[delta_][delta_]);
 
   if (freq_map) {
     fmap(n_x, n_y, n_tr, x_max_FMA, y_max_FMA, 0.0, true, true);
@@ -2126,16 +2126,16 @@ int main(int argc, char *argv[])
 
   if (false) {
     //aperture:
-    //      ini_aper(-50e-3, 50e-3, -25e-3, 25e-3); 
-      
+    //      ini_aper(-50e-3, 50e-3, -25e-3, 25e-3);
+
     //      if (false)
     //	set_aper(ElemIndex("d0id"), -25e-3, 25e-3, -2.5e-3, 2.5e-3);
     //	set_aper(ElemIndex("d_u55"), -25e-3, 25e-3, -19e-3/2.0, 19e-3/2.0);
     //      else
     //	set_aper(ElemIndex("d0id"), -25e-3, 25e-3, -5e-3, 5e-3);
-      
+
     //      PrintCh();
-      
+
     //      Touschek(1.3e-9, globval.delta_RF, globval.eps[X_], 0.008e-9,
     //	       sigma_delta, sigma_s);
 
@@ -2147,7 +2147,7 @@ int main(int argc, char *argv[])
 //    IBS(1.3e-9, 0.85e-9, 0.008e-9, 0.84e-3, 2*4.4e-3);
 
     Touschek(1.3e-9, globval.delta_RF, 0.85e-9, 0.008e-9, 0.84e-3, 4.4e-3);
-      
+
     double  sum_delta[globval.Cell_nLoc+1][2];
     double  sum2_delta[globval.Cell_nLoc+1][2];
     double  mean_delta_s[globval.Cell_nLoc+1][2];
@@ -2158,12 +2158,12 @@ int main(int argc, char *argv[])
       sum_delta[j][0] = 0.0; sum_delta[j][1] = 0.0;
       sum2_delta[j][0] = 0.0; sum2_delta[j][1] = 0.0;
     }
- 
+
     Touschek(1.3e-9, globval.delta_RF, false,
 	     0.85e-9, 0.008e-9, 0.84e-3, 4.4e-3,
 	     512, true, sum_delta, sum2_delta);
 
-    fp = file_write("mom_aper.out"); 
+    fp = file_write("mom_aper.out");
     for(j = 0; j <= globval.Cell_nLoc; j++)
       fprintf(fp, "%4d %7.2f %5.3f %6.3f\n",
 	      j, Cell[j].S, 1e2*sum_delta[j][0], 1e2*sum_delta[j][1]);

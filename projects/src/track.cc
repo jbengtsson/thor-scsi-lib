@@ -33,10 +33,10 @@ void track(const double x, const double p_x,
   ps[x_] = x; ps[px_] = p_x; ps[y_] = y; ps[py_] = p_y; ps[delta_] = delta;
 
   std::cout << std::scientific << std::setprecision(3)
-	    << "\n" << std::setw(11) << ps << "\n"; 
-  Cell_Pass(0, globval.Cell_nLoc, ps, lastpos);  
+	    << "\n" << std::setw(11) << ps << "\n";
+  Cell_Pass(0, globval.Cell_nLoc, ps, lastpos);
   std::cout << std::scientific << std::setprecision(3)
-	    << std::setw(11) << ps << "\n"; 
+	    << std::setw(11) << ps << "\n";
 
   prt_Beam_Pos("track.out");
 }
@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
   trace = !true;
 
   if (true)
-    Read_Lattice(argv[1]); 
+    Read_Lattice(argv[1]);
   else
     rdmfile("flat_file.dat");
 

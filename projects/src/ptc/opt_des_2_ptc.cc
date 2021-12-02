@@ -142,7 +142,7 @@ public:
     ksi2[2],
     ksi2_scl,
     L0;                  // Cell length.
-  std::vector<double> 
+  std::vector<double>
     ksi1_ctrl;
   std::vector< std::vector<double> >
     value,
@@ -160,7 +160,7 @@ public:
   std::vector< std::vector<int> >
     grad_dip_Fnum_b1,
     mI_loc;
-  
+
 
   constr_type(void) {
     n_iter = 0; chi2 = 1e30; chi2_prt = 1e30;
@@ -433,7 +433,7 @@ void phi_corr(constr_type &constr)
     - (phi-constr.phi0)
     /GetnKid(constr.Fnum_b1[constr.n_b1-1]);
   set_phi(constr.Fnum_b1[constr.n_b1-1], phi1);
- 
+
   constr.phi_tot = get_phi(constr);
 
   if (prt) {
@@ -827,7 +827,7 @@ void constr_type::get_Jacobian(param_type &lat_prms)
   for (j = 0; j < n_loc; j++)
     for (k = 0; k < n_type; k++)
       if (value_scl[j][k] != 0e0) n_constr++;
-    
+
   Jacobian = dmatrix(1, n_constr, 1, lat_prms.n_prm);
 
   printf("\nget_Jacobian: %d %d\n", n_constr, lat_prms.n_prm);
@@ -845,7 +845,7 @@ void constr_type::get_Jacobian(param_type &lat_prms)
 	  ind++;
 	}
     }
- 
+
     constr_dparam(lat_prms.Fnum[i], lat_prms.n[i], -2e0*eps);
     get_lin_opt(lat_constr);
     for (j = 0; j < n_loc; j++) {
@@ -1010,12 +1010,12 @@ double constr_type::get_chi2(const param_type &prms, double *bn,
       bn_ext = bn_bounded(bn[k], prms.bn_min[k-1], prms.bn_max[k-1]);
     } else {
       // Tweak D_09.
-      bn_ext = get_L(ElemIndex("d_10_1"), 1); 
+      bn_ext = get_L(ElemIndex("d_10_1"), 1);
       dchi2[0] = scl_extra*sqr(bn_ext+0.14);
       chi2 += dchi2[0];
       if (prt)
 	printf("  D_10_1:            %10.3e (%10.3e)\n", dchi2[0], bn_ext);
-      bn_ext = get_L(ElemIndex("d_10_2"), 1); 
+      bn_ext = get_L(ElemIndex("d_10_2"), 1);
       dchi2[0] = scl_extra*sqr(bn_ext+0.14);
       chi2 += dchi2[0];
       if (prt)
@@ -1029,7 +1029,7 @@ double constr_type::get_chi2(const param_type &prms, double *bn,
     if (prt) printf("  eps_x:             %10.3e\n", dchi2[X_]);
   }
 
-  if (prt) printf("\n"); 
+  if (prt) printf("\n");
   for (j = 0; j < n_loc; j++) {
     if (prt) {
       printf("  ");
@@ -1097,7 +1097,7 @@ double constr_type::get_chi2(const param_type &prms, double *bn,
     if (prt) printf("  ksi1_ctrl:        [%10.3e, %10.3e, %10.3e]\n",
 		    dchi2[0], dchi2[1], dchi2[2]);
   }
-  
+
   if (ksi1_svd_scl != 0) {
     mean = (ksi1_svd[X_]+ksi1_svd[Y_])/2e0;
     geom_mean = sqrt(ksi1_svd[X_]*ksi1_svd[Y_]);
@@ -1182,7 +1182,7 @@ void constr_type::get_dchi2(double *bn, double *df) const
 
 int not_zero(const double a)
 {
-  return (a != 0e0)? 1 : 0; 
+  return (a != 0e0)? 1 : 0;
 }
 
 
@@ -2358,7 +2358,7 @@ void match_ls(param_type &prms, constr_type &constr)
   //   Quadrupole   2.
   int j, k;
 
-  // Perturbed symmetry at end of Dipole Cell: 
+  // Perturbed symmetry at end of Dipole Cell:
   //   1. Initialize with: [Qf1, Qd2, Qd3].
   //   2. Exclude for 1st pass: pert_dip_cell = false.
   //   3. Include for fine tuning.
@@ -2434,7 +2434,7 @@ void match_ss(param_type &prms, constr_type &constr)
   //   Quadrupole   2.
   int j, k;
 
-  // Perturbed symmetry at end of Dipole Cell: 
+  // Perturbed symmetry at end of Dipole Cell:
   //   1. Initialize with: [Qf1, Qd2, Qd3].
   //   2. Exclude for 1st pass: pert_dip_cell = false.
   //   3. Include for fine tuning.
@@ -2468,7 +2468,7 @@ void match_als_u(param_type &prms, constr_type &constr)
   const int    n_ic        = 4;
   const double ic[n_ic][2] =
     {{0.0, 0.0}, {0.1153496843, 3.2620137331}, {0.0002943186, 0.0}, {0.0, 0.0}};
- 
+
   prms.add_prm("q1",   2, -20.0, 20.0, 1.0);
   prms.add_prm("q2",   2, -20.0, 20.0, 1.0);
   prms.add_prm("q3",   2, -20.0, 20.0, 1.0);
@@ -2601,7 +2601,7 @@ void match_ms(param_type &prms, constr_type &constr)
   const int    n_ic        = 4;
   const double ic[n_ic][2] =
     {{0.0, 0.0}, {7.08276, 3.03915}, {0.0, 0.0}, {0.0, 0.0}};
- 
+
   // Standard Straight.
   grad_dip_scl.push_back(0.129665);
   grad_dip_scl.push_back(0.149256);
