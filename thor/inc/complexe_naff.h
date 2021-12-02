@@ -149,7 +149,7 @@
 {
 	double ratio, den;
 	double abr, abi, cr;
-    
+
 	if( (abr = c2->reel) < 0.)
 		abr = - abr;
 	if( (abi = c2->imag) < 0.)
@@ -175,14 +175,14 @@
 /*----------------i_compl_div2d--------------------------------*/
 /* division d'un reel par un complexe c1/(c2_r+i*c2_i)         */
 /*-------------------------------------------------------------*/
-t_complexe i_compl_div2d(const double c1, 
-                                       const double c2_r, 
+t_complexe i_compl_div2d(const double c1,
+                                       const double c2_r,
                                        const double c2_i)
 {
 	double ratio, den;
 	double abr, abi;
     t_complexe zres;
-    
+
 	if( (abr = c2_r) < 0.)
 		abr = - abr;
 	if( (abi = c2_i) < 0.)
@@ -214,7 +214,7 @@ t_complexe i_compl_div4d(const double c1_r,const double c1_i,
 	double ratio, den;
 	double abr, abi;
     t_complexe zres;
-    
+
 	if( (abr = c2_r) < 0.)
 		abr = - abr;
 	if( (abi = c2_i) < 0.)
@@ -234,7 +234,7 @@ t_complexe i_compl_div4d(const double c1_r,const double c1_i,
 		zres.reel = (c1_r + c1_i*ratio) / den;
 		zres.imag = (c1_i - c1_r*ratio) / den;
 		}
- return zres; 
+ return zres;
 }
 
 /*----------------i_compl_div----------------------------------*/
@@ -257,7 +257,7 @@ t_complexe i_compl_pow2d(const double p_r, const double p_i,int n)
 	double t;
 	double q_r=1,q_i=0,x_r,x_i;
     t_complexe zq;
-    
+
 	if(n == 0)
 		goto done;
 	if(n < 0)
@@ -393,7 +393,7 @@ t_complexe i_compl_exp(t_complexe c1)
 /* soustrait de deux nombres complexes c1 et c2 : c1-=c2        */
 /*--------------------------------------------------------------*/
 /*v0.96 M. GASTINEAU 01/12/98 : ajout */
-void i_compl_psub(t_complexe *c1,t_complexe *c2) 
+void i_compl_psub(t_complexe *c1,t_complexe *c2)
 {
  c1->reel -= c2->reel;
  c1->imag -= c2->imag;
@@ -413,7 +413,7 @@ t_complexe i_compl_sub(t_complexe c1,t_complexe c2)
 
 
 /*----------------i_compl_cos----------------------------------*/
-/* retourne le cosinus de c1 (cos x  cosh y  -  i sin x sinh y)*/ 
+/* retourne le cosinus de c1 (cos x  cosh y  -  i sin x sinh y)*/
 /*-------------------------------------------------------------*/
 /* v0.97 M. GASTINEAU 15/02/99: ajout */
 t_complexe i_compl_cos(t_complexe c1)

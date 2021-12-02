@@ -22,7 +22,7 @@ unsigned short int seq_tps = 0;       // sequence no for TPSA vector
 const int n_max   = 100;              // max iterations for LieExp
 const int bufsize = 250000;           /* Note, max no of monomials is
 					 (no+nv)!/(nv!*no!) */
- 
+
 
 long int fact(long int n)
 {
@@ -403,7 +403,7 @@ std::istream& operator>>(std::istream &is, tps &a)
 	     << no1 << std::setw(11) << rbuf[n];
 	for (i = 0; i < nv_tps; i++)
 	  std::cout << std::setw(3) << jj[i];
-	std::cout << "\n"; 
+	std::cout << "\n";
       }
 
 //      hash_(no_tps, nv_tps, jj, ibuf1[n-1], ibuf2[n-1]);
@@ -469,11 +469,11 @@ std::ostream& operator<<(std::ostream &os, const tps &a)
   s << "\nNO_TPSA = " << no_tps << ", NV = " << nv_tps << "\n";
 
   for (i = 1; i <= 66; i++)
-    s << "-"; 
+    s << "-";
   s << "\n";
 
   if (header) prt_header(s, res_basis);
-  
+
   n = 0;
   for (j = 1; j <= nv_tps; j++)
     if (fabs(a.ltps[j]) >= eps_tps) n++;

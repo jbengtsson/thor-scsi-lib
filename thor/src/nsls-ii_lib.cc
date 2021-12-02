@@ -327,7 +327,7 @@ bool CorrectCOD(LatticeType &lat, const int n_orbit, const double scl)
   //   ps.zero(); lat.Cell_Pass(0, conf.Cell_nLoc, ps, lastpos);
   // }
   // if (false) prt_cod("cod.out", conf.bpm, true);
- 
+
   cod = lat.getcod(0e0, lastpos);
   if (cod) {
     codstat(lat, mean, sigma, max, lat.conf.Cell_nLoc, true);
@@ -1933,11 +1933,11 @@ void set_map_reversal(LatticeType &lat, const long int Fnum)
 void setmp(long ilat, long m, long n, double rr, double bnoff, double cmn)
 {
   // ilat index of element in lattice
-  // m multipole to be set 
+  // m multipole to be set
   // n base multipole for which the coefficient is defined
   //     ! n or m < 0 means skew!
   // rr reference radius for definition of coefficient
-  // bnoff offset for base multipole 
+  // bnoff offset for base multipole
   // cmn coefficient from magnet group in "units". normalization:
   // base multipole=10000
   //    cmn = (nAn/r) from magnet group
@@ -1974,7 +1974,7 @@ void setmpall(LatticeType &lat, double rref)
   ElemType cell;
   long     i;
   bool     mset;
-  
+
   if (true) {
     for (i = 0; i <= lat.conf.Cell_nLoc; i++) {
       lat.getelem(i, &cell);
@@ -1984,33 +1984,33 @@ void setmpall(LatticeType &lat, double rref)
 	  // BN magnet
 	  setmp(i, 3, 1, rref , 0.0, 2.0940E1) ;
 	  setmp(i, 5, 1, rref , 0.0, 1.1376E1) ;
-          mset=true;       
+          mset=true;
 	}
 	if (strncmp(cell.PName,"vb",2) == 0) {
-	  //VB magnet (mirrorplate version) 
+	  //VB magnet (mirrorplate version)
 	  setmp(i, 3, 1, rref , 0.0, -39.86) ;
 	  setmp(i, 4, 2, rref , 0.0, -90.93) ;
 	  setmp(i, 5, 1, rref , 0.0, -3.17) ;
 	  setmp(i, 6, 2, rref , 0.0, -22.10) ;
-          mset=true;       
+          mset=true;
 	}
 	if (strncmp(cell.PName,"qp",2) == 0) {
 	  //QP main quads
 	  setmp(i, 6, 2, rref , 6.75, -26) ; //dodeka suppressed at 55 T/m
 	  setmp(i,10, 2, rref , 0.0 ,-1.65) ;
-          mset=true;       
+          mset=true;
 	}
 	if (strncmp(cell.PName,"s",1) == 0) {
 	  //S sextupole
 	  setmp(i, 9, 3, rref , 0.0, -8.1);
 	  setmp(i,15, 3, rref , 0.0, -24.9);
-          mset=true;       
+          mset=true;
 	}
 	if (strncmp(cell.PName,"qa",2) == 0) {
 	  //QA tuning quads and skew quads
 	  setmp(i, 6, 2, rref , 0.0, 1435);
 	  setmp(i,-6,-2, rref , 0.0,-1435);
-          mset=true;       
+          mset=true;
 	}
 	if (strncmp(cell.PName,"cs",2) == 0) {
 	  //CS skew quads

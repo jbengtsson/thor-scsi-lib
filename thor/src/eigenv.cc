@@ -50,7 +50,7 @@ static int closest(double x, double x1, double x2, double x3)
 
    Purpose: called by geigen
        A[*, i] <==> A[*, j]
-       A[i, *] <==> A[j, *]  
+       A[i, *] <==> A[j, *]
 
 
    Input:
@@ -122,7 +122,7 @@ static void Swap(double *x, double *y)
                       arma::vec &wr, arma::vec &wi)
 
    Purpose:  called by GDiag
-      This routine finds the eigenvalues and eigenvectors of the full matrix fm 
+      This routine finds the eigenvalues and eigenvectors of the full matrix fm
 
       Compute eigenvalues and eigenvectors using double
       precision Eispack routines:
@@ -134,7 +134,7 @@ static void Swap(double *x, double *y)
       tridiagonal, generalized real, and generalized real symmetric matices.
       In addition, two routines are included that use singular value
       decomposition to solve certain least-squares problems.
-      
+
    Input:
        n  matrix dimension
        fm input "full" matrix
@@ -453,7 +453,7 @@ void GenB(arma::mat &B, arma::mat &BInv, arma::vec &Eta,
               arma::mat &M, double *Omega, double *alphac)
 
    Purpose: called by Ring_MatTwiss, Ring_DATwiss
-   
+
       Input M:     Oneturn transfer matrix
 
       Output A
@@ -488,7 +488,7 @@ void GenB(arma::mat &B, arma::mat &BInv, arma::vec &Eta,
        InitJJ, CopyMat, TpMat, UnitMat, GetAinv, MulLMat
        geigen,
        GetEta, GenB
-       
+
    Comments:
        none
 
@@ -620,7 +620,7 @@ static void eswap(arma::mat &t6a, arma::vec &lamr, arma::vec &lami,
 
    Output:
        t6a matrix of sorted and normalized eigenvectors
-       
+
    Return:
        none
 
@@ -668,9 +668,9 @@ void NormEigenVec(arma::mat &Vr,arma::mat &Vi, arma::vec &wr, arma::vec &wi,
         t6a(i-1, j2-1) = -t6a(i-1, j2-1);
       }
     }
- 
+
     sqrn = sqrt(fabs(rn)); /* take the norm of rn */
- 
+
     for (i = 1; i <= ps_dim; i++) {
       t6a(i-1, j1-1)=t6a(i-1, j1-1)/sqrn; t6a(i-1, j2-1)=t6a(i-1, j2-1)/sqrn;
     }

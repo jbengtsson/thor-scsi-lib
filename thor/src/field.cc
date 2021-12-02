@@ -40,7 +40,7 @@ template<>
 void ss_vect<double>::print(const string &str)
 {
   std::cout << std::scientific << std::setprecision(6) << str << std::setw(14)
-	    << *this << "\n"; 
+	    << *this << "\n";
 }
 
 
@@ -206,5 +206,3 @@ operator<<(std::basic_ostream<CharT, Traits> &os, const ss_vect<tps> &a)
 template std::basic_ostream<char, std::char_traits<char> >&
 operator<<(std::basic_ostream<char, std::char_traits<char> > &,
 	   const ss_vect<tps> &);
-
-

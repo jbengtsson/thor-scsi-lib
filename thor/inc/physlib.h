@@ -4,7 +4,7 @@
                  SLS, PSI      1995 - 1997
    M. Boege      SLS, PSI      1998          C translation
    L. Nadolski   SOLEIL        2002          Link to NAFF, Radia field maps
-   J. Bengtsson  NSLS-II, BNL  2004 -        
+   J. Bengtsson  NSLS-II, BNL  2004 -
 
 */
 
@@ -154,7 +154,7 @@ void Scale_Tol(LatticeType &lat, int Fnum, double dxrms, double dyrms,
 void SetaTol(LatticeType &lat, int Fnum, int Knum, double dx, double dy,
 	     double dr);
 
-void ini_aper(LatticeType &lat, const double Dxmin, const double Dxmax, 
+void ini_aper(LatticeType &lat, const double Dxmin, const double Dxmax,
               const double Dymin, const double Dymax);
 
 void set_aper(LatticeType &lat, const int Fnum, const double Dxmin,
@@ -216,7 +216,7 @@ void codstat(LatticeType &lat, double *mean, double *sigma, double *xmax,
 
 void CodStatBpm(LatticeType &lat, double *mean, double *sigma, double *xmax,
 		long lastpos, long bpmdis[]);
-                
+
 double Sgn (double x);
 
 double digitize(double x, double maxkick, double maxsamp);
@@ -230,7 +230,7 @@ void Dis_In(long *bpmdis, long *vcorrdis, long *hcorrdis,
                    long *wvdis, long *whdis);
 
 
-/* high level functions for reading lattice file*/  
+/* high level functions for reading lattice file*/
 void Read_Lattice(LatticeType &lat, const char *fic);
 long get_bpm_number(void);
 long get_hcorr_number(void);

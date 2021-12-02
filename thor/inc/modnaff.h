@@ -25,11 +25,11 @@
 
 /*#ifdef FUNCINLINEEXTERN_MUSTBEINLIB*/
 #define INLINE_EXTERN static inline
-/*#else 
+/*#else
 #define INLINE_EXTERN inline extern
 #endif *//*FUNCINLINEEXTERN_MUSTBEINLIB*/
 
- 
+
 /*---------------------*/
 /*routine d'allocation */
 /*---------------------*/
@@ -77,15 +77,15 @@ struct list_fenetre_naf
 };
 /* v0.96 M. GASTINEAU 18/12/98 : fin ajout */
 
-typedef struct list_fenetre_naf t_list_fenetre_naf; /* v0.96 M. GASTINEAU 18/12/98 : ajout */   
+typedef struct list_fenetre_naf t_list_fenetre_naf; /* v0.96 M. GASTINEAU 18/12/98 : ajout */
 
 /*v0.96 M. GASTINEAU 04/09/98 : ajout pour la gestion de naf */
 /* pour le role de ces champs, cf. modnaff.c */
-struct stnaf 
+struct stnaf
 {
  /*champ utilise par modnaff.c */
  FILE *NFPRT;
- double EPSM; 
+ double EPSM;
  int NTERM,KTABS,NFS;
  int ICPLX,IW,ISEC;
  int NERROR,IPRT;
@@ -97,7 +97,7 @@ struct stnaf
 
  double DTOUR,UNIANG,FREFON;
  double XH,T0;
- 
+
  /*autre champ utilise en tant que flag */
  double m_dneps; /*equivaut a DNEPS */
  int m_iNbLineToIgnore; /*nombre de lignes a ignorer en debut du fichier des solutions */

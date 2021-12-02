@@ -25,7 +25,7 @@ bool DA_data_type::track(LatticeType &lat, const param_data_type &params,
 	 << std::setw(4) << 0
 	 << std::setw(24) << 1e3*ps[x_] << std::setw(24) << 1e3*ps[px_]
 	 << std::setw(24) << 1e3*ps[y_] << std::setw(24) << 1e3*ps[py_]
-	 << std::setw(24) << 1e2*ps[delta_] 
+	 << std::setw(24) << 1e2*ps[delta_]
 	 << std::setw(24) << 1e3*ps[ct_] << std::endl;
     } else {
       os << "#         [mm]        [mrad]       [mm]         [mrad]"
@@ -34,7 +34,7 @@ bool DA_data_type::track(LatticeType &lat, const param_data_type &params,
 	 << std::setw(4) << 0
 	 << std::setw(24) << 1e3*ps[x_] << std::setw(24) << 1e3*ps[px_]
 	 << std::setw(24) << 1e3*ps[y_] << std::setw(24) << 1e3*ps[py_]
-	 << std::setw(24) << 1e2*ps[delta_] 
+	 << std::setw(24) << 1e2*ps[delta_]
 	 << std::setw(24) << 2.0*f_rf*180.0*ps[ct_]/c0 << std::endl;
     }
     os << "#" << std::endl;
@@ -49,14 +49,14 @@ bool DA_data_type::track(LatticeType &lat, const param_data_type &params,
 	     << std::setw(4) << i
 	     << std::setw(24) << 1e3*ps[x_] << std::setw(24) << 1e3*ps[px_]
 	     << std::setw(24) << 1e3*ps[y_] << std::setw(24) << 1e3*ps[py_]
-	     << std::setw(24) << 1e2*ps[delta_] 
+	     << std::setw(24) << 1e2*ps[delta_]
 	     << std::setw(24) << 1e3*ps[ct_] << std::endl;
 	else
 	  os <<std:: scientific << std::setprecision(16)
 	     << std::setw(4) << i
 	     << std::setw(24) << 1e3*ps[x_] << std::setw(24) << 1e3*ps[px_]
 	     << std::setw(24) << 1e3*ps[y_] << std::setw(24) << 1e3*ps[py_]
-	     << std::setw(24) << 1e2*ps[delta_] 
+	     << std::setw(24) << 1e2*ps[delta_]
 	     << std::setw(24) << 2.0*f_rf*180.0*ps[ct_]/c0 << std::endl;
       }
     } else
@@ -149,7 +149,7 @@ double DA_data_type::get_dynap(LatticeType &lat, param_data_type &params,
   fflush(fp);
 
   return DA;
-} 
+}
 
 
 void DA_data_type::get_DA_bare(LatticeType &lat, param_data_type &params)
@@ -177,18 +177,18 @@ void DA_data_type::get_DA_bare(LatticeType &lat, param_data_type &params)
 
     sprintf(str, "DA_bare_%4.2f.out", 1e2*d); fp = file_write(str);
 
-    DA = get_dynap(lat, params, fp, 10e-3, d, 0.1e-3, x_min, x_max); 
+    DA = get_dynap(lat, params, fp, 10e-3, d, 0.1e-3, x_min, x_max);
 
     fclose(fp);
 
     x_hat[X_] = (x_max[X_]-x_min[X_])/2.0; x_hat[Y_] = x_max[Y_];
 
-    fprintf(DA_bare, "  %5.2f %6.1f   %4.1f      %4.1f   %4.1f  %4.1f\n", 
+    fprintf(DA_bare, "  %5.2f %6.1f   %4.1f      %4.1f   %4.1f  %4.1f\n",
 	    1e2*d, 1e6*DA,
 	    1e6*sqr(x_hat[X_])/lat.elems[lat.conf.Cell_nLoc]->Beta[X_],
 	    1e6*sqr(x_hat[Y_])/lat.elems[lat.conf.Cell_nLoc]->Beta[Y_],
 	    1e3*x_hat[X_], 1e3*x_hat[Y_]);
-  
+
     fflush(DA_bare);
   }
 
@@ -234,7 +234,7 @@ void DA_data_type::get_DA_real(LatticeType &lat, param_data_type &params,
 
   gdxrms = gdzrms = gdarms = jdxrms = jdzrms = edxrms = edzrms = edarms
          = bdxrms = bdzrms = bdarms = 0e0;
-  
+
   for (j = 0; j <= params.n_delta_DA; j++) {
     d[j] = (params.n_delta_DA > 0)?
       (double)j/(double)params.n_delta_DA*params.delta_DA : 0.0;
@@ -325,7 +325,7 @@ void DA_data_type::get_DA_real(LatticeType &lat, param_data_type &params,
 	orb_corr[X_].prt_svdmat(lat);
 	orb_corr[Y_].prt_svdmat(lat);
       }
- 
+
       lat.Ring_GetTwiss(true, 0.0); printglob(lat);
 
       GetEmittance(lat, ElemIndex("cav"), true);
@@ -343,7 +343,7 @@ void DA_data_type::get_DA_real(LatticeType &lat, param_data_type &params,
 
       ///////////////////////////////
       // Fit tunes to TuneX and TuneY
-      
+
       if (params.TuneX*params.TuneY > 0) {
 	dk=1e-3;
 	nq[0]=nq[1]=0;
@@ -407,10 +407,10 @@ void DA_data_type::get_DA_real(LatticeType &lat, param_data_type &params,
 	lat.Ring_GetTwiss(true, 0.0); printglob(lat);
 	GetEmittance(lat, ElemIndex("cav"), true);
       }
-      
+
       // End of tune and chromaticity fit
       ///////////////////////////////////
-      
+
       prt_beamsizes(lat, j);
 
       if (params.ap_file != "") params.LoadApers(lat, 1.0, 1.0);
@@ -442,7 +442,7 @@ void DA_data_type::get_DA_real(LatticeType &lat, param_data_type &params,
 	       lat.elems[lat.Elem_GetPos(lat.conf.qt,1)]->PName);
         set_bnL_design_fam(lat, lat.conf.qt, Quad, 0.0, 0.0);
       }
-      if (params.N_calls > 0) params.reset_quads(lat);  
+      if (params.N_calls > 0) params.reset_quads(lat);
     } else
       chk_cod(cod, "err_and_corr");
   }
@@ -456,7 +456,7 @@ void DA_data_type::get_DA_real(LatticeType &lat, param_data_type &params,
 
     fprintf(DA_real, "  %6.3f  %7.2f \xB1 %7.2f"
 	    "   %6.2f \xB1 %6.3f    %6.2f \xB1 %6.3f"
-	    "   %5.2f \xB1 %6.3f     %5.2f \xB1 %6.3f\n", 
+	    "   %5.2f \xB1 %6.3f     %5.2f \xB1 %6.3f\n",
 	    d[j]*1e2,
 	    1e6*DA_m[j], 1e6*DA_s[j],
 	    1e6*sqr(x_hat_m[j][X_])/lat.elems[lat.conf.Cell_nLoc]->Beta[X_],
@@ -473,6 +473,6 @@ void DA_data_type::get_DA_real(LatticeType &lat, param_data_type &params,
 
 void DA_data_type::get_mean_sigma(const int n, double &m, double &s)
 {
-  m = (n > 0)? m/n : 0e0; 
+  m = (n > 0)? m/n : 0e0;
   s = (n > 1)? sqrt((s-n*sqr(m))/(n-1)) : 0e0;
 }

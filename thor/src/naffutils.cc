@@ -4,7 +4,7 @@
                  SLS, PSI      1995 - 1997
    M. Boege      SLS, PSI      1998          C translation
    L. Nadolski   SOLEIL        2002          Link to NAFF, Radia field maps
-   J. Bengtsson  NSLS-II, BNL  2004 -        
+   J. Bengtsson  NSLS-II, BNL  2004 -
 
 */
 
@@ -66,8 +66,8 @@ void Trac_Simple(LatticeType &lat, double x, double px, double y, double py,
     /* Get closed orbit */
     //~ lat.getcod(dp, lastpos);
     findcod(lat, dp);
-  
-    if (trace && lat.conf.codflag) 
+
+    if (trace && lat.conf.codflag)
       printf("dp= % .5e %% xcod= % .5e mm zcod= % .5e mm \n",
              dp*1e2, lat.conf.CODvect[0]*1e3, lat.conf.CODvect[2]*1e3);
 
@@ -101,7 +101,7 @@ void Trac_Simple(LatticeType &lat, double x, double px, double y, double py,
     {
       // printf("Trac_Simple: Particle lost \n");
       // printf("%6ld plane:"
-      // 	     " %1d %+10.5g %+10.5g %+10.5g %+10.5g %+10.5g %+10.5g \n", 
+      // 	     " %1d %+10.5g %+10.5g %+10.5g %+10.5g %+10.5g %+10.5g \n",
       // 	     lastn, lat.conf.lossplane,
       // 	     x1[0], x1[1], x1[2], x1[3], x1[4], x1[5]);
       lostF = true;
@@ -302,7 +302,7 @@ void Get_NAFF(int nterm, long ndata, double Tab[DIM][NTURN],
        none
 
    Comments:
-       
+
 
 ****************************************************************************/
 void Get_Tabshift(double Tab[DIM][NTURN], double Tab0[DIM][NTURN], long nbturn, long nshift)
@@ -350,7 +350,7 @@ void Get_freq(double *fx, double *fz, double *nux, double *nuz)
 {
   const double eps0 = 1e-4;
   const double eps1 = 1e-6;
-  
+
   // case of nux
   if (fabs(fx[0]) < eps0){
     *nux = fx[1];

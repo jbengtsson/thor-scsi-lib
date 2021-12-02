@@ -354,7 +354,7 @@ static void EnterUDItable(const char *name, double X, struct LOC_Lat_Read *LINK)
     strcpy(WITH->Uname, name);
   else {
     printf("\nEnterUDItable: string length exceeded %lu (%lu)\n",
-	   strlen(name)+1, 2*sizeof(WITH->Uname));   
+	   strlen(name)+1, 2*sizeof(WITH->Uname));
     exit(1);
   }
   WITH->Uvalue = X;
@@ -491,7 +491,7 @@ static void Lat_Nextch(FILE *fi, FILE *fo, long *cc, long *ll, long *errpos,
 
     *ll = 0;
     *cc = 0;
-    
+
     *line = "";
     while (!P_eoln(fi)) {
       (*ll)++;
@@ -688,7 +688,7 @@ static void Lat_GetSym(FILE *fi_, FILE *fo_, long *cc_, long *ll_,
       strcpy(id, empty_str);
     else {
       printf("\nLat_GetSym: string length exceeded %lu (%lu)\n",
-	     strlen(empty_str)+1, 2*sizeof(id));   
+	     strlen(empty_str)+1, 2*sizeof(id));
     exit(1);
     }
     do {
@@ -1091,7 +1091,7 @@ static void Factor(struct LOC_Term *LINK)
 	  strcpy(fname, LINK->LINK->LINK->id);
         else {
 	  printf("\n: string length exceeded %lu (%lu)\n",
-		 strlen(LINK->LINK->LINK->id)+1, 2*sizeof(fname));   
+		 strlen(LINK->LINK->LINK->id)+1, 2*sizeof(fname));
 	  exit(1);
 	}
 	WITH = (*ElemFam_)[V.i-1].ElemF;
@@ -1146,7 +1146,7 @@ static void Factor(struct LOC_Term *LINK)
 	    strcpy(fname, LINK->LINK->LINK->id);
 	  else {
 	    printf("\n: string length exceeded %lu (%lu)\n",
-		   strlen(LINK->LINK->LINK->id)+1, 2*sizeof(fname));   
+		   strlen(LINK->LINK->LINK->id)+1, 2*sizeof(fname));
 	    exit(1);
 	  }
 	  GetSym(LINK->LINK->LINK);
@@ -1759,7 +1759,7 @@ static void Lat_ProcessBlockInput(FILE *fi_, FILE *fo_, long *cc_, long *ll_,
     return;
   }
   /* Increment number of defined blocks */
-  
+
   LINK->NoB++;
   LINK->BlockS.resize(LINK->NoB);
   WITH = &LINK->BlockS[LINK->NoB-1];
@@ -1768,7 +1768,7 @@ static void Lat_ProcessBlockInput(FILE *fi_, FILE *fo_, long *cc_, long *ll_,
     strcpy(WITH->Bname, BlockName);
   else {
     printf("\n: string length exceeded %lu (%lu)\n",
-	   strlen(BlockName)+1, 2*sizeof(WITH->Bname));   
+	   strlen(BlockName)+1, 2*sizeof(WITH->Bname));
     exit(1);
   }
   WITH->BSTART = LINK->Bpointer + 1;
@@ -3558,7 +3558,7 @@ static void Reg(const char *name, Lat_symbol ks,
     strcpy(LINK->LINK->key[LINK->LINK->nkw-1], name);
   else {
     printf("\n: string length exceeded %lu (%lu)\n",
-	   strlen(name)+1, 2*sizeof(LINK->LINK->key[LINK->LINK->nkw-1]));   
+	   strlen(name)+1, 2*sizeof(LINK->LINK->key[LINK->LINK->nkw-1]));
     exit(1);
   }
   LINK->LINK->ksy[LINK->LINK->nkw-1] = ks;
@@ -3751,7 +3751,7 @@ static void DealWithDefns(struct LOC_Lat_Read *LINK)
 	  strcpy(idsave, LINK->id);
         else {
 	  printf("\n: string length exceeded %lu (%lu)\n",
-		 strlen(LINK->id)+1, 2*sizeof(idsave));   
+		 strlen(LINK->id)+1, 2*sizeof(idsave));
 	  exit(1);
 	}
 	if (strlen(LINK->id)+1 <= 2*sizeof(ElementName))
@@ -3760,7 +3760,7 @@ static void DealWithDefns(struct LOC_Lat_Read *LINK)
 	  strcpy(ElementName, LINK->id);
         else {
 	  printf("\n: string length exceeded %lu (%lu)\n",
-		 strlen(LINK->id)+1, 2*sizeof(ElementName));   
+		 strlen(LINK->id)+1, 2*sizeof(ElementName));
 	  exit(1);
 	}
 	if (strlen(LINK->id)+1 <= 2*sizeof(BlockName))
@@ -3769,7 +3769,7 @@ static void DealWithDefns(struct LOC_Lat_Read *LINK)
 	  strcpy(BlockName, LINK->id);
         else {
 	  printf("\n: string length exceeded %lu (%lu)\n",
-		 strlen(LINK->id)+1, 2*sizeof(BlockName));   
+		 strlen(LINK->id)+1, 2*sizeof(BlockName));
 	  exit(1);
 	}
 	P_addset(P_expset(SET2, 0), (long)colon);
@@ -3814,7 +3814,7 @@ static void DealWithDefns(struct LOC_Lat_Read *LINK)
 	      strcpy(IdentName, idsave);
 	    else {
 	      printf("\n: string length exceeded %lu (%lu)\n",
-		     strlen(idsave)+1, 2*sizeof(IdentName));   
+		     strlen(idsave)+1, 2*sizeof(IdentName));
 	      exit(1);
 	    }
 	    i = CheckUDItable(IdentName, LINK);
@@ -3940,7 +3940,7 @@ static void DealWithDefns(struct LOC_Lat_Read *LINK)
 	  strcpy(IdentName, LINK->id);
         else {
 	  printf("\n: string length exceeded %lu (%lu)\n",
-		 strlen(LINK->id)+1, 2*sizeof(IdentName));   
+		 strlen(LINK->id)+1, 2*sizeof(IdentName));
 	  exit(1);
 	}
 	i = CheckElementtable(IdentName, LINK);
@@ -4145,7 +4145,7 @@ bool LatticeType::Lat_Read(const std::string &filnam)
   struct LOC_Lat_Read V;
   FILE                *fi_, *fo_;
 
-  V.line = new string;  
+  V.line = new string;
 
   ElemFam_ = &elemf;
   Lat_     = this;
@@ -4195,7 +4195,7 @@ bool LatticeType::Lat_Read(const std::string &filnam)
   if (debug) this->prt_fams();
   PrintResult(&V);                  /* Print lattice statistics */
 
-  delete V.line;  
+  delete V.line;
 
  _L9999:
   return (!Lat_->conf.ErrFlag);

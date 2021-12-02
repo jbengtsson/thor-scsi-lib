@@ -42,8 +42,8 @@ class param_data_type {
   static double v_cut;  // weigthing factor cut (Default 1.0e-4)
   static int    n_stat; // number of statistics
   static int    n_meth; // machine errors (0=standard,1=cormisal)
-  static int    n_bits; // PS resolution in amplitude in number of bits. 
-  
+  static int    n_bits; // PS resolution in amplitude in number of bits.
+
   int h_corr[max_corr], v_corr[max_corr], bpm_loc[max_bpm];
 
   static double VDweight, // weight for vertical dispersion
@@ -105,7 +105,7 @@ class param_data_type {
 #define igrmax          2000
 #define ilatmax        10000
 #define iseednrmax        20
- 
+
   typedef struct girdertype {
     double gsp[2], gdx[2], gdy[2], gdt;
     long ilat[2], igir[2], gco[2], level;
@@ -131,12 +131,12 @@ class param_data_type {
 		 double *edzrms, double *edarms, double *bdxrms,
 		 double *bdzrms, double *bdarms, double *rancutx,
 		 double *rancuty, double *rancutt, long *iseed, long *iseednr);
-  
+
   void get_param(LatticeType &lat, const string &param_file);
   void get_bare(LatticeType &lat);
   void get_dbeta_dnu(LatticeType &lat, double m_dbeta[], double s_dbeta[],
 		     double m_dnu[], double s_dnu[]);
-  
+
 // Control of vertical beam size.
   void FindSQ_SVDmat(double **SkewRespMat, double **U, double **V, double *w,
 		     int N_COUPLE, int N_SKEW);

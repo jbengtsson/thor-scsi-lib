@@ -15,11 +15,11 @@ bool ini_tps = false, header = false, res_basis = false, stable = false;
 const int n_max   = 200;     // max iterations for LieExp
 
 // Name length for FORTRAN library is 10; 10+1 for C.
-const int  name_len_for              = 10; 
+const int  name_len_for              = 10;
 const char tpsa_name[name_len_for+1] = "tps-";
 
 int  bufsize; // Note, max no of monomials is (no+nv)!/(nv!*no!)
- 
+
 
 long int fact(long int n)
 {
@@ -1016,7 +1016,7 @@ tps LieFact_DF(const ss_vect<tps> &xy, ss_vect<tps> &x)
 {
   /* Dragt-Finn factorization:
 
-       M = M_lin exp(:h_3:) exp(:h_4:) ... 
+       M = M_lin exp(:h_3:) exp(:h_4:) ...
 
   */
   int      i;
@@ -1035,10 +1035,10 @@ tps LieFact(const ss_vect<tps> &xy)
 {
   /* Single exponent Dragt-Finn factorization:
 
-       M = exp(:h_2:) exp(:h_3:) exp(:h_4:) ... 
+       M = exp(:h_2:) exp(:h_3:) exp(:h_4:) ...
 
   */
-  return Intd(FlowFact(xy), -1.0); 
+  return Intd(FlowFact(xy), -1.0);
 }
 
 
@@ -1152,7 +1152,7 @@ std::istream& operator>>(std::istream &is, tps &a)
 	     << no1 << std::setw(11) << rbuf[n];
 	for (i = 0; i < tps_n; i++)
 	  std::cout << std::setw(3) << jj[i];
-	std::cout << std::endl; 
+	std::cout << std::endl;
       }
 
       hash_(no_tps, tps_n, jj, ibuf1[n-1], ibuf2[n-1]);
@@ -1210,7 +1210,7 @@ std::ostream& operator<<(std::ostream &os, const tps &a)
 
   daexp_(a.intptr, rbuf, ibuf1, ibuf2, name);
   s << "\n";
-  
+
   i = 0;
   while ((i < name_len_for) && (name[i] != ' ')) {
     s << name[i]; i++;
@@ -1220,11 +1220,11 @@ std::ostream& operator<<(std::ostream &os, const tps &a)
     << ", NV = " << nv_tps << ", INA = " << a.intptr << "\n";
 
   for (i = 1; i <= 66; i++)
-    s << "-"; 
+    s << "-";
   s << "\n";
 
   if (header) prt_header(s);
-  
+
   if (n != 0) {
     s << "\n   |I|         a              ";
     for (i = 1; i <= nv_tps; i++)
@@ -1239,7 +1239,7 @@ std::ostream& operator<<(std::ostream &os, const tps &a)
     for (i = 1; i <= n; i++) {
       dehash_(no_tps, nv_tps, ibuf1[i-1], ibuf2[i-1], jj);
       ord = 0;
-      for (j = 0; j < nv_tps; j++) 
+      for (j = 0; j < nv_tps; j++)
 	ord += jj[j];
       if (ord == no)
 	if (fabs(rbuf[i]) >= eps_tps) {

@@ -47,7 +47,7 @@ def rd_simple(file_name):
         if z > z0:
             n[Z_] += 1
             if n[Z_] == 1:
-                x_min[Y_] = y;x_min[Z_] = z; 
+                x_min[Y_] = y;x_min[Z_] = z;
             if n[Z_] == 2:
                 dx[Z_] = z - z0
             z0 = z
