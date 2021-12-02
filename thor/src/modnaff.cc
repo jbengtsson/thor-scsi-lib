@@ -50,24 +50,24 @@ t_naf g_NAFVariable;
 !-------------------------------------------------------------------------
 !   NAFF.0.84 NUMERICAL ANALYSIS OF FUNDAMENTAL FREQUENCIES
 !            (27 JANVIER 1996)
-!  
-!   (C) JACQUES LASKAR 
+!
+!   (C) JACQUES LASKAR
 !       ASTRONOMIE ET SYSTEMES DYNAMIQUES
 !       BUREAU DES LONGITUDES
 !       75006 PARIS
 !       EMAIL : LASKAR@BDL.FR
 !
-!    MAIN REFERENCES : 
+!    MAIN REFERENCES :
 !    LASKAR, J.: THE CHAOTIC MOTION OF THE SOLAR SYSTEM. A NUMERICAL
 !    ESTIMATE OF THE SIZE OF THE CHAOTIC ZONES,ICARUS,88,(1990),266--291
 !
 !   (NAFF.MAC.1.6 - 27/5/98)
 !
 !**************************************************************************
-!  THIS PROGRAMM  CANNOT BE COPIED, 
+!  THIS PROGRAMM  CANNOT BE COPIED,
 !  DISTRIBUTED NOR MODIFIED WITHOUT THE AGREEMENT OF THE AUTHOR.
 !**************************************************************************
-! 
+!
 !                        PROGRAMME D'ANALYSE DE FOURIER AUTOMATIQUE
 !   -- NAFF --           CALCULE UN TERME A LA FOIS ET LE RETRANCHE
 !                        A TABS
@@ -88,7 +88,7 @@ t_naf g_NAFVariable;
 !  16/4/91   COMPILATION SEPAREE DE NAFF EN UNE BIBLIOTHEQUE
 !  30/4/91   TRAITEMENT DU CAS OU ON RETROUVE LA MEME FREQUENCE
 !  27/1/96   PLUSIEURS FENETRES
-!  27/2/97   MODIF POUR DIMENSIONNER TOUT EXPLICITEMENT AVEC 
+!  27/2/97   MODIF POUR DIMENSIONNER TOUT EXPLICITEMENT AVEC
 !            INCLUDE NAFF.INC POUR LES PARAMETRES
 !  23/45/1997    CORRECTION DE MAXIQUA.F (F. JOUTEL)
 !  22/4/1998 MODIF POUR QUADRUPLE PRECISION (J. LASKAR)
@@ -105,29 +105,29 @@ t_naf g_NAFVariable;
 !      1)  INITIALISER LES VARIABLES :
 !              DTOUR,KTABS,XH,NTERM,IW,T0,ICPLX,ISEC,NFPRT,IPRT
 !      2)  CALL INITNAF
-!             CALCULE UNIANG,FREFON, EPSM, PI 
+!             CALCULE UNIANG,FREFON, EPSM, PI
 !             CREE LES TABLEAUX DYNAMIQUES ((ZTABS)), ((TFS)), ((ZAMP)),
 !	     ((ZALP)) et((TWIN))
 !             APPELLE INIWIN
 !  - PHASE D'UTILISATION
 !      1)  EMPLIR LE TABLEAU ZTABS
 !      2)  CALL MFTNAF(NBTERM,EPS)
-!          ANALYSE ((ZTABS)) ET ESSAIE DE RECHERCHER (NBTERM) FREQUENCES, 
+!          ANALYSE ((ZTABS)) ET ESSAIE DE RECHERCHER (NBTERM) FREQUENCES,
 !          (EPS) ETANT L'ERREUR TOLEREE
 !          --! MODIFIE ((ZTABS))
 !  - PHASE D'EXPLOITATION OU DE MODIFICATION
 !     * CALL PRTABS(KTABS,ZTABS,IPAS)
-!         IMPRIME LES ELEMENTS DU TABLEAU COMPLEXE (ZTABS(0:KTABS)) TOUS 
+!         IMPRIME LES ELEMENTS DU TABLEAU COMPLEXE (ZTABS(0:KTABS)) TOUS
 !         LES (IPAS), ((IPRT)) DOIT ETRE MIS A 1 AVANT LA PROCEDURE POUR
-!         IMPRIMER QUELQUE CHOSE 
+!         IMPRIMER QUELQUE CHOSE
 !     * CALL SMOY(ZM)
-!         CALCULE LA MOYENNNE DES ELEMENTS DE ((ZTABS)) ET MODIFIE CE  
-!         TABLEAU EN SOUSTRAYANT DE CHACUN DES ELEMENTS CETTE VALEUR 
+!         CALCULE LA MOYENNNE DES ELEMENTS DE ((ZTABS)) ET MODIFIE CE
+!         TABLEAU EN SOUSTRAYANT DE CHACUN DES ELEMENTS CETTE VALEUR
 !         MOYENNE (ZM)
 !         --! MODIFIE ((ZTABS))
 !     * CALL TESSOL (EPS,TFSR,ZAMPR)
 !         TESTE LA COHERENCE DES SOLUTIONS OBTENUES PAR NAFF:
-!          -  RECONSTRUIT LE SIGNAL A PARTIR DES ((NFS)) TERMES TROUVES 
+!          -  RECONSTRUIT LE SIGNAL A PARTIR DES ((NFS)) TERMES TROUVES
 !             QUI SONT DANS ((TFS)) ET ((ZAMP))
 !          -  ANALYSE CE NOUVEAU SIGNAL, (EPS) ETANT L'ERREUR TOLEREE,
 !             ET RANGE LES NOUVEAUX TERMES DANS (TFSR) ET (ZAMPR)
@@ -147,7 +147,7 @@ t_naf g_NAFVariable;
 !  NTERM                : LE NOMBRE MAXIMAL DE FREQUENCES A RECHERCHER
 !  KTABS                : LE NOMBRE D'INTERVALLES ENTRE LES DONNEES
 !                         (IL Y A DONC KTABS+1 DONNEES)
-!  XH                   : PAS ENTRE DEUX DONNEES 
+!  XH                   : PAS ENTRE DEUX DONNEES
 !                         DANS UNE UNITE DE TEMPS QUELCONQUE
 !                         LA DUREE DE L'INTERVALLE EST ALORS XH!KTABS
 !  T0                   : DATE DE DEPART DES DONNEES
@@ -174,7 +174,7 @@ t_naf g_NAFVariable;
 !                        CALCULE EN FONCTION DE DTOUR
 !  FREFON              : FREQUENCE FONDAMENTALE
 !                           FREFON=2*PI/(KTABS*XH) OU EN SECONDES
-!                           FREFON=360.D0*3600.D0/(KTABS*XH)  
+!                           FREFON=360.D0*3600.D0/(KTABS*XH)
 !  NFS                 : NOMBRE DE FREQUENCES ENTIEREMENT DETERMINEES
 !                        AINSI QUE LEUR AMPLITUDE
 !  TFS(NBTERM)         : TABLEAU DES FREQUENCES
@@ -185,14 +185,14 @@ t_naf g_NAFVariable;
 static double AF,BF;
 static double *TWIN=NULL;
 
-/*!-----------------------------------------------------------------------	  
+/*!-----------------------------------------------------------------------
 ! VARIABLES A INITIALISER PAR L'UTILISATEUR AVANT DE LANCER INITNAF
           PUBLIC :: DTOUR,KTABS,XH,NTERM,IW,NFPRT,IPRT;
 ! VARIABLES PUBLIQUES INITIALISEES PAR INITNAF
           PUBLIC :: EPSM,PI,UNIANG,FREFON;
 ! TABLEAUX PUBLICS CREES PAR INITNAF ET DETRUITES PAR CLEANNAFF
           PUBLIC ::  TFS,ZAMP,ZTABS,ZALP;
-!-----------------------------------------------------------------------	  
+!-----------------------------------------------------------------------
 ! VARIABLES  A INITIALISER PAR L'UTILISATEUR AVANT DE LANCER NAFF
           PUBLIC :: T0,ICPLX,ISEC
 ! VARIABLES INITIALISES ET UTILISEES PAR NAFF
@@ -223,15 +223,15 @@ void naf_iniwin(double *p_pardTWIN);
 void delete_list_fenetre_naf(t_list_fenetre_naf *p_pListFenNaf);
 t_list_fenetre_naf *concat_list_fenetre_naf(t_list_fenetre_naf *p_pListFenHead,
                                             t_list_fenetre_naf *p_pListFenEnd);
-t_list_fenetre_naf *cree_list_fenetre_naf(const double p_dFreqMin, 
-                                          const double p_dFreqMax, 
+t_list_fenetre_naf *cree_list_fenetre_naf(const double p_dFreqMin,
+                                          const double p_dFreqMax,
                                           const int p_iNbTerm);
 
-/*!-----------------------------------------------------------------------	  
+/*!-----------------------------------------------------------------------
 ! VARIABLES PRIVEES
-          PRIVATE :: TWIN,AF,BF                   
+          PRIVATE :: TWIN,AF,BF
 ! ROUTINES PRIVEES
-          PRIVATE :: INIWIN,FRETES,ZTPOW,FFTMAX,FOUR1,PUISS2,MAXX        
+          PRIVATE :: INIWIN,FRETES,ZTPOW,FFTMAX,FOUR1,PUISS2,MAXX
           PRIVATE :: MODFRE, GRAMSC,PROSCA,SECANTES,MAXIQUA
           PRIVATE :: FUNC,FUNCP,PRODER,ZTDER,FREFIN,PROFRE
           PRIVATE :: ZTPOW2,ZARDYD,PROSCAA,ZTPOW2A,MODTAB*/
@@ -243,7 +243,7 @@ static void naf_maxx(int N, double *T, int *INDX);
 static void naf_fftmax(double *FR);
 #else /*remplacee par:*/
 static int naf_maxx(int N, double *T);
-static double naf_fftmax(int p_iFrMin, int p_iFrMax, double FREFO2, int KTABS2); 
+static double naf_fftmax(int p_iFrMin, int p_iFrMax, double FREFO2, int KTABS2);
 #endif /*NAF_USE_OPTIMIZE*/
 /* v0.96 M. GASTINEAU 12/01/99 : fin optimisation */
 static void naf_modtab(int N, double *T) __attribute__((unused));
@@ -263,11 +263,11 @@ static BOOL naf_profre(double FS, double *A, double *B, double *RMD);
 static BOOL naf_proscaa(double F1, double F2, t_complexe *ZP);
 static BOOL naf_zardyd(t_complexe *ZT, int N, double H, t_complexe *ZOM);
 static void naf_ztpow2a(int N, int N1, t_complexe *ZTF, double *TW, t_complexe ZA, t_complexe ZAST);
-          
-/*!------------------------------------------------------------------------          
+
+/*!------------------------------------------------------------------------
           CONTAINS*/
- 
- 
+
+
 /*!*/
 
 /*!-----------------------------------------------------------------------
@@ -283,12 +283,12 @@ static void naf_ztpow2a(int N, int N1, t_complexe *ZTF, double *TW, t_complexe Z
 !  - appelle INIWIN
 !-----------------------------------------------------------------------*/
 void naf_initnaf(void)
-{  
+{
 /*!----------------- PREMIERES INITIALISATIONS*/
       g_NAFVariable.EPSM = DBL_EPSILON;
       /*PI = ATAN2(1.D0,0.D0)*2*/
       g_NAFVariable.UNIANG = g_NAFVariable.DTOUR/(2*pi) ;
-      g_NAFVariable.FREFON = g_NAFVariable.DTOUR/(g_NAFVariable.KTABS*g_NAFVariable.XH)	;      
+      g_NAFVariable.FREFON = g_NAFVariable.DTOUR/(g_NAFVariable.KTABS*g_NAFVariable.XH)	;
       SYSCHECKMALLOCSIZE(g_NAFVariable.TFS, double, g_NAFVariable.NTERM+1);/*allocate(TFS(1:NTERM),stat = NERROR)*/
       SYSCHECKMALLOCSIZE(g_NAFVariable.ZAMP, t_complexe, g_NAFVariable.NTERM+1); /*allocate(ZAMP(1:NTERM),stat = NERROR)*/
       DIM2(g_NAFVariable.ZALP, (g_NAFVariable.NTERM+1), (g_NAFVariable.NTERM+1), t_complexe,"ZALP"); /*allocate(ZALP(1:NTERM,1:NTERM),stat = NERROR)*/
@@ -296,7 +296,7 @@ void naf_initnaf(void)
       SYSCHECKMALLOCSIZE(TWIN, double, g_NAFVariable.KTABS+1); /*allocate(TWIN(0:KTABS),stat = NERROR)*/
       /*v0.96 M. GASTINEAU 18/12/98 : modification du prototype */
       /*naf_iniwin();  */
-      naf_iniwin(TWIN);     
+      naf_iniwin(TWIN);
 }/*      end SUBROUTINE INITNAF*/
 /*!-----------------------------------------------------------------------
       subroutine CLEANNAF*/
@@ -306,7 +306,7 @@ void naf_cleannaf(void)
 /*!-----------------------------------------------------------------------
 !     desalloue les tableaux dynamiques
 !-----------------------------------------------------------------------*/
- 
+
       SYSFREE(g_NAFVariable.TFS);
       SYSFREE(g_NAFVariable.ZAMP);
       HFREE2(g_NAFVariable.ZALP);
@@ -317,22 +317,22 @@ void naf_cleannaf(void)
       g_NAFVariable.m_pListFen =NULL;
       /* v0.96 M. GASTINEAU 06/01/99 : fin ajout */
 }/*      end  subroutine CLEANNAF  */
-      
+
 /*-----------------------------------------------------------------------*/
 /* fonction identique a naf_initnaf mais :                               */
 /*n'alloue pas de tableau pour ZTABS, TFS et ZAMP.                       */
 /*-----------------------------------------------------------------------*/
 /*v0.96 M. GASTINEAU 06/10/98 : ajout */
 void naf_initnaf_notab()
-{  
+{
 /*!----------------- PREMIERES INITIALISATIONS*/
       g_NAFVariable.EPSM = DBL_EPSILON;
       g_NAFVariable.UNIANG = g_NAFVariable.DTOUR/(2*pi) ;
-      g_NAFVariable.FREFON = g_NAFVariable.DTOUR/(g_NAFVariable.KTABS*g_NAFVariable.XH)	;      
+      g_NAFVariable.FREFON = g_NAFVariable.DTOUR/(g_NAFVariable.KTABS*g_NAFVariable.XH)	;
       DIM2(g_NAFVariable.ZALP, (g_NAFVariable.NTERM+1), (g_NAFVariable.NTERM+1), t_complexe,"ZALP"); /*allocate(ZALP(1:NTERM,1:NTERM),stat = NERROR)*/
       SYSCHECKMALLOCSIZE(TWIN, double, g_NAFVariable.KTABS+1); /*allocate(TWIN(0:KTABS),stat = NERROR)*/
       /*v0.96 M. GASTINEAU 18/12/98 : modification du prototype */
-      /*naf_iniwin();*/ naf_iniwin(TWIN);    
+      /*naf_iniwin();*/ naf_iniwin(TWIN);
 }/*      end SUBROUTINE naf_initnaf_notab*/
 
 /*-----------------------------------------------------------------------*/
@@ -347,7 +347,7 @@ void naf_cleannaf_notab()
 
 !     desalloue les tableaux dynamiques
 !-----------------------------------------------------------------------*/
- 
+
       HFREE2(g_NAFVariable.ZALP);
       SYSFREE(TWIN);
       /* v0.96 M. GASTINEAU 06/01/99 : ajout */
@@ -356,7 +356,7 @@ void naf_cleannaf_notab()
       /* v0.96 M. GASTINEAU 06/01/99 : fin ajout */
 }/*      end  subroutine naf_initnaf_notab  */
 
-         
+
 /*!-----------------------------------------------------------------------
       SUBROUTINE MFTNAF(NBTERM,EPS)*/
 /*v0.97 M. GASTINEAU 26/05/99 : correction bug 0.97/99/05/26/A  pour pas<0 (XH<0) */
@@ -370,7 +370,7 @@ BOOL naf_mftnaf(int NBTERM, double EPS)
 !     NBTERM               : NOMBRE DE TERMES RECHERCHES (<= NTERM)
 !
 !
-!     EPS                 : PRECISION AVEC LAQUELLE ON RECHERCHE 
+!     EPS                 : PRECISION AVEC LAQUELLE ON RECHERCHE
 !                           LES FREQUENCES
 !
 !-----------------------------------------------------------------------
@@ -378,10 +378,10 @@ BOOL naf_mftnaf(int NBTERM, double EPS)
       IMPLICIT NONE
 ! (EPS)
       integer :: NBTERM
-      REAL (8) :: EPS     
+      REAL (8) :: EPS
 !
       integer :: I,IFLAG,NUMFR
-      REAL (8) :: TOL,STAREP,FR,A,B,RM     
+      REAL (8) :: TOL,STAREP,FR,A,B,RM
 !-----------------------------------------------------------------------*/
       int I, IFLAG, NUMFR = 0;
       double TOL,STAREP,FR,A,B,RM;
@@ -393,7 +393,7 @@ BOOL naf_mftnaf(int NBTERM, double EPS)
       int KTABS2;
 #endif /*NAF_USE_OPTIMIZE*/
 /*v0.96 M. GASTINEAU 14/01/99 : fin ajout*/
-      
+
       if (NBTERM >g_NAFVariable.NTERM)
       {
        Myyerror("Nbre de termes cherches trop grand");
@@ -420,20 +420,20 @@ BOOL naf_mftnaf(int NBTERM, double EPS)
        iFrMin=(int)(g_NAFVariable.m_pListFen->dFreqMin/FREFO2);
        iFrMax=(int)(g_NAFVariable.m_pListFen->dFreqMax/FREFO2);
        /*v0.97 M. GASTINEAU 26/05/99 : ajout - correction bug (cas pas <0) */
-       if (iFrMin>iFrMax) 
+       if (iFrMin>iFrMax)
        {/*swap*/
         double temp = iFrMin;
         iFrMin = iFrMax;
         iFrMax = (int)temp;
        }
        /*v0.97 M. GASTINEAU 26/05/99 : fin ajout  */
-       if (iFrMin<-iMaxValue) 
+       if (iFrMin<-iMaxValue)
        { iFrMin=-iMaxValue; }
-       else if (iFrMin>iMaxValue) 
+       else if (iFrMin>iMaxValue)
        { iFrMin=+iMaxValue; }
-       if (iFrMax<-iMaxValue) 
+       if (iFrMax<-iMaxValue)
        { iFrMax=-iMaxValue; }
-       else if (iFrMax>iMaxValue) 
+       else if (iFrMax>iMaxValue)
        { iFrMax=+iMaxValue; }
       }
 #endif /*NAF_USE_OPTIMIZE*/
@@ -487,16 +487,16 @@ void naf_prtabs(int KTABS, t_complexe *ZTABS, int IPAS)
 !-----------------------------------------------------------------------
 !     IMPRESSION DE g_NAFVariable.ZTABS
 !-----------------------------------------------------------------------
-  
+
       IMPLICIT NONE
 ! (KTABS,g_NAFVariable.ZTABS,IPAS)
       integer :: KTABS,IPAS
       complex (8) :: g_NAFVariable.ZTABS(0:KTABS)
 !
-      integer :: I         
+      integer :: I
 !*/
       int I;
-      
+
       if  (g_NAFVariable.IPRT==1)
       {
          for (I=0;I<=KTABS;I+=IPAS)
@@ -518,12 +518,12 @@ void naf_smoy(t_complexe *ZM)
 !    LA VALEUR MOYENNE
 
 !-----------------------------------------------------------------------
- 
-      IMPLICIT NONE 
+
+      IMPLICIT NONE
 ! (ZM)
-      complex (8) :: ZM 
+      complex (8) :: ZM
 !
-      integer :: I          
+      integer :: I
 !-----------------------------------------------------------------------
 */
       int I;
@@ -543,7 +543,7 @@ void naf_smoy(t_complexe *ZM)
       t_complexe *pzarTabs;
       double dNbKTabs1=g_NAFVariable.KTABS+1;
       i_compl_cmplx(ZM,0.E0,0.E0);
-      for (I=0, pzarTabs = g_NAFVariable.ZTABS; 
+      for (I=0, pzarTabs = g_NAFVariable.ZTABS;
            I<=g_NAFVariable.KTABS;
            I++, pzarTabs++)
       {
@@ -551,7 +551,7 @@ void naf_smoy(t_complexe *ZM)
       }
       i_compl_pdivdoubl(ZM,&dNbKTabs1);/*ZM=ZM/(g_NAFVariable.KTABS+1)*/
       for (I=0, pzarTabs = g_NAFVariable.ZTABS;
-           I<=g_NAFVariable.KTABS; 
+           I<=g_NAFVariable.KTABS;
            I++, pzarTabs++)
       {
          i_compl_psub(pzarTabs,ZM);
@@ -571,13 +571,13 @@ void naf_fretes(double FR, int *IFLAG, double TOL, int * NUMFR)
 !     RENVOIE IFLAG =  1 SI LE TEST REUSSIT (ON PEUT CONTINUER)
 !             IFLAG =  0 SI LE TEST ECHOUE (IL VAUT MIEUX S'ARRETER)
 !             IFLAG = -1 SI TEST < ECART, MAIS TEST/ECART < TOL
-!                        (ON RETROUVE PRATIQUEMENT LA MEME FREQUENCE 
+!                        (ON RETROUVE PRATIQUEMENT LA MEME FREQUENCE
 !                         D'INDICE NFR)
 !     TOL (ENTREE) TOLERANCE ( 1.D-7) EST UN BON EXEMPLE
 !     NFR (SORTIE) INDICE DE LA FREQUENCE RETROUVEE
 !
 !***********************************************************************
-  
+
       IMPLICIT NONE
 ! (FR,IFLAG,TOL,NUMFR)
       integer :: IFLAG,NUMFR
@@ -587,9 +587,9 @@ void naf_fretes(double FR, int *IFLAG, double TOL, int * NUMFR)
       REAL (8) :: ECART,TEST
 ! */
       int I;
-      double ECART, TEST;                
+      double ECART, TEST;
       *IFLAG = 1;
-      ECART = fabs(g_NAFVariable.FREFON) ; 
+      ECART = fabs(g_NAFVariable.FREFON) ;
       for (I = 1; I<=g_NAFVariable.NFS; I++)
       {
         TEST = fabs(g_NAFVariable.TFS[I] - FR);
@@ -631,16 +631,16 @@ void naf_ztpow(int N, int N1, t_complexe *ZT, t_complexe ZA, t_complexe ZAST)
 ! (N,N1,ZT,ZA,ZAST)
       integer :: N,N1
       complex (8) :: ZT(0:N),ZA,ZAST
-!           
+!
       integer :: I,INC,NX,IT,NT
       complex (8) ZT1,ZINC
 ! */
       int  I,INC,NX,IT,NT;
-      t_complexe  ZT1,ZINC;   
+      t_complexe  ZT1,ZINC;
 /* v0.96 M. GASTINEAU 01/12/98 : utilisation des fonctions  complexes inlines et optimisation */
 #if NAF_USE_OPTIMIZE>0
       t_complexe *pzarZT;
-#endif     /*NAF_USE_OPTIMIZE*/ 
+#endif     /*NAF_USE_OPTIMIZE*/
 
       if (N<N1-1)
       {
@@ -658,7 +658,7 @@ void naf_ztpow(int N, int N1, t_complexe *ZT, t_complexe ZA, t_complexe ZAST)
       ZT1=divcomplexe(ZT[N1-1], ZAST); /*ZT1 = ZT(N1-1)/ZAST*/
       ZINC=cmplx(1E0, 0E0); /*ZINC= 1;*/
       INC =0;
-      NT = (N+1)/N1;  
+      NT = (N+1)/N1;
       for (IT = 2; IT<= NT; IT++)
       {
          ZINC = mulcomplexe(ZINC,ZT1);
@@ -684,7 +684,7 @@ void naf_ztpow(int N, int N1, t_complexe *ZT, t_complexe ZA, t_complexe ZAST)
       ZT1=i_compl_div(ZT[N1-1], ZAST); /*ZT1 = ZT(N1-1)/ZAST*/
       i_compl_cmplx(&ZINC,1E0, 0E0); /*ZINC= 1;*/
       INC =0;
-      NT = (N+1)/N1;  
+      NT = (N+1)/N1;
       for (IT = 2; IT<= NT; IT++)
       {
          i_compl_pmul(&ZINC,&ZT1);
@@ -701,28 +701,28 @@ void naf_ztpow(int N, int N1, t_complexe *ZT, t_complexe ZA, t_complexe ZAST)
       {
          ZT[INC+I]=i_compl_mul(ZT[I], ZINC); /*ZT(INC +I) = ZT(I)*ZINC*/
       }
-#endif /*NAF_USE_OPTIMIZE*/ 
+#endif /*NAF_USE_OPTIMIZE*/
 /* v0.96 M. GASTINEAU 01/12/98 : fin modification */
 }/*      END SUBROUTINE ZTPOW*/
 /*!
       SUBROUTINE TESSOL (EPS,TFSR,ZAMPR)*/
 BOOL naf_tessol(double EPS, double *TFSR, t_complexe *ZAMPR)
-{      
+{
 /*!-----------------------------------------------------------------------
 !     TESSOL
 !                SOUS PROGRAMME POUR VERIFIER LA PRECISION DES
 !                SOLUTIONS OBTENUES PAR ANALYSE DE FOURIER
-!                ON ANALYSE A NOUVEAU LA SOLUTION ET ON COMPARE 
+!                ON ANALYSE A NOUVEAU LA SOLUTION ET ON COMPARE
 !                LES TERMES
 !
 !     J. LASKAR 25/5/89
 !-----------------------------------------------------------------------
-      
+
       IMPLICIT NONE
 ! (EPS,TFSR,ZAMPR)
       REAL (8) :: EPS, TFSR(g_NAFVariable.NTERM)
       complex (8) :: ZAMPR(g_NAFVariable.NTERM)
-!          
+!
       integer :: IT,IFR,JFR, NVTERM
       REAL (8) :: OFFSET
       complex (8) :: ZI,ZA,ZOM,ZEX
@@ -743,7 +743,7 @@ BOOL naf_tessol(double EPS, double *TFSR, t_complexe *ZAMPR)
 /* v0.96 M. GASTINEAU 01/12/98 : utilisation des fonctions  complexes inlines et optimisation */
 #if NAF_USE_OPTIMIZE>0
       t_complexe *pzarTab;
-#endif /**/      
+#endif /**/
       SYSCHECKMALLOCSIZE(ZAMPT, t_complexe, g_NAFVariable.NTERM+1); /* allocate(ZAMPT(1:g_NAFVariable.NTERM),stat = NERROR)*/
       DIM2(ZALPT, (g_NAFVariable.NTERM+1), (g_NAFVariable.NTERM+1), t_complexe, "ZALPT"); /*allocate(ZALPT(1:g_NAFVariable.NTERM,1:g_NAFVariable.NTERM),stat = NERROR)*/
       SYSCHECKMALLOCSIZE(TFST, double, g_NAFVariable.NTERM+1);/* allocate(TFST(1:g_NAFVariable.NTERM),stat = NERROR)*/
@@ -886,7 +886,7 @@ void  naf_inifre()
 !     UTILE QUAND ON BOUCLE SUR PLUSIEURS CAS
 !
 !***********************************************************************
-       
+
       IMPLICIT NONE
 */
       int I,J;
@@ -946,10 +946,10 @@ void  naf_inifre()
 !                      2 AMPLITUDE DES FREQUENCES NEGATIVES
 !     DISTANCE ENTRE DEUX LIGNES  g_NAFVariable.FREFON
 !-----------------------------------------------------------------------
-      
+
       IMPLICIT NONE
 ! (FR)
-      REAL (8) :: FR      
+      REAL (8) :: FR
 !
       integer :: KTABS2,ISG,IPAS,I,IDV,INDX,IFR
       REAL (8) :: FREFO2
@@ -966,12 +966,12 @@ void naf_fftmax(double *FR)
       double *RTAB=NULL;
 
       naf_puiss2(g_NAFVariable.KTABS+1,&KTABS2);
-/*! */     
+/*! */
       SYSCHECKMALLOCSIZE(pdTAB,double,2*KTABS2); pdTAB--;/*  allocate(TAB(2*KTABS2),stat = NERROR)*/
       SYSCHECKMALLOCSIZE(RTAB,double,KTABS2);/*allocate(RTAB(0:KTABS2-1),stat = NERROR)*/
-/*!*/      
+/*!*/
       FREFO2=(g_NAFVariable.FREFON*g_NAFVariable.KTABS)/KTABS2;
-/*!****************** */  
+/*!****************** */
       if (g_NAFVariable.IPRT==1)
       {
        fprintf(g_NAFVariable.NFPRT,"KTABS2= %d  FREFO2= %g\n",KTABS2, FREFO2);
@@ -983,7 +983,7 @@ void naf_fftmax(double *FR)
       for(I=0;I<=KTABS2-1; I++)
       {
          pdTAB[2*I+1]=g_NAFVariable.ZTABS[I].reel*TWIN[I];/*pdTAB(2*I+1)=DREAL(g_NAFVariable.ZTABS(I))*TWIN(I)*/
-         pdTAB[2*I+2]=g_NAFVariable.ZTABS[I].imag*TWIN[I]; /*pdTAB(2*I+2)=DIMAG(g_NAFVariable.ZTABS(I))*TWIN(I)*/          
+         pdTAB[2*I+2]=g_NAFVariable.ZTABS[I].imag*TWIN[I]; /*pdTAB(2*I+2)=DIMAG(g_NAFVariable.ZTABS(I))*TWIN(I)*/
       }
       naf_four1(pdTAB,KTABS2,ISG);
       for(I=0;I<=KTABS2-1; I++)
@@ -994,22 +994,22 @@ void naf_fftmax(double *FR)
 /*!**********************        CALL MODTAB(KTABS2,RTAB)*/
       naf_maxx(KTABS2-1, RTAB, &INDX);/*naf_maxx(KTABS2,RTAB,&INDX);*/
       /* car naf_maxx travaille sur des tableaux de 1 a N */
-      
+
       IFR=((INDX+1)<=(KTABS2/2))?INDX:INDX-KTABS2; /*IF (INDX.LE.KTABS2/2) THEN
           IFR = INDX-1
       ELSE
           IFR = INDX-1-KTABS2
       ENDIF*/
-      
+
       *FR = IFR*FREFO2*IPAS;
       if (g_NAFVariable.IPRT==1)
       {
-       fprintf(g_NAFVariable.NFPRT,"IFR=%d FR=%g RTAB=%g INDX=%d KTABS2=%d\n",IFR,*FR, RTAB[INDX],INDX,KTABS2); 
+       fprintf(g_NAFVariable.NFPRT,"IFR=%d FR=%g RTAB=%g INDX=%d KTABS2=%d\n",IFR,*FR, RTAB[INDX],INDX,KTABS2);
       }
       SYSFREE(RTAB);
 }
 #else /*remplacee par:*/
-double naf_fftmax(int p_iFrMin, int p_iFrMax, double FREFO2, int KTABS2) 
+double naf_fftmax(int p_iFrMin, int p_iFrMax, double FREFO2, int KTABS2)
 {
 /* la fonction retourne la frequence FR dertminee */
 /* On suppose p_iFrMin < p_iFrMax */
@@ -1021,18 +1021,18 @@ double naf_fftmax(int p_iFrMin, int p_iFrMax, double FREFO2, int KTABS2)
       int iKTABS2m1, iKTABS2;
       double dDIV;
       double *pdTABTemp1,*pdTABTemp2;
-      
 
-      
+
+
       /*naf_puiss2(g_NAFVariable.KTABS+1,&KTABS2);*//*v0.96 M. GASTINEAU 14/01/99 */
       iKTABS2 = KTABS2;
       iKTABS2m1 = iKTABS2-1;
-/*! */     
+/*! */
       SYSCHECKMALLOCSIZE(pdTAB,double,2*iKTABS2); /*  allocate(TAB(2*KTABS2),stat = NERROR)*/
       SYSCHECKMALLOCSIZE(RTAB,double,iKTABS2);/*allocate(RTAB(0:KTABS2-1),stat = NERROR)*/
-/*!*/      
+/*!*/
      /* FREFO2=(g_NAFVariable.FREFON*g_NAFVariable.KTABS)/iKTABS2;*//*v0.96 M. GASTINEAU 14/01/99 */
-/*!****************** */  
+/*!****************** */
       if (g_NAFVariable.IPRT==1)
       {
        fprintf(g_NAFVariable.NFPRT,"KTABS2= %d  FREFO2= %g\n",iKTABS2, FREFO2);
@@ -1046,7 +1046,7 @@ double naf_fftmax(int p_iFrMin, int p_iFrMax, double FREFO2, int KTABS2)
           I++)
       {
          *pdTABTemp1++ = (*pdTABTemp2++) * TWIN[I];/*pdTAB(2*I+1)=DREAL(g_NAFVariable.ZTABS(I))*TWIN(I)*/
-         *pdTABTemp1++ = (*pdTABTemp2++) * TWIN[I]; /*pdTAB(2*I+2)=DIMAG(g_NAFVariable.ZTABS(I))*TWIN(I)*/          
+         *pdTABTemp1++ = (*pdTABTemp2++) * TWIN[I]; /*pdTAB(2*I+2)=DIMAG(g_NAFVariable.ZTABS(I))*TWIN(I)*/
       }
       naf_four1(pdTAB-1,iKTABS2,ISG);
       for(I=0, pdTABTemp1=pdTAB, pdTABTemp2=pdTABTemp1+1;
@@ -1064,10 +1064,10 @@ double naf_fftmax(int p_iFrMin, int p_iFrMax, double FREFO2, int KTABS2)
       ELSE
           IFR = INDX-1-KTABS2
       ENDIF*/
-      /* *FR = IFR*FREFO2*IPAS; 
+      /* *FR = IFR*FREFO2*IPAS;
       if (g_NAFVariable.IPRT==1)
       {
-       fprintf(g_NAFVariable.NFPRT,"IFR=%d FR=%g RTAB=%g INDX=%d KTABS2=%d\n",IFR,*FR, RTAB[INDX],INDX,iKTABS2); 
+       fprintf(g_NAFVariable.NFPRT,"IFR=%d FR=%g RTAB=%g INDX=%d KTABS2=%d\n",IFR,*FR, RTAB[INDX],INDX,iKTABS2);
       }
       SYSFREE(RTAB); */
       /*remplacee par:*/
@@ -1085,7 +1085,7 @@ double naf_fftmax(int p_iFrMin, int p_iFrMax, double FREFO2, int KTABS2)
        INDX=naf_maxx(p_iFrMax-p_iFrMin, RTAB+iKTABS2+p_iFrMin);
        IFR=INDX+p_iFrMin;
       }
-      else 
+      else
       {/* p_iFrMin et p_iFrMax de signe differents */
        int INDXNeg;
        /* frequence negative */
@@ -1101,11 +1101,11 @@ double naf_fftmax(int p_iFrMin, int p_iFrMax, double FREFO2, int KTABS2)
         IFR=INDX;
        }
       }
-      FR = IFR*FREFO2*IPAS; 
+      FR = IFR*FREFO2*IPAS;
       if (g_NAFVariable.IPRT==1)
       {
        fprintf(g_NAFVariable.NFPRT,"IFRMIN=%d IFRMAX=%d IFR=%d FR=%g RTAB=%g INDX=%d KTABS2=%d\n",p_iFrMin, p_iFrMax,
-               IFR,FR, RTAB[INDX],INDX,iKTABS2); 
+               IFR,FR, RTAB[INDX],INDX,iKTABS2);
       }
       SYSFREE(RTAB);
       return FR;
@@ -1124,7 +1124,7 @@ void naf_four1(double *DATA, int NN, int ISIGN)
 ! (DATA,NN,ISIGN)
        integer :: NN,ISIGN
        REAL (8) :: DATA(2*NN)
-! 
+!
       integer :: N,I,J,M,MMAX,ISTEP
       REAL (8) :: THETA,WPR,WPI,WR,WI,TEMPR,TEMPI,WTEMP
 */
@@ -1134,7 +1134,7 @@ void naf_four1(double *DATA, int NN, int ISIGN)
       J=1;
       for(I=1;I<=N; I+=2)
       {
-/*! en fait N est pair donc I<= N-1    */  
+/*! en fait N est pair donc I<= N-1    */
         if(J>I)
         {
           TEMPR=DATA[J];
@@ -1196,12 +1196,12 @@ void naf_puiss2(int NT, int *N2)
 !    CONTENUE DANS NT
 !*******************************************
       implicit none
-!  (NT,N2)    
+!  (NT,N2)
       INTEGER ::  N2,NT
-!    
+!
       integer :: n
 ! */
-      int N;           
+      int N;
       N=NT;
       if (N==0)
       {
@@ -1213,7 +1213,7 @@ void naf_puiss2(int NT, int *N2)
       {
          *N2 <<=1;/*N2=N2*2*/
          N >>=1; /*N=N/2*/
-         
+
       }
 }/*      END SUBROUTINE PUISS2 */
 
@@ -1227,7 +1227,7 @@ void naf_puiss2(int NT, int *N2)
        REAL (8) :: T(0:N)
 !
       integer :: J
-      REAL (8) VMAX             
+      REAL (8) VMAX
 !*/
 /* v0.96 M. GASTINEAU 12/01/99 : optimisation  passage par retour et non par la pile */
 #if NAF_USE_OPTIMIZE==0
@@ -1277,14 +1277,14 @@ void naf_modtab(int N, double *T)
       implicit none
 !  (N,T)
       integer :: N
-      REAL (8) :: T(0:N) 
-!          
+      REAL (8) :: T(0:N)
+!
       integer NOK,I
 ! */
-      int NOK, I;     
+      int NOK, I;
       NOK = 40;
       for(I = 0; I<=NOK; I++)
-      {   
+      {
        T[I] = 0;
        T[N-I] = 0;
       }
@@ -1299,16 +1299,16 @@ void naf_modfre(int NUMFR, double *A, double *B)
 /*!-----------------------------------------------------------------------
 !     PERMET DE MODIFIER UNE AMPLITUDE DEJA CALCULEE QUAND
 !     ON RETROUVE LE MEME TERME, A TOL PRES DANS LE DEVELOPPEMENT
-! 
+!
 !     NUMFR     INDICE DE LA FREQUENCE EXISTANT DEJA
-!     A,B       PARTIES REELLES ET IMAGINAIRES DE L'AMPLITUDE DE LA MODIF 
+!     A,B       PARTIES REELLES ET IMAGINAIRES DE L'AMPLITUDE DE LA MODIF
 !               A APPORTER A L'AMPLITUDE DE LA FREQUENCE NUMFR
 !
 !     AUTRES PARAMETRES TRANSMIS PAR LE COMMON/CGRAM/g_NAFVariable.ZAMP,g_NAFVariable.ZALP,g_NAFVariable.TFS,g_NAFVariable.NFS
 !
 !     30/4/91
 !-----------------------------------------------------------------------
-      
+
 !----------! g_NAFVariable.TFS EST LE TABLEAU FINAL DES FREQUENCES
 !----------! g_NAFVariable.ZAMP   TABLEAU DES AMPLITUDES COMPLEXES
 !----------! g_NAFVariable.ZALP   MATRICE DE PASSAGE DE LA BASE ORTHONORMALISEE
@@ -1317,7 +1317,7 @@ void naf_modfre(int NUMFR, double *A, double *B)
 ! (NUMFR,A,B)
       integer :: NUMFR
       REAL (8) :: A,B
-!            
+!
       integer :: IT
       complex (8) :: ZI,ZOM,ZA,ZEX,ZINC
       complex (8), dimension (:),  allocatable :: ZT
@@ -1325,7 +1325,7 @@ void naf_modfre(int NUMFR, double *A, double *B)
       int IT;
       t_complexe ZI,ZOM,ZA,ZEX,ZINC;
       t_complexe *ZT=NULL;
-           
+
 /* v0.96 M. GASTINEAU 01/12/98 : utilisation des fonctions  complexes inlines et optimisation */
 #if NAF_USE_OPTIMIZE==0
       SYSCHECKMALLOCSIZE(ZT,t_complexe, g_NAFVariable.KTABS+1); /*allocate(ZT(0:g_NAFVariable.KTABS),stat = NERROR)*/
@@ -1339,7 +1339,7 @@ void naf_modfre(int NUMFR, double *A, double *B)
 !-----------!       2*RE(g_NAFVariable.ZAMP(I)*EXP(ZI*g_NAFVariable.TFS(I)*T) )*/
       g_NAFVariable.ZAMP[NUMFR]=addcomplexe(g_NAFVariable.ZAMP[NUMFR],ZA);
       if (g_NAFVariable.IPRT==1)
-      { 
+      {
        fprintf(g_NAFVariable.NFPRT," %+-20.15E %+-20.15E %+-20.15E %+-20.15E %+-20.15E\n",g_NAFVariable.TFS[NUMFR],
                      module(g_NAFVariable.ZAMP[NUMFR]),g_NAFVariable.ZAMP[NUMFR].reel,
                      g_NAFVariable.ZAMP[NUMFR].imag,atan2(g_NAFVariable.ZAMP[NUMFR].imag,g_NAFVariable.ZAMP[NUMFR].reel));
@@ -1352,7 +1352,7 @@ void naf_modfre(int NUMFR, double *A, double *B)
          naf_ztpow(g_NAFVariable.KTABS,64,ZT,ZINC,ZEX); /*CALL  ZTPOW (KTABS+1,64,ZT,ZINC,ZEX)*/
          for(IT=0;IT<=g_NAFVariable.KTABS;IT++)
          {
-            g_NAFVariable.ZTABS[IT]=subcomplexe(g_NAFVariable.ZTABS[IT], ZT[IT]); 
+            g_NAFVariable.ZTABS[IT]=subcomplexe(g_NAFVariable.ZTABS[IT], ZT[IT]);
          }
       }
       else
@@ -1365,7 +1365,7 @@ void naf_modfre(int NUMFR, double *A, double *B)
          {
           for(IT=0;IT<=g_NAFVariable.KTABS;IT++)
           {
-           g_NAFVariable.ZTABS[IT].reel -= ZT[IT].reel; 
+           g_NAFVariable.ZTABS[IT].reel -= ZT[IT].reel;
            /*g_NAFVariable.ZTABS(IT+1)=g_NAFVariable.ZTABS(IT+1)- DREAL(ZT(IT+1)) */
           }
          }
@@ -1385,7 +1385,7 @@ void naf_modfre(int NUMFR, double *A, double *B)
 #else /*remplacee par:*/
       t_complexe *pzarTabs, *pzarZT;
       const int ikTabs=g_NAFVariable.KTABS; /*v0.96 M. GASTINEAU 12/01/99 : optimisation*/
-      
+
       SYSCHECKMALLOCSIZE(ZT,t_complexe, g_NAFVariable.KTABS+1); /*allocate(ZT(0:g_NAFVariable.KTABS),stat = NERROR)*/
       i_compl_cmplx(&ZI,0.E0,1.E0);
       ZOM=i_compl_muldoubl(g_NAFVariable.TFS[NUMFR]/g_NAFVariable.UNIANG,ZI); /*ZOM=g_NAFVariable.TFS[NUMFR]/g_NAFVariable.UNIANG*ZI*/
@@ -1398,7 +1398,7 @@ void naf_modfre(int NUMFR, double *A, double *B)
 !-----------!       2*RE(g_NAFVariable.ZAMP(I)*EXP(ZI*g_NAFVariable.TFS(I)*T) )*/
       i_compl_padd(g_NAFVariable.ZAMP+NUMFR,&ZA);
       if (g_NAFVariable.IPRT==1)
-      { 
+      {
        fprintf(g_NAFVariable.NFPRT," %+-20.15E %+-20.15E %+-20.15E %+-20.15E %+-20.15E\n",g_NAFVariable.TFS[NUMFR],
                      i_compl_module(g_NAFVariable.ZAMP[NUMFR]),g_NAFVariable.ZAMP[NUMFR].reel,
                      g_NAFVariable.ZAMP[NUMFR].imag,atan2(g_NAFVariable.ZAMP[NUMFR].imag,g_NAFVariable.ZAMP[NUMFR].reel));
@@ -1432,7 +1432,7 @@ void naf_modfre(int NUMFR, double *A, double *B)
          {
           for(IT=0;IT<=ikTabs;IT++)
           {
-           g_NAFVariable.ZTABS[IT].reel -= ZT[IT].reel; 
+           g_NAFVariable.ZTABS[IT].reel -= ZT[IT].reel;
            /*g_NAFVariable.ZTABS(IT+1)=g_NAFVariable.ZTABS(IT+1)- DREAL(ZT(IT+1)) */
           }
          }
@@ -1444,7 +1444,7 @@ void naf_modfre(int NUMFR, double *A, double *B)
            /* g_NAFVariable.ZTABS[IT].reel -=ZT[IT].reel;*//* g_NAFVariable.ZTABS(IT)=g_NAFVariable.ZTABS(IT)- DREAL(ZT(IT)) */
            /*remplacee par:*/
            g_NAFVariable.ZTABS[IT].reel -=2*ZT[IT].reel;/* g_NAFVariable.ZTABS(IT)=g_NAFVariable.ZTABS(IT)- DREAL(ZT(IT)) */
-           /*v0.96 M. GASTINEAU 12/01/99 : fin modification */        
+           /*v0.96 M. GASTINEAU 12/01/99 : fin modification */
          }
       }
       SYSFREE(ZT); /*deallocate(ZT)*/
@@ -1470,7 +1470,7 @@ BOOL naf_gramsc(double FS, double A, double B)
 !
 !     MODIFIE LE 26 9 87 POUR LES FONCTIONS REELLES   J. LASKAR
 !-----------------------------------------------------------------------
-      
+
 !----------! g_NAFVariable.TFS EST LE TABLEAU FINAL DES FREQUENCES
 !----------! g_NAFVariable.ZAMP   TABLEAU DES AMPLITUDES COMPLEXES
 !----------! g_NAFVariable.ZALP   MATRICE DE PASSAGE DE LA BASE ORTHONORMALISEE
@@ -1478,7 +1478,7 @@ BOOL naf_gramsc(double FS, double A, double B)
 !----------! g_NAFVariable.NFS    NOMBRE DE FREQ.DEJA DETERMINEES
       IMPLICIT NONE
 ! (g_NAFVariable.KTABS,FS,A,B)
-      REAL (8) :: FS,A,B     
+      REAL (8) :: FS,A,B
 !
       integer :: I, J, K, NF, IT
       REAL (8) DIV
@@ -1490,7 +1490,7 @@ BOOL naf_gramsc(double FS, double A, double B)
       double DIV;
       t_complexe *ZTEE=NULL;
       t_complexe ZDIV,ZMUL,ZI,ZEX,ZINC,ZA,ZOM;
-      t_complexe *ZT=NULL;  
+      t_complexe *ZT=NULL;
 /* v0.96 M. GASTINEAU 01/12/98 : utilisation des fonctions  complexes inlines et optimisation */
 #if NAF_USE_OPTIMIZE>0
       t_complexe *pzarTabs, *pzarZT;
@@ -1574,7 +1574,7 @@ BOOL naf_gramsc(double FS, double A, double B)
          naf_ztpow(g_NAFVariable.KTABS,64,ZT,ZINC,ZEX); /*naf_ztpow(g_NAFVariable.KTABS+1,64,ZT,ZINC,ZEX);*/
          for(IT=0;IT<=g_NAFVariable.KTABS;IT++)
          {
-            g_NAFVariable.ZTABS[IT]=subcomplexe(g_NAFVariable.ZTABS[IT],ZT[IT]); 
+            g_NAFVariable.ZTABS[IT]=subcomplexe(g_NAFVariable.ZTABS[IT],ZT[IT]);
          }
        }
        else
@@ -1587,7 +1587,7 @@ BOOL naf_gramsc(double FS, double A, double B)
          {
          for(IT=0;IT<=g_NAFVariable.KTABS;IT++)
          {
-           g_NAFVariable.ZTABS[IT].reel -= ZT[IT].reel; 
+           g_NAFVariable.ZTABS[IT].reel -= ZT[IT].reel;
            /*g_NAFVariable.ZTABS(IT+1)=g_NAFVariable.ZTABS(IT+1)- DREAL(ZT(IT+1)) */
          }
          }
@@ -1693,7 +1693,7 @@ BOOL naf_gramsc(double FS, double A, double B)
          {
          for(IT=0;IT<=ikTabs;IT++)
          {
-           g_NAFVariable.ZTABS[IT].reel -= ZT[IT].reel; 
+           g_NAFVariable.ZTABS[IT].reel -= ZT[IT].reel;
            /*g_NAFVariable.ZTABS(IT+1)=g_NAFVariable.ZTABS(IT+1)- DREAL(ZT(IT+1)) */
          }
          }
@@ -1729,7 +1729,7 @@ void naf_prosca(double F1, double F2, t_complexe* ZP)
 !     F1,F2     FREQUENCES EN "/AN
 !               REVU LE 26/9/87 J. LASKAR
 !-----------------------------------------------------------------------
-      
+
       IMPLICIT NONE
 ! (g_NAFVariable.KTABS,F1,F2,ZP)
       REAL (8) :: F1,F2
@@ -1739,7 +1739,7 @@ void naf_prosca(double F1, double F2, t_complexe* ZP)
       REAL (8) PICARRE, T1,T2, XT,DIV,FAC,T,FR1,FR2
 * */
       t_complexe ZI,ZF,ZF1,ZF2;
-      double  PICARRE, T1,T2, XT,DIV,FACTEUR,T,FR1,FR2;               
+      double  PICARRE, T1,T2, XT,DIV,FACTEUR,T,FR1,FR2;
 /* v0.96 M. GASTINEAU 01/12/98 : utilisation des fonctions  complexes inlines et optimisation */
 #if NAF_USE_OPTIMIZE==0
       ZI=cmplx(0.E0,1.E0);
@@ -1798,7 +1798,7 @@ void naf_prosca(double F1, double F2, t_complexe* ZP)
 /* v0.96 M. GASTINEAU 01/12/98 : fin optimisation */
       }
 }/*      END  SUBROUTINE PROSCA*/
-      
+
 /*      FUNCTION FUNC(X)  */
 double naf_func(double X)
 {
@@ -1812,17 +1812,17 @@ double naf_func(double X)
       naf_profre(X,&AF,&BF,&RMD);
       return RMD;
 }/*      END FUNCTION FUNC*/
-     
+
 /*      FUNCTION FUNCP(X)*/
 double naf_funcp(double X)
 {
 /*      IMPLICIT NONE
 !  (X)
       REAL (8) :: X,FUNCP
-!          
+!
       REAL (8) :: DER, RMF
 ! */
-      double DER, RMF;     
+      double DER, RMF;
       naf_proder(X,&DER,&AF,&BF,&RMF);
       return DER;
 }/*      END FUNCTION FUNCP*/
@@ -1831,20 +1831,20 @@ double naf_funcp(double X)
 void naf_proder(double FS, double *DER, double *A, double *B,double *RM)
 {
 /*!***********************************************************************
-!  CE SOUS PROG. CALCULE LA DERIVEE DU CARRE DU MODULE DU PRODUIT 
+!  CE SOUS PROG. CALCULE LA DERIVEE DU CARRE DU MODULE DU PRODUIT
 !  SCALAIRE DE EXP(-I*FS)*T PAR TAB(0:7
 !  UTILISE LA METHODE D'INTEGRATION DE HARDY
-!  LE RESULTAT EST DANS DER 
+!  LE RESULTAT EST DANS DER
 !  A +IB LE PRODUIT SCALAIRE , RM SON MODULE
 !  FS EST DONNEE EN SECONDES PAR AN
 !               REVU LE 26/9/87 J. LASKAR
 !                       26/5/98 (CHGT DE SIGNE) (*m/4)
 !***********************************************************************
-      
+
       IMPLICIT NONE
 ! (FS,DER,A,B,RM)
-      REAL (8) :: FS,DER,A,B,RM      
-! 
+      REAL (8) :: FS,DER,A,B,RM
+!
       integer,parameter :: NVECT=64
       REAL (8) :: OM,ANG0,ANGI,H
       complex (8) :: ZI,ZAC,ZINC,ZEX,ZB,ZT,ZA
@@ -1852,7 +1852,7 @@ void naf_proder(double FS, double *DER, double *A, double *B,double *RM)
       complex (8), dimension (:), allocatable :: ZTF
 ! */
 #define NVECT 64
-      double  OM,ANG0,ANGI,H;    
+      double  OM,ANG0,ANGI,H;
       t_complexe ZI,ZAC,ZINC,ZEX,ZB,/*ZT,*/ZA;
       int LTF;
       t_complexe *ZTF=NULL;/*tableau de 1 a KTABS+1 */
@@ -1871,7 +1871,7 @@ void naf_proder(double FS, double *DER, double *A, double *B,double *RM)
       ZAC = expcomplexe (muldoublcomplexe(-ANG0,ZI));
       ZINC=  expcomplexe (muldoublcomplexe(-ANGI,ZI));
       ZEX = divcomplexe(ZAC,ZINC); /*ZEX = ZAC/ZINC*/
-      naf_ztpow2(g_NAFVariable.KTABS,NVECT,ZTF,g_NAFVariable.ZTABS,TWIN,ZINC,ZEX); /*CALL  ZTPOW2(g_NAFVariable.KTABS+1,NVECT,ZTF,g_NAFVariable.ZTABS,TWIN,ZINC,ZEX)*/ 
+      naf_ztpow2(g_NAFVariable.KTABS,NVECT,ZTF,g_NAFVariable.ZTABS,TWIN,ZINC,ZEX); /*CALL  ZTPOW2(g_NAFVariable.KTABS+1,NVECT,ZTF,g_NAFVariable.ZTABS,TWIN,ZINC,ZEX)*/
 /*!------------------ TAILLE DU PAS*/
       H=1.E0/((double)LTF);
       naf_zardyd(ZTF,LTF,H,&ZA);
@@ -1894,7 +1894,7 @@ void naf_proder(double FS, double *DER, double *A, double *B,double *RM)
       ZAC = i_compl_exp (i_compl_muldoubl(-ANG0,ZI));
       ZINC=  i_compl_exp (i_compl_muldoubl(-ANGI,ZI));
       ZEX = i_compl_div(ZAC,ZINC); /*ZEX = ZAC/ZINC*/
-      naf_ztpow2(g_NAFVariable.KTABS,NVECT,ZTF,g_NAFVariable.ZTABS,TWIN,ZINC,ZEX); /*CALL  ZTPOW2(g_NAFVariable.KTABS+1,NVECT,ZTF,g_NAFVariable.ZTABS,TWIN,ZINC,ZEX)*/ 
+      naf_ztpow2(g_NAFVariable.KTABS,NVECT,ZTF,g_NAFVariable.ZTABS,TWIN,ZINC,ZEX); /*CALL  ZTPOW2(g_NAFVariable.KTABS+1,NVECT,ZTF,g_NAFVariable.ZTABS,TWIN,ZINC,ZEX)*/
 /*!------------------ TAILLE DU PAS*/
       H=1.E0/((double)LTF);
       naf_zardyd(ZTF,LTF,H,&ZA);
@@ -1916,7 +1916,7 @@ void naf_ztder(int N, int N1, t_complexe *ZTF, t_complexe *ZTA, double *TW, t_co
 {
 /*!-----------------------------------------------------------------------
 !ZTPOW   CALCULE  ZTF(I) = ZTA(I)* TW(I)*ZAST*ZA**I *(T0+(I-1)*XH EN VECTORIEL
-!          
+!
 !-----------------------------------------------------------------------
       IMPLICIT NONE
 !  (N,N1,ZT,ZTF,ZTA,TW,ZA,ZAST,T0,XH)
@@ -1926,12 +1926,12 @@ void naf_ztder(int N, int N1, t_complexe *ZTF, t_complexe *ZTA, double *TW, t_co
 !
       integer :: I,INC,NT,IT,NX
       complex (8) :: ZT1,ZINC
-      complex (8),dimension (:), allocatable :: ZT 
+      complex (8),dimension (:), allocatable :: ZT
 !      */
       int I,INC,NT,IT,NX;
       t_complexe ZT1, ZINC;
       t_complexe *ZT=NULL;
-      
+
       SYSCHECKMALLOCSIZE(ZT,t_complexe,N1); /*allocate(ZT(0:N1-1),stat = NERROR)*/
       if (N<N1-1)
       {
@@ -1955,7 +1955,7 @@ void naf_ztder(int N, int N1, t_complexe *ZTF, t_complexe *ZTA, double *TW, t_co
       ZT1 = divcomplexe(ZT[N1-1],ZAST);
       ZINC= cmplx(1,0);
       INC =0;
-      NT = (N+1)/N1;  
+      NT = (N+1)/N1;
       for( IT = 2; IT<= NT; IT++)
       {
          ZINC = mulcomplexe(ZINC,ZT1);
@@ -1986,13 +1986,13 @@ void naf_ztder(int N, int N1, t_complexe *ZTF, t_complexe *ZTA, double *TW, t_co
       }
       for(I = 0; I<N1; I++)
       {
-         ZTF[I] = i_compl_muldoubl((T0+(I)*XH)*TW[I], i_compl_mul(ZTA[I],ZT[I])); 
+         ZTF[I] = i_compl_muldoubl((T0+(I)*XH)*TW[I], i_compl_mul(ZTA[I],ZT[I]));
          /*ZTF(I) = ZTA(I)*TW(I)*ZT(I)*(T0+(I-1)*XH)*/
       }
       ZT1 = i_compl_div(ZT[N1-1],ZAST);
       i_compl_cmplx(&ZINC,1,0);
       INC =0;
-      NT = (N+1)/N1;  
+      NT = (N+1)/N1;
       for( IT = 2; IT<= NT; IT++)
       {
          i_compl_pmul(&ZINC,&ZT1);
@@ -2015,7 +2015,7 @@ void naf_ztder(int N, int N1, t_complexe *ZTF, t_complexe *ZTA, double *TW, t_co
 /* v0.96 M. GASTINEAU 01/12/98 : fin optimisation */
       SYSFREE(ZT);
 }/*      END SUBROUTINE ZTDER*/
-      
+
 /*      SUBROUTINE SECANTES(X,PASS,EPS,XM,IPRT,NFPRT)*/
 void naf_secantes(double X, double PASS, double EPS, double *XM, int IPRT, FILE *NFPRT)
 {
@@ -2023,7 +2023,7 @@ void naf_secantes(double X, double PASS, double EPS, double *XM, int IPRT, FILE 
 !***********************************************************
 !      CALCUL PAR  LA METHODE DES SECANTES D'UN ZERO
 !      D'UNE FONCTION FUNC FOURNIE PAR L'UTILISATEUR
-!      
+!
 !     X, PASS : LE ZERO EST SUPPOSE ETRE DANS X-PASS,X+PASS
 !     EPS     : PRECISION AVEC LAQUELLE ON VA CALCULER
 !               LE MAXIMUM
@@ -2032,7 +2032,7 @@ void naf_secantes(double X, double PASS, double EPS, double *XM, int IPRT, FILE 
 !               0: IMPRESSION D'UNE EVENTUELLE ERREUR FATALE
 !               1: IMPRESSION SUR LE FICHIER g_NAFVariable.NFPRT
 !               2: IMPRESSION DES RESULTATS INTERMEDIAIRES
-!     
+!
 !    FONC(X) :FONCTION DONNEE PAR L'UTILISATEUR
 !    PARAMETRES
 !       NMAX  : NOMBRE D'ESSAIS
@@ -2042,13 +2042,13 @@ void naf_secantes(double X, double PASS, double EPS, double *XM, int IPRT, FILE 
 !       1: LE ZERO N'EST PAS TROUVE A EPSI PRES
 !          -->   SEULEMENT SI IENC=1
 !       2: PENTRE TROP FAIBLE (DIVISION PAR PRESQUE ZERO)
-!       3: ECHEC TOTAL 
+!       3: ECHEC TOTAL
 !  F. Joutel 26/5/98
 !  Modif 26/8/98 Enleve l'appel de FONC car dans un module
 ! il ne semble pas etre possible de passer une fonction
 ! interne en parametre, remplace FONC par FUNCP
 !***********************************************************
-       
+
        IMPLICIT NONE
 ! (X,PASS,EPS,XM,FUNCP,IPRT,NFPRT)
        real (8) :: X, PASS,EPS,XM
@@ -2058,7 +2058,7 @@ void naf_secantes(double X, double PASS, double EPS, double *XM, int IPRT, FILE 
 ! 	   real (8) :: x,fonc
 ! 	 end function fonc
 !       end interface
-!              
+!
        integer, parameter :: NMAX=30, IENC=1
        integer :: I
        REAL (8) :: EPSI,A,B,FA,FB,DELTA,COR
@@ -2067,7 +2067,7 @@ void naf_secantes(double X, double PASS, double EPS, double *XM, int IPRT, FILE 
 #define SECANTES_IENC (1)
        int I;
        double EPSI,A,B,FA,FB,DELTA,COR;
-       
+
        g_NAFVariable.NERROR=0;
        EPSI=MAX(g_NAFVariable.EPSM,EPS);
        if (fabs(PASS)>EPSI)
@@ -2085,7 +2085,7 @@ void naf_secantes(double X, double PASS, double EPS, double *XM, int IPRT, FILE 
 /*10    CONTINUE*/
 SECANTES_10 :
        if (fabs(B-A)>EPSI)
-       { 
+       {
           FA=FB;
           FB=naf_funcp(B);
 /*! 	  FB=FONC(B)*/
@@ -2171,20 +2171,20 @@ void naf_maxiqua(double X, double PASS, double EPS, double *XM, double *YM, int 
 !***********************************************************
 !      CALCUL PAR INTERPOLATION QUADRATIQUE DU MAX
 !      D'UNE FONCTION FONC FOURNIE PAR L'UTILISATEUR
-!      
-!     X, PASS : LE MAX EST SUPPOSE ETRE SI POSSIBLE 
+!
+!     X, PASS : LE MAX EST SUPPOSE ETRE SI POSSIBLE
 !               DANS X-PASS,X+PASS
 !     EPS     : PRECISION AVEC LAQUELLE ON VA CALCULER
 !               LE MAXIMUM
 !     XM      : ABSCISSE DU MAX
 !     YM      : YM=FUNC(XM)
-!     IPRT     : -1 PAS D'IMPRESSION 
+!     IPRT     : -1 PAS D'IMPRESSION
 !               0: IMPRESSION D'UNE EVENTUELLE ERREUR FATALE
 !               1: IMPRESSION SUR LE FICHIER NFPRT
 !               2: IMPRESSION DES RESULTATS INTERMEDIAIRES
-! 
+!
 !    FONC(X)  :FONCTION DONNEE PAR L'UTILISATEUR
-! 
+!
 !***********************************************************
 !  PARAMETRES
 !   NMAX     : NOMBRE MAXIMAL D'ITERATIONS
@@ -2204,7 +2204,7 @@ void naf_maxiqua(double X, double PASS, double EPS, double *XM, double *YM, int 
 ! il ne semble pas etre possible de passer une fonction
 ! interne en parametre, remplace FONC par FUNCP
 !***********************************************************
-      
+
       IMPLICIT NONE
 !  (X,PASS,EPS,XM,YM,FONC,IPRT,NFPRT)
       integer :: IPRT,NFPRT
@@ -2215,26 +2215,26 @@ void naf_maxiqua(double X, double PASS, double EPS, double *XM, double *YM, int 
 ! 	  real (8) :: x,fonc
 ! 	end function fonc
 !      end interface
-!          
-      integer, parameter :: NMAX=200, NFATAL=100 
+!
+      integer, parameter :: NMAX=200, NFATAL=100
       REAL (8), parameter :: RABS=1.D0
       integer :: NITER,NCALCUL
       REAL (8)  :: PAS,EPSLOC,X1,X2,X3,Y1,Y2,Y3,A,ERR,DX,TEMP
-      REAL (8) :: D1,D2   
+      REAL (8) :: D1,D2
 */
 #define MAXIQUA_NMAX (200)
 #define MAXIQUA_NFATAL (100)
-#define MAXIQUA_RABS (1.E0) 
+#define MAXIQUA_RABS (1.E0)
       int NITER, NCALCUL;
       double PAS,EPSLOC,X1,X2,X3,Y1,Y2,Y3,A,ERR,DX,TEMP;
       double D1=0E0,D2=0E0;
-     
-/*! 
+
+/*!
 !* ENTRE 0 ET RABS LES ERREURS SONT ENVISAGEES DE FACON ABSOLUE
 !* APRES RABS, LES ERREURS SONT ENVISAGEES DE FACON RELATIVE.
 !*/
       EPSLOC=MAX(EPS,sqrt(g_NAFVariable.EPSM));
-/*!      
+/*!
 !*  AU SOMMET D'UNE PARABOLE Y=Y0-A*(X-X0)**2, UN ECART DE X AUTOUR DE X0
 !*  INFERIEUR A EPSLOC DONNE UN ECART DE Y INFERIEUR A A*EPSLOC**2*/
       if (IPRT>=1)
@@ -2262,9 +2262,9 @@ MAXIQUA_10:
             {
                fprintf(NFPRT," ERREUR FATALE\n");
             }
-         } 
+         }
          else
-         { 
+         {
            if (PAS>=PASS)
            {
               g_NAFVariable.NERROR = 4;
@@ -2272,8 +2272,8 @@ MAXIQUA_10:
               {
                 fprintf(NFPRT,"  PAS D''ENCADREMENT TROUVE\n");
               }
-           } 
-           else 
+           }
+           else
            {
               g_NAFVariable.NERROR =3;
               if (IPRT>=0)
@@ -2310,13 +2310,13 @@ MAXIQUA_10:
       if (IPRT>=2)
       {
         if (sqrt(A)!=0)
-        { 
+        {
          fprintf(NFPRT,"%12.8E %12.8E %25.16E %25.16E %25.16E %25.16E\n", PAS,X2,Y1,Y2,Y3,EPSLOC/sqrt(A));
         }
         else
-        { 
+        {
          fprintf(NFPRT,"%12.8E %12.8E %25.16E %25.16E %25.16E INF\n", PAS,X2,Y1,Y2,Y3);
-        }        
+        }
       }
 /*!* TEST POUR UN CALCUL SIGNifICATif DES VALEURS DE LA FONCTION*/
       if ((fabs (D1-D2))<2.E0*g_NAFVariable.EPSM*MAX(MAXIQUA_RABS,fabs(Y2)))
@@ -2348,11 +2348,11 @@ MAXIQUA_10:
       {
           if (IPRT>=1)
           {
-             fprintf(NFPRT,"SORTIE AU SOMMET DE LA PARABOLE\n"); 
+             fprintf(NFPRT,"SORTIE AU SOMMET DE LA PARABOLE\n");
           }
           ERR=EPSLOC*sqrt(MAX(MAXIQUA_RABS,Y2)/A);
           goto MAXIQUA_EXIT;
-        } 
+        }
       DX= 0.5E0*PAS*(Y1-Y3)/(D2-D1);
 /*!* TEST POUR UN NOUVEAU PAS SIGNifICATif*/
       if (fabs(DX)<g_NAFVariable.EPSM*MAX(MAXIQUA_RABS,fabs(X2)))
@@ -2360,11 +2360,11 @@ MAXIQUA_10:
           if (IPRT>=1)
           {
            fprintf(NFPRT,"CORRECTION MINUSCULE\n");
-          } 
+          }
           ERR=PAS;
           goto MAXIQUA_EXIT;
       }
-      PAS=fabs(DX); 
+      PAS=fabs(DX);
       if (DX>0.E0)
       {
          X1 = X2;
@@ -2383,8 +2383,8 @@ MAXIQUA_10:
          X1 = X2 - PAS;
          Y1 = naf_func(X1);
       }
-/*!* A LA SORTIE DE CE CALCUL LE PAS DOIT ETRE DIVISE AU MOINS PAR 2 
-!! MAIS ON N'EST PAS ASSURE QUE LES VALEURS FINALES Y1,Y2,Y3 
+/*!* A LA SORTIE DE CE CALCUL LE PAS DOIT ETRE DIVISE AU MOINS PAR 2
+!! MAIS ON N'EST PAS ASSURE QUE LES VALEURS FINALES Y1,Y2,Y3
 !* VERifIENT Y1<=Y2>=Y3, AUSSI, ON REPART AU DEBUT*/
       NCALCUL++; /*NCALCUL=NCALCUL+1*/
       goto MAXIQUA_10;
@@ -2394,16 +2394,16 @@ MAXIQUA_EXIT :
       if (IPRT>=1)
       {
          fprintf(NFPRT,"%12.8E %12.8E %12.8E\n", PAS,*XM,*YM);
-         fprintf(NFPRT," POSITION TROUVEE A %g PRES\n",ERR); 
+         fprintf(NFPRT," POSITION TROUVEE A %g PRES\n",ERR);
          TEMP =  fabs (Y3-Y2)+ fabs(Y2-Y1);
          if (TEMP<2.E0*g_NAFVariable.EPSM*MAX(MAXIQUA_RABS,fabs(Y2)))
          {
             fprintf(NFPRT," TROUVEE SOUS UN PLATEAU DE LA FONCTION\n");
-         } 
+         }
       }
-#undef MAXIQUA_NMAX 
-#undef MAXIQUA_NFATAL 
-#undef MAXIQUA_RABS    
+#undef MAXIQUA_NMAX
+#undef MAXIQUA_NFATAL
+#undef MAXIQUA_RABS
 }/*      END SUBROUTINE MAXIQUA*/
 
 /*      SUBROUTINE FREFIN (FR,A,B,RM, RPAS0,RPREC)*/
@@ -2423,7 +2423,7 @@ void naf_frefin(double *FR, double *A, double *B, double *RM, const double RPAS0
 ! Modif 26/8/98 Enleve les appels aux fonctions func et funcp internes
 ! au module
 !-----------------------------------------------------------------------
-      
+
       IMPLICIT NONE
 ! (FR,A,B,RM, RPAS0,RPREC)
       REAL (8) FR,A,B,RM,RPAS0,RPREC
@@ -2449,11 +2449,11 @@ void naf_frefin(double *FR, double *A, double *B, double *RM, const double RPAS0
          naf_secantes(X,PASS,EPS,&XM,g_NAFVariable.IPRT,g_NAFVariable.NFPRT);
 /*! 	 CALL SECANTES(X,PASS,EPS,XM,FUNCP,g_NAFVariable.IPRT,g_NAFVariable.NFPRT)*/
          YM=naf_func(XM);
-      }   
+      }
       *FR=XM;
       *RM=YM;
       *A=AF;
-      *B=BF; 
+      *B=BF;
       if (g_NAFVariable.IPRT==1)
       {
        /*v0.96 M. GASTINEAU 19/11/98 : modification*/
@@ -2477,7 +2477,7 @@ BOOL naf_profre(double FS, double *A, double *B, double *RMD)
 !  FS EST DONNEE EN SECONDES PAR AN
 !               REVU LE 26/9/87 J. LASKAR
 !***********************************************************************
-      
+
       IMPLICIT NONE
 ! (g_NAFVariable.KTABS,FS,A,B,RMD)
       REAL (8) :: FS,A,B,RMD
@@ -2485,7 +2485,7 @@ BOOL naf_profre(double FS, double *A, double *B, double *RMD)
       integer :: LTF
       REAL (8) :: OM,ANG0,ANGI,H
       complex (8) ZI,ZAC,ZINC,ZEX,ZA
-      complex (8), dimension (:), allocatable :: ZTF      
+      complex (8), dimension (:), allocatable :: ZTF
 ! */
       int LTF;
       double OM,ANG0,ANGI,H;
@@ -2546,7 +2546,7 @@ void naf_ztpow2(int N, int N1, t_complexe *ZTF, t_complexe *ZTA, double *TW, t_c
 {
 /*!-----------------------------------------------------------------------
 !     ZTPOW   CALCULE  ZTF(I) = ZTA(I)* TW(I)*ZAST*ZA**I EN VECTORIEL
-!           
+!
 !-----------------------------------------------------------------------
       IMPLICIT NONE
 ! (N,N1,ZTF,ZTA,TW,ZA,ZAST)
@@ -2564,7 +2564,7 @@ void naf_ztpow2(int N, int N1, t_complexe *ZTF, t_complexe *ZTA, double *TW, t_c
 /* v0.96 M. GASTINEAU 01/12/98 : utilisation des fonctions  complexes inlines et optimisation */
 #if NAF_USE_OPTIMIZE>0
       t_complexe *pzarZT;
-#endif /**/      
+#endif /**/
       SYSCHECKMALLOCSIZE(ZT,t_complexe, N1); /*allocate(ZT(0:N1-1),stat = nerror)*/
       if (N<N1-1)
       {
@@ -2586,7 +2586,7 @@ void naf_ztpow2(int N, int N1, t_complexe *ZTF, t_complexe *ZTA, double *TW, t_c
       ZT1= divcomplexe(ZT[N1-1], ZAST); /*ZT1 = ZT(N1-1)/ZAST*/
       ZINC= cmplx(1E0,0E0);
       INC =0;
-      NT = (N+1)/N1;  
+      NT = (N+1)/N1;
       for(IT = 2;IT<= NT; IT++)
       {
          ZINC=mulcomplexe(ZINC,ZT1); /*ZINC = ZINC*ZT1*/
@@ -2618,7 +2618,7 @@ void naf_ztpow2(int N, int N1, t_complexe *ZTF, t_complexe *ZTA, double *TW, t_c
       ZT1= i_compl_div(ZT[N1-1], ZAST); /*ZT1 = ZT(N1-1)/ZAST*/
       i_compl_cmplx(&ZINC,1E0,0E0);
       INC =0;
-      NT = (N+1)/N1;  
+      NT = (N+1)/N1;
       for(IT = 2;IT<= NT; IT++)
       {
          i_compl_pmul(&ZINC,&ZT1); /*ZINC = ZINC*ZT1*/
@@ -2656,7 +2656,7 @@ void naf_iniwin(double *p_pardTWIN)
 !     MODif LE 13/12/90 (J. LASKAR)
 !     MODif LE 27/1/96 FOR VARIOUS WINDOWS  (J. LASKAR)
 !
-!     WORKING AREA TWIN(*) SHOULD BE GIVEN IN 
+!     WORKING AREA TWIN(*) SHOULD BE GIVEN IN
 !
 !     IW IS THE WINDOW FLAG
 !     IW = 0 : NO WINDOW
@@ -2664,21 +2664,21 @@ void naf_iniwin(double *p_pardTWIN)
 !                  WITH CN = 2^N*(N!)^2/(2N)!
 !     IW = -1  EXPONENTIAL WINDOW PHI(T) = 1/CE*EXP(-1/(1-T^2))
 !
-!     MODif LE 22/4/98 POUR CALCUL EN PLUS DE L'EPSILON MACHINE 
-!     g_NAFVariable.EPSM 
+!     MODif LE 22/4/98 POUR CALCUL EN PLUS DE L'EPSILON MACHINE
+!     g_NAFVariable.EPSM
 !      26/5/98 CORRECTION DE L'ORIGINE DES TABLEAUX (*m/4)
 !******************************************************************
 !
-       
+
       IMPLICIT NONE
 !
-      integer :: I,IT           
+      integer :: I,IT
       REAL (8) :: CE,T1,T2,TM,T,CN,PIST
 !
 !---------------------------------------------------------------- */
       int I, IT;
       double CE,T1,T2,TM,T,CN,PIST;
-      
+
       CE= 0.22199690808403971891E0;
 /*!
 !      PI=ATAN2(1.D0,0.E0)*2.E0*/
@@ -2692,7 +2692,7 @@ void naf_iniwin(double *p_pardTWIN)
          {
            /*v0.96 M. GASTINEAU 18/12/98 : modification */
            /* TWIN[IT]=1.E0; *//*remplacee par:*/
-           p_pardTWIN[IT]=1.E0;           
+           p_pardTWIN[IT]=1.E0;
            /*v0.96 M. GASTINEAU 18/12/98 : fin modification */
          }
       }
@@ -2702,7 +2702,7 @@ void naf_iniwin(double *p_pardTWIN)
          for(I = 1;I<=g_NAFVariable.IW;I++)
          {
             CN *= I*(2.E0/((double)(g_NAFVariable.IW+I))); /*CN = CN*2.D0*I*1.D0/(g_NAFVariable.IW+I)*/
-         };       
+         };
          for(IT=0;IT<=g_NAFVariable.KTABS;IT++)
          {
             T=IT*g_NAFVariable.XH-TM;
@@ -2758,7 +2758,7 @@ BOOL naf_zardyd(t_complexe *ZT, int N, double H, t_complexe *ZOM)
 !      SOM VALEUR DE L'INTEGRALE SUR L'INTERVALLE [X1,XN]
 !      LE PROGRAMME EST EN DOUBLE PRECISION
 !               REVU LE 26/9/87 J. LASKAR
-!      
+!
 !************************************************************************
       IMPLICIT NONE
 !  (ZT,N,H,ZOM)
@@ -2766,7 +2766,7 @@ BOOL naf_zardyd(t_complexe *ZT, int N, double H, t_complexe *ZOM)
       complex (8) :: ZT(0:N),ZOM
       REAL (8) :: H
 !
-      integer :: ITEST,K,I 
+      integer :: ITEST,K,I
 !               */
       int ITEST, K, I;
 /* v0.96 M. GASTINEAU 13/01/99 : optimisation */
@@ -2794,7 +2794,7 @@ BOOL naf_zardyd(t_complexe *ZT, int N, double H, t_complexe *ZOM)
              addcomplexe(
                 addcomplexe( muldoublcomplexe(41,ZT[0]),  muldoublcomplexe(216,ZT[1]) )
                 , addcomplexe( muldoublcomplexe(27,ZT[2]),  muldoublcomplexe(272,ZT[3]) ) )
-             , addcomplexe(              
+             , addcomplexe(
                 addcomplexe( muldoublcomplexe(27,ZT[4]),  muldoublcomplexe(216,ZT[5]) )
 
                 , muldoublcomplexe(41,ZT[N]) )
@@ -2809,7 +2809,7 @@ BOOL naf_zardyd(t_complexe *ZT, int N, double H, t_complexe *ZOM)
              addcomplexe(
                 addcomplexe( muldoublcomplexe(82,ZT[INC]),  muldoublcomplexe(216,ZT[INC+1]) )
                 , addcomplexe( muldoublcomplexe(27,ZT[INC+2]),  muldoublcomplexe(272,ZT[INC+3]) ) )
-             , addcomplexe(              
+             , addcomplexe(
                 addcomplexe( muldoublcomplexe(27,ZT[INC+4]),  muldoublcomplexe(216,ZT[INC+5]) )
                 , *ZOM )
               );
@@ -2824,7 +2824,7 @@ BOOL naf_zardyd(t_complexe *ZT, int N, double H, t_complexe *ZOM)
              i_compl_add(
                 i_compl_add( i_compl_muldoubl(41,ZT[0]),  i_compl_muldoubl(216,ZT[1]) )
                 , i_compl_add( i_compl_muldoubl(27,ZT[2]),  i_compl_muldoubl(272,ZT[3]) ) )
-             , i_compl_add(              
+             , i_compl_add(
                 i_compl_add( i_compl_muldoubl(27,ZT[4]),  i_compl_muldoubl(216,ZT[5]) )
                 , i_compl_muldoubl(41,ZT[N]) )
               );
@@ -2838,7 +2838,7 @@ BOOL naf_zardyd(t_complexe *ZT, int N, double H, t_complexe *ZOM)
              i_compl_add(
                 i_compl_add( i_compl_muldoubl(82,ZT[INC]),  i_compl_muldoubl(216,ZT[INC+1]) )
                 , i_compl_add( i_compl_muldoubl(27,ZT[INC+2]),  i_compl_muldoubl(272,ZT[INC+3]) ) )
-             , i_compl_add(              
+             , i_compl_add(
                 i_compl_add( i_compl_muldoubl(27,ZT[INC+4]),  i_compl_muldoubl(216,ZT[INC+5]) )
                 , *ZOM )
               );
@@ -2880,7 +2880,7 @@ BOOL naf_zardyd(t_complexe *ZT, int N, double H, t_complexe *ZOM)
 BOOL naf_proscaa(double F1, double F2, t_complexe *ZP)
 {
 /*!-----------------------------------------------------------------------
-!     PROSCAA   CALCULE LE PRODUIT SCALAIRE 
+!     PROSCAA   CALCULE LE PRODUIT SCALAIRE
 !           < EXP(I*F1*T),  EXP(I*F2*T)>
 !               SUR L'INTERVALLE [0:g_NAFVariable.KTABS]  T=g_NAFVariable.T0+g_NAFVariable.XH*IT
 !              CALCUL NUMERIQUE
@@ -2888,7 +2888,7 @@ BOOL naf_proscaa(double F1, double F2, t_complexe *ZP)
 !     F1,F2     FREQUENCES EN "/AN
 !               REVU LE 26/9/87 J. LASKAR
 !-----------------------------------------------------------------------
-      
+
       IMPLICIT NONE
 ! (g_NAFVariable.KTABS,F1,F2,ZP)
       REAL (8) :: F1,F2
@@ -2898,13 +2898,13 @@ BOOL naf_proscaa(double F1, double F2, t_complexe *ZP)
       real *8 :: OM,ANG0,ANGI,H
       complex (8) :: ZI,ZAC,ZINC,ZEX
       complex (8), dimension (:),allocatable :: ZTF
-      
+
 !*/
       int LTF;
       double OM,ANG0,ANGI,H;
       t_complexe ZI,ZAC,ZINC,ZEX;
       t_complexe *ZTF=NULL;
-      
+
       SYSCHECKMALLOCSIZE(ZTF, t_complexe, g_NAFVariable.KTABS+1); /*allocate(ZTF(0:g_NAFVariable.KTABS),stat = nerror)*/
 /* v0.96 M. GASTINEAU 01/12/98 : utilisation des fonctions  complexes inlines et optimisation */
 #if NAF_USE_OPTIMIZE==0
@@ -2916,7 +2916,7 @@ BOOL naf_proscaa(double F1, double F2, t_complexe *ZP)
       ANGI=OM*g_NAFVariable.XH;
       ZAC= expcomplexe(muldoublcomplexe(-ANG0, ZI)); /*ZAC = EXP (-ZI*ANG0)*/
       ZINC=expcomplexe(muldoublcomplexe(-ANGI, ZI)); /*ZINC= EXP (-ZI*ANGI)*/
-      ZEX= divcomplexe(ZAC, ZINC); /*ZEX = ZAC/ZINC*/      
+      ZEX= divcomplexe(ZAC, ZINC); /*ZEX = ZAC/ZINC*/
       naf_ztpow2a(g_NAFVariable.KTABS,64,ZTF,TWIN,ZINC,ZEX);/*CALL  ZTPOW2A(g_NAFVariable.KTABS+1,64,ZTF,TWIN,ZINC,ZEX)*/
 #else/*remplacee par:*/
       i_compl_cmplx(&ZI,0.E0,1.E0);
@@ -2927,7 +2927,7 @@ BOOL naf_proscaa(double F1, double F2, t_complexe *ZP)
       ANGI=OM*g_NAFVariable.XH;
       ZAC= i_compl_exp(i_compl_muldoubl(-ANG0, ZI)); /*ZAC = EXP (-ZI*ANG0)*/
       ZINC=i_compl_exp(i_compl_muldoubl(-ANGI, ZI)); /*ZINC= EXP (-ZI*ANGI)*/
-      ZEX= i_compl_div(ZAC, ZINC); /*ZEX = ZAC/ZINC*/      
+      ZEX= i_compl_div(ZAC, ZINC); /*ZEX = ZAC/ZINC*/
       naf_ztpow2a(g_NAFVariable.KTABS,64,ZTF,TWIN,ZINC,ZEX);/*CALL  ZTPOW2A(g_NAFVariable.KTABS+1,64,ZTF,TWIN,ZINC,ZEX)*/
 #endif /*NAF_USE_OPTIMIZE==0*/
 /* v0.96 M. GASTINEAU 01/12/98 : fin optimisation */
@@ -2936,12 +2936,12 @@ BOOL naf_proscaa(double F1, double F2, t_complexe *ZP)
       H=1.E0/LTF;
       /*CALL ZARDYD(ZTF,LTF+1,H,ZP)*/
       if (naf_zardyd(ZTF,LTF,H,ZP)==FALSE)
-      { 
+      {
        SYSFREE(ZTF);
        return FALSE;
       }
       SYSFREE(ZTF);
-      return TRUE; 
+      return TRUE;
 }/*      END SUBROUTINE PROSCAA*/
 
 /*      SUBROUTINE ZTPOW2A (N,N1,ZTF,TW,ZA,ZAST)*/
@@ -2958,13 +2958,13 @@ void naf_ztpow2a(int N, int N1, t_complexe *ZTF, double *TW, t_complexe ZA, t_co
       complex (8) :: ZTF(0:N),ZA,ZAST
 !
       integer :: I,INC,IT, NX,NT
-      complex (8) :: ZT1,ZINC     
+      complex (8) :: ZT1,ZINC
       complex (8), dimension (:),allocatable :: ZT
 !      */
       int I,INC,IT, NX,NT;
       t_complexe ZT1,ZINC;
       t_complexe *ZT=NULL;
-      
+
       SYSCHECKMALLOCSIZE(ZT, t_complexe, N1); /*allocate(ZT(0:N1-1),stat = nerror)*/
       if (N<N1-1)
       {
@@ -2994,7 +2994,7 @@ void naf_ztpow2a(int N, int N1, t_complexe *ZTF, double *TW, t_complexe ZA, t_co
          for(I = 0; I<N1; I++)
          {
             ZTF[INC +I] = muldoublcomplexe(TW[INC+I],mulcomplexe(ZT[I],ZINC));/*ZTF(INC +I) = TW(INC+I)*ZT(I)*ZINC*/
-            
+
          }
       }
       ZINC=mulcomplexe(ZINC, ZT1); /*ZINC = ZINC*ZT1*/
@@ -3025,7 +3025,7 @@ void naf_ztpow2a(int N, int N1, t_complexe *ZTF, double *TW, t_complexe ZA, t_co
          for(I = 0; I<N1; I++)
          {
             ZTF[INC +I] = i_compl_muldoubl(TW[INC+I],i_compl_mul(ZT[I],ZINC));/*ZTF(INC +I) = TW(INC+I)*ZT(I)*ZINC*/
-            
+
          }
       }
       i_compl_pmul(&ZINC,&ZT1); /*ZINC = ZINC*ZT1*/
@@ -3049,21 +3049,21 @@ void naf_correction(double *FREQ)
 !  F. Joutel 26/5/98
 !  Ref : J. Laskar : Introduction to frequency map analysis
 !------------------------------------------------------------------
-       
+
       IMPLICIT NONE
 ! (FREQ)
       real *8 :: FREQ
 !
-      integer :: I           
+      integer :: I
       real *8 :: TL,TM2,PICARRE,TM,FAC,A,COR,OMEGA,DELTA
       complex (8) :: ZI,ZALPHA
-!      
+!
 !      PI = ATAN2(1.D0,1.D0)*4.D0*/
       int I;
 
       double TL,TM2,PICARRE,TM,FACTEUR,A,COR,OMEGA,DELTA;
       t_complexe ZI,ZALPHA;
-      
+
       TL=g_NAFVariable.KTABS*g_NAFVariable.XH*0.5E0;
       TM2=1.E0/(TL*TL);
       PICARRE=pi*pi;
@@ -3088,8 +3088,8 @@ void naf_correction(double *FREQ)
 #if NAF_USE_OPTIMIZE==0
           ZALPHA = mulcomplexe(divcomplexe(g_NAFVariable.ZAMP[I],g_NAFVariable.ZAMP[1]), expcomplexe(muldoublcomplexe(OMEGA*TM,ZI))); /*ZALPHA=g_NAFVariable.ZAMP[I]/g_NAFVariable.ZAMP[1]*EXP(ZI*OMEGA*TM)*/
 #else /*remplacee par:*/
-          ZALPHA = i_compl_mul(i_compl_div(g_NAFVariable.ZAMP[I],g_NAFVariable.ZAMP[1]), 
-                               i_compl_exp(i_compl_muldoubl(OMEGA*TM,ZI))); 
+          ZALPHA = i_compl_mul(i_compl_div(g_NAFVariable.ZAMP[I],g_NAFVariable.ZAMP[1]),
+                               i_compl_exp(i_compl_muldoubl(OMEGA*TM,ZI)));
           /*ZALPHA=g_NAFVariable.ZAMP[I]/g_NAFVariable.ZAMP[1]*EXP(ZI*OMEGA*TM)*/
 #endif /*NAF_USE_OPTIMIZE==0*/
 /* v0.96 M. GASTINEAU 01/12/98 : fin optimisation */
@@ -3104,20 +3104,20 @@ void naf_correction(double *FREQ)
          *FREQ=g_NAFVariable.TFS[1]+COR;
          if (g_NAFVariable.IPRT>=1)
          {
-           fprintf(g_NAFVariable.NFPRT,"CORRECTION DE LA 1ERE FREQUENCE\n");  
+           fprintf(g_NAFVariable.NFPRT,"CORRECTION DE LA 1ERE FREQUENCE\n");
            fprintf(g_NAFVariable.NFPRT, "FREQ. DE DEPART=%20.15E, CORRECTION=%20.15E\n",g_NAFVariable.TFS[1],COR);
            fprintf(g_NAFVariable.NFPRT, "FREQUENCE CORRIGEE:%20.15E\n", *FREQ);
          }
-      } 
-      else 
+      }
+      else
       {
-          if (g_NAFVariable.IPRT>=0) 
+          if (g_NAFVariable.IPRT>=0)
           {
              fprintf(g_NAFVariable.NFPRT, "PAS DE CALCUL\n");
           }
       }
 }/*      END SUBROUTINE CORRECTION*/
-      
+
 /*      end module naff
 */
 /*-----------------------------------------------------------*/
@@ -3127,12 +3127,12 @@ void naf_correction(double *FREQ)
 /* delete_list_fenetre_naf.                                  */
 /*-----------------------------------------------------------*/
 /* v0.96 M. GASTINEAU 18/12/98 : ajout */
-t_list_fenetre_naf *cree_list_fenetre_naf(const double p_dFreqMin, const double p_dFreqMax, 
+t_list_fenetre_naf *cree_list_fenetre_naf(const double p_dFreqMin, const double p_dFreqMax,
                                           const int p_iNbTerm)
 {
  t_list_fenetre_naf *pListRes;
 #ifdef DBUG
- if (niveau>=4) 
+ if (niveau>=4)
  {
   printf("cree_list_fenetre_naf(%g, %g, %d) - entree \n",
           p_dFreqMin, p_dFreqMax, p_iNbTerm);
@@ -3144,7 +3144,7 @@ t_list_fenetre_naf *cree_list_fenetre_naf(const double p_dFreqMin, const double 
  pListRes->dFreqMax = p_dFreqMax;
  pListRes->iNbTerme = p_iNbTerm;
 #ifdef DBUG
- if (niveau>=4) 
+ if (niveau>=4)
  {
   printf("cree_list_fenetre_naf() - sortie et retourne 0x%p \n",pListRes);
  }
@@ -3160,7 +3160,7 @@ t_list_fenetre_naf *cree_list_fenetre_naf(const double p_dFreqMin, const double 
 void delete_list_fenetre_naf(t_list_fenetre_naf *p_pListFenNaf)
 {
 #ifdef DBUG
- if (niveau>=4) 
+ if (niveau>=4)
   printf("delete_list_fenetre_naf(0x%p) - entree \n",p_pListFenNaf);
 #endif /*DBUG*/
  while(p_pListFenNaf!=NULL)
@@ -3171,9 +3171,9 @@ void delete_list_fenetre_naf(t_list_fenetre_naf *p_pListFenNaf)
  }
 
 #ifdef DBUG
- if (niveau>=4) 
+ if (niveau>=4)
   printf("delete_list_fenetre_naf() - sortie \n");
-#endif /*DBUG*/ 
+#endif /*DBUG*/
 }
 
 /*-----------------------------------------------------------*/
@@ -3188,7 +3188,7 @@ t_list_fenetre_naf *concat_list_fenetre_naf(t_list_fenetre_naf *p_pListFenHead,
 {
  t_list_fenetre_naf *pListTemp;
 #ifdef DBUG
- if (niveau>=4) 
+ if (niveau>=4)
   printf("concat_list_fenetre_naf(0x%p, 0x%p) - entree \n",p_pListFenHead,p_pListFenEnd);
 #endif /*DBUG*/
  if (p_pListFenHead==NULL)
@@ -3201,7 +3201,7 @@ t_list_fenetre_naf *concat_list_fenetre_naf(t_list_fenetre_naf *p_pListFenHead,
  }
  else
  { /* p_pListFenHead is not NULL */
-  for(pListTemp=p_pListFenHead; 
+  for(pListTemp=p_pListFenHead;
       pListTemp->suivant!=NULL;
       pListTemp = pListTemp->suivant)
       { /*do nothing */}

@@ -154,7 +154,7 @@ void get_elem(std::ifstream &inf, LatticeType *lat, char *line, long int &i,
   sscanf(line, "%d %d %d %d", &kind, &method, &n, &reverse);
 
   lat->elems.push_back(elem_alloc(kind));
- 
+
   lat->elems[i]->Name = name;
   lat->elems[i]->Fnum = Fnum; lat->elems[i]->Knum = Knum;
   if (prt)
@@ -219,7 +219,7 @@ void get_elem(std::ifstream &inf, LatticeType *lat, char *line, long int &i,
       inf.getline(line, line_max);
       if (prt) printf("%s\n", line);
       sscanf(line, "%lf %lf %lf",
-	     &lat->elems[i]->dS[X_], &lat->elems[i]->dS[Y_], &dTerror); 
+	     &lat->elems[i]->dS[X_], &lat->elems[i]->dS[Y_], &dTerror);
       lat->elems[i]->dT[X_] = cos(degtorad(dTerror));
       lat->elems[i]->dT[Y_] = sin(degtorad(dTerror));
       M->PdTrms = dTerror; M->PdTrnd = 1e0;
@@ -403,7 +403,7 @@ void LatticeType::rdmfile(const std::string &mfile_dat)
   chk_Fam(elemf);
   conf.Cell_nLoc = i;
   get_transp_mats(0e0);
- 
+
   conf.dPcommon = 1e-8; conf.CODeps = 1e-14; conf.CODimax = 40;
 
   SI_init();

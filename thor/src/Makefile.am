@@ -15,7 +15,7 @@ LIBS	    = -L../../TPSA \
               -lstdc++ \
               -lgsl \
               -L/usr/local/Cellar/armadillo/10.6.2/lib \
-              -larmadillo 
+              -larmadillo
               $(GSL_LIBS)
 
 # C Preprocessor flags.

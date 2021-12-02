@@ -73,7 +73,7 @@
 void prtHOM(FILE *fp, MpoleType *elem)
 {
   int i, nmpole;
-  
+
   nmpole = 0;
   for (i = 1; i <= elem->Porder; i++)
     if ((elem->PB[HOMmax-i] != 0.0) || (elem->PB[HOMmax+i] != 0.0)) nmpole++;

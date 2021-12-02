@@ -45,7 +45,7 @@ extern "C" {
 	      const long int &);
   /* void dapin_(const long int [], const long int &, long int [], */
   /*  	      const long int &, const long int []); */
-  void daexp_(const long int &, double [], long int [], long int [], char []); 
+  void daexp_(const long int &, double [], long int [], long int [], char []);
   void dacct_(const long int [], const long int &, const long int [],
 	      const long int &, long int [], const long int &);
 

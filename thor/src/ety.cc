@@ -4,7 +4,7 @@
                  SLS, PSI      1995 - 1997
    M. Boege      SLS, PSI      1998          C translation
    L. Nadolski   SOLEIL        2002          Link to NAFF, Radia field maps
-   J. Bengtsson  NSLS-II, BNL  2004 -        
+   J. Bengtsson  NSLS-II, BNL  2004 -
 
   ety.c --  given a real general matrix, this subroutine
             reduces a submatrix situated in rows and columns
@@ -85,7 +85,7 @@ double dsign(double x, double y)
              only elements low through high are used.
 
         fortran routine by b. s. garbow
-        modified by filippo neri. 
+        modified by filippo neri.
 
 
    input:

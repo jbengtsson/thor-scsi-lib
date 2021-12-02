@@ -33,7 +33,7 @@ void setrancut(const double cut)
 }
 
 double normranf(void)
-{  
+{
   int    i, j;
   double f, w;
 
@@ -577,7 +577,7 @@ void set_bn(LatticeType &lat, const bn_types bn_type, const int Fnum,
       M->PBrms[HOMmax-n] = an*M->PBpar[HOMmax+nd];
     }
     if(new_rnd){
-	M->PBrnd[HOMmax+n] = (normal)? normranf() : ranf(); 
+	M->PBrnd[HOMmax+n] = (normal)? normranf() : ranf();
 	M->PBrnd[HOMmax-n] = (normal)? normranf() : ranf();
     }
     break;

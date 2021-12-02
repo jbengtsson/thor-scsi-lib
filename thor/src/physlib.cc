@@ -4,7 +4,7 @@
                  SLS, PSI      1995 - 1997
    M. Boege      SLS, PSI      1998          C translation
    L. Nadolski   SOLEIL        2002          Link to NAFF, Radia field maps
-   J. Bengtsson  NSLS-II, BNL  2004 -        
+   J. Bengtsson  NSLS-II, BNL  2004 -
 
 */
 
@@ -107,7 +107,7 @@ void track(const char *file_name, LatticeType &lat, double ic1, double ic2,
 
           Output                floqs
 
-        Phase Space               0     [x, px, y, py, delta, ct]  
+        Phase Space               0     [x, px, y, py, delta, ct]
 	Floquet Space             1     [x^, px^, y^, py^, delta, ct]
 	Action-Angle Variables    2     [2Jx, phx, 2Jy, phiy, delta, ct]
 
@@ -169,13 +169,13 @@ void track(const char *file_name, LatticeType &lat, double ic1, double ic2,
     fprintf(outf, "         [%%]           [mm]\n");
     fprintf(outf, "#\n");
     fprintf(outf, "%4d %23.16e %23.16e %23.16e %23.16e %23.16e %23.16e\n",
-	    0, scl_1*ic1, scl_2*ic2, scl_1*ic3, scl_2*ic4, 1e2*dp, 
+	    0, scl_1*ic1, scl_2*ic2, scl_1*ic3, scl_2*ic4, 1e2*dp,
 	    0*1e3*lat.conf.CODvect[ct_]);
   } else {
     fprintf(outf, "         [%%]           [deg]\n");
     fprintf(outf, "#\n");
     fprintf(outf, "%4d %23.16e %23.16e %23.16e %23.16e %23.16e %23.16e\n",
-	    0, scl_1*ic1, scl_2*ic2, scl_1*ic3, scl_2*ic4, 1e2*dp, 
+	    0, scl_1*ic1, scl_2*ic2, scl_1*ic3, scl_2*ic4, 1e2*dp,
 	    2.0*f_rf*180.0*lat.conf.CODvect[ct_]/c0);
   }
   x2[x_] = x0[x_] + lat.conf.CODvect[x_];
@@ -197,7 +197,7 @@ void track(const char *file_name, LatticeType &lat, double ic1, double ic2,
 	   lastn, 1e3*x2[x_], 1e3*x2[px_], 1e3*x2[y_], 1e3*x2[py_],
 	   1e2*x2[delta_], 1e3*x2[ct_]);
   }
-    
+
   do {
     (lastn)++;
     for (i = 0; i < nv_; i++)
@@ -209,7 +209,7 @@ void track(const char *file_name, LatticeType &lat, double ic1, double ic2,
       xf[i] = x2[i] - lat.conf.CODvect[i];
 
     for (i = delta_; i <= ct_; i++)
-      if (lat.conf.Cavity_on && (i != ct_)) 
+      if (lat.conf.Cavity_on && (i != ct_))
 	xf[i] = x2[i] - lat.conf.CODvect[i];
       else
 	xf[i] = x2[i];
@@ -949,19 +949,19 @@ void SetaTol(LatticeType &lat, int Fnum, int Knum, double dx, double dy,
 }
 
 
-void ini_aper(LatticeType &lat, const double Dxmin, const double Dxmax, 
-              const double Dymin, const double Dymax) 
-{ 
-  int  k; 
- 
-  for (k = 0; k <= lat.conf.Cell_nLoc; k++) { 
+void ini_aper(LatticeType &lat, const double Dxmin, const double Dxmax,
+              const double Dymin, const double Dymax)
+{
+  int  k;
+
+  for (k = 0; k <= lat.conf.Cell_nLoc; k++) {
     lat.elems[k]->maxampl[X_][0] = Dxmin;
-    lat.elems[k]->maxampl[X_][1] = Dxmax; 
+    lat.elems[k]->maxampl[X_][1] = Dxmax;
     lat.elems[k]->maxampl[Y_][0] = Dymin;
-    lat.elems[k]->maxampl[Y_][1] = Dymax; 
-  } 
-} 
- 
+    lat.elems[k]->maxampl[Y_][1] = Dymax;
+  }
+}
+
 void set_aper(LatticeType &lat, const int Fnum, const double Dxmin,
 	      const double Dxmax, const double Dymin, const double Dymax)
 {
@@ -1002,7 +1002,7 @@ void LoadApertures(LatticeType &lat, const char *ChamberFileName)
 
 
 // Load tolerances from the file
-void LoadTolerances(LatticeType &lat, const char *TolFileName) 
+void LoadTolerances(LatticeType &lat, const char *TolFileName)
 {
   char    line[128], FamName[32];
   int     Fnum;
@@ -1034,7 +1034,7 @@ void LoadTolerances(LatticeType &lat, const char *TolFileName)
 
 // Load tolerances from the file
 void ScaleTolerances(LatticeType &lat, const char *TolFileName,
-		     const double scl) 
+		     const double scl)
 {
   char    line[128], FamName[32];
   int     Fnum;
@@ -1046,7 +1046,7 @@ void ScaleTolerances(LatticeType &lat, const char *TolFileName,
   do
     fgets(line, 128, tolfile);
   while (strstr(line, "#") != NULL);
-  
+
   do {
     if (strstr(line, "#") == NULL) {
       sscanf(line,"%s %lf %lf %lf", FamName, &dx, &dy, &dr);
@@ -1592,7 +1592,7 @@ void GetMean(long n, double *x)
 /* double Fract(double x)
 
    Purpose:
-      Gets fractional part of x 
+      Gets fractional part of x
 
    Input:
        none
@@ -1723,7 +1723,7 @@ void Read_Lattice(LatticeType &lat, const char *fic)
     lat.conf.CODimax        = 40;    /* maximum number of iterations for COD
 				    algo */
     lat.conf.delta_RF = RFacceptance;/* energy acceptance for SOLEIL */
-  } else {   
+  } else {
     // for transfer lines
     /* Initial settings : */
     beta[X_] = 8.1; alpha[X_] = 0.0; beta[Y_] = 8.1; alpha[Y_] = 0.0;
@@ -1891,7 +1891,7 @@ void GetTuneTrac(LatticeType &lat, long Nbtour, double emax, double *nux,
 /****************************************************************************/
 /* void findcodS(double dP)
 
-   Purpose: 
+   Purpose:
        Search for the closed orbit using a numerical method
        Algo: Newton_Raphson method
              Quadratic convergence
@@ -1928,13 +1928,13 @@ void findcodS(LatticeType &lat, double dP)
   long         lastpos;
 
   vcod = dvector(1, 6);
-      
+
   // starting point
   for (k = 1; k <= 6; k++)
-    vcod[k] = 0.0;  
-  
-  vcod[5] = dP;  // energy offset 
-    
+    vcod[k] = 0.0;
+
+  vcod[5] = dP;  // energy offset
+
   if (lat.conf.Cavity_on){
       dim = 6;   /* 6D tracking*/
     fprintf(stdout,"Error looking for cod in 6D\n");
@@ -1945,7 +1945,7 @@ void findcodS(LatticeType &lat, double dP)
       vcod[1] = lat.elems[0]->Eta[0]*dP; vcod[2] = lat.elems[0]->Etap[0]*dP;
       vcod[3] = lat.elems[0]->Eta[1]*dP; vcod[4] = lat.elems[0]->Etap[1]*dP;
   }
-  
+
   Newton_RaphsonS(lat, ntrial, vcod, dim, tolx);
 
   if (lat.conf.codflag == false)
@@ -1969,7 +1969,7 @@ void findcodS(LatticeType &lat, double dP)
 
    Purpose:
        Simple precision algo
-       Tracks x over one turn. And computes the Jacobian matrix of the 
+       Tracks x over one turn. And computes the Jacobian matrix of the
        transformation by numerical differentiation.
        using forward difference formula : faster but less accurate
        using symmetric difference formula
@@ -1980,7 +1980,7 @@ void findcodS(LatticeType &lat, double dP)
 
    Output:
       fvect transport of x over one turn
-      fjac  Associated jacobian matrix      
+      fjac  Associated jacobian matrix
 
    Return:
        none
@@ -2007,7 +2007,7 @@ void computeFandJS(LatticeType &lat, double *x, int n, double **fjac,
 
   for (i = 1; i <= 6; i++)
     x0[i - 1] = x[i];
-  
+
   lat.Cell_Pass(0, lat.conf.Cell_nLoc, x0, lastpos);
 
   for (i = 1; i <= n; i++)
@@ -2039,20 +2039,20 @@ void computeFandJS(LatticeType &lat, double *x, int n, double **fjac,
     for (i = 1; i <= n; i++)  // symmetric difference formula
       fjac[i][k + 1] = 0.5 * (fx1[i - 1] - fx2[i - 1]) / deps;
     //~ for (i = 1; i <= n; i++) // forward difference formula
-    //~ fjac[i][k + 1] = (float) ((x0[i - 1] - fx[i - 1]) / deps);  
+    //~ fjac[i][k + 1] = (float) ((x0[i - 1] - fx[i - 1]) / deps);
   }
 }
 
 
 /****************************************************************************/
 /* void Newton_RaphsonS(int ntrial,double x[],int n,double tolx, double tolf)
- 
+
    Purpose:
        Newton_Rapson algorithm from Numerical Recipes
        single precision algorithm
        Robustess: quadratic convergence
        Hint: for n-dimensional problem, the algo can be stuck on local minimum
-             In this case, it should be enough to provide a resonable starting 
+             In this case, it should be enough to provide a resonable starting
              point.
 
        Method:
@@ -2063,8 +2063,8 @@ void computeFandJS(LatticeType &lat, double *x, int n, double **fjac,
              h = - inverse(Jacobian(f) -Id) * (f(x)-x)
             the new guess is then xnew = x + h
          By iteration, this converges quadratically.
-     
-     The algo is stopped whenever  |x -xnew| < tolx     
+
+     The algo is stopped whenever  |x -xnew| < tolx
 
          f(x) is computes by tracking over one turn
      Jacobian(f) is computed numerically by numerical differentiation
@@ -2075,10 +2075,10 @@ void computeFandJS(LatticeType &lat, double *x, int n, double **fjac,
        n number of dimension 4 or 6
      x intial guess for the closed orbit
        tolx tolerance over the solution x
-       tolf tolerance over the evalution f(x)  
+       tolf tolerance over the evalution f(x)
 
    Output:
-       x closed orbit  
+       x closed orbit
 
    Return:
        none
@@ -2088,7 +2088,7 @@ void computeFandJS(LatticeType &lat, double *x, int n, double **fjac,
 
    specific functions:
        computeFandJS
-     ludcmp,lubksb 
+     ludcmp,lubksb
 
    Comments:
        none
@@ -2102,7 +2102,7 @@ void Newton_RaphsonS(LatticeType &lat, int ntrial, double x[], int n,
   double  errx, d, *bet, *fvect, **alpha;
 
   errx = 0.0;
-  // NR arrays start from 1 and not 0 !!!       
+  // NR arrays start from 1 and not 0 !!!
   indx = ivector(1, n);
   bet = dvector(1, n);
   fvect = dvector(1, n);

@@ -560,7 +560,7 @@
      &           no,nv,' NOMAX, NVMAX = ',nomax,nvmax
             call dadeb(31,'ERR DAALL ',1)
          endif
-!     
+!
          if(nhole.gt.0) then
             ind=nda
  20         if (allvec(ind)) then
@@ -582,7 +582,7 @@
 
          allvec(ind) = .true.
          ic = ind
-!     
+!
          if(nv.ne.0) then
             call danum(no,nv,ndanum)
          else
@@ -614,7 +614,7 @@
                nst = nst + ndanum
             endif
          endif
-!     
+!
          if(nst.gt.lst) then
             x=-1.d0
             write(6,*)'ERROR IN DAALL, STACK EXHAUSTED '
@@ -625,13 +625,13 @@
 !     X=DSQRT(X)
             call dadeb(31,'ERR DAALL ',1)
          endif
-!     
+!
          if(nv.eq.0.or.nomax.eq.1) then
             call daclr(ic)
             idall(ic) = idalm(ic)
          endif
       endif
-!     
+!
       if(nda.gt.ndamaxi) ndamaxi=nda
 
       return
@@ -802,7 +802,7 @@
      &           no,nv,' NOMAX, NVMAX = ',nomax,nvmax
             call dadeb(31,'ERR DAALL ',1)
          endif
-!     
+!
          if(nhole.gt.0) then
             ind=nda
  20         if (allvec(ind)) then
@@ -825,7 +825,7 @@
          allvec(ind) = .true.
 
          ic = ind
-!     
+!
          if(nv.ne.0) then
             call danum(no,nv,ndanum)
          else
@@ -857,7 +857,7 @@
                nst = nst + ndanum
             endif
          endif
-!     
+!
          if(nst.gt.lst) then
             x=-1.d0
             write(6,*)'ERROR IN DAALL, STACK EXHAUSTED '
@@ -868,14 +868,14 @@
 !     X=DSQRT(X)
             call dadeb(31,'ERR DAALL ',1)
          endif
-!     
+!
 !     IF(NV.EQ.0) THEN
          if(nv.eq.0.or.nomax.eq.1) then
             call daclr(ic)
             idall(ic) = idalm(ic)
          endif
       endif
-!     
+!
       if(nda.gt.ndamaxi) ndamaxi=nda
 
       return
