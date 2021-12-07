@@ -10,6 +10,10 @@
 #ifndef TPSA_FOR_PM_H
 #define TPSA_FOR_PM_H
 
+#include <armadillo>
+#include <tps/ss_vect.h>
+#include <tps/tps_type.h>
+
 extern int  bufsize;  // Note, max no of monomials is (no+nv)!/(nv!*no!)
 
 
@@ -29,4 +33,4 @@ void idprset(const int level);
 
 tps atan2(const tps &b,const tps &a);
 
-#endif
+#endif /* TPSA_FOR_PM_H */
