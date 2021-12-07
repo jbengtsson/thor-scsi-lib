@@ -11,6 +11,11 @@
 #ifndef PRTMFILE_H
 #define PRTMFILE_H
 
-void prtmfile(const char mfile_dat[]);
+/* does not exist any more
+ *
+ * use LatticeType::prtmfile instead
+
+ * *  void prtmfile(const char mfile_dat[]);
+ */
 
 #endif

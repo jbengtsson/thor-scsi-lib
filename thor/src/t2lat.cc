@@ -4141,7 +4141,7 @@ void PrintResult(struct LOC_Lat_Read *LINK)
 }
 
 
-bool LatticeType::Lat_Read(const std::string &filnam)
+void LatticeType::Lat_Read(const std::string &filename, bool verbose)
 {
   struct LOC_Lat_Read V;
   FILE                *fi_, *fo_;
@@ -4151,8 +4151,8 @@ bool LatticeType::Lat_Read(const std::string &filnam)
   ElemFam_ = &elemf;
   Lat_     = this;
 
-  fi_ = file_read((filnam+".lat").c_str());
-  fo_ = file_write((filnam+".lax").c_str());
+  fi_ = file_read((filename+".lat").c_str());
+  fo_ = file_write((filename+".lax").c_str());
 
   if (Lat_->conf.trace)
     printf("\nLat_Read: dndsym = %d, solsym = %d, max_set = %d"
@@ -4194,12 +4194,21 @@ bool LatticeType::Lat_Read(const std::string &filnam)
   RegisterKids(&V);                 /* Check wether too many elements */
 
   if (debug) this->prt_fams();
-  PrintResult(&V);                  /* Print lattice statistics */
+  if(verbose){
+    PrintResult(&V);                  /* Print lattice statistics */
+  }
 
   delete V.line;
 
  _L9999:
-  return (!Lat_->conf.ErrFlag);
+
+  // return (!Lat_->conf.ErrFlag);
+  if(Lat_->conf.ErrFlag){
+    /* parse error occurred */
+    std::cerr << __FILE__ << "@" << __LINE__
+	      << " failed to parse lattice: >" << filename <<"<" << std::endl;
+    throw lattice_parse_error;
+  }
 }
 
 #undef UDImax
