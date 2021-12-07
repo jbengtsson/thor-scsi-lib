@@ -15,6 +15,21 @@
 #define danamlen 10
 #define dafunlen  4
 
+#include <tps/enums.h>
+#include <tps/ss_vect.h>
+#include <tps/tps_type.h>
+#include <tps/tpsa_lin.h>
+#include <iostream>
+#include <exception>
+
+// #include <stdlib.h>
+
+/**
+ * Todo: all calls to _exit need to be replaced by appropriate exceptions
+ * required for _exit
+ */
+#include <unistd.h>
+
 typedef char danambuf[danamlen];
 typedef char     funnambuf[dafunlen];
 
@@ -29,8 +44,9 @@ void daeps_(const double eps) { eps_tps = eps; }
 
 void danot_(const int no) {
   if (no != 1) {
-    printf("danot_: max order exceeded %d (%d)\n", no, 1);
-    exit_(0);
+    std::cerr << "danot_: max order exceeded " << no << "  (1)" << std::endl;
+    throw std::domain_error("danot_: max order exceeded");
+    // exit_(0);
   }
 }
 
@@ -39,8 +55,8 @@ void daini_(int no, int nv, int fio)
 {
   eps_tps = 1e-25;
   if (no != 1) {
-    printf("daini_: max order exceeded %d (%d)\n", no, 1);
-    exit_(1);
+    std::cerr << "daini_: max order exceeded " << no << "  (1)" << std::endl;
+    throw std::domain_error("danot_: max order exceeded");
   }
   if ((nv < 1) || (nv > nv_tps))
     printf("daini_: to many dimensions %d(%d)\n", nv, nv_tps);
@@ -469,8 +485,8 @@ void dafun_(const char *fun, const std::vector<double> &x,
   else if (!strncmp(fun, "ATAN", dafunlen))
     daarctan(x, u);
   else {
-    printf("dafun: illegal function %s\n", fun);
-    exit_(0);
+    std::cerr << "dafun: illegal function >" << fun << "<" << std::endl;
+    throw std::invalid_argument("illegal function name specified");
   }
 
   dacop_(u, z);

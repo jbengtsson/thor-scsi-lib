@@ -5,6 +5,12 @@
 #ifndef TPSA_LIN_H
 #define TPSA_LIN_H
 
+#include <tps/tps_type.h>
+#include <tps/ss_vect.h>
+#include <vector>
+#include <armadillo>
+
+
 void daeps_(const double eps);
 
 void danot_(const long int no);
