@@ -77,7 +77,7 @@ def set_config():
 
 def get_lat(file_name):
     lat = set_config()
-    lat.Lat_Read(file_name)
+    lat.Lat_Read(file_name, False)
     lat.Lat_Init()
     lat.ChamberOff()
     lat.conf.CODimax = 10
@@ -198,8 +198,9 @@ if __name__ == "__main__":
     # Lattices.
     lat_dir = os.getenv("LAT")
     lattices = {
-        # "bessy-iii": lat_dir + "/BESSY-III/NoTG-TGRB-B60-6bend-6sx_JB_tracy",
-        # "diamond": lat_dir + "/DIAMOND-II/vmx_symopt_Qx205_Qy364",
+        "bessy-iii": lat_dir + "/BESSY-III/NoTG-TGRB-B60-6bend-6sx_JB_tracy",
+        "diamond": lat_dir + "/DIAMOND-II/vmx_symopt_Qx205_Qy364",
         "bessy-ii": "tests/lattices/b2_stduser_beamports_blm_tracy_corr",
     }
-    main(lattices["bessy-ii"])
+    # main(lattices["bessy-ii"])
+    main(lattices["bessy-iii"])

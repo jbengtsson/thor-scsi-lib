@@ -2909,7 +2909,14 @@ static bool Lat_DealElement(FILE *fi_, FILE *fo_, long *cc_, long *ll_,
       WITH2->Pthick = pthicktype(thin);
       WITH2->Pirho = degtorad(t);
     }
-    WITH2->PN = k1; WITH2->Pmethod = k2;
+    if (k1 >= 1)
+      WITH2->PN = k1;
+    else {
+      std::cerr << __FILE__ << "@" << __LINE__
+		<< " failed to parse lattice: >N = " << k1 <<"<" << std::endl;
+      throw lattice_parse_error;
+    }
+    WITH2->Pmethod = k2;
     WITH2->PTx1 = t1; WITH2->PTx2 = t2; WITH2->Pgap = gap;
     WITH2->PdTpar = dt;
     AssignHOM(WITH2, &V);
