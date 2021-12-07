@@ -10,6 +10,7 @@
 
 #include "thor_lib.h"
 
+#include "exceptions.cc"
 #include "field.cc"
 
 #if NO_TPSA == 1
