@@ -56,7 +56,18 @@
 
 */
 
+#include <thor_scsi/core/constants.h>
+#include <thor_scsi/core/elements.h>
+#include <thor_scsi/core/lattice.h>
+#include <thor_scsi/legacy/io.h>
+#include <thor_scsi/legacy/io_codes.h>
+#include <cstdio>
 
+using namespace thor_scsi::elements;
+using namespace thor_scsi::core;
+using namespace thor_scsi::legacy;
+
+/*
 #define snamelen 10
 
 // numerical type codes
@@ -68,6 +79,8 @@
 #define wiggler_   4
 #define kick_map_  6
 #define map_       7
+*/
+
 
 
 void prtHOM(FILE *fp, MpoleType *elem)
