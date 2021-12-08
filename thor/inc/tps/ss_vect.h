@@ -2,6 +2,7 @@
 #define _TPS_SS_VECT_H_
 
 #include <tps/config.h>
+#include <tps/enums.h>
 #include <tps/forward_decl.h>
 #include <tps/tps_type.h>
 #include <string>

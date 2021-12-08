@@ -50,6 +50,9 @@ arma::mat stlmattomat(const std::vector< std::vector<double> > &stlmat);
 
 std::vector< std::vector<double> > mattostlmat(const arma::mat &mat);
 
+std::vector< std::vector<double> > get_stlmat(const ss_vect<tps> &map);
+
+
 void dacop_(const std::vector<double> &x, std::vector<double> &z);
 
 void daadd_(const std::vector<double> &x, const std::vector<double> &y,
@@ -130,3 +133,9 @@ void daabs_(const std::vector<double> &x, double &r);
 void daabs2_(const std::vector<double> &x, double &r);
 
 #endif
+/*
+ * Local Variables:
+ * mode: c++
+ * c-file-style: "python"
+ * End:
+ */
