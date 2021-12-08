@@ -4,8 +4,11 @@
 
 */
 
-#ifndef T2CELL_H
-#define T2CELL_H
+#ifndef THOR_SCSI_T2CELL_H
+#define THOR_SCSI_T2CELL_H
+
+#include <tps/ss_vect.h>
+#include <tps/tps_type.h>
 
 extern tps  sigma_;
 
@@ -19,4 +22,4 @@ void Cell_Pass(const long i0, const long i1, ss_vect<T> &x, long &lastpos);
 
 void Cell_Pass(const long i0, const long i1, tps &sigma, long &lastpos);
 
-#endif
+#endif /* THOR_SCSI_T2CELL_H */

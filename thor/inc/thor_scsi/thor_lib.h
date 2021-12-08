@@ -51,7 +51,7 @@ using namespace std;
 
 // Tracy-3
 #include "thor_config.h"
-#include "field.h"
+// #include "field.h"
 
 #ifndef NO_TPSA
   // Abort.
@@ -99,11 +99,6 @@ using namespace std;
 
 // #include "nsls-ii_lib.h"
 
-
-// Truncated Power Series Algebra (TPSA)
-extern const int nv_tps, nd_tps, iref_tps;
-extern int       no_tps, ndpt_tps;
-extern double    eps_tps;
 
 extern LatticeType lat;
 

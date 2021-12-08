@@ -4,14 +4,20 @@
 
 */
 
-#ifndef T2ELEM_H
-#define T2ELEM_H
+#ifndef THOR_SCSI_PROCESS_T2ELEM_H
+#define THOR_SCSI_PROCESS_T2ELEM_H 1
 
-namespace {
-};
+#include <tps/ss_vect.h>
+#include <tps/tps_type.h>
+#include <vector>
+
+extern double q_fluct;
+
+namespace thor_scsi {
+
 extern bool   sympl;
 extern int    FieldMap_filetype;
-extern double C_u, C_gamma, C_q, cl_rad, q_fluct;
+extern double C_u, C_gamma, C_q, cl_rad,
 
 template<typename T>
 T get_p_s(ConfigType &conf, const ss_vect<T> &);
@@ -53,17 +59,19 @@ void thin_kick(ConfigType &conf, const int Order, const MpoleArray &MB,
 template<typename T>
 void sol_pass(ConfigType &conf, const ElemType *elem, ss_vect<T> &x);
 
-DriftType* Drift_Alloc(void);
-MarkerType* Marker_Alloc(void);
-MpoleType* Mpole_Alloc(void);
-CavityType* Cavity_Alloc(void);
-WigglerType* Wiggler_Alloc(void);
-InsertionType* Insertion_Alloc(void);
-FieldMapType* FieldMap_Alloc(void);
-SpreaderType* Spreader_Alloc(void);
-RecombinerType* Recombiner_Alloc(void);
-SolenoidType* Solenoid_Alloc(void);
-MapType* Map_Alloc(void);
+	namespace elements {
+    DriftType* Drift_Alloc(void);
+    MarkerType* Marker_Alloc(void);
+    MpoleType* Mpole_Alloc(void);
+    CavityType* Cavity_Alloc(void);
+    WigglerType* Wiggler_Alloc(void);
+    InsertionType* Insertion_Alloc(void);
+    FieldMapType* FieldMap_Alloc(void);
+    SpreaderType* Spreader_Alloc(void);
+    RecombinerType* Recombiner_Alloc(void);
+    SolenoidType* Solenoid_Alloc(void);
+    MapType* Map_Alloc(void);
+  }
 
 arma::mat get_edge_lin_map(const double h, const double phi,
 			   const double gap, const double delta);
@@ -76,4 +84,12 @@ void get_lin_mats(const double delta);
 void get_B(ConfigType &conf, const char *file_name, FieldMapType *FM);
 double Elem_GetKval(int Fnum1, int Knum1, int Order);
 
-#endif
+};
+
+#endif /*  THOR_SCSI_PROCESS_T2ELEM_H*/
+/*
+ * Local Variables:
+ * mode: c++
+ * c-file-style: "python"
+ * End:
+ */
