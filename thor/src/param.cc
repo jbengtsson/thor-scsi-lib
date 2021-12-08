@@ -1,3 +1,6 @@
+#include <thor_scsi/tweak/param.h>
+
+using namespace thor_scsi::core;
 
 bool        param_data_type::DA_bare      = false;
 bool        param_data_type::freq_map     = false;
@@ -64,6 +67,11 @@ void TracyStrcpy (char *elem, char *pname) {
   }
 }
 
+/**
+
+   Todo: move to appropriate section
+ */
+
 void MyStrcpy (char *elem, char *pname, long leng) {
   long i;
 
@@ -75,7 +83,7 @@ void MyStrcpy (char *elem, char *pname, long leng) {
   }
 }
 
-#define seps 1E-6
+#define seps 1E-6 ///> Todo: check this!
 
 void param_data_type::GirderSetup(LatticeType &lat) {
   bool     giropen, ismag;

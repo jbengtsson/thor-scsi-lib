@@ -1,4 +1,12 @@
+#include <thor_scsi/core/constants.h>
+#include <thor_scsi/process/dynap.h>
 
+#include <iostream>
+#include <iomanip>
+
+//using namespace thor_scsi;
+using namespace thor_scsi::core;
+using namespace thor_scsi::elements;
 
 bool DA_data_type::track(LatticeType &lat, const param_data_type &params,
 			 const double x, const double px, const double y,
