@@ -1,6 +1,6 @@
 
-#ifndef SET_ERRORS
-#define SET_ERRORS
+#ifndef _THOR_SCSI_TWEAK_ERRORS_
+#define _THOR_SCSI_TWEAK_ERRORS_ 1
 
 
 enum bn_types
@@ -100,4 +100,4 @@ void set_bnr_rms_type(LatticeType &lat, const int type, const int n,
 		      const double bnr, const double anr,
 		      const bool new_rnd);
 
-#endif
+#endif /* _THOR_SCSI_TWEAK_ERRORS_ */
