@@ -1,3 +1,31 @@
+/**
+
+   Todo:
+       track down following variables:
+
+       * stable
+
+       Are these global, local or should use ConfigType
+ */
+
+#include <thor_scsi/core/constants.h>
+#include <thor_scsi/core/lattice.h>
+#include <thor_scsi/core/config.h>
+#include <thor_scsi/legacy/io.h>
+#include <thor_scsi/legacy/legacy.h>
+#include <thor_scsi/legacy/time.h>
+#include <thor_scsi/process/t2ring.h>
+
+#include <tps/tpsa_lin.h>
+#include <tps/ss_vect_utils.h>
+
+using namespace thor_scsi::core;
+using namespace thor_scsi::elements;
+
+#include <armadillo>
+#include <iostream>
+#include <iomanip>
+#include <vector>
 
 void LatticeType::ChamberOff(void)
 {
@@ -1561,7 +1589,7 @@ void Trac(LatticeType &lat, double x, double px, double y, double py, double dp,
 }
 
 
-void LatticeType::print(const string &str)
+void LatticeType::print(const std::string &str)
 {
   int j, k;
 

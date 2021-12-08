@@ -8,9 +8,16 @@
 
 */
 
+#include <thor_scsi/importers/radia.h>
+#include <thor_scsi/exceptions.h>
+#include <iostream>
+#include <math.h>
+#include <cstring>
 
 const static bool traceID = false;
 
+namespace ts = thor_scsi;
+namespace tse = thor_scsi::elements;
 
 template<typename T>
 void spline(const double x[], const T y[], int const n,
@@ -103,7 +110,7 @@ void splie2(double x1a[], double x2a[], double **ya,
 
 #define ZERO_RADIA 1e-7
 
-void Read_IDfile(char *fic_radia, const ConfigType &conf, InsertionType *ID)
+void Read_IDfile(char *fic_radia, const thor_scsi::core::ConfigType &conf, thor_scsi:elements::InsertionType *ID)
 {
   char dummy[5000];
   int  i, j;
@@ -114,7 +121,8 @@ void Read_IDfile(char *fic_radia, const ConfigType &conf, InsertionType *ID)
   /* open radia text file */
   if ((fi = fopen(fic_radia,"r")) == NULL) {
     printf("Read_IDfile: Error while opening file %s \n", fic_radia);
-    exit_(1);
+    throw ts::lattice_parse_error;
+    // exit_(1);
   }
 
   printf("\n");
@@ -152,7 +160,8 @@ void Read_IDfile(char *fic_radia, const ConfigType &conf, InsertionType *ID)
     printf("Read_IDfile:  Increase the size of insertion tables \n");
     printf("nx = % d (IDXmax = %d) and nz = %d (IDZMAX = % d) \n",
 	   ID->nx, IDXMAX, ID->nz, IDZMAX);
-    exit_(1);
+    throw std::length_error("Increase the size of insertion table");
+    //exit_(1);
   }
 
   /* ninth line */
@@ -246,16 +255,16 @@ void Read_IDfile(char *fic_radia, const ConfigType &conf, InsertionType *ID)
 
 template<typename T>
 void LinearInterpolation2(T &X, T &Z, T &TX, T &TZ, T &B2,
-			  ElemType *Cell, bool &out, int order)
+			  tse::ElemType *Cell, bool &out, int order)
 {
   int            i, ix = 0, iz = 0;
   T              T1, U, THX = 0.0, THZ = 0.0;
   double         xstep = 0.0;
   double         zstep = 0.0;
   int            nx = 0, nz = 0;
-  InsertionType  *WITH;
+  tse::InsertionType  *WITH;
 
-  WITH = dynamic_cast<InsertionType*>(Cell);
+  WITH = dynamic_cast<tse::InsertionType*>(Cell);
   nx = WITH->nx; nz = WITH->nz;
 
   xstep = WITH->tabx[1]-WITH->tabx[0]; /* increasing values */
@@ -417,13 +426,13 @@ void LinearInterpolation2(T &X, T &Z, T &TX, T &TZ, T &B2,
 ****************************************************************************/
 template<typename T>
 void SplineInterpolation2(T &X, T &Z, T &thetax, T &thetaz,
-			  ElemType *Cell, bool &out)
+			  tse::ElemType *Cell, bool &out)
 {
     int            nx, nz;
-    InsertionType  *WITH;
+    tse::InsertionType  *WITH;
 //    int kx, kz;
 
-    WITH = dynamic_cast<InsertionType*>(Cell);
+    WITH = dynamic_cast<tse::InsertionType*>(Cell);
     nx = WITH->nx; nz = WITH->nz;
 
     /* test wether X and Z within the transverse map area */
@@ -465,7 +474,7 @@ void SplineInterpolation2(T &X, T &Z, T &thetax, T &thetaz,
 }
 
 
-void Matrices4Spline(InsertionType *WITH)
+void Matrices4Spline(tse::InsertionType *WITH)
 {
   int kx, kz;
 

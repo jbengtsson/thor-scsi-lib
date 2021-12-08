@@ -1,3 +1,30 @@
+/*
+  Todo:
+
+  * Check global variables
+    Should these not go away?
+
+  * Review setjmp longjmp. Should it be replaced by exceptions handling
+
+
+*/
+
+#include <thor_scsi/core/lattice.h>
+#include <thor_scsi/core/elements_basis.h>
+#include <thor_scsi/legacy/legacy.h>
+#include <thor_scsi/legacy/io.h>
+#include <thor_scsi/legacy/time.h>
+#include <thor_scsi/importers/radia.h>
+#include <thor_scsi/exceptions.h>
+#include <thor_scsi/version.h>
+
+#include <vector>
+#include <string>
+#include <setjmp.h>
+
+using namespace thor_scsi::core;
+using namespace thor_scsi::elements;
+namespace ts = thor_scsi;
 
 // C wrapper for Pascal global variablse.
 static std::vector<ElemFamType> *ElemFam_;
@@ -116,7 +143,7 @@ struct LOC_Lat_Read
   long              lc;            // program location counter*/
   long              ll;            // length of current line*/
   long              errpos;
-  string            *line;
+  std::string            *line;
 
   Lat_keytype       key;
   Lat_ksytype       ksy;
@@ -137,7 +164,7 @@ struct LOC_Lat_EVAL
   char       *id;
   double     *rnum;
   bool       *skipflag, *rsvwd;
-  string     *line;
+  std::string     *line;
   Lat_symbol *sym;
   alfa_      *key;
   Lat_symbol *ksy;
@@ -160,7 +187,7 @@ struct LOC_Lat_ProcessBlockInput
   char       *id;
   double     *rnum;
   bool       *skipflag, *rsvwd;
-  string     *line;
+  std::string     *line;
   Lat_symbol *sym;
   alfa_      *key;
   Lat_symbol *ksy;
@@ -183,7 +210,7 @@ struct LOC_Lat_DealElement
   char       *BlockName;
   double     *rnum;
   bool       *skipflag, *rsvwd;
-  string     *line;
+  std::string     *line;
   Lat_symbol *sym;
   alfa_      *key;
   Lat_symbol *ksy;
@@ -209,7 +236,7 @@ struct LOC_Lat_GetSym
   char   *chin;
   double *rnum;
   bool   *skipflag;
-  string *line;
+  std::string *line;
   long   k, e;
 };
 
@@ -254,7 +281,8 @@ long *P_addset(long *s, unsigned val)
   if (size+1 > (unsigned)max_set) {
     std::cout << "P_addset: size+1 > max_set " << size+1
 	 << "(" << max_set << ")" << std::endl;
-    exit_(1);
+    throw std::length_error("P_addset size exceeded");
+    //exit_(1);
   }
   return sbase;
 }
@@ -439,7 +467,8 @@ static void abort_(struct LOC_Lat_Read *LINK)
   Lat_->conf.ErrFlag = true;
   /*goto 9999*/
 //  printf("% .5E\n", sqrt(-1.0));
-  exit_(1);
+  throw ts::lattice_parse_error;
+  //exit_(1);
 }
 
 
@@ -468,7 +497,7 @@ static void Lat_Error(long n, FILE *fo, long *cc, long *errpos,
 
 
 static void Lat_Nextch(FILE *fi, FILE *fo, long *cc, long *ll, long *errpos,
-		       long *lc, char *chin, bool *skipflag, string *line,
+		       long *lc, char *chin, bool *skipflag, std::string *line,
 		       struct LOC_Lat_Read *LINK)
 {
   if (*cc == *ll) {
@@ -497,7 +526,8 @@ static void Lat_Nextch(FILE *fi, FILE *fo, long *cc, long *ll, long *errpos,
       (*ll)++;
       if ((*ll) > LatLLng) {
         printf("\nLat_Nextch: LatLLng exceeded %ld (%d)\n", (*ll)-1, LatLLng-1);
-        exit_(1);
+	throw std::length_error("LatLLng exceeded");
+        // exit_(1);
       }
       *chin = getc(fi);
       if (*chin == '\n')
@@ -519,7 +549,8 @@ static void Lat_Nextch(FILE *fi, FILE *fo, long *cc, long *ll, long *errpos,
   (*cc)++;
   if ((*cc) > LatLLng) {
     printf("\nLat_Nextch: LatLLng exceeded %ld (%d)\n", (*cc), LatLLng);
-    exit_(1);
+    throw std::length_error("LatLLng exceeded");
+    //exit_(1);
   }
   *chin = (*line)[*cc-1];
   /* upper case to lower case */
@@ -533,7 +564,7 @@ static void Lat_Nextch(FILE *fi, FILE *fo, long *cc, long *ll, long *errpos,
 
 static void Lat_errorm(const char *cmnt, FILE *fi, FILE *fo, long *cc,
 		       long *ll, long *errpos, long *lc, char *chin,
-		       bool *skipflag, string *line,
+		       bool *skipflag, std::string *line,
 		       struct LOC_Lat_Read *LINK)
 {
   /*write(fo, ' ****')*/
@@ -622,7 +653,7 @@ static void Lat_GetSym(FILE *fi_, FILE *fo_, long *cc_, long *ll_,
 		       long *errpos_, long *lc_, long *nkw, long *inum,
 		       long emax__, long emin__, long kmax_, long nmax_,
 		       char *chin_, char *id, double *rnum_, bool *skipflag_,
-		       bool *rsvwd, string *line_, Lat_symbol *sym, alfa_ *key,
+		       bool *rsvwd, std::string *line_, Lat_symbol *sym, alfa_ *key,
 		       Lat_symbol *ksy, Lat_symbol *sps,
 		       struct LOC_Lat_Read *LINK)
 {  /*GetSym*/
@@ -698,7 +729,8 @@ static void Lat_GetSym(FILE *fi_, FILE *fo_, long *cc_, long *ll_,
 	V.k++; id[V.k-1] = *V.chin;
       } else {
 	printf("Lat_GetSym: %s (%d)\n", id, NameLength);
-	exit_(1);
+	throw ts::lattice_parse_error;
+	// exit_(1);
       }
       NextCh(&V);
     } while (parsename || *V.chin == '_' || islower(*V.chin) ||
@@ -1315,7 +1347,7 @@ static double Lat_EVAL(FILE *fi_, FILE *fo_, long *cc_, long *ll_,
 		       long emin__,
 		       long kmax__, long nmax__, char *chin_, char *id_,
 		       double *rnum_,
-		       bool *skipflag_, bool *rsvwd_, string *line_,
+		       bool *skipflag_, bool *rsvwd_, std::string *line_,
 		       Lat_symbol *sym_,
 		       alfa_ *key_, Lat_symbol *ksy_, Lat_symbol *sps_,
 		       struct LOC_Lat_Read *LINK)
@@ -1480,7 +1512,7 @@ static void InsideParent(long k4, struct LOC_GetBlock *LINK)
 }
 
 
-void prt_bool(const string &fmt, const bool b)
+void prt_bool(const std::string &fmt, const bool b)
 {
   // Avoid compiler warnings with %d type code.
   printf(fmt.c_str(), (b)? "true " : "false");
@@ -1720,7 +1752,7 @@ static void Lat_ProcessBlockInput(FILE *fi_, FILE *fo_, long *cc_, long *ll_,
 				  long kmax__, long nmax__, char *chin_,
 				  char *id_, char *BlockName,
 				  double *rnum_, bool *skipflag_, bool *rsvwd_,
-				  string *line_,
+				  std::string *line_,
 				  Lat_symbol *sym_, alfa_ *key_,
 				  Lat_symbol *ksy_, Lat_symbol *sps_,
 				  struct LOC_Lat_Read *LINK)
@@ -3137,7 +3169,8 @@ static bool Lat_DealElement(FILE *fi_, FILE *fo_, long *cc_, long *ll_,
       (*ElemFam_)[Lat_->conf.Elem_nFam-1].ElemF = WITH6;
     } else {
       std::cout << "Fieldmap: energy not defined" << std::endl;
-      exit_(1);
+      throw ts::lattice_parse_error;
+      // exit_(1);
     }
     break;
 
@@ -3281,7 +3314,8 @@ static bool Lat_DealElement(FILE *fi_, FILE *fo_, long *cc_, long *ll_,
       if (!firstflag && !secondflag) {
 	printf("\nErreur no Insertion filename found as"
 	       " an input in lattice file\n");
-	exit_(-1);
+	throw ts::lattice_parse_error;
+	// exit_(-1);
       }
 
       if (k2 != 1) { // linear interpolation
@@ -3427,7 +3461,8 @@ static bool Lat_DealElement(FILE *fi_, FILE *fo_, long *cc_, long *ll_,
 
       default:
 	std::cout << "Solenoid: undef. case" << std::endl;
-	exit_(1);
+	throw ts::lattice_parse_error;
+	//exit_(1);
 	break;
       }
       test__(P_expset(SET, (1 << ((long)comma)) | (1 << ((long)semicolon))),
@@ -4016,7 +4051,8 @@ void GetRingType(struct LOC_Lat_Read *LINK)
 	      " properly in the lattice file\n");
       printf("  ringtype set to 1 means ring\n");
       printf("  ringtype set to 0 means transfer line\n");
-      exit_(1);
+      throw ts::lattice_parse_error;
+      // exit_(1);
     }
   }
 }
@@ -4117,8 +4153,8 @@ void PrintResult(struct LOC_Lat_Read *LINK)
   newtime = GetTime();
 
   printf("\n");
-  printf("  Thor_scsi v. %d.%d.%d compiled on %s\n", thor_version_major,
-	 thor_version_minor, thor_version_micro,  __DATE__);
+  printf("  Thor_scsi v. %d.%d.%d compiled on %s\n", ts::thor_version_major,
+	 ts::thor_version_minor, ts::thor_version_micro,  __DATE__);
   printf("\n");
   printf("  LATTICE Statistics for today %s \n\n", asctime2(newtime));
   printf("  Number of constants: UDIC                 =%5ld\n", LINK->UDIC);
@@ -4146,7 +4182,7 @@ void LatticeType::Lat_Read(const std::string &filename, bool verbose)
   struct LOC_Lat_Read V;
   FILE                *fi_, *fo_;
 
-  V.line = new string;
+  V.line = new std::string;
 
   ElemFam_ = &elemf;
   Lat_     = this;
