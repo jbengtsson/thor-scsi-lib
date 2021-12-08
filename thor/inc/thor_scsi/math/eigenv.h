@@ -8,10 +8,18 @@
 
 */
 
-#ifndef EIGENV_H
-#define EIGENV_H
+#ifndef _THOR_SCSI_MATH_EIGENV_H_
+#define _THOR_SCSI_MATH_EIGENV_H_ 1
+
+#include <armadillo>
 
 bool geigen(int n, arma::mat &fm, arma::mat &Vre, arma::mat &Vim, arma::vec &wr,
 	    arma::vec &wi);
 
-#endif
+#endif /* _THOR_SCSI_MATH_EIGENV_H_ */
+/*
+ * Local Variables:
+ * mode: c++
+ * c-file-style: "python"
+ * End:
+ */

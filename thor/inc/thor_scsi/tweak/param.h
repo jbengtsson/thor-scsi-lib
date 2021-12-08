@@ -1,7 +1,10 @@
-#ifndef PARAM_H
-#define PARAM_H
+#ifndef _THOR_SCSI_TWEAK_PARAM_H_
+#define _THOR_SCSI_TWEAK_PARAM_H_ 1
+#include <thor_scsi/core/lattice.h>
+#include <string>
+#include <vector>
 
-const int N_Fam_max = 25, max_corr = 150, max_bpm = 150;
+const int N_Fam_max = 25, max_corr = 150, max_bpm = 150; ///< Todo: move to config file
 
 // Lattice error and correction files
 const char CodCorLatFileName[]  = "codcorlat.out";
@@ -11,9 +14,9 @@ const char skew_FileName[]      = "skew";
 const char eta_y_FileName[]     = "eta_y";
 const char deta_y_FileName[]    = "deta_y.out";
 
-const int n_b2_max    = 1500;  // max no of quad corrector families
-const int n_b3_max    = 1500; // max no of sextupoles
-const int max_ID_Fams = 25;   // max no of ID families
+const int n_b2_max    = 1500;  ///< max no of quad corrector families
+const int n_b3_max    = 1500; ///< max no of sextupoles
+const int max_ID_Fams = 25;   ///< max no of ID families
 
 // Weights for ID correction
 const double scl_nu = 1e2, scl_dbeta = 1.0, scl_dnu = 0.1, ID_step = 0.5;
@@ -22,7 +25,7 @@ class param_data_type {
  private:
 
  public:
-  string ae_file, fe_file, ap_file, in_dir, lat_FileName;
+  std::string ae_file, fe_file, ap_file, in_dir, lat_FileName;
 
   static bool DA_bare,
               freq_map;
@@ -35,24 +38,24 @@ class param_data_type {
              HCM_per_scell,
              VCM_per_scell;
 
-  static double kick;   // 0.01 mrad kick for trims
-  static double h_maxkick; // Default 1 mrad
-  static double v_maxkick; // Default 1 mrad
-  static double h_cut;  // weigthing factor cut (Default 1.0e-4)
-  static double v_cut;  // weigthing factor cut (Default 1.0e-4)
-  static int    n_stat; // number of statistics
-  static int    n_meth; // machine errors (0=standard,1=cormisal)
-  static int    n_bits; // PS resolution in amplitude in number of bits.
+  static double kick;   ///< 0.01 mrad kick for trims
+  static double h_maxkick; ///< Default 1 mrad
+  static double v_maxkick; ///< Default 1 mrad
+  static double h_cut;  ///< weigthing factor cut (Default 1.0e-4)
+  static double v_cut;  ///< weigthing factor cut (Default 1.0e-4)
+  static int    n_stat; ///< number of statistics
+  static int    n_meth; ///< machine errors (0=standard,1=cormisal)
+  static int    n_bits; ///< PS resolution in amplitude in number of bits.
 
   int h_corr[max_corr], v_corr[max_corr], bpm_loc[max_bpm];
 
-  static double VDweight, // weight for vertical dispersion
-                HVweight, // weight for coupling Htrim vertical BPM
-                VHweight; // weight for coupling Vtrim horizontal BPM
+  static double VDweight, ///< weight for vertical dispersion
+                HVweight, ///< weight for coupling Htrim vertical BPM
+                VHweight; ///< weight for coupling Vtrim horizontal BPM
   static double disp_wave_y, disp_wave_o, qt_s_cut;
   static int    qt_from_file;
 
-  static double TuneX, // target tunes and chromaticities
+  static double TuneX, ///< target tunes and chromaticities
                 TuneY,
                 ChromX,
                 ChromY;
@@ -121,8 +124,8 @@ class param_data_type {
 
   latticetype Lattice[ilatmax];
 
-  void GirderSetup(LatticeType &lat);
-  void SetCorMis(LatticeType &lat, double gxrms, double gyrms, double gtrms,
+  void GirderSetup(thor_scsi::core::LatticeType &lat);
+  void SetCorMis(thor_scsi::core::LatticeType &lat, double gxrms, double gyrms, double gtrms,
 		 double jxrms, double jyrms, double exrms, double eyrms,
 		 double etrms, double rancutx, double rancuty, double rancutt,
 		 long iseed);
@@ -132,71 +135,77 @@ class param_data_type {
 		 double *bdzrms, double *bdarms, double *rancutx,
 		 double *rancuty, double *rancutt, long *iseed, long *iseednr);
 
-  void get_param(LatticeType &lat, const string &param_file);
-  void get_bare(LatticeType &lat);
-  void get_dbeta_dnu(LatticeType &lat, double m_dbeta[], double s_dbeta[],
+  void get_param(thor_scsi::core::LatticeType &lat, const string &param_file);
+  void get_bare(thor_scsi::core::LatticeType &lat);
+  void get_dbeta_dnu(thor_scsi::core::LatticeType &lat, double m_dbeta[], double s_dbeta[],
 		     double m_dnu[], double s_dnu[]);
 
 // Control of vertical beam size.
   void FindSQ_SVDmat(double **SkewRespMat, double **U, double **V, double *w,
 		     int N_COUPLE, int N_SKEW);
-  void FindMatrix(LatticeType &lat, double **SkewRespMat,
+  void FindMatrix(thor_scsi::core::LatticeType &lat, double **SkewRespMat,
 		  const double deta_y_max, const double deta_y_offset);
-  void ini_skew_cor(LatticeType &lat, const double deta_y_max,
+  void ini_skew_cor(thor_scsi::core::LatticeType &lat, const double deta_y_max,
 		    const double deta_y_offset);
-  void FindCoupVector(LatticeType &lat, double *VertCouple);
-  void SkewStat(LatticeType &lat, double VertCouple[], const int cnt);
-  void corr_eps_y(LatticeType &lat, const int cnt);
+  void FindCoupVector(thor_scsi::core::LatticeType &lat, double *VertCouple);
+  void SkewStat(thor_scsi::core::LatticeType &lat, double VertCouple[], const int cnt);
+  void corr_eps_y(thor_scsi::core::LatticeType &lat, const int cnt);
   void ReadEta(const char *TolFileName);
 
   // Control of IDs.
-  void get_IDs(LatticeType &lat);
-  void set_IDs(LatticeType &lat, const double scl);
-  void reset_quads(LatticeType &lat);
+  void get_IDs(thor_scsi::core::LatticeType &lat);
+  void set_IDs(thor_scsi::core::LatticeType &lat, const double scl);
+  void reset_quads(thor_scsi::core::LatticeType &lat);
   void SVD(const int m, const int n, double **M, double beta_nu[],
 	   double b2Ls_[], const bool first);
-  void quad_config(LatticeType &lat);
-  bool get_SQ(LatticeType &lat);
+  void quad_config(thor_scsi::core::LatticeType &lat);
+  bool get_SQ(thor_scsi::core::LatticeType &lat);
   double Bet(double bq, double nus, double nuq, double NuQ);
   double Nus(double bq, double nus, double nuq, double NuQ);
   void A_matrix(void);
-  void X_vector(LatticeType &lat, const bool first);
-  void ini_ID_corr(LatticeType &lat, const bool IDs);
-  void W_diag(LatticeType &lat);
-  bool ID_corr(LatticeType &lat, const int N_calls, const int N_steps,
+  void X_vector(thor_scsi::core::LatticeType &lat, const bool first);
+  void ini_ID_corr(thor_scsi::core::LatticeType &lat, const bool IDs);
+  void W_diag(thor_scsi::core::LatticeType &lat);
+  bool ID_corr(thor_scsi::core::LatticeType &lat, const int N_calls, const int N_steps,
 	       const bool IDs, const int cnt);
-  void ReadCorMis(LatticeType &lat, const bool Scale_it, const double Scale)
+  void ReadCorMis(thor_scsi::core::LatticeType &lat, const bool Scale_it, const double Scale)
     const;
-  void LoadAlignTol(LatticeType &lat, const bool Scale_it, const double Scale,
+  void LoadAlignTol(thor_scsi::core::LatticeType &lat, const bool Scale_it, const double Scale,
 		    const bool new_rnd, const int seed) const;
-  void LoadFieldErr(LatticeType &lat, const bool Scale_it, const double Scale,
+  void LoadFieldErr(thor_scsi::core::LatticeType &lat, const bool Scale_it, const double Scale,
 		    const bool new_rnd) const;
-  void LoadApers(LatticeType &lat, const double scl_x, const double scl_y)
+  void LoadApers(thor_scsi::core::LatticeType &lat, const double scl_x, const double scl_y)
     const;
 
-  void Align_BPMs(LatticeType &lat, const int n, const double bdxrms,
+  void Align_BPMs(thor_scsi::core::LatticeType &lat, const int n, const double bdxrms,
 		  const double bdzrms, const double bdarms) const;
-  bool CorrectCOD_N(LatticeType &lat, const int n_orbit, const int k);
-  void ini_COD_corr(LatticeType &lat, const int n_bpm_Fam,
+  bool CorrectCOD_N(thor_scsi::core::LatticeType &lat, const int n_orbit, const int k);
+  void ini_COD_corr(thor_scsi::core::LatticeType &lat, const int n_bpm_Fam,
 		    const std::string bpm_names[], const int n_hcorr_Fam,
 		    const std::string hcorr_names[], const int n_vcorr_Fam,
 		    const std::string vcorr_names[], const bool svd);
 
-  bool cod_corr(LatticeType &lat, const int n_cell, const double scl,
+  bool cod_corr(thor_scsi::core::LatticeType &lat, const int n_cell, const double scl,
 		const double h_maxkick, const double v_maxkick,
 		const long n_bits, orb_corr_type orb_corr[]);
 
-  void Orb_and_Trim_Stat(LatticeType &lat, orb_corr_type orb_corr[]);
+  void Orb_and_Trim_Stat(thor_scsi::core::LatticeType &lat, orb_corr_type orb_corr[]);
 
-  void prt_cod_corr_lat(LatticeType &lat);
+  void prt_cod_corr_lat(thor_scsi::core::LatticeType &lat);
 
-  void err_and_corr_init(LatticeType &lat, const string &param_file,
+  void err_and_corr_init(thor_scsi::core::LatticeType &lat, const string &param_file,
 			 orb_corr_type orb_corr[]);
 
   void err_and_corr_exit(orb_corr_type orb_corr[]);
 };
 
-void get_bn2(LatticeType &lat, const string file_name1,
+void get_bn2(thor_scsi::core::LatticeType &lat, const string file_name1,
 	     const string file_name2, int n, const bool prt);
 
-#endif
+#endif /* _THOR_SCSI_TWEAK_PARAM_H_ */
+/*
+ * Local Variables:
+ * mode: c++
+ * c-file-style: "python"
+ * End:
+ */

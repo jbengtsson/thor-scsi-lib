@@ -1,11 +1,13 @@
-#ifndef DYNAP_H
-#define DYNAP_H
+#ifndef _THOR_SCSI_PROCESS_DYNAP_H_
+#define _THOR_SCSI_PROCESS_DYNAP_H_ 1
+
+#include <thor_scsi/core/lattice.h>
 
 class DA_data_type {
  private:
  public:
 
-  bool track(LatticeType &lat, const param_data_type &params,
+  bool track(thor_scsi::core::LatticeType &lat, const param_data_type &params,
 	     const double x, const double px, const double y, const double py,
 	     const double delta, const double f_rf, const bool prt);
   void get_r_stable(LatticeType &lat, const param_data_type &params,
@@ -20,4 +22,4 @@ class DA_data_type {
   void get_mean_sigma(const int n, double &m, double &s);
 };
 
-#endif
+#endif /* _THOR_SCSI_PROCESS_DYNAP_H_ */
