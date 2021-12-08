@@ -1,6 +1,20 @@
+/**
 
-// eigenv.c -- Eigenvalue routines
+  eigenv.cc -- Eigenvalue routines
 
+  Todo:
+      *    Check if "stable" is a global variable. And if so if it should stay one
+       *    Move LatticeType:GDiag to separate file
+ */
+#include <thor_scsi/core/lattice.h>
+#include <thor_scsi/math/eigenv.h>
+#include <thor_scsi/math/ety.h>
+#include <tps/enums.h>
+#include <tps/utils.h>
+#include <tps/tpsa_lin.h>
+#include <tps/ss_vect_utils.h>
+
+using namespace thor_scsi::core;
 
 /****************************************************************************/
 /* long closest(double x, double x1, double x2, double x3)
@@ -492,6 +506,8 @@ void GenB(arma::mat &B, arma::mat &BInv, arma::vec &Eta,
    Comments:
        none
 
+  Todo:
+       Check if this->conf.stable is correct!!
 ****************************************************************************/
 void LatticeType::GDiag(int n_, double C, arma::mat &A, arma::mat &Ainv,
 			arma::mat &R, arma::mat &M, double &Omega,
@@ -506,7 +522,7 @@ void LatticeType::GDiag(int n_, double C, arma::mat &A, arma::mat &Ainv,
 
   V.n = n_; V.Ainv = Ainv; InitJJ(V);
   fm = trans(M);
-  stable = geigen(V.n, fm, V.Vre, V.Vim, wr, wi);
+  this->conf.stable = geigen(V.n, fm, V.Vre, V.Vim, wr, wi);
   if (conf.radiation)
     for (j = 1; j <= V.n/2; j++) {
       x1 = sqrt(sqr(wr[j*2-2])+sqr(wi[j*2-2]));
@@ -514,7 +530,10 @@ void LatticeType::GDiag(int n_, double C, arma::mat &A, arma::mat &Ainv,
       conf.alpha_rad[j-1] = log(sqrt(x1*x2));
     }
 
-  stable = geigen(V.n, M, Vrmat, Vimat, wr, wi);
+  /*
+   * WARNING: This change is not checked!!!
+   */
+  this->conf.stable = geigen(V.n, M, Vrmat, Vimat, wr, wi);
 
   this->conf.Vr = mattostlmat(Vrmat);
   this->conf.Vi = mattostlmat(Vimat);

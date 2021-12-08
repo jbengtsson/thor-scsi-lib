@@ -12,8 +12,8 @@
             orthogonal similarity transformations.
 
 */
-
-
+#include <thor_scsi/math/ety.h>
+#include <math.h>
 /****************************************************************************/
 /* double dsign(double x, double y)
 

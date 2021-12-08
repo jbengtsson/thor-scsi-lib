@@ -5,8 +5,8 @@
 #ifndef TPSA_LIN_H
 #define TPSA_LIN_H
 
-#include <tps/tps_type.h>
 #include <tps/ss_vect.h>
+#include <tps/tps_type.h>
 #include <vector>
 #include <armadillo>
 

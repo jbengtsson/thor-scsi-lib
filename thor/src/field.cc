@@ -2,10 +2,14 @@
 
    Definitions:  Polymorphic number class.              */
 
+#include <tps/ss_vect.h>
+#include <tps/tps_type.h>
+#include <iostream>
+#include <iomanip>
 
 #if NO_TPSA == 1
 
-void tps::print(const string &str)
+void tps::print(const std::string &str)
 {
   std::cout << std::scientific << std::setprecision(6) << str << "cst:\n"
 	    << std::setw(14) << ltps[0] << "\nlinear:\n";
@@ -16,7 +20,7 @@ void tps::print(const string &str)
 }
 
 template<>
-void ss_vect<tps>::print(const string &str)
+void ss_vect<tps>::print(const std::string &str)
 {
   std::cout << str;
   for (int i = 1; i <= nv_tps; i++) {
@@ -29,15 +33,15 @@ void ss_vect<tps>::print(const string &str)
 
 #else
 
-void tps::print(const string &str) { std::cout << str << *this; }
+void tps::print(const std::string &str) { std::cout << str << *this; }
 
 template<>
-void ss_vect<tps>::print(const string &str) { std::cout << str << *this; }
+void ss_vect<tps>::print(const std::string &str) { std::cout << str << *this; }
 
 #endif
 
 template<>
-void ss_vect<double>::print(const string &str)
+void ss_vect<double>::print(const std::string &str)
 {
   std::cout << std::scientific << std::setprecision(6) << str << std::setw(14)
 	    << *this << "\n";
