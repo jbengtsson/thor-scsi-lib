@@ -11,6 +11,7 @@
 
 #include <thor_scsi/core/elements_basis.h>
 #include <thor_scsi/core/lattice.h>
+#include <thor_scsi/process/t2ring_common.h>
 #include <tps/ss_vect.h>
 #include <tps/tps_type.h>
 #include <vector>
@@ -69,8 +70,6 @@ void get_ab(const ss_vect<tps> &A, std::vector<double> &alpha,
 	    std::vector<double> &beta, std::vector<double> &dnu,
 	    std::vector<double> &eta, std::vector<double> &etap);
 
-void get_twoJ(const int n_DOF, const ss_vect<double> &ps,
-	      const ss_vect<tps> &A, double twoJ[]);
 
 void Trac(thor_scsi::core::LatticeType &lat, double x, double px, double y, double py, double dp,
 	  double ctau, long nmax, long pos, long &lastn, long &lastpos,
@@ -83,9 +82,6 @@ double GetKpar(thor_scsi::core::LatticeType &lat, int Fnum, int Knum, int Order)
 double get_dynap(thor_scsi::core::LatticeType &lat, const double delta, const int n_aper,
 		 const int n_track, const bool cod);
 
-// Same C asctime \n.
-char *asctime2(const struct tm *timeptr);
-struct tm* GetTime();
 
 void computeFandJ(thor_scsi::core::LatticeType &lat, int n, double *x, ss_vect<double> *fjac,
 		  double *fvect);
