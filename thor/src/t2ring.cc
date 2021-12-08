@@ -18,9 +18,11 @@
 
 #include <tps/tpsa_lin.h>
 #include <tps/ss_vect_utils.h>
+#include <tps/math_pass.h>
 
 using namespace thor_scsi::core;
 using namespace thor_scsi::elements;
+namespace ts = thor_scsi;
 
 #include <armadillo>
 #include <iostream>
@@ -67,7 +69,7 @@ void LatticeType::PrintCh(void)
 }
 
 
-void GetNu(std::vector<double> &nu, std::vector< std::vector<double> > &M)
+bool GetNu(std::vector<double> &nu, std::vector< std::vector<double> > &M)
 {
   /* Not assuming mid-plane symmetry, the charachteristic polynomial for a
      symplectic periodic matrix is given by
@@ -113,6 +115,7 @@ void GetNu(std::vector<double> &nu, std::vector< std::vector<double> > &M)
   arma::mat M1(ps_dim, ps_dim);
 
   const int n = 4;
+  bool stable = false;
 
   M1 = stlmattomat(M);
   for (i = 0; i < n; i++)
@@ -134,7 +137,7 @@ void GetNu(std::vector<double> &nu, std::vector< std::vector<double> > &M)
   if (b2mc < 0e0) {
     stable = false; nu[X_] = NAN; nu[Y_] = NAN;
     printf("\nGetNu: unstable\n");
-    return;
+    return stable;
   }
 
   for (i = 0; i < 2; i++) {
@@ -148,11 +151,12 @@ void GetNu(std::vector<double> &nu, std::vector< std::vector<double> > &M)
     } else {
       stable = false; nu[i] = NAN;
       printf("\nGetNu: unstable %s plane %10.3e\n", (i == 0)? "hor" : "ver", x);
-      return;
+      return stable;
     }
   }
 
-  return;
+  /* calculation revealed stable beam ?? */
+  return true;
 }
 
 
@@ -338,7 +342,7 @@ void LatticeType::Ring_Getchrom(double dP)
     return;
   }
   conf.stable = Cell_GetABGN(conf.OneTurnMat, alpha, beta, gamma, nu0);
-  if (!stable) {
+  if (!conf.stable) {
     printf("\nRing_Getchrom: unstable\n");
     return;
   }
@@ -387,8 +391,8 @@ void LatticeType::Ring_Twiss(bool chroma, double dP)
   if (!conf.codflag) return;
 
   // Check if stable
-  stable = Cell_GetABGN(conf.OneTurnMat, alpha, beta, gamma, nu);
-  if (!stable) {
+  conf.stable = Cell_GetABGN(conf.OneTurnMat, alpha, beta, gamma, nu);
+  if (!conf.stable) {
     printf("Ring_Twiss: unstable\n");
     return;
   }
@@ -2015,8 +2019,8 @@ void dynap(FILE *fp, LatticeType &lat, double r, const double delta,
       phi -= 1e-3;
     getdynap(lat, r, phi, delta, eps, nturn, floqs);
     x[i] = r*cos(phi); y[i] = r*sin(phi);
-    x_min = min(x[i], x_min); x_max = max(x[i], x_max);
-    y_min = min(y[i], y_min); y_max = max(y[i], y_max);
+    x_min = std::min(x[i], x_min); x_max = std::max(x[i], x_max);
+    y_min = std::min(y[i], y_min); y_max = std::max(y[i], y_max);
     if (!floqs) {
       if (print)
         printf("  %6.2f %6.2f\n", 1e3*x[i], 1e3*y[i]);
@@ -2157,7 +2161,8 @@ void getdynap(LatticeType &lat, double &r, double phi, double delta, double eps,
       rmax = r;
     if (rmin > rmax) {
       printf("getdynap: rmin > rmax\n");
-      exit_(0);
+      throw ts::SanityCheckError();
+      // exit_(0);
     }
 
   }

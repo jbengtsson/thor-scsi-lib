@@ -453,6 +453,9 @@ namespace thor_scsi {
 		SolenoidType* Solenoid_Alloc(void);	///< Todo: Some factory implementation required?
 		MapType* Map_Alloc(void);               ///< Todo: Some factory implementation required?
 
+
+		std::vector< std::vector<double> > get_transp_mat(ElemType *elem, const double delta);
+
 	}
 }
 #endif /* _THOR_SCSI_CORE_ELEMENTS_H_ */

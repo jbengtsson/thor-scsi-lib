@@ -15,6 +15,7 @@
 #include <thor_scsi/legacy/io.h>
 #include <thor_scsi/legacy/time.h>
 #include <thor_scsi/importers/radia.h>
+#include <thor_scsi/process/t2elem_common.h>
 #include <thor_scsi/exceptions.h>
 #include <thor_scsi/version.h>
 
@@ -82,9 +83,6 @@ const int  max_set = (solsym-bndsym+1)/SETBITS + 2;
 // array for set
 typedef long int  symset[max_set];
 
-#define NameLength 150  // Max length of identifiers (e.g. file names).
-
-typedef char partsName[NameLength];
 
 typedef struct _REC_BlockStype
 {
@@ -467,7 +465,7 @@ static void abort_(struct LOC_Lat_Read *LINK)
   Lat_->conf.ErrFlag = true;
   /*goto 9999*/
 //  printf("% .5E\n", sqrt(-1.0));
-  throw ts::lattice_parse_error;
+  throw ts::LatticeParseError();
   //exit_(1);
 }
 
@@ -729,7 +727,7 @@ static void Lat_GetSym(FILE *fi_, FILE *fo_, long *cc_, long *ll_,
 	V.k++; id[V.k-1] = *V.chin;
       } else {
 	printf("Lat_GetSym: %s (%d)\n", id, NameLength);
-	throw ts::lattice_parse_error;
+	throw ts::LatticeParseError();
 	// exit_(1);
       }
       NextCh(&V);
@@ -1938,7 +1936,7 @@ static void AssignHOM(MpoleType *M, struct LOC_Lat_DealElement *LINK)
   for (i = -HOMmax; i <= HOMmax; i++) {
     if (LINK->BA[i+HOMmax]) {
       M->PBpar[i+HOMmax] = LINK->B[i+HOMmax];
-      M->Porder = max(abs(i), (long)M->Porder);
+      M->Porder = std::max(std::abs(i), (long)M->Porder);
     }
   }
 }
@@ -2048,7 +2046,7 @@ static bool Lat_DealElement(FILE *fi_, FILE *fo_, long *cc_, long *ll_,
 			    char *ElementName,
                             char *BlockName_, double *rnum_, bool *skipflag_,
 			    bool *rsvwd_,
-                            string *line_, Lat_symbol *sym_, alfa_ *key_,
+                            std::string *line_, Lat_symbol *sym_, alfa_ *key_,
 			    Lat_symbol *ksy_,
                             Lat_symbol *sps_, struct LOC_Lat_Read *LINK)
 {
@@ -3169,7 +3167,7 @@ static bool Lat_DealElement(FILE *fi_, FILE *fo_, long *cc_, long *ll_,
       (*ElemFam_)[Lat_->conf.Elem_nFam-1].ElemF = WITH6;
     } else {
       std::cout << "Fieldmap: energy not defined" << std::endl;
-      throw ts::lattice_parse_error;
+      throw ts::LatticeParseError();
       // exit_(1);
     }
     break;
@@ -3314,7 +3312,7 @@ static bool Lat_DealElement(FILE *fi_, FILE *fo_, long *cc_, long *ll_,
       if (!firstflag && !secondflag) {
 	printf("\nErreur no Insertion filename found as"
 	       " an input in lattice file\n");
-	throw ts::lattice_parse_error;
+	throw ts::LatticeParseError();
 	// exit_(-1);
       }
 
@@ -3461,7 +3459,7 @@ static bool Lat_DealElement(FILE *fi_, FILE *fo_, long *cc_, long *ll_,
 
       default:
 	std::cout << "Solenoid: undef. case" << std::endl;
-	throw ts::lattice_parse_error;
+	throw ts::LatticeParseError();
 	//exit_(1);
 	break;
       }
@@ -4051,7 +4049,7 @@ void GetRingType(struct LOC_Lat_Read *LINK)
 	      " properly in the lattice file\n");
       printf("  ringtype set to 1 means ring\n");
       printf("  ringtype set to 0 means transfer line\n");
-      throw ts::lattice_parse_error;
+      throw ts::LatticeParseError();
       // exit_(1);
     }
   }
@@ -4243,7 +4241,7 @@ void LatticeType::Lat_Read(const std::string &filename, bool verbose)
     /* parse error occurred */
     std::cerr << __FILE__ << "@" << __LINE__
 	      << " failed to parse lattice: >" << filename <<"<" << std::endl;
-    throw lattice_parse_error;
+    throw ts::LatticeParseError();
   }
 }
 

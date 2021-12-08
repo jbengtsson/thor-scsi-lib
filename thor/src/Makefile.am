@@ -7,12 +7,20 @@ lib_LTLIBRARIES        = libtpsa.la libthor.la
 ## conditional definition depending which library version is built
 ## or built both
 #libtracy_a_SOURCES     = tracy_lib.cc
-libtpsa_la_SOURCES     = tpsa_utils.cc
+libtpsa_la_SOURCES     = tpsa_utils.cc field.cc
 libtpsa_la_SOURCES     += tpsa_lin.cc tpsa_lin_pm.cc
+
 # libtpsa_la_SOURCES     += tpsa_for_pm.cc # tpsa_for.cc
-libtest_la_SOURCES      = test_lib.cc
-libthor_la_SOURCES     = radia2tracy.cc
-libthor_la_SOURCES     +=  t2cell.cc t2lat.cc t2ring.cc t2elem.cc # thor_lib.cc
+# libtest_la_SOURCES      = test_lib.cc
+libthor_la_SOURCES     = radia2tracy.cc legacy/io.cc
+libthor_la_SOURCES     += ety.cc eigenv.cc
+libthor_la_SOURCES     += prtmfile.cc rdmfile.cc lsoc.cc
+# libthor_la_SOURCES     += param.cc dynap.cc
+libthor_la_SOURCES     +=  t2cell.cc t2lat.cc set_errors.cc
+# Heavy template lifting below
+# libthor_la_SOURCES     += t2elem.cc t2ring.cc thor_lib.cc
+# libthor_la_SOURCES     += field.cc
+libthor_la_SOURCES     += thor_lib.cc
 
 # AM_LDFLAGS flags:
 #  {-static | -shared}

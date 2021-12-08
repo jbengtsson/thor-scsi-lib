@@ -68,7 +68,6 @@ arma::mat get_thin_kick_lin_map(const double b2L, const double delta);
 arma::mat get_lin_mat(ElemType *Elem, const double delta);
 void get_lin_mats(const double delta);
 
-void get_B(ConfigType &conf, const char *file_name, FieldMapType *FM);
 double Elem_GetKval(int Fnum1, int Knum1, int Order);
 
 };

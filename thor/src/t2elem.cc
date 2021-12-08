@@ -27,15 +27,13 @@ namespace ts = thor_scsi;
 namespace tsm = thor_scsi::math;
 using namespace thor_scsi::core;
 using namespace thor_scsi::elements;
+namespace tse = thor_scsi::elements;
+namespace tsc = thor_scsi::core;
 
-template void tsm::LinearInterpolation2(double &, double &, double &, double &,
-				     double &, thor_scsi::elements::ElemType *, bool &, int);
-template void tsm::LinearInterpolation2(tps &, tps &, tps &, tps &, tps &,
-				     thor_scsi::elements::ElemType *, bool &, int);
 
 
 bool          first_FM = true;
-double        C_u, C_gamma, C_q, cl_rad, q_fluct, I[6]; /// track down how these variables are to be used!
+double        C_u, C_gamma, C_q, cl_rad, q_fluct, I[6]; ///< track down how these variables are to be used!
 double        c_1, d_1, c_2, d_2;
 double        s_FM;
 std::ofstream outf_;
@@ -2053,8 +2051,8 @@ void InsertionType::Insertion_Pass(ConfigType &conf, ss_vect<T> &x)
       // if (!ID->linear)
       //   SplineInterpolation2(x[x_], x[y_], tx2, tz2, *this, outoftable);
       // else {
-      tsm::LinearInterpolation2(x[x_], x[y_], tx2, tz2, B2_perp, this,
-			     outoftable, 2);
+      tsm::LinearInterpolation2(x[x_], x[y_], tx2, tz2, B2_perp, *this,
+				outoftable, 2);
 
 	// Scale locally with (Brho) (as above) instead of when the file
 	// is read; since the beam energy might not be known at that time.
@@ -2785,11 +2783,11 @@ arma::mat get_sbend_mat(const ElemType *elem, const double delta)
 
 
 std::vector< std::vector<double> >
-get_transp_mat(ElemType *elem, const double delta)
+tse::get_transp_mat(tse::ElemType *elem, const double delta)
 {
   arma::mat M(tps_n, tps_n), M1(tps_n, tps_n), M2(tps_n, tps_n);
 
-  MpoleType *Mp = dynamic_cast<MpoleType*>(elem);
+  tse::MpoleType *Mp = dynamic_cast<tse::MpoleType*>(elem);
 
   if (elem->PL != 0e0) {
     M = get_sbend_mat(elem, delta);
@@ -2807,23 +2805,23 @@ get_transp_mat(ElemType *elem, const double delta)
 }
 
 
-void LatticeType::get_transp_mats(const double delta)
+void tsc::LatticeType::get_transp_mats(const double delta)
 {
   long int  k;
-  MpoleType *Mp;
+  tse::MpoleType *Mp;
 
   for (k = 0; k <= conf.Cell_nLoc; k++) {
-    Mp = dynamic_cast<MpoleType*>(elems[k]);
+    Mp = dynamic_cast<tse::MpoleType*>(elems[k]);
     if (elems[k]->Pkind == Mpole)
       Mp->M_elem = get_transp_mat(elems[k], delta);
   }
 }
 
 
-ElemType* MpoleType::Elem_Init(const ConfigType &conf, const bool reverse)
+tse::ElemType* tse::MpoleType::Elem_Init(const tsc::ConfigType &conf, const bool reverse)
 {
   double     phi;
-  MpoleType  *Mp;
+  tse::MpoleType  *Mp;
 
   MpoleType* M = dynamic_cast<MpoleType*>(this);
 

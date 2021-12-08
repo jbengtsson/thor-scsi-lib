@@ -20,7 +20,10 @@
 const char beam_envelope_file[] = "beam_envelope";
 
 
-void GetNu(std::vector<double> &nu, std::vector< std::vector<double> > &M);
+/*
+ * returns if stable
+ */
+bool GetNu(std::vector<double> &nu, std::vector< std::vector<double> > &M);
 
 bool Cell_GetABGN(std::vector< std::vector<double> > &M,
 		  std::vector<double> &alpha, std::vector<double> &beta,

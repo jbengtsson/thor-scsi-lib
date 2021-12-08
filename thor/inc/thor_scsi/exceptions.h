@@ -29,7 +29,7 @@ namespace thor_scsi {
 			{
 				return "Invalid last position";
 			}
-	}invalid_last_position;
+	};
 
 	class LatticeParseError: public std::exception
 	{
@@ -38,7 +38,15 @@ namespace thor_scsi {
 				return "Lattice parse error";
 			}
 
-	}lattice_parse_error;
+	};
+
+	class SanityCheckError:  public std::exception
+	{
+		virtual const char* what() const throw()
+			{
+				return "SanityCheckErro";
+			}
+	};
 
 }
 #endif
