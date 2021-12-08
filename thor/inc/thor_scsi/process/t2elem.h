@@ -59,19 +59,6 @@ void thin_kick(ConfigType &conf, const int Order, const MpoleArray &MB,
 template<typename T>
 void sol_pass(ConfigType &conf, const ElemType *elem, ss_vect<T> &x);
 
-	namespace elements {
-    DriftType* Drift_Alloc(void);
-    MarkerType* Marker_Alloc(void);
-    MpoleType* Mpole_Alloc(void);
-    CavityType* Cavity_Alloc(void);
-    WigglerType* Wiggler_Alloc(void);
-    InsertionType* Insertion_Alloc(void);
-    FieldMapType* FieldMap_Alloc(void);
-    SpreaderType* Spreader_Alloc(void);
-    RecombinerType* Recombiner_Alloc(void);
-    SolenoidType* Solenoid_Alloc(void);
-    MapType* Map_Alloc(void);
-  }
 
 arma::mat get_edge_lin_map(const double h, const double phi,
 			   const double gap, const double delta);

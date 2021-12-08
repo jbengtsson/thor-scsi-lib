@@ -441,6 +441,17 @@ namespace thor_scsi {
 				{ Map_Pass(conf, ps); };
 		};
 
+		DriftType* Drift_Alloc(void);           ///< Todo: Some factory implementation required?
+		MarkerType* Marker_Alloc(void);		///< Todo: Some factory implementation required?
+		MpoleType* Mpole_Alloc(void);		///< Todo: Some factory implementation required?
+		CavityType* Cavity_Alloc(void);		///< Todo: Some factory implementation required?
+		WigglerType* Wiggler_Alloc(void);	///< Todo: Some factory implementation required?
+		InsertionType* Insertion_Alloc(void);	///< Todo: Some factory implementation required?
+		FieldMapType* FieldMap_Alloc(void);	///< Todo: Some factory implementation required?
+		SpreaderType* Spreader_Alloc(void);	///< Todo: Some factory implementation required?
+		RecombinerType* Recombiner_Alloc(void);	///< Todo: Some factory implementation required?
+		SolenoidType* Solenoid_Alloc(void);	///< Todo: Some factory implementation required?
+		MapType* Map_Alloc(void);               ///< Todo: Some factory implementation required?
 
 	}
 }

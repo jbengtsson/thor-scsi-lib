@@ -16,12 +16,13 @@
 #include <thor_scsi/core/config.h>
 
 
-#include <thor_scsi/process/t2ring.h> ///< Analyse dependencies
-#include <thor_scsi/process/t2elem.h> ///< Analyse dependencies
+// #include <thor_scsi/process/t2ring.h> ///< Analyse dependencies
+// #include <thor_scsi/process/t2elem.h> ///< Analyse dependencies
 #include <tps/tpsa_lin.h>
+#include <thor_scsi/process/t2ring_common.h>
 
-// Inline functions.
 
+extern double q_fluct; /// < Track down if it is a constant or a global variable reflecting current status
 
 // partial template-class specialization
 // primary version

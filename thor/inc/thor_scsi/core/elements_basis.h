@@ -3,8 +3,8 @@
 
 #include <vector>
 #include <string>
-#include <tps/tps_type.h>
 #include <tps/ss_vect.h>
+#include <tps/tps_type.h>
 #include <thor_scsi/core/cells.h>
 #include <thor_scsi/core/elements_enums.h>
 #include <thor_scsi/core/config.h>

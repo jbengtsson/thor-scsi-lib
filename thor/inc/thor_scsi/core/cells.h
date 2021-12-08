@@ -1,5 +1,6 @@
 #ifndef _THOR_SCSI_CORE_CELL_H_
 #define _THOR_SCSI_CORE_CELL_H_
+#include <thor_scsi/exceptions.h>
 
 #include <vector>
 namespace thor_scsi {
@@ -68,11 +69,12 @@ namespace thor_scsi {
 		 }
 		 inline double getRoll(void){
 		   // how needs that to be implemented
-		   ;
+		   throw thor_scsi::NotImplemented();
+		   return -1e100;
 		 }
 		 inline void setRoll(double roll){
 		   // how needs that to be implemented
-		   ;
+		   throw thor_scsi::NotImplemented();
 		 }
 	  };
 	}
