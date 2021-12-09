@@ -10,6 +10,7 @@
 */
 
 #include <tps/enums.h>
+#include <tps/externs.h>
 #include <tps/exceptions.h>
 #include <tps/ss_vect.h>
 #include <tps/tpsa_lin.h>
@@ -20,10 +21,8 @@
 #include <iomanip>
 #include <math.h>
 
-extern const int nv_tps, nd_tps, iref_tps;
-
-extern int    no_tps, ndpt_tps;
-extern double eps_tps;
+// extern const int nv_tps, nd_tps, iref_tps;
+// extern int    no_tps, ndpt_tps;
 
 bool ini_tps = false, header = false, res_basis = false, stable = false;
 

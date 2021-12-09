@@ -16,6 +16,18 @@
 
 using namespace thor_scsi::core;
 
+/**
+   Forward declarations
+
+   Todo:
+   functions only used here. define them static?
+ */
+struct LOC_GDiag;
+void GenB(arma::mat&, arma::mat&, arma::vec&, struct LOC_GDiag&);
+void NormEigenVec(arma::mat&, arma::mat&, arma::vec&, arma::vec&, arma::mat&);
+/* end forward declarations */
+
+
 /****************************************************************************/
 /* long closest(double x, double x1, double x2, double x3)
 

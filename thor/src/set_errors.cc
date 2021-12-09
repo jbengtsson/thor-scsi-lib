@@ -1,9 +1,26 @@
 #include <thor_scsi/tweak/errors.h>
 #include <string>
 
+
 namespace ts = thor_scsi;
 namespace tsc = thor_scsi::core;
 namespace tse = thor_scsi::elements;
+
+using namespace thor_scsi;
+/**
+   Forward declarations
+
+   Todo:
+   functions only used here. define them static?
+ */
+//void iniranf(long int);
+//void newseed(void);
+//double ranf(void);
+//void setrancut(double);
+//double normranf(void);
+//void CheckAlignTol(thor_scsi::core::LatticeType&, const char*);
+/* end forward declarations */
+
 
 const static bool normal = true; // Normal or rectangular distribution.
 
@@ -21,23 +38,23 @@ static long int
 static double
   normcut_;
 
-void iniranf(const long i) { rseed0 = i; rseed = i; }
+void ts::iniranf(const long i) { rseed0 = i; rseed = i; }
 
-void newseed(void)
+void ts::newseed(void)
 {
   rseed0 = (k_*rseed0+c_) % m_; rseed = (rseed0+54321) % m_;
 }
 
 // Random number generator with rectangular distribution.
-double ranf(void) { rseed = (k_*rseed+c_) % m_; return (rseed/1e8); }
+double ts::ranf(void) { rseed = (k_*rseed+c_) % m_; return (rseed/1e8); }
 
-void setrancut(const double cut)
+void ts::setrancut(const double cut)
 {
   printf("\nsetrancut: cut set to %3.1f\n", cut);
   normcut_ = cut;
 }
 
-double normranf(void)
+double ts::normranf(void)
 {
   int    i, j;
   double f, w;
@@ -62,7 +79,7 @@ double normranf(void)
 
 // Misalignments.
 
-void CheckAlignTol(tsc::LatticeType &lat, const char *OutputFile)
+void ts::CheckAlignTol(tsc::LatticeType &lat, const char *OutputFile)
   // check aligment errors of individual magnets on giders
   // the dT and roll angle are all printed out
 {

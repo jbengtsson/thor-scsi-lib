@@ -5,8 +5,10 @@ import numpy as np
 #sys.path.append(thor_dir+'/thor/lib')
 
 # Set $PYTHONPATH to: ../Thor_scsi/python
+import thor
+print(thor)
 import thor.lib as scsi
-
+print(scsi)
 
 # Constants.
 
@@ -77,7 +79,7 @@ def set_config():
 
 def get_lat(file_name):
     lat = set_config()
-    lat.Lat_Read(file_name)
+    lat.Lat_Read(file_name, False)
     lat.Lat_Init()
     lat.ChamberOff()
     lat.conf.CODimax = 10
@@ -87,6 +89,8 @@ def get_lat(file_name):
 
 def main(file_name):
     lat = get_lat(file_name)
+    for cnt, elem in enumerate(lat.elems):
+        print(f"{cnt:04d} {elem}")
 
     lat.Ring_GetTwiss(True, 0e-3)
     lat.print("")

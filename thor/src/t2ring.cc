@@ -15,10 +15,29 @@
 #include <thor_scsi/legacy/legacy.h>
 #include <thor_scsi/legacy/time.h>
 #include <thor_scsi/process/t2ring.h>
+#include <thor_scsi/process/t2ring_common.h>
 
 #include <tps/tpsa_lin.h>
 #include <tps/ss_vect_utils.h>
 #include <tps/math_pass.h>
+
+/**
+   Forward declarations
+
+   Todo:
+   functions only used here. define them static?
+ */
+void getprm(arma::mat&, std::vector<double>&, std::vector<double>&);
+void dagetprm(ss_vect<tps>&, std::vector<double>&, std::vector<double>&);
+double get_curly_H(double, double, double, double);
+void get_dI_eta_5(std::__debug::vector<thor_scsi::elements::ElemType*>, int);
+void write_misalignments(const thor_scsi::core::LatticeType&, const char*);
+void computeFandJ(thor_scsi::core::LatticeType&, int, ss_vect<double>&, arma::mat&, ss_vect<double>&);
+bool chk_if_lost(thor_scsi::core::LatticeType&, double, double, double, long int, bool);
+double d_sign(double, double);
+#if 0
+#endif
+/* end forward declarations */
 
 using namespace thor_scsi::core;
 using namespace thor_scsi::elements;

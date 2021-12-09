@@ -16,6 +16,7 @@
 #define dafunlen  4
 
 #include <tps/enums.h>
+#include <tps/externs.h>
 #include <tps/ss_vect.h>
 #include <tps/tps_type.h>
 #include <tps/tpsa_lin.h>
@@ -33,16 +34,18 @@
 typedef char danambuf[danamlen];
 typedef char     funnambuf[dafunlen];
 
-extern const int nv_tps, nd_tps, iref_tps;
+// extern const int nv_tps, nd_tps, iref_tps;
 
-extern int    no_tps, ndpt_tps;
-extern double eps_tps;
+// extern int    no_tps, ndpt_tps;
 
+/*
+    Configuration variable
 
+ */
 void daeps_(const double eps) { eps_tps = eps; }
 
 
-void danot_(const int no) {
+void danot_(const long int no) {
   if (no != 1) {
     std::cerr << "danot_: max order exceeded " << no << "  (1)" << std::endl;
     throw std::domain_error("danot_: max order exceeded");
@@ -51,34 +54,39 @@ void danot_(const int no) {
 }
 
 
-void daini_(int no, int nv, int fio)
+void daini_(const long int no, const long int nv, const long int fio)
 {
-  eps_tps = 1e-25;
+  // now defined as global const
+  // eps_tps = 1e-25;
   if (no != 1) {
     std::cerr << "daini_: max order exceeded " << no << "  (1)" << std::endl;
     throw std::domain_error("danot_: max order exceeded");
   }
-  if ((nv < 1) || (nv > nv_tps))
-    printf("daini_: to many dimensions %d(%d)\n", nv, nv_tps);
+  if ((nv < 1) || (nv > nv_tps)){
+    std::cerr << "daini_: to many dimensions " << nv << " (" << nv_tps << ")"
+	      << std::endl;
+  }
 }
 
 
-void lieini(const int no, const int nv, const int nd2i)
+void lieini(const long int no, const long int nv, const long int nd2i)
 {
-  if ((nv < 1) || (nv > nv_tps))
-    printf("lieini: max dim exceeded %d (%d)\n", nv, nv_tps);
+  if ((nv < 1) || (nv > nv_tps)){
+    std::cerr <<  "lieini: max dim exceeded " << nv << " (" << nv_tps << ")"
+	      << std::endl;
+  }
 }
 
 
-void daall_(std::vector<double> &x, const int nd2, const char *daname,
-	   const int no, const int nv)
+void daall_(std::vector<double> &x, const long int nd2, const char *daname,
+	   const long int no, const long int nv)
 { for (int j = 0; j <= nv_tps; j++) x[j] = 0.0; }
 
 
-void dadal_(std::vector<double> &x, const int nv_tps) { }
+void dadal_(std::vector<double> &x, const long int nv_tps) { }
 
 
-void davar_(std::vector<double> &x, const double r, const int i)
+void davar_(std::vector<double> &x, const double r, const long int i)
 {
   x[0] = r;
   for (int j = 1; j <= nv_tps; j++) x[j] = 0e0;
@@ -278,8 +286,7 @@ void damul_(const std::vector<double> &x, const std::vector<double> &y,
 }
 
 
-void dafun_(const char *fun, const std::vector<double> &x,
-	    std::vector<double> &z);
+//void dafun_(const char *fun, const std::vector<double> &x,   std::vector<double> &z);
 
 void dadiv_(const std::vector<double> &x, const std::vector<double> &y,
 	    std::vector<double> &z)
@@ -512,11 +519,11 @@ void dacct_(const ss_vect<tps> &x, const int i,
 }
 
 
-void dainv_(const ss_vect<tps> &x, const int i, ss_vect<tps> &z, const int k)
+void dainv_(const ss_vect<tps> &x, const long int i, ss_vect<tps> &z, const long int k)
 { z = mattomap(arma::inv(maptomat(x))); }
 
 
-void Rotmap(const int n, ss_vect<tps> &map, const arma::mat &R)
+void Rotmap(const long int n, ss_vect<tps> &map, const arma::mat &R)
 { map = mattomap(maptomat(map)*R); }
 
 

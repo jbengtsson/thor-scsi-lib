@@ -15,10 +15,26 @@ void daeps_(const double eps);
 
 void danot_(const long int no);
 
-void daini_(long int no, long int nv, long int fio);
+/**
+   Todo
 
+   Shall it throw an exception if too many dimensions
+*/
+void daini_(const long int no, const long int nv, const long int fio);
+
+/**
+   Todo
+
+   Shall it throw an exception if too many dimensions
+*/
 void lieini(const long int no, const long int nv, const long int nd2i);
 
+/**
+
+   Todo:
+      Why so many arguments  all except x ar not used?
+      Required for truncated power series?
+ */
 void daall_(std::vector<double> &x, const long int nd2, const char *daname,
 	    const long int no, const long int nv);
 

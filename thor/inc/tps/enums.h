@@ -1,6 +1,7 @@
 #ifndef _TPS_ENUMS_H_
 #define _TPS_ENUMS_H_ 1
 
+#include <tps/config.h>
 const int
   max_str   = 132,
   n_m2      = 21,       ///< No of 1st & 2nd order moments: (6 over 5) + 6.
@@ -24,8 +25,9 @@ const int
 
 
 // Truncated Power Series Algebra (TPSA)
-extern int       no_tps, ndpt_tps;
-extern double    eps_tps;
+const  int  no_tps = NO_TPSA, ndpt_tps = 5;
+
+
 
 #endif
 /*

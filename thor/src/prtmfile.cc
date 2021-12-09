@@ -81,6 +81,15 @@ using namespace thor_scsi::legacy;
 #define map_       7
 */
 
+/**
+   Forward declarations
+
+   Todo:
+   functions only used here. define them static?
+ */
+void prtHOM(FILE *fp, MpoleType *elem);
+void prtName(FILE*, thor_scsi::elements::ElemType*, int, int, int, int, bool);
+/* end forward declarations */
 
 
 void prtHOM(FILE *fp, MpoleType *elem)

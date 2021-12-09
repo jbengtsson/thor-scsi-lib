@@ -3,9 +3,15 @@
 #include <iostream>
 //namespace ts = thor_scsi;
 //namespace tsc = thor_scsi::core;
-//namespace tsm = thor_scsi::math;
+namespace tsm = thor_scsi::math;
+/**
+   Forward declarations
 
-
+   Todo:
+   functions only used here. define them static?
+ */
+//void splie2(double*, double*, double**, int, int, double**);
+/* end forward declarations */
 template<typename T>
 void spline(const double x[], const T y[], int const n,
 	    double const yp1, const double ypn, T y2[])
@@ -88,7 +94,7 @@ void splin2(const double x1a[], const double x2a[],
 }
 
 
-void splie2(double x1a[], double x2a[], double **ya,
+void tsm::splie2(double x1a[], double x2a[], double **ya,
 	    int m, int n, double **y2a)
 
 {

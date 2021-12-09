@@ -27,6 +27,30 @@ using namespace thor_scsi::core;
 using namespace thor_scsi::elements;
 namespace ts = thor_scsi;
 
+
+/**
+   Forward declarations
+
+   Todo:
+   functions only used here. define them static?
+ */
+
+int P_inset(unsigned int, long int*);
+long *P_addset(long *s, unsigned val);
+long *P_expset(long *d, long s);
+void prt_bool(const std::string&, bool);
+void fixedtostr(std::string &str);
+long *P_setunion(long *d, long *s1, long *s2);
+
+struct LOC_Lat_ProcessBlockInput;
+double EVAL(struct LOC_Lat_ProcessBlockInput *LINK);
+
+struct LOC_Lat_Read;
+void GetEnergy(struct LOC_Lat_Read*);
+void GetRingType(struct LOC_Lat_Read*);
+void PrintResult(struct LOC_Lat_Read*);
+/* end forward declarations */
+
 // C wrapper for Pascal global variablse.
 static std::vector<ElemFamType> *ElemFam_;
 static LatticeType              *Lat_;

@@ -106,6 +106,8 @@ template<typename T> class ss_vect {
   friend tps Intd(const ss_vect<tps> &, const double);
   friend ss_vect<tps> Difd(const tps &, const double);
   friend ss_vect<tps> Taked(const ss_vect<tps> &, const int);
+
+
  private:
   // (Note, e.g. spin components should be added here)
   std::vector<T> ss;
@@ -159,5 +161,9 @@ template<typename T>
 template<typename U>
 inline ss_vect<T>::ss_vect(const ss_vect<U> &a)
 { for (int i = 0; i < ps_dim; i++) ss.push_back(a[i]); }
+
+
+
+double xabs(long n, ss_vect<double> &x);
 
 #endif /* _TPS_SS_VECT_H_ */
