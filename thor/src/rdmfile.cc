@@ -86,6 +86,19 @@ namespace ts = thor_scsi;
 
 const int line_max = 200;
 
+/**
+   Forward declarations
+
+   Todo:
+   functions only used here. define them static?
+
+   Factory pattern? Should be singled out ?
+ */
+ElemType* elem_alloc(const int kind);
+void get_elem(std::ifstream&, thor_scsi::core::LatticeType*, char*, long int&, int&);
+void get_elemf(thor_scsi::core::LatticeType*, int, int);
+void chk_Fam(std::vector<thor_scsi::elements::ElemFamType>&);
+/* end forward declarations */
 
 ElemType* elem_alloc(const int kind)
 {

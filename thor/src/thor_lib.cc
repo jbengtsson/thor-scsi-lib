@@ -7,6 +7,13 @@
    J. Bengtsson  NSLS-II, BNL  2004 -
 
 */
+#include <thor_scsi/core/lattice.h>
+#include <thor_scsi/core/elements_basis.h>
+#include <thor_scsi/math/interpolation.h>
+namespace tsc = thor_scsi::core;
+namespace tsm = thor_scsi::math;
+namespace tse = thor_scsi::elements;
+
 #include "interpolation.cc"
 #include "interpolation_elements.cc"
 #include "t2elem.cc"
@@ -73,8 +80,6 @@ double eps_tps = 1e-25; // Floating point truncation.
 namespace tse=thor_scsi::elements;
 namespace tsc=thor_scsi::core;
 
-template class ss_vect<double>;
-template class ss_vect<tps>;
 
 
 template void GtoL(ss_vect<double> &, std::vector<double> &,
@@ -158,15 +163,20 @@ template void Wiggler_pass_EF3(tsc::ConfigType &conf, tse::ElemType *Cell,
 template void sol_pass(tsc::ConfigType &conf, const tse::ElemType *, ss_vect<double> &);
 template void sol_pass(tsc::ConfigType &conf, const tse::ElemType *, ss_vect<tps> &);
 
+namespace thor_scsi{
+  namespace math {
+    template void LinearInterpolation2(double &x, double &z, double &tx, double &tz, double &B2,
+				       thor_scsi::elements::ElemType *,
+				       bool &, int);
+    template void LinearInterpolation2(tps &, tps &, tps &, tps &, tps &,
+				       thor_scsi::elements::ElemType *, bool &, int);
+  }
+}
 
-template void LinearInterpolation2(double &, double &, double &, double &,
-				   double &, tse::ElemType *, bool &, int);
-template void LinearInterpolation2(tps &, tps &, tps &, tps &, tps &,
-				   tse::ElemType *, bool &, int);
 
-template void SplineInterpolation2(double &, double &, double &, double &,
+template void tsm::SplineInterpolation2(double &, double &, double &, double &,
 				   tse::ElemType *, bool &);
-template void SplineInterpolation2(tps &, tps &, tps &, tps &,
+template void tsm::SplineInterpolation2(tps &, tps &, tps &, tps &,
 				   tse::ElemType *, bool &);
 
 template void spline(const double [], const double [], int const,
@@ -189,11 +199,9 @@ template void splin2(const double [], const double [],
 		     double **, double **, const int, const int,
 		     const tps &, const tps &, tps &);
 
-int
-  no_tps   = NO_TPSA,
-  ndpt_tps = 5;
 
 
+#if 0
 double d_sign(double a, double b)
 {
   double x;
@@ -201,7 +209,6 @@ double d_sign(double a, double b)
   x = (a >= 0 ? a : - a);
   return( b >= 0 ? x : -x);
 }
-
 
 void t2init(void)
 {
@@ -217,7 +224,7 @@ void t2init(void)
 
 //  lieini((long)no_, (long)nv_, (long)nd2_);
 }
-
+#endif
 
 /*
 // Matlab BS
@@ -231,18 +238,7 @@ void exit_(int exit_code)
 */
 
 
-double xabs(long n, ss_vect<double> &x)
-{
-  long    i;
-  double  sum;
-
-  sum = 0.0;
-  for (i = 0; i < n; i++)
-    sum += sqr(x[i]);
-
-  return sqrt(sum);
-}
-
+void prt_name_ascii(std::string &name);
 
 void prt_name_ascii(std::string &name)
 {
@@ -253,9 +249,10 @@ void prt_name_ascii(std::string &name)
     printf(" %3d", (int)name[i]);
   printf(" )\n");
 }
+#if 0
+#endif
 
-
-long LatticeType::ElemIndex(const std::string &name)
+long int tsc::LatticeType::ElemIndex(const std::string &name)
 {
   long        i;
   std::string name1 = name;

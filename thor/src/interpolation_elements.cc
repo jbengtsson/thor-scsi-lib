@@ -3,10 +3,11 @@
 const static bool traceID = false;
 
 namespace tse = thor_scsi::elements;
+namespace tsm = thor_scsi::math;
 
 template<typename T>
-void LinearInterpolation2(T &X, T &Z, T &TX, T &TZ, T &B2,
-			  tse::ElemType *Cell, bool &out, int order)
+void tsm::LinearInterpolation2(T &X, T &Z, T &TX, T &TZ, T &B2,
+			       tse::ElemType *Cell, bool &out, int order)
 {
   int            i, ix = 0, iz = 0;
   T              T1, U, THX = 0.0, THZ = 0.0;
@@ -176,7 +177,7 @@ void LinearInterpolation2(T &X, T &Z, T &TX, T &TZ, T &B2,
 
 ****************************************************************************/
 template<typename T>
-void SplineInterpolation2(T &X, T &Z, T &thetax, T &thetaz,
+void  tsm::SplineInterpolation2(T &X, T &Z, T &thetax, T &thetaz,
 			  tse::ElemType *Cell, bool &out)
 {
     int            nx, nz;

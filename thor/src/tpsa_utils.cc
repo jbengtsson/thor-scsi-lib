@@ -2,6 +2,7 @@
 #include <exception>
 #include <iostream>
 
+double eps_tps  = 1e-25;
 
 long int fact(long int n)
 {

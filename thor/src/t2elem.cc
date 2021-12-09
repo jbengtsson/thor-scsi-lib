@@ -15,13 +15,30 @@
 #include <thor_scsi/exceptions.h>
 #include <thor_scsi/math/interpolation.h>
 #include <thor_scsi/process/t2elem_b.h>
+#include <thor_scsi/process/t2elem_common.h>
+#include <thor_scsi/process/t2elem.h>
 #include <thor_scsi/legacy/legacy.h>
 #include <thor_scsi/legacy/io.h>
+#include <thor_scsi/utils.h>
 #include <tps/ss_vect.h>
 #include <tps/math_pass.h>
 #include <iostream>
 #include <iomanip>
 #include <vector>
+
+/**
+   Forward declarations
+
+   Todo:
+   functions only used here. define them static?
+ */
+void get_dI_eta_5_ID(thor_scsi::elements::MpoleType*);
+double get_phi(thor_scsi::elements::MpoleType*);
+void Init_Euclid(thor_scsi::elements::ElemType*);
+arma::mat get_edge_mat(thor_scsi::elements::MpoleType*, bool, double);
+arma::mat get_sbend_mat(const thor_scsi::elements::ElemType*, double);
+/* end forward declarations */
+
 
 namespace ts = thor_scsi;
 namespace tsm = thor_scsi::math;
@@ -429,7 +446,7 @@ void EdgeFocus(ConfigType &conf, const double irho, const double phi,
 template<typename T>
 void p_rot(ConfigType &conf, double phi, ss_vect<T> &ps)
 {
-  T          c, s, t, pz, p, val;
+  T  c, s, t, pz, val; // p
   ss_vect<T> ps1;
 
   c = cos(degtorad(phi));
@@ -2051,7 +2068,7 @@ void InsertionType::Insertion_Pass(ConfigType &conf, ss_vect<T> &x)
       // if (!ID->linear)
       //   SplineInterpolation2(x[x_], x[y_], tx2, tz2, *this, outoftable);
       // else {
-      tsm::LinearInterpolation2(x[x_], x[y_], tx2, tz2, B2_perp, *this,
+      tsm::LinearInterpolation2(x[x_], x[y_], tx2, tz2, B2_perp, this,
 				outoftable, 2);
 
 	// Scale locally with (Brho) (as above) instead of when the file
@@ -2459,16 +2476,16 @@ void Init_Euclid(ElemType *elem)
 }
 
 
-DriftType* Drift_Alloc(void)
+tse::DriftType* tse::Drift_Alloc(void)
 {
-  DriftType *D = new DriftType;
+  DriftType *D = new tse::DriftType;
   D->PL = 0e0;
   Init_Euclid(D);
   return D;
 }
 
 
-MpoleType* Mpole_Alloc(void)
+tse::MpoleType* tse::Mpole_Alloc(void)
 {
   int       j;
   MpoleType *Mp = new MpoleType;
@@ -2512,7 +2529,7 @@ MpoleType* Mpole_Alloc(void)
 }
 
 
-CavityType* Cavity_Alloc(void)
+tse::CavityType* tse::Cavity_Alloc(void)
 {
   CavityType *C = new CavityType;
 
@@ -2525,7 +2542,7 @@ CavityType* Cavity_Alloc(void)
 }
 
 
-MarkerType* Marker_Alloc(void)
+tse::MarkerType* tse::Marker_Alloc(void)
 {
   MarkerType *Mk = new MarkerType;
 
@@ -2535,7 +2552,7 @@ MarkerType* Marker_Alloc(void)
 }
 
 
-WigglerType* Wiggler_Alloc(void)
+tse::WigglerType* tse::Wiggler_Alloc(void)
 {
   int         j;
   WigglerType *W = new WigglerType;
@@ -2562,7 +2579,7 @@ WigglerType* Wiggler_Alloc(void)
 }
 
 
-InsertionType* Insertion_Alloc(void)
+tse::InsertionType* tse::Insertion_Alloc(void)
 {
   int           i = 0, j = 0;
   InsertionType *ID = new InsertionType;
@@ -2615,7 +2632,7 @@ InsertionType* Insertion_Alloc(void)
 }
 
 
-FieldMapType* FieldMap_Alloc(void)
+tse::FieldMapType* tse::FieldMap_Alloc(void)
 {
   FieldMapType *FM = new FieldMapType;
 
@@ -2628,7 +2645,7 @@ FieldMapType* FieldMap_Alloc(void)
 }
 
 
-SpreaderType* Spreader_Alloc(void)
+tse::SpreaderType* tse::Spreader_Alloc(void)
 {
   int          k;
   SpreaderType *Spr = new SpreaderType;
@@ -2642,7 +2659,7 @@ SpreaderType* Spreader_Alloc(void)
 }
 
 
-RecombinerType* Recombiner_Alloc(void)
+tse::RecombinerType* tse::Recombiner_Alloc(void)
 {
   RecombinerType *Rec = new RecombinerType;
 
@@ -2652,7 +2669,7 @@ RecombinerType* Recombiner_Alloc(void)
 }
 
 
-SolenoidType* Solenoid_Alloc(void)
+tse::SolenoidType* tse::Solenoid_Alloc(void)
 {
   int          j;
   SolenoidType *Sol = new SolenoidType;
@@ -2668,7 +2685,7 @@ SolenoidType* Solenoid_Alloc(void)
 }
 
 
-MapType* Map_Alloc(void)
+tse::MapType* tse::Map_Alloc(void)
 {
   MapType *Map = new MapType;
 
@@ -2678,7 +2695,7 @@ MapType* Map_Alloc(void)
 }
 
 
-ElemType* DriftType::Elem_Init(const ConfigType &conf, const bool reverse)
+tse::ElemType* tse::DriftType::Elem_Init(const ConfigType &conf, const bool reverse)
 {
   DriftType *Dp;
 

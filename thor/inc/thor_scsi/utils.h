@@ -8,8 +8,6 @@
 #include <tps/ss_vect.h>
 namespace thor_scsi {
 
-	double xabs(long n, ss_vect<double> &x);
-
 
 }
 #endif /* _THOR_SCSI_UTILS_H_ */

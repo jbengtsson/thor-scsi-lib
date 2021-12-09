@@ -14,6 +14,17 @@
 */
 #include <thor_scsi/math/ety.h>
 #include <math.h>
+/**
+   Forward declarations
+
+   Todo:
+   functions only used here. define them static?
+ */
+double dsign(double x, double y);
+int min0(int i, int j);
+void etdiv(double *a, double *b, double c, double d, double e, double f);
+/* end forward declarations */
+
 /****************************************************************************/
 /* double dsign(double x, double y)
 
