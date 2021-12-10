@@ -14,7 +14,6 @@
 #include <thor_scsi/core/elements.h>
 #include <thor_scsi/core/lattice.h>
 #include <thor_scsi/core/elements_enums.h>
-#include <thor_scsi/utils.h>
 #include <cassert>
 #include <iomanip>
 #include <iostream>

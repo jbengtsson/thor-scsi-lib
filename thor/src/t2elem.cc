@@ -19,7 +19,6 @@
 #include <thor_scsi/process/t2elem.h>
 #include <thor_scsi/legacy/legacy.h>
 #include <thor_scsi/legacy/io.h>
-#include <thor_scsi/utils.h>
 #include <tps/ss_vect.h>
 #include <tps/math_pass.h>
 #include <iostream>
