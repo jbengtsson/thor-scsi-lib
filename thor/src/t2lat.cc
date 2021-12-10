@@ -2968,7 +2968,7 @@ static bool Lat_DealElement(FILE *fi_, FILE *fo_, long *cc_, long *ll_,
     else {
       std::cerr << __FILE__ << "@" << __LINE__
 		<< " failed to parse lattice: >N = " << k1 <<"<" << std::endl;
-      throw lattice_parse_error;
+      throw ts::LatticeParseError();
     }
     WITH2->Pmethod = k2;
     WITH2->PTx1 = t1; WITH2->PTx2 = t2; WITH2->Pgap = gap;
