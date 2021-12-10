@@ -18,14 +18,6 @@ namespace tse = thor_scsi::elements;
 namespace tsc = thor_scsi::core;
 
 
-#ifndef NO_TPSA
-  #error "NO_TPSA not defined"
-  // Abort compilation.
-  #include <stop here>
-#else
-  #pragma message("thor_py.cc: NO_TPSA = " XSTR(NO_TPSA))
-#endif
-
 // Polymorphic number template class wrapper.
 
 

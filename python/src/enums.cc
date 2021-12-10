@@ -6,13 +6,6 @@
 #include <string>
 #include <sstream>
 
-#ifndef NO_TPSA
-  #error "NO_TPSA not defined"
-  // Abort compilation.
-  #include <stop here>
-#else
-  #pragma message("thor_py.cc: NO_TPSA = " XSTR(NO_TPSA))
-#endif
 
 
 namespace py = pybind11;
