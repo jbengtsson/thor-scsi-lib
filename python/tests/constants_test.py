@@ -9,7 +9,7 @@ import os, sys
 # sys.path.append(tracy_dir+'/tracy/lib')
 
 import unittest
-import tracy.lib as scsi
+import thor.lib as scsi
 
 
 pi_est = 355 / 113
