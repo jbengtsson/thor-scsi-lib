@@ -13,7 +13,7 @@ libtpsa_la_SOURCES     += tpsa_lin.cc tpsa_lin_pm.cc
 # libtpsa pm parts
 # libtpsa_la_SOURCES     += tpsa_for_pm.cc # tpsa_for.cc
 # libtest_la_SOURCES      = test_lib.cc
-libthor_la_SOURCES     = radia2tracy.cc legacy/io.cc utils.cc
+libthor_la_SOURCES     = radia2tracy.cc legacy/io.cc
 libthor_la_SOURCES     += ety.cc eigenv.cc
 libthor_la_SOURCES     += prtmfile.cc rdmfile.cc lsoc.cc
 # libthor_la_SOURCES     += param.cc dynap.cc
