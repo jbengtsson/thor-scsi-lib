@@ -9,11 +9,20 @@
 
 */
 
+#include <tps/enums.h>
+#include <tps/externs.h>
+#include <tps/exceptions.h>
+#include <tps/ss_vect.h>
+#include <tps/tpsa_lin.h>
+#include <tps/tpsa_lin_pm.h>
+#include <tps/utils.h>
+#include <exception>
+#include <iostream>
+#include <iomanip>
+#include <math.h>
 
-extern const int nv_tps, nd_tps, iref_tps;
-
-extern int    no_tps, ndpt_tps;
-extern double eps_tps;
+// extern const int nv_tps, nd_tps, iref_tps;
+// extern int    no_tps, ndpt_tps;
 
 bool ini_tps = false, header = false, res_basis = false, stable = false;
 
@@ -24,31 +33,7 @@ const int bufsize = 250000;           /* Note, max no of monomials is
 					 (no+nv)!/(nv!*no!) */
 
 
-long int fact(long int n)
-{
-  if (n > 0)
-    return n*fact(n-1);
-  else if (n == 0)
-    return 1;
-  else {
-    std::cout << "fact: neg. argument: " << n << "\n";
-    exit_(1);
-    // avoid compiler warning
-    return -1;
-  }
-}
 
-
-long int nok(long int n, long int k)
-{
-  long int j;
-  double   u;
-
-  u = 1.0;
-  for (j = 0; j < k; j++)
-    u *= (double)(n-j)/(double)(k-j);
-  return (long int)(u+0.5);
-}
 
 
 // Interface to Fortran TPSA library
@@ -75,7 +60,7 @@ void TPSA_Ini(void)
   n = nok(no_tps+nv_tps, nv_tps);
   if (n > bufsize) {
     std::cout << "*** bufsize exceeded " << n << " (" << bufsize << ")\n";
-    exit_(0);
+    throw std::length_error("bufsize exceeded");
   }
   ini_tps = true;
 }
@@ -191,7 +176,8 @@ tps pow(const tps &a, const int n)
     return tps(pow(a, n-1)) *= a;
   else {
     std::cout << "pow: should never get here " << n << "\n";
-    exit_(0);
+    throw std::domain_error("pow: received unexpected argumemt ");
+    //exit_(0);
     // avoid compiler warning
     return 0.0;
   }
@@ -265,7 +251,7 @@ tps atan2(const tps &b, const tps &a) {
       c = sgn(b.cst())*M_PI/2.0;
     else {
       std::cout << "atan2: 0/0 undefined\n";
-      exit_(1);
+      throw std::domain_error("atan2: 0/0 undefined\n");
     }
   else
     if (b.cst() >= 0.0)
@@ -378,7 +364,8 @@ std::istream& operator>>(std::istream &is, tps &a)
 
   const bool prt = false;
 
-  std::cout << "not implemented\n"; exit_(1);
+  throw NotImplemented();
+  //std::cout << "not implemented\n"; exit_(1);
 
   is.getline(line, max_str); is.getline(line, max_str);
   sscanf(line, "tpsa, NO_TPSA =%d, NV =%d", &no1, &nv1);
@@ -413,8 +400,10 @@ std::istream& operator>>(std::istream &is, tps &a)
 //    daimp_(rbuf, ibuf1, ibuf2, a.intptr);
   } else {
     std::cout << "*** illegal no (" << no_tps << ") or nv ("
-	      << nv_tps << ")\n";
-    exit_(1);
+	      << nv_tps << ")" << std::endl;
+    throw std::invalid_argument ("illegal no or nv");
+
+    // exit_(1);
   }
 
   return is;

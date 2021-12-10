@@ -36,11 +36,17 @@ ext_modules = [
     # ),
     Pybind11Extension(
         "lib",
-        sorted(["src/thor_py.cc"]),
+        # sorted(["src/thor_py_enums.cc", "src/thor_py.cc"]),
+        ["src/thor_py.cc", "src/enums.cc", "src/config_type.cc",
+         "src/elements.cc", "src/lattice.cc",
+        ],
         include_dirs=["../thor/inc"] + [d["gsl_include"]],
         define_macros=[("_GLIBCXX_DEBUG", 1), ("_GLIBCXX_DEBUG_PEDANTIC", 1)],
-        library_dirs=["../thor/src/.libs"] + [d["gsl_lib_dir"]],
-        libraries=["thor"] + d["gsl_libs"],
+        library_dirs=(
+            #["../thor/src/.libs"]
+            ["../../engine/lib"]
+        + [d["gsl_lib_dir"]]),
+        libraries=["thor", "tpsa"] + d["gsl_libs"],
     ),
 ]
 

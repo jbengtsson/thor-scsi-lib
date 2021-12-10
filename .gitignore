@@ -5,6 +5,10 @@
 *.o
 *.a
 
+# Libraries
+*.so
+*.a
+
 # libtool files
 libtool
 
@@ -27,6 +31,11 @@ libtool
 m4/
 .deps
 tracy_lib.lo
+*.lo
+*.la
+
+# Fortran modules
+TPSA/*.mod
 
 # Command, data and graphics files.
 in
