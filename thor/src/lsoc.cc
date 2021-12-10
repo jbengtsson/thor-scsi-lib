@@ -8,6 +8,18 @@
 
 */
 
+#include <thor_scsi/legacy/io.h>
+#include <thor_scsi/process/lsoc.h>
+#include <thor_scsi/tweak/errors.h>
+#include <gsl/gsl_matrix.h>
+#include <gsl/gsl_vector.h>
+#include <gsl/gsl_linalg.h>
+#include <iostream>
+#include <iomanip>
+
+using namespace thor_scsi::elements;
+using namespace thor_scsi::core;
+using namespace thor_scsi;
 
 static bool       first_h[] = {true, true}, first_v[] = {true, true};
 int               n_bpm_[2], n_corr_[2];
@@ -47,7 +59,8 @@ void prt_gcmat(const int plane)
     outf = file_write("svdv.out");
   else {
     printf("prt_gcmat: undefined plane %d\n", plane);
-    exit_(1);
+    throw std::invalid_argument("undefined plane (not [1|2])");
+    //exit_(1);
   }
 
   fprintf(outf,"# total no of monitors:                %d\n", n_bpm_[k]);

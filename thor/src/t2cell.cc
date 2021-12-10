@@ -8,9 +8,21 @@
 
 */
 
+#include <thor_scsi/process/t2cell.h>
+#include <thor_scsi/process/t2elem_b.h>
+#include <thor_scsi/core/defines.h>
+#include <thor_scsi/core/elements.h>
+#include <thor_scsi/core/lattice.h>
+#include <thor_scsi/core/elements_enums.h>
+#include <cassert>
+#include <iomanip>
+#include <iostream>
 
 #define debug false
-#include <cassert>
+
+using namespace thor_scsi;
+using namespace thor_scsi::core;
+using namespace thor_scsi::elements;
 
 template<typename T>
 inline bool ElemType::CheckAmpl(ConfigType &conf, const ss_vect<T> &ps)
@@ -55,11 +67,23 @@ void LatticeType::Cell_Pass(const long i0, const long i1, ss_vect<T> &ps,
     for (i = 0; i < ps_dim/2; i++)
       conf.D_rad[i] = 0e0;
 
+
   if (!elems[i0]->CheckAmpl(conf, ps))
     lastpos = i0;
   else {
     lastpos = i1;
+    if( (i0 >= elems.size()) || (i1 >= elems.size())){
+      std::cerr << __FILE__ << "@" << __LINE__
+		<< " Will crash soon as elements outside of vector will be accessed! "
+		<< " vector has "  << elems.size() << " elements"
+		<< " i0 = " << i0 << " i1 = " << i1
+		<< std::endl;
+    }
     for (i = i0; i <= i1; i++) {
+      /*
+      std::cerr << __FILE__ << "@" << __LINE__
+		<<  " Working on element " << elems[i]->Name << std::endl;
+      */
       elems[i]->Cell_Pass(conf, ps);
       if (!elems[i]->CheckAmpl(conf, ps)) {
 	if (conf.trace)
@@ -168,9 +192,9 @@ bool LatticeType::Cell_getCOD(long imax, double eps, double dP, long &lastpos)
 
   if (conf.trace)
     std::cout << std::scientific << std::setprecision(1)
-	      << "\nCell_getCOD: imax = " << setw(1) << imax
-	      << " eps = " << setw(7) << eps
-	      << " dP =" << setw(7) << dP << std::endl
+	      << "\nCell_getCOD: imax = " << std::setw(1) << imax
+	      << " eps = " << std::setw(7) << eps
+	      << " dP =" << std::setw(7) << dP << std::endl
 	      << std::scientific << std::setprecision(5)
 	      << "  0                        x0 ="
 	      << std::setw(13) << x0 << std::endl;
@@ -267,7 +291,7 @@ void LatticeType::Lat_Init(void)
   elems.resize(conf.Cell_nLoc+1);
 
   // Assign element 0 ("begin").
-  elems[0] = Marker_Alloc();
+  elems[0] = thor_scsi::elements::Marker_Alloc();
   elems[0]->Name = first_name;
   elems[0]->PL = 0e0; elems[0]->Fnum = 0; elems[0]->Knum = 0;
   elems[0]->Pkind = marker;

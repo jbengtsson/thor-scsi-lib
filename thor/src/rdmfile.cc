@@ -54,9 +54,25 @@
 
      kick_map:   scale order <file name>                                      */
 
+#include <thor_scsi/core/constants.h>
+#include <thor_scsi/core/elements.h>
+#include <thor_scsi/core/lattice.h>
+#include <thor_scsi/exceptions.h>
+#include <thor_scsi/importers/radia.h>
+#include <thor_scsi/legacy/io.h>
+#include <thor_scsi/legacy/io_codes.h>
+#include <thor_scsi/legacy/legacy.h>
+#include <iostream>
+
+using namespace thor_scsi::elements;
+using namespace thor_scsi::core;
+using namespace thor_scsi::legacy;
+
+namespace ts = thor_scsi;
 
 #define snamelen   10
 
+/*
 // numerical type codes
 #define marker_   -1
 #define drift_     0
@@ -66,10 +82,23 @@
 #define wiggler_   4
 #define kick_map   6
 #define map_       7
-
+*/
 
 const int line_max = 200;
 
+/**
+   Forward declarations
+
+   Todo:
+   functions only used here. define them static?
+
+   Factory pattern? Should be singled out ?
+ */
+ElemType* elem_alloc(const int kind);
+void get_elem(std::ifstream&, thor_scsi::core::LatticeType*, char*, long int&, int&);
+void get_elemf(thor_scsi::core::LatticeType*, int, int);
+void chk_Fam(std::vector<thor_scsi::elements::ElemFamType>&);
+/* end forward declarations */
 
 ElemType* elem_alloc(const int kind)
 {
@@ -105,7 +134,7 @@ ElemType* elem_alloc(const int kind)
     Elem = Wiggler_Alloc();
     Elem->Pkind = PartsKind(Wigl);
     break;
-  case kick_map:
+  case kick_map_:
     Elem = Insertion_Alloc();
     Elem->Pkind = PartsKind(Insertion);
     break;
@@ -114,9 +143,9 @@ ElemType* elem_alloc(const int kind)
     Elem->Pkind = PartsKind(Map);
     break;
   default:
-    printf("elem_alloc: unknown type %d", kind);
+    std::cerr << "elem_alloc: unknown type " << kind << std::endl;
     Elem = NULL;
-    exit_(1);
+    throw std::invalid_argument("element alloc unknown type");
     break;
   }
   return Elem;
@@ -175,8 +204,10 @@ void get_elem(std::ifstream &inf, LatticeType *lat, char *line, long int &i,
 
   switch (lat->elems[i]->Pkind) {
   case undef:
-    std::cout << "rdmfile: unknown type " << i << std::endl;
-    exit_(1);
+    std::cerr << "rdmfile: element  " << i
+	      << " unknown type "  << lat->elems[i]->Pkind << std::endl;
+    throw ts::LatticeParseError();
+      //exit_(1);
     break;
   case marker:
     break;
@@ -239,7 +270,7 @@ void get_elem(std::ifstream &inf, LatticeType *lat, char *line, long int &i,
       sscanf(line, "%*d %lf %lf", &M->PB[HOMmax+n], &M->PB[HOMmax-n]);
       M->PBpar[HOMmax+n] = M->PB[HOMmax+n];
       M->PBpar[HOMmax-n] = M->PB[HOMmax-n];
-      M->Porder = max(n, M->Porder);
+      M->Porder = std::max(n, M->Porder);
     }
 
     if (lat->conf.mat_meth && (M->Pthick == thick))
@@ -286,8 +317,9 @@ void get_elem(std::ifstream &inf, LatticeType *lat, char *line, long int &i,
       strcpy(ID->fname2, file_name);
       Read_IDfile(ID->fname2, lat->conf, ID);
     } else {
-      std::cout << "rdmfile: undef order " << n << std::endl;
-      exit_(1);
+      std::cerr << "rdmfile: undef order " << n << std::endl;
+      throw ts::NotImplemented();
+      // exit_(1);
     }
 
     if (ID->Pmethod == 1)
@@ -327,7 +359,8 @@ void get_elem(std::ifstream &inf, LatticeType *lat, char *line, long int &i,
     break;
   default:
     std::cout << "rdmfile: unknown type" << std::endl;
-    exit_(1);
+    throw ts::NotImplemented();
+    // exit_(1);
     break;
   }
 }
@@ -343,7 +376,7 @@ void get_elemf(LatticeType *lat, const int i, const int kind)
 
   elemp->S = (i == 0)? 0e0 : lat->elems[i-1]->S + elemp->PL;
 
-  lat->elemf.resize(max(Fnum, (int)lat->elemf.size()));
+  lat->elemf.resize(std::max(Fnum, (int)lat->elemf.size()));
 
   ElemFamType &elemf = lat->elemf[Fnum-1];
 
@@ -356,12 +389,12 @@ void get_elemf(LatticeType *lat, const int i, const int kind)
     if (elemf.KidList.size() == 0)
       elemf.KidList.resize(1);
     else
-      elemf.KidList.resize(max(Knum, (int)elemf.KidList.size()));
+      elemf.KidList.resize(std::max(Knum, (int)elemf.KidList.size()));
 
     elemf.KidList[Knum-1] = i;
-    elemf.nKid = max(Knum, elemf.nKid);
+    elemf.nKid = std::max(Knum, elemf.nKid);
 
-    lat->conf.Elem_nFam = max((long)Fnum, lat->conf.Elem_nFam);
+    lat->conf.Elem_nFam = std::max((long)Fnum, lat->conf.Elem_nFam);
   }
 }
 

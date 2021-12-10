@@ -5,8 +5,10 @@ import numpy as np
 #sys.path.append(thor_dir+'/thor/lib')
 
 # Set $PYTHONPATH to: ../Thor_scsi/python
+import thor
+print(thor)
 import thor.lib as scsi
-
+print(scsi)
 
 # Constants.
 
@@ -87,6 +89,8 @@ def get_lat(file_name):
 
 def main(file_name):
     lat = get_lat(file_name)
+    for cnt, elem in enumerate(lat.elems):
+        print(f"{cnt:04d} {elem}")
 
     lat.Ring_GetTwiss(True, 0e-3)
     lat.print("")

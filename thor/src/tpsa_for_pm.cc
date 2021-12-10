@@ -7,6 +7,18 @@
 
 */
 
+
+#include <tps/enums.h>
+#include <tps/exceptions.h>
+#include <tps/mmf.h>
+#include <tps/tpsa_for.h>
+#include <tps/tpsa_for_pm.h>
+#include <tps/utils.h>
+#include <exception>
+#include <iostream>
+#include <iomanip>
+#include <math.h>
+
 extern int no_tps, ndpt_tps;
 
 bool ini_tps = false, header = false, res_basis = false, stable = false;
@@ -21,31 +33,6 @@ const char tpsa_name[name_len_for+1] = "tps-";
 int  bufsize; // Note, max no of monomials is (no+nv)!/(nv!*no!)
 
 
-long int fact(long int n)
-{
-  if (n > 0)
-    return n*fact(n-1);
-  else if (n == 0)
-    return 1;
-  else {
-    std::cout << "fact: neg. argument: " << n << std::endl;
-    exit_(0);
-    // avoid compiler warning
-    return -1;
-  }
-}
-
-
-long int nok(long int n, long int k)
-{
-  long int  j;
-  double    u;
-
-  u = 1.0;
-  for (j = 0; j < k; j++)
-    u *= (double)(n-j)/(double)(k-j);
-  return (long int)(u+0.5);
-}
 
 
 #if NO_TPSA > 1
@@ -390,8 +377,8 @@ tps pow(const tps &a, const int n)
   else if (n > 1)
     return tps(pow(a, n-1)) *= a;
   else {
-    std::cout << "pow: should never get here " << n << std::endl;
-    exit_(0);
+    std::cout << "pow: should never get here " << n << "\n";
+    throw std::domain_error("pow: received unexpected argumemt ");
     // avoid compiler warning
     return 0.0;
   }
@@ -549,9 +536,11 @@ tps atan(const tps &a)
       ((cst-7.0*pow(cst, 3.0)+7.0*pow(cst, 5.0)-pow(cst, 7.0))*pow(b, 8.0))/
       pow(1.0+sqr(cst), 8.0) + atan(cst);
   } else {
-    std::cout << "atan: only defined to " << no_tps << "th order (" << no_tps
+    std::cerr << "atan: only defined to " << no_tps << "th order (" << no_tps
 	 << ")" << std::endl;
-    exit_(1);
+    // "atan only defined to some order no_tps"
+    throw NotImplemented();
+    //exit_(1);
   }
 
   return c;
@@ -570,7 +559,8 @@ tps atan2(const tps &b,const tps &a) {
       c = sgn(b.cst())*M_PI/2.0;
     else {
       std::cout << "atan2: 0/0 undefined" << std::endl;
-      exit_(1);
+      throw std::domain_error("atan2: 0/0 undefined\n");
+      // exit_(1);
     }
   else
     if (b.cst() >= 0.0)
@@ -1163,7 +1153,8 @@ std::istream& operator>>(std::istream &is, tps &a)
   } else {
     std::cout << "*** illegal no = " << no1 << " (" << no_tps
 	 << ") or nv = " << nv1 << " (" << tps_n << ")" << std::endl;
-    exit_(1);
+    throw std::invalid_argument ("illegal no or nv");
+    // exit_(1);
   }
 
   return is;

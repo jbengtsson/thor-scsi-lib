@@ -8,11 +8,48 @@
 
    Element propagators.                                                      */
 
+#include <thor_scsi/core/config.h>
+#include <thor_scsi/core/constants.h>
+#include <thor_scsi/core/elements.h>
+#include <thor_scsi/core/lattice.h>
+#include <thor_scsi/exceptions.h>
+#include <thor_scsi/math/interpolation.h>
+#include <thor_scsi/process/t2elem_b.h>
+#include <thor_scsi/process/t2elem_common.h>
+#include <thor_scsi/process/t2elem.h>
+#include <thor_scsi/legacy/legacy.h>
+#include <thor_scsi/legacy/io.h>
+#include <tps/ss_vect.h>
+#include <tps/math_pass.h>
+#include <iostream>
 #include <iomanip>
+#include <vector>
+
+/**
+   Forward declarations
+
+   Todo:
+   functions only used here. define them static?
+ */
+void get_dI_eta_5_ID(thor_scsi::elements::MpoleType*);
+double get_phi(thor_scsi::elements::MpoleType*);
+void Init_Euclid(thor_scsi::elements::ElemType*);
+arma::mat get_edge_mat(thor_scsi::elements::MpoleType*, bool, double);
+arma::mat get_sbend_mat(const thor_scsi::elements::ElemType*, double);
+/* end forward declarations */
+
+
+namespace ts = thor_scsi;
+namespace tsm = thor_scsi::math;
+using namespace thor_scsi::core;
+using namespace thor_scsi::elements;
+namespace tse = thor_scsi::elements;
+namespace tsc = thor_scsi::core;
+
 
 
 bool          first_FM = true;
-double        C_u, C_gamma, C_q, cl_rad, q_fluct, I[6];
+double        C_u, C_gamma, C_q, cl_rad, q_fluct, I[6]; ///< track down how these variables are to be used!
 double        c_1, d_1, c_2, d_2;
 double        s_FM;
 std::ofstream outf_;
@@ -206,103 +243,6 @@ inline T get_p_s(ConfigType &conf, const ss_vect<T> &ps)
 }
 
 
-// partial template-class specialization
-// primary version
-template<typename T>
-class is_tps { };
-
-// partial specialization
-template<>
-class is_tps<double> {
- public:
-  static inline void get_ps(const ss_vect<double> &x, CellType *Cell)
-  { Cell->BeamPos = pstostl(x); }
-
-  static inline double set_prm(const int k) { return 1e0; }
-
-  static inline double get_curly_H(const ss_vect<tps> &x)
-    {
-      std::cout << "get_curly_H: operation not defined for double" << std::endl;
-      exit_(1);
-      return 0e0;
-    }
-
-  static inline double get_dI_eta(const ss_vect<tps> &A)
-    {
-      std::cout << "get_dI_eta: operation not defined for double" << std::endl;
-      exit_(1);
-      return 0e0;
-    }
-
-  static inline void emittance(ConfigType &conf, const double B2,
-			       const double u, const double ps0,
-			       const ss_vect<double> &xp) { }
-
-  static inline void diff_mat(const double B2, const double u,
-			      const double ps0, const ss_vect<double> &xp) { }
-
-};
-
-
-// partial specialization
-template<>
-class is_tps<tps> {
- public:
-  static inline void get_ps(const ss_vect<tps> &x, CellType *Cell)
-  { Cell->BeamPos = pstostl(x.cst()); Cell->A = maptostlmat(x); }
-
-  static inline tps set_prm(const int k) { return tps(0e0, k); }
-
-  static inline double get_curly_H(const ss_vect<tps> &A)
-  {
-    int             j;
-    double          curly_H[2];
-    ss_vect<double> eta;
-
-    eta.zero();
-    for (j = 0; j < 4; j++)
-      eta[j] = A[j][delta_];
-
-    get_twoJ(2, eta, A, curly_H);
-
-    return curly_H[X_];
-  }
-
-  static inline double get_dI_eta(const ss_vect<tps> &A)
-  {
-    return A[x_][delta_];
-  }
-
-  static inline void emittance(ConfigType &conf, const tps &B2_perp,
-			       const tps &ds, const tps &p_s0,
-			       const ss_vect<tps> &A)
-  {
-    // M. Sands "The Physics of Electron Storage Rings" SLAC-121, Eq. (5.20),
-    // p. 118:
-    //   dN<u^2>/E^2 =
-    //     3*C_U*C_gamma*h_bar*c*E_0^5*(1+delta)^4*(B_perp/(Brho))^3
-    //     /(4*pi*m_e^3 [eV/c^2])
-    // A contains the eigenvectors.
-    int          j;
-    double       B_66;
-    ss_vect<tps> A_inv;
-
-    if (B2_perp > 0e0) {
-      B_66 = (q_fluct*pow(B2_perp.cst(), 1.5)*pow(p_s0, 4)*ds).cst();
-      A_inv = Inv(A);
-      // D_11 = D_22 = curly_H_x,y * B_66 / 2,
-      // curly_H_x,y = eta_Fl^2 + etap_Fl^2
-      for (j = 0; j < 3; j++)
-	conf.D_rad[j] +=
-	  (sqr(A_inv[j*2][delta_])+sqr(A_inv[j*2+1][delta_]))*B_66/2e0;
-    }
-  }
-
-  static inline void diff_mat(const tps &B2_perp, const tps &ds,
-			      const tps &p_s0, ss_vect<tps> &x)
-  { }
-
-};
 
 
 template<typename T>
@@ -505,7 +445,7 @@ void EdgeFocus(ConfigType &conf, const double irho, const double phi,
 template<typename T>
 void p_rot(ConfigType &conf, double phi, ss_vect<T> &ps)
 {
-  T          c, s, t, pz, p, val;
+  T  c, s, t, pz, val; // p
   ss_vect<T> ps1;
 
   c = cos(degtorad(phi));
@@ -574,13 +514,7 @@ void quad_fringe(ConfigType &conf, const double b2, ss_vect<T> &ps)
 }
 
 
-inline ss_vect<double> mat_pass(std::vector< std::vector<double> > &M,
-				ss_vect<double> &ps)
-{ return vectops(stlmattomat(M)*pstovec(ps)); }
 
-inline ss_vect<tps> mat_pass(std::vector< std::vector<double> > &M,
-			     ss_vect<tps> &ps)
-{ return mattomap(stlmattomat(M)*maptomat(ps)); }
 
 
 template<typename T>
@@ -689,8 +623,9 @@ void MpoleType::Mpole_Pass(ConfigType &conf, ss_vect<T> &ps)
     break;
 
   default:
-    printf("Mpole_Pass: Method not supported %10s %d\n", Name.c_str(), Pmethod);
-    exit_(0);
+    std::cerr <<  "Mpole_Pass: Method not supported " << Name
+	      <<  " method " << Pmethod <<  std::endl;
+    throw ts::NotImplemented();
     break;
   }
 
@@ -1084,7 +1019,7 @@ void Wiggler_pass_EF(ConfigType &conf, const ElemType *elem,
     break;
   default:
     std::cout << "Wiggler_pass_EF: unknown element type" << std::endl;
-    exit_(1);
+    throw ts::NotImplemented();
     break;
   }
 
@@ -1100,7 +1035,7 @@ void Wiggler_pass_EF(ConfigType &conf, const ElemType *elem,
     //   break;
     default:
       std::cout << "Wiggler_pass_EF: unknown element type" << std::endl;
-      exit_(1);
+      throw ts::NotImplemented();
       break;
     }
 
@@ -1409,7 +1344,7 @@ void WigglerType::Wiggler_Pass(ConfigType &conf, ss_vect<T> &ps)
 
   case Meth_Linear:
     std::cout << "Wiggler_Pass: Meth_Linear not supported" << std::endl;
-    exit_(1);
+    throw ts::NotImplemented();
     break;
 
   case Meth_First:
@@ -2132,8 +2067,8 @@ void InsertionType::Insertion_Pass(ConfigType &conf, ss_vect<T> &x)
       // if (!ID->linear)
       //   SplineInterpolation2(x[x_], x[y_], tx2, tz2, *this, outoftable);
       // else {
-        LinearInterpolation2(x[x_], x[y_], tx2, tz2, B2_perp, this,
-			     outoftable, 2);
+      tsm::LinearInterpolation2(x[x_], x[y_], tx2, tz2, B2_perp, this,
+				outoftable, 2);
 
 	// Scale locally with (Brho) (as above) instead of when the file
 	// is read; since the beam energy might not be known at that time.
@@ -2265,9 +2200,10 @@ long int LatticeType::Elem_GetPos(const int Fnum, const int Knum)
   if (elemf[Fnum-1].nKid > 0)
     return elemf[Fnum-1].KidList[Knum-1];
   else {
-    printf("Elem_GetPos: there are no kids in family %d %s (%d)\n",
-	   Fnum, elemf[Fnum-1].ElemF->Name.c_str(), elemf[Fnum-1].nKid);
-    exit_(1);
+    std::cerr << "Elem_GetPos: there are no kids in family "<< Fnum <<  " "
+	      << elemf[Fnum-1].ElemF->Name << " "
+	      << "n kids " <<  elemf[Fnum-1].nKid << std::endl;
+    throw std::length_error("no kids in family");
     return -1;
   }
 }
@@ -2286,7 +2222,9 @@ static double thirdroot(double a)
   return x;
 }
 
-
+/**
+ * should that not go to constants ?
+ */
 void LatticeType::SI_init()
 {
   // SI units are used internally
@@ -2335,7 +2273,7 @@ std::string ElemType::repr(void)
 }
 */
 
-void ElemType::prt_elem(const string &str)
+void ElemType::prt_elem(const std::string &str)
 {
   printf("%s", str.c_str());
   printf(" %-15s %6.3f %2d %6.3f %2d %2d",
@@ -2344,7 +2282,7 @@ void ElemType::prt_elem(const string &str)
 }
 
 
-void DriftType::print(const string &str)
+void DriftType::print(const std::string &str)
 {
   prt_elem(str);
   printf(" drift \n");
@@ -2361,7 +2299,7 @@ double get_phi(MpoleType *elem)
 }
 
 
-void MpoleType::print(const string &str)
+void MpoleType::print(const std::string &str)
 {
   prt_elem(str);
   printf(" mpole  method %1d n_step %2d n_max %2d, n_design %2d reverse %1d"
@@ -2397,7 +2335,7 @@ std::string MpoleType::repr(void)
    return "Mpole(" + repr_elem() + ", " + repr_add() +")";
 }
 
-void CavityType::print(const string &str)
+void CavityType::print(const std::string &str)
 {
   prt_elem(str);
   printf(" cavity\n");
@@ -2408,7 +2346,7 @@ std::string CavityType::repr(void)
   return "Cavity(" + repr_elem() +")";
 }
 
-void MarkerType::print(const string &str)
+void MarkerType::print(const std::string &str)
 {
   prt_elem(str);
   printf(" marker\n");
@@ -2420,7 +2358,7 @@ std::string MarkerType::repr(void)
 }
 
 
-void WigglerType::print(const string &str)
+void WigglerType::print(const std::string &str)
 {
   prt_elem(str);
   printf(" wiggl \n");
@@ -2431,7 +2369,7 @@ std::string WigglerType::repr(void)
   return "Wiggler(" + repr_elem() +")";
 }
 
-void InsertionType::print(const string &str)
+void InsertionType::print(const std::string &str)
 {
   prt_elem(str);
   printf(" ID    \n");
@@ -2442,7 +2380,7 @@ std::string InsertionType::repr(void)
   return "Insertion(" + repr_elem() +")";
 }
 
-void FieldMapType::print(const string &str)
+void FieldMapType::print(const std::string &str)
 {
   prt_elem(str);
   printf(" FM    \n");
@@ -2454,7 +2392,7 @@ std::string FieldMapType::repr(void)
 }
 
 
-void SpreaderType::print(const string &str)
+void SpreaderType::print(const std::string &str)
 {
   prt_elem(str);
   printf(" spread\n");
@@ -2467,7 +2405,7 @@ std::string SpreaderType::repr(void)
 }
 
 
-void RecombinerType::print(const string &str)
+void RecombinerType::print(const std::string &str)
 {
   prt_elem(str);
   printf(" recomb\n");
@@ -2479,7 +2417,7 @@ std::string RecombinerType::repr(void)
 }
 
 
-void SolenoidType::print(const string &str)
+void SolenoidType::print(const std::string &str)
 {
   prt_elem(str);
   printf(" sol   \n");
@@ -2493,7 +2431,7 @@ std::string SolenoidType::repr(void)
 }
 
 
-void MapType::print(const string &str)
+void MapType::print(const std::string &str)
 {
   prt_elem(str);
   printf(" map   \n");
@@ -2516,7 +2454,7 @@ void LatticeType::prt_fams(void)
 }
 
 
-void LatticeType::prt_elems(const string &str)
+void LatticeType::prt_elems(const std::string &str)
 {
   int k;
 
@@ -2537,16 +2475,16 @@ void Init_Euclid(ElemType *elem)
 }
 
 
-DriftType* Drift_Alloc(void)
+tse::DriftType* tse::Drift_Alloc(void)
 {
-  DriftType *D = new DriftType;
+  DriftType *D = new tse::DriftType;
   D->PL = 0e0;
   Init_Euclid(D);
   return D;
 }
 
 
-MpoleType* Mpole_Alloc(void)
+tse::MpoleType* tse::Mpole_Alloc(void)
 {
   int       j;
   MpoleType *Mp = new MpoleType;
@@ -2590,7 +2528,7 @@ MpoleType* Mpole_Alloc(void)
 }
 
 
-CavityType* Cavity_Alloc(void)
+tse::CavityType* tse::Cavity_Alloc(void)
 {
   CavityType *C = new CavityType;
 
@@ -2603,7 +2541,7 @@ CavityType* Cavity_Alloc(void)
 }
 
 
-MarkerType* Marker_Alloc(void)
+tse::MarkerType* tse::Marker_Alloc(void)
 {
   MarkerType *Mk = new MarkerType;
 
@@ -2613,7 +2551,7 @@ MarkerType* Marker_Alloc(void)
 }
 
 
-WigglerType* Wiggler_Alloc(void)
+tse::WigglerType* tse::Wiggler_Alloc(void)
 {
   int         j;
   WigglerType *W = new WigglerType;
@@ -2640,7 +2578,7 @@ WigglerType* Wiggler_Alloc(void)
 }
 
 
-InsertionType* Insertion_Alloc(void)
+tse::InsertionType* tse::Insertion_Alloc(void)
 {
   int           i = 0, j = 0;
   InsertionType *ID = new InsertionType;
@@ -2693,7 +2631,7 @@ InsertionType* Insertion_Alloc(void)
 }
 
 
-FieldMapType* FieldMap_Alloc(void)
+tse::FieldMapType* tse::FieldMap_Alloc(void)
 {
   FieldMapType *FM = new FieldMapType;
 
@@ -2706,7 +2644,7 @@ FieldMapType* FieldMap_Alloc(void)
 }
 
 
-SpreaderType* Spreader_Alloc(void)
+tse::SpreaderType* tse::Spreader_Alloc(void)
 {
   int          k;
   SpreaderType *Spr = new SpreaderType;
@@ -2720,7 +2658,7 @@ SpreaderType* Spreader_Alloc(void)
 }
 
 
-RecombinerType* Recombiner_Alloc(void)
+tse::RecombinerType* tse::Recombiner_Alloc(void)
 {
   RecombinerType *Rec = new RecombinerType;
 
@@ -2730,7 +2668,7 @@ RecombinerType* Recombiner_Alloc(void)
 }
 
 
-SolenoidType* Solenoid_Alloc(void)
+tse::SolenoidType* tse::Solenoid_Alloc(void)
 {
   int          j;
   SolenoidType *Sol = new SolenoidType;
@@ -2746,7 +2684,7 @@ SolenoidType* Solenoid_Alloc(void)
 }
 
 
-MapType* Map_Alloc(void)
+tse::MapType* tse::Map_Alloc(void)
 {
   MapType *Map = new MapType;
 
@@ -2756,7 +2694,7 @@ MapType* Map_Alloc(void)
 }
 
 
-ElemType* DriftType::Elem_Init(const ConfigType &conf, const bool reverse)
+tse::ElemType* tse::DriftType::Elem_Init(const ConfigType &conf, const bool reverse)
 {
   DriftType *Dp;
 
@@ -2861,11 +2799,11 @@ arma::mat get_sbend_mat(const ElemType *elem, const double delta)
 
 
 std::vector< std::vector<double> >
-get_transp_mat(ElemType *elem, const double delta)
+tse::get_transp_mat(tse::ElemType *elem, const double delta)
 {
   arma::mat M(tps_n, tps_n), M1(tps_n, tps_n), M2(tps_n, tps_n);
 
-  MpoleType *Mp = dynamic_cast<MpoleType*>(elem);
+  tse::MpoleType *Mp = dynamic_cast<tse::MpoleType*>(elem);
 
   if (elem->PL != 0e0) {
     M = get_sbend_mat(elem, delta);
@@ -2883,23 +2821,23 @@ get_transp_mat(ElemType *elem, const double delta)
 }
 
 
-void LatticeType::get_transp_mats(const double delta)
+void tsc::LatticeType::get_transp_mats(const double delta)
 {
   long int  k;
-  MpoleType *Mp;
+  tse::MpoleType *Mp;
 
   for (k = 0; k <= conf.Cell_nLoc; k++) {
-    Mp = dynamic_cast<MpoleType*>(elems[k]);
+    Mp = dynamic_cast<tse::MpoleType*>(elems[k]);
     if (elems[k]->Pkind == Mpole)
       Mp->M_elem = get_transp_mat(elems[k], delta);
   }
 }
 
 
-ElemType* MpoleType::Elem_Init(const ConfigType &conf, const bool reverse)
+tse::ElemType* tse::MpoleType::Elem_Init(const tsc::ConfigType &conf, const bool reverse)
 {
   double     phi;
-  MpoleType  *Mp;
+  tse::MpoleType  *Mp;
 
   MpoleType* M = dynamic_cast<MpoleType*>(this);
 
