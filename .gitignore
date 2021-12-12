@@ -66,3 +66,7 @@ python/README.rst
 # Byte-compiled / optimized / DLL files
 **/__pycache__/
 *.py[cod]
+
+# Documentation automatically generated files
+docs/Doxygen/xml
+docs/Sphinx/api/
