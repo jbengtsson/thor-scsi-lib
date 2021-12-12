@@ -1,10 +1,10 @@
-/*
+/**
+
   Todo:
+      * Check global variables
+        Should these not go away?
 
-  * Check global variables
-    Should these not go away?
-
-  * Review setjmp longjmp. Should it be replaced by exceptions handling
+      * Review setjmp longjmp. Should it be replaced by exceptions handling
 
 
 */
@@ -136,34 +136,34 @@ typedef alfa_      Lat_keytype[Lat_nkw_max];
 typedef Lat_symbol Lat_ksytype[Lat_nkw_max];
 typedef Lat_symbol Lat_spstype[256];
 
-// Local variables for Lat_Read:
+///< Local variables for Lat_Read:
 struct LOC_Lat_Read
 {
   FILE              *fi, *fo;
   jmp_buf           _JL9999;
   long              Symmetry;
-  bool              Ring;          // true is CELL is a ring
+  bool              Ring;          ///< true is CELL is a ring
 
-  long              NoB;           // Number of defined Blocks
+  long              NoB;           ///< Number of defined Blocks
   BlockStype        BlockS;
 
   std::vector<long> Bstack;
   long              Bpointer;
-  std::vector<bool> Reverse_stack; // Reverse element.
+  std::vector<bool> Reverse_stack; ///< Reverse element.
 
-  long              UDIC;          // Number of user defined constants
+  long              UDIC;          ///< Number of user defined constants
   std::vector<_REC_UDItable>
   UDItable;
 
-  long              nkw;           // number of key word
-  Lat_symbol        sym;           // last symbol read by GetSym*/
-  alfa_             id;            // identifier from GetSym*/
-  long              inum;          // integer from GetSym*/
-  double            rnum;          // double number from GetSym*/
-  char              chin;          // last character read from source program
-  long              cc;            // character counter*/
-  long              lc;            // program location counter*/
-  long              ll;            // length of current line*/
+  long              nkw;           ///< number of key word
+  Lat_symbol        sym;           ///< last symbol read by GetSym*/
+  alfa_             id;            ///< identifier from GetSym*/
+  long              inum;          ///< integer from GetSym*/
+  double            rnum;          ///< double number from GetSym*/
+  char              chin;          ///< last character read from source program
+  long              cc;            ///< character counter*/
+  long              lc;            ///< program location counter*/
+  long              ll;            ///< length of current line*/
   long              errpos;
   std::string            *line;
 
@@ -176,7 +176,7 @@ struct LOC_Lat_Read
 };
 
 
-/* Local variables for Lat_EVAL: */
+///< Local variables for Lat_EVAL:
 struct LOC_Lat_EVAL
 {
   struct LOC_Lat_Read *LINK;
@@ -199,7 +199,7 @@ struct LOC_Lat_EVAL
 };
 
 
-/* Local variables for Lat_ProcessBlockInput: */
+///< Local variables for Lat_ProcessBlockInput
 struct LOC_Lat_ProcessBlockInput
 {
   struct LOC_Lat_Read *LINK;

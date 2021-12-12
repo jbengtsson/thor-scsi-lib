@@ -1,6 +1,10 @@
 #ifndef _THOR_SCSI_CORE_ELEMENTS_BASIS_H_
 #define _THOR_SCSI_CORE_ELEMENTS_BASIS_H_ 1
 
+/**
+   Definitions common for all elements
+
+ */
 #include <vector>
 #include <string>
 #include <tps/ss_vect.h>
@@ -11,28 +15,34 @@
 
 namespace thor_scsi {
 	namespace elements {
-		// Element virtual base class.
+		//< Element virtual base class.
 		class ElemType : public CellType {
 		public:
 			std::string
-			Name;                      // Element name.
+			Name;                      ///< Element name.
 			bool
-			Reverse;                   // Reverse element.
+			Reverse;                   ///< Reverse element.
+			                           ///< Todo:
+			                           ///<    document what it means
 			double
-			PL;                        // Length[m].
+			PL;                        ///< Length[m].
 			PartsKind
-			Pkind;                     // Enumeration for magnet types.
+			Pkind;                     ///<  Enumeration for magnet types.
 
 
-			// representation similar to prt_elem but a bit more pythonic
-			std::string repr_elem(void);
-			virtual std::string repr() = 0;
+			std::string repr_elem(void);     ///< auxilliary function providing a string of common information
+			                                 ///< required for the different elements
+			virtual std::string repr() = 0;  ///< representation similar to prt_elem but a bit more pythonic
+			                                 ///< used by python interface to generate the information for
+			                                 ///< :meth:`__repr__`
 
 			void prt_elem(const std::string &);
 
-			/*
+			/**
 			 * Todo:
 			 *    Check if that is still missing an overloaded method?
+			 *
+			 * If understood coorectly one should review if a element factory is requireed.
 			 */
 			virtual ElemType* Elem_Init(const thor_scsi::core::ConfigType &conf, const bool reverse)
 				{ return NULL; };
@@ -55,15 +65,15 @@ namespace thor_scsi {
 		};
 
 
-		// Index for lattice families & elements.
+		///< Index for lattice families & elements.
 		class ElemFamType {
 		public:
 			ElemType 		*ElemF;
 			int
-			nKid,                      // No of kids.
+			nKid,                      ///< No of kids.
 				NoDBN;
 			std::vector<int> KidList;
-			std::vector<std::string>    DBNlist; // For control system.
+			std::vector<std::string>    DBNlist; ///< For control system.
 		};
 	}
 }
