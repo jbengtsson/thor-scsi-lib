@@ -9,7 +9,10 @@ namespace thor_scsi {
 	namespace elements {
 		typedef std::vector<double> MpoleArray;
 
+		/**
 
+		   Empty space between two "typical accelertor components"
+		 */
 		class DriftType : public ElemType {
 		public:
 			friend DriftType* Drift_Alloc(void);
@@ -31,39 +34,42 @@ namespace thor_scsi {
 				{ Drift_Pass(conf, ps); };
 		};
 
+		/**
+		 * Representation of harmonics
+		 */
 		class MpoleType : public ElemType {
 		public:
 			int
-			Pmethod,                   // Integration Method.
-				PN,                        // Number of integration steps.
-				Porder,                    // The highest order in PB.
-				n_design;                  // multipole order (design).
+			Pmethod,                   ///< Integration Method.
+				PN,                        ///< Number of integration steps.
+				Porder,                    ///< The highest order in PB.
+				n_design;                  ///< multipole order (design).
 			double
 			PdTpar,                    // Roll angle [deg]: design
-				PdTsys,                    //                    systematic
-				PdTrms,                    //                    rms
-				PdTrnd,                    //                    random number.
-				PTx1,                      // Bend angle [deg]: hor. entrance angle
-				PTx2,                      //                   hor. exit angle.
-				Pgap,                      // Total magnet gap [m].
-				Pirho,                     // 1/rho [1/m].
-				Pc0,                       // Corrections for roll error of bend.
+				PdTsys,                    //<                    systematic
+				PdTrms,                    ///<                    rms
+				PdTrnd,                    ///<                    random number.
+				PTx1,                      ///< Bend angle [deg]:  hor. entrance angle
+				PTx2,                      ///<  Bend angle [deg]: hor. exit angle.
+				Pgap,                      ///< Total magnet gap [m].
+				Pirho,                     ///< 1/rho [1/m].
+				Pc0,                       ///< Corrections for roll error of bend.
 				Pc1,
 				Ps1;
 			std::vector<double>
-			PdSsys{0e0, 0e0},          // Displacement errors [m]: systematic
-				PdSrms{0e0, 0e0},          //                          rms
-				PdSrnd{0e0, 0e0};          //                          random number.
+			PdSsys{0e0, 0e0},                  ///< Displacement errors [m]: systematic
+				PdSrms{0e0, 0e0},          ///<                          rms
+				PdSrnd{0e0, 0e0};          ///<                          random number.
 			MpoleArray
-			PBpar,                     // Multipole strengths: design
-				PBsys,                     //                      systematic
-				PBrms,                     //                      rms
-				PBrnd,                     //                      random number
-				PB;                        //                      total.
+			PBpar,                             ///< Multipole strengths: design
+				PBsys,                     ///<                      systematic
+				PBrms,                     ///<                      rms
+				PBrnd,                     ///<                      random number
+				PB;                        ///<                      total.
 			pthicktype
 			Pthick;
 			std::vector< std::vector<double> >
-			M_elem                     // Transport matrix & orbit.
+			M_elem                     ///< Transport matrix & orbit.
 			{{0e0, 0e0, 0e0, 0e0, 0e0, 0e0, 0e0},
 			 {0e0, 0e0, 0e0, 0e0, 0e0, 0e0, 0e0},
 			 {0e0, 0e0, 0e0, 0e0, 0e0, 0e0, 0e0},
@@ -76,8 +82,9 @@ namespace thor_scsi {
 			ElemType* Elem_Init(const thor_scsi::core::ConfigType &conf, const bool reverse);
 			void print(const std::string &);
 			std::string repr(void);
-			// additional information of mpole for mpole
-			// more than just solely type name
+			///< additional information of mpole for mpole
+			///< more than just solely type name
+			///< used by meth:`repr`
 			std::string repr_add(void);
 
 			void SetdS(void);
@@ -106,15 +113,15 @@ namespace thor_scsi {
 		class CavityType : public ElemType {
 		public:
 			bool
-			entry_focus,               // Edge focusing at entry.
-				exit_focus;                // Edge focusing at exit.
+			entry_focus,               ///< Edge focusing at entry.
+				exit_focus;                ///< Edge focusing at exit.
 			int
-			PN,                        // Number of integration steps.
-				Ph;                        // Harmonic number.
+			PN,                        ///< Number of integration steps.
+				Ph;                        ///< Harmonic number.
 			double
-			Pvolt,                     // Vrf [V].
-				Pfreq,                     // Vrf [Hz].
-				phi;                       // RF phase.
+			Pvolt,                     ///< Vrf [V].
+				Pfreq,                     ///< Vrf [Hz].
+				phi;                       ///< RF phase.
 
 			friend CavityType* Cavity_Alloc(void);
 			ElemType* Elem_Init(const thor_scsi::core::ConfigType &conf, const bool reverse);
@@ -171,26 +178,26 @@ namespace thor_scsi {
 		class WigglerType : public ElemType {
 		public:
 			int
-			Pmethod,                   // Integration Method.
-				PN,                        // number of integration steps.
-				n_harm,                    // No of harmonics.
-				harm[n_harm_max],          // Harmonic number.
-				Porder;                    // The highest order in PB.
+			Pmethod,                   ///< Integration Method.
+				PN,                        ///< number of integration steps.
+				n_harm,                    ///< No of harmonics.
+				harm[n_harm_max],          ///< Harmonic number.
+				Porder;                    ///< The highest order in PB.
 			double
-			PdTpar,                    // Roll angle [deg]: design
-				PdTsys,                    //                   systematic
-				PdTrms,                    //                   RMS
-				PdTrnd,                    //                   random number.
-				Lambda,                    // lambda.
-				BoBrhoV[n_harm_max],       // B/Brho: ver.
-				BoBrhoH[n_harm_max],       //         hor.
-				kxV[n_harm_max],           // kx.
-				kxH[n_harm_max],           // kx.
-				phi[n_harm_max];           // phi.
+			PdTpar,                    ///< Roll angle [deg]: design
+				PdTsys,                    ///<                   systematic
+				PdTrms,                    ///<                   RMS
+				PdTrnd,                    ///<                   random number.
+				Lambda,                    ///< lambda.
+				BoBrhoV[n_harm_max],       ///< B/Brho: ver.
+				BoBrhoH[n_harm_max],       ///<         hor.
+				kxV[n_harm_max],           ///< kx.
+				kxH[n_harm_max],           ///< kx.
+				phi[n_harm_max];           ///< phi.
 			std::vector<double>
-			PdSsys{0e0, 0e0},          // Displacement error [m]: systematic
-				PdSrms{0e0, 0e0},          //                         RMS
-				PdSrnd{0e0, 0e0};          //                         random number.
+			PdSsys{0e0, 0e0},          ///< Displacement error [m]: systematic
+				PdSrms{0e0, 0e0},          ///<                         RMS
+				PdSrnd{0e0, 0e0};          ///<                         random number.
 			MpoleArray
 			PBW;
 
@@ -216,29 +223,29 @@ namespace thor_scsi {
 		class InsertionType : public ElemType {
 		public:
 			char
-			fname1[100],               // Filename for insertion description: 1st order.
-				fname2[100];               // Filename for insertion description: 2nd order.
+			fname1[100],               ///< Filename for insertion description: 1st order.
+				fname2[100];               ///< Filename for insertion description: 2nd order.
 			bool
-			linear,                    // if true linear interpolation else spline.
-				firstorder,                // true if first order kick map loaded.
-				secondorder,               // true if second order kick map loaded.
-				long_comp;                 // flag for longitudinal comp.
+			linear,                    ///< if true linear interpolation else spline.
+				firstorder,                ///< true if first order kick map loaded.
+				secondorder,               ///< true if second order kick map loaded.
+				long_comp;                 ///< flag for longitudinal comp.
 			int
-			Pmethod,                   // Integration Method.
-				PN,                        // number of integration steps.
-				nx,                        // Horizontal point number.
-				nz,                        // Vertical point number.
-				Porder;                    // The highest order in PB.
+			Pmethod,                   ///< Integration Method.
+				PN,                        ///< number of integration steps.
+				nx,                        ///< Horizontal point number.
+				nz,                        ///< Vertical point number.
+				Porder;                    ///< The highest order in PB.
 			double
-			scaling,                   // static scaling factor as in BETA ESRF.
-				phi,                       // Bend angle.
-				tabx[IDXMAX],              // spacing in H-plane.
-				tabz[IDZMAX],              // spacing in V-plane.
+			scaling,                   ///< static scaling factor as in BETA ESRF.
+				phi,                       ///< Bend angle.
+				tabx[IDXMAX],              ///< spacing in H-plane.
+				tabz[IDZMAX],              ///< spacing in V-plane.
 				thetax[IDZMAX][IDXMAX],
-				thetax1[IDZMAX][IDXMAX],   // 1 for first order.
+				thetax1[IDZMAX][IDXMAX],   ///< 1 for first order.
 				thetaz[IDZMAX][IDXMAX],
 				thetaz1[IDZMAX][IDXMAX],
-				B2[IDZMAX][IDXMAX],        // B^2_perp.
+				B2[IDZMAX][IDXMAX],        ///< B^2_perp.
 				**tx,
 				**tz,
 				**f2x,
@@ -246,24 +253,24 @@ namespace thor_scsi {
 				**tx1,
 				**tz1,
 				**f2x1,
-				**f2z1,                    // a voir.
+				**f2z1,                    ///< a voir.
 				*tab1,
-				*tab2,                     // tab of x and z meshes from Radia code.
-			// Roll angle.
-				PdTpar,                    // design [deg].
-				PdTsys,                    // systematic [deg].
-				PdTrms,                    // rms [deg].
-				PdTrnd;                    // random number.
-//  Strength
+				*tab2,                     ///< tab of x and z meshes from Radia code.
+                                                           ///< Roll angle.
+				PdTpar,                    ///< design [deg].
+				PdTsys,                    ///< systematic [deg].
+				PdTrms,                    ///< rms [deg].
+				PdTrnd;                    ///< random number.
+///< Strength
 //  double Plperiod;           // Length Period [m].
 //  int Pnperiod;              // Number of periods.
 //  double PBoBrho;            // B/Brho.
 //  double PKx;                // kx.
 //  mpolArray PBW;
 			std::vector<double>
-			PdSsys{0e0, 0e0},          // Displacement error [m]: systematic
-				PdSrms{0e0, 0e0},          //                         rms
-				PdSrnd{0e0, 0e0};          //                         random number.
+			PdSsys{0e0, 0e0},          ///< Displacement error [m]: systematic
+				PdSrms{0e0, 0e0},          ///<                         rms
+				PdSrnd{0e0, 0e0};          ///<                         random number.
 
 			friend InsertionType* Insertion_Alloc(void);
 			ElemType* Elem_Init(const thor_scsi::core::ConfigType &conf, const bool reverse);
@@ -287,9 +294,9 @@ namespace thor_scsi {
 		class FieldMapType : public ElemType {
 		public:
 			int
-			n_step,                    // number of integration steps.
-				n[3],                      // no of steps.
-				cut;                       // cut in z direction.
+			n_step,                    ///< number of integration steps.
+				n[3],                      ///< no of steps.
+				cut;                       ///< cut in z direction.
 			double
 			scl,
 				phi,
@@ -299,11 +306,11 @@ namespace thor_scsi {
 				Ld,
 				L1,
 				dx[3],
-				*x[3],                     // [dx, dy, dz], [x, y, z].
+				*x[3],                     ///< [dx, dy, dz], [x, y, z].
 				***BoBrho[3],
-				***BoBrho2[3],             // [B_x, B_y, B_z].
+				***BoBrho2[3],             ///< [B_x, B_y, B_z].
 				***AoBrho[2],
-				***AoBrho2[2];             // [Ax(x, y, z), Ay(x, y, z)], spline info.
+				***AoBrho2[2];             ///< [Ax(x, y, z), Ay(x, y, z)], spline info.
 
 			friend FieldMapType* FieldMap_Alloc(void);
 			ElemType* Elem_Init(const thor_scsi::core::ConfigType &conf, const bool reverse);
@@ -327,7 +334,7 @@ namespace thor_scsi {
 		class SpreaderType : public ElemType {
 		public:
 			double
-			E_max[Spreader_max];       // energy levels in increasing order.
+			E_max[Spreader_max];       ///< energy levels in increasing order.
 			CellType
 			*Cell_ptrs[Spreader_max];
 
@@ -378,18 +385,18 @@ namespace thor_scsi {
 		class SolenoidType : public ElemType {
 		public:
 			int
-			N;                         // Number of integration steps.
+			N;                         ///< Number of integration steps.
 			double
-			BoBrho,                    // normalized field strength.
+			BoBrho,                    ///< normalized field strength.
 			// Roll angle.
-				dTpar,                     // design [deg].
-				dTsys,                     // systematic [deg].
-				dTrms,                     // rms [deg].
-				dTrnd;                     // random number.
+				dTpar,                     ///< design [deg].
+				dTsys,                     ///< systematic [deg].
+				dTrms,                     ///< rms [deg].
+				dTrnd;                     ///< random number.
 			std::vector<double>
-			PdSsys{0e0, 0e0},          // Displacement errors [m]: systematic
-				PdSrms{0e0, 0e0},          //                          rms
-				PdSrnd{0e0, 0e0};          //                          random number.
+			PdSsys{0e0, 0e0},          ///< Displacement errors [m]: systematic
+				PdSrms{0e0, 0e0},          ///<                          rms
+				PdSrnd{0e0, 0e0};          ///<                          random number.
 
 			friend SolenoidType* Solenoid_Alloc(void);
 			ElemType* Elem_Init(const thor_scsi::core::ConfigType &conf, const bool reverse);
