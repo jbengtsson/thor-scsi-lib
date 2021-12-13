@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "thor_scsi"
+version = "0.1.0"
+description = "\u0016\u0019Self-Consistent Symplectic Integrator for Charged Particle Beam Dynamics"
+authors = ["Johan Bengtsson"]
+license = "GPL"
+
+[tool.poetry.dependencies]
+python = ">=3.7"
+numpy = ">=1.16"
+
+[tool.poetry.dev-dependencies]
+pybind11 = ">=v2.7"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
