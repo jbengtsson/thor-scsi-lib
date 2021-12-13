@@ -5,6 +5,31 @@
 #include <thor_scsi/core/defines.h>
 #include <thor_scsi/core/elements_basis.h>
 
+
+/** Calculate multipole kick. The kick is given by
+
+                   e L      L delta      L x
+	theta  = - --- B  + -------  -  -----  , 
+             x     p    y     rho           2
+                    0                    rho
+                 e L
+	theta  = --- B
+             y   p    x
+                  0
+    where
+                           ====
+                           \                       n-1
+	(B + iB  ) = B rho  >   (ia  + b ) (x + iy)
+	  y    x           /       n    n
+	                   ====
+    where
+			e      1
+			-- = -----
+			p    B rho
+			 0
+*/
+
+
 namespace thor_scsi {
 	namespace elements {
 		typedef std::vector<double> MpoleArray;
