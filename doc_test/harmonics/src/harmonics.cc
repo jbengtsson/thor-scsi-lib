@@ -4,12 +4,12 @@ using namespace thor_scsi;
 
 
 
-Harmonics Harmonics::operator + (Harmonics &other)
+PlanarHarmonics PlanarHarmonics::operator + (PlanarHarmonics &other)
 {
 	unsigned int n = std::max(this->getCoeffs()->size(), other.getCoeffs()->size());
 	unsigned int i;
 
-	Harmonics nh(n);
+	PlanarHarmonics nh(n);
 	auto *ncoeffs = nh.getCoeffs();
 
 	i = 0;
@@ -27,17 +27,20 @@ Harmonics Harmonics::operator + (Harmonics &other)
 	return nh;
 }
 
-
-void Harmonics::applyTranslation(const cdbl dz)
+/**
+ *  
+ *
+ */
+void PlanarHarmonics::applyTranslation(const cdbl dzs)
 {
 
 	auto coeffs = this->getCoeffs();
 
 	for (unsigned int i = 0; i < coeffs->size(); ++i) {
-		cdbl dzi = dz;
+		cdbl dzi = dzs;
 		for (unsigned j = i+1; j < coeffs->size(); ++j) {
 			coeffs->at(i) +=  double(binom(j, i)) * coeffs->at(j) * dzi;
-			dzi *= dz;
+			dzi *= dzs;
 		}
 	}
 }

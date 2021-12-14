@@ -35,26 +35,60 @@ release = 'latest'
 extensions = [
     'breathe',
     'exhale',
+    "sphinx.ext.mathjax",
+    "sphinx.ext.todo",
+    #'sphinx.ext.autodoc',
+    #'sphinx.ext.napoleon',
 ]
-
 # -- Exhale configuration ---------------------------------------------------
 # Setup the breathe extension
 breathe_projects = {
-    "thor_scsi": "./../../Doxygen/gen_docs/xml"
+    "thor-scsi": "./_doxygen/xml"
 }
-breathe_default_project = "thor_scsi"
+breathe_default_project = "thor-scsi"
 
- # Setup the exhale extension
+header_path = "./../../harmonics/include"
+
+doxygen_opts = f"""
+# Inputs
+INPUT                  = "{header_path}"
+
+RECURSIVE              = YES
+FULL_PATH_NAMES        = YES
+
+# Options
+ENABLE_PREPROCESSING = YES
+MACRO_EXPANSION = YES
+SKIP_FUNCTION_MACROS = NO
+EXPAND_ONLY_PREDEF = NO
+
+GENERATE_HTML           = NO
+GENERATE_XML            = YES
+XML_PROGRAMLISTING = NO
+
+JAVADOC_BANNER         = YES
+
+# For verbatim inclused in the options
+ALIASES += "rst=\verbatim embed:rst"
+ALIASES += "endrst=\endverbatim"
+ALIASES += "rst=\verbatim embed:rst:leading-asterisk"
+ALIASES += "endrst=\endverbatim"
+
+"""
+
+# Setup the exhale extension
 exhale_args = {
     # These arguments are required
     "containmentFolder":     "./api",
     "rootFileName":          "library_root.rst",
     "rootFileTitle":         "Library API",
-    "doxygenStripFromPath":  "..",
+    "doxygenStripFromPath":  header_path,
     # Suggested optional arguments
     "createTreeView":        True,
     # TIP: if using the sphinx-bootstrap-theme, you need
     # "treeViewIsBootstrap": True,
+    "exhaleExecutesDoxygen": True,
+    "exhaleDoxygenStdin":    doxygen_opts
 }
 
 # Tell sphinx what the primary language being documented is.
@@ -77,6 +111,9 @@ language = 'en'
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = []
+
+# If true, `todo` and `todoList` produce output, else they produce nothing.
+todo_include_todos = True
 
 
 # -- Options for HTML output -------------------------------------------------
