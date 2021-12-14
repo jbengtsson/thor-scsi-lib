@@ -6,28 +6,6 @@
 #include <thor_scsi/core/elements_basis.h>
 
 
-/** Calculate multipole kick. The kick is given by
-
-                   e L      L delta      L x
-	theta  = - --- B  + -------  -  -----  , 
-             x     p    y     rho           2
-                    0                    rho
-                 e L
-	theta  = --- B
-             y   p    x
-                  0
-    where
-                           ====
-                           \                       n-1
-	(B + iB  ) = B rho  >   (ia  + b ) (x + iy)
-	  y    x           /       n    n
-	                   ====
-    where
-			e      1
-			-- = -----
-			p    B rho
-			 0
-*/
 
 
 namespace thor_scsi {
@@ -59,8 +37,55 @@ namespace thor_scsi {
 				{ Drift_Pass(conf, ps); };
 		};
 
+/* Calculate multipole kick. The kick is given by
+
+                   e L      L delta      L x
+	theta  = - --- B  + -------  -  -----  ,
+             x     p    y     rho           2
+                    0                    rho
+                 e L
+	theta  = --- B
+             y   p    x
+                  0
+    where
+                           ====
+                           \                       n-1
+	(B + iB  ) = B rho  >   (ia  + b ) (x + iy)
+	  y    x           /       n    n
+	                   ====
+    where
+			e      1
+			-- = -----
+			p    B rho
+			 0
+*/
 		/**
-		 * Representation of harmonics
+		 * Calcualte multipole kick. The kick is given by
+		 * @f[
+		 *     \vartheta_x =  \frac{e}{p_\mathrm{0}} L B_y + \frac{L}{\rho}
+                 *                  \left(\delta - \frac{x}{\rho} \right)
+		 * @f]
+		 * @f[
+		      \vartheta_y =  \frac{e}{p_\mathrm{0}} L B_x
+		 * @f]
+		 * with
+		 * @f[
+		 * \frac{e}{p_\mathrm{0}} = \frac{1}{B\, \rho}
+		 * @f]
+		 *
+		 * The magnetic field expansion used here is
+		 *  @f[
+		 *     \mathbf{B(z)} = B_y + i B_x =
+		 *	\sum\limits_{n=1}^N \mathbf{C}_n
+		 *	\left(\frac{\mathbf{z}}{R_\mathrm{ref}}\right)^{(n-1)}
+		 *  @f]
+		 *
+		 *  with \f$ \mathbf{z} = x + i y \f$ and \f$ \mathbf{C}_n = B_n + i A_n \f$
+		 *  and \f$R_\mathrm{ref}\f$ the reference radius.
+		 *  \f$N\f$ corresponds to the maximum harmonic
+		 *
+		 * Furthermore note that \f$R_\mathrm{ref}\f$ = 1
+		 *
 		 */
 		class MpoleType : public ElemType {
 		public:
