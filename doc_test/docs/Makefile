@@ -1,9 +1,20 @@
+SRC_DIR = src
+SPHINX_MK_FILE=sphinx.mk
+RM=rm
+RMFLAGS=-rf
 
+.PHONY: all
+all : html
 
-all : doxygen sphinx
+.PHONY: html
+html :
+	@make -f $(SPHINX_MK_FILE) html
 
-doxygen :
-	@make -C Doxygen
+.PHONY: clean
+clean :
+	$(RM) $(RMFLAGS) source/_doxygen/ source/api/
+	@make  -f $(SPHINX_MK_FILE) clean
 
-sphinx : doxygen
-	@make -C Sphinx
+.PHONY: distclean
+distclean : clean
+	$(RM) $(RMFLAGS) build
