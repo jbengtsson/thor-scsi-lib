@@ -42,29 +42,16 @@ extensions = [
 ]
 # -- Exhale configuration ---------------------------------------------------
 # Setup the breathe extension
-#breathe_projects = {
-#    "thor_scsi": "./../Doxygen/gen_docs/xml"
-#}
 breathe_projects = {
-    "thor_scsi": "./_doxygen/xml"
+    "thor-scsi": "./_doxygen/xml"
 }
-breathe_default_project = "thor_scsi"
+breathe_default_project = "thor-scsi"
 
-doxygen_opts = """
+header_path = "./../../harmonics/include"
 
-
-# Project Stuff
-PROJECT_NAME           = "Thor Scsi"
-PROJECT_BRIEF          = "Dev docs"
-
-INPUT                  = "./../../harmonics/"
-
-
-
-"""
-doxygen_opts = """
+doxygen_opts = f"""
 # Inputs
-INPUT                  = "./../../../harmonics/include"
+INPUT                  = "{header_path}"
 
 RECURSIVE              = YES
 FULL_PATH_NAMES        = YES
@@ -95,7 +82,7 @@ exhale_args = {
     "containmentFolder":     "./api",
     "rootFileName":          "library_root.rst",
     "rootFileTitle":         "Library API",
-    "doxygenStripFromPath":  "../../../harmonics/",
+    "doxygenStripFromPath":  header_path,
     # Suggested optional arguments
     "createTreeView":        True,
     # TIP: if using the sphinx-bootstrap-theme, you need
