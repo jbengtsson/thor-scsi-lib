@@ -6,7 +6,7 @@ int main(int argc, char * argv[])
 {
 
 	namespace ts = thor_scsi;
-	ts::Harmonics h;
+	ts::PlanarHarmonics h;
 
 	h.setHarmonic(10, 4);
 	auto h2 = h;

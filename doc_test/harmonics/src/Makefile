@@ -1,5 +1,5 @@
 
-CXXFLAGS = -O2 -g -ggdb -pedantic -Wall
+CXXFLAGS = -O2 -g -ggdb -pedantic -Wall -I../Include
 OBJS=harmonic_test.o harmonics.o math_comb.o
 RM=rm
 RMFLAGS=-f
