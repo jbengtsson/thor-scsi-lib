@@ -6,10 +6,10 @@ void prt_ZAP(const int n)
   outf = file_write("ZAPLAT.DAT");
 
   fprintf(outf, "%ld %7.5f\n",
-	  globval.Cell_nLoc+1, n*Cell[globval.Cell_nLoc].S);
+	  lat.conf.Cell_nLoc+1, n*Cell[lat.conf.Cell_nLoc].S);
   fprintf(outf, "One super period\n");
 
-  for (k = 0; k <= globval.Cell_nLoc; k++)
+  for (k = 0; k <= lat.conf.Cell_nLoc; k++)
     fprintf(outf, "%10.5f %8.5f %9.6f %8.5f %7.3f %8.5f %8.5f %7.5f\n",
 	    Cell[k].S,
 	    Cell[k].Beta[X_], Cell[k].Alpha[X_],

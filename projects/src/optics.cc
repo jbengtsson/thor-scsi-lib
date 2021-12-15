@@ -1,6 +1,7 @@
-#define NO 1
+//#define NO 1
 
-#include "tracy_lib.h"
+#include <thor_scsi/compat/compat.h>
+
 
 #include "prt_ZAP.cc"
 
@@ -41,7 +42,7 @@ double rad2deg(const double a) { return a*180e0/M_PI; }
 double deg2rad(const double a) { return a*M_PI/180e0; }
 
 
-void prt_name(FILE *outf, const char *name, const string &str, const int len)
+void prt_name(FILE *outf, const char *name, const std::string &str, const int len)
 {
   int j, k;
 
@@ -263,7 +264,7 @@ void fit_ksi1(const int lat_case, const double ksi_x, const double ksi_y)
 
   switch (lat_case) {
   case 1:
-    Fnum.push_back(ElemIndex("sd1a"));
+    Fnum.push_back(lat.ElemIndex("sd1a"));
     Fnum.push_back(ElemIndex("sd1b"));
     Fnum.push_back(ElemIndex("sd1d"));
     Fnum.push_back(ElemIndex("sd1e"));
@@ -413,7 +414,7 @@ void prt_dip()
   int                        j, k, loc;
   double                     phi, L, L1, phi1, phi_rel, phi_rel_tot;
   std::vector<int>           row;
-  std::vector< vector<int> > Fnum;
+  std::vector< std::vector<int> > Fnum;
   std::vector<double>        phi2;
 
   row.push_back(ElemIndex("bl1_1"));
@@ -806,12 +807,12 @@ void get_dbeta_deta(const double delta)
 {
   // Evaluate derivative; to avoid effect of tune shift.
   int            j, k;
-  vector<double> dbeta[2], deta_x;
+  std::vector<double> dbeta[2], deta_x;
   FILE           *outf;
 
   const double d_delta = 1e-5;
 
-  const string file_name = "dbeta_deta.out";
+  const std::string file_name = "dbeta_deta.out";
 
   outf = file_write(file_name.c_str());
 
@@ -980,7 +981,7 @@ void prt_eta_Fl(void)
 }
 
 
-void track(const string fname, const int n, const double x, const double p_x,
+void track(const std::string fname, const int n, const double x, const double p_x,
 	   const double y, const double p_y, const double delta)
 {
   long int        lastpos;
@@ -1204,7 +1205,7 @@ void get_disp(void)
 }
 
 
-void get_matrix(const string &name, const double delta)
+void get_matrix(const std::string &name, const double delta)
 {
   int          k;
   double       L, rho, b2, K[2], psi[2];
@@ -1311,8 +1312,8 @@ void get_eta(void)
 }
 
 
-void orm(const string &bpm, const int i,
-	 const string &corr, const int j)
+void orm(const std::string &bpm, const int i,
+	 const std::string &corr, const int j)
 {
   long int loc_bpm, loc_corr;
   double   nu, spiq, betai, betaj, nui, nuj, A_ij;
@@ -1328,8 +1329,8 @@ void orm(const string &bpm, const int i,
 }
 
 
-void orm_num(const string &bpm, const int i,
-	     const string &corr, const int j, const double eps)
+void orm_num(const std::string &bpm, const int i,
+	     const std::string &corr, const int j, const double eps)
 {
   long int        lastpos, loc_bpm, loc_corr;
   double          A_ij, x0, x1;
@@ -1350,8 +1351,8 @@ void orm_num(const string &bpm, const int i,
 }
 
 
-void trm(const string &bpm, const int i,
-	 const string &corr, const int j)
+void trm(const std::string &bpm, const int i,
+	 const std::string &corr, const int j)
 {
   long int loc_bpm, loc_corr;
   double   betai, betaj, nui, nuj, A_ij;
@@ -1368,8 +1369,8 @@ void trm(const string &bpm, const int i,
 }
 
 
-void trm_num(const string &bpm, const int i,
-	     const string &corr, const int j, const double eps)
+void trm_num(const std::string &bpm, const int i,
+	     const std::string &corr, const int j, const double eps)
 {
   long int        lastpos, loc_bpm, loc_corr;
   double          A_ij;
@@ -1419,7 +1420,7 @@ void prt_M_lin(void)
 }
 
 
-void prt_RB(const int loc, const string &name, const bool rb, const bool hdr)
+void prt_RB(const int loc, const std::string &name, const bool rb, const bool hdr)
 {
   double L, rho_inv, phi, B, b_2, dx;
 
@@ -1441,7 +1442,7 @@ void prt_RB(const int loc, const string &name, const bool rb, const bool hdr)
 }
 
 
-void prt_quad(const int loc, const string &name, const bool hdr)
+void prt_quad(const int loc, const std::string &name, const bool hdr)
 {
   double L, b_2;
 
@@ -1457,7 +1458,7 @@ void prt_quad(const int loc, const string &name, const bool hdr)
 }
 
 
-void prt_sext(const int loc, const string &name, const bool hdr)
+void prt_sext(const int loc, const std::string &name, const bool hdr)
 {
   double L, b_3;
 
@@ -1473,7 +1474,7 @@ void prt_sext(const int loc, const string &name, const bool hdr)
 }
 
 
-void prt_oct(const int loc, const string &name, const bool hdr)
+void prt_oct(const int loc, const std::string &name, const bool hdr)
 {
   double L, b_4;
 
@@ -1609,17 +1610,17 @@ int main(int argc, char *argv[])
   Matrix           M;
   std::vector<int> Fam;
   ss_vect<tps>     Ascr, A_Atp, Id, Ms;
-  ostringstream    str;
+  ostd::stringstream    str;
 
   const long   seed   = 1121;
   const int    n_turn = 2064;
   const double delta  = 2.0e-2;
   //                   nu[]    = { 102.18/20.0, 68.30/20.0 };
-  // const std::string q_fam[] = { "qfe", "qde" }, s_fam[] = { "sfh", "sd" };
+  // const std::std::string q_fam[] = { "qfe", "qde" }, s_fam[] = { "sfh", "sd" };
   //                   nu[]    = { 39.1/12.0, 15.25/12.0 };
   //                   // nu[]    = { 3.266+0.01, 1.275 };
-  // const std::string q_fam[] = { "qm2b", "qm3" }, s_fam[] = { "sfh", "sd" };
-  const std::string
+  // const std::std::string q_fam[] = { "qm2b", "qm3" }, s_fam[] = { "sfh", "sd" };
+  const std::std::string
     q_fam[] = { "qf03", "qd04" },
     s_fam[] = { "sfh", "sd" };
 
@@ -1635,15 +1636,15 @@ int main(int argc, char *argv[])
   globval.mat_meth = !false;
 
   if (true)
-    Read_Lattice(argv[1]);
+    lat.Read_Lattice(argv[1]);
   else
     rdmfile(argv[1]);
 
-  globval.H_exact    = false; globval.quad_fringe    = false;
-  globval.Cavity_on  = false; globval.radiation      = false;
-  globval.emittance  = false; globval.IBS            = false;
-  globval.pathlength = false; globval.bpm            = 0;
-  globval.Cart_Bend  = false; globval.dip_edge_fudge = true;
+  lat.conf.H_exact    = false; lat.conf.quad_fringe    = false;
+  lat.conf.Cavity_on  = false; lat.conf.radiation      = false;
+  lat.conf.emittance  = false; lat.conf.IBS            = false;
+  lat.conf.pathlength = false; lat.conf.bpm            = 0;
+  lat.conf.Cart_Bend  = false; lat.conf.dip_edge_fudge = true;
 
   if (false) no_sxt();
 
@@ -1656,20 +1657,20 @@ int main(int argc, char *argv[])
     exit(0);
   }
 
-  globval.Cavity_on = false; globval.radiation = false;
+  lat.conf.Cavity_on = false; lat.conf.radiation = false;
   Ring_GetTwiss(true, 0e0); printglob();
 
   if (false) {
     prt_lin_map(3,
-		chk_sympl(putlinmat(6, globval.OneTurnMat))-get_sympl_form(3));
+		chk_sympl(putlinmat(6, lat.conf.OneTurnMat))-get_sympl_form(3));
     exit(0);
   }
 
   if (false) {
     chk_optics(1.178856e-01, 1.813178e+01, -8.236462e-03, 3.617426e-04,
 	       -2.046559e-02, 3.603793e+00, 0.0, 0.0);
-    prt_lat("linlat1.out", globval.bpm, true);
-    prt_lat("linlat.out", globval.bpm, true, 10);
+    prt_lat("linlat1.out", lat.conf.bpm, true);
+    prt_lat("linlat.out", lat.conf.bpm, true, 10);
     exit(0);
   }
 
@@ -1680,7 +1681,7 @@ int main(int argc, char *argv[])
     set_map(ElemIndex("ps_rot"), dnu);
     Ring_GetTwiss(true, 0e0); printglob();
     for (k = 0; k < 2; k++)
-      dnu[k] = (SET_NU)? nu[k] - globval.TotalTune[k] : nu[k];
+      dnu[k] = (SET_NU)? nu[k] - lat.conf.TotalTune[k] : nu[k];
     printf("\ntune set to:\n  dnu     = [%8.5f, %8.5f]\n", dnu[X_], dnu[Y_]);
     printf("  nu      = [%8.5f, %8.5f]\n", nu[X_], nu[Y_]);
     set_map(ElemIndex("ps_rot"), dnu);
@@ -1697,11 +1698,11 @@ int main(int argc, char *argv[])
     Ring_GetTwiss(true, 0e0); printglob();
   }
 
-  if (globval.mat_meth && !prt_s1) {
+  if (lat.conf.mat_meth && !prt_s1) {
     get_eps_x(eps_x, sigma_delta, U_0, J, tau, I, true);
 
-    prt_lat("linlat1.out", globval.bpm, true);
-    prt_lat("linlat.out", globval.bpm, true, 10);
+    prt_lat("linlat1.out", lat.conf.bpm, true);
+    prt_lat("linlat.out", lat.conf.bpm, true, 10);
     prt_chrom_lat();
     prtmfile("flat_file.dat");
 
@@ -1728,13 +1729,13 @@ int main(int argc, char *argv[])
     get_Poincare_Map();
 #else
       no_sxt();
-      globval.Cavity_on = true; globval.radiation = true;
+      lat.conf.Cavity_on = true; lat.conf.radiation = true;
       Ring_GetTwiss(true, 0e0); printglob();
       PoincareMap map;
       prt_lin_map(3, map.GetMap(true, true));
 #endif
-    prt_lat("linlat1.out", globval.bpm, true);
-    prt_lat("linlat.out", globval.bpm, true, 10);
+    prt_lat("linlat1.out", lat.conf.bpm, true);
+    prt_lat("linlat.out", lat.conf.bpm, true, 10);
     exit(0);
   }
 
@@ -1742,10 +1743,10 @@ int main(int argc, char *argv[])
     long int     lastpos;
     ss_vect<tps> map;
 
-    globval.Cavity_on = !false; globval.radiation = false;
+    lat.conf.Cavity_on = !false; lat.conf.radiation = false;
 
     map.identity();
-    Cell_Pass(0, globval.Cell_nLoc, map, lastpos);
+    Cell_Pass(0, lat.conf.Cell_nLoc, map, lastpos);
     prt_lin_map(3, map);
     exit(0);
   }
@@ -1756,11 +1757,11 @@ int main(int argc, char *argv[])
     ofstream        outf;
 
     file_wr(outf, "track.out");
-    globval.Cavity_on = !false; globval.radiation = !false;
+    lat.conf.Cavity_on = !false; lat.conf.radiation = !false;
     ps.zero();
     ps[x_] = 0e-3; ps[px_] = 0e-3; ps[y_] = 0e-3; ps[py_] = 0e-3;
     ps[ct_] = 0e-3;
-    for (k = 0; k <= globval.Cell_nLoc; k++) {
+    for (k = 0; k <= lat.conf.Cell_nLoc; k++) {
       Cell_Pass(k, k, ps, lastpos);
       outf << setw(4) << k
 	   << fixed << setprecision(5) << setw(9) << Cell[k].S
@@ -1792,7 +1793,7 @@ int main(int argc, char *argv[])
   }
 
   if (false) {
-    globval.Cavity_on  = !false; globval.radiation = !false;
+    lat.conf.Cavity_on  = !false; lat.conf.radiation = !false;
     track("track.out", 10, 0e0, 0e0, 0e0, 0e0, 0e0);
     exit(0);
   }
@@ -1828,8 +1829,8 @@ int main(int argc, char *argv[])
     no_sxt();
     Ring_GetTwiss(true, 0e0); printglob();
 
-    prt_lat("linlat1.out", globval.bpm, true);
-    prt_lat("linlat.out", globval.bpm, true, 10);
+    prt_lat("linlat1.out", lat.conf.bpm, true);
+    prt_lat("linlat.out", lat.conf.bpm, true, 10);
     prt_chrom_lat();
 
     exit(0);
@@ -1888,16 +1889,16 @@ int main(int argc, char *argv[])
     } else
       ttwiss(alpha0, beta0, eta0, etap0, 0e0);
 
-    prt_lat("linlat1.out", globval.bpm, true);
-    prt_lat("linlat.out", globval.bpm, true, 10);
+    prt_lat("linlat1.out", lat.conf.bpm, true);
+    prt_lat("linlat.out", lat.conf.bpm, true, 10);
 
     exit(0);
   }
 
   prtmfile("flat_file.dat");
-  // globval.bpm = ElemIndex("bpm");
-  prt_lat("linlat1.out", globval.bpm, true);
-  prt_lat("linlat.out", globval.bpm, true, 10);
+  // lat.conf.bpm = ElemIndex("bpm");
+  prt_lat("linlat1.out", lat.conf.bpm, true);
+  prt_lat("linlat.out", lat.conf.bpm, true, 10);
   prt_chrom_lat();
 
   if (prt_s1) {
@@ -1944,8 +1945,8 @@ int main(int argc, char *argv[])
 
   if (false) {
     chk_mpole();
-    prt_lat("linlat1.out", globval.bpm, true);
-    prt_lat("linlat.out", globval.bpm, true, 10);
+    prt_lat("linlat1.out", lat.conf.bpm, true);
+    prt_lat("linlat.out", lat.conf.bpm, true, 10);
     exit(0);
   }
 
@@ -1960,7 +1961,7 @@ int main(int argc, char *argv[])
   }
 
   if (false) {
-    globval.Cavity_on = false; globval.radiation = false;
+    lat.conf.Cavity_on = false; lat.conf.radiation = false;
     track(0e-3, 0e-3);
     exit(0);
   }
@@ -1975,22 +1976,22 @@ int main(int argc, char *argv[])
     // exit(0);
   }
 
-  globval.Cavity_on = false; globval.radiation = false;
+  lat.conf.Cavity_on = false; lat.conf.radiation = false;
   Ring_GetTwiss(true, 0e0); printglob();
 
   if (false) get_alphac2();
 
   if (false) {
     iniranf(seed); setrancut(1e0);
-    // globval.bpm = ElemIndex("mon");
-    globval.bpm = ElemIndex("bpm");
-    globval.hcorr = ElemIndex("ch"); globval.vcorr = ElemIndex("cv");
+    // lat.conf.bpm = ElemIndex("mon");
+    lat.conf.bpm = ElemIndex("bpm");
+    lat.conf.hcorr = ElemIndex("ch"); lat.conf.vcorr = ElemIndex("cv");
     // ALS-U.
-    // globval.bpm = ElemIndex("bpm_m");
-    // globval.hcorr = ElemIndex("corr_h"); globval.vcorr = ElemIndex("corr_v");
+    // lat.conf.bpm = ElemIndex("bpm_m");
+    // lat.conf.hcorr = ElemIndex("corr_h"); lat.conf.vcorr = ElemIndex("corr_v");
 
-    gcmat(globval.bpm, globval.hcorr, 1);
-    gcmat(globval.bpm, globval.vcorr, 2);
+    gcmat(lat.conf.bpm, lat.conf.hcorr, 1);
+    gcmat(lat.conf.bpm, lat.conf.vcorr, 2);
 
     get_cod_rms(50e-6, 50e-6, 100, true);
 
@@ -2075,22 +2076,22 @@ int main(int argc, char *argv[])
   if (false) {
     Id.identity();
     Ms[x_] =
-      (cos(-2e0*M_PI*globval.TotalTune[Z_])
-       +globval.alpha_z*sin(-2e0*M_PI*globval.TotalTune[Z_]))*Id[x_]
-      + globval.beta_z*sin(-2e0*M_PI*globval.TotalTune[Z_])*Id[px_];
+      (cos(-2e0*M_PI*lat.conf.TotalTune[Z_])
+       +lat.conf.alpha_z*sin(-2e0*M_PI*lat.conf.TotalTune[Z_]))*Id[x_]
+      + lat.conf.beta_z*sin(-2e0*M_PI*lat.conf.TotalTune[Z_])*Id[px_];
     Ms[px_] =
-      -(1e0+sqr(globval.alpha_z))/globval.beta_z
-      *sin(-2e0*M_PI*globval.TotalTune[Z_])*Id[x_]
-      +(cos(-2e0*M_PI*globval.TotalTune[Z_])
-	-globval.alpha_z*sin(-2e0*M_PI*globval.TotalTune[Z_]))*Id[px_];
+      -(1e0+sqr(lat.conf.alpha_z))/lat.conf.beta_z
+      *sin(-2e0*M_PI*lat.conf.TotalTune[Z_])*Id[x_]
+      +(cos(-2e0*M_PI*lat.conf.TotalTune[Z_])
+	-lat.conf.alpha_z*sin(-2e0*M_PI*lat.conf.TotalTune[Z_]))*Id[px_];
     prt_lin_map(1, Ms);
-    Ms = exp(-Cell[globval.Cell_nLoc].S/(c0*globval.tau[Z_]))*Ms;
+    Ms = exp(-Cell[lat.conf.Cell_nLoc].S/(c0*lat.conf.tau[Z_]))*Ms;
     prt_lin_map(1, Ms);
     printf("\nDet = %17.10e",
 	   Ms[x_][x_]*Ms[px_][px_]-Ms[x_][px_]*Ms[px_][x_]);
 
     // Variables needs to be changed too.
-    // Ascr = putlinmat(6, globval.Ascr);
+    // Ascr = putlinmat(6, lat.conf.Ascr);
     // a = Ascr[delta_]; Ascr[delta_] = Ascr[ct_]; Ascr[ct_] = a;
     // Ascr = get_A_CS(3, Ascr, dnu);
     // A_Atp = Ascr*tp_S(3, Ascr);
@@ -2108,7 +2109,7 @@ int main(int argc, char *argv[])
     // get_bn_design_elem(b2_fam[1], 1, Quad, b2[1], a2);
 
     // printf("\nnu_x = %8.5f nu_y = %8.5f\n",
-    // 	   globval.TotalTune[X_], globval.TotalTune[Y_]);
+    // 	   lat.conf.TotalTune[X_], lat.conf.TotalTune[Y_]);
     // printf("  %s = %8.5f  %s = %8.5f\n",
     // 	   q_fam[0].c_str(), b2[0], q_fam[1].c_str(), b2[1]);
 
@@ -2136,7 +2137,7 @@ int main(int argc, char *argv[])
   }
 
   if (true) {
-    globval.Cavity_on = true;
+    lat.conf.Cavity_on = true;
     get_dynap(delta, 25, n_turn, false);
   }
 

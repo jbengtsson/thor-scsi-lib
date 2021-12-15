@@ -11,8 +11,11 @@
 //
 // Johan Bengtsson 29/03/20.
 
+#include <iostream>
+#include <iomanip>
 #include <random>
-
+#include <tps/ss_vect.h>
+#include <tps/tps_type.h>
 
 const int n_DOF = 3;
 
@@ -113,7 +116,7 @@ ss_vect<tps> TpMap(ss_vect<tps> A)
 }
 
 
-void PrtVec(const string &str, ss_vect<double> vec)
+void PrtVec(const std::string &str, ss_vect<double> vec)
 {
   int k;
 
@@ -126,7 +129,7 @@ void PrtVec(const string &str, ss_vect<double> vec)
 }
 
 
-void PrtMap(const string &str, ss_vect<tps> map)
+void PrtMap(const std::string &str, ss_vect<tps> map)
 {
   int i, j;
 
@@ -141,7 +144,7 @@ void PrtMap(const string &str, ss_vect<tps> map)
 }
 
 
-void prt_vec(const string &str, const int n, double *a)
+void prt_vec(const std::string &str, const int n, double *a)
 {
   int i;
 
@@ -666,7 +669,7 @@ void PoincareMapType::propagate(const int n, BeamType &beam) const
   std::normal_distribution<double> norm_ranf(0e0, 1e0);
 
   const int    n_prt     = 10;
-  const string file_name = "propagate.out";
+  const std::string file_name = "propagate.out";
 
   outf = file_write(file_name.c_str());
 
@@ -704,7 +707,7 @@ void PoincareMapType::propagate(const int n, ss_vect<tps> &Sigma) const
   FILE            *outf;
 
   const int          n_prt     = 1;
-  const string       file_name = "propagate.out";
+  const std::string       file_name = "propagate.out";
   const ss_vect<tps> M_Chol    = TpMap(M_Chol_tp);
 
   std::default_random_engine       rand;
@@ -783,8 +786,8 @@ void PoincareMapType::print(void)
   printf("D          = [%11.5e, %11.5e, %11.5e]\n", D[X_], D[Y_], D[Z_]);
   printf("eps        = [%11.5e, %11.5e, %11.5e]\n", eps[X_], eps[Y_], eps[Z_]);
 
-  cout << scientific << setprecision(6) << "\nCOD:\n" << setw(14) << ps_cod
-       << "\n";
+  std::cout << std::scientific << std::setprecision(6) << std::endl
+	    << "COD:" << std::endl << std::setw(14) << ps_cod << std::endl;
 
   PrtMap("\nM_num (input map):", M_num);
   printf("\nDet{M_num}-1 = %10.3e\n", DetMap(M_num)-1e0);
@@ -986,10 +989,10 @@ void chk_map(const PoincareMapType &map)
   PrtMap("\nInv(M_delta)*Inv(M_cav)*Inv(M_tau)*M:", M);
   eta = GetEta(M);
   eta1 = eta; eta1[delta_] = 1e0;
-  cout << scientific << setprecision(12)
-       << "\neta:  \n" << setw(20) << eta1 << "\n";
-  cout << scientific << setprecision(12)
-       << "M*eta:\n" << setw(20) << (M*eta1).cst() << "\n";
+  std::cout << std::scientific << std::setprecision(12)
+	    << "\neta:  "  << std::endl << std::setw(20) << eta1 << std::endl;
+  std::cout << std::scientific << std::setprecision(12)
+	    << "M*eta:" << std::endl << std::setw(20) << (M*eta1).cst() << std::endl;
   A0 = GetA0(eta);
   M = Inv(A0)*M*A0;
   PrtMap("\nInv(A0)*M*A0:", M);
