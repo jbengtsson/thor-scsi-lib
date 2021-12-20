@@ -15,6 +15,7 @@ public:
   ss_vect<tps> GetMap(const bool cav, const bool rad);
 };
 
+namespace tse = thor_scsi::elements;
 
 ss_vect<tps> PoincareMap::GetLat(void)
 {
@@ -24,15 +25,15 @@ ss_vect<tps> PoincareMap::GetLat(void)
 
   const bool prt = !false;
   const double
-    C       = Cell[globval.Cell_nLoc].S,
+    C       = Cell[globval.Cell_nLoc]->S,
     alpha_c = globval.Alphac;
 
   Id.identity();
 
   for (k = 0; k < 2; k++) {
     mu[k] = 2e0*M_PI*globval.TotalTune[k];
-    alpha[k] = Cell[0].Alpha[k];
-    beta[k] = Cell[0].Beta[k];
+    alpha[k] = Cell[0]->Alpha[k];
+    beta[k] = Cell[0]->Beta[k];
     gamma[k] = (1e0+sqr(alpha[k]))/beta[k];
   }
 
@@ -81,16 +82,17 @@ ss_vect<tps> PoincareMap::GetDelta(const double delta)
   return M;
 }
 
-
 ss_vect<tps> PoincareMap::GetCav(void)
 {
   ss_vect<tps> Id, M;
 
   const bool prt = !false;
   const int  loc = Elem_GetPos(ElemIndex("cav"), 1);
+
+  tse::CavityType *cav = dynamic_cast<tse::CavityType*>(Cell[loc]);
   const double
-    V_RF = Cell[loc].Elem.C->Pvolt,
-    f_RF = Cell[loc].Elem.C->Pfreq,
+    V_RF = cav->Pvolt,
+    f_RF = cav->Pfreq,
     phi0 = asin(globval.U0/V_RF);
 
   Id.identity();
@@ -115,7 +117,7 @@ ss_vect<tps> PoincareMap::GetRad(void)
   ss_vect<tps> Id, M;
 
   const bool   prt = !false;
-  const double C   = Cell[globval.Cell_nLoc].S;
+  const double C   = Cell[globval.Cell_nLoc]->S;
 
   Id.identity();
 
@@ -144,7 +146,8 @@ ss_vect<tps> PoincareMap::GetMap(const bool cav, const bool rad)
   globval.U0 = globval.dE*1e9*globval.Energy;
   delta_rad = globval.U0/(1e9*globval.Energy);
 
-  C     = Cell[globval.Cell_nLoc].S;
+  /* last active cell ? */
+  C     = Cell[globval.Cell_nLoc]->S;
   tau_z = -C/(c0*globval.alpha_rad[Z_]);
   delta_rad2 = exp(-C/(c0*tau_z)) - 1e0;
 

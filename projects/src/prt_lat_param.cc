@@ -6,7 +6,7 @@ void get_bend(const char *name, double &L, double &B, double &B_2)
   const double Brho = globval.Energy*1e9/c0;
 
   loc = Elem_GetPos(ElemIndex(name), 1);
-  L = Cell[loc].Elem.PL;
+  L = Cell[loc]->PL;
   rho_inv = Cell[loc].Elem.M->Pirho;
   phi = L*rho_inv;
   b_2 = Cell[loc].Elem.M->PBpar[Quad+HOMmax];
