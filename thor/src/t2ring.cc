@@ -61,7 +61,6 @@ void LatticeType::ChamberOff(void)
   conf.chambre = false;
 }
 
-
 void LatticeType::PrintCh(void)
 {
   long       i = 0;
@@ -73,7 +72,7 @@ void LatticeType::PrintCh(void)
   newtime = GetTime();
 
   f = file_write(fic);
-  fprintf(f, "# TRACY II v.2.6 -- %s -- %s \n", fic, asctime2(newtime));
+  fprintf(f, "# TRACY  XXXX  -- %s -- %s \n", fic, asctime2(newtime));
   fprintf(f, "#    name                s      -xch     +xch     zch\n");
   fprintf(f, "#                               [mm]     [mm]     [mm]\n");
   fprintf(f, "#\n");
@@ -90,44 +89,6 @@ void LatticeType::PrintCh(void)
 
 bool GetNu(std::vector<double> &nu, std::vector< std::vector<double> > &M)
 {
-  /* Not assuming mid-plane symmetry, the charachteristic polynomial for a
-     symplectic periodic matrix is given by
-
-       P(lambda) = det(M-lambda*I)
-                 = (lambda-lambda0)(lambda-1/lambda0)
-		   (lambda-lambda1)(lambda-1/lambda1)
-
-     It follows that
-
-       P(1) = (2-x)(2-y),     P(-1) = (2+x)(2+y)
-
-     where
-
-       x = (lambda0+1/lambda0)/2 = cos(2 pi nu_x)
-
-     and similarly for y. Eliminating y
-
-       x^2 + 4 b x + 4 c = 0
-
-     where
-
-       b = (P(1)-P(-1))/16,    c =(P(1)+P(-1))/8 - 1
-
-     Solving for x
-
-       x,y = -b +/- sqrt(b^2-c)
-
-     where the sign is given by
-
-       trace(hor) > trace(ver)
-
-     gives
-
-       nu_x,y = arccos(x,y)/(2 pi)
-
-     For mid-plane symmetry it simplies to
-
-       nu_x = arccos((m11+m22)/2)/(2 pi)                                      */
 
   int       i;
   double    sgn, detp, detm, b, c, tr[2], b2mc, x;
@@ -178,7 +139,12 @@ bool GetNu(std::vector<double> &nu, std::vector< std::vector<double> > &M)
   return true;
 }
 
-
+/**
+ * compute twiss parameters
+ *
+ * Get Alpha beta gamma nu
+ *
+ */
 bool Cell_GetABGN(std::vector< std::vector<double> > &M,
 		  std::vector<double> &alpha,
 		  std::vector<double> &beta, std::vector<double> &gamma,
@@ -205,6 +171,12 @@ bool Cell_GetABGN(std::vector< std::vector<double> > &M,
 }
 
 
+/**
+ * Get the dispersion
+ *
+ * Todo:
+ *   Rename in computeDispersion ?
+ */
 void LatticeType::Cell_Geteta(long i0, long i1, bool ring, double dP)
 {
   long int        i, lastpos;
@@ -243,6 +215,14 @@ void LatticeType::Cell_Geteta(long i0, long i1, bool ring, double dP)
 }
 
 
+/**
+ * Get Poincare Map periodic system
+ *
+ * Computes \f$ A * A^T \f$
+ * Returns:
+ *      alpha:
+ *      beta:
+ */
 void getprm(arma::mat &Ascr, std::vector<double> &alpha,
 	    std::vector<double> &beta)
 {
@@ -256,6 +236,16 @@ void getprm(arma::mat &Ascr, std::vector<double> &alpha,
 }
 
 
+/**
+ * Get
+ *
+ * Returns: alpha beta
+ *
+ * Todo:
+ *     legacy code? remove
+ *
+ *
+ */
 void dagetprm(ss_vect<tps> &Ascr, std::vector<double> &alpha,
 	      std::vector<double> &beta)
 {
@@ -562,6 +552,9 @@ void get_dI_eta_5( std::vector<ElemType*> elems, const int k)
 }
 
 
+/**
+ * Computes Synchrotron integrals
+ */
 void LatticeType::get_I(std::vector<double> &I, const bool prt)
 {
   int j, k;
@@ -616,22 +609,9 @@ void LatticeType::Elem_Pass_Lin(ss_vect<T> ps)
   }
 }
 
+/**
 
-void LatticeType::get_eps_x(double &eps_x, double &sigma_delta, double &U_0,
-			    std::vector<double> &J, std::vector<double> &tau,
-			    std::vector<double> &I, const bool prt)
-{
-  bool         cav, emit;
-  int          k;
-  ss_vect<tps> A;
-
-  const double
-    C_q_scl = 1e18*C_q/sqr(m_e),
-    E_0     = 1e9*conf.Energy,
-    C       = elems[conf.Cell_nLoc]->S,
-    T_0     = C/c0;
-
-  /* Note:
+   Note:
 
         T
        M  J M = J,
@@ -649,6 +629,20 @@ void LatticeType::get_eps_x(double &eps_x, double &sigma_delta, double &U_0,
        H~ = ( A   eta )  A   eta = ( J eta )  A A  ( J eta )
 
   */
+
+void LatticeType::get_eps_x(double &eps_x, double &sigma_delta, double &U_0,
+			    std::vector<double> &J, std::vector<double> &tau,
+			    std::vector<double> &I, const bool prt)
+{
+  bool         cav, emit;
+  int          k;
+  ss_vect<tps> A;
+
+  const double
+    C_q_scl = 1e18*C_q/sqr(m_e),
+    E_0     = 1e9*conf.Energy,
+    C       = elems[conf.Cell_nLoc]->S,
+    T_0     = C/c0;
 
   cav = conf.Cavity_on; emit = conf.emittance;
 
@@ -760,11 +754,22 @@ void LatticeType::prt_lat1(const int loc1, const int loc2,
   fclose(outf);
 }
 
-
+/**
+ *
+ * Todo:
+ *   inline function or good choice of default variables
+ */
 void LatticeType::prt_lat2(const std::string &fname, const bool all)
 { prt_lat1(0, conf.Cell_nLoc, fname, all); }
 
 
+/**
+ * Calculates Twiss parameters element by element
+ *
+ * Todo:
+ *    Legacy reduncdancy?
+ *
+ */
 void LatticeType::Cell_Twiss(const long int i0, const long int i1)
 {
   long int            i;
@@ -798,7 +803,10 @@ void LatticeType::Cell_Twiss(const long int i0, const long int i1)
   }
 }
 
-
+/**
+ * Todo:
+ *     Check if that prints out Twiss parameters?
+ */
 void LatticeType::prt_lat3(const int loc1, const int loc2,
 			   const std::string &fname, const bool all,
 			   const int n)
@@ -917,12 +925,22 @@ void LatticeType::prt_lat3(const int loc1, const int loc2,
   fclose(outf);
 }
 
-
+/**
+ * Todo:
+ *     Check if that prints out Twiss parameters?
+ *     Inline function?
+ */
 void LatticeType::prt_lat4(const std::string &fname, const bool all,
 			   const int n)
 { prt_lat3(0, conf.Cell_nLoc, fname, all, n); }
 
 
+/*
+ * Print closed orbit
+ *
+ * Todo:
+ *    Fix version print
+ */
 void LatticeType::prt_cod(const char *file_name, const bool all)
 {
   long      i;
@@ -967,7 +985,9 @@ void LatticeType::prt_cod(const char *file_name, const bool all)
   fclose(outf);
 }
 
-
+/**
+ * Print beam position
+ */
 void LatticeType::prt_beampos(const char *file_name)
 {
   long int k;
@@ -989,6 +1009,9 @@ void LatticeType::prt_beampos(const char *file_name)
 }
 
 
+/**
+ * write current misalginments to file
+ */
 void write_misalignments(const LatticeType &lat, const char* filename) {
   int       j;
   ElemType  *clp;
@@ -1020,6 +1043,15 @@ void write_misalignments(const LatticeType &lat, const char* filename) {
 }
 
 
+/**
+ * Prints beam size from sigma Matrix
+ *
+ * Args: cnt
+ *    cnt: allows to enumerate the file
+ *
+ * Todo:
+ *    refactor interface: make it a stream operator
+ */
 void LatticeType::prt_beamsizes(const int cnt)
 {
   int   k;
@@ -1049,7 +1081,10 @@ void LatticeType::prt_beamsizes(const int cnt)
   write_misalignments(*this, fname);
 }
 
-
+/**
+ *
+ * Compute chromaticty and print it to file
+ */
 void LatticeType::prt_chrom_lat(void)
 {
   long int  i;
@@ -1125,7 +1160,12 @@ struct LOC_Ring_Fittune
   jmp_buf _JL999;
 };
 
-
+/*
+ * Simply checks boolean variable
+ *
+ * Todo:
+ *     Refactor code that uses this method
+ */
 void LatticeType::checkifstable_(struct LOC_Ring_FitDisp *LINK)
 {
   if (!stable) {
@@ -1155,6 +1195,9 @@ void LatticeType::checkifstable(struct LOC_Ring_Fittune *LINK)
   }
 }
 
+/**
+ *
+ */
 
 void LatticeType::Ring_Fittune(std::vector<double> &nu, double eps,
 			       std::vector<int> &nq, long qf[],
@@ -1254,7 +1297,9 @@ void LatticeType::shiftkp(long Elnum, double dkp)
   M->Mpole_SetPB(lat, elemp->Fnum, elemp->Knum, (long)Sext);
 }
 
-
+/**
+ *
+ */
 void LatticeType::Ring_Fitchrom(std::vector<double> &ksi, double eps,
 				std::vector<int> &ns, long sf[], long sd[],
 				double dkpL, long imax)
@@ -1404,8 +1449,8 @@ _L999:
 void findcod(LatticeType &lat, double dP)
 {
   ss_vect<double> vcod;
-  const int       ntrial = 40;  // maximum number of trials for closed orbit
-  const double    tolx = 1e-10;  // numerical precision
+  const int       ntrial = 40;  ///< maximum number of trials for closed orbit
+  const double    tolx = 1e-10;  ///< numerical precision
   int             k, dim = 0;
   long            lastpos;
 
@@ -2076,7 +2121,9 @@ double get_aper(int n, double x[], double y[])
   return(A);
 }
 
-
+/**
+ * Todo: n_DOF: could it be derived from ss_vect thats allocated internally ?
+ */
 ss_vect<tps> get_S(const int n_DOF)
 {
   int          j;

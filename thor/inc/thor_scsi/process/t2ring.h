@@ -19,16 +19,78 @@
 // Computation result files
 const char beam_envelope_file[] = "beam_envelope";
 
-
-/*
- * returns if stable
+/**
+ *
+ * returns true if stable
+ *
+ * Not assuming mid-plane symmetry, the charachteristic polynomial for a
+ * symplectic periodic matrix is given by
+ *
+ * @f[
+ *    P(lambda) = det(M-lambda*I)
+ *    = (lambda-lambda0)(lambda-1/lambda0)
+ *	   (lambda-lambda1)(lambda-1/lambda1)
+ * @f]
+ *
+ * It follows that
+ * @f[
+ *      P(1) = (2-x)(2-y),     P(-1) = (2+x)(2+y)
+ * @f]
+ *
+ * where
+ * @f[
+ *   x = (lambda0+1/lambda0)/2 = cos(2 pi nu_x)
+ * @f]
+ *
+ * and similarly for y. Eliminating y
+ * @f[
+ *    x^2 + 4 b x + 4 c = 0
+ * @f]
+ *
+ * where
+ * @f[
+ *      b = (P(1)-P(-1))/16,    c =(P(1)+P(-1))/8 - 1
+ * @f]
+ *
+ * Solving for x
+ * @f[
+ *    x,y = -b +/- sqrt(b^2-c)
+ * @f]
+ *
+ * where the sign is given by
+ * @f[
+ *     trace(hor) > trace(ver)
+ *  @f]
+ *
+ * gives
+ * @f[
+ *     nu_x,y = arccos(x,y)/(2 pi)
+ * @f]
+ *
+ * For mid-plane symmetry it simplies to
+ * @f[
+ *    nu_x = arccos((m11+m22)/2)/(2 pi)
+ * @f]
+ *
  */
 bool GetNu(std::vector<double> &nu, std::vector< std::vector<double> > &M);
 
+/**
+ * compute twiss parameters
+ *
+ * Get Alpha beta gamma nu
+ *
+ */
 bool Cell_GetABGN(std::vector< std::vector<double> > &M,
 		  std::vector<double> &alpha, std::vector<double> &beta,
 		  std::vector<double> &gamma, std::vector<double> &nu);
 
+/**
+ * Get the dispersion
+ *
+ * Todo:
+ *   Rename in computeDispersion ?
+ */
 void Cell_Geteta(long i0, long i1, bool ring, double dP);
 
 void Cell_Twiss(long i0, long i1, ss_vect<tps> &Ascr, bool chroma, bool ring,
@@ -101,6 +163,9 @@ void dynap(FILE *fp, thor_scsi::core::LatticeType &lat, double r, const double d
 
 double get_aper(int n, double x[], double y[]);
 
+/**
+ * Todo: n_DOF: could it be derived from ss_vect thats allocated internally ?
+ */
 ss_vect<tps> get_S(const int n_DOF);
 
 void getdynap(thor_scsi::core::LatticeType &lat, double &r, double phi, double delta, double eps,

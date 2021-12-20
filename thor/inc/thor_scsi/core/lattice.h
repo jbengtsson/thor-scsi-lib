@@ -14,7 +14,15 @@ namespace thor_scsi {
 	    std::vector<thor_scsi::elements::ElemType*>   elems;
 	    ConfigType               conf;
 
+            /**
+	     * Must be called after lattice has been read?
+	     * Todo:
+	     *    Check if lattice parser calls it
+	     */
 	    void Lat_Init(void);
+	     /*
+	      * Check what this is for ...
+	      */
 	    void SI_init();
 
 	    void prt_fams(void);
@@ -60,27 +68,88 @@ namespace thor_scsi {
 	    friend void emittance(ConfigType &conf, const tps &B2_perp, const tps &ds,
 				  const tps &p_s0, const ss_vect<tps> &A);
 
+            /**
+	     * Pass forward from element number i0 to i1
+	     *
+	     *
+	     *  Args:
+	     *       i0:      start position
+	     *       i1:      end position
+	     *       ps:      phase space coordiante in design coordinate system
+	     *       lastpos: reports the location number of the element, where the
+	     *                particle  got lost
+	     */
 	    // t2cell.
 	    template<typename T>
 	      void Cell_Pass(const long i0, const long i1, ss_vect<T> &ps, long &lastpos);
 
+            /**
+	       Todo: make function inline or use default values
+	    */
 	    // Python does not support function overloading; dynamically typed language.
 	    void Cell_Pass1(const long i0, const long i1, ss_vect<double> &ps,
 			    long &lastpos);
+           /**
+	      Todo: make function inline or use default values
+	    */
 	    void Cell_Pass2(const long i0, const long i1, ss_vect<tps> &ps,
 			    long &lastpos);
-
+            /**
+	     * Polymorphism:  Moment tracking ....
+	     *
+	     * Note:
+	     *      Code explored but needs to be exploited
+	     *
+	     * @f[
+	     *     \Sigma_{k+1} = M_k Sigma_k M_k^T = \left(M_k (M_k Sigma_k)^T\right)^T
+	     * @f]
+	     */
 	    void Cell_Pass(const long i0, const long i1, tps &sigma, long &lastpos);
 
+             /**
+	      * Get closed orbit distortion
+	      *
+	      * Note:
+	      *     consider to rename it to compute ...
+	      *
+	      * Todo:
+	      *   consider to make it private function
+	      */
 	    bool Cell_getCOD(long imax, double eps, double dp, long &lastpos);
+            /**
+	     * Get Closed Orbit Distortion
+	     *
+	     * Args:
+	     *      imax: number of maximum iterations
+	     *      eps:  tolerance for Newton search
+	     *      dP:   momentum deviation from design \f$ \Delta \delta \f$
+	     *
+	     * Todo:
+	     *     renamed to compute
+	     */
 	    bool GetCOD(long imax, double eps, double dp, long &lastpos);
 	    bool getcod(double dp, long &lastpos);
 
 	    // t2ring.
+	    /**
+	     * Get Closed Orbit Distortion
+	     *
+	     * Todo:
+	     *     Review if removed ?
+	     *     renamed to compute
+	     */
 	    void GDiag(int n_, double C, arma::mat &A, arma::mat &Ainv_, arma::mat &R,
 		       arma::mat &M, double &Omega, double &alphac);
 
 	    void Cell_Geteta(long i0, long i1, bool ring, double dp);
+
+            /**
+	     * Calculates Twiss parameters element by element
+	     *
+	     * Todo:
+	     *    Legacy reduncdancy?
+	     *
+	     */
 	    void Cell_Twiss(long i0, long i1, ss_vect<tps> &Ascr, bool chroma, bool ring,
 			    double dp);
 	    void Cell_Twiss(const long int i0, const long int i1);
@@ -101,9 +170,48 @@ namespace thor_scsi {
 	    void Ring_FitDisp(long pos, double eta, double eps, long nq, long q[],
 			      double dkL, long imax);
 
+	    /**
+	     * Computes Synchrotron integrals
+	     */
 	    void get_I(std::vector<double> &I, const bool prt);
 	    template<typename T>
 	      void Elem_Pass_Lin(ss_vect<T> ps);
+
+            /**
+              *
+              *  Note:
+              *    @f[
+	      *        M^T J M = J
+	      *    @f]
+	      *
+	      *    @f[
+	      *         A{-1} = -J A^T J,
+	      *
+	      *         J =
+	      *             \left|\begin{array}{rr}
+	      *              0 & I \\
+	      *             -I & 0 \\
+	      *            \end{array}\right|,
+	      *
+	      *        A A^T = \left|\begin{array}{rr}
+	      *                   \beta & -\alpha \\
+	      *                   -\alpha & gamma \\
+	      *                \end{array}\right|
+	      *    @f]
+	      *
+              *      -1       T           |  0  I |        T   | beta   -alpha |
+              *     A   = -J A  J,    J = |       |,    A A  = |               |
+              *                           | -I  0 |            | -alpha  gamma |
+	      *
+	      * Args:
+	      *        eps_x :
+	      *        sigma_delta:
+	      *         J :
+	      *         tau:
+	      *         I:
+	      *         prt:
+	      *
+              */
 	    void get_eps_x(double &eps_x, double &sigma_delta, double &U_0,
 			   std::vector<double> &J, std::vector<double> &tau,
 			   std::vector<double> &I, const bool prt);
@@ -112,13 +220,46 @@ namespace thor_scsi {
 
 	    void prt_lat1(const int loc1, const int loc2, const std::string &fname,
 			  const bool all);
+            /**
+	     *
+	     * Todo:
+	     *   inline function or good choice of default variables
+	     */
 	    void prt_lat2(const std::string &fname, const bool all);
+	    /**
+	     * Todo:
+	     *     Check if that prints out Twiss parameters?
+	     */
 	    void prt_lat3(const int loc1, const int loc2, const std::string &fname,
 			  const bool all, const int n);
 	    void prt_lat4(const std::string &fname, const bool all, const int n);
+            /**
+	     *
+	     * Compute chromaticty and print it to file
+	     */
 	    void prt_chrom_lat(void);
+
+            /**
+	     * Print closed orbit
+	     *
+	     * Todo:
+	     *    Fix version print
+	     */
 	    void prt_cod(const char *file_name, const bool all);
+
+            /**
+	     * Print beam position for each element
+	     */
 	    void prt_beampos(const char *file_name);
+            /**
+	     * Prints beam size from sigma Matrix
+	     *
+	     * Args: cnt
+	     *    cnt: allows to enumerate the file
+	     *
+	     * Todo:
+	     *    refactor interface: make it a stream operator
+	     */
 	    void prt_beamsizes(const int cnt);
 
 	    void checkifstable_(struct LOC_Ring_FitDisp *LINK);
@@ -129,8 +270,23 @@ namespace thor_scsi {
 	    void shiftk_(long Elnum, double dk, struct LOC_Ring_FitDisp *LINK);
 	    void shiftkp(long Elnum, double dkp);
 
-	    // Vacuum chamber.
+            /**
+	     *
+	     * Warning:
+	     *     Sets the maximum amplitude to max_ampl
+	     *
+	     * Todo:
+	     *       Find out where max_ampl is defined
+	     */
 	    void ChamberOff(void);
+            /**
+	     * Print Chamber (internal geometry limit used
+	     *
+	     * prints to predefined file chamber.out
+	     *
+	     * Todo:
+	     *   convert it flush to a stream
+	     */
 	    void PrintCh(void);
 
 	    void print(const std::string &);

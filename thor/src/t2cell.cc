@@ -54,7 +54,17 @@ template<typename T>
 void ElemType::Cell_Pass(ConfigType &conf, ss_vect<T> &ps)
 { Elem_Pass(conf, ps); is_tps<T>::get_ps(ps, this); }
 
-
+/**
+ * Pass forward from element number i0 to i1
+ *
+ *
+ *  Args:
+ *       i0:      start position
+ *       i1:      end position
+ *       ps:      phase space coordiante in design coordinate system
+ *       lastpos: reports the location number of the element, where the
+ *                particle  got lost
+ */
 template<typename T>
 void LatticeType::Cell_Pass(const long i0, const long i1, ss_vect<T> &ps,
 			    long &lastpos)
@@ -98,16 +108,26 @@ void LatticeType::Cell_Pass(const long i0, const long i1, ss_vect<T> &ps,
   }
 }
 
-
+/**
+   Todo: make function inline or use default values
+ */
 void LatticeType::Cell_Pass1(const long i0, const long i1, ss_vect<double> &ps,
 			    long &lastpos)
 { Cell_Pass(i0, i1, ps, lastpos); }
-
+/**
+   Todo: make function inline or use default values
+ */
 void LatticeType::Cell_Pass2(const long i0, const long i1, ss_vect<tps> &ps,
 			    long &lastpos)
 { Cell_Pass(i0, i1, ps, lastpos); }
 
 
+/**
+ * Polymorphism:  Moment tracking ....
+ *
+ * Note:
+ *      Code explored but needs to be exploited
+ */
 void LatticeType::Cell_Pass(const long i0, const long i1, tps &sigma,
 			    long &lastpos)
 {
@@ -159,7 +179,15 @@ void LatticeType::Cell_Pass(const long i0, const long i1, tps &sigma,
   }
 }
 
-
+/**
+ * Get closed orbit distortion
+ *
+ * Note:
+ *     consider to rename it to compute ...
+ *
+ * Todo:
+ *   consider to make it private function
+ */
 bool LatticeType::Cell_getCOD(long imax, double eps, double dP, long &lastpos)
 {
   long            j, n, n_iter;
@@ -262,18 +290,40 @@ bool LatticeType::Cell_getCOD(long imax, double eps, double dP, long &lastpos)
 }
 
 
+/**
+ * Get Closed Orbit Distortion
+ *
+ * Args:
+ *      imax: number of maximum iterations
+ *      eps:  tolerance for Newton search
+ *      dP:   momentum deviation from design \f$ \Delta \delta \f$
+ *
+ * Todo:
+ *     renamed to compute
+ */
 bool LatticeType::GetCOD(long imax, double eps, double dP, long &lastpos)
 {
   return Cell_getCOD(imax, eps, dP, lastpos);
 }
 
-
+/**
+ * Get Closed Orbit Distortion
+ *
+ * Todo:
+ *     Review if removed ?
+ *     renamed to compute
+ */
 bool LatticeType::getcod(double dP, long &lastpos)
 {
   return GetCOD(conf.CODimax, conf.CODeps, dP, lastpos);
 }
 
 
+/**
+ * Must be called after lattice has been read?
+ * Todo:
+ *    Check if lattice parser calls it
+ */
 void LatticeType::Lat_Init(void)
 {
   bool     first = true, reverse;

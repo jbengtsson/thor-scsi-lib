@@ -95,7 +95,7 @@ namespace thor_scsi {
 				Porder,                    ///< The highest order in PB.
 				n_design;                  ///< multipole order (design).
 			double
-			PdTpar,                    // Roll angle [deg]: design
+			PdTpar,                    ///< Roll angle [deg]: design
 				PdTsys,                    //<                    systematic
 				PdTrms,                    ///<                    rms
 				PdTrnd,                    ///<                    random number.
@@ -110,12 +110,13 @@ namespace thor_scsi {
 			PdSsys{0e0, 0e0},                  ///< Displacement errors [m]: systematic
 				PdSrms{0e0, 0e0},          ///<                          rms
 				PdSrnd{0e0, 0e0};          ///<                          random number.
+			/* todo: review to implement is a complex arrays */
 			MpoleArray
 			PBpar,                             ///< Multipole strengths: design
-				PBsys,                     ///<                      systematic
-				PBrms,                     ///<                      rms
-				PBrnd,                     ///<                      random number
-				PB;                        ///<                      total.
+				PBsys,                     ///< Multipole strengths: systematic
+				PBrms,                     ///< Multipole strengths: random variation \f$ <\sigma> \f$
+				PBrnd,                     ///< random number used for computing PBrms.
+				PB;                        ///< Multipole strengths: total used by integrator
 			pthicktype
 			Pthick;
 			std::vector< std::vector<double> >
@@ -137,8 +138,14 @@ namespace thor_scsi {
 			///< used by meth:`repr`
 			std::string repr_add(void);
 
+			/**
+			 *  sets up the  calculation of the Euclidian group: translation
+			 */
 			void SetdS(void);
 			void SetdT(void);
+			/*
+			 *
+			 */
 			void SetPB(const int n);
 			double GetdT(void);
 			double GetPB(const int n);
@@ -159,7 +166,9 @@ namespace thor_scsi {
 			}
 
 		};
-
+		/**
+		 * RF cavity
+		 */
 		class CavityType : public ElemType {
 		public:
 			bool
@@ -199,6 +208,10 @@ namespace thor_scsi {
 
 		};
 
+		/**
+		 * A simple beam position monitor. can only sit on the ideal position
+		 *
+		 */
 		class MarkerType : public ElemType {
 		public:
 			friend MarkerType* Marker_Alloc(void);
