@@ -82,7 +82,6 @@ namespace thor_scsi {
 	    // t2cell.
 	    template<typename T>
 	      void Cell_Pass(const long i0, const long i1, ss_vect<T> &ps, long &lastpos);
-
             /**
 	       Todo: make function inline or use default values
 	    */
