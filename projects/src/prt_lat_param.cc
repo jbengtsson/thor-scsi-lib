@@ -1,3 +1,7 @@
+namespace tse = thor_scsi::elements;
+namespace ts = thor_scsi;
+
+
 void get_bend(const char *name, double &L, double &B, double &B_2)
 {
   int    loc;
@@ -6,10 +10,12 @@ void get_bend(const char *name, double &L, double &B, double &B_2)
   const double Brho = globval.Energy*1e9/c0;
 
   loc = Elem_GetPos(ElemIndex(name), 1);
-  L = Cell[loc]->PL;
-  rho_inv = Cell[loc].Elem.M->Pirho;
+  tse::MpoleType *a_mpole = dynamic_cast<tse::MpoleType*>(Cell[loc]);
+  assert(a_mpole);
+  L = a_mpole->PL;
+  rho_inv = a_mpole->Pirho;
   phi = L*rho_inv;
-  b_2 = Cell[loc].Elem.M->PBpar[Quad+HOMmax];
+  b_2 = a_mpole->PBpar[Quad+HOMmax];
   B = Brho*rho_inv;
   B_2 = Brho*b_2;
 }
@@ -28,30 +34,50 @@ void get_RB(const char *name, int &n_RB, double &B_2, double &dx)
 }
 
 
+/*
+ * Could just have changed original code a bit
+ * Was too tempting to mordernize it
+ */
 void get_max_bn(const int n, int &n_bn, double &bn_max)
 {
-  int k;
 
   n_bn = 0; bn_max = 0e0;
-  for (k = 0; k <= globval.Cell_nLoc; k++)
-    if (Cell[k].Elem.Pkind == Mpole)
-      if (Cell[k].Elem.M->PBpar[n+HOMmax] != 0e0) {
-	n_bn++;
-	bn_max = max(fabs(Cell[k].Elem.M->PBpar[n+HOMmax]), bn_max);
-      }
+#if 0
+  int k;
+  for (k = 0; k <= globval.Cell_nLoc; k++){
+    auto elem = Cell[k];
+    if (elem->Pkind == Mpole){
+      tse::MpoleType *a_mpole;
+      a_mpole = dynamic_cast<MpoleType*>(elem);
+    }
+  }
+#endif
+  for(auto a_mpole : filter_mpole_types(Cell)){
+    if (a_mpole->PBpar[n+HOMmax] != 0e0) {
+      n_bn++;
+      bn_max = max(fabs(a_mpole->PBpar[n+HOMmax]), bn_max);
+    }
+  }
 }
 
 
 void set_sxt(void)
 {
-  int    k;
   double b_n;
 
-  for (k = 0; k < globval.Elem_nFam; k++)
+#if 0
+  int    k;
+  for (k = 0; k < globval.Elem_nFam; k++){
+    auto elem = ElemFam[k];
     if ((ElemFam[k].ElemF.Pkind == Mpole)
 	&& (ElemFam[k].ElemF.M->n_design == Sext)) {
       b_n = ElemFam[k].ElemF.M->PBpar[Sext+HOMmax];
       set_bn_design_fam(k+1, Sext, b_n, 0e0);
+    }
+#endif
+    for(auto a_mpole : filter_sextupoles(Cell)){
+      b_n = a_mpole->PBpar[Sext+HOMmax];
+      set_bn_design_fam(a_mpole, Sext, b_n, 0e0);
     }
 }
 
@@ -60,8 +86,9 @@ void prt_lat_param(char *file_name, char *cav_name, const double eps_s,
 		   const double beta_s)
 {
   int    loc, n_bn, n_RB, n_RB_tot;
-  double bn_max, B_2, dx, dx_max, L, B, eps_x, sigma_delta, U_0, J[3], tau[3];
-  double I[6], curly_H_x, eps_eff_x;
+  double bn_max, B_2, dx, dx_max, L, B, eps_x, sigma_delta, U_0;
+  double  curly_H_x, eps_eff_x;
+  std::vector<double> J = {0.0, 0.0, 0.0}, tau = {0.0, 0.0, 0.0}, I = {0.0, 0.0, 0.0,/* half */ 0.0, 0.0, 0.0};
   FILE   *outf;
 
   const double Brho = globval.Energy*1e9/c0;
@@ -70,20 +97,21 @@ void prt_lat_param(char *file_name, char *cav_name, const double eps_s,
 
   fprintf(outf, "\n\nBasic parameters\n");
 
-  fprintf(outf, "C [m]\t%5.3f\n", Cell[globval.Cell_nLoc].S);
+  fprintf(outf, "C [m]\t%5.3f\n", Cell[globval.Cell_nLoc]->S);
 
   loc = Elem_GetPos(ElemIndex(cav_name), 1);
-  fprintf(outf, "Harmonic no\t%1d\n", Cell[loc].Elem.C->Ph);
-  fprintf(outf, "RF frequency [MHz]\t%8.6f\n", 1e-6*Cell[loc].Elem.C->Pfreq);
+  tse::CavityType *cav = dynamic_cast<tse::CavityType*>(Cell[loc]);
+  fprintf(outf, "Harmonic no\t%1d\n", cav->Ph);
+  fprintf(outf, "RF frequency [MHz]\t%8.6f\n", 1e-6*cav->Pfreq);
 
   fprintf(outf, "LS [m]\t%4.2f\n",
-	 2e0*Cell[Elem_GetPos(ElemIndex("quad_add"), 1)-1].S);
+	 2e0*Cell[Elem_GetPos(ElemIndex("quad_add"), 1)-1]->S);
   fprintf(outf, "SS [m]\t%4.2f\n",
-	 Cell[Elem_GetPos(ElemIndex("qf1"), 2)-1].S
-	 -Cell[Elem_GetPos(ElemIndex("qf1"), 1)].S);
+	 Cell[Elem_GetPos(ElemIndex("qf1"), 2)-1]->S
+	 -Cell[Elem_GetPos(ElemIndex("qf1"), 1)]->S);
   fprintf(outf, "MS [m]\t%4.2f\n",
-	 Cell[Elem_GetPos(ElemIndex("sh2"), 2)-1].S
-	 -Cell[Elem_GetPos(ElemIndex("sh2"), 1)].S);
+	 Cell[Elem_GetPos(ElemIndex("sh2"), 2)-1]->S
+	 -Cell[Elem_GetPos(ElemIndex("sh2"), 1)]->S);
   fprintf(outf, "\n\n\n");
 
   get_max_bn(Quad, n_bn, bn_max);
@@ -161,7 +189,7 @@ void prt_lat_param(char *file_name, char *cav_name, const double eps_s,
   get_eps_x(eps_x, sigma_delta, U_0, J, tau, I, false);
   fprintf(outf, "eps_x (w/o IDs) [pm.rad]\t%1.0f\n", 1e12*eps_x);
   loc = Elem_GetPos(ElemIndex("ms"), 1);
-  curly_H_x = sqr(Cell[loc].Eta[X_])/Cell[loc].Beta[X_];
+  curly_H_x = sqr(Cell[loc]->Eta[X_])/Cell[loc]->Beta[X_];
   eps_eff_x = eps_x*sqrt(1e0+curly_H_x*sqr(sigma_delta)/eps_x);
   fprintf(outf, "epsˆ*_x MS [pm.rad]\t%1.0f\n", 1e12*eps_eff_x);
   fprintf(outf, "\n\n");
@@ -189,13 +217,13 @@ void prt_lat_param(char *file_name, char *cav_name, const double eps_s,
 
   loc = Elem_GetPos(ElemIndex("ls"), 1);
   fprintf(outf, "beta_x, beta_y, eta_x (LS)\t%3.1f, %3.1f, %3.1f\n",
-	 Cell[loc].Beta[X_], Cell[loc].Beta[Y_], Cell[loc].Eta[X_]);
+	 Cell[loc]->Beta[X_], Cell[loc]->Beta[Y_], Cell[loc]->Eta[X_]);
   loc = Elem_GetPos(ElemIndex("ss"), 1);
   fprintf(outf, "beta_x, beta_y, eta_x (SS)\t%3.1f, %3.1f, %3.1f\n",
-	 Cell[loc].Beta[X_], Cell[loc].Beta[Y_], Cell[loc].Eta[X_]);
+	 Cell[loc]->Beta[X_], Cell[loc]->Beta[Y_], Cell[loc]->Eta[X_]);
   loc = Elem_GetPos(ElemIndex("ms"), 1);
   fprintf(outf, "beta_x, beta_y, eta_x (MS)\t%3.1f, %3.1f, %5.3f\n",
-	 Cell[loc].Beta[X_], Cell[loc].Beta[Y_], Cell[loc].Eta[X_]);
+	 Cell[loc]->Beta[X_], Cell[loc]->Beta[Y_], Cell[loc]->Eta[X_]);
 
   fprintf(outf, "tau (w/o IDs) [msec]\t%3.1f, %3.1f, %3.1f\n",
 	 1e3*tau[X_], 1e3*tau[Y_], 1e3*tau[Z_]);

@@ -15,7 +15,6 @@ public:
   ss_vect<tps> GetMap(const bool cav, const bool rad);
 };
 
-namespace tse = thor_scsi::elements;
 
 ss_vect<tps> PoincareMap::GetLat(void)
 {

@@ -11,11 +11,8 @@
 //
 // Johan Bengtsson 29/03/20.
 
-#include <iostream>
-#include <iomanip>
 #include <random>
-#include <tps/ss_vect.h>
-#include <tps/tps_type.h>
+
 
 const int n_DOF = 3;
 
@@ -28,7 +25,7 @@ public:
   int
     n_part;            // No of particles.
   std::vector< ss_vect<double> >
-    ps;                // Phase space coordinates.
+    ps;                // Phase space coordinates. 
   ss_vect<double>
     mean;              // Average.
   ss_vect<tps>
@@ -116,7 +113,7 @@ ss_vect<tps> TpMap(ss_vect<tps> A)
 }
 
 
-void PrtVec(const std::string &str, ss_vect<double> vec)
+void PrtVec(const string &str, ss_vect<double> vec)
 {
   int k;
 
@@ -129,7 +126,7 @@ void PrtVec(const std::string &str, ss_vect<double> vec)
 }
 
 
-void PrtMap(const std::string &str, ss_vect<tps> map)
+void PrtMap(const string &str, ss_vect<tps> map)
 {
   int i, j;
 
@@ -144,7 +141,7 @@ void PrtMap(const std::string &str, ss_vect<tps> map)
 }
 
 
-void prt_vec(const std::string &str, const int n, double *a)
+void prt_vec(const string &str, const int n, double *a)
 {
   int i;
 
@@ -292,9 +289,9 @@ ss_vect<tps> get_emit(ss_vect<tps> &M, ss_vect<tps> &D)
   for (i = 1; i <= mat_vec_dim; i++)
     for (j = 1; j <= mat_vec_dim; j++)
       Id[i][j] = (i == j)? 1e0 : 0e0;
-
+ 
   dmsub(Id, mat_vec_dim, mat_vec_dim, M_M_mat, MmI);
-  dinverse(MmI, mat_vec_dim, MmI_inv);
+  dinverse(MmI, mat_vec_dim, MmI_inv);  
   dmvmult(MmI_inv, mat_vec_dim, mat_vec_dim, D_vec, mat_vec_dim, Sigma_vec);
   Sigma = vec2map(Sigma_vec);
 
@@ -444,7 +441,7 @@ void GetTwiss(const ss_vect<tps> &A, const ss_vect<tps> &R,
   eta.zero();
   for (k = 0; k < 2; k++)
     eta[k] = scr[k][delta_];
-
+ 
   // A_t.identity();
   // for (k = 4; k < 6; k++)
   //   A_t[k] = A[k][ct_]*Id[ct_] + A[k][delta_]*Id[delta_];
@@ -498,7 +495,7 @@ void PoincareMapType::GetM_delta(void)
 void PoincareMapType::GetM_tau(void)
 {
   int k;
-
+ 
   M_tau.zero();
   for (k = 0; k < n_DOF; k++) {
     M_tau[2*k] = exp(-C/(c0*tau[k]))*tps(0e0, 2*k+1);
@@ -669,7 +666,7 @@ void PoincareMapType::propagate(const int n, BeamType &beam) const
   std::normal_distribution<double> norm_ranf(0e0, 1e0);
 
   const int    n_prt     = 10;
-  const std::string file_name = "propagate.out";
+  const string file_name = "propagate.out";
 
   outf = file_write(file_name.c_str());
 
@@ -707,7 +704,7 @@ void PoincareMapType::propagate(const int n, ss_vect<tps> &Sigma) const
   FILE            *outf;
 
   const int          n_prt     = 1;
-  const std::string       file_name = "propagate.out";
+  const string       file_name = "propagate.out";
   const ss_vect<tps> M_Chol    = TpMap(M_Chol_tp);
 
   std::default_random_engine       rand;
@@ -786,8 +783,8 @@ void PoincareMapType::print(void)
   printf("D          = [%11.5e, %11.5e, %11.5e]\n", D[X_], D[Y_], D[Z_]);
   printf("eps        = [%11.5e, %11.5e, %11.5e]\n", eps[X_], eps[Y_], eps[Z_]);
 
-  std::cout << std::scientific << std::setprecision(6) << std::endl
-	    << "COD:" << std::endl << std::setw(14) << ps_cod << std::endl;
+  cout << scientific << setprecision(6) << "\nCOD:\n" << setw(14) << ps_cod
+       << "\n";
 
   PrtMap("\nM_num (input map):", M_num);
   printf("\nDet{M_num}-1 = %10.3e\n", DetMap(M_num)-1e0);
@@ -913,7 +910,7 @@ void BenchMark(const int n_part, const int n_turn, const PoincareMapType &map)
 void BenchMark(const int n_turn, const PoincareMapType &map)
 {
   BeamType beam;
-
+ 
   printf("\nBenchMark:\n");
   beam.BeamInit_Sigma(0e-9, 1e-9, 0e-9, map.A);
   beam.print(map);
@@ -989,10 +986,10 @@ void chk_map(const PoincareMapType &map)
   PrtMap("\nInv(M_delta)*Inv(M_cav)*Inv(M_tau)*M:", M);
   eta = GetEta(M);
   eta1 = eta; eta1[delta_] = 1e0;
-  std::cout << std::scientific << std::setprecision(12)
-	    << "\neta:  "  << std::endl << std::setw(20) << eta1 << std::endl;
-  std::cout << std::scientific << std::setprecision(12)
-	    << "M*eta:" << std::endl << std::setw(20) << (M*eta1).cst() << std::endl;
+  cout << scientific << setprecision(12)
+       << "\neta:  \n" << setw(20) << eta1 << "\n";
+  cout << scientific << setprecision(12)
+       << "M*eta:\n" << setw(20) << (M*eta1).cst() << "\n";
   A0 = GetA0(eta);
   M = Inv(A0)*M*A0;
   PrtMap("\nInv(A0)*M*A0:", M);
