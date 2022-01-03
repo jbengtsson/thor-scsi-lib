@@ -14,6 +14,7 @@ Software update strategy
 8. Make lattice managment transparant to python interface
 9. Add solid set of unit tests
 10. Review internal representation for cache friendlyness
+11. Calculations (e.g. integration steps) separate from memory management
 
 
 Rework build process
