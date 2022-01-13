@@ -8,6 +8,7 @@
 #include <thor_scsi/core/elements.h>
 #include <thor_scsi/core/lattice.h>
 #include <thor_scsi/legacy/legacy.h>
+#include <thor_scsi/tweak/tweak.h>
 
 #endif /* _THOR_SCSI_H_ */
 /*

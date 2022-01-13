@@ -1,9 +1,13 @@
 #ifndef _THOR_SCSI_TWEAK_PARAM_H_
 #define _THOR_SCSI_TWEAK_PARAM_H_ 1
 #include <thor_scsi/core/lattice.h>
+#include <thor_scsi/obsolete/orb_corr.h>
+#include <thor_scsi/compat/typedefs.h>
 #include <string>
 #include <vector>
+#include <array>
 
+namespace thor_scsi {
 const int N_Fam_max = 25, max_corr = 150, max_bpm = 150; ///< Todo: move to config file
 
 // Lattice error and correction files
@@ -80,9 +84,12 @@ class param_data_type {
 
   // ID control.
   int                      N_calls, N_steps, N_Fam, Q_Fam[N_Fam_max];
-  int                      n_sext, sexts[max_elem];
-  double                   betas0_[max_elem][2], nus0_[max_elem][2], nu0_[2];
-  double                   b2[N_Fam_max];
+	int                      n_sext;
+	std::vector<int> sexts;
+	// double                   betas0_[max_elem][2], nus0_[max_elem][2], nu0_[2];
+	std::vector<std::array<double, 2>> betas0_, nus0_, nu0_;
+	//double                   b2[N_Fam_max];
+	std::vector<double> b2;
   static double            ID_s_cut;
   double                   **SkewRespMat, *VertCouple, *SkewStrengthCorr;
   double                   *eta_y;
@@ -98,7 +105,7 @@ class param_data_type {
   double   Nu_X, Nu_Y, Nu_X0, Nu_Y0;
   double   **A1, *Xsext, *Xsext0, *b2Ls_, *w1, **U1, **V1;
   double   *Xoct, *b4s, **Aoct;
-  Vector2  dnu0, nu_0;
+  thor_scsi::compat::Vector2  dnu0, nu_0;
 
 //-------------------------------------------------------------------
 // types and variables used by GirderSetup and SetCorMis
@@ -135,7 +142,7 @@ class param_data_type {
 		 double *bdzrms, double *bdarms, double *rancutx,
 		 double *rancuty, double *rancutt, long *iseed, long *iseednr);
 
-  void get_param(thor_scsi::core::LatticeType &lat, const string &param_file);
+  void get_param(thor_scsi::core::LatticeType &lat, const std::string &param_file);
   void get_bare(thor_scsi::core::LatticeType &lat);
   void get_dbeta_dnu(thor_scsi::core::LatticeType &lat, double m_dbeta[], double s_dbeta[],
 		     double m_dnu[], double s_dnu[]);
@@ -193,15 +200,16 @@ class param_data_type {
 
   void prt_cod_corr_lat(thor_scsi::core::LatticeType &lat);
 
-  void err_and_corr_init(thor_scsi::core::LatticeType &lat, const string &param_file,
+  void err_and_corr_init(thor_scsi::core::LatticeType &lat, const std::string &param_file,
 			 orb_corr_type orb_corr[]);
 
   void err_and_corr_exit(orb_corr_type orb_corr[]);
 };
 
-void get_bn2(thor_scsi::core::LatticeType &lat, const string file_name1,
-	     const string file_name2, int n, const bool prt);
 
+void get_bn2(thor_scsi::core::LatticeType &lat, const std::string file_name1,
+	     const std::string file_name2, int n, const bool prt);
+};
 #endif /* _THOR_SCSI_TWEAK_PARAM_H_ */
 /*
  * Local Variables:
