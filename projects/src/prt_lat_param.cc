@@ -60,7 +60,9 @@ void get_max_bn(const int n, int &n_bn, double &bn_max)
   }
 }
 
-
+// What is this function precisly supposed to do ...
+// Push one sextupole setting forward ...
+// Have it push bn value to field value ?
 void set_sxt(void)
 {
   double b_n;
@@ -82,7 +84,7 @@ void set_sxt(void)
 }
 
 
-void prt_lat_param(char *file_name, char *cav_name, const double eps_s,
+void prt_lat_param(const char *file_name, const char *cav_name, const double eps_s,
 		   const double beta_s)
 {
   int    loc, n_bn, n_RB, n_RB_tot;

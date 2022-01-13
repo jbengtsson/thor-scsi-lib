@@ -5,10 +5,20 @@
 #define NO 1
 namespace tse = thor_scsi::elements;
 namespace tsc = thor_scsi::core;
+#include <tps/tpsa_lin.h>
+
+#include <tps/tpsa_for_pm.h>
+#include <tps/tpsa_lin.h>
+ss_vect<tps> putlinmat(const int nv, const std::vector<std::vector<double>>  &mat){
+  ss_vect<tps>  tmp = stlmattomap(mat);
+  arma::mat amat = maptomat(tmp);
+  return putlinmat(nv, amat);
+}
+//#define putlinmat(nv, mat) putlinmat_compat(nv, mat)
 
 #include "prt_ZAP.cc"
 
-#define PM 0
+#define PM 1
 #if PM
 #include "PoincareMap.cc"
 #else
@@ -48,6 +58,7 @@ double rad2deg(const double a) { return a*180e0/M_PI; }
 double deg2rad(const double a) { return a*M_PI/180e0; }
 
 
+
 void prt_name(FILE *outf, const char *name, const string &str, const int len)
 {
   int j, k;
@@ -57,7 +68,7 @@ void prt_name(FILE *outf, const char *name, const string &str, const int len)
     fprintf(outf, "%c", name[j]);
     j++;
   } while (name[j] != ' ');
-  fprintf(outf, str.c_str());
+  fprintf(outf, "%s", str.c_str());
   for (k = j; k < len; k++)
     fprintf(outf, " ");
 }
@@ -217,6 +228,9 @@ void fit_ksi1(const std::vector<int> &Fnum_b3,
 	      const double ksi_x, const double ksi_y, const double db3L,
 	      double svd[])
 {
+
+  assert(0);
+#if 0
   int    n_b3, j, k, n_svd;
   double **A, **U, **V, *w, *b, *x, b3L, a3L;
 
@@ -242,8 +256,9 @@ void fit_ksi1(const std::vector<int> &Fnum_b3,
       printf("\nfit_ksi1: ksi1+ = [%9.5f, %9.5f]\n",
 	     globval.Chrom[X_], globval.Chrom[Y_]);
 
-    for (j = 1; j <= m; j++)
+    for (j = 1; j <= m; j++){
       A[j][k] = globval.Chrom[j-1];
+    }
     set_dbnL_design_fam(Fnum_b3[k-1], Sext, -2e0*db3L, 0e0);
     Ring_Getchrom(0e0);
     if (prt)
@@ -300,8 +315,9 @@ void fit_ksi1(const std::vector<int> &Fnum_b3,
   free_dmatrix(A, 1, m, 1, n_b3); free_dmatrix(U, 1, m, 1, n_b3);
   free_dmatrix(V, 1, n_b3, 1, n_b3);
   free_dvector(w, 1, n_b3); free_dvector(b, 1, m); free_dvector(x, 1, n_b3);
-}
 
+#endif
+}
 
 void fit_ksi1(const int lat_case, const double ksi_x, const double ksi_y)
 {
@@ -945,7 +961,7 @@ void A_At_pass(void)
   int          i;
   ss_vect<tps> A, A_Atp;
 
-  A.identity(); A = putlinmat(4, globval.Ascr);
+  A.identity(); A = putlinmat(4, stlmattomat(globval.Ascr));
   A_Atp = A*tp_S(2, A);
   printf("\n    alpha_x  beta_x    alpha_y  beta_y:\n"
 	 "  %9.5f %8.5f %9.5f %8.5f\n",
@@ -1101,7 +1117,7 @@ void prt_mat(const int n, const Matrix &A)
   printf("matrix:\n");
   for (i = 0; i < n; i++) {
     for (j = 0; j < n; j++)
-      printf(" %18.15f", A[i][j]);
+      printf(" %18.15f", A[i, j]);
     printf("\n");
   }
 }
@@ -1381,6 +1397,9 @@ void get_eta(void)
   M = putlinmat(2, globval.OneTurnMat);
   prt_lin_map(1, PInv(Id-M, jj));
 
+  assert(Cell.size() > 0);
+  tse::ElemType &last_cell = *Cell.back();
+
   M[x_] =
     (1e0+last_cell.Alpha[X_]/tan(M_PI*globval.TotalTune[X_]))
     /2e0*Id[x_]
@@ -1507,7 +1526,7 @@ void wtf(void)
     - globval.Ascr[ct_][delta_]*globval.Ascr[delta_][delta_];
   globval.beta_z = sqr(globval.Ascr[ct_][ct_]) + sqr(globval.Ascr[ct_][delta_]);
 
-  tse::CellType &first_cell = Cell[0];
+  tse::ElemType &first_cell = *Cell[0];
   printf("\nLattice Parameters:\n  alpha = [%9.5f, %9.5f, %9.5f]\n",
 	 first_cell.Alpha[X_], first_cell.Alpha[Y_], globval.alpha_z);
   printf("  beta  = [%9.5f, %9.5f, %9.5f]\n",
@@ -1519,7 +1538,9 @@ void prt_M_lin(void)
   int k;
 
   for(auto mpole : filter_mpole_types(Cell)){
-    printf("%10s:", mpole->Name);
+    printf("%10s:", mpole->Name.c_str());
+    // Which map is that ?
+    // could not find it in tracy 3
     prt_lin_map(3, mpole->M_lin);
   }
 }
@@ -1691,14 +1712,17 @@ void chk_traj(void)
 
   M.zero();
   Cell_Pass(0, globval.Cell_nLoc, M, lastpos);
-  for (auto elem: Cell);
+  for (auto elem: Cell){
     outf << setw(4) << k << " "
 	 << setw(15) << elem->Name
 	 << fixed << setprecision(2) << setw(7) << elem->S
-	 << setprecision(1) << setw(5) << get_code(elem)
-	 << scientific << setprecision(15) << setw(23) << elem->.BeamPos
-	 << "\n";
+	 << setprecision(1) << setw(5) << get_code(elem);
+    for (auto pos: elem->BeamPos){
+      outf << scientific << setprecision(15) << setw(23) << pos;
+    }
+    outf << std::endl;
 
+  }
   outf.close();
 }
 
@@ -1717,7 +1741,7 @@ int main(int argc, char *argv[])
   int              k, b2_fam[2], b3_fam[2], lat_case;
   double           b2[2], a2, b3[2], b3L[2], a3, a3L, f_rf, dx, dnu[3];
   double           eps_x, sigma_delta, U_0;
-  std::vector<double> J= {0.0, 0.0,0.0}, tau = {0.0, 0.0, 0.0}, I[6];
+  std::vector<double> J= {0.0, 0.0,0.0}, tau = {0.0, 0.0, 0.0}, I(6, 0.0);
   tps              a;
   Matrix           M;
   std::vector<int> Fam;
@@ -1739,11 +1763,15 @@ int main(int argc, char *argv[])
   const double R_ref = 5e-3;
 
   // 1: DIAMOND, 2: NSLS-II, 3: Oleg I, 4: Oleg II.
+#if 0
   FieldMap_filetype = 4; sympl = !false;
+#else
+#warning "Deactivated unknown options"
+#endif
 
-  reverse_elem = !false;
+  globval.reverse_elem = !false;
 
-  trace = false;
+  globval.trace = false;
 
   globval.mat_meth = !false;
 
@@ -1875,7 +1903,7 @@ int main(int argc, char *argv[])
     ps[ct_] = 0e-3;
     for (k = 0; k <= globval.Cell_nLoc; k++) {
       Cell_Pass(k, k, ps, lastpos);
-      auto elem = Cell[k]
+      auto elem = Cell[k];
       outf << setw(4) << k
 	   << fixed << setprecision(5) << setw(9) << elem->S
 	   << " " << setw(10) << elem->Name
@@ -1950,6 +1978,7 @@ int main(int argc, char *argv[])
   }
 
   if (false) {
+    ss_vect<tps> map;
     loc = Elem_GetPos(ElemIndex("bb"), 1);
     map.identity();
     // Tweak to remain within field map range at entrance.
@@ -1961,7 +1990,7 @@ int main(int argc, char *argv[])
     if (tweak) map[x_] -= dx;
     prt_lin_map(3, map);
     getlinmat(6, map, M);
-    printf("\n1-Det: %9.3e\n", 1e0-DetMat(6, M));
+    printf("\n1-Det: %9.3e\n", 1e0-DetMat(6, (M)));
     exit(0);
   }
 
@@ -1996,7 +2025,8 @@ int main(int argc, char *argv[])
       eta1[]   = { 0.07297,  0.0},
       etap1[]  = {-0.01063,  0.0};
 
-    set_map_per(ElemIndex("ps_per"), alpha1, beta1, eta1, etap1);
+    auto a_map = dynamic_cast<MapType *>(Cell[ElemIndex("ps_per")]);
+    set_map_per(a_map, alpha1, beta1, eta1, etap1);
     if (!true) {
       Ring_GetTwiss(true, 0e0); printglob();
     } else
@@ -2026,7 +2056,7 @@ int main(int argc, char *argv[])
 	   t_elem->Etap[X_], t_elem->Etap[Y_]);
     printf("\n%10s:\n  (%12.10f, %12.10f, %12.10f, %12.10f,"
 	   "\n  %12.10f, %12.10f, %3.1f, %3.1f)\n",
-	   t_elem->Elem->Name.c_str(),
+	   t_elem->Name.c_str(),
 	   t_elem->Alpha[X_], t_elem->Beta[X_],
 	   t_elem->Alpha[Y_], t_elem->Beta[Y_],
 	   t_elem->Eta[X_], t_elem->Etap[X_],
@@ -2200,6 +2230,9 @@ int main(int argc, char *argv[])
       +(cos(-2e0*M_PI*globval.TotalTune[Z_])
 	-globval.alpha_z*sin(-2e0*M_PI*globval.TotalTune[Z_]))*Id[px_];
     prt_lin_map(1, Ms);
+
+    assert(Cell.size() > 0);
+    tse::ElemType &last_cell = *Cell.back();
     Ms = exp(-last_cell.S/(c0*globval.tau[Z_]))*Ms;
     prt_lin_map(1, Ms);
     printf("\nDet = %17.10e",

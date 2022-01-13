@@ -13,7 +13,6 @@
 
 #include <random>
 
-
 const int n_DOF = 3;
 
 struct PoincareMapType;
@@ -25,7 +24,7 @@ public:
   int
     n_part;            // No of particles.
   std::vector< ss_vect<double> >
-    ps;                // Phase space coordinates. 
+    ps;                // Phase space coordinates.
   ss_vect<double>
     mean;              // Average.
   ss_vect<tps>
@@ -262,9 +261,11 @@ void Kronecker_prod(const int n, double **A, double **B, double **C)
 	  C[(i-1)*n+k][(j-1)*n+l] = A[i][j]*B[k][l];
 }
 
-
 ss_vect<tps> get_emit(ss_vect<tps> &M, ss_vect<tps> &D)
 {
+  assert(0);
+#if 0
+
   int          i, j;
   double       *D_vec, *Sigma_vec, **M_mat, **M_M_mat, **Id, **MmI, **MmI_inv;
   ss_vect<tps> Sigma;
@@ -289,9 +290,9 @@ ss_vect<tps> get_emit(ss_vect<tps> &M, ss_vect<tps> &D)
   for (i = 1; i <= mat_vec_dim; i++)
     for (j = 1; j <= mat_vec_dim; j++)
       Id[i][j] = (i == j)? 1e0 : 0e0;
- 
+
   dmsub(Id, mat_vec_dim, mat_vec_dim, M_M_mat, MmI);
-  dinverse(MmI, mat_vec_dim, MmI_inv);  
+  dinverse(MmI, mat_vec_dim, MmI_inv);
   dmvmult(MmI_inv, mat_vec_dim, mat_vec_dim, D_vec, mat_vec_dim, Sigma_vec);
   Sigma = vec2map(Sigma_vec);
 
@@ -304,8 +305,9 @@ ss_vect<tps> get_emit(ss_vect<tps> &M, ss_vect<tps> &D)
   free_dmatrix(MmI_inv, 1, mat_vec_dim, 1, mat_vec_dim);
 
   return Sigma;
-}
+  #endif
 
+}
 
 ss_vect<tps> GetSigma(const double C, const double tau[], const double D[],
 	      ss_vect<tps> &A)
@@ -441,7 +443,7 @@ void GetTwiss(const ss_vect<tps> &A, const ss_vect<tps> &R,
   eta.zero();
   for (k = 0; k < 2; k++)
     eta[k] = scr[k][delta_];
- 
+
   // A_t.identity();
   // for (k = 4; k < 6; k++)
   //   A_t[k] = A[k][ct_]*Id[ct_] + A[k][delta_]*Id[delta_];
@@ -470,8 +472,10 @@ void PoincareMapType::GetM_cav(void)
 {
   const int loc = Elem_GetPos(ElemIndex("cav"), 1);
 
-  V_RF = Cell[loc].Elem.C->Pvolt;
-  f_RF = Cell[loc].Elem.C->Pfreq;
+  auto cav = dynamic_cast<CavityType *>(Cell[loc]);
+  assert(cav);
+  V_RF = cav->Pvolt;
+  f_RF = cav->Pfreq;
   phi0 = asin(delta_cav*E0/V_RF);
 
   M_cav.identity();
@@ -495,7 +499,7 @@ void PoincareMapType::GetM_delta(void)
 void PoincareMapType::GetM_tau(void)
 {
   int k;
- 
+
   M_tau.zero();
   for (k = 0; k < n_DOF; k++) {
     M_tau[2*k] = exp(-C/(c0*tau[k]))*tps(0e0, 2*k+1);
@@ -544,7 +548,7 @@ ss_vect<tps> Mat2Map(const int n, double **M)
   return map;
 }
 
-
+#if 0
 void PoincareMapType::GetM_Chol_tp(void)
 {
   int          j, k, j1, k1;
@@ -582,7 +586,7 @@ void PoincareMapType::GetM_Chol_tp(void)
   free_dvector(diag, 1, n); free_dmatrix(d1, 1, n, 1, n);
   free_dmatrix(d2, 1, n, 1, n);
 }
-
+#endif
 
 void PoincareMapType::GetMap(void)
 {
@@ -605,7 +609,7 @@ void PoincareMapType::GetM(const bool cav, const bool rad)
 {
   cav_on = cav; rad_on = rad;
 
-  C = Cell[globval.Cell_nLoc].S; E0 = 1e9*globval.Energy;
+  C = Cell[globval.Cell_nLoc]->S; E0 = 1e9*globval.Energy;
 
   GetMap();
   GetA(n_DOF, C, M_num, A, M_Fl, tau);
@@ -910,7 +914,7 @@ void BenchMark(const int n_part, const int n_turn, const PoincareMapType &map)
 void BenchMark(const int n_turn, const PoincareMapType &map)
 {
   BeamType beam;
- 
+
   printf("\nBenchMark:\n");
   beam.BeamInit_Sigma(0e-9, 1e-9, 0e-9, map.A);
   beam.print(map);
