@@ -12,10 +12,15 @@
 
 
  */
+#include <thor_scsi/compat/constants.h>
+#include <thor_scsi/compat/families.h>
 #include <thor_scsi/compat/globals.h>
-#include <thor_scsi/compat/std_headers.h>
-#include <thor_scsi/thor_scsi.h>
 #include <thor_scsi/compat/namespaces.h>
+#include <thor_scsi/compat/std_headers.h>
+#include <thor_scsi/compat/typedefs.h>
+#include <thor_scsi/thor_scsi.h>
+// #include <thor_scsi/obsolete/nsls-ii_lib.h>
+// #include <thor_scsi/obsolete/orb_corr.h>
 
 #endif /*  _THOR_SCSI_COMPAT_H_ */
 /*
