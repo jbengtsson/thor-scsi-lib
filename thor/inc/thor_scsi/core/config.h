@@ -2,6 +2,7 @@
 #define _THOR_SCSI_CORE_CONFIG_H_ 1
 
 #include <vector>
+#include <armadillo>
 
 namespace thor_scsi {
 	namespace core {
@@ -20,7 +21,7 @@ namespace thor_scsi {
 				Cart_Bend,
 				dip_edge_fudge,               ///< Dipole Edge fudge.
 				pathlength,                   ///< Absolute Path Length.
-				Aperture_on,
+				Aperture_on,                  ///< Aperture limitation used ?
 				EPU,
 				mat_meth,                     ///< Matrix method.
 				IBS,                          ///< Intrabeam Scattering.

@@ -288,6 +288,12 @@ namespace thor_scsi {
 	     */
 	    void PrintCh(void);
 
+            /**
+	     * Prints info on computation and on result
+	     *
+	     * Warning:
+	     *           string argument is not used!
+	     */
 	    void print(const std::string &);
 
 	    void GetEmittance(const int Fnum, const bool prt);

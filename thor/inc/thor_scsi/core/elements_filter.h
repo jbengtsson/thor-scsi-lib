@@ -5,7 +5,16 @@
  * Todo:
  *    automatically include std::ranges if available
  */
+// #include <algorithm>
+// #ifdef __cpp_lib_ranges
+// #error "ranges"
 // #include <ranges>
+// #else
+// #error "No ranges"
+// #endif
+
+#include <thor_scsi/core/cpp_version.h>
+
 #include <vector>
 #include <set>
 #include <unordered_set>
@@ -21,8 +30,11 @@
  */
 namespace thor_scsi{
 	namespace elements {
+		/**
+		 * Check if element is a drift (if the dynamic cast is successful)
+		 */
 		inline bool is_drift_type(thor_scsi::elements::ElemType *elem){
-			return dynamic_cast<thor_scsi::elements::DriftType *>(elem) != nullptr;
+			return (dynamic_cast<thor_scsi::elements::DriftType *>(elem) != nullptr);
 		}
                 /**
 		 * Cast Elem to drift type
