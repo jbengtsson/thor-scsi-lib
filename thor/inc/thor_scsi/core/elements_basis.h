@@ -21,9 +21,7 @@ namespace thor_scsi {
 			std::string
 			Name;                      ///< Element name.
 			bool
-			Reverse;                   ///< Reverse element.
-			                           ///< Todo:
-			                           ///<    document what it means
+			Reverse;                   ///< reverse elements: rearange the elements in reveresed order
 			double
 			PL;                        ///< Length[m].
 			PartsKind
@@ -46,15 +44,25 @@ namespace thor_scsi {
 			 */
 			virtual ElemType* Elem_Init(const thor_scsi::core::ConfigType &conf, const bool reverse)
 				{ return NULL; };
+
+			/**
+			 * Todo: implement taking stream or as ostream operator ....
+			 */
 			virtual void print(const std::string &) {};
 
-			virtual void SetdS(void) {};
-			virtual void SetdT(void) {};
-			virtual void SetPB(const int n) {};
+			virtual void SetdS(void) {}; ///< Eucledian Group: dx, dy
+			virtual void SetdT(void) {}; ///< Eucledian Group: Roll angle
+			virtual void SetPB(const int n) {}; ///< Multipoles (total numbers)
 			virtual double GetdT(void) { return 0e0; };
 			virtual double GetPB(const int n) { return 0e0; };
 
 			// C++ templates not supported for virtual functions.
+			/**
+			 * Propagater  step for phase space.
+			 *
+			 * Args.
+			 *    ps : phase space
+			 */
 			virtual void Elem_Pass(thor_scsi::core::ConfigType &conf, ss_vect<double> &ps) {};
 			virtual void Elem_Pass(thor_scsi::core::ConfigType &conf, ss_vect<tps> &ps) {};
 
@@ -72,8 +80,8 @@ namespace thor_scsi {
 			int
 			nKid,                      ///< No of kids.
 				NoDBN;
-			std::vector<int> KidList;
-			std::vector<std::string>    DBNlist; ///< For control system.
+			std::vector<int> KidList;   ///< Todo: position number in lattice ??
+			std::vector<std::string>    DBNlist; ///< For control system. Todo: but what ?
 		};
 	}
 }

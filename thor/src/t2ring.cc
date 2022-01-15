@@ -27,14 +27,20 @@
    Todo:
    functions only used here. define them static?
  */
-void getprm(arma::mat&, std::vector<double>&, std::vector<double>&);
-void dagetprm(ss_vect<tps>&, std::vector<double>&, std::vector<double>&);
-double get_curly_H(double, double, double, double);
-void get_dI_eta_5(std::__debug::vector<thor_scsi::elements::ElemType*>, int);
-void write_misalignments(const thor_scsi::core::LatticeType&, const char*);
-void computeFandJ(thor_scsi::core::LatticeType&, int, ss_vect<double>&, arma::mat&, ss_vect<double>&);
-bool chk_if_lost(thor_scsi::core::LatticeType&, double, double, double, long int, bool);
-double d_sign(double, double);
+
+namespace thor_scsi {
+  void getprm(arma::mat&, std::vector<double>&, std::vector<double>&);
+  void dagetprm(ss_vect<tps>&, std::vector<double>&, std::vector<double>&);
+  double get_curly_H(double, double, double, double);
+  void get_dI_eta_5(std::__debug::vector<thor_scsi::elements::ElemType*>, int);
+  void write_misalignments(const thor_scsi::core::LatticeType&, const char*);
+  void computeFandJ(thor_scsi::core::LatticeType&, int, ss_vect<double>&, arma::mat&, ss_vect<double>&);
+  bool chk_if_lost(thor_scsi::core::LatticeType&, double, double, double, long int, bool);
+  double d_sign(double, double);
+}
+
+namespace ts=thor_scsi;
+
 #if 0
 #endif
 /* end forward declarations */
@@ -61,7 +67,6 @@ void LatticeType::ChamberOff(void)
   conf.chambre = false;
 }
 
-
 void LatticeType::PrintCh(void)
 {
   long       i = 0;
@@ -73,7 +78,7 @@ void LatticeType::PrintCh(void)
   newtime = GetTime();
 
   f = file_write(fic);
-  fprintf(f, "# TRACY II v.2.6 -- %s -- %s \n", fic, asctime2(newtime));
+  fprintf(f, "# TRACY  XXXX  -- %s -- %s \n", fic, asctime2(newtime));
   fprintf(f, "#    name                s      -xch     +xch     zch\n");
   fprintf(f, "#                               [mm]     [mm]     [mm]\n");
   fprintf(f, "#\n");
@@ -88,46 +93,8 @@ void LatticeType::PrintCh(void)
 }
 
 
-bool GetNu(std::vector<double> &nu, std::vector< std::vector<double> > &M)
+bool ts::GetNu(std::vector<double> &nu, std::vector< std::vector<double> > &M)
 {
-  /* Not assuming mid-plane symmetry, the charachteristic polynomial for a
-     symplectic periodic matrix is given by
-
-       P(lambda) = det(M-lambda*I)
-                 = (lambda-lambda0)(lambda-1/lambda0)
-		   (lambda-lambda1)(lambda-1/lambda1)
-
-     It follows that
-
-       P(1) = (2-x)(2-y),     P(-1) = (2+x)(2+y)
-
-     where
-
-       x = (lambda0+1/lambda0)/2 = cos(2 pi nu_x)
-
-     and similarly for y. Eliminating y
-
-       x^2 + 4 b x + 4 c = 0
-
-     where
-
-       b = (P(1)-P(-1))/16,    c =(P(1)+P(-1))/8 - 1
-
-     Solving for x
-
-       x,y = -b +/- sqrt(b^2-c)
-
-     where the sign is given by
-
-       trace(hor) > trace(ver)
-
-     gives
-
-       nu_x,y = arccos(x,y)/(2 pi)
-
-     For mid-plane symmetry it simplies to
-
-       nu_x = arccos((m11+m22)/2)/(2 pi)                                      */
 
   int       i;
   double    sgn, detp, detm, b, c, tr[2], b2mc, x;
@@ -178,8 +145,13 @@ bool GetNu(std::vector<double> &nu, std::vector< std::vector<double> > &M)
   return true;
 }
 
-
-bool Cell_GetABGN(std::vector< std::vector<double> > &M,
+/**
+ * compute twiss parameters
+ *
+ * Get Alpha beta gamma nu
+ *
+ */
+bool ts::Cell_GetABGN(std::vector< std::vector<double> > &M,
 		  std::vector<double> &alpha,
 		  std::vector<double> &beta, std::vector<double> &gamma,
 		  std::vector<double> &nu)
@@ -205,6 +177,12 @@ bool Cell_GetABGN(std::vector< std::vector<double> > &M,
 }
 
 
+/**
+ * Get the dispersion
+ *
+ * Todo:
+ *   Rename in computeDispersion ?
+ */
 void LatticeType::Cell_Geteta(long i0, long i1, bool ring, double dP)
 {
   long int        i, lastpos;
@@ -243,7 +221,15 @@ void LatticeType::Cell_Geteta(long i0, long i1, bool ring, double dP)
 }
 
 
-void getprm(arma::mat &Ascr, std::vector<double> &alpha,
+/**
+ * Get Poincare Map periodic system
+ *
+ * Computes \f$ A * A^T \f$
+ * Returns:
+ *      alpha:
+ *      beta:
+ */
+void ts::getprm(arma::mat &Ascr, std::vector<double> &alpha,
 	    std::vector<double> &beta)
 {
   int k;
@@ -256,7 +242,17 @@ void getprm(arma::mat &Ascr, std::vector<double> &alpha,
 }
 
 
-void dagetprm(ss_vect<tps> &Ascr, std::vector<double> &alpha,
+/**
+ * Get
+ *
+ * Returns: alpha beta
+ *
+ * Todo:
+ *     legacy code? remove
+ *
+ *
+ */
+void ts::dagetprm(ss_vect<tps> &Ascr, std::vector<double> &alpha,
 	      std::vector<double> &beta)
 {
   int k;
@@ -488,7 +484,7 @@ void LatticeType::ttwiss(const std::vector<double> &alpha,
 }
 
 
-double get_curly_H(const double alpha_x, const double beta_x,
+double ts::get_curly_H(const double alpha_x, const double beta_x,
 		   const double eta_x, const double etap_x)
 {
   double curly_H, gamma_x;
@@ -501,7 +497,7 @@ double get_curly_H(const double alpha_x, const double beta_x,
 }
 
 
-void get_dI_eta_5( std::vector<ElemType*> elems, const int k)
+void ts::get_dI_eta_5( std::vector<ElemType*> elems, const int k)
 {
   double       L, K, h, b2, alpha, beta, gamma, psi, eta, etap;
   ss_vect<tps> Id;
@@ -562,6 +558,9 @@ void get_dI_eta_5( std::vector<ElemType*> elems, const int k)
 }
 
 
+/**
+ * Computes Synchrotron integrals
+ */
 void LatticeType::get_I(std::vector<double> &I, const bool prt)
 {
   int j, k;
@@ -616,22 +615,9 @@ void LatticeType::Elem_Pass_Lin(ss_vect<T> ps)
   }
 }
 
+/**
 
-void LatticeType::get_eps_x(double &eps_x, double &sigma_delta, double &U_0,
-			    std::vector<double> &J, std::vector<double> &tau,
-			    std::vector<double> &I, const bool prt)
-{
-  bool         cav, emit;
-  int          k;
-  ss_vect<tps> A;
-
-  const double
-    C_q_scl = 1e18*C_q/sqr(m_e),
-    E_0     = 1e9*conf.Energy,
-    C       = elems[conf.Cell_nLoc]->S,
-    T_0     = C/c0;
-
-  /* Note:
+   Note:
 
         T
        M  J M = J,
@@ -649,6 +635,20 @@ void LatticeType::get_eps_x(double &eps_x, double &sigma_delta, double &U_0,
        H~ = ( A   eta )  A   eta = ( J eta )  A A  ( J eta )
 
   */
+
+void LatticeType::get_eps_x(double &eps_x, double &sigma_delta, double &U_0,
+			    std::vector<double> &J, std::vector<double> &tau,
+			    std::vector<double> &I, const bool prt)
+{
+  bool         cav, emit;
+  int          k;
+  ss_vect<tps> A;
+
+  const double
+    C_q_scl = 1e18*C_q/sqr(m_e),
+    E_0     = 1e9*conf.Energy,
+    C       = elems[conf.Cell_nLoc]->S,
+    T_0     = C/c0;
 
   cav = conf.Cavity_on; emit = conf.emittance;
 
@@ -685,7 +685,7 @@ void LatticeType::get_eps_x(double &eps_x, double &sigma_delta, double &U_0,
 }
 
 
-double get_code(const ConfigType &conf, const ElemType &Cell)
+double ts::get_code(const ConfigType &conf, const ElemType &Cell)
 {
   double    code;
 
@@ -760,11 +760,22 @@ void LatticeType::prt_lat1(const int loc1, const int loc2,
   fclose(outf);
 }
 
-
+/**
+ *
+ * Todo:
+ *   inline function or good choice of default variables
+ */
 void LatticeType::prt_lat2(const std::string &fname, const bool all)
 { prt_lat1(0, conf.Cell_nLoc, fname, all); }
 
 
+/**
+ * Calculates Twiss parameters element by element
+ *
+ * Todo:
+ *    Legacy reduncdancy?
+ *
+ */
 void LatticeType::Cell_Twiss(const long int i0, const long int i1)
 {
   long int            i;
@@ -798,7 +809,10 @@ void LatticeType::Cell_Twiss(const long int i0, const long int i1)
   }
 }
 
-
+/**
+ * Todo:
+ *     Check if that prints out Twiss parameters?
+ */
 void LatticeType::prt_lat3(const int loc1, const int loc2,
 			   const std::string &fname, const bool all,
 			   const int n)
@@ -917,12 +931,22 @@ void LatticeType::prt_lat3(const int loc1, const int loc2,
   fclose(outf);
 }
 
-
+/**
+ * Todo:
+ *     Check if that prints out Twiss parameters?
+ *     Inline function?
+ */
 void LatticeType::prt_lat4(const std::string &fname, const bool all,
 			   const int n)
 { prt_lat3(0, conf.Cell_nLoc, fname, all, n); }
 
 
+/*
+ * Print closed orbit
+ *
+ * Todo:
+ *    Fix version print
+ */
 void LatticeType::prt_cod(const char *file_name, const bool all)
 {
   long      i;
@@ -967,7 +991,9 @@ void LatticeType::prt_cod(const char *file_name, const bool all)
   fclose(outf);
 }
 
-
+/**
+ * Print beam position
+ */
 void LatticeType::prt_beampos(const char *file_name)
 {
   long int k;
@@ -989,7 +1015,10 @@ void LatticeType::prt_beampos(const char *file_name)
 }
 
 
-void write_misalignments(const LatticeType &lat, const char* filename) {
+/**
+ * write current misalginments to file
+ */
+void ts::write_misalignments(const LatticeType &lat, const char* filename) {
   int       j;
   ElemType  *clp;
   MpoleType *M;
@@ -1020,6 +1049,15 @@ void write_misalignments(const LatticeType &lat, const char* filename) {
 }
 
 
+/**
+ * Prints beam size from sigma Matrix
+ *
+ * Args: cnt
+ *    cnt: allows to enumerate the file
+ *
+ * Todo:
+ *    refactor interface: make it a stream operator
+ */
 void LatticeType::prt_beamsizes(const int cnt)
 {
   int   k;
@@ -1049,7 +1087,10 @@ void LatticeType::prt_beamsizes(const int cnt)
   write_misalignments(*this, fname);
 }
 
-
+/**
+ *
+ * Compute chromaticty and print it to file
+ */
 void LatticeType::prt_chrom_lat(void)
 {
   long int  i;
@@ -1125,7 +1166,12 @@ struct LOC_Ring_Fittune
   jmp_buf _JL999;
 };
 
-
+/*
+ * Simply checks boolean variable
+ *
+ * Todo:
+ *     Refactor code that uses this method
+ */
 void LatticeType::checkifstable_(struct LOC_Ring_FitDisp *LINK)
 {
   if (!stable) {
@@ -1155,6 +1201,9 @@ void LatticeType::checkifstable(struct LOC_Ring_Fittune *LINK)
   }
 }
 
+/**
+ *
+ */
 
 void LatticeType::Ring_Fittune(std::vector<double> &nu, double eps,
 			       std::vector<int> &nq, long qf[],
@@ -1254,7 +1303,9 @@ void LatticeType::shiftkp(long Elnum, double dkp)
   M->Mpole_SetPB(lat, elemp->Fnum, elemp->Knum, (long)Sext);
 }
 
-
+/**
+ *
+ */
 void LatticeType::Ring_Fitchrom(std::vector<double> &ksi, double eps,
 				std::vector<int> &ns, long sf[], long sd[],
 				double dkpL, long imax)
@@ -1401,11 +1452,11 @@ _L999:
 #endif
 
 
-void findcod(LatticeType &lat, double dP)
+void ts::findcod(LatticeType &lat, double dP)
 {
   ss_vect<double> vcod;
-  const int       ntrial = 40;  // maximum number of trials for closed orbit
-  const double    tolx = 1e-10;  // numerical precision
+  const int       ntrial = 40;  ///< maximum number of trials for closed orbit
+  const double    tolx = 1e-10;  ///< numerical precision
   int             k, dim = 0;
   long            lastpos;
 
@@ -1442,7 +1493,7 @@ void findcod(LatticeType &lat, double dP)
 }
 
 
-void prt_lin_map(const int n_DOF, const ss_vect<tps> &map)
+void ts::prt_lin_map(const int n_DOF, const ss_vect<tps> &map)
 {
   int i, j;
 
@@ -1460,7 +1511,7 @@ void prt_lin_map(const int n_DOF, const ss_vect<tps> &map)
 }
 
 
-ss_vect<tps> get_A(const std::vector<double> &alpha,
+ss_vect<tps> ts::get_A(const std::vector<double> &alpha,
 		   const std::vector<double> &beta,
 		   const std::vector<double> &eta,
 		   const std::vector<double> &etap)
@@ -1482,7 +1533,7 @@ ss_vect<tps> get_A(const std::vector<double> &alpha,
 }
 
 
-ss_vect<tps> get_A_CS(const int n, const ss_vect<tps> &A,
+ss_vect<tps> ts::get_A_CS(const int n, const ss_vect<tps> &A,
 		      std::vector<double> &dnu)
 {
   int          k;
@@ -1499,7 +1550,7 @@ ss_vect<tps> get_A_CS(const int n, const ss_vect<tps> &A,
 }
 
 
-void get_ab(const ss_vect<tps> &A, std::vector<double> &alpha,
+void ts::get_ab(const ss_vect<tps> &A, std::vector<double> &alpha,
 	    std::vector<double> &beta, std::vector<double> &dnu,
 	    std::vector<double> &eta, std::vector<double> &etap)
 {
@@ -1540,7 +1591,7 @@ void get_twoJ(const int n_DOF, const ss_vect<double> &ps, const ss_vect<tps> &A,
 }
 
 
-void SetKLpar(LatticeType &lat, int Fnum, int Knum, int Order, double kL)
+void ts::SetKLpar(LatticeType &lat, int Fnum, int Knum, int Order, double kL)
 {
   long int  loc;
   MpoleType *M;
@@ -1555,7 +1606,7 @@ void SetKLpar(LatticeType &lat, int Fnum, int Knum, int Order, double kL)
 }
 
 
-double GetKpar(LatticeType &lat, int Fnum, int Knum, int Order)
+double ts::GetKpar(LatticeType &lat, int Fnum, int Knum, int Order)
 {
   long int  loc;
   MpoleType *M;
@@ -1567,7 +1618,7 @@ double GetKpar(LatticeType &lat, int Fnum, int Knum, int Order)
 }
 
 
-void Trac(LatticeType &lat, double x, double px, double y, double py, double dp,
+void ts::Trac(LatticeType &lat, double x, double px, double y, double py, double dp,
 	  double ctau, long nmax, long pos, long &lastn, long &lastpos,
 	  FILE *outf1)
 {
@@ -1819,7 +1870,7 @@ void LatticeType::GetEmittance(const int Fnum, const bool prt)
 }
 
 
-double get_dynap(LatticeType &lat, const double delta, const int n_aper,
+double ts::get_dynap(LatticeType &lat, const double delta, const int n_aper,
 		 const int n_track, const bool cod)
 {
   char   str[max_str];
@@ -1868,7 +1919,7 @@ struct tm* GetTime()
 }
 
 
-void computeFandJ(LatticeType &lat, int n, ss_vect<double> &x, arma::mat &fjac,
+void ts::computeFandJ(LatticeType &lat, int n, ss_vect<double> &x, arma::mat &fjac,
 		  ss_vect<double> &fvect)
 {
   int             i, k;
@@ -1907,7 +1958,7 @@ void computeFandJ(LatticeType &lat, int n, ss_vect<double> &x, arma::mat &fjac,
 }
 
 
-int Newton_Raphson(LatticeType &lat, int n, ss_vect<double> &x, int ntrial,
+int ts::Newton_Raphson(LatticeType &lat, int n, ss_vect<double> &x, int ntrial,
 		   double tolx)
 {
   int             k, i;
@@ -1958,7 +2009,7 @@ int Newton_Raphson(LatticeType &lat, int n, ss_vect<double> &x, int ntrial,
 }
 
 
-void get_dnu(const int n, const ss_vect<tps> &A, std::vector<double> &dnu)
+void ts::get_dnu(const int n, const ss_vect<tps> &A, std::vector<double> &dnu)
 {
   int k;
 
@@ -1974,7 +2025,7 @@ void get_dnu(const int n, const ss_vect<tps> &A, std::vector<double> &dnu)
 }
 
 
-ss_vect<tps> tp_S(const int n_DOF, const ss_vect<tps> &A)
+ss_vect<tps> ts::tp_S(const int n_DOF, const ss_vect<tps> &A)
 {
   int          j;
   long int     jj[ps_dim];
@@ -1989,7 +2040,7 @@ ss_vect<tps> tp_S(const int n_DOF, const ss_vect<tps> &A)
 }
 
 
-void dynap(FILE *fp, LatticeType &lat, double r, const double delta,
+void ts::dynap(FILE *fp, LatticeType &lat, double r, const double delta,
 	   const double eps, const int npoint, const int nturn, double x[],
 	   double y[], const bool floqs, const bool cod, const bool print)
 
@@ -2060,7 +2111,7 @@ void dynap(FILE *fp, LatticeType &lat, double r, const double delta,
 }
 
 
-double get_aper(int n, double x[], double y[])
+double ts::get_aper(int n, double x[], double y[])
 {
   int     i;
   double  A;
@@ -2076,8 +2127,10 @@ double get_aper(int n, double x[], double y[])
   return(A);
 }
 
-
-ss_vect<tps> get_S(const int n_DOF)
+/**
+ * Todo: n_DOF: could it be derived from ss_vect thats allocated internally ?
+ */
+ss_vect<tps> ts::get_S(const int n_DOF)
 {
   int          j;
   ss_vect<tps> S;
@@ -2115,7 +2168,7 @@ char *asctime2(const struct tm *timeptr)
 
 
 #define nfloq     4
-bool chk_if_lost(LatticeType &lat, double x0, double y0, double delta,
+bool ts::chk_if_lost(LatticeType &lat, double x0, double y0, double delta,
 		 long int nturn, bool floqs)
 {
   long int        i, lastn, lastpos;
@@ -2155,7 +2208,7 @@ bool chk_if_lost(LatticeType &lat, double x0, double y0, double delta,
 #undef nfloq
 
 
-void getdynap(LatticeType &lat, double &r, double phi, double delta, double eps,
+void ts::getdynap(LatticeType &lat, double &r, double phi, double delta, double eps,
 	      int nturn, bool floqs)
 {
   /* Determine dynamical aperture by binary search. */

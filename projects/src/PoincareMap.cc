@@ -13,7 +13,6 @@
 
 #include <random>
 
-
 const int n_DOF = 3;
 
 struct PoincareMapType;
@@ -262,9 +261,11 @@ void Kronecker_prod(const int n, double **A, double **B, double **C)
 	  C[(i-1)*n+k][(j-1)*n+l] = A[i][j]*B[k][l];
 }
 
-
 ss_vect<tps> get_emit(ss_vect<tps> &M, ss_vect<tps> &D)
 {
+  assert(0);
+#if 0
+
   int          i, j;
   double       *D_vec, *Sigma_vec, **M_mat, **M_M_mat, **Id, **MmI, **MmI_inv;
   ss_vect<tps> Sigma;
@@ -304,8 +305,9 @@ ss_vect<tps> get_emit(ss_vect<tps> &M, ss_vect<tps> &D)
   free_dmatrix(MmI_inv, 1, mat_vec_dim, 1, mat_vec_dim);
 
   return Sigma;
-}
+  #endif
 
+}
 
 ss_vect<tps> GetSigma(const double C, const double tau[], const double D[],
 	      ss_vect<tps> &A)
@@ -470,8 +472,10 @@ void PoincareMapType::GetM_cav(void)
 {
   const int loc = Elem_GetPos(ElemIndex("cav"), 1);
 
-  V_RF = Cell[loc].Elem.C->Pvolt;
-  f_RF = Cell[loc].Elem.C->Pfreq;
+  auto cav = dynamic_cast<CavityType *>(Cell[loc]);
+  assert(cav);
+  V_RF = cav->Pvolt;
+  f_RF = cav->Pfreq;
   phi0 = asin(delta_cav*E0/V_RF);
 
   M_cav.identity();
@@ -544,7 +548,7 @@ ss_vect<tps> Mat2Map(const int n, double **M)
   return map;
 }
 
-
+#if 0
 void PoincareMapType::GetM_Chol_tp(void)
 {
   int          j, k, j1, k1;
@@ -582,7 +586,7 @@ void PoincareMapType::GetM_Chol_tp(void)
   free_dvector(diag, 1, n); free_dmatrix(d1, 1, n, 1, n);
   free_dmatrix(d2, 1, n, 1, n);
 }
-
+#endif
 
 void PoincareMapType::GetMap(void)
 {
@@ -605,7 +609,7 @@ void PoincareMapType::GetM(const bool cav, const bool rad)
 {
   cav_on = cav; rad_on = rad;
 
-  C = Cell[globval.Cell_nLoc].S; E0 = 1e9*globval.Energy;
+  C = Cell[globval.Cell_nLoc]->S; E0 = 1e9*globval.Energy;
 
   GetMap();
   GetA(n_DOF, C, M_num, A, M_Fl, tau);

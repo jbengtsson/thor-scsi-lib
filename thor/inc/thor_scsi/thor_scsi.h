@@ -1,10 +1,14 @@
 #ifndef _THOR_SCSI_H_
 #define _THOR_SCSI_H_ 1
 
-#include <thor_scsi/config.h>
 #include <thor_scsi/version.h>
 #include <thor_scsi/exceptions.h>
+#include <thor_scsi/core/config.h>
 #include <thor_scsi/core/core.h>
+#include <thor_scsi/core/elements.h>
+#include <thor_scsi/core/lattice.h>
+#include <thor_scsi/legacy/legacy.h>
+#include <thor_scsi/tweak/tweak.h>
 
 #endif /* _THOR_SCSI_H_ */
 /*

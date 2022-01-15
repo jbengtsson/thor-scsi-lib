@@ -8,6 +8,8 @@
 #include <thor_scsi/core/elements_basis.h>
 #include <thor_scsi/core/elements.h>
 #include <thor_scsi/core/lattice.h>
+#include <thor_scsi/core/elements_filter.h>
+//#include <thor_scsi/core/lattice_filter.h>
 
 namespace thor_scsi {
   namespace core {

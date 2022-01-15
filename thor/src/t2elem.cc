@@ -176,6 +176,21 @@ void splin2_(const double x1a[], const double x2a[], double **ya, double **y2a,
 #endif
 
 
+/**
+ *
+ * Implementation of the Euclidan Group
+ *
+ * x Global to local: electron in the tunnel from global orbit to local element coordinate system
+ *
+ * Args:
+ *        ps: phase space
+ *        S:  translation
+ *        R:  rotation (matrix)
+ *        c0:
+ *        c1:
+ *        s1
+ *
+ */
 template<typename T>
 void GtoL(ss_vect<T> &ps, std::vector<double> &S, std::vector<double> &R,
 	  const double c0, const double c1, const double s1)
@@ -198,7 +213,10 @@ void GtoL(ss_vect<T> &ps, std::vector<double> &S, std::vector<double> &R,
   // Phase space vector is now in magnet's local coordinates.
 }
 
-
+/**
+ *  Local to Global: inverse of GtoL.
+ *  Look there for the parameters
+ */
 template<typename T>
 void LtoG(ss_vect<T> &ps, std::vector<double> &S, std::vector<double> &R,
 	  double c0, double c1, double s1)
@@ -530,7 +548,7 @@ void MpoleType::Mpole_Pass(ConfigType &conf, ss_vect<T> &ps)
     // Needs A^-1.
     curly_dH_x = 0e0;
     for (i = 0; i <= 5; i++)
-      dI[i] = 0e0;
+      /* Synchrotron integrals */ dI[i] = 0e0;
   }
 
   switch (Pmethod) {

@@ -47,7 +47,7 @@ tst_it_SOURCES            = tst_it.cc
 
 # For MacBook: use local installation of gcc; vs. LLVM.
 
-LIBS	 = -L$(TRACY_LIB)/tracy/lib -ltracy \
+LIBS	 = -L$(THOR_LIB)/lib -lthor -ltpsa \
            -L/usr/local/Cellar/gcc/11.1.0_1/lib/gcc/11 \
            -lstdc++ \
            -L/usr/local/Cellar/gsl/2.7/lib \
@@ -56,7 +56,7 @@ LIBS	 = -L$(TRACY_LIB)/tracy/lib -ltracy \
            -larmadillo
 
 # C Preprocessor flags.
-AM_CPPFLAGS = -I$(TRACY_LIB)/tracy/inc -I$(NUM_REC)/inc \
+AM_CPPFLAGS = -I$(THOR_LIB)/thor/inc  \
               -I/usr/local/Cellar/gsl/2.7/include \
               -I/usr/local/Cellar/armadillo/10.6.1/include \
               -I/usr/local/Cellar/pybind11/2.6.2/include \
@@ -67,3 +67,6 @@ AM_CPPFLAGS = -I$(TRACY_LIB)/tracy/inc -I$(NUM_REC)/inc \
 # C++ flags.
 AM_CXXFLAGS = -g -O0 -Wall -Wno-error=all -std=c++14 \
               -D_GLIBCXX_DEBUG -D_GLIBCXX_DEBUG_PEDANTIC
+# Not clean organisation
+# Files need to be reorganised any way
+AM_CXXFLAGS += -I$(THOR_LIB)/include/thor_scsi/inc/

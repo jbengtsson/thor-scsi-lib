@@ -6,33 +6,34 @@
 namespace thor_scsi {
 	namespace elements {
 
-	  // LEGO lattice structure.
+	  ///< LEGO lattice structure.
 	  class CellType {
 	  public:
 	    int
-	      Fnum,                      // Element Family #.
-	      Knum;                      // Element Kid #.
+	      Fnum,                      ///< Element Family #.
+	      Knum;                      ///< Element Kid #.
 	    double
-	      S,                         // Position in the ring.
-	      curly_dH_x;                // Contribution to curly_H_x.
+	      S,                         ///< position in the ring. S coordinate of the desgin orbit.
+	      curly_dH_x;                ///< Contribution to curly_H_x.
 	    std::vector<double>
-	      dI                         // Contribution to I[1..5].
+	      dI                         ///< Contribution to I[1..5].
 		{0e0, 0e0, 0e0, 0e0, 0e0, 0e0},
-	      dS{0e0, 0e0},              // Transverse displacement.
-              dT{0e0, 0e0},              // dT = (cos(dT), sin(dT)).
-	      Eta{0e0, 0e0},             // Eta & eta' (redundant).
+	      dS{0e0, 0e0},              ///< Transverse displacement.
+              dT{0e0, 0e0},              ///< dT = (cos(dT), sin(dT)).
+	      Eta{0e0, 0e0},             ///< Eta & eta' (redundant).
 	      Etap{0e0, 0e0},
-	      Alpha{0e0, 0e0},           // Twiss parameters (redundant).
+	      Alpha{0e0, 0e0},           ///< Twiss parameters (redundant).
 	      Beta{0e0, 0e0},
 	      Nu{0e0, 0e0},
-	     BeamPos                    // Last position of the beam this cell.
+	     BeamPos                    ///< Last position of the beam this cell.
              {0e0, 0e0, 0e0, 0e0, 0e0, 0e0, 0e0};
 
+		  /* todo: review if these should be  arma arrays */
 	     std::vector< std::vector<double> >
-	       maxampl                    // Hor & ver physical aperture.
+	       maxampl                    ///< Hor & ver physical aperture.
 		 {{0e0, 0e0},
 		     {0e0, 0e0}},
-	       A                          // Floquet space to phase space transformation.
+	       A                          ///< Floquet space to phase space transformation.
       {{0e0, 0e0, 0e0, 0e0, 0e0, 0e0, 0e0},
        {0e0, 0e0, 0e0, 0e0, 0e0, 0e0, 0e0},
        {0e0, 0e0, 0e0, 0e0, 0e0, 0e0, 0e0},
@@ -40,7 +41,7 @@ namespace thor_scsi {
        {0e0, 0e0, 0e0, 0e0, 0e0, 0e0, 0e0},
        {0e0, 0e0, 0e0, 0e0, 0e0, 0e0, 0e0},
        {0e0, 0e0, 0e0, 0e0, 0e0, 0e0, 0e0}},
-		 sigma                      // sigma matrix (redundant).
+		 sigma                      ///< sigma matrix (redundant).
       {{0e0, 0e0, 0e0, 0e0, 0e0, 0e0},
        {0e0, 0e0, 0e0, 0e0, 0e0, 0e0},
        {0e0, 0e0, 0e0, 0e0, 0e0, 0e0},
@@ -48,22 +49,40 @@ namespace thor_scsi {
        {0e0, 0e0, 0e0, 0e0, 0e0, 0e0},
        {0e0, 0e0, 0e0, 0e0, 0e0, 0e0}};
 		 CellType
-		   *next_ptr;               // pointer to next cell (for tracking).
+		   *next_ptr;               ///< pointer to next cell (for tracking).
 
 		 bool trace = false;
 
 		 inline void setTraceFlag(bool flag){
 		   this->trace = flag;
 		 }
+		  /**
+		   * Euclidian Group: element 0, actually used value
+		   * \f$ rms \cdot random number \f$
+		   * horizontal coordinate
+		   */
 		 inline const double getDx(void){
 		   return this->dS[0];
 		 }
+		  /**
+		   * Euclidian Group: element 0, actually used value
+		   * \f$ rms \cdot random number \f$
+		   * vertical coordinate
+		   */
 		 inline const double getDy(void){
 		   return this->dS[1];
 		 }
+		  /**
+		   * Warning: value should be typically applied to rms and random value
+		   *          be aware that it is overriden
+		   */
 		 inline void setDx(double value){
 		   this->dS[0] = value;
 		 }
+		  /**
+		   * Warning: value should be typically applied to rms and random value
+		   *          be aware that it is overriden
+		   */
 		 inline void setDy(double value){
 		   this->dS[1] = value;
 		 }
