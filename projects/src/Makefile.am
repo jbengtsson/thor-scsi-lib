@@ -47,7 +47,7 @@ tst_it_SOURCES            = tst_it.cc
 
 # For MacBook: use local installation of gcc; vs. LLVM.
 
-LIBS	 = -L$(THOR_LIB)/thor/lib -lthor -ltpsa \
+LIBS	 = -L$(THOR_LIB)/lib -lthor -ltpsa \
            -L/usr/local/Cellar/gcc/11.1.0_1/lib/gcc/11 \
            -lstdc++ \
            -L/usr/local/Cellar/gsl/2.7/lib \
@@ -67,4 +67,6 @@ AM_CPPFLAGS = -I$(THOR_LIB)/thor/inc  \
 # C++ flags.
 AM_CXXFLAGS = -g -O0 -Wall -Wno-error=all -std=c++14 \
               -D_GLIBCXX_DEBUG -D_GLIBCXX_DEBUG_PEDANTIC
-AM_CXXFLAGS += -I$(THOR_LIB)/thor/inc
+# Not clean organisation
+# Files need to be reorganised any way
+AM_CXXFLAGS += -I$(THOR_LIB)/include/thor_scsi/inc/

@@ -60,13 +60,18 @@ void get_max_bn(const int n, int &n_bn, double &bn_max)
   }
 }
 
-// What is this function precisly supposed to do ...
-// Push one sextupole setting forward ...
-// Have it push bn value to field value ?
+/**
+ * What is this function precisly supposed to do ...
+ * Push one sextupole setting forward ...
+ * pushes from
+ *   familiy k to next k + 1
+ * currently implemented: propagete k from first setxupole to all others
+ * Should start with first family
+ */
 void set_sxt(void)
 {
   double b_n;
-
+  bool extracted = false;
 #if 0
   int    k;
   for (k = 0; k < globval.Elem_nFam; k++){
@@ -77,9 +82,19 @@ void set_sxt(void)
       set_bn_design_fam(k+1, Sext, b_n, 0e0);
     }
 #endif
+
     for(auto a_mpole : filter_sextupoles(Cell)){
-      b_n = a_mpole->PBpar[Sext+HOMmax];
-      set_bn_design_fam(a_mpole, Sext, b_n, 0e0);
+      if(!extracted){
+	b_n = a_mpole->PBpar[Sext+HOMmax];
+	extracted = true;
+      } else {
+	a_mpole->PBpar[Sext+HOMmax] = b_n;
+	// set a_n to zero.
+	a_mpole->PBpar[-Sext+HOMmax] = 0;
+	// trigger update of field
+	a_mpole->SetPB(Sext);
+	a_mpole->SetPB(-Sext);
+      }
     }
 }
 

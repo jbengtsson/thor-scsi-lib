@@ -12,7 +12,8 @@ namespace tsc = thor_scsi::core;
 ss_vect<tps> putlinmat(const int nv, const std::vector<std::vector<double>>  &mat){
   ss_vect<tps>  tmp = stlmattomap(mat);
   arma::mat amat = maptomat(tmp);
-  return putlinmat(nv, amat);
+  throw thor_scsi::NotImplemented();
+  // return putlinmat(nv, amat);
 }
 //#define putlinmat(nv, mat) putlinmat_compat(nv, mat)
 
@@ -30,6 +31,9 @@ ss_vect<tps> putlinmat(const int nv, const std::vector<std::vector<double>>  &ma
 /*
  * Warnint: no_tps is now defined in the TPSA library as constant
  */
+#if (NO != no_tps)
+#warning "Code requires to be fixed that no_tps is now a fixed number
+#endif
 // int no_tps = NO;
 
 
@@ -1289,8 +1293,12 @@ void get_disp(void)
   }
 
   globval.Cavity_on = !false; globval.radiation = false;
+#if 0
   track("track.out", A[x_], A[px_], A[y_], A[py_], A[delta_], 2000,
 	lastn, lastpos,	0, 0*f_rf);
+#else
+#warning "Tracking not called!"
+#endif
 
   if (!false) {
     // Standard Map.
@@ -1537,11 +1545,13 @@ void prt_M_lin(void)
 {
   int k;
 
+  assert(0);
+
   for(auto mpole : filter_mpole_types(Cell)){
     printf("%10s:", mpole->Name.c_str());
     // Which map is that ?
     // could not find it in tracy 3
-    prt_lin_map(3, mpole->M_lin);
+    // prt_lin_map(3, mpole->M_lin);
   }
 }
 
@@ -1775,6 +1785,10 @@ int main(int argc, char *argv[])
 
   globval.mat_meth = !false;
 
+  if(argc <= 1){
+    std::cerr << "You must specifiy a lattice file as first argument!" << std::endl;
+    exit(1);
+  }
   if (true)
     Read_Lattice(argv[1]);
   else
@@ -2015,23 +2029,23 @@ int main(int argc, char *argv[])
   }
 
   if (false) {
-    const double
-      alpha0[] = { 0.91959,  3.19580},
-      beta0[]  = { 1.27047, 17.77859},
-      eta0[]   = { 0.0,      0.0},
-      etap0[]  = { 0.0,      0.0},
-      alpha1[] = { 0.81112,  0.45975},
-      beta1[]  = { 4.56189,  2.62113},
-      eta1[]   = { 0.07297,  0.0},
-      etap1[]  = {-0.01063,  0.0};
+    const Vector2
+      alpha0 = { 0.91959,  3.19580},
+      beta0  = { 1.27047, 17.77859},
+      eta0   = { 0.0,      0.0},
+      etap0  = { 0.0,      0.0},
+      alpha1 = { 0.81112,  0.45975},
+      beta1  = { 4.56189,  2.62113},
+      eta1   = { 0.07297,  0.0},
+      etap1  = {-0.01063,  0.0};
 
     auto a_map = dynamic_cast<MapType *>(Cell[ElemIndex("ps_per")]);
-    set_map_per(a_map, alpha1, beta1, eta1, etap1);
+    set_map_per(a_map, alpha1.data(), beta1.data(), eta1.data(), etap1.data());
     if (!true) {
       Ring_GetTwiss(true, 0e0); printglob();
-    } else
+    } else {
       ttwiss(alpha0, beta0, eta0, etap0, 0e0);
-
+    }
     prt_lat("linlat1.out", globval.bpm, true);
     prt_lat("linlat.out", globval.bpm, true, 10);
 
