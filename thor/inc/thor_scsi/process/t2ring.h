@@ -16,6 +16,7 @@
 #include <tps/tps_type.h>
 #include <vector>
 
+namespace thor_scsi {
 // Computation result files
 const char beam_envelope_file[] = "beam_envelope";
 
@@ -170,5 +171,5 @@ ss_vect<tps> get_S(const int n_DOF);
 
 void getdynap(thor_scsi::core::LatticeType &lat, double &r, double phi, double delta, double eps,
 	      int nturn, bool floqs);
-
+}
 #endif /* THOR_SCSI_PROCESS_T2RING_H */

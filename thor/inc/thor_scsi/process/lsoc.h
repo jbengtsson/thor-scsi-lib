@@ -13,7 +13,7 @@
 
 #include <thor_scsi/core/lattice.h>
 #include <vector>
-
+namespace thor_scsi {
 extern int              n_bpm_[2], n_corr_[2];
 extern std::vector<int> bpms_[2], corrs_[2];
 
@@ -39,7 +39,7 @@ void gtcmat(thor_scsi::core::LatticeType &lat, const int n_bpm, const std::vecto
 	    const bool svd);
 
 void lstc(thor_scsi::core::LatticeType &lat, const int plane, const double scl);
-
+}
 #endif /* _THOR_SCSI_PROCESS_LSOC_H_ */
 /*
  * Local Variables:

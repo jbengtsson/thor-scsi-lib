@@ -11,11 +11,7 @@
 //
 // Johan Bengtsson 29/03/20.
 
-#include <iostream>
-#include <iomanip>
 #include <random>
-#include <tps/ss_vect.h>
-#include <tps/tps_type.h>
 
 const int n_DOF = 3;
 
@@ -116,7 +112,7 @@ ss_vect<tps> TpMap(ss_vect<tps> A)
 }
 
 
-void PrtVec(const std::string &str, ss_vect<double> vec)
+void PrtVec(const string &str, ss_vect<double> vec)
 {
   int k;
 
@@ -129,7 +125,7 @@ void PrtVec(const std::string &str, ss_vect<double> vec)
 }
 
 
-void PrtMap(const std::string &str, ss_vect<tps> map)
+void PrtMap(const string &str, ss_vect<tps> map)
 {
   int i, j;
 
@@ -144,7 +140,7 @@ void PrtMap(const std::string &str, ss_vect<tps> map)
 }
 
 
-void prt_vec(const std::string &str, const int n, double *a)
+void prt_vec(const string &str, const int n, double *a)
 {
   int i;
 
@@ -265,9 +261,11 @@ void Kronecker_prod(const int n, double **A, double **B, double **C)
 	  C[(i-1)*n+k][(j-1)*n+l] = A[i][j]*B[k][l];
 }
 
-
 ss_vect<tps> get_emit(ss_vect<tps> &M, ss_vect<tps> &D)
 {
+  assert(0);
+#if 0
+
   int          i, j;
   double       *D_vec, *Sigma_vec, **M_mat, **M_M_mat, **Id, **MmI, **MmI_inv;
   ss_vect<tps> Sigma;
@@ -307,8 +305,9 @@ ss_vect<tps> get_emit(ss_vect<tps> &M, ss_vect<tps> &D)
   free_dmatrix(MmI_inv, 1, mat_vec_dim, 1, mat_vec_dim);
 
   return Sigma;
-}
+  #endif
 
+}
 
 ss_vect<tps> GetSigma(const double C, const double tau[], const double D[],
 	      ss_vect<tps> &A)
@@ -473,8 +472,10 @@ void PoincareMapType::GetM_cav(void)
 {
   const int loc = Elem_GetPos(ElemIndex("cav"), 1);
 
-  V_RF = Cell[loc].Elem.C->Pvolt;
-  f_RF = Cell[loc].Elem.C->Pfreq;
+  auto cav = dynamic_cast<CavityType *>(Cell[loc]);
+  assert(cav);
+  V_RF = cav->Pvolt;
+  f_RF = cav->Pfreq;
   phi0 = asin(delta_cav*E0/V_RF);
 
   M_cav.identity();
@@ -547,7 +548,7 @@ ss_vect<tps> Mat2Map(const int n, double **M)
   return map;
 }
 
-
+#if 0
 void PoincareMapType::GetM_Chol_tp(void)
 {
   int          j, k, j1, k1;
@@ -585,7 +586,7 @@ void PoincareMapType::GetM_Chol_tp(void)
   free_dvector(diag, 1, n); free_dmatrix(d1, 1, n, 1, n);
   free_dmatrix(d2, 1, n, 1, n);
 }
-
+#endif
 
 void PoincareMapType::GetMap(void)
 {
@@ -608,7 +609,7 @@ void PoincareMapType::GetM(const bool cav, const bool rad)
 {
   cav_on = cav; rad_on = rad;
 
-  C = Cell[globval.Cell_nLoc].S; E0 = 1e9*globval.Energy;
+  C = Cell[globval.Cell_nLoc]->S; E0 = 1e9*globval.Energy;
 
   GetMap();
   GetA(n_DOF, C, M_num, A, M_Fl, tau);
@@ -669,7 +670,7 @@ void PoincareMapType::propagate(const int n, BeamType &beam) const
   std::normal_distribution<double> norm_ranf(0e0, 1e0);
 
   const int    n_prt     = 10;
-  const std::string file_name = "propagate.out";
+  const string file_name = "propagate.out";
 
   outf = file_write(file_name.c_str());
 
@@ -707,7 +708,7 @@ void PoincareMapType::propagate(const int n, ss_vect<tps> &Sigma) const
   FILE            *outf;
 
   const int          n_prt     = 1;
-  const std::string       file_name = "propagate.out";
+  const string       file_name = "propagate.out";
   const ss_vect<tps> M_Chol    = TpMap(M_Chol_tp);
 
   std::default_random_engine       rand;
@@ -786,8 +787,8 @@ void PoincareMapType::print(void)
   printf("D          = [%11.5e, %11.5e, %11.5e]\n", D[X_], D[Y_], D[Z_]);
   printf("eps        = [%11.5e, %11.5e, %11.5e]\n", eps[X_], eps[Y_], eps[Z_]);
 
-  std::cout << std::scientific << std::setprecision(6) << std::endl
-	    << "COD:" << std::endl << std::setw(14) << ps_cod << std::endl;
+  cout << scientific << setprecision(6) << "\nCOD:\n" << setw(14) << ps_cod
+       << "\n";
 
   PrtMap("\nM_num (input map):", M_num);
   printf("\nDet{M_num}-1 = %10.3e\n", DetMap(M_num)-1e0);
@@ -989,10 +990,10 @@ void chk_map(const PoincareMapType &map)
   PrtMap("\nInv(M_delta)*Inv(M_cav)*Inv(M_tau)*M:", M);
   eta = GetEta(M);
   eta1 = eta; eta1[delta_] = 1e0;
-  std::cout << std::scientific << std::setprecision(12)
-	    << "\neta:  "  << std::endl << std::setw(20) << eta1 << std::endl;
-  std::cout << std::scientific << std::setprecision(12)
-	    << "M*eta:" << std::endl << std::setw(20) << (M*eta1).cst() << std::endl;
+  cout << scientific << setprecision(12)
+       << "\neta:  \n" << setw(20) << eta1 << "\n";
+  cout << scientific << setprecision(12)
+       << "M*eta:\n" << setw(20) << (M*eta1).cst() << "\n";
   A0 = GetA0(eta);
   M = Inv(A0)*M*A0;
   PrtMap("\nInv(A0)*M*A0:", M);

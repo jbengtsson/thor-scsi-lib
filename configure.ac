@@ -1,7 +1,7 @@
 # C macro processor.
 AC_CONFIG_MACRO_DIRS([m4])
 AC_CONFIG_SRCDIR([thor/src/t2elem.cc])
-AC_INIT([Thor],[2.0])
+AC_INIT([thor_scsi],[2.0])
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_SRCDIR(thor/src/t2elem.cc)
 

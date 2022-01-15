@@ -22,14 +22,14 @@ using namespace thor_scsi::core;
 using namespace thor_scsi;
 
 static bool       first_h[] = {true, true}, first_v[] = {true, true};
-int               n_bpm_[2], n_corr_[2];
-std::vector<int>  bpms_[2], corrs_[2];
+int               thor_scsi::n_bpm_[2], thor_scsi::n_corr_[2];
+std::vector<int>  thor_scsi::bpms_[2], thor_scsi::corrs_[2];
 static gsl_vector *w_lsoc[2], *w_lstc[2];
 static gsl_matrix *A_lsoc[2], *U_lsoc[2], *V_lsoc[2],
                   *A_lstc[2], *U_lstc[2], *V_lstc[2];
 
 
-void zero_trims(LatticeType &lat)
+void thor_scsi::zero_trims(LatticeType &lat)
 {
   int      j, k;
   long int loc;
@@ -43,7 +43,7 @@ void zero_trims(LatticeType &lat)
 }
 
 
-void prt_gcmat(const int plane)
+void thor_scsi::prt_gcmat(const int plane)
 {
   int  i, j;
   FILE *outf = NULL;
@@ -99,7 +99,7 @@ void prt_gcmat(const int plane)
 }
 
 
-void gcmat(LatticeType &lat, const int plane)
+void thor_scsi::gcmat(LatticeType &lat, const int plane)
 {
   /* Get orbit response matrix
 
@@ -154,7 +154,7 @@ void gcmat(LatticeType &lat, const int plane)
 }
 
 
-void gcmat(LatticeType &lat, const int n_bpm, const std::vector<int> bpms,
+void thor_scsi::gcmat(LatticeType &lat, const int n_bpm, const std::vector<int> bpms,
 	   const int n_corr, const std::vector<int> corrs, const int plane,
 	   const bool svd)
 {
@@ -191,7 +191,7 @@ void gcmat(LatticeType &lat, const int n_bpm, const std::vector<int> bpms,
 }
 
 
-void gcmat(LatticeType &lat, const int bpm, const int corr,
+void thor_scsi::gcmat(LatticeType &lat, const int bpm, const int corr,
 	   const int plane)
 {
   int              i;
@@ -213,7 +213,7 @@ void gcmat(LatticeType &lat, const int bpm, const int corr,
 }
 
 
-void lsoc(LatticeType &lat, const int plane, const double scl)
+void thor_scsi::lsoc(LatticeType &lat, const int plane, const double scl)
 {
   int      j;
   long int loc;
@@ -245,7 +245,7 @@ void lsoc(LatticeType &lat, const int plane, const double scl)
 }
 
 
-void gtcmat(LatticeType &lat, const int plane)
+void thor_scsi::gtcmat(LatticeType &lat, const int plane)
 {
   /* Get trajectory response matrix
 
@@ -296,7 +296,7 @@ void gtcmat(LatticeType &lat, const int plane)
 }
 
 
-void gtcmat(LatticeType &lat, const int n_bpm, const std::vector<int> bpms,
+void thor_scsi::gtcmat(LatticeType &lat, const int n_bpm, const std::vector<int> bpms,
 	    const int n_corr, const std::vector<int> corrs, const int plane,
 	    const bool svd)
 {
@@ -333,7 +333,7 @@ void gtcmat(LatticeType &lat, const int n_bpm, const std::vector<int> bpms,
 }
 
 
-void lstc(LatticeType &lat, const int plane, const double scl)
+void thor_scsi::lstc(LatticeType &lat, const int plane, const double scl)
 {
   int      j;
   long int loc;
