@@ -1,6 +1,6 @@
 #ifndef _TPS_EXTERNS_H_
 #define _TPS_EXTERNS_H_ 1
-/*
+/**
  * Why was that required in the first place ?
  *
  * Should it be reimplemented as a config module

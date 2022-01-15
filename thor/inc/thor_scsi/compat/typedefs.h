@@ -6,6 +6,7 @@
 #include <tps/ss_vect.h>
 #include <tps/tpsa_lin.h>
 #include <thor_scsi/compat/constants.h>
+#include <thor_scsi/exceptions.h>
 
 namespace thor_scsi {
 	namespace compat {
@@ -15,14 +16,21 @@ namespace thor_scsi {
 		typedef std::array<double, 2> Vector2;
 
 		/// Warning: requires to be implemented
-		void _prtmat(const int n, const Matrix &A);
+		inline void _prtmat(const int n, const Matrix &A){
+			throw thor_scsi::NotImplemented();
+		}
 
 		inline void prtmat(const int n, const std::vector< std::vector<double> > &stlmat){
 			_prtmat(n, stlmattomat(stlmat));
 		}
+		inline void TpMat(const int n, Matrix &A){
+			throw thor_scsi::NotImplemented();
+		}
 
-		void TpMat(const int n, Matrix &A);
-		double DetMat(const int n, const Matrix &A_);
+		inline double DetMat(const int n, const Matrix &A_){
+			throw thor_scsi::NotImplemented();
+		}
+
 		inline double DetMat(const int n, const std::vector< std::vector<double> > &stlmat){
 			return DetMat(n, stlmattomat(stlmat));
 		}

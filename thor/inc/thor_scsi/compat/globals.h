@@ -12,6 +12,7 @@
 #include <thor_scsi/obsolete/nsls-ii_lib.h>
 #include <thor_scsi/tweak/errors.h>
 #include <thor_scsi/tweak/param.h>
+#include <thor_scsi/exceptions.h>
 
 namespace thor_scsi {
 	namespace compat {
@@ -58,8 +59,16 @@ namespace thor_scsi {
 			return get_code(globval, *Cell);
 		}
 
+		/**
+		 * Todo: reimplement
+		 *
+		 * Implemented in the nsls_lib:
+		 *
+		 * Functionality should be in lattice or family class:
+		 */
 		inline void no_sxt(void){
-			thor_scsi::no_sxt(lat);
+			throw thor_scsi::NotImplemented();
+			// thor_scsi::no_sxt(lat);
 		}
 
 		inline void printglob(void){
@@ -71,8 +80,16 @@ namespace thor_scsi {
 			thor_scsi::misalign_rms_type(lat, type, dx_rms, dy_rms, dr_rms, new_rnd);
 		}
 
+		/**
+		 * Todo: reimplement
+		 *
+		 * Implemented in the nsls_lib?
+		 *
+		 * Functionality should be in lattice or family class:
+		 */
 		inline bool orb_corr(const int n_orbit){
-			return thor_scsi::orb_corr(lat, n_orbit);
+			throw thor_scsi::NotImplemented();
+			// return thor_scsi::orb_corr(lat, n_orbit);
 		}
 
 		/**
@@ -81,6 +98,7 @@ namespace thor_scsi {
 		 */
 		inline void Read_Lattice(const std::string &filename, bool verbose=true){
 			lat.Lat_Read(filename, verbose);
+			lat.Lat_Init();
 		}
 
 		inline void rdmfile(const std::string &filename){
@@ -111,6 +129,25 @@ namespace thor_scsi {
 			return thor_scsi::get_dynap(lat, delta, n_aper, n_track, cod);
 		}
 
+		/*
+		inline void ttwiss(const std::vector<double> &alpha, const std::vector<double> &beta,
+			    const std::vector<double> &eta, const std::vector<double> &etap,
+			    const double dp){
+			lat.ttwiss(alpha, beta, eta, etap, dp);
+		}
+		*/
+		inline void ttwiss(const Vector2 &alpha, const Vector2 &beta,
+			    const Vector2 &eta, const Vector2 &etap,
+			    const double dp){
+			const std::vector<double>
+				av(alpha.begin(), alpha.end()),
+				bv(beta.begin(), beta.end()),
+				ev(eta.begin(), eta.end()),
+				epv(etap.begin(), etap.end());
+			lat.ttwiss(av, bv, ev, epv, dp);
+		}
+
+
 		inline void prt_chrom_lat(void){
 			lat.prt_chrom_lat();
 		}
@@ -120,6 +157,8 @@ namespace thor_scsi {
 		inline void prt_lat(std::string fname, const int Fnum, const bool all, const int n){
 			assert(0);
 		}
+
+
 	}; /* compat */
 }; /* thor_scsi */
 #endif /* _THOR_SCSI_COMPAT_GLOBALS_H_ */

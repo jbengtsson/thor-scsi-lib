@@ -143,8 +143,8 @@ namespace thor_scsi {
 			 */
 			void SetdS(void);
 			void SetdT(void);
-			/*
-			 *
+			/**
+			 * triggers calculation of member PB from members PBrms, PBrnd, PBsys
 			 */
 			void SetPB(const int n);
 			double GetdT(void);

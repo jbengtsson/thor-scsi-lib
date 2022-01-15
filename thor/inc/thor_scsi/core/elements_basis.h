@@ -44,6 +44,10 @@ namespace thor_scsi {
 			 */
 			virtual ElemType* Elem_Init(const thor_scsi::core::ConfigType &conf, const bool reverse)
 				{ return NULL; };
+
+			/**
+			 * Todo: implement taking stream or as ostream operator ....
+			 */
 			virtual void print(const std::string &) {};
 
 			virtual void SetdS(void) {}; ///< Eucledian Group: dx, dy
@@ -76,8 +80,8 @@ namespace thor_scsi {
 			int
 			nKid,                      ///< No of kids.
 				NoDBN;
-			std::vector<int> KidList;
-			std::vector<std::string>    DBNlist; ///< For control system.
+			std::vector<int> KidList;   ///< Todo: position number in lattice ??
+			std::vector<std::string>    DBNlist; ///< For control system. Todo: but what ?
 		};
 	}
 }

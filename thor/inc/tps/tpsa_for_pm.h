@@ -13,6 +13,7 @@
 #include <armadillo>
 #include <tps/ss_vect.h>
 #include <tps/tps_type.h>
+#include <cassert>
 
 extern int  bufsize;  // Note, max no of monomials is (no+nv)!/(nv!*no!)
 
@@ -25,9 +26,25 @@ double getmat(const ss_vect<tps> &map, const int i, const int j);
 
 void putmat(ss_vect<tps> &map, const int i, const int j, const double r);
 
-void getlinmat(const int nv, const ss_vect<tps> &map, arma::mat &mat);
+/**
+ * tpsa_for_pm.cc does not yet compile ...
+ *
+ * thus now implemented as an inline aborting program.
+ * make it only a definition as soon as tpsa_for_pm.cc has been ported
+ */
+inline void getlinmat(const int nv, const ss_vect<tps> &map, arma::mat &mat){
+  assert(0);
+}
 
-ss_vect<tps> putlinmat(const int nv, const arma::mat &mat);
+/**
+ * tpsa_for_pm.cc does not yet compile ...
+ *
+ * thus now implemented as an inline aborting program.
+ * make it only a definition as soon as tpsa_for_pm.cc has been ported
+ */
+inline ss_vect<tps> putlinmat(const int nv, const arma::mat &mat){
+  assert(0);
+}
 
 void idprset(const int level);
 
