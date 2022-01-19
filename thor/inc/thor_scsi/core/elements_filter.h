@@ -3,25 +3,10 @@
 
 /**
  * Todo:
- *    automatically include std::ranges if available
+ *    automatically include std::ranges if available ... currently work in progress
  */
-// #include <algorithm>
-// #ifdef __cpp_lib_ranges
-// #error "ranges"
-// #include <ranges>
-// #else
-// #error "No ranges"
-// #endif
-
-#include <thor_scsi/core/cpp_version.h>
-
-#include <vector>
-#include <set>
-#include <unordered_set>
 #include <cassert>
-#include <range/v3/view/filter.hpp>
-#include <range/v3/view/transform.hpp>
-
+#include <thor_scsi/core/cpp_ranges.h>
 #include <thor_scsi/core/elements.h>
 
 /*
