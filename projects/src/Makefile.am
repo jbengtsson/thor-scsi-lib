@@ -52,20 +52,21 @@ LIBS	 = -L$(THOR_LIB)/lib -lthor -ltpsa \
            -lstdc++ \
            -L/usr/local/Cellar/gsl/2.7/lib \
            -lgsl \
-           -L/usr/local/Cellar/armadillo/10.6.1/lib \
+           -L/usr/local/Cellar/armadillo/10.6.2/lib \
            -larmadillo
 
 # C Preprocessor flags.
 AM_CPPFLAGS = -I$(THOR_LIB)/thor/inc  \
               -I/usr/local/Cellar/gsl/2.7/include \
-              -I/usr/local/Cellar/armadillo/10.6.1/include \
-              -I/usr/local/Cellar/pybind11/2.6.2/include \
+              -I/usr/local/Cellar/armadillo/10.6.2/include \
+              -I/usr/local/Cellar/range-v3/0.11.0/include \
+              -I/usr/local/Cellar/pybind11/2.6.1/include \
               -I/usr/local/Cellar/python@3.9/3.9.5/Frameworks/Python.framework/Versions/3.9/include/python3.9 \
               -I/usr/local/carma/include \
               -I/usr/local/Cellar/numpy/1.21.1/lib/python3.9/site-packages/numpy/core/include
 
 # C++ flags.
-AM_CXXFLAGS = -g -O0 -Wall -Wno-error=all -std=c++14 \
+AM_CXXFLAGS = -g -O0 -Wall -Wno-error=all -std=c++20 \
               -D_GLIBCXX_DEBUG -D_GLIBCXX_DEBUG_PEDANTIC
 # Not clean organisation
 # Files need to be reorganised any way

@@ -151,11 +151,11 @@ namespace thor_scsi {
 		inline void prt_chrom_lat(void){
 			lat.prt_chrom_lat();
 		}
-		inline void prt_lat(std::string fname, const int Fnum, const bool all){
-			assert(0);
+		inline void prt_lat(std::string fname, const bool all){
+			lat.prt_lat2();
 		}
-		inline void prt_lat(std::string fname, const int Fnum, const bool all, const int n){
-			assert(0);
+		inline void prt_lat(std::string fname, const bool all, const int n){
+			lat.prt_lat4();
 		}
 
 
