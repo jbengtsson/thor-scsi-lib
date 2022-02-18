@@ -1,0 +1,39 @@
+@PACKAGE_INIT@
+
+include(CMakeFindDependencyMacro)
+# include("${CMAKE_CURRENT_LIST_DIR}/thor_scsiTargets.cmake")
+
+check_required_components(thor_scsi)
+
+
+
+# Todo: add dependency on boost. See top CMakeLists.txt
+include(CMakeFindDependencyMacro)
+# Todo: how to define subpackages
+# Otherwise warning occurs at least cmake 3.16.3
+cmake_policy(SET CMP0057 NEW)
+
+set(_supported_components core bd)
+
+# A current hack .. why still needed ?
+set(thor_scsi_FOUND TRUE)
+message(STATUS "thor_scsi_found ${thor_scsi_FOUND}")
+
+##  # How to specify the include directory ?
+##  get_filename_component(thor_scsi_INCLUDE_DIR "${CMAKE_CURRENT_LIST_DIR}/../../../include/" ABSOLUTE)
+##
+##
+message(STATUS "Looking for thor_scsi components: ${thor_scsi_FIND_COMPONENTS}")
+
+foreach(_comp ${thor_scsi_FIND_COMPONENTS})
+  if (NOT _comp IN_LIST _supported_components)
+    message(STATUS "flame component ${_comp} not in supported components {_supported_components}")
+    set(flame_FOUND False)
+    set(flame_NOT_FOUND_MESSAGE "Unsupported component: ${_cmp}")
+  endif()
+  set(_comp_load_name "${CMAKE_CURRENT_LIST_DIR}/thor_scsi${_comp}Targets.cmake")
+  message(STATUS "loadling ${_comp_load_name}")
+  include("${_comp_load_name}")
+endforeach()
+
+message(STATUS "thor_scsi_found ${thor_scsi_FOUND}")
