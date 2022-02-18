@@ -1,27 +1,67 @@
-#ifndef THOR_SCSI_PROCESS_T2ELEM_H
-#define THOR_SCSI_PROCESS_T2ELEM_H 1
+#ifndef _THOR_SCSI_CORE_ELEMENTS_HELPERS_H_
+#define _THOR_SCSI_CORE_ELEMENTS_HELPERS_H_ 1
 
 /**
- * Todo:
- *     A little comment of reasoning
+   Contains functions not part of the global API but rather
+   code common to the elemetns.
+
  */
+#include <vector>
+#include <string>
 #include <tps/ss_vect.h>
 #include <tps/ss_vect_utils.h>
 #include <tps/tps.h>
+#include <thor_scsi/core/cells.h>
+#include <thor_scsi/core/elements_enums.h>
+#include <thor_scsi/core/config.h>
+
 #include <exception>
 #include <iostream>
 #include <string>
 
-#include <thor_scsi/core/cells.h>
-#include <thor_scsi/core/config.h>
-
-
-// #include <thor_scsi/process/t2ring.h> ///< Analyse dependencies
-// #include <thor_scsi/process/t2elem.h> ///< Analyse dependencies
 #include <tps/tpsa_lin.h>
-#include <thor_scsi/process/t2ring_common.h>
+// #include <thor_scsi/process/t2ring_common.h>
 
-#error "Obsolete header file"
+
+extern double q_fluct; /// < Track down if it is a constant or a global variable reflecting current status
+
+namespace thor_scsi {
+	namespace elements {
+
+void get_twoJ(const int n_DOF, const ss_vect<double> &ps,
+	      const ss_vect<tps> &A, double twoJ[]);
+
+/**
+ *
+ * Todo: check naming:
+ *
+ *  Function exist that are named
+ *
+ *
+ *  get_p_s
+ *  get_ps
+ */
+
+template<typename T>
+inline T get_p_s(thor_scsi::core::ConfigType &conf, const ss_vect<T> &ps)
+{
+  T p_s, p_s2;
+
+  if (!conf.H_exact)
+    // Small angle axproximation.
+    p_s = 1e0 + ps[delta_];
+  else {
+    p_s2 = sqr(1e0+ps[delta_]) - sqr(ps[px_]) - sqr(ps[py_]);
+    if (p_s2 >= 0e0)
+      p_s = sqrt(p_s2);
+    else {
+//      printf("get_p_s: *** Speed of light exceeded!\n");
+      p_s = NAN;
+    }
+  }
+  return(p_s);
+}
+
 
 // partial template-class specialization
 // primary version
@@ -120,7 +160,9 @@ public:
 
 };
 
-#endif /* THOR_SCSI_PROCESS_T2ELEM_H */
+	}
+}
+#endif /*  _THOR_SCSI_CORE_ELEMENTS_HELPERS_H_  */
 /*
  * Local Variables:
  * mode: c++

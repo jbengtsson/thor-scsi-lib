@@ -17,7 +17,7 @@ namespace tse = thor_scsi::elements;
 #include "interpolation.cc"
 #include "interpolation_elements.cc"
 #include "t2elem.cc"
-#include "t2ring.cc"
+// #include "t2ring.cc"
 // #include "sigma_track.cc"
 
 

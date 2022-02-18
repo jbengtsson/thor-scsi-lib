@@ -10,32 +10,8 @@
 
 namespace thor_scsi {
 	namespace elements {
-		typedef std::vector<double> MpoleArray;
 
-		/**
-
-		   Empty space between two "typical accelertor components"
-		 */
-		class DriftType : public ElemType {
-		public:
-			friend DriftType* Drift_Alloc(void);
-			ElemType* Elem_Init(const thor_scsi::core::ConfigType &conf, const bool reverse);
-			void print(const std::string &);
-			std::string repr(void);
-
-			void SetdS(void) {};
-			void SetdT(void) {};
-			void SetPB(const int n) {};
-			double GetdT(void) { return 0e0; };
-			double GetPB(const int n) { return 0e0; };
-
-			template<typename T>
-			void Drift_Pass(thor_scsi::core::ConfigType &conf, ss_vect<T> &ps);
-			void Elem_Pass(thor_scsi::core::ConfigType &conf, ss_vect<double> &ps)
-				{ Drift_Pass(conf, ps); };
-			void Elem_Pass(thor_scsi::core::ConfigType &conf, ss_vect<tps> &ps)
-				{ Drift_Pass(conf, ps); };
-		};
+#if 0
 
 /* Calculate multipole kick. The kick is given by
 
@@ -87,6 +63,7 @@ namespace thor_scsi {
 		 * Furthermore note that \f$R_\mathrm{ref}\f$ = 1
 		 *
 		 */
+		typedef std::vector<double> MpoleArray;
 		class MpoleType : public ElemType {
 		public:
 			int
@@ -510,7 +487,6 @@ namespace thor_scsi {
 			void Elem_Pass(thor_scsi::core::ConfigType &conf, ss_vect<tps> &ps)
 				{ Map_Pass(conf, ps); };
 		};
-
 		DriftType* Drift_Alloc(void);           ///< Todo: Some factory implementation required?
 		MarkerType* Marker_Alloc(void);		///< Todo: Some factory implementation required?
 		MpoleType* Mpole_Alloc(void);		///< Todo: Some factory implementation required?
@@ -523,6 +499,7 @@ namespace thor_scsi {
 		SolenoidType* Solenoid_Alloc(void);	///< Todo: Some factory implementation required?
 		MapType* Map_Alloc(void);               ///< Todo: Some factory implementation required?
 
+#endif
 
 		std::vector< std::vector<double> > get_transp_mat(ElemType *elem, const double delta);
 

@@ -28,9 +28,11 @@ namespace thor_scsi {
 			Pkind;                     ///<  Enumeration for magnet types.
 
 
+			ElemType(const Config & config) : CellType(config)
+				{};
 			std::string repr_elem(void);     ///< auxilliary function providing a string of common information
 			                                 ///< required for the different elements
-			virtual std::string repr() = 0;  ///< representation similar to prt_elem but a bit more pythonic
+			virtual std::string repr(void) = 0;  ///< representation similar to prt_elem but a bit more pythonic
 			                                 ///< used by python interface to generate the information for
 			                                 ///< :meth:`__repr__`
 
@@ -57,19 +59,23 @@ namespace thor_scsi {
 			virtual double GetPB(const int n) { return 0e0; };
 
 			// C++ templates not supported for virtual functions.
+
 			/**
 			 * Propagater  step for phase space.
 			 *
-			 * Args.
+			 * Args:
 			 *    ps : phase space
 			 */
-			virtual void Elem_Pass(thor_scsi::core::ConfigType &conf, ss_vect<double> &ps) {};
-			virtual void Elem_Pass(thor_scsi::core::ConfigType &conf, ss_vect<tps> &ps) {};
+			virtual void pass(thor_scsi::core::ConfigType &conf, ss_vect<double> &ps) {};
+			virtual void pass(thor_scsi::core::ConfigType &conf, ss_vect<tps> &ps) {};
 
 			template<typename T>
-			  bool CheckAmpl(thor_scsi::core::ConfigType &conf, const ss_vect<T> &x);
+			void pass(thor_scsi::core::ConfigType &conf, ss_vect<T> &ps);
+
+			///< Candidate to be moved towards aperture
 			template<typename T>
-			void Cell_Pass(thor_scsi::core::ConfigType &conf, ss_vect<T> &ps);
+			  bool CheckAmpl(thor_scsi::core::ConfigType &conf, const ss_vect<T> &x);
+
 		};
 
 

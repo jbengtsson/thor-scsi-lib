@@ -240,6 +240,8 @@ void LtoG(ss_vect<T> &ps, std::vector<double> &S, std::vector<double> &R,
 }
 
 
+#if 0
+/* moved to element basis */
 template<typename T>
 inline T get_p_s(ConfigType &conf, const ss_vect<T> &ps)
 {
@@ -259,6 +261,7 @@ inline T get_p_s(ConfigType &conf, const ss_vect<T> &ps)
   }
   return(p_s);
 }
+#endif
 
 
 
@@ -326,36 +329,6 @@ void radiate_ID(ConfigType &conf, ss_vect<T> &ps, const double L,
   }
 
   if (conf.emittance) is_tps<T>::emittance(conf, B2_perp, ds, p_s0, cs);
-}
-
-
-template<typename T>
-void Drift(ConfigType &conf, const double L, ss_vect<T> &ps)
-{
-  T u;
-
-  if (!conf.H_exact) {
-    // Small angle axproximation.
-    u = L/(1e0+ps[delta_]);
-    ps[x_]  += u*ps[px_]; ps[y_] += u*ps[py_];
-    ps[ct_] += u*(sqr(ps[px_])+sqr(ps[py_]))/(2e0*(1e0+ps[delta_]));
-  } else {
-    u = L/get_p_s(conf, ps);
-    ps[x_]  += u*ps[px_]; ps[y_] += u*ps[py_];
-    ps[ct_] += u*(1e0+ps[delta_]) - L;
-  }
-  if (conf.pathlength) ps[ct_] += L;
-}
-
-
-template<typename T>
-void DriftType::Drift_Pass(ConfigType &conf, ss_vect<T> &ps)
-{
-  Drift(conf, PL, ps);
-
-  if (conf.emittance && !conf.Cavity_on)
-    // Needs A^-1.
-    curly_dH_x = is_tps<tps>::get_curly_H(ps);
 }
 
 
