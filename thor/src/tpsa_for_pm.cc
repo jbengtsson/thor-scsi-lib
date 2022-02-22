@@ -19,7 +19,7 @@
 #include <iomanip>
 #include <math.h>
 
-extern int no_tps, ndpt_tps;
+extern int  ndpt_tps; //no_tps
 
 bool ini_tps = false, header = false, res_basis = false, stable = false;
 

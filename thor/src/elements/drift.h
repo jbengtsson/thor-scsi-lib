@@ -30,11 +30,11 @@ namespace thor_scsi {
 			 * Todo:
 			 *     replace function with mv operator
 			 */
-			virtual void assign(const ElementVoidBase *other) override{
-				const DriftType *O = static_cast<const DriftType*>(other);
-				// transform = O->transform
-				ElementVoidBase::assign(other);
-			}
+			//virtual void assign(const ElementVoidBase *other) override{
+			//	const DriftType *O = static_cast<const DriftType*>(other);
+			//	// transform = O->transform
+			//	ElementVoidBase::assign(other);
+			//}
 
 #if 0
 			void print(const std::string &);
@@ -47,10 +47,10 @@ namespace thor_scsi {
 			// double GetPB(const int n) { return 0e0; };
 
 			inline void pass(thor_scsi::core::ConfigType &conf, ss_vect<double> &ps) override final
-				{ //_advance(conf, ps);
+				{ //_pass(conf, ps);
 				};
 			inline void pass(thor_scsi::core::ConfigType &conf, ss_vect<tps> &ps) override final
-				{ //_advance(conf, ps);
+				{ //_pass(conf, ps);
 				};
 
 		private:

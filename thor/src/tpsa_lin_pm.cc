@@ -278,7 +278,9 @@ tps cosh(const tps &a)
   return b;
 }
 
-const double tps::cst(void) const
+// Constantness ignored by callers ...
+// const double tps::cst(void) const
+double tps::cst(void) const
 {
   int      i;
   long int jj[nv_tps];

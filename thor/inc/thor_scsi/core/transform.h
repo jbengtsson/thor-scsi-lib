@@ -30,13 +30,13 @@ namespace thor_scsi{
 			}
 
 			///< Eucledian Group: Roll angle
-			inline const double getRoll(void)  {
+			inline double getRoll(void)  {
 				return atan2(m_dT[1], m_dT[0]);
 			}
-			inline const double getDx(void){
+			inline double getDx(void){
 				return m_dS[0];
 			}
-			inline const double getDy(void){
+			inline double getDy(void){
 				return m_dS[1];
 			}
 			inline void setDx(const double x){

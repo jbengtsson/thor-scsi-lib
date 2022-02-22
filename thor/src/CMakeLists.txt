@@ -1,14 +1,58 @@
 
+# Hope that spills not into fortran code
 if(CMAKE_COMPILER_IS_GNUCXX)
-  message(STATUS "Enabling gxx debug preprocessor flags")
-  # add_definitions(-Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers)
-  add_definitions(-D_GLIBCXX_DEBUG -D_GLIBCXX_DEBUG_PEDANTIC -g -ggdb -pedantic -Wall)
+
+  add_definitions(
+  	-Wcast-align
+	-Wcast-qual
+	-Wctor-dtor-privacy
+	-Wdisabled-optimization
+	-Wformat=2
+	-Winit-self
+	-Wlogical-op
+	-Wnoexcept
+	# -Wold-style-cast
+	-Woverloaded-virtual
+	-Wredundant-decls
+	# -Wshadow
+	-Wsign-promo
+	-Wstrict-null-sentinel
+	-Wstrict-overflow=5
+	-Wswitch-default
+	-Wundef
+	-Wno-unused
+   	-Wmissing-declarations
+   	#-Weffc++
+	#-Wpadding
+)
+  # has to be removed at a later stage
+  # guess a move ctor and use in code will provide
+  # some speed up
+  # add_definitions(-Werror)
+
+  add_definitions(
+  -Wno-deprecated-copy
+    -Wno-error=deprecated-copy
+  )
+  add_definitions(
+  -Wno-Werror=all
+   -Wmissing-declarations
+  -Wno-error=unused-result
+  -Wno-error=sign-compare
+  -Wno-error=vla -Wno-error=old-style-cast
+  -Wno-error=shadow
+  -Wno-error=strict-overflow
+  -Wno-error=sign-promo
+  -Wno-error=format-nonliteral
+  -Wno-error=switch-default)
 endif()
 
 # yes ... depends on flame ...
 find_package(flame  REQUIRED COMPONENTS core)
 get_target_property(flame_CORE_LIBRARY flame::flame_core IMPORTED_LOCATION_RELEASE)
+message(STATUS "Flame core library ${flame_CORE_LIBRARY}")
 message(STATUS "Flame include dir ${flame_INCLUDE_DIR}")
+
 get_filename_component(thor_scsi_INCLUDE_DIR "${CMAKE_CURRENT_LIST_DIR}//../inc/" ABSOLUTE)
 
 set(tpsa_HEADERS
@@ -66,16 +110,28 @@ target_include_directories(tpsa_lin PUBLIC
   $<INSTALL_INTERFACE:include/>  # <prefix>/include/mylib
 )
 
+set_target_properties(tpsa_lin
+  PROPERTIES
+    SOVERSION 0
+)
+
+
+target_link_libraries(tpsa_lin
+)
+
+
 
 set(thor_scsi_HEADERS
   ${thor_scsi_INCLUDE_DIR}/thor_scsi/version.h
-  ${thor_scsi_INCLUDE_DIR}/thor_scsi/exceptions.h
   )
 
 # Needs to be fixed ... reorganisation of files
-set(thor_scsi_CORE_HEADERS
+set(thor_scsi_core_HEADERS
+  ${thor_scsi_INCLUDE_DIR}/thor_scsi/core/exceptions.h
   ${thor_scsi_INCLUDE_DIR}/thor_scsi/core/transform.h
   ${thor_scsi_INCLUDE_DIR}/thor_scsi/core/lattice_filter.h
+  ${thor_scsi_INCLUDE_DIR}/thor_scsi/core/cell_void.h
+  ${thor_scsi_INCLUDE_DIR}/thor_scsi/core/machine.h
   ${thor_scsi_INCLUDE_DIR}/thor_scsi/core/cells.h
   ${thor_scsi_INCLUDE_DIR}/thor_scsi/core/constants.h
   ${thor_scsi_INCLUDE_DIR}/thor_scsi/core/elements_basis.h
@@ -89,12 +145,15 @@ set(thor_scsi_CORE_HEADERS
   ${thor_scsi_INCLUDE_DIR}/thor_scsi/core/config.h
   ${thor_scsi_INCLUDE_DIR}/thor_scsi/core/cpp_version.h
 )
-set(thor_scsi_CORE_ELEMENT_HEADERS
+set(thor_scsi_core_ELEMENT_HEADERS
   elements/drift.h
 )
 
-set(thor_scsi_FILES
+set(thor_scsi_core_FILES
   core/transform.cc
+  core/cell_void.cc
+  core/machine.cc
+  core/element_helpers.cc
   elements/drift.cc
   # thor_lib.cc
   # t2cell.cc
@@ -109,17 +168,37 @@ set(thor_scsi_FILES
   # set_errors.cc
 )
 
-add_library(thor SHARED
-  ${thor_scsi_FILES}
-  ${thor_scsi_HEADERS}
-  ${thor_scsi_CORE_HEADERS}
+add_library(thor_scsi_core SHARED
+  ${thor_scsi_core_FILES}
+  ${thor_scsi_core_HEADERS}
 )
-add_library(thor_scsi::thor ALIAS thor)
+add_library(thor_scsi::core ALIAS thor_scsi_core)
 
-target_include_directories(thor
+target_include_directories(thor_scsi_core
     PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/>"
     "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
+)
+
+
+target_link_libraries(thor_scsi_core
+# Todo: need to learn how to include it ...
+#  tpsa_lin
+)
+
+set_target_properties(thor_scsi_core
+  PROPERTIES
+    SOVERSION 0
+)
+
+
+set(thor_scsi_files
+  version.cc
+)
+
+add_library(thor_scsi SHARED
+  ${thor_scsi_files}
+  ${thor_scsi_HEADERS}
 )
 
 
@@ -152,44 +231,50 @@ target_include_directories(thor
 ## )
 
 # ---- install helpers --
+
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 set(THOR_SCSI_CMAKE_LIB_DIR "${CMAKE_INSTALL_LIBDIR}/cmake/thor_scsi")
+
+message(STATUS "CMAKE install Dirs  lib: '${CMAKE_INSTALL_LIBDIR}' bin '${CMAKE_INSTALL_BINDIR}' include '${CMAKE_INSTALL_INCLUDEDIR}'")
+
+
 # --- tpsa install support  --------------
 install(FILES ${tpsa_HEADERS} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/tps/)
 install(TARGETS tpsa_lin
-        EXPORT thor_scsitpsa_linTargets
+        EXPORT tpsa_linTargets
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
         INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 	)
 # generate and install export file
-install(EXPORT thor_scsitpsa_linTargets
-        FILE thor_scsitpsa_linTargets.cmake
+install(EXPORT tpsa_linTargets
+        FILE tpsa_linTargets.cmake
         NAMESPACE thor_scsi::
 	DESTINATION ${THOR_SCSI_CMAKE_LIB_DIR}
 )
 # --- end tpsa install support  ----------
-# --- thor_scsi install support  ---------
-install(FILES ${thor_scsi_HEADERS} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/thor_scsi/)
-install(FILES ${thor_scsi_CORE_HEADERS} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/thor_scsi/core/)
-install(FILES ${thor_scsi_CORE_ELEMENT_HEADERS} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/thor_scsi/core/)
-install(TARGETS thor
-        EXPORT thor_scsithorTargets
+
+# --- thor_scsi thor install support  ----
+
+install(FILES ${thor_scsi_core_HEADERS} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/thor_scsi/core/)
+install(FILES ${thor_scsi_core_ELEMENT_HEADERS} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/thor_scsi/core/)
+install(TARGETS thor_scsi_core
+        EXPORT thor_scsi_coreTargets
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
         INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 	)
 # generate and install export file
-install(EXPORT thor_scsithorTargets
-        FILE thor_scsithorTargets.cmake
+install(EXPORT thor_scsi_coreTargets
+        FILE coreTargets.cmake
         NAMESPACE thor_scsi::
 	DESTINATION ${THOR_SCSI_CMAKE_LIB_DIR}
 )
 
-# --- end thor_scsi install support  -----
+# --- end thor_scsi thor install support -
 
 configure_package_config_file(
     ${CMAKE_CURRENT_SOURCE_DIR}/cmake/thor_scsiConfig.cmake.in
@@ -202,6 +287,28 @@ write_basic_package_version_file(
     VERSION "${THOR_SCSI_VERSION}"
     COMPATIBILITY SameMajorVersion
 )
+
+
+# --- thor scsi install support  ---------
+install(FILES ${thor_scsi_HEADERS} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/thor_scsi/)
+install(FILES ${thor_scsi_HEADERS} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/thor_scsi/)
+install(TARGETS thor_scsi
+        EXPORT thor_scsiTargets
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+        INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+)
+
+install(
+    EXPORT thor_scsiTargets
+    FILE thor_scsiTargets.cmake
+    DESTINATION ${THOR_SCSI_CMAKE_LIB_DIR}
+    NAMESPACE thor_scsi::
+)
+
+# --- end thor scsi install support  -----
+
 # --- tpsa install support  -----
 
 install(FILES

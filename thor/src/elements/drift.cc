@@ -3,11 +3,14 @@
 #include <thor_scsi/core/element_helpers.h>
 #include <tps/ss_vect.h>
 #include <tps/tps.h>
+#include <tps/tps_type.h>
 
 namespace tsc = thor_scsi::core;
 namespace tse = thor_scsi::elements;
 
 namespace thor_scsi::elements {
+
+
 template<typename T>
 void Drift(tsc::ConfigType &conf, const double L, ss_vect<T> &ps)
 {
@@ -28,17 +31,18 @@ void Drift(tsc::ConfigType &conf, const double L, ss_vect<T> &ps)
 }
 
 template<typename T>
-void tse::DriftType::_advance(tsc::ConfigType &conf, ss_vect<T> &ps)
+void tse::DriftType::_pass(tsc::ConfigType &conf, ss_vect<T> &ps)
 {
   Drift(conf, PL, ps);
 
-  if (conf.emittance && !conf.Cavity_on)
+  if (conf.emittance && !conf.Cavity_on){
     // Needs A^-1.
     curly_dH_x = is_tps<tps>::get_curly_H(ps);
+  }
 }
 
-template void tse::DriftType::_advance(tsc::ConfigType &conf, ss_vect<double> &ps);
-template void tse::DriftType::_advance(tsc::ConfigType &conf, ss_vect<tps> &ps);
+template void tse::DriftType::_pass(tsc::ConfigType &conf, ss_vect<double> &ps);
+// template void tse::DriftType::_pass(tsc::ConfigType &conf, ss_vect<tps> &ps);
 
 
 /*

@@ -72,7 +72,7 @@ class is_tps { };
 template<>
 class is_tps<double> {
 public:
-	static inline void get_ps(const ss_vect<double> &x, thor_scsi::elements::CellType *Cell)
+	static inline void get_ps(const ss_vect<double> &x, thor_scsi::core::CellType *Cell)
 		{ Cell->BeamPos = pstostl(x); }
 
 	static inline double set_prm(const int k) { return 1e0; }
@@ -102,7 +102,7 @@ public:
 template<>
 class is_tps<tps> {
 public:
-	static inline void get_ps(const ss_vect<tps> &x, thor_scsi::elements::CellType *Cell)
+	static inline void get_ps(const ss_vect<tps> &x, thor_scsi::core::CellType *Cell)
 		{ Cell->BeamPos = pstostl(x.cst()); Cell->A = maptostlmat(x); }
 
 	static inline tps set_prm(const int k) { return tps(0e0, k); }

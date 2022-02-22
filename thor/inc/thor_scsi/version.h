@@ -4,9 +4,13 @@
 namespace thor_scsi {
 	static const int thor_version_major = 3;
 	static const int thor_version_minor = 5;
-	static const int thor_version_micro = 0;
+	static const int thor_version_patch_level = 0;
 
-	std::string get_compiled_version(void);
+	const char * compiled_version = "3.5.0";
+	/**
+	 * stores run version when compile process is running
+	 */
+	extern const char *run_version;
 }
 #endif /* _THOR_SCSI_VERSION_H_ */
 /*

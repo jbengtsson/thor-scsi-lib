@@ -16,7 +16,7 @@
 namespace thor_scsi {
 	namespace elements {
 		//< Element virtual base class.
-		class ElemType : public CellType {
+		class ElemType : public thor_scsi::core::CellType {
 		public:
 			std::string
 			Name;                      ///< Element name.
@@ -66,8 +66,8 @@ namespace thor_scsi {
 			 * Args:
 			 *    ps : phase space
 			 */
-			virtual void pass(thor_scsi::core::ConfigType &conf, ss_vect<double> &ps) {};
-			virtual void pass(thor_scsi::core::ConfigType &conf, ss_vect<tps> &ps) {};
+			virtual void pass(thor_scsi::core::ConfigType &conf, ss_vect<double> &ps) = 0;
+			virtual void pass(thor_scsi::core::ConfigType &conf, ss_vect<tps> &ps) = 0;
 
 			template<typename T>
 			void pass(thor_scsi::core::ConfigType &conf, ss_vect<T> &ps);

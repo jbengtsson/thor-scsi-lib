@@ -1568,7 +1568,8 @@ void ts::get_ab(const ss_vect<tps> &A, std::vector<double> &alpha,
   get_dnu(2, A, dnu);
 }
 
-
+#if 0
+// moved to element/element_helpers
 void get_twoJ(const int n_DOF, const ss_vect<double> &ps, const ss_vect<tps> &A,
 	      double twoJ[])
 {
@@ -1589,7 +1590,7 @@ void get_twoJ(const int n_DOF, const ss_vect<double> &ps, const ss_vect<tps> &A,
 
   danot_(no);
 }
-
+#endif
 
 void ts::SetKLpar(LatticeType &lat, int Fnum, int Knum, int Order, double kL)
 {

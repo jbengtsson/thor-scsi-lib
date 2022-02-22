@@ -27,7 +27,9 @@ class tps {
   // trace level for TPSALib and LieLib
   friend void idprset(const int);
 
-  const double cst(void) const;
+  // Constant ness of cst return ignored by callers
+  // const double cst(void) const;
+  double cst(void) const;
   double operator[](const int) const;
   double operator[](const long int []) const;
   void pook(const long int [], const double);

@@ -1,12 +1,12 @@
 #ifndef _THOR_SCSI_CORE_CELL_H_
 #define _THOR_SCSI_CORE_CELL_H_
-#include <thor_scsi/exceptions.h>
-#include <flame/core/base.h>
+#include <thor_scsi/core/exceptions.h>
+#include <thor_scsi/core/cell_void.h>
 #include <thor_scsi/core/transform.h>
 
 #include <vector>
 namespace thor_scsi {
-	namespace elements {
+	namespace core {
 
 		/**  LEGO lattice structure.
 		 *
@@ -18,9 +18,9 @@ namespace thor_scsi {
 		 *
 		 *      * propagate / pass
 		 */
-		class CellType : public ElementVoidBase {
+		class CellType : public CellVoid {
 		public:
-			inline CellType(const Config& config): ElementVoidBase(config){
+			inline CellType(const Config& config): CellVoid(config){
 			}
 	    int
 	      Fnum,                      ///< Element Family #.
@@ -73,7 +73,7 @@ namespace thor_scsi {
 		   * \f$ rms \cdot random number \f$
 		   * horizontal coordinate
 		   */
-		 inline const double getDx(void){
+		 inline double getDx(void){
 			 return this->transform.getDx();
 		 }
 		  /**
@@ -81,7 +81,7 @@ namespace thor_scsi {
 		   * \f$ rms \cdot random number \f$
 		   * vertical coordinate
 		   */
-		 inline const double getDy(void){
+		 inline double getDy(void){
 			 return this->transform.getDy();
 		 }
 		  /**
