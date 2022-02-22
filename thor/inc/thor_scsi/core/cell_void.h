@@ -49,8 +49,8 @@ namespace thor_scsi::core {
 		/**
 		 * @brief Construct this element using the provided Config.
 		 *
-		 * Base class ctor makes use of Config parameters "name" and "length".
-		 * "name" is required.  "length" is option, and is 0.0 if omitted.
+		 * Base class ctor makes use of Config parameters "name"
+		 * "name" is required.
 		 *
 		 * Sub-classes are allowed to require certain parameters to be provided.
 		 *

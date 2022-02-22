@@ -13,12 +13,9 @@ namespace thor_scsi {
 		class DriftType : public ElemType {
 		public:
 			inline DriftType(const Config &config) : ElemType(config){
-				PL = 0;
+				// transformation done by transfrom
 				// ... done by Elemtype initialisation
 				// ... pleonamsmus
-				this->transform.setDx(0.0);
-				this->transform.setDy(0.0);
-				this->transform.setRoll(0.0);
 			}
 
 

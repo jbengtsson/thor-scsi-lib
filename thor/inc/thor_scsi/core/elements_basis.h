@@ -18,8 +18,11 @@ namespace thor_scsi {
 		//< Element virtual base class.
 		class ElemType : public thor_scsi::core::CellType {
 		public:
+#if 0
+			/* already defined in cell_void */
 			std::string
 			Name;                      ///< Element name.
+#endif
 			bool
 			Reverse;                   ///< reverse elements: rearange the elements in reveresed order
 			double
@@ -27,8 +30,14 @@ namespace thor_scsi {
 			PartsKind
 			Pkind;                     ///<  Enumeration for magnet types.
 
-
-			ElemType(const Config & config) : CellType(config)
+			/**
+			 * @ brief basic element type
+			 *
+			 * "length" is option, and is 0.0 if omitted.
+			 * delegate type to
+			 */
+			ElemType(const Config & config) : CellType(config),
+							  PL(config.get<double>("L", 0.0))
 				{};
 			std::string repr_elem(void);     ///< auxilliary function providing a string of common information
 			                                 ///< required for the different elements
@@ -36,6 +45,7 @@ namespace thor_scsi {
 			                                 ///< used by python interface to generate the information for
 			                                 ///< :meth:`__repr__`
 
+			virtual inline double getLength(void) final { return this->PL;};
 			void prt_elem(const std::string &);
 
 			/**
@@ -51,6 +61,7 @@ namespace thor_scsi {
 			 * Todo: implement taking stream or as ostream operator ....
 			 */
 			virtual void print(const std::string &) {};
+
 
 			virtual void SetdS(void) {}; ///< Eucledian Group: dx, dy
 			virtual void SetdT(void) {}; ///< Eucledian Group: Roll angle
