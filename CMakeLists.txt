@@ -30,5 +30,10 @@ find_package(PythonInterp 3)
 
 # include(CMakeAddFortranSubdirectory)
 
+enable_testing()
+
+# Fortran implementation part
 add_subdirectory(TPSA)
-add_subdirectory(thor)
+# C++ implementation part
+add_subdirectory(src)
+# add_subdirectory(thor)
