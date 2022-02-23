@@ -450,7 +450,10 @@ void prt_header(std::ostream &s, const bool res_basis)
   }
 }
 
-
+#if 0
+/*
+ * Should be implemented by visit ...
+ */
 std::ostream& operator<<(std::ostream &os, const tps &a)
 {
   int                i, j, n;
@@ -499,3 +502,4 @@ std::ostream& operator<<(std::ostream &os, const tps &a)
 
   return os << s.str();
 }
+#endif

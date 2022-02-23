@@ -9,7 +9,7 @@ namespace thor_scsi {
 		class ConfigType {
 		public:
 			bool
-			trace,
+			trace, ///< consider to remove (handled by elements now ...)
 				reverse_elem,
 				stable,
 				ErrFlag,
@@ -34,7 +34,7 @@ namespace thor_scsi {
 				chambre;
 
 			long int
-			Cell_nLoc,                    ///< Number of Elements.
+			Cell_nLoc,                    ///< Number of Elements. I thnk not required any more
 				Elem_nFam,                    ///< Number of Families.
 				CODimax;                      /** closed Orbit Finder: max number of
 								 iterations. */

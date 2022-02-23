@@ -12,7 +12,7 @@ namespace thor_scsi::elements {
 
 
 template<typename T>
-void Drift(tsc::ConfigType &conf, const double L, ss_vect<T> &ps)
+void Drift(const tsc::ConfigType &conf, const double L, ss_vect<T> &ps)
 {
   T u;
 
@@ -31,7 +31,7 @@ void Drift(tsc::ConfigType &conf, const double L, ss_vect<T> &ps)
 }
 
 template<typename T>
-void tse::DriftType::_pass(tsc::ConfigType &conf, ss_vect<T> &ps)
+void tse::DriftType::_pass(const tsc::ConfigType &conf, ss_vect<T> &ps)
 {
   Drift(conf, PL, ps);
 
@@ -41,8 +41,8 @@ void tse::DriftType::_pass(tsc::ConfigType &conf, ss_vect<T> &ps)
   }
 }
 
-template void tse::DriftType::_pass(tsc::ConfigType &conf, ss_vect<double> &ps);
-// template void tse::DriftType::_pass(tsc::ConfigType &conf, ss_vect<tps> &ps);
+template void tse::DriftType::_pass(const tsc::ConfigType &conf, ss_vect<double> &ps);
+//template void tse::DriftType::_pass(const tsc::ConfigType &conf, ss_vect<tps> &ps);
 
 
 /*

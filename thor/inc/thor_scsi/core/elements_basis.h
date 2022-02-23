@@ -76,9 +76,12 @@ namespace thor_scsi {
 			 *
 			 * Args:
 			 *    ps : phase space
+			 *
+			 * Todo:
+			 *      make config constant (after config has been reworked)
 			 */
 			virtual void pass(thor_scsi::core::ConfigType &conf, ss_vect<double> &ps) = 0;
-			virtual void pass(thor_scsi::core::ConfigType &conf, ss_vect<tps> &ps) = 0;
+			// virtual void pass(thor_scsi::core::ConfigType &conf, ss_vect<tps> &ps) = 0;
 
 			template<typename T>
 			void pass(thor_scsi::core::ConfigType &conf, ss_vect<T> &ps);

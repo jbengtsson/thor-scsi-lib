@@ -6,6 +6,7 @@
 #include <tps/forward_decl.h>
 #include <tps/tps_type.h>
 #include <string>
+#include <ostream>
 #include <vector>
 
 
@@ -31,7 +32,11 @@ template<typename T> class ss_vect {
   template<typename U>
     ss_vect(const ss_vect<U> &);
 
+
   void print(const std::string &);
+  ///< Todo: consider if adding an unused  level flag for consistency
+  void show(std::ostream&, int precision=6) const;
+
 
   ss_vect<double> cst(void) const;
   T& operator[](const int i) { return ss[i]; }
@@ -113,6 +118,12 @@ template<typename T> class ss_vect {
   std::vector<T> ss;
 };
 
+template<typename T> inline
+std::ostream& operator<<(std::ostream& strm, ss_vect<T>& s)
+{
+    s.show(strm);
+    return strm;
+}
 
 // Class for single particle phase space dynamics
 

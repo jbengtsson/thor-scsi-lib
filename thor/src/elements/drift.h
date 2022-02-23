@@ -44,15 +44,13 @@ namespace thor_scsi {
 			// double GetPB(const int n) { return 0e0; };
 
 			inline void pass(thor_scsi::core::ConfigType &conf, ss_vect<double> &ps) override final
-				{ //_pass(conf, ps);
-				};
-			inline void pass(thor_scsi::core::ConfigType &conf, ss_vect<tps> &ps) override final
-				{ //_pass(conf, ps);
-				};
+			{ _pass(conf, ps); };
+			// inline void pass(thor_scsi::core::ConfigType &conf, ss_vect<tps> &ps) override final
+			// { _pass(conf, ps); };
 
 		private:
 			template<typename T>
-			void _pass(thor_scsi::core::ConfigType &conf, ss_vect<T> &ps);
+			void _pass(const thor_scsi::core::ConfigType &conf, ss_vect<T> &ps);
 		};
 	}
 }

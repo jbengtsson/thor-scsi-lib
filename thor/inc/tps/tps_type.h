@@ -9,7 +9,7 @@
 #include <tps/config.h>
 #include <string>
 #include <vector>
-
+#include <ostream>
 
 class tps {
  public:
@@ -21,7 +21,8 @@ class tps {
   ~tps(void);
 
   void print(const std::string &);
-
+  ///< Todo: consider if adding an unused  level flag for consistency
+  void show(std::ostream&, int precision=6) const;
   // initialize TPSA library
    friend void TPSAEps(const double);
   // trace level for TPSALib and LieLib
@@ -72,6 +73,7 @@ class tps {
   friend double abs(const tps &);
   friend double abs2(const tps &);
   friend tps sqrt(const tps &);
+  //inline tps sqr(const tps &a) {return a * a;};
   friend tps sqr(const tps &);
   friend tps pow(const tps &, const int);
   friend tps exp(const tps &);
@@ -141,6 +143,12 @@ private:
 }; /* class tps */
 
 
+inline
+std::ostream& operator<<(std::ostream& strm, const tps& s)
+{
+    s.show(strm);
+    return strm;
+}
 
 
 

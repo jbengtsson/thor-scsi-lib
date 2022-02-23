@@ -43,7 +43,7 @@ void get_twoJ(const int n_DOF, const ss_vect<double> &ps,
  */
 
 template<typename T>
-inline T get_p_s(thor_scsi::core::ConfigType &conf, const ss_vect<T> &ps)
+inline T get_p_s(const thor_scsi::core::ConfigType &conf, const ss_vect<T> &ps)
 {
   T p_s, p_s2;
 
@@ -89,7 +89,7 @@ public:
 		return 0e0;
 	}
 
-	static inline void emittance(thor_scsi::core::ConfigType &conf, const double B2,
+	static inline void emittance(const thor_scsi::core::ConfigType &conf, const double B2,
 				     const double u, const double ps0,
 				     const ss_vect<double> &xp) { }
 
