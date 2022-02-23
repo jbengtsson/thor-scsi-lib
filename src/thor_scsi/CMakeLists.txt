@@ -42,8 +42,10 @@ set(thor_scsi_core_HEADERS
   # ${thor_scsi_INCLUDE_DIR}/thor_scsi/core/cpp_version.h
   core/machine.h
   core/cell_void.h
-  core/transform.h
   core/cells.h
+  core/transform.h
+  core/math_comb.h
+  core/harmonics.h
 )
 
 set(thor_scsi_core_ELEMENT_HEADERS
@@ -55,6 +57,8 @@ set(thor_scsi_core_FILES
   core/transform.cc
   core/cell_void.cc
   core/machine.cc
+  core/math_comb.cc
+  core/harmonics.cc
   elements/element_helpers.cc
   elements/drift.cc
   # thor_lib.cc
