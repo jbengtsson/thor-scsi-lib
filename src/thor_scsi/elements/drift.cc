@@ -1,6 +1,6 @@
-#include "drift.h"
 #include <thor_scsi/core/config.h>
-#include <thor_scsi/core/element_helpers.h>
+#include <thor_scsi/elements/element_helpers.h>
+#include <thor_scsi/elements/drift.h>
 #include <tps/ss_vect.h>
 #include <tps/tps.h>
 #include <tps/tps_type.h>

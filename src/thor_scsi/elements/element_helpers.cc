@@ -1,4 +1,4 @@
-#include <thor_scsi/core/element_helpers.h>
+#include <thor_scsi/elements/element_helpers.h>
 #include <tps/tps_type.h>
 
 namespace tse = thor_scsi::elements;

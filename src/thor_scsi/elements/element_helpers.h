@@ -12,7 +12,7 @@
 #include <tps/ss_vect_utils.h>
 #include <tps/tps.h>
 #include <thor_scsi/core/cells.h>
-#include <thor_scsi/core/elements_enums.h>
+// #include <thor_scsi/core/elements_enums.h>
 #include <thor_scsi/core/config.h>
 
 #include <exception>

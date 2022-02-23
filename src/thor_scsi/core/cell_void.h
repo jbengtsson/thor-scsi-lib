@@ -97,9 +97,17 @@ namespace thor_scsi::core {
 	private:
 		Observer *p_observe;
 		Config p_conf;
-	        friend class thor_scsi::core::Machine;
+	        friend class Machine;
 	};
+	
+	inline
+	std::ostream& operator<<(std::ostream& strm, const CellVoid& cell_void)
+	{
+		cell_void.show(strm, 0);
+		return strm;
+	}
 }
+
 
 
 #endif /* _THOR_SCSI_CORE_CELL_VOID_H_ */

@@ -10,6 +10,7 @@ namespace thor_scsi {
 
 		   Empty space between two "typical accelerator components"
 		 */
+		using thor_scsi::core::ElemType;
 		class DriftType : public ElemType {
 		public:
 			inline DriftType(const Config &config) : ElemType(config){
@@ -20,8 +21,6 @@ namespace thor_scsi {
 
 
 			const char* type_name() const override final { return "drift"; };
-			virtual std::string repr(void) override final{ return "Dift repr: implement me!";} ;
-
 			/**
 			 *
 			 * Todo:
@@ -36,6 +35,7 @@ namespace thor_scsi {
 #if 0
 			void print(const std::string &);
 			std::string repr(void);
+			virtual std::string repr(void) override final{ return "Dift repr: implement me!";} ;
 			void SetdS(void) {};
 			void SetdT(void) {};
 			void SetPB(const int n) {};
