@@ -4,6 +4,9 @@ include(../../cmake/gpp_warnings.cmake)
 find_package(flame  REQUIRED COMPONENTS core)
 get_target_property(flame_CORE_LIBRARY flame::flame_core IMPORTED_LOCATION_RELEASE)
 
+# should already be handled by thor_scsi
+find_package(Armadillo REQUIRED)
+
 find_package(Boost 1.52.0 REQUIRED COMPONENTS
   prg_exec_monitor
   unit_test_framework
@@ -11,6 +14,7 @@ find_package(Boost 1.52.0 REQUIRED COMPONENTS
 
 message(STATUS "Flame core library ${flame_CORE_LIBRARY}")
 message(STATUS "Flame include dir ${flame_INCLUDE_DIR}")
+
 
 # get_filename_component(thor_scsi_INCLUDE_DIR "${CMAKE_CURRENT_LIST_DIR}//../inc/" ABSOLUTE)
 # get_filename_component(thor_scsi_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../inc/" ABSOLUTE)
@@ -44,13 +48,16 @@ set(thor_scsi_core_HEADERS
   core/cell_void.h
   core/cells.h
   core/transform.h
+  core/transform_phase_space.h
   core/math_comb.h
-  core/harmonics.h
+  core/multipoles.h
 )
 
 set(thor_scsi_core_ELEMENT_HEADERS
-  elements/drift.h
   elements/elements_basis.h
+  elements/drift.h
+  elements/elements_mpole.h
+  elements/element_helpers.h
 )
 
 set(thor_scsi_core_FILES
@@ -59,9 +66,12 @@ set(thor_scsi_core_FILES
   core/machine.cc
   core/math_comb.cc
   core/multipoles.cc
-  core/multipoles_extra.cc
+  # Only required if GSL's implementation of Horner's rule to be used
+  # or a pure taylor series
+  # core/multipoles_extra.cc
   elements/element_helpers.cc
   elements/drift.cc
+  # elements/mpole.cc
   # thor_lib.cc
   # t2cell.cc
   # t2lat.cc
@@ -90,7 +100,8 @@ target_include_directories(thor_scsi_core
 
 target_link_libraries(thor_scsi_core
 # Todo: need to learn how to include it ...
-#  tpsa_lin
+  ${flame_CORE_LIBRARY}
+  ${ARMADILLO_LIBRARIES}
 )
 
 set_target_properties(thor_scsi_core
@@ -114,6 +125,40 @@ target_include_directories(thor_scsi
     "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )
 
+
+add_executable(test_transform_phase_space
+  core/test_transform_phase_space.cc
+)
+target_link_libraries(test_transform_phase_space
+  thor_scsi
+  thor_scsi_core
+  tpsa_lin
+  # PRIVATE Boost::boost
+  #  quadmath
+    ${Boost_PRG_EXEC_MONITOR_LIBRARY}
+    ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
+)
+
+add_test(transform_phase_space test_transform_phase_space)
+
+# add_executable(test_mpole  elements/test_mpole.cc)
+##
+## target_include_directories(test_mpole
+##     PUBLIC
+##     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../>"
+##     "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
+## )
+## target_link_libraries(test_mpole
+##   thor_scsi
+##   thor_scsi_core
+##   tpsa_lin
+##   # PRIVATE Boost::boost
+##   #  quadmath
+##     ${Boost_PRG_EXEC_MONITOR_LIBRARY}
+##     ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
+## )
+##
+## add_test(mpole test_mpole)
 # add_subdirectory(core)
 #
 # Non linear part needs still to be ported to new interface

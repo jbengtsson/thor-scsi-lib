@@ -176,68 +176,6 @@ void splin2_(const double x1a[], const double x2a[], double **ya, double **y2a,
 #endif
 
 
-/**
- *
- * Implementation of the Euclidan Group
- *
- * x Global to local: electron in the tunnel from global orbit to local element coordinate system
- *
- * Args:
- *        ps: phase space
- *        S:  translation
- *        R:  rotation (matrix)
- *        c0:
- *        c1:
- *        s1
- *
- */
-template<typename T>
-void GtoL(ss_vect<T> &ps, std::vector<double> &S, std::vector<double> &R,
-	  const double c0, const double c1, const double s1)
-{
-  ss_vect<T> ps1;
-
-  // Simplified rotated p_rot: R^-1(theta_des) prot(phi/2) R(theta_des).
-  ps[px_] += c1; ps[py_] += s1;
-  // Eucluclidian transformation:
-  //   first Translate,
-  ps[x_] -= S[X_]; ps[y_] -= S[Y_];
-  //   then Rotate.
-  ps1 = ps;
-  ps[x_]  =  R[X_]*ps1[x_]  + R[Y_]*ps1[y_];
-  ps[px_] =  R[X_]*ps1[px_] + R[Y_]*ps1[py_];
-  ps[y_]  = -R[Y_]*ps1[x_]  + R[X_]*ps1[y_];
-  ps[py_] = -R[Y_]*ps1[px_] + R[X_]*ps1[py_] ;
-  // Simplified p_rot.
-  ps[px_] -= c0;
-  // Phase space vector is now in magnet's local coordinates.
-}
-
-/**
- *  Local to Global: inverse of GtoL.
- *  Look there for the parameters
- */
-template<typename T>
-void LtoG(ss_vect<T> &ps, std::vector<double> &S, std::vector<double> &R,
-	  double c0, double c1, double s1)
-{
-  ss_vect<T> ps1;
-
-  // Reverse of GtoL, with inverted Euclidian.
-  // Simplified p_rot.
-  ps[px_] -= c0;
-  // Inverted Eucluclidian transformation:
-  //   first Rotate.
-  ps1 = ps;
-  ps[x_]  = R[X_]*ps1[x_]  - R[Y_]*ps1[y_];
-  ps[px_] = R[X_]*ps1[px_] - R[Y_]*ps1[py_];
-  ps[y_]  = R[Y_]*ps1[x_]  + R[X_]*ps1[y_];
-  ps[py_] = R[Y_]*ps1[px_] + R[X_]*ps1[py_];
-  //   then Translate.
-  ps[x_] += S[X_]; ps[y_] += S[Y_];
-  // Rotated p_rot.
-  ps[px_] += c1; ps[py_] += s1;
-}
 
 
 #if 0
@@ -415,8 +353,12 @@ void thin_kick(ConfigType &conf, const int Order, const MpoleArray &MB,
 }
 
 
+/**
+ * Todo:
+ *     check phi
+ */
 template<typename T>
-void EdgeFocus(ConfigType &conf, const double irho, const double phi,
+void EdgeFocus(ConfigType &conf, const double irho, const double phi /* in degrees */,
 	       const double gap, ss_vect<T> &ps)
 {
   ps[px_] += irho*tan(degtorad(phi))*ps[x_];
@@ -508,120 +450,6 @@ void quad_fringe(ConfigType &conf, const double b2, ss_vect<T> &ps)
 
 
 
-template<typename T>
-void MpoleType::Mpole_Pass(ConfigType &conf, ss_vect<T> &ps)
-{
-  int          seg = 0, i;
-  double       dL = 0e0, dL1 = 0e0, dL2 = 0e0,
-               dkL1 = 0e0, dkL2 = 0e0, h_ref = 0e0;
-
-  GtoL(ps, dS, dT, Pc0, Pc1, Ps1);
-
-  if (conf.emittance && !conf.Cavity_on) {
-    // Needs A^-1.
-    curly_dH_x = 0e0;
-    for (i = 0; i <= 5; i++)
-      /* Synchrotron integrals */ dI[i] = 0e0;
-  }
-
-  switch (Pmethod) {
-
-  case Meth_Fourth:
-    if (conf.mat_meth && (Porder <= Quad)) {
-      ps = mat_pass(M_elem, ps);
-
-      // if (conf.emittance && !conf.Cavity_on) &&
-      // 	(PL != 0e0) && (Pirho != 0e0)) get_dI_eta_5(this);
-    } else {
-      // Fringe fields.
-      if (conf.quad_fringe && (PB[Quad+HOMmax] != 0e0))
-	quad_fringe(conf, PB[Quad+HOMmax], ps);
-      if (!conf.Cart_Bend) {
-	if (Pirho != 0e0)
-	  EdgeFocus(conf, Pirho, PTx1, Pgap, ps);
-      } else {
-	p_rot(conf, PTx1, ps); bend_fringe(conf, Pirho, ps);
-      }
-
-      if (Pthick == thick) {
-	if (!conf.Cart_Bend) {
-	  // Polar coordinates.
-	  h_ref = Pirho; dL = PL/PN;
-	} else {
-	  // Cartesian coordinates.
-	  h_ref = 0e0;
-	  if (Pirho == 0e0)
-	    dL = PL/PN;
-	  else
-	    dL = 2e0/Pirho*sin(PL*Pirho/2e0)/PN;
-	}
-
-	dL1 = c_1*dL; dL2 = c_2*dL; dkL1 = d_1*dL; dkL2 = d_2*dL;
-
-	for (seg = 1; seg <= PN; seg++) {
-	  if (conf.emittance && !conf.Cavity_on) {
-	    // Needs A^-1.
-	    curly_dH_x += is_tps<tps>::get_curly_H(ps);
-	    dI[4] += is_tps<tps>::get_dI_eta(ps);
-	  }
-
-	  Drift(conf, dL1, ps);
-	  thin_kick(conf, Porder, PB, dkL1, Pirho, h_ref, ps);
-	  Drift(conf, dL2, ps);
-	  thin_kick(conf, Porder, PB, dkL2, Pirho, h_ref, ps);
-
-	  if (conf.emittance && !conf.Cavity_on) {
-	    // Needs A^-1.
-	    curly_dH_x += 4e0*is_tps<tps>::get_curly_H(ps);
-	    dI[4] += 4e0*is_tps<tps>::get_dI_eta(ps);
-	  }
-
-	  Drift(conf, dL2, ps);
-	  thin_kick(conf, Porder, PB, dkL1, Pirho, h_ref, ps);
-	  Drift(conf, dL1, ps);
-
-	  if (conf.emittance && !conf.Cavity_on) {
-	    // Needs A^-1.
-	    curly_dH_x += is_tps<tps>::get_curly_H(ps);
-	    dI[4] += is_tps<tps>::get_dI_eta(ps);
-	  }
-	}
-
-	if (conf.emittance && !conf.Cavity_on) {
-	  // Needs A^-1.
-	  curly_dH_x /= 6e0*PN;
-	  dI[1] += PL*is_tps<tps>::get_dI_eta(ps)*Pirho;
-	  dI[2] += PL*sqr(Pirho);
-	  dI[3] += PL*fabs(cube(Pirho));
-	  dI[4] *=
-	    PL*Pirho*(sqr(Pirho)+2e0*PBpar[Quad+HOMmax])
-	    /(6e0*PN);
-	  dI[5] += PL*fabs(cube(Pirho))*curly_dH_x;
-	}
-      } else
-	thin_kick(conf, Porder, PB, 1e0, 0e0, 0e0, ps);
-
-      // Fringe fields.
-      if (!conf.Cart_Bend) {
-	if (Pirho != 0e0)
-	  EdgeFocus(conf, Pirho, PTx2, Pgap, ps);
-      } else {
-	bend_fringe(conf, -Pirho, ps); p_rot(conf, PTx2, ps);
-      }
-      if (conf.quad_fringe && (PB[Quad+HOMmax] != 0e0))
-	quad_fringe(conf, -PB[Quad+HOMmax], ps);
-    }
-    break;
-
-  default:
-    std::cerr <<  "Mpole_Pass: Method not supported " << Name
-	      <<  " method " << Pmethod <<  std::endl;
-    throw ts::NotImplemented();
-    break;
-  }
-
-  LtoG(ps, dS, dT, Pc0, Pc1, Ps1);
-}
 
 
 template<typename T>
