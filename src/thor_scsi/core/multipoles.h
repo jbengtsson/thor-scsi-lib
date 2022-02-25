@@ -1,5 +1,5 @@
-#ifndef _THOR_SCSI_CORE_HARMONICS_H_
-#define _THOR_SCSI_CORE_HARMONICS_H_ 1
+#ifndef _THOR_SCSI_CORE_MULTIPOLES_H_
+#define _THOR_SCSI_CORE_MULTIPOLES_H_ 1
 #include <vector>
 #include <complex>
 #include <cassert>
@@ -13,7 +13,7 @@
  
 namespace thor_scsi::core {
 
-	const int max_harmonic = 21;
+	const int max_multipole = 21;
 
 	typedef std::complex<double> cdbl;
 #ifdef THOR_SCSI_USE_F128
@@ -22,14 +22,14 @@ namespace thor_scsi::core {
 	typedef std::complex<double> cdbl_intern;
 #endif // THOR_SCSI_USE_F128
 	
-	class MultipolesBase{
-		virtual inline cdbl field(const double x, const double y) = 0;	  
+	/// pure virtual class of 2D Multipoles
+	/// using European convention
+	struct MultipolesBase{
+		virtual inline cdbl field(const cdbl z) = 0;
 	};
 	
         /**
-	 *  Representation of planar 2D multipoles / harmonics
-	 *
-	 * The given solution
+	 *  Representation of planar 2D harmonics / multipoles
 	 *
 	 *  @f[
 	 *     \mathbf{B(z)} = B_y + i B_x =
@@ -47,13 +47,13 @@ namespace thor_scsi::core {
 	class PlanarMultipoles : public MultipolesBase{
 	public:
 		/**
-		   Just allocates an set of zero harmonics
+		   Just allocates an set of zero multipoles
 		 */
-		inline PlanarMultipoles(const unsigned int h_max=max_harmonic){
+		inline PlanarMultipoles(const unsigned int h_max=max_multipole){
 			if(h_max<=1){
-				throw std::logic_error("max harmonic must be at least 1");
+				throw std::logic_error("max multipole must be at least 1");
 			}
-			this->m_max_harmonic = h_max;
+			this->m_max_multipole = h_max;
 			this->coeffs.resize(h_max);
 			const cdbl_intern zero(0.0, 0.0);
 			for(auto h : this->coeffs){
@@ -62,10 +62,10 @@ namespace thor_scsi::core {
 		};
 		
 		PlanarMultipoles(PlanarMultipoles&& o):
-			coeffs(std::move(o.coeffs)){this->m_max_harmonic = o.m_max_harmonic;};
+			coeffs(std::move(o.coeffs)){this->m_max_multipole = o.m_max_multipole;};
 
 		PlanarMultipoles(PlanarMultipoles& o):
-			coeffs(o.coeffs){this->m_max_harmonic = o.m_max_harmonic;};
+			coeffs(o.coeffs){this->m_max_multipole = o.m_max_multipole;};
 
 		inline PlanarMultipoles clone(void) const {
 			return PlanarMultipoles(std::vector<cdbl_intern>(this->coeffs));
@@ -77,10 +77,10 @@ namespace thor_scsi::core {
 		 */
 		inline PlanarMultipoles(std::vector<cdbl_intern> const coeffs) {
 			if(coeffs.size()<=1){
-				throw std::logic_error("max harmonic must be at least 1");
+				throw std::logic_error("max multipole must be at least 1");
 			}
 			this->coeffs = coeffs;
-			this->m_max_harmonic = this->coeffs.size();
+			this->m_max_multipole = this->coeffs.size();
 		}
 		
 	public:
@@ -116,6 +116,7 @@ namespace thor_scsi::core {
 			cdbl result(double(t_field.real()), double(t_field.imag()));
 			return result;
 		}
+		/*
 		inline cdbl field(const double x, const double y){
 			const cdbl z(x, y);
 			return field(z);
@@ -124,7 +125,8 @@ namespace thor_scsi::core {
 		inline cdbl field(const double x){
 			return field(x, 0);
 		}
-		/** Check if harmonic index is within range of representation
+		*/
+		/** Check if multipole index is within range of representation
 
 		    \verbatim embed:rst
 
@@ -133,42 +135,42 @@ namespace thor_scsi::core {
 
 		    \endverbatim
 		 */
-		inline void checkHarmonicIndex(const unsigned int n){
+		inline void checkMultipoleIndex(const unsigned int n){
 			if(n <= 0){
 				// European convention
-				throw std::length_error("harmonics index <= 0");
+				throw std::length_error("multipoles index <= 0");
 				assert(0);
-			}else if (n > this->m_max_harmonic){
-				throw std::length_error("harmonics index >  max harmonic");
+			}else if (n > this->m_max_multipole){
+				throw std::length_error("multipoles index >  max multipole");
 				assert(0);
 			}
 		}
 
-		/** get n'th harmonic
+		/** get n'th multipole
 
 		    \verbatim embed:rst
 		    .. todo::
-		        Review if the harmonic index check can be avoided as
+		        Review if the multipole index check can be avoided as
 			std::vector implements the required check
 		    \endverbatim
 		 */
-		inline cdbl getHarmonic(const unsigned int n){
-			this->checkHarmonicIndex(n);
+		inline cdbl getMultipole(const unsigned int n){
+			this->checkMultipoleIndex(n);
 			unsigned  use_n = n - 1;
 			assert(use_n > 0);
-			assert(use_n <this->m_max_harmonic);
+			assert(use_n <this->m_max_multipole);
 			cdbl_intern c = this->coeffs[use_n];
 			cdbl res(double(c.real()), double(c.imag()));
 			return res;
 		}
 
-		/** set n'th harmonic
+		/** set n'th multipole
 		 */
-		inline void setHarmonic(const unsigned int n, const cdbl c){
-			this->checkHarmonicIndex(n);
+		inline void setMultipole(const unsigned int n, const cdbl c){
+			this->checkMultipoleIndex(n);
 			unsigned use_n = n - 1;
 			assert(use_n > 0);
-			assert(use_n <this->m_max_harmonic);
+			assert(use_n <this->m_max_multipole);
 			this->coeffs[use_n] = cdbl_intern(c.real(), c.imag());
 		}
 
@@ -199,7 +201,7 @@ namespace thor_scsi::core {
 		/**
 		 * @brief translates coordiante system
 		 *
-		 * Apply following translation to the coordinate system of the harmonics
+		 * Apply following translation to the coordinate system of the multipoles
 		 * \f$ \mathbf{\Delta z}_\mathrm{s} = \mathbf{\Delta z}/R_\mathrm{rref} \f$
 		 * with \f$ \mathbf{\Delta z} = \Delta x + i \Delta y \f$
 		 *
@@ -227,7 +229,7 @@ namespace thor_scsi::core {
 		}
 
 		/**
-		 *  scale all harmonics by a factor scale in place
+		 *  scale all multipoles by a factor scale in place
 		 *
 		 * \verbatim embed:rst:leading-asterisk
 		 *
@@ -244,7 +246,7 @@ namespace thor_scsi::core {
 		}
 
 		/**
-		 * scale harmonics and return a new object.
+		 * scale multipoles and return a new object.
 		 *
 		 * \verbatim embed:rst:leading-asterisk
 		 *
@@ -265,7 +267,7 @@ namespace thor_scsi::core {
 		 *
 		 * \verbatim embed:rst:leading-asterisk
 		 *
-		 * Add an other set of harmonics to this set.
+		 * Add an other set of multipoles to this set.
 		 *
 		 * .. todo::
 		 *      *  Implementation correct ?
@@ -277,8 +279,8 @@ namespace thor_scsi::core {
 		/**
 		 * The maximum index represented.
 		 */
-		inline unsigned int getMaxHarmonicIndex(void){
-			return this->m_max_harmonic;
+		inline unsigned int getMultipoleMaxIndex(void){
+			return this->m_max_multipole;
 		}
 
 		/**
@@ -297,7 +299,7 @@ namespace thor_scsi::core {
 		}
 
 	private:
-		unsigned int m_max_harmonic;
+		unsigned int m_max_multipole;
 		std::vector<cdbl_intern> coeffs;
 
 
@@ -309,14 +311,14 @@ namespace thor_scsi::core {
 
 
 	// why should one need that ...
-	// void toHarmonicRepresentation(std::vector<cdbl> vec);
+	// void toMultipoleRepresentation(std::vector<cdbl> vec);
 
 	// consider if caching the coefficients internally is a good idea
 	// If all code constantly access them, it would be a good idea
 	// std::vector<<double> coeffs_tracy_representation;
 #endif
 }
-#endif /* _THOR_SCSI_HARMONICS_H_ */
+#endif /* _THOR_SCSI_MULTIPOLES_H_ */
 /*
  * Local Variables:
  * mode: c++

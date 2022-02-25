@@ -19,20 +19,20 @@ target_include_directories(test_transform
     "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )
 
-add_executable(test_harmonics
-  test_harmonics.cc
-  harmonics.cc
-  harmonics_extra.cc
+add_executable(test_multipoles_planar
+  test_multipoles_planar.cc
+  multipoles.cc
+  multipoles_extra.cc
   math_comb.cc
 )
-add_test(harmonics test_harmonics)
+add_test(multipoles_planar test_multipoles_planar)
 
-target_include_directories(test_harmonics
+target_include_directories(test_multipoles_planar
     PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../../>"
     "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )
-target_link_libraries(test_harmonics
+target_link_libraries(test_multipoles_planar
   # PRIVATE Boost::boost
   #  quadmath
   gsl
@@ -41,7 +41,7 @@ target_link_libraries(test_harmonics
     ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
 )
   
-target_include_directories(test_harmonics
+target_include_directories(test_multipoles_planar
     PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../../>"
     "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"

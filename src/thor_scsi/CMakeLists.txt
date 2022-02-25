@@ -58,8 +58,8 @@ set(thor_scsi_core_FILES
   core/cell_void.cc
   core/machine.cc
   core/math_comb.cc
-  core/harmonics.cc
-  core/harmonics_extra.cc
+  core/multipoles.cc
+  core/multipoles_extra.cc
   elements/element_helpers.cc
   elements/drift.cc
   # thor_lib.cc

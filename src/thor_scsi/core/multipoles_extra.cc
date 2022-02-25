@@ -1,11 +1,11 @@
 #include <gsl/gsl_complex.h>
 #include <gsl/gsl_poly.h>
 #include <gsl/gsl_vector_complex_double.h>
-#include <thor_scsi/core/harmonics.h>
+#include <thor_scsi/core/multipoles.h>
 
 namespace tsc = thor_scsi::core;
 
-tsc::cdbl tsc::PlanarHarmonics::field_gsl(const tsc::cdbl z)
+tsc::cdbl tsc::PlanarMultipoles::field_gsl(const tsc::cdbl z)
 {
 
 	gsl_complex gz, *mem=NULL;
@@ -29,7 +29,7 @@ tsc::cdbl tsc::PlanarHarmonics::field_gsl(const tsc::cdbl z)
 	
 }
 
-tsc::cdbl tsc::PlanarHarmonics::field_taylor(const tsc::cdbl z)
+tsc::cdbl tsc::PlanarMultipoles::field_taylor(const tsc::cdbl z)
 {
 	tsc::cdbl_intern zp(z.real(), z.imag()), ztmp = zp,
 		field(0.0, 0.0);

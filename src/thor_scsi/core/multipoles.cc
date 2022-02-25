@@ -1,15 +1,15 @@
-#include <thor_scsi/core/harmonics.h>
+#include <thor_scsi/core/multipoles.h>
 #include <thor_scsi/core/math_comb.h>
 
 namespace tsc = thor_scsi::core;
 
 
-tsc::PlanarHarmonics tsc::PlanarHarmonics::operator + (tsc::PlanarHarmonics &other)
+tsc::PlanarMultipoles tsc::PlanarMultipoles::operator + (tsc::PlanarMultipoles &other)
 {
 	unsigned int n = std::max(this->getCoeffs().size(), other.getCoeffs().size());
 	unsigned int i;
 
-	PlanarHarmonics nh(n);
+	PlanarMultipoles nh(n);
 	auto ncoeffs = nh.getCoeffs();
 
 	i = 0;
@@ -31,7 +31,7 @@ tsc::PlanarHarmonics tsc::PlanarHarmonics::operator + (tsc::PlanarHarmonics &oth
  *
  *
  */
-void tsc::PlanarHarmonics::applyTranslation(const tsc::cdbl dzs)
+void tsc::PlanarMultipoles::applyTranslation(const tsc::cdbl dzs)
 {
 
 	for (unsigned int i = 0; i < this->coeffs.size(); ++i) {
