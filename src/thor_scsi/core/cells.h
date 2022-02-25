@@ -28,7 +28,7 @@ namespace thor_scsi {
 	    double
 	      S,                         ///< position in the ring. S coordinate of the desgin orbit.
 	      curly_dH_x;                ///< Contribution to curly_H_x.
-	    thor_scsi::core::Euclidian2DTransform transform;
+			//thor_scsi::core::Euclidian2DTransform transform;
 	    std::vector<double>
 	      dI                         ///< Contribution to I[1..5].
 		{0e0, 0e0, 0e0, 0e0, 0e0, 0e0},
@@ -73,6 +73,7 @@ namespace thor_scsi {
 		   * \f$ rms \cdot random number \f$
 		   * horizontal coordinate
 		   */
+#if 0
 		 inline double getDx(void){
 			 return this->transform.getDx();
 		 }
@@ -104,6 +105,7 @@ namespace thor_scsi {
 		 inline void setRoll(double roll){
 			 this->transform.setRoll(roll);
 		 }
+#endif
 	  };
 	}
 }

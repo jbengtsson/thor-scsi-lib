@@ -1,5 +1,4 @@
 #include <thor_scsi/core/transform.h>
-
 /*
  * Local Variables:
  * mode: c++

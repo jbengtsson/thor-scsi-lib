@@ -3,7 +3,7 @@
 
 namespace thor_scsi {
 	namespace elements {
-		typedef std::vector<double> MpoleArray;
+		//typedef std::vector<double> MpoleArray;
 
 
 		/**
@@ -25,16 +25,6 @@ namespace thor_scsi {
 			Solenoid   = 10,
 			Map        = 11 };
 
-
-		/**
-		 * Todo:
-		 *    Check if should be renamed e.g. lens type
-		 */
-		enum pthicktype
-		{
-			thick = 0,
-		thin  = 1
-		};
 
 		enum MpoleKind
 		{

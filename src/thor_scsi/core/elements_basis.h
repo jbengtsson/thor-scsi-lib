@@ -75,14 +75,16 @@ namespace thor_scsi {
 #if 0
 			///< Candidate to be moved towards aperture
 			template<typename T>
-			  bool CheckAmpl(thor_scsi::core::ConfigType &conf, const ss_vect<T> &x);
-			
+			bool CheckAmpl(thor_scsi::core::ConfigType &conf, const ss_vect<T> &x);
+
+			virtual void show(std::ostream&, int level) const;
+#if 0
 			std::string repr_elem(void);     ///< auxilliary function providing a string of common information
 			                                 ///< required for the different elements
 			virtual std::string repr(void) = 0;  ///< representation similar to prt_elem but a bit more pythonic
 			                                 ///< used by python interface to generate the information for
 			                                 ///< :meth:`__repr__`
-
+#endif
 			/**
 			 * Todo:
 			 *    Check if that is still missing an overloaded method?
@@ -103,7 +105,7 @@ namespace thor_scsi {
 #endif
 		};
 
-#if 0		
+#if 0
 		///< Index for lattice families & elements.
 		class ElemFamType {
 		public:
@@ -114,7 +116,7 @@ namespace thor_scsi {
 			std::vector<int> KidList;   ///< Todo: position number in lattice ??
 			std::vector<std::string>    DBNlist; ///< For control system. Todo: but what ?
 		};
-#endif		
+#endif
 	}
 }
 #endif /*  _THOR_SCSI_CORE_ELEMENTS_BASIS_H_  */

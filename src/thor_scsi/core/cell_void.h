@@ -63,7 +63,7 @@ namespace thor_scsi::core {
 		/** Sub-classes must provide an approprate short description string.
 		 *  Must match the type name passed to Machine::registerElement().
 		 */
-		virtual const char* type_name() const =0;
+		virtual const char* type_name(void) const =0;
 
 		//! Propogate the given State through this Element
 		//! Still dicussing which name to use
@@ -99,7 +99,7 @@ namespace thor_scsi::core {
 		Config p_conf;
 	        friend class Machine;
 	};
-	
+
 	inline
 	std::ostream& operator<<(std::ostream& strm, const CellVoid& cell_void)
 	{
