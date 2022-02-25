@@ -4,6 +4,8 @@
 #include <thor_scsi/core/multipoles.h>
 #include <cmath>
 
+/* Second implemntation of .field method available? */
+// #define THOR_SCSI_PLANAR_MULTIPOLES_FIELD2
 namespace tsc = thor_scsi::core;
 
 static const double rad2deg = 180.0/M_PI;
@@ -14,7 +16,7 @@ BOOST_AUTO_TEST_CASE(test01_complex_angle)
 
 	{
 		const double angle = M_PI/16.0;
-	
+
 		tsc::cdbl cang = exp(angle * I);
 		BOOST_CHECK_CLOSE(std::arg(cang) * rad2deg, angle * rad2deg, 1e-4);
 	}
@@ -23,23 +25,23 @@ BOOST_AUTO_TEST_CASE(test01_complex_angle)
 		const double angle = M_PI/4.0;
 		tsc::cdbl cang = exp(angle * I);
 		BOOST_CHECK_CLOSE(std::arg(cang) * rad2deg, angle * rad2deg, 1e-4);
-		
+
 	}
 	{
 		const double angle = M_PI/2.0;
 		tsc::cdbl cang = exp(angle * I);
 		BOOST_CHECK_CLOSE(std::arg(cang) * rad2deg, angle * rad2deg, 1e-4);
-		
+
 	}
 	{
 		const double angle = -M_PI/2.0;
 		tsc::cdbl cang = exp(angle * I);
-		BOOST_CHECK_CLOSE(std::arg(cang) * rad2deg, angle * rad2deg, 1e-4);		
+		BOOST_CHECK_CLOSE(std::arg(cang) * rad2deg, angle * rad2deg, 1e-4);
 	}
 	{
 		const double angle = -M_PI*7/8.0;
 		tsc::cdbl cang = exp(angle * I);
-		BOOST_CHECK_CLOSE(std::arg(cang) * rad2deg, angle * rad2deg, 1e-4);		
+		BOOST_CHECK_CLOSE(std::arg(cang) * rad2deg, angle * rad2deg, 1e-4);
 	}
 }
 
@@ -207,7 +209,7 @@ BOOST_AUTO_TEST_CASE(test41_rotate_quadrupole_consistency)
 {
 
 	return;
-	
+
 	auto h = tsc::PlanarMultipoles();
 
 	const int n = 2;
@@ -220,7 +222,7 @@ BOOST_AUTO_TEST_CASE(test41_rotate_quadrupole_consistency)
 
 	const double angle = M_PI/2.0, phase = angle * n;
 	const tsc::cdbl cang = exp(angle * I);
-	
+
 	const tsc::cdbl
 		pos0(  1,   0),
 		pos1(  0,   1),
@@ -277,14 +279,14 @@ BOOST_AUTO_TEST_CASE(test50_octupole_field)
 	auto h = tsc::PlanarMultipoles();
 
 	const int n = 4;
-	
+
 	// pure octupole
 	h.setMultipole(n, tsc::cdbl(1, 0));
 
 	BOOST_CHECK_CLOSE(h.getMultipole(n).real(), 1, 1e-42);
 	BOOST_CHECK_CLOSE(h.getMultipole(n).imag(), 0, 1e-42);
 
-	
+
 	// cubic  interpolation
 	{
 		auto field =  h.field(0);
@@ -329,23 +331,23 @@ BOOST_AUTO_TEST_CASE(test62_rotate_dipole)
 	const tsc::cdbl
 		pos0(1, 0),
 		pos1(1, 1);
-	
+
 	const tsc::cdbl
 		field0 = h.field(pos0),
 		field1 = h.field(pos1);
-			
+
 	h.applyRollAngle(angle);
 	BOOST_CHECK_CLOSE(h.getMultipole(n).real(), cos(phase), 1e-22);
 	BOOST_CHECK_CLOSE(h.getMultipole(n).imag(), sin(phase), 1e-22);
 	BOOST_CHECK_CLOSE(std::arg(h.getMultipole(n)), phase, 1e-22);
 	BOOST_CHECK_CLOSE(std::arg(h.getMultipole(n))/angle, n, 1e-22);
-	
+
 	{
-		// check that the phase advances as expected 
+		// check that the phase advances as expected
 		const tsc::cdbl
 			check0 = h.field(pos0),
 			check1 = h.field(pos1);
-			
+
 		BOOST_CHECK_CLOSE((std::arg(field0) + phase) * rad2deg, std::arg(check0) * rad2deg, 1e-10);
 		BOOST_CHECK_CLOSE((std::arg(field1) + phase) * rad2deg, std::arg(check1) * rad2deg, 1e-10);
 	}
@@ -355,7 +357,7 @@ BOOST_AUTO_TEST_CASE(test62_rotate_dipole)
 		const tsc::cdbl
 			rpos0 = pos0 * cang,
 			rpos1 = pos1 * cang;
-	
+
 		// Check that the positions are rotated backwards
 		// when the coordinate system is rotated these will be the cofficients of the
 		// original position
@@ -391,7 +393,7 @@ BOOST_AUTO_TEST_CASE(test63_rotate_octupole)
 		pos3(-0.5, 0),
 		pos4 = -0.5 * I;
 
-	
+
 	const tsc::cdbl
 		field0 = h.field(pos0),
 		field1 = h.field(pos1),
@@ -399,14 +401,14 @@ BOOST_AUTO_TEST_CASE(test63_rotate_octupole)
 		field3 = h.field(pos3),
 		field4 = h.field(pos4);
 
-	
+
 	h.applyRollAngle(angle);
 	BOOST_CHECK_CLOSE(h.getMultipole(4).real(), cos(phase), 1e-22);
 	BOOST_CHECK_CLOSE(h.getMultipole(4).imag(), sin(phase), 1e-22);
 	BOOST_CHECK_CLOSE(std::arg(h.getMultipole(4)), phase, 1e-22);
 	BOOST_CHECK_CLOSE(std::arg(h.getMultipole(4))/angle, n, 1e-22);
 	// BOOST_CHECK_SMALL(double(h.getMultipole(4).imag()),  1e-14);
-	
+
 	BOOST_CHECK_CLOSE(h.getMultipole(5).real(),  0, 1e-22);
 	BOOST_CHECK_CLOSE(h.getMultipole(5).imag(),  0, 1e-22);
 	BOOST_CHECK_CLOSE(h.getMultipole(3).real(),  0, 1e-22);
@@ -417,23 +419,23 @@ BOOST_AUTO_TEST_CASE(test63_rotate_octupole)
 	BOOST_CHECK_CLOSE(h.getMultipole(1).imag(),  0, 1e-22);
 
 	{
-		// check that the phase advances as expected 
+		// check that the phase advances as expected
 		const tsc::cdbl
 			check0 = h.field(pos0),
 			check1 = h.field(pos1),
 			check2 = h.field(pos2),
 			check3 = h.field(pos3),
 			check4 = h.field(pos4);
-	
-		
+
+
 		// No length no angle
 		// BOOST_CHECK_CLOSE(std::arg(field0) * rad2deg, std::arg(check0) * rad2deg, 1e-42);
 		BOOST_CHECK_CLOSE((std::arg(field1) + phase) * rad2deg, std::arg(check1) * rad2deg, 1e-10);
 		BOOST_CHECK_CLOSE((std::arg(field2) + phase) * rad2deg, std::arg(check2) * rad2deg, 1e-10);
-		BOOST_CHECK_CLOSE(-360 + (std::arg(field3) + phase) * rad2deg, std::arg(check3) * rad2deg, 1e-10);	
+		BOOST_CHECK_CLOSE(-360 + (std::arg(field3) + phase) * rad2deg, std::arg(check3) * rad2deg, 1e-10);
 		BOOST_CHECK_CLOSE((std::arg(field4) + phase) * rad2deg, std::arg(check4) * rad2deg, 1e-140);
 	}
-	
+
 	{
 		const tsc::cdbl cang = exp(-angle * I);
 		const tsc::cdbl
@@ -450,7 +452,7 @@ BOOST_AUTO_TEST_CASE(test63_rotate_octupole)
 		BOOST_CHECK_CLOSE((std::arg(rpos2) + angle) * rad2deg, std::arg(pos2) * rad2deg, 1e-13);
 		BOOST_CHECK_CLOSE((std::arg(rpos3) + angle) * rad2deg, std::arg(pos3) * rad2deg, 1e-13);
 		BOOST_CHECK_CLOSE((std::arg(rpos4) + angle) * rad2deg, std::arg(pos4) * rad2deg, 1e-13);
-		
+
 		// check that the field has the same angle as before if probed at the same
 		// posititon ins pace is used (thus different coordinate coefficients)
 		const tsc::cdbl
@@ -459,14 +461,14 @@ BOOST_AUTO_TEST_CASE(test63_rotate_octupole)
 			check2 = h.field(rpos2),
 			check3 = h.field(rpos3),
 			check4 = h.field(rpos4);
-	
+
 		// No length no angle
 		// BOOST_CHECK_CLOSE(std::arg(field0) * rad2deg, std::arg(check0) * rad2deg, 1e-42);
-		// angle of field is now rotated 
+		// angle of field is now rotated
 		BOOST_CHECK_SMALL(       (std::arg(check1) - angle) * rad2deg, 1e-10);
 		BOOST_CHECK_SMALL(       (std::arg(field1)        ) * rad2deg, 1e-10);
 		BOOST_CHECK_CLOSE(       (std::arg(check2) - angle) * rad2deg, std::arg(field2) * rad2deg, 1e-10);
-		BOOST_CHECK_CLOSE(360 +  (std::arg(check3) - angle) * rad2deg, std::arg(field3) * rad2deg, 1e-10);	
+		BOOST_CHECK_CLOSE(360 +  (std::arg(check3) - angle) * rad2deg, std::arg(field3) * rad2deg, 1e-10);
 		BOOST_CHECK_CLOSE(       (std::arg(check4) - angle) * rad2deg, std::arg(field4) * rad2deg, 1e-10);
 
 		// Magnitude should be still the same
@@ -475,7 +477,7 @@ BOOST_AUTO_TEST_CASE(test63_rotate_octupole)
 		BOOST_CHECK_CLOSE(std::norm(check2), std::norm(field2), 1e-10);
 		BOOST_CHECK_CLOSE(std::norm(check3), std::norm(field3), 1e-10);
 		BOOST_CHECK_CLOSE(std::norm(check4), std::norm(field4), 1e-10);
-		
+
 	}
 }
 
@@ -538,7 +540,7 @@ BOOST_AUTO_TEST_CASE(test60_rotate_octupole_small_angle)
 			rpos0 = pos0 * cang,
 			rpos1 = pos1 * cang,
 			rpos2 = pos2 * cang;
-		
+
 		const tsc::cdbl
 			check0 = h.field(rpos0),
 			check1 = h.field(rpos1),
@@ -570,9 +572,9 @@ BOOST_AUTO_TEST_CASE(test70_translate_quadrupole_zero)
 
 	BOOST_CHECK_CLOSE(h.getMultipole(2).real(), 1, 1e-42);
 	BOOST_CHECK_CLOSE(h.getMultipole(2).imag(), 0, 1e-42);
-	
+
 	// check that no dipole component has been added
-	BOOST_CHECK_SMALL(double(h.getMultipole(1).real()), 1e-13);	
+	BOOST_CHECK_SMALL(double(h.getMultipole(1).real()), 1e-13);
 	BOOST_CHECK_SMALL(double(h.getMultipole(1).imag()), 1e-13);
 
 }
@@ -599,7 +601,7 @@ BOOST_AUTO_TEST_CASE(test80_translate_quadrupole_one)
 	BOOST_CHECK_SMALL(field0.imag(), 1e-42);
 	BOOST_CHECK_CLOSE(field1.imag(), 0.5, 1e-42);
 	BOOST_CHECK_CLOSE(field2.real(),   1, 1e-42);
-	
+
 	// checking interface
 	h.applyTranslation(dz);
 
@@ -623,7 +625,7 @@ BOOST_AUTO_TEST_CASE(test80_translate_quadrupole_one)
 		check0 = h.field(pos0 - dz),
 		check1 = h.field(pos1 - dz),
 		check2 = h.field(pos2 - dz);
-	
+
 	BOOST_CHECK_CLOSE(field0.real(), check0.real(), 1e-42);
 	BOOST_CHECK_CLOSE(field0.imag(), check0.imag(), 1e-42);
 
@@ -654,7 +656,7 @@ BOOST_AUTO_TEST_CASE(test90_translate_quadrupole_test_field)
 	// checking interface
 	h.applyTranslation(dz);
 
-	
+
 	const tsc::cdbl
 		check0 = h.field(pos0 - dz),
 		check1 = h.field(pos1 - dz),
@@ -690,7 +692,7 @@ BOOST_AUTO_TEST_CASE(test91_translate_sextupole)
 	// sextupole ... same as sextupole
 	BOOST_CHECK_CLOSE(h.getMultipole(3).real(), sextupole, 1e-42);
 	BOOST_CHECK_CLOSE(h.getMultipole(3).imag(), 0, 1e-42);
-		
+
 	// quadrupole ... half the sextupole
 	BOOST_CHECK_CLOSE(h.getMultipole(2).real(), 2 * sextupole, 1e-42);
 	BOOST_CHECK_CLOSE(h.getMultipole(2).imag(), 0, 1e-42);
@@ -704,7 +706,7 @@ BOOST_AUTO_TEST_CASE(test91_translate_sextupole)
 		check0 = h.field(pos0 - dz),
 		check1 = h.field(pos1 - dz),
 		check2 = h.field(pos2 - dz);
-	
+
 	BOOST_CHECK_CLOSE(field0.real(), check0.real(), 1e-42);
 	BOOST_CHECK_CLOSE(field0.imag(), check0.imag(), 1e-42);
 
@@ -718,7 +720,7 @@ BOOST_AUTO_TEST_CASE(test91_translate_sextupole)
 BOOST_AUTO_TEST_CASE(test92_translate_octupole)
 {
 	const double octupole = 1000;
-	
+
 	const tsc::cdbl dz(1, 0);
 	tsc::PlanarMultipoles h = tsc::PlanarMultipoles();
 	h.setMultipole(4, tsc::cdbl(1, 0) * octupole);
@@ -736,12 +738,12 @@ BOOST_AUTO_TEST_CASE(test92_translate_octupole)
 
 	BOOST_CHECK_CLOSE(h.getMultipole(4).real(), octupole, 1e-42);
 	BOOST_CHECK_CLOSE(h.getMultipole(4).imag(), 0, 1e-42);
-	
-	// sextupole same as octupole 
+
+	// sextupole same as octupole
 	BOOST_CHECK_CLOSE(h.getMultipole(3).real(), 3 * octupole , 1e-42);
 	BOOST_CHECK_CLOSE(h.getMultipole(3).imag(), 0, 1e-42);
-		
-	// quadrupole ... a third of 
+
+	// quadrupole ... a third of
 	BOOST_CHECK_CLOSE(h.getMultipole(2).real(), 3 * octupole , 1e-42);
 	BOOST_CHECK_CLOSE(h.getMultipole(2).imag(), 0, 1e-42);
 
@@ -762,7 +764,7 @@ BOOST_AUTO_TEST_CASE(test92_translate_octupole)
 
 	BOOST_CHECK_CLOSE(field2.real(), check2.real(), 1e-42);
 	BOOST_CHECK_CLOSE(field2.imag(), check2.imag(), 1e-42);
-	
+
 }
 
 
@@ -783,7 +785,7 @@ BOOST_AUTO_TEST_CASE(test100_translate_quadrupole_small)
 	h.setMultipole(10, icosapole);
 
 
-	const tsc::cdbl pos0(0, 0e0/rref) , pos1(0, 17e-3/rref), pos2(23e-3/rref, 0);	
+	const tsc::cdbl pos0(0, 0e0/rref) , pos1(0, 17e-3/rref), pos2(23e-3/rref, 0);
 	const tsc::cdbl
 		field0 = h.field(pos0),
 		field1 = h.field(pos1),
@@ -795,10 +797,13 @@ BOOST_AUTO_TEST_CASE(test100_translate_quadrupole_small)
 	const tsc::cdbl
 		check0 = h.field(pos0 - dz),
 		check1 = h.field(pos1 - dz),
-		check2 = h.field(pos2 - dz),
+		check2 = h.field(pos2 - dz);
+#ifdef THOR_SCSI_PLANAR_MULTIPOLES_FIELD2
+	const tsc::cdbl
 		check0_2 = h.field2(pos0 - dz),
 		check1_2 = h.field2(pos1 - dz),
 		check2_2 = h.field2(pos2 - dz);
+#endif // THOR_SCSI_PLANAR_MULTIPOLES_FIELD2
 
 
 	// limits set for quadmath .. in percent
@@ -812,5 +817,5 @@ BOOST_AUTO_TEST_CASE(test100_translate_quadrupole_small)
 	BOOST_CHECK_CLOSE(field2.real(), check2.real(), 2e-3);
 	BOOST_CHECK_SMALL(field2.imag() - check2.imag(), 2e-3);
 
-	
+
 }

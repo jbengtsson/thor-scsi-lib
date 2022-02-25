@@ -10,24 +10,31 @@
 #include <boost/multiprecision/float128.hpp>
 #include <boost/multiprecision/complex128.hpp>
 #endif // THOR_SCSI_USE_F128
- 
+
 namespace thor_scsi::core {
 
+	/**
+	 * maximum multipole to use
+	 */
 	const int max_multipole = 21;
 
 	typedef std::complex<double> cdbl;
+
 #ifdef THOR_SCSI_USE_F128
 	typedef boost::multiprecision::complex128 cdbl_intern;
-#else // THOR_SCSI_USE_F128	
+#else // THOR_SCSI_USE_F128
 	typedef std::complex<double> cdbl_intern;
 #endif // THOR_SCSI_USE_F128
-	
-	/// pure virtual class of 2D Multipoles
-	/// using European convention
+
+	/**
+	 * Pure virtual class of multipoles
+	 *
+	 * External code just requires to calculate multipoles
+	 */
 	struct MultipolesBase{
-		virtual inline cdbl field(const cdbl z) = 0;
+		virtual inline cdbl field(const double x, const double y) = 0;
 	};
-	
+
         /**
 	 *  Representation of planar 2D harmonics / multipoles
 	 *
@@ -40,9 +47,21 @@ namespace thor_scsi::core {
 	 *  with \f$ \mathbf{z} = x + i y \f$ and \f$ \mathbf{C}_n = B_n + i A_n \f$
 	 *  and \f$R_\mathrm{ref}\f$ the reference radius.
 	 *  \f$N\f$ corresponds to the maximum harmonic
-	 *  Please note: the class adheres to the European convention
 	 *
-	 *  Todo: rename to multipoles
+	 * \verbatim embed:rst:leading-asterisk
+	 *
+	 *  Please note: for the methods
+	 *
+	 *      - setMultipole
+	 *      - getMultipoles
+	 *
+	 *  the class adheres to the European convention. All other methods do not
+	 *  provide direct indexing.
+	 *
+	 *  The coefficients are internally represented by a standard vector, Thus
+	 *  its index needs to be reduced by one.
+	 *
+	 * \endverbatim
 	 */
 	class PlanarMultipoles : public MultipolesBase{
 	public:
@@ -60,7 +79,7 @@ namespace thor_scsi::core {
 				h = zero;
 			}
 		};
-		
+
 		PlanarMultipoles(PlanarMultipoles&& o):
 			coeffs(std::move(o.coeffs)){this->m_max_multipole = o.m_max_multipole;};
 
@@ -82,7 +101,7 @@ namespace thor_scsi::core {
 			this->coeffs = coeffs;
 			this->m_max_multipole = this->coeffs.size();
 		}
-		
+
 	public:
 		/**
 		 * @brief compute the field at position z
@@ -91,21 +110,9 @@ namespace thor_scsi::core {
 		 *
 		 * \verbatim embed:rst:leading-asterisk
 		 *
-		 *   .. todo::
-		 *       check accuracy of complex calculation
-		 *
-		 *  Todo : cross check with GSL ...
-		 * \endverbatim		 
+		 * \endverbatim
 		 */
-		cdbl field_gsl(const cdbl z);
-		cdbl field_taylor(const cdbl z);
-		inline cdbl field3(const cdbl z){
-			return field_gsl(z);
-		}
-		inline cdbl field2(const cdbl z){
-			return field_taylor(z);
-		}
-		virtual inline cdbl field(const cdbl z) override final {
+		inline cdbl field(const cdbl z) {
 			int n = this->coeffs.size() -1;
 			cdbl_intern t_field = this->coeffs[n];
 			cdbl_intern z_tmp(z.real(), z.imag());
@@ -116,16 +123,11 @@ namespace thor_scsi::core {
 			cdbl result(double(t_field.real()), double(t_field.imag()));
 			return result;
 		}
-		/*
-		inline cdbl field(const double x, const double y){
+		virtual inline cdbl field(const double x, const double y) override final{
 			const cdbl z(x, y);
 			return field(z);
 		}
 
-		inline cdbl field(const double x){
-			return field(x, 0);
-		}
-		*/
 		/** Check if multipole index is within range of representation
 
 		    \verbatim embed:rst

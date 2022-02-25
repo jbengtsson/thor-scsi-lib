@@ -13,8 +13,8 @@ tsc::cdbl tsc::PlanarMultipoles::field_gsl(const tsc::cdbl z)
 
 	auto n = this->coeffs.size();
 	gsl_complex *vec = NULL;
-	
-	vec = (gsl_complex *) calloc(n, sizeof(gsl_vector)); 
+
+	vec = (gsl_complex *) calloc(n, sizeof(gsl_vector));
 	if(!vec){
 		throw std::logic_error("No vec allocated!");
 	}
@@ -26,14 +26,14 @@ tsc::cdbl tsc::PlanarMultipoles::field_gsl(const tsc::cdbl z)
 	gsl_complex gr = gsl_complex_poly_complex_eval((const gsl_complex*) vec, int(n), gz);
 	free(vec);
 	return tsc::cdbl(GSL_REAL(gr), GSL_IMAG(gr));
-	
+
 }
 
 tsc::cdbl tsc::PlanarMultipoles::field_taylor(const tsc::cdbl z)
 {
 	tsc::cdbl_intern zp(z.real(), z.imag()), ztmp = zp,
 		field(0.0, 0.0);
-	
+
 	for(size_t i = 0; i< this->coeffs.size(); ++i){
 		if(i == 0){
 			field += this->coeffs[i];
@@ -45,4 +45,3 @@ tsc::cdbl tsc::PlanarMultipoles::field_taylor(const tsc::cdbl z)
 	tsc::cdbl result(double(field.real()),double(field.imag()));
 	return result;
 }
-
