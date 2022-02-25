@@ -28,6 +28,18 @@ extern double q_fluct; /// < Track down if it is a constant or a global variable
 namespace thor_scsi {
 	namespace elements {
 
+/**
+ * compute the linear action J
+ *
+ * \verbatim embed:rst:leading-asterisk
+ *
+ *  Todo:
+ *      Check interface. See if phi and J should be computed at the same time
+ *      Check return double (e.g. std::array)
+ *
+ * \endverbatim
+ *
+ */
 void get_twoJ(const int n_DOF, const ss_vect<double> &ps,
 	      const ss_vect<tps> &A, double twoJ[]);
 
@@ -37,11 +49,14 @@ void get_twoJ(const int n_DOF, const ss_vect<double> &ps,
  *
  *  Function exist that are named
  *
- *
+ *  Compute longitudinal momentum
  *  get_p_s
  *  get_ps
  */
 
+/**
+ *  @brief Compute longitudinal momentum
+ */
 template<typename T>
 inline T get_p_s(const thor_scsi::core::ConfigType &conf, const ss_vect<T> &ps)
 {
@@ -68,21 +83,36 @@ inline T get_p_s(const thor_scsi::core::ConfigType &conf, const ss_vect<T> &ps)
 template<typename T>
 class is_tps { };
 
-// partial specialization
+/**
+ * partial specialization
+ *
+ * Todo: check if moved to oberver
+ */
 template<>
 class is_tps<double> {
 public:
+	/**
+	 *  @brief Compute phase space
+	 */
 	static inline void get_ps(const ss_vect<double> &x, thor_scsi::core::CellType *Cell)
 		{ Cell->BeamPos = pstostl(x); }
 
 	static inline double set_prm(const int k) { return 1e0; }
 
+	/**
+	 * @brief Compute (linear) dispersion action
+	 */
 	static inline double get_curly_H(const ss_vect<tps> &x){
 		std::cout << "get_curly_H: operation not defined for double" << std::endl;
 		throw std::domain_error("get_curly_H: operation not defined for double");
 		return 0e0;
 	}
 
+	/**
+	 * @brief Synchrotorn integral
+	 *
+	 * Todo: Check which one
+	 */
 	static inline double get_dI_eta(const ss_vect<tps> &A){
 		std::cout << "get_dI_eta: operation not defined for double" << std::endl;
 		throw std::domain_error("get_dI_eta: operation not defined for double");
