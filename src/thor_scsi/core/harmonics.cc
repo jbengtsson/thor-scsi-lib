@@ -27,7 +27,6 @@ tsc::PlanarHarmonics tsc::PlanarHarmonics::operator + (tsc::PlanarHarmonics &oth
 	return nh;
 }
 
-
 /**
  *
  *

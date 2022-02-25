@@ -33,8 +33,8 @@ target_include_directories(test_harmonics
     "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )
 target_link_libraries(test_harmonics
-  PRIVATE Boost::boost
-  quadmath
+  # PRIVATE Boost::boost
+  #  quadmath
   gsl
   gslcblas
     ${Boost_PRG_EXEC_MONITOR_LIBRARY}

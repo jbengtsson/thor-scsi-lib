@@ -374,9 +374,114 @@ BOOST_AUTO_TEST_CASE(test62_rotate_dipole)
 	}
 }
 
-BOOST_AUTO_TEST_CASE(test61_rotate_octupole)
+BOOST_AUTO_TEST_CASE(test63_rotate_octupole)
 {
 	auto h = tsc::PlanarHarmonics();
+
+	const int n = 4;
+	// pure quadrupole
+	h.setHarmonic(n, tsc::cdbl(1, 0));
+
+	const double angle = M_PI/45, phase = angle * n;
+
+	const tsc::cdbl
+		pos0(0, 0),
+		pos1(1, 0),
+		pos2 = I,
+		pos3(-0.5, 0),
+		pos4 = -0.5 * I;
+
+	
+	const tsc::cdbl
+		field0 = h.field(pos0),
+		field1 = h.field(pos1),
+		field2 = h.field(pos2),
+		field3 = h.field(pos3),
+		field4 = h.field(pos4);
+
+	
+	h.applyRollAngle(angle);
+	BOOST_CHECK_CLOSE(h.getHarmonic(4).real(), cos(phase), 1e-22);
+	BOOST_CHECK_CLOSE(h.getHarmonic(4).imag(), sin(phase), 1e-22);
+	BOOST_CHECK_CLOSE(std::arg(h.getHarmonic(4)), phase, 1e-22);
+	BOOST_CHECK_CLOSE(std::arg(h.getHarmonic(4))/angle, n, 1e-22);
+	// BOOST_CHECK_SMALL(double(h.getHarmonic(4).imag()),  1e-14);
+	
+	BOOST_CHECK_CLOSE(h.getHarmonic(5).real(),  0, 1e-22);
+	BOOST_CHECK_CLOSE(h.getHarmonic(5).imag(),  0, 1e-22);
+	BOOST_CHECK_CLOSE(h.getHarmonic(3).real(),  0, 1e-22);
+	BOOST_CHECK_CLOSE(h.getHarmonic(3).imag(),  0, 1e-22);
+	BOOST_CHECK_CLOSE(h.getHarmonic(2).real(),  0, 1e-22);
+	BOOST_CHECK_CLOSE(h.getHarmonic(2).imag(),  0, 1e-22);
+	BOOST_CHECK_CLOSE(h.getHarmonic(1).real(),  0, 1e-22);
+	BOOST_CHECK_CLOSE(h.getHarmonic(1).imag(),  0, 1e-22);
+
+	{
+		// check that the phase advances as expected 
+		const tsc::cdbl
+			check0 = h.field(pos0),
+			check1 = h.field(pos1),
+			check2 = h.field(pos2),
+			check3 = h.field(pos3),
+			check4 = h.field(pos4);
+	
+		
+		// No length no angle
+		// BOOST_CHECK_CLOSE(std::arg(field0) * rad2deg, std::arg(check0) * rad2deg, 1e-42);
+		BOOST_CHECK_CLOSE((std::arg(field1) + phase) * rad2deg, std::arg(check1) * rad2deg, 1e-10);
+		BOOST_CHECK_CLOSE((std::arg(field2) + phase) * rad2deg, std::arg(check2) * rad2deg, 1e-10);
+		BOOST_CHECK_CLOSE(-360 + (std::arg(field3) + phase) * rad2deg, std::arg(check3) * rad2deg, 1e-10);	
+		BOOST_CHECK_CLOSE((std::arg(field4) + phase) * rad2deg, std::arg(check4) * rad2deg, 1e-140);
+	}
+	
+	{
+		const tsc::cdbl cang = exp(-angle * I);
+		const tsc::cdbl
+			rpos0 = pos0 * cang,
+			rpos1 = pos1 * cang,
+			rpos2 = pos2 * cang,
+			rpos3 = pos3 * cang,
+			rpos4 = pos4 * cang;
+
+		// Check that the positions are rotated backwards
+		// when the coordinate system is rotated these will be the cofficients of the
+		// original position
+		BOOST_CHECK_CLOSE((std::arg(rpos1) + angle) * rad2deg, std::arg(pos1) * rad2deg, 1e-13);
+		BOOST_CHECK_CLOSE((std::arg(rpos2) + angle) * rad2deg, std::arg(pos2) * rad2deg, 1e-13);
+		BOOST_CHECK_CLOSE((std::arg(rpos3) + angle) * rad2deg, std::arg(pos3) * rad2deg, 1e-13);
+		BOOST_CHECK_CLOSE((std::arg(rpos4) + angle) * rad2deg, std::arg(pos4) * rad2deg, 1e-13);
+		
+		// check that the field has the same angle as before if probed at the same
+		// posititon ins pace is used (thus different coordinate coefficients)
+		const tsc::cdbl
+			check0 = h.field(rpos0),
+			check1 = h.field(rpos1),
+			check2 = h.field(rpos2),
+			check3 = h.field(rpos3),
+			check4 = h.field(rpos4);
+	
+		// No length no angle
+		// BOOST_CHECK_CLOSE(std::arg(field0) * rad2deg, std::arg(check0) * rad2deg, 1e-42);
+		// angle of field is now rotated 
+		BOOST_CHECK_SMALL(       (std::arg(check1) - angle) * rad2deg, 1e-10);
+		BOOST_CHECK_SMALL(       (std::arg(field1)        ) * rad2deg, 1e-10);
+		BOOST_CHECK_CLOSE(       (std::arg(check2) - angle) * rad2deg, std::arg(field2) * rad2deg, 1e-10);
+		BOOST_CHECK_CLOSE(360 +  (std::arg(check3) - angle) * rad2deg, std::arg(field3) * rad2deg, 1e-10);	
+		BOOST_CHECK_CLOSE(       (std::arg(check4) - angle) * rad2deg, std::arg(field4) * rad2deg, 1e-10);
+
+		// Magnitude should be still the same
+		BOOST_CHECK_CLOSE(std::norm(check0), std::norm(field0), 1e-10);
+		BOOST_CHECK_CLOSE(std::norm(check1), std::norm(field1), 1e-10);
+		BOOST_CHECK_CLOSE(std::norm(check2), std::norm(field2), 1e-10);
+		BOOST_CHECK_CLOSE(std::norm(check3), std::norm(field3), 1e-10);
+		BOOST_CHECK_CLOSE(std::norm(check4), std::norm(field4), 1e-10);
+		
+	}
+}
+
+{
+	auto h = tsc::PlanarHarmonics();
+
 
 	const int n = 4;
 	// pure quadrupole
@@ -697,6 +802,7 @@ BOOST_AUTO_TEST_CASE(test91_translate_sextupole)
 	// dipole
 	BOOST_CHECK_CLOSE(h.getHarmonic(1).real(), sextupole, 1e-42);
 	BOOST_CHECK_CLOSE(h.getHarmonic(1).imag(), 0, 1e-42);
+>>>>>>> 0703e7007597e66926f43a232f48613c7710f928
 
 	// probe field where coordinates were
 	const tsc::cdbl
@@ -764,9 +870,110 @@ BOOST_AUTO_TEST_CASE(test92_translate_octupole)
 	
 }
 
+BOOST_AUTO_TEST_CASE(test91_translate_sextupole)
+{
+	const double sextupole = 100;
+	const tsc::cdbl dz(1, 0);
+	tsc::PlanarHarmonics h = tsc::PlanarHarmonics();
+	h.setHarmonic(3, tsc::cdbl(1, 0) * sextupole);
+	const tsc::cdbl pos0(0, 0), pos1(0, .5), pos2(1., 0);
+
+	BOOST_CHECK_CLOSE(h.getHarmonic(3).real(), sextupole, 1e-42);
+	const tsc::cdbl
+		field0 = h.field(pos0),
+		field1 = h.field(pos1),
+		field2 = h.field(pos2);
+
+	h.applyTranslation(dz);
+
+	// sextupole ... same as sextupole
+	BOOST_CHECK_CLOSE(h.getHarmonic(3).real(), sextupole, 1e-42);
+	BOOST_CHECK_CLOSE(h.getHarmonic(3).imag(), 0, 1e-42);
+		
+	// quadrupole ... half the sextupole
+	BOOST_CHECK_CLOSE(h.getHarmonic(2).real(), 2 * sextupole, 1e-42);
+	BOOST_CHECK_CLOSE(h.getHarmonic(2).imag(), 0, 1e-42);
+	// pure quadrupole .. assuming harmonics have been checked
+	h.setHarmonic(1, tsc::cdbl(1, 0));
+	h.setHarmonic( 6, dodecapole);
+	h.setHarmonic(10, icosapole);
+
+	// dipole
+	BOOST_CHECK_CLOSE(h.getHarmonic(1).real(), sextupole, 1e-42);
+	BOOST_CHECK_CLOSE(h.getHarmonic(1).imag(), 0, 1e-42);
+
+	// probe field where coordinates were
+	const tsc::cdbl
+		check0 = h.field(pos0 - dz),
+		check1 = h.field(pos1 - dz),
+		check2 = h.field(pos2 - dz);
+	
+	BOOST_CHECK_CLOSE(field0.real(), check0.real(), 1e-42);
+	BOOST_CHECK_CLOSE(field0.imag(), check0.imag(), 1e-42);
+
+	BOOST_CHECK_CLOSE(field1.real(), check1.real(), 1e-42);
+	BOOST_CHECK_CLOSE(field1.imag(), check1.imag(), 1e-42);
+
+	BOOST_CHECK_CLOSE(field2.real(), check2.real(), 1e-42);
+	BOOST_CHECK_CLOSE(field2.imag(), check2.imag(), 1e-42);
+}
+
+BOOST_AUTO_TEST_CASE(test92_translate_octupole)
+{
+	const double octupole = 1000;
+	
+	const tsc::cdbl dz(1, 0);
+	tsc::PlanarHarmonics h = tsc::PlanarHarmonics();
+	h.setHarmonic(4, tsc::cdbl(1, 0) * octupole);
+	const tsc::cdbl pos0(0, 0), pos1(0, .5), pos2(1., 0);
+
+	BOOST_CHECK_CLOSE(h.getHarmonic(4).real(), octupole, 1e-42);
+
+
+	const tsc::cdbl
+		field0 = h.field(pos0),
+		field1 = h.field(pos1),
+		field2 = h.field(pos2);
+
+	h.applyTranslation(dz);
+
+	BOOST_CHECK_CLOSE(h.getHarmonic(4).real(), octupole, 1e-42);
+	BOOST_CHECK_CLOSE(h.getHarmonic(4).imag(), 0, 1e-42);
+	
+	// sextupole same as octupole 
+	BOOST_CHECK_CLOSE(h.getHarmonic(3).real(), 3 * octupole , 1e-42);
+	BOOST_CHECK_CLOSE(h.getHarmonic(3).imag(), 0, 1e-42);
+		
+	// quadrupole ... a third of 
+	BOOST_CHECK_CLOSE(h.getHarmonic(2).real(), 3 * octupole , 1e-42);
+	BOOST_CHECK_CLOSE(h.getHarmonic(2).imag(), 0, 1e-42);
+
+	// dipole
+	BOOST_CHECK_CLOSE(h.getHarmonic(1).real(), octupole, 1e-42);
+	BOOST_CHECK_CLOSE(h.getHarmonic(1).imag(), 0, 1e-42);
+
+	const tsc::cdbl
+		check0 = h.field(pos0 - dz),
+		check1 = h.field(pos1 - dz),
+		check2 = h.field(pos2 - dz),
+		check0_2 = h.field2(pos0 - dz),
+		check1_2 = h.field2(pos1 - dz),
+		check2_2 = h.field2(pos2 - dz);
+
+	
+	BOOST_CHECK_CLOSE(field0.real(), check0.real(), 1e-42);
+	BOOST_CHECK_CLOSE(field0.imag(), check0.imag(), 1e-42);
+
+	BOOST_CHECK_CLOSE(field1.real(), check1.real(), 1e-42);
+	BOOST_CHECK_CLOSE(field1.imag(), check1.imag(), 1e-42);
+
+	BOOST_CHECK_CLOSE(field2.real(), check2.real(), 1e-42);
+	BOOST_CHECK_CLOSE(field2.imag(), check2.imag(), 1e-42);
+	
+}
+
 BOOST_AUTO_TEST_CASE(test100_translate_quadrupole_small)
 {
-
 
 	tsc::PlanarHarmonics h = tsc::PlanarHarmonics();
 	const double unit = 1e-4, rref=40e-3;
@@ -811,13 +1018,5 @@ BOOST_AUTO_TEST_CASE(test100_translate_quadrupole_small)
 	BOOST_CHECK_CLOSE(field2.real(), check2.real(), 2e-3);
 	BOOST_CHECK_SMALL(field2.imag() - check2.imag(), 2e-3);
 
-	BOOST_CHECK_CLOSE(check0_2.real(), check0.real(), 1e-42);
-	BOOST_CHECK_CLOSE(check0_2.imag(), check0.imag(), 1e-42);
-	
-	BOOST_CHECK_CLOSE(check1_2.real(), check1.real(), 1e-42);
-	BOOST_CHECK_CLOSE(check1_2.imag(), check1.imag(), 1e-42);
-	
-	BOOST_CHECK_CLOSE(check2_2.real(), check2.real(), 1e-42);
-	BOOST_CHECK_CLOSE(check2_2.imag(), check2.imag(), 1e-42);
 	
 }
