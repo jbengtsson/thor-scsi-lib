@@ -5,16 +5,28 @@
 #include <cassert>
 #include <stdexcept>
 
-
+// #define THOR_SCSI_USE_F128 1
+#ifdef THOR_SCSI_USE_F128
+#include <boost/multiprecision/float128.hpp>
+#include <boost/multiprecision/complex128.hpp>
+#endif // THOR_SCSI_USE_F128
+ 
 namespace thor_scsi::core {
 
 	const int max_harmonic = 21;
 
 	typedef std::complex<double> cdbl;
+#ifdef THOR_SCSI_USE_F128
+	typedef boost::multiprecision::complex128 cdbl_intern;
+#else // THOR_SCSI_USE_F128	
+	typedef std::complex<double> cdbl_intern;
+#endif // THOR_SCSI_USE_F128
+	
 	/// pure virtual class of 2D Harmonics
 	/// using European convention
 	class HarmonicsBase{
 	};
+	
         /**
 	 *  Representation of planar 2D harmonics
 	 *
@@ -29,6 +41,7 @@ namespace thor_scsi::core {
 	 *  \f$N\f$ corresponds to the maximum harmonic
 	 *  Please note: the class adheres to the European convention
 	 *
+	 *  Todo: rename to multipoles
 	 */
 	class PlanarHarmonics : public HarmonicsBase{
 	public:
@@ -41,11 +54,12 @@ namespace thor_scsi::core {
 			}
 			this->m_max_harmonic = h_max;
 			this->coeffs.resize(h_max);
-			const cdbl zero(0.0, 0.0);
+			const cdbl_intern zero(0.0, 0.0);
 			for(auto h : this->coeffs){
 				h = zero;
 			}
 		};
+		
 		PlanarHarmonics(PlanarHarmonics&& o):
 			coeffs(std::move(o.coeffs)){this->m_max_harmonic = o.m_max_harmonic;};
 
@@ -53,9 +67,64 @@ namespace thor_scsi::core {
 			coeffs(o.coeffs){this->m_max_harmonic = o.m_max_harmonic;};
 
 		inline PlanarHarmonics clone(void) const {
-			return PlanarHarmonics(std::vector<cdbl>(this->coeffs));
+			return PlanarHarmonics(std::vector<cdbl_intern>(this->coeffs));
 		}
 
+	private:
+		/**
+		 * Todo: memory handling!
+		 */
+		inline PlanarHarmonics(std::vector<cdbl_intern> const coeffs) {
+			if(coeffs.size()<=1){
+				throw std::logic_error("max harmonic must be at least 1");
+			}
+			this->coeffs = coeffs;
+			this->m_max_harmonic = this->coeffs.size();
+		}
+		
+	public:
+		/**
+		 * @brief compute the field at position z
+		 *
+		 * Uses Horner equation
+		 *
+		 * \verbatim embed:rst:leading-asterisk
+		 *
+		 *   .. todo::
+		 *       check accuracy of complex calculation
+		 *
+		 *  Todo : cross check with GSL ...
+		 * \endverbatim		 
+		 */
+		cdbl field_gsl(const cdbl z);
+		cdbl field_taylor(const cdbl z);
+		inline cdbl field3(const cdbl z){
+			return field_gsl(z);
+		}
+		inline cdbl field2(const cdbl z){
+			return field_taylor(z);
+		}
+		inline cdbl field(const cdbl z){
+			int n = this->coeffs.size() -1;
+			cdbl_intern t_field = this->coeffs[n];
+			cdbl_intern z_tmp(z.real(), z.imag());
+			for(int i=n - 2; i >= 0; --i){
+				cdbl_intern tmp = this->coeffs[i];
+				t_field = t_field * z_tmp + tmp;
+			}
+			cdbl result(double(t_field.real()), double(t_field.imag()));
+			return result;
+		}
+		/*
+		inline cdbl field(const double x, const double y){
+			const cdbl z(x, y);
+			return field(z);
+		}
+
+		inline cdbl field(const double x){
+			return field(x, 0);
+		}
+		*/
 		/** Check if harmonic index is within range of representation
 
 		    \verbatim embed:rst
@@ -76,36 +145,6 @@ namespace thor_scsi::core {
 			}
 		}
 
-		/**
-		 * @brief compute the field at position z
-		 *
-		 * Uses Hohner equation
-		 *
-		 * \verbatim embed:rst:leading-asterisk
-		 *
-		 *   .. todo::
-		 *       check accuracy of complex calculation
-		 * \endverbatim
-		 */
-		inline cdbl field(const cdbl z){
-			int n = this->coeffs.size() -1;
-			cdbl field = this->coeffs[n];
-			for(int i=n - 2; i >= 0; --i){
-				cdbl tmp = this->coeffs[i];
-				field = field * z + tmp;
-			}
-			return field;
-		}
-
-		inline cdbl field(const double x, const double y){
-			const cdbl z(x, y);
-			return field(z);
-		}
-
-		inline cdbl field(const double x){
-			return field(x, 0);
-		}
-
 		/** get n'th harmonic
 
 		    \verbatim embed:rst
@@ -119,7 +158,9 @@ namespace thor_scsi::core {
 			unsigned  use_n = n - 1;
 			assert(use_n > 0);
 			assert(use_n <this->m_max_harmonic);
-			return this->coeffs[use_n];
+			cdbl_intern c = this->coeffs[use_n];
+			cdbl res(double(c.real()), double(c.imag()));
+			return res;
 		}
 
 		/** set n'th harmonic
@@ -129,11 +170,11 @@ namespace thor_scsi::core {
 			unsigned use_n = n - 1;
 			assert(use_n > 0);
 			assert(use_n <this->m_max_harmonic);
-			this->coeffs[use_n] = c;
+			this->coeffs[use_n] = cdbl_intern(c.real(), c.imag());
 		}
 
 		/**
-		 * applys a roll angle to the harmonics
+		 * applys a roll angle to the coordinate system z
 		 *
 		 *  @f[
 		 *  \mathbf{C´}_n =  \mathbf{C}_n \exp{(I n \alpha)}
@@ -148,16 +189,16 @@ namespace thor_scsi::core {
 		 *
 		 */
 		inline void applyRollAngle(const double alpha){
-			cdbl I (0, 1);
-			for(unsigned int i = 0; i < this->coeffs.size(); ++i){
+			cdbl_intern I (0, 1);
+			for(size_t i = 0; i < this->coeffs.size(); ++i){
 				const double phase = alpha * (i + 1);
-				cdbl scale = exp(I * phase);
+				cdbl_intern scale = exp(I * phase);
 				this->coeffs[i] *= scale;
 			}
 		}
 
 		/**
-		 * @brief translates harmonics by a shift
+		 * @brief translates coordiante system
 		 *
 		 * Apply following translation to the coordinate system of the harmonics
 		 * \f$ \mathbf{\Delta z}_\mathrm{s} = \mathbf{\Delta z}/R_\mathrm{rref} \f$
@@ -252,23 +293,13 @@ namespace thor_scsi::core {
 		 *
 		 * \endverbatim
 		 */
-		inline std::vector<cdbl>& getCoeffs(void){
+		inline std::vector<cdbl_intern>& getCoeffs(void){
 			return this->coeffs;
 		}
 
 	private:
-		/**
-		 * Todo: memory handling!
-		 */
-		inline PlanarHarmonics(std::vector<cdbl> const coeffs) {
-			if(coeffs.size()<=1){
-				throw std::logic_error("max harmonic must be at least 1");
-			}
-			this->coeffs = coeffs;
-			this->m_max_harmonic = this->coeffs.size();
-		}
 		unsigned int m_max_harmonic;
-		std::vector<cdbl> coeffs;
+		std::vector<cdbl_intern> coeffs;
 
 
 	};
