@@ -22,6 +22,7 @@ target_include_directories(test_transform
 add_executable(test_harmonics
   test_harmonics.cc
   harmonics.cc
+  harmonics_extra.cc
   math_comb.cc
 )
 add_test(harmonics test_harmonics)
@@ -32,6 +33,10 @@ target_include_directories(test_harmonics
     "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )
 target_link_libraries(test_harmonics
+  PRIVATE Boost::boost
+  quadmath
+  gsl
+  gslcblas
     ${Boost_PRG_EXEC_MONITOR_LIBRARY}
     ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
 )

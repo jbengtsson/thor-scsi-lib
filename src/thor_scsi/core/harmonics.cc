@@ -27,16 +27,16 @@ tsc::PlanarHarmonics tsc::PlanarHarmonics::operator + (tsc::PlanarHarmonics &oth
 	return nh;
 }
 
+
 /**
  *
  *
  */
-#include <iostream>
 void tsc::PlanarHarmonics::applyTranslation(const tsc::cdbl dzs)
 {
 
 	for (unsigned int i = 0; i < this->coeffs.size(); ++i) {
-		cdbl dzi = dzs;
+		cdbl_intern dzi(dzs.real(), dzs.imag());
 		for (unsigned j = i+1; j < this->coeffs.size(); ++j) {
 			this->coeffs[i] +=  double(binom(j, i)) * this->coeffs[j] * dzi;
 		}
