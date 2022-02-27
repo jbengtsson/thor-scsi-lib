@@ -3,6 +3,8 @@
 
 #include <thor_scsi/elements/element_local_coordinates.h>
 #include <thor_scsi/elements/enums.h>
+// move to API
+#include <thor_scsi/core/multipoles.h>
 
 /* Calculate multipole kick. The kick is given by
 
@@ -62,7 +64,9 @@ namespace thor_scsi::elements {
 	class MpoleType : public LocalGalileanPRot {
 	public:
 
-		inline MpoleType(const Config &config) : LocalGalileanPRot(config){}
+		inline MpoleType(const Config &config) : LocalGalileanPRot(config){
+			intp = nullptr;
+		}
 		// friend MpoleType* Mpole_Alloc(void);
 		//	ElemType* Elem_Init(const thor_scsi::core::ConfigType &conf, const bool reverse);
 		// void print(const std::string &);
@@ -89,6 +93,9 @@ namespace thor_scsi::elements {
 		{ _localPass(conf, ps);}
 		// virtual void pass(thor_scsi::core::ConfigType &conf, ss_vect<tps> &ps) override final
 		// { _pass(conf, ps);}
+
+		///< Make smart pointer
+		thor_scsi::core::Field2DInterpolation* intp;
 
 	  private:
 		template<typename T>

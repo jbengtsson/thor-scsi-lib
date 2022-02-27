@@ -31,8 +31,8 @@ namespace thor_scsi::core {
 	 *
 	 * External code just requires to calculate multipoles
 	 */
-	struct MultipolesBase{
-		virtual inline cdbl field(const double x, const double y) = 0;
+	struct Field2DInterpolation{
+		virtual inline void field(const double x, const double y, double *Bx, double *By) = 0;
 	};
 
         /**
@@ -63,7 +63,7 @@ namespace thor_scsi::core {
 	 *
 	 * \endverbatim
 	 */
-	class PlanarMultipoles : public MultipolesBase{
+	class PlanarMultipoles : public  Field2DInterpolation{
 	public:
 		/**
 		   Just allocates an set of zero multipoles
@@ -123,9 +123,11 @@ namespace thor_scsi::core {
 			cdbl result(double(t_field.real()), double(t_field.imag()));
 			return result;
 		}
-		virtual inline cdbl field(const double x, const double y) override final{
+		virtual inline void field(const double x, const double y, double *Bx, double * By) override final{
 			const cdbl z(x, y);
-			return field(z);
+			const cdbl r = field(z);
+			*Bx = r.real();
+			*By = r.imag();
 		}
 
 		/** Check if multipole index is within range of representation

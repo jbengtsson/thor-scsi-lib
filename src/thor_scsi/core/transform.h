@@ -127,7 +127,8 @@ namespace thor_scsi::core {
 			     << "s1 = " << this->getS1();
 		}
 
-	private:
+
+	protected:
 		double c0, c1, s1;
 	};
 

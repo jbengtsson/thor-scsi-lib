@@ -34,7 +34,7 @@ namespace thor_scsi::elements {
 
 	private:
 		template<typename T>
-		void _pass(const thor_scsi::core::ConfigType &conf, ss_vect<T> &ps){
+		void _pass(thor_scsi::core::ConfigType &conf, ss_vect<T> &ps){
 			this->global2Local(ps);
 			this->localPass(conf, ps);
 			this->local2Global(ps);

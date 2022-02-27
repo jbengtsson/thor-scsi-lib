@@ -14,6 +14,7 @@
 #include <thor_scsi/core/cells.h>
 // #include <thor_scsi/core/elements_enums.h>
 #include <thor_scsi/core/config.h>
+#include <thor_scsi/core/multipoles.h>
 
 #include <exception>
 #include <iostream>
@@ -27,6 +28,28 @@ extern double q_fluct; /// < Track down if it is a constant or a global variable
 
 namespace thor_scsi {
 	namespace elements {
+
+/**
+ * Correction for magnet gap (longitudinal fringe field)
+ *
+ *
+ * irho h = 1/rho [1/m]
+ * phi  edge angle
+ * gap  full gap between poles
+ *
+ *                          2
+ *         K1*gap*h*(1 + sin phi)
+ *  psi = ----------------------- * (1 - K2*g*gap*tan phi)
+ *              cos phi
+ *
+ *  K1 is usually 1/2
+ *  K2 is zero here
+ *
+ * @f[
+ * @f]
+ *  Todo: convert equation in doc to TeX form
+ */
+		double get_psi(const double irho, const double phi, const double gap);
 
 /**
  * compute the linear action J
@@ -188,8 +211,29 @@ public:
 				    const tps &p_s0, ss_vect<tps> &x)
 		{ }
 
-};
 
+};
+		/**
+		 * @brief forward a phase space with a drift
+		 *
+		 *
+		 * Required as helper for drift -- kick -- drift implementationa
+		 * See drift.h for DriftType, which is an implementation as separate lattice lement
+		 */
+		template<typename T>
+		void drift_pass(const thor_scsi::core::ConfigType &conf, const double L, ss_vect<T> &ps);
+
+		/**
+		 * The vector potential for the combined-function sector bend is from:
+		 *  C. Iselin "Lie Transformations and Transport Equations for Combined-
+		 * Function Dipoles" Part. Accel. 17, 143-155 (1985).
+		 */
+		template<typename T>
+		void thin_kick(thor_scsi::core::ConfigType &conf, const int Order,
+			       const thor_scsi::core::Field2DInterpolation& intp,
+			       //const MpoleArray &MB,
+			       const double L, const double h_bend, const double h_ref,
+			       ss_vect<T> &ps);
 	}
 }
 #endif /*  _THOR_SCSI_CORE_ELEMENTS_HELPERS_H_  */
