@@ -195,8 +195,9 @@ void MpoleType::Mpole_Pass(ConfigType &conf, ss_vect<T> &ps)
 	if (conf.emittance && !conf.Cavity_on) {
 		// Needs A^-1.
 		curly_dH_x = 0e0;
-		for (i = 0; i <= 5; i++)
+		for (i = 0; i <= 5; i++){
 			/* Synchrotron integrals */ dI[i] = 0e0;
+		}
 	}
 
 	switch (Pmethod) {
@@ -225,10 +226,11 @@ void MpoleType::Mpole_Pass(ConfigType &conf, ss_vect<T> &ps)
 				} else {
 					// Cartesian coordinates.
 					h_ref = 0e0;
-					if (Pirho == 0e0)
+					if (Pirho == 0e0){
 						dL = PL/PN;
-					else
+					}else{
 						dL = 2e0/Pirho*sin(PL*Pirho/2e0)/PN;
+					}
 				}
 
 				dL1 = c_1*dL; dL2 = c_2*dL; dkL1 = d_1*dL; dkL2 = d_2*dL;
@@ -273,18 +275,20 @@ void MpoleType::Mpole_Pass(ConfigType &conf, ss_vect<T> &ps)
 						/(6e0*PN);
 					dI[5] += PL*fabs(cube(Pirho))*curly_dH_x;
 				}
-			} else
+			} else {
 				thin_kick(conf, Porder, PB, 1e0, 0e0, 0e0, ps);
-
+			}
 			// Fringe fields.
 			if (!conf.Cart_Bend) {
-				if (Pirho != 0e0)
+				if (Pirho != 0e0){
 					EdgeFocus(conf, Pirho, PTx2, Pgap, ps);
+				}
 			} else {
 				bend_fringe(conf, -Pirho, ps); p_rot(conf, PTx2, ps);
 			}
-			if (conf.quad_fringe && (PB[Quad+HOMmax] != 0e0))
+			if (conf.quad_fringe && (PB[Quad+HOMmax] != 0e0)){
 				quad_fringe(conf, -PB[Quad+HOMmax], ps);
+			}
 		}
 		break;
 
