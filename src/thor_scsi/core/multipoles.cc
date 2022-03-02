@@ -27,10 +27,26 @@ tsc::PlanarMultipoles tsc::PlanarMultipoles::operator + (tsc::PlanarMultipoles &
 	return nh;
 }
 
-/**
- *
- *
- */
+void tsc::PlanarMultipoles::show(std::ostream& strm, int level) const
+{
+	strm << "interpolation 2D multipoles";
+	if (level > 2){
+		strm << ": num = " << this->coeffs.size();
+	}
+	if (level  > 3){
+		strm << ", muls = (";
+		int i = 0;
+		for(auto c : this->coeffs){
+			if(i > 0){
+				strm << ", ";
+			}
+			strm << "[" << c.real() << ", " << c.imag() << "]";
+			++i;
+		}
+		strm << ")";
+	}
+}
+
 void tsc::PlanarMultipoles::applyTranslation(const tsc::cdbl dzs)
 {
 

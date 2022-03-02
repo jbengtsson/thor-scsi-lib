@@ -65,6 +65,15 @@ BOOST_AUTO_TEST_CASE(test01_init_zero)
 
 }
 
+BOOST_AUTO_TEST_CASE(test02_show)
+{
+	auto h = tsc::PlanarMultipoles();
+	std::cout << "test print " << h <<  std::endl;
+	std::cout << "test show ";
+	h.show(std::cout, 10);
+	std::cout << std::endl;
+}
+
 BOOST_AUTO_TEST_CASE(test10_set_harmonic_dipole)
 {
 	auto h = tsc::PlanarMultipoles();

@@ -1,6 +1,5 @@
 #include <thor_scsi/elements/mpole.h>
 #include <thor_scsi/elements/element_helpers.h>
-#include <thor_scsi/elements/elements_enums.h>
 #include <thor_scsi/elements/utils.h>
 #include <tps/math_pass.h>
 
@@ -157,10 +156,6 @@ void tse::quad_fringe(const tsc::ConfigType &conf, const double b2, ss_vect<T> &
    End support functions
    ========================================================================== */
 
-// #define THOR_SCSI_USE_RADIATION
-#ifndef  THOR_SCSI_USE_RADIATION
-#warning "Radiation computation disabled by preprocessors"
-#endif /* THOR_SCSI_USE_RADIATION */
 // #define THOR_SCSI_QUAD_FRINGE
 #ifndef THOR_SCSI_QUAD_FRINGE
 #warning "Quadrupole fringe computation disabled by preprocessors"
@@ -192,7 +187,7 @@ void tse::quad_fringe(const tsc::ConfigType &conf, const double b2, ss_vect<T> &
  * \endverbatim
  */
 template<typename T>
-void tse::MpoleType::_localPass(tsc::ConfigType &conf, ss_vect<T> &ps)
+void tse::FieldKick::_localPass(tsc::ConfigType &conf, ss_vect<T> &ps)
 {
 	int          seg = 0, i;
 	double       dL = 0e0, dL1 = 0e0, dL2 = 0e0,
@@ -360,3 +355,6 @@ void tse::MpoleType::_localPass(tsc::ConfigType &conf, ss_vect<T> &ps)
 	// now handled by LocalCoordinateElement
 	// LtoG(ps, dS, dT, Pc0, Pc1, Ps1);
 }
+
+template void tse::FieldKick::_localPass(tsc::ConfigType &conf, ss_vect<double> &ps);
+// template void tse::FieldKick::_localPass(tsc::ConfigType &conf, ss_vect<tps> &ps);

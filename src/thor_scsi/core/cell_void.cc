@@ -16,5 +16,5 @@ tsc::CellVoid::~CellVoid()
 
 void tsc::CellVoid::show(std::ostream& strm, int level) const
 {
-    strm<<"Cell "<<index<<": "<<name<<" ("<<type_name()<<")\n";
+    strm<<"cell "<<index<<": "<<name<<" ("<<type_name()<<")";
 }

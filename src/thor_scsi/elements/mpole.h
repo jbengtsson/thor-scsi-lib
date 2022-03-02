@@ -2,6 +2,7 @@
 #define _THOR_SCSI_ELEMENTS_MPOLE_H_
 
 #include <thor_scsi/elements/element_local_coordinates.h>
+#include <thor_scsi/elements/elements_enums.h>
 #include <thor_scsi/elements/enums.h>
 #include <thor_scsi/elements/utils.h>
 // move to API
@@ -51,14 +52,19 @@ namespace thor_scsi::elements {
 	 */
 	const int HOMmax = 21;
 	typedef std::vector<double> MpoleArray;
-	class MpoleType : public LocalGalileanPRot {
+	class FieldKick : public LocalGalileanPRot {
 	public:
 
-		inline MpoleType(const Config &config) : LocalGalileanPRot(config){
+		/*
+		 * todo: configuration for method: use int
+		 */
+		inline FieldKick(const Config &config) : LocalGalileanPRot(config){
 			// Field interpolation type
 			intp = nullptr;
+			const int method = config.get<double>("Method", 4);
+			this->setIntegrationMethod(method);
 		}
-		// friend MpoleType* Mpole_Alloc(void);
+		// friend FieldKick* Mpole_Alloc(void);
 		//	ElemType* Elem_Init(const thor_scsi::core::ConfigType &conf, const bool reverse);
 		// void print(const std::string &);
 		/// std::string repr(void);
@@ -68,6 +74,26 @@ namespace thor_scsi::elements {
 		// std::string repr_add(void);
 
 		const char* type_name(void) const override final { return "mpole"; };
+		virtual inline void show(std::ostream& strm, int level) const override {
+			LocalGalileanPRot::show(strm, level);
+			if(level >= 1){
+				/* at least intercept it with a blank */
+				strm << " ";
+				if(!this->intp){
+					strm << " NO interpolater set!";
+				} else {
+					this->intp->show(strm, level);
+				}
+			}
+		}
+
+		void inline setIntegrationMethod(const int n){
+			this->validateIntegrationMethod(n);
+			this->Pmethod = n;
+		}
+		int  getIntegrationMethod(void) const {
+			return this->Pmethod;
+		}
 
 		inline double GetKpar(int order){
 			throw std::logic_error("Implement harmonic access ");
@@ -91,14 +117,7 @@ namespace thor_scsi::elements {
 	  private:
 		template<typename T>
 			void _localPass(thor_scsi::core::ConfigType &conf, ss_vect<T> &ps);
-#if 0
-		template<typename T>
-			void Mpole_Pass(thor_scsi::core::ConfigType &conf, ss_vect<T> &ps);
-		void Elem_Pass(thor_scsi::core::ConfigType &conf, ss_vect<double> &ps)
-		{ Mpole_Pass(conf, ps); };
-		void Elem_Pass(thor_scsi::core::ConfigType &conf, ss_vect<tps> &ps)
-		{ Mpole_Pass(conf, ps); };
-#endif
+
 	  public:
 #if 0
 
@@ -125,7 +144,6 @@ namespace thor_scsi::elements {
 			PdSrnd{0e0, 0e0};          ///<                          random number.
 #endif
 		int
-			Pmethod,                   ///< Integration Method.
 			PN,                        ///< Number of integration steps.
 			Porder,                    ///< The highest order in PB.
 			n_design;                  ///< multipole order (design).
@@ -187,7 +205,37 @@ namespace thor_scsi::elements {
 		const double d_1 = 2e0*c_1;
 		const double d_2 = 1e0 - 2e0*d_1;
 
+		void inline validateIntegrationMethod(const int n) const {
+			switch(n){
+			case Meth_Fourth:
+				return;
+			default:
+				throw thor_scsi::NotImplemented();
+			}
+		}
+
+		int Pmethod;                  ///< Integration Method.
+
 	};
+
+	class MpoleType : public FieldKick {
+	public:
+		/**
+		 *
+		 * \verbatim embed:rst:leading-asterisk
+		 *
+		 * .. Warning::
+		 *
+		 *     fix memory handling of interpolation object
+		 *     add move constructor
+		 *
+		 * \endverbatim
+		 */
+		inline MpoleType(const Config &config) : FieldKick(config){
+			intp = new thor_scsi::core::PlanarMultipoles;
+		}
+	};
+
 } // Name space
 
 #endif // _THOR_SCSI_ELEMENTS_MPOLE_H_

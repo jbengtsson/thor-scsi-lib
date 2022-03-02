@@ -142,25 +142,25 @@ target_link_libraries(test_transform_phase_space
 
 add_test(transform_phase_space test_transform_phase_space)
 
-# add_executable(test_mpole  elements/test_mpole.cc)
-##
-## target_include_directories(test_mpole
-##     PUBLIC
-##     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../>"
-##     "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
-## )
-## target_link_libraries(test_mpole
-##   thor_scsi
-##   thor_scsi_core
-##   tpsa_lin
-##   # PRIVATE Boost::boost
-##   #  quadmath
-##     ${Boost_PRG_EXEC_MONITOR_LIBRARY}
-##     ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
-## )
-##
-## add_test(mpole test_mpole)
-# add_subdirectory(core)
+add_executable(test_mpole  elements/test_mpole.cc)
+
+target_include_directories(test_mpole
+    PUBLIC
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../>"
+    "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
+)
+target_link_libraries(test_mpole
+  thor_scsi
+  thor_scsi_core
+  tpsa_lin
+  # PRIVATE Boost::boost
+  #  quadmath
+    ${Boost_PRG_EXEC_MONITOR_LIBRARY}
+    ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
+)
+
+add_test(mpole test_mpole)
+
 #
 # Non linear part needs still to be ported to new interface
 ## set(tpsa_nlin_FILES

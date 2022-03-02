@@ -13,6 +13,12 @@
 // #include <thor_scsi/core/elements_enums.h>
 #include <thor_scsi/core/config.h>
 
+// #define THOR_SCSI_USE_RADIATION
+#ifndef  THOR_SCSI_USE_RADIATION
+#warning "Radiation computation disabled by preprocessors"
+#endif /* THOR_SCSI_USE_RADIATION */
+
+
 namespace thor_scsi {
 	namespace core {
 		//< Element virtual base class.
@@ -48,9 +54,9 @@ namespace thor_scsi {
 			 * Todo: implement taking stream or as ostream operator ....
 			 */
 			virtual inline void show(std::ostream& strm, int level) const override {
-				strm << "Name: '"<<this->name<<"'";
+				CellType::show(strm, level);
 				if(level >= 1){
-					strm << "L= '"<<this->PL<<"'";
+					strm << " L= '"<<this->PL<<"'";
 				}
 			}
 

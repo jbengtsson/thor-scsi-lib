@@ -6,9 +6,28 @@
 
 namespace tse = thor_scsi::elements;
 
-BOOST_AUTO_TEST_CASE(test01_drift_print)
+BOOST_AUTO_TEST_CASE(test01_kick_print)
 {
 	Config C;
-	C.set<std::string>("name", "d");
+	C.set<std::string>("name", "test");
+	C.set<double>("Method", 4.0);
+	tse::FieldKick kick(C);
+
+	std::cout<< "Field kick " << kick <<std::endl;
+	std::cout<< "     ";
+	kick.show(std::cout, 4);
+	std::cout<<std::endl;
+}
+
+BOOST_AUTO_TEST_CASE(test02_mpole_print)
+{
+	Config C;
+	C.set<std::string>("name", "test");
+	C.set<double>("Method", 4.0);
 	tse::MpoleType mpole(C);
+
+	std::cout<< "mpole " << mpole <<std::endl;
+	std::cout<< "     ";
+	mpole.show(std::cout, 4);
+	std::cout<<std::endl;
 }

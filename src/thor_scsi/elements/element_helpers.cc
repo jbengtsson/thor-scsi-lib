@@ -97,7 +97,7 @@ namespace thor_scsi::elements{
 #endif
 			    )) {
 			ps0 = ps;
-#warning "feld interpolation for bends missing"
+#warning "field interpolation for bends missing"
 #if 0
 			/*
 			 * Compute magnetic field with Horner's rule.
@@ -113,15 +113,19 @@ namespace thor_scsi::elements{
 			}
 #endif
 			{
+				// Warning: currently this only works for doubles!
+				const double x = ps[x_];
+				const double y = ps[y_];
 				double Bx, By;
-
+				intp.field(ps[x_], ps[y_], &BxoBrho, &ByoBrho);
 
 			}
-
+#ifdef THOR_SCSI_USE_RADIATION
 			if (conf.radiation || conf.emittance) {
 				B[X_] = BxoBrho; B[Y_] = ByoBrho + h_bend; B[Z_] = 0e0;
 				radiate(conf, ps, L, h_ref, B);
 			}
+#endif /* THOR_SCSI_USE_RADIATION */
 
 			if (h_ref != 0e0) {
 				// Sector bend.
@@ -137,7 +141,7 @@ namespace thor_scsi::elements{
 					ps[ct_] += u*(1e0+ps0[delta_]);
 					// ps[px_] -= L*(h_bend*(1e0+h_ref*ps0[x_])-h_ref*p_s);
 
-#warning "feld interpolation for sector bends missing"
+#warning "field interpolation for sector bends missing"
 #if 0
 					// Field expansion up to sextupole like terms.
 					ByoBrho += h_bend - MB[Quad+HOMmax]*h_ref*sqr(ps0[y_])/2e0;
@@ -156,3 +160,9 @@ namespace thor_scsi::elements{
 }
 //template void tse::drift_pass(tsc::ConfigType &conf, const double, ss_vect<tps> &);
 template void tse::drift_pass(const tsc::ConfigType &conf, const double, ss_vect<double> &);
+
+template void tse::thin_kick(tsc::ConfigType &conf, const int Order, const tsc::Field2DInterpolation& intp,
+			     const double L, const double h_bend, const double h_ref, ss_vect<double> &ps);
+
+//template void tse::thin_kick(tsc::ConfigType &conf, const int Order, const tsc::Field2DInterpolation& intp,
+//			     const double L, const double h_bend, const double h_ref, ss_vect<tps> &ps);

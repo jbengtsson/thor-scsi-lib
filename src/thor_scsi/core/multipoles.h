@@ -4,6 +4,8 @@
 #include <complex>
 #include <cassert>
 #include <stdexcept>
+#include <ostream>
+
 
 // #define THOR_SCSI_USE_F128 1
 #ifdef THOR_SCSI_USE_F128
@@ -48,8 +50,17 @@ namespace thor_scsi::core {
 		 *
 		 * \endverbatim
 		 */
-		virtual inline void field(const double x, const double y, double *Bx, double *By) = 0;
+		virtual inline void field(const double x, const double y, double *Bx, double *By) const = 0;
+
+		virtual void show(std::ostream&, int level) const = 0;
 	};
+
+	inline
+	std::ostream& operator<<(std::ostream& strm, const Field2DInterpolation& intp)
+	{
+		intp.show(strm, 0);
+		return strm;
+	}
 
         /**
 	 *  Representation of planar 2D harmonics / multipoles
@@ -137,7 +148,7 @@ namespace thor_scsi::core {
 		 *      complex field By + I * Bx
 		 * \endverbatim
 		 */
-		inline cdbl field(const cdbl z) {
+		inline cdbl field(const cdbl z) const {
 			int n = this->coeffs.size() -1;
 			cdbl_intern t_field = this->coeffs[n];
 			cdbl_intern z_tmp(z.real(), z.imag());
@@ -148,7 +159,7 @@ namespace thor_scsi::core {
 			cdbl result(double(t_field.real()), double(t_field.imag()));
 			return result;
 		}
-		virtual inline void field(const double x, const double y, double *Bx, double * By) override final{
+		virtual inline void field(const double x, const double y, double *Bx, double * By) const override final{
 			const cdbl z(x, y);
 			const cdbl r = field(z);
 			*Bx = r.real();
@@ -328,6 +339,8 @@ namespace thor_scsi::core {
 		inline std::vector<cdbl_intern>& getCoeffs(void){
 			return this->coeffs;
 		}
+
+		virtual void show(std::ostream& strm, int level) const override final;
 
 	private:
 		unsigned int m_max_multipole;
