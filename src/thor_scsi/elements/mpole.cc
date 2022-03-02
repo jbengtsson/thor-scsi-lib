@@ -281,7 +281,7 @@ void tse::MpoleType::_localPass(tsc::ConfigType &conf, ss_vect<T> &ps)
 				/*
 				 * Calculating the individual pieces
 				 */
-				dL1 = c_1*dL; dL2 = c_2*dL; dkL1 = d_1*dL; dkL2 = d_2*dL;
+				dL1 = this->c_1*dL; dL2 = this->c_2*dL; dkL1 = this->d_1*dL; dkL2 = this->d_2*dL;
 
 				/* body calculation */
 				for (seg = 1; seg <= PN; seg++) {

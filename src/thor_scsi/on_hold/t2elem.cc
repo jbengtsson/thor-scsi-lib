@@ -1886,31 +1886,12 @@ long int LatticeType::Elem_GetPos(const int Fnum, const int Knum)
 }
 
 
-static double thirdroot(double a)
-{
-  /* By substitution method */
-  int    i;
-  double x;
-
-  x = 1e0; i = 0;
-  do {
-    i++; x = (x+a)/(x*x+1e0);
-  } while (i != 250);
-  return x;
-}
 
 /**
  * should that not go to constants ?
  */
 void LatticeType::SI_init()
 {
-  // SI units are used internally
-  // apart from energy [GeV]
-  /*  c_1 = 1/(2*(2-2^(1/3))),    c_2 = (1-2^(1/3))/(2*(2-2^(1/3)))
-      d_1 = 1/(2-2^(1/3)),        d_2 = -2^(1/3)/(2-2^(1/3))                 */
-
-  c_1 = 1e0/(2e0*(2e0-thirdroot(2e0))); c_2 = 0.5e0 - c_1;
-  d_1 = 2e0*c_1; d_2 = 1e0 - 2e0*d_1;
 
   // classical radiation
   C_u = 55e0/(24e0*sqrt(3e0));

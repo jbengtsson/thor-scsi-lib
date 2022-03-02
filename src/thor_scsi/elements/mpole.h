@@ -3,6 +3,7 @@
 
 #include <thor_scsi/elements/element_local_coordinates.h>
 #include <thor_scsi/elements/enums.h>
+#include <thor_scsi/elements/utils.h>
 // move to API
 #include <thor_scsi/core/multipoles.h>
 
@@ -43,21 +44,10 @@ namespace thor_scsi::elements {
 	 * \frac{e}{p_\mathrm{0}} = \frac{1}{B\, \rho}
 	 * @f]
 	 *
-	 * The magnetic field expansion used here is
-	 *  @f[
-	 *     \mathbf{B(z)} = B_y + i B_x =
-	 *	\sum\limits_{n=1}^N \mathbf{C}_n
-	 *	\left(\frac{\mathbf{z}}{R_\mathrm{ref}}\right)^{(n-1)}
-	 *  @f]
-	 *
-	 *  with \f$ \mathbf{z} = x + i y \f$ and \f$ \mathbf{C}_n = B_n + i A_n \f$
-	 *  and \f$R_\mathrm{ref}\f$ the reference radius.
-	 *  \f$N\f$ corresponds to the maximum harmonic
-	 *
-	 * Furthermore note that \f$R_\mathrm{ref}\f$ = 1
-	 *
-	 *
-	 * Todo: see if mpole has always to derice from
+	 * \verbatim embed:rst:leading-asterisk
+	 *   The magnetic field expansion is represented by a
+	 *   :any:`Field`Field2DInterpolation object:
+	 * \endverbatim
 	 */
 	const int HOMmax = 21;
 	typedef std::vector<double> MpoleArray;
@@ -65,6 +55,7 @@ namespace thor_scsi::elements {
 	public:
 
 		inline MpoleType(const Config &config) : LocalGalileanPRot(config){
+			// Field interpolation type
 			intp = nullptr;
 		}
 		// friend MpoleType* Mpole_Alloc(void);
@@ -146,7 +137,7 @@ namespace thor_scsi::elements {
 			Pc0,                       ///< Corrections for roll error of bend.
 			Pc1,
 			Ps1;
-#if 1
+#if 0
 		/* todo: review to implement is a complex arrays */
 		MpoleArray
 			PBpar,                             ///< Multipole strengths: design
@@ -165,6 +156,36 @@ namespace thor_scsi::elements {
 			 {0e0, 0e0, 0e0, 0e0, 0e0, 0e0, 0e0},
 			 {0e0, 0e0, 0e0, 0e0, 0e0, 0e0, 0e0},
 			 {0e0, 0e0, 0e0, 0e0, 0e0, 0e0, 0e0}};
+	private:
+		// SI units are used internally
+		// apart from energy [GeV]
+		/*  c_1 = 1/(2*(2-2^(1/3))),    c_2 = (1-2^(1/3))/(2*(2-2^(1/3)))
+		    d_1 = 1/(2-2^(1/3)),        d_2 = -2^(1/3)/(2-2^(1/3))                 */
+
+		/**
+		 * Symplectic integrator
+		 * 2nd order
+		 *
+		 *  @f[ \frac{L}{2} \to bnl \to  \frac{L}{2} ]@
+		 *
+		 * Here 4th order: calculating coefficients
+		 *
+		 * 4th order:
+		 *
+		 *  @f[ d_1 L \to c_1  bnL \to d_1 L \to c_2 bnl \to d_1 L ]@
+		 *
+		 * with
+		 *
+		 * @f[ d_1 + d_2 + d_1 = L @f]
+		 *
+		 *  @f[c_1 + c_2 = 1 @f]
+		 *
+		 * d_2:  negative thus creates a negative drift
+		 */
+		const double c_1 = 1e0/(2e0*(2e0-thirdroot(2e0)));
+		const double c_2 = 0.5e0 - c_1;
+		const double d_1 = 2e0*c_1;
+		const double d_2 = 1e0 - 2e0*d_1;
 
 	};
 } // Name space

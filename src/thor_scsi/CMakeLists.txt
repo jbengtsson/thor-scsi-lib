@@ -72,6 +72,7 @@ set(thor_scsi_core_FILES
   elements/element_helpers.cc
   elements/drift.cc
   elements/mpole.cc
+  elements/utils.cc
   # thor_lib.cc
   # t2cell.cc
   # t2lat.cc
