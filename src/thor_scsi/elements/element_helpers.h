@@ -26,37 +26,53 @@
 
 extern double q_fluct; /// < Track down if it is a constant or a global variable reflecting current status
 
-namespace thor_scsi {
-	namespace elements {
+namespace thor_scsi::elements {
 
-/**
- * Correction for magnet gap (longitudinal fringe field)
+/*
  *
- *
- * irho h = 1/rho [1/m]
- * phi  edge angle
- * gap  full gap between poles
  *
  *                          2
  *         K1*gap*h*(1 + sin phi)
  *  psi = ----------------------- * (1 - K2*g*gap*tan phi)
  *              cos phi
  *
- *  K1 is usually 1/2
- *  K2 is zero here
+ *
+ */
+/**
+ * Correction for magnet gap (longitudinal fringe field)
+ *
+ *
+ * irho = h,
+ * @f[
+ *  h = \frac{1}{\rho} [1/m]
+ * @f]
+ * @f[\phi@f]  edge angle
+ * gap  full gap between poles
+ *
+ *  @f[K_1 @f] is usually 1/2,
+ *  @f[K_2 @f] is zero here
+ *
  *
  * @f[
+ *     \psi = \frac{K_1 \ gap \  h (1 + \left[sin(phi)\right]^2)}{\cos{(\phi)}}
+ *             * (1 - K_2 \ g  \ gap \tan(\phi))
  * @f]
- *  Todo: convert equation in doc to TeX form
+ *
+ * \verbatim embed:rst:leading-asterisk
+ * .. Warning::
+ *
+ *    phi: value expected in degree!
+ * \endverbatim
  */
-		double get_psi(const double irho, const double phi, const double gap);
+	double get_psi(const double irho, const double phi, const double gap);
 
 /**
- * compute the linear action J
+ * @brief compute the linear action J
  *
  * \verbatim embed:rst:leading-asterisk
  *
- *  Todo:
+ * .. Todo::
+ *
  *      Check interface. See if phi and J should be computed at the same time
  *      Check return double (e.g. std::array)
  *
@@ -132,7 +148,7 @@ public:
 	}
 
 	/**
-	 * @brief Synchrotorn integral
+	 * @brief Synchrotron integral
 	 *
 	 * Todo: Check which one
 	 */
@@ -178,15 +194,27 @@ public:
 		return A[x_][delta_];
 	}
 
+	/*
+	 *  dN<u^2>/E^2 =
+	 * 3*C_U*C_gamma*h_bar*c*E_0^5*(1+delta)^4*(B_perp/(Brho))^3/(4*pi*m_e^3 [eV/c^2])
+	 */
 	/**
-
-	  see
-	  M. Sands "The Physics of Electron Storage Rings" SLAC-121, Eq. (5.20),
-	  p. 118:
-	    dN<u^2>/E^2 =
-	      3*C_U*C_gamma*h_bar*c*E_0^5*(1+delta)^4*(B_perp/(Brho))^3/(4*pi*m_e^3 [eV/c^2])
-
-	  A contains the eigenvectors.
+	 *
+	 *
+	 * @f[
+	 *  \frac{dN<u^2>}{E^2} =
+	 *    3 \ C_U \ C_\gamma \hbar \ c \sqrt{E_0} (1+\delta)^4
+	 *       \frac{\left(\frac{B_{perp}}{B\rho}\right)^3}{(4*pi*m_e^3 [eV/c^2])}
+	 * @f]
+	 * A contains the eigenvectors.
+	 *
+	 * \verbatim embed:rst:leading-asterisk
+	 * see [Sands]_
+	 *
+	 * .. [Sands] M. Sands "The Physics of Electron Storage Rings" SLAC-121, Eq. (5.20),
+	 *            p. 118
+	 *
+	 * \endverbatim
 	 */
 	static inline void emittance(thor_scsi::core::ConfigType &conf, const tps &B2_perp,
 				     const tps &ds, const tps &p_s0,
@@ -234,8 +262,8 @@ public:
 			       //const MpoleArray &MB,
 			       const double L, const double h_bend, const double h_ref,
 			       ss_vect<T> &ps);
-	}
-}
+
+}// namespace thor_scsi::elements
 #endif /*  _THOR_SCSI_CORE_ELEMENTS_HELPERS_H_  */
 /*
  * Local Variables:

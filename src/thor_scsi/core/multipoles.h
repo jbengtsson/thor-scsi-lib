@@ -32,6 +32,22 @@ namespace thor_scsi::core {
 	 * External code just requires to calculate multipoles
 	 */
 	struct Field2DInterpolation{
+		/**
+		 * \verbatim embed:rst:leading-asterisk
+		 *
+		 * Args:
+		 *     x: first coordinate (typically horizontal position)
+		 *     y: second coordinate  (typically vertical position)
+		 *     Bx: pointer to variable where field component `x` will be stored
+		 *     By: pointer to variable where field component `y` will be stored
+		 *
+		 * Warning:
+		 *     Note: * thor_scsi* is using a left hand coordinate system.
+		 *     This function here is expecting all coordinates in a left
+		 *     handed coordiante system
+		 *
+		 * \endverbatim
+		 */
 		virtual inline void field(const double x, const double y, double *Bx, double *By) = 0;
 	};
 
@@ -46,7 +62,7 @@ namespace thor_scsi::core {
 	 *
 	 *  with \f$ \mathbf{z} = x + i y \f$ and \f$ \mathbf{C}_n = B_n + i A_n \f$
 	 *  and \f$R_\mathrm{ref}\f$ the reference radius.
-	 *  \f$N\f$ corresponds to the maximum harmonic
+	 *  \f$N\f$ corresponds to the maximum multipole
 	 *
 	 * \verbatim embed:rst:leading-asterisk
 	 *
@@ -55,12 +71,12 @@ namespace thor_scsi::core {
 	 *      - setMultipole
 	 *      - getMultipoles
 	 *
-	 *  the class adheres to the European convention. All other methods do not
-	 *  provide direct indexing.
+	 *  the class adheres to the European convention (i.e. dipole = 1, quadrupole = 2, ..).
+	 *  All other methods do not require direct indexing.
 	 *
 	 *  The coefficients are internally represented by a standard vector, Thus
 	 *  its index needs to be reduced by one.
-	 *
+ 	 *
 	 * \endverbatim
 	 */
 	class PlanarMultipoles : public  Field2DInterpolation{
@@ -92,7 +108,13 @@ namespace thor_scsi::core {
 
 	private:
 		/**
-		 * Todo: memory handling!
+		 * \verbatim embed:rst:leading-asterisk
+		 * Todo:
+		 *     memory handling of the coefficient array
+		 *
+		 *  Args:
+		 *     coeffs: a vector of complex coefficients
+		 * \endverbatim
 		 */
 		inline PlanarMultipoles(std::vector<cdbl_intern> const coeffs) {
 			if(coeffs.size()<=1){
@@ -105,11 +127,14 @@ namespace thor_scsi::core {
 	public:
 		/**
 		 * @brief compute the field at position z
-		 *
 		 * Uses Horner equation
 		 *
 		 * \verbatim embed:rst:leading-asterisk
+		 * Args:
+		 *      z: position (x + I y) at which to implement the position
 		 *
+		 * Returns:
+		 *      complex field By + I * Bx
 		 * \endverbatim
 		 */
 		inline cdbl field(const cdbl z) {
@@ -130,7 +155,7 @@ namespace thor_scsi::core {
 			*By = r.imag();
 		}
 
-		/** Check if multipole index is within range of representation
+		/** @brief Check if multipole index is within range of representation
 
 		    \verbatim embed:rst
 
@@ -150,7 +175,7 @@ namespace thor_scsi::core {
 			}
 		}
 
-		/** get n'th multipole
+		/** @brief get n'th multipole
 
 		    \verbatim embed:rst
 		    .. todo::
@@ -168,7 +193,8 @@ namespace thor_scsi::core {
 			return res;
 		}
 
-		/** set n'th multipole
+		/**
+		 * @brief set n'th multipole
 		 */
 		inline void setMultipole(const unsigned int n, const cdbl c){
 			this->checkMultipoleIndex(n);
@@ -179,7 +205,7 @@ namespace thor_scsi::core {
 		}
 
 		/**
-		 * applys a roll angle to the coordinate system z
+		 * @brief: applys a roll angle to the coordinate system z
 		 *
 		 *  @f[
 		 *  \mathbf{C´}_n =  \mathbf{C}_n \exp{(I n \alpha)}
@@ -216,10 +242,9 @@ namespace thor_scsi::core {
 		 *
 		 * \verbatim embed:rst:leading-asterisk		 *
 		 * .. warning::
-		 *        Code not yet checked
-		 *
-		 * .. todo::
-		 *       check accuracy of complex calculation
+		 *       The  accuracy of complex calculation was checked (see test). It seems that
+		 *       loss of accuracy is significant. It is suggested to transform the point to the
+		 *       coordinate system of the multipoles instead.
 		 *
 		 * \endverbatim		 *
 		 */
@@ -295,6 +320,8 @@ namespace thor_scsi::core {
 		 * .. note::
 		 *     access to the same memory. If you change the coefficients
 		 *     outside you also change them here.
+		 *
+		 * .. Todo::
 		 *
 		 * \endverbatim
 		 */

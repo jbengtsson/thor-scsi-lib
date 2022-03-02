@@ -808,14 +808,18 @@ BOOST_AUTO_TEST_CASE(test100_translate_quadrupole_small)
 
 	// limits set for quadmath .. in percent
 	BOOST_CHECK_CLOSE(field0.real(), check0.real(), 1.6e-4);
+	BOOST_WARN_CLOSE(field0.real(), check0.real(), 1e-15);
 	BOOST_CHECK_SMALL(field0.imag(),  1e-16);
 	BOOST_CHECK_SMALL(check0.imag(),  1.2e-6);
+	BOOST_WARN_SMALL(check0.imag(),  1e-15);
 
 	BOOST_CHECK_CLOSE(field1.real(), check1.real(), 1.1e-4);
 	BOOST_CHECK_SMALL(field1.imag() - check1.imag(), 5e-4);
+	BOOST_WARN_SMALL(field1.imag()  - check1.imag(),  1e-15);
 
 	BOOST_CHECK_CLOSE(field2.real(), check2.real(), 2e-3);
+	BOOST_WARN_CLOSE(field2.real(), check2.real(), 1e-15);
 	BOOST_CHECK_SMALL(field2.imag() - check2.imag(), 2e-3);
-
+	BOOST_WARN_SMALL(field2.imag() - check2.imag(), 1e-15);
 
 }
