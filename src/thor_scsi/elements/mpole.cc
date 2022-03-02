@@ -184,14 +184,16 @@ void tse::quad_fringe(const tsc::ConfigType &conf, const double b2, ss_vect<T> &
  * \endverbatim
  */
 template<typename T>
-void MpoleType::Mpole_Pass(ConfigType &conf, ss_vect<T> &ps)
+void MpoleType::_localPass(ConfigType &conf, ss_vect<T> &ps)
 {
 	int          seg = 0, i;
 	double       dL = 0e0, dL1 = 0e0, dL2 = 0e0,
 		dkL1 = 0e0, dkL2 = 0e0, h_ref = 0e0;
 
-	GtoL(ps, dS, dT, Pc0, Pc1, Ps1);
+	// now handled by LocalCoordinateElement
+	// GtoL(ps, dS, dT, Pc0, Pc1, Ps1);
 
+	// Set start
 	if (conf.emittance && !conf.Cavity_on) {
 		// Needs A^-1.
 		curly_dH_x = 0e0;
@@ -203,6 +205,7 @@ void MpoleType::Mpole_Pass(ConfigType &conf, ss_vect<T> &ps)
 	switch (Pmethod) {
 
 	case Meth_Fourth:
+		// Matrix methodx
 		if (conf.mat_meth && (Porder <= Quad)) {
 			ps = mat_pass(M_elem, ps);
 
@@ -211,14 +214,21 @@ void MpoleType::Mpole_Pass(ConfigType &conf, ss_vect<T> &ps)
 		} else {
 			// Fringe fields.
 			if (conf.quad_fringe && (PB[Quad+HOMmax] != 0e0))
-				quad_fringe(conf, PB[Quad+HOMmax], ps);
+				tse::quad_fringe(conf, PB[Quad+HOMmax], ps);
 			if (!conf.Cart_Bend) {
-				if (Pirho != 0e0)
-					EdgeFocus(conf, Pirho, PTx1, Pgap, ps);
+				if (Pirho != 0e0){
+					tse::edgeFeocus(conf, Pirho, PTx1, Pgap, ps);
+				}
 			} else {
-				p_rot(conf, PTx1, ps); bend_fringe(conf, Pirho, ps);
+				// here in Carthesian coordinates
+
+				/* horizontal focusing: purely geometric effect */
+				tse::p_rot(conf, PTx1, ps);
+				/* vertical focusing: leading order effect */
+				bend_fringe(conf, Pirho, ps);
 			}
 
+			/* define integration step */
 			if (Pthick == thick) {
 				if (!conf.Cart_Bend) {
 					// Polar coordinates.
@@ -227,14 +237,39 @@ void MpoleType::Mpole_Pass(ConfigType &conf, ss_vect<T> &ps)
 					// Cartesian coordinates.
 					h_ref = 0e0;
 					if (Pirho == 0e0){
+						// along the straight line
 						dL = PL/PN;
 					}else{
+						// along the arc
 						dL = 2e0/Pirho*sin(PL*Pirho/2e0)/PN;
 					}
 				}
 
+
+				/*
+				 * Symplectic integrator
+				 * 2nd order
+				 *
+				 *  L/2 -> bnl -> L/2
+				 *
+				 * Here 4th order
+				 *
+				 * 4 th order
+				 *
+				 * d_1 * L -> c_1 * bnl -> d_2 * L -> c_2 * bnl -> d_1 * L
+				 *
+				 * d_1 + d_2 + d_1 = L
+				 *
+				 * d_2 negative drift
+				 * c_1 + c_2 = 1
+				 */
+
+				/*
+				 * Calculating the individual pieces
+				 */
 				dL1 = c_1*dL; dL2 = c_2*dL; dkL1 = d_1*dL; dkL2 = d_2*dL;
 
+				/* body calculation */
 				for (seg = 1; seg <= PN; seg++) {
 					if (conf.emittance && !conf.Cavity_on) {
 						// Needs A^-1.
@@ -263,8 +298,10 @@ void MpoleType::Mpole_Pass(ConfigType &conf, ss_vect<T> &ps)
 						dI[4] += is_tps<tps>::get_dI_eta(ps);
 					}
 				}
+				/* end body calculation */
 
 				if (conf.emittance && !conf.Cavity_on) {
+					// Why only when cavities are not on ?
 					// Needs A^-1.
 					curly_dH_x /= 6e0*PN;
 					dI[1] += PL*is_tps<tps>::get_dI_eta(ps)*Pirho;
@@ -276,6 +313,7 @@ void MpoleType::Mpole_Pass(ConfigType &conf, ss_vect<T> &ps)
 					dI[5] += PL*fabs(cube(Pirho))*curly_dH_x;
 				}
 			} else {
+				// no symplectic integration
 				thin_kick(conf, Porder, PB, 1e0, 0e0, 0e0, ps);
 			}
 			// Fringe fields.
@@ -299,7 +337,8 @@ void MpoleType::Mpole_Pass(ConfigType &conf, ss_vect<T> &ps)
 		break;
 	}
 
-	LtoG(ps, dS, dT, Pc0, Pc1, Ps1);
+	// now handled by LocalCoordinateElement
+	// LtoG(ps, dS, dT, Pc0, Pc1, Ps1);
 }
 
 template<typename T>
@@ -337,7 +376,7 @@ void tse::MpoleType::_localPass(tsc::ConfigType &conf, ss_vect<T> &ps)
 	if (Pirho != 0e0)
 	  tse::edge_focus(conf, Pirho, PTx1, Pgap, ps);
       } else {
-	// here in Carthesian coordinates x
+ 	// here in Carthesian coordinates x
 
 	/* horizontal focusing: purely geometric effect */
 	tse::p_rot(conf, PTx1, ps);
