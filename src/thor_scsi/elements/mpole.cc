@@ -157,6 +157,14 @@ void tse::quad_fringe(const tsc::ConfigType &conf, const double b2, ss_vect<T> &
    End support functions
    ========================================================================== */
 
+// #define THOR_SCSI_USE_RADIATION
+#ifndef  THOR_SCSI_USE_RADIATION
+#warning "Radiation computation disabled by preprocessors"
+#endif /* THOR_SCSI_USE_RADIATION */
+// #define THOR_SCSI_QUAD_FRINGE
+#ifndef THOR_SCSI_QUAD_FRINGE
+#warning "Quadrupole fringe computation disabled by preprocessors"
+#endif /* THOR_SCSI_QUAD_FRINGE */
 
 /*
  *
@@ -184,7 +192,7 @@ void tse::quad_fringe(const tsc::ConfigType &conf, const double b2, ss_vect<T> &
  * \endverbatim
  */
 template<typename T>
-void MpoleType::_localPass(ConfigType &conf, ss_vect<T> &ps)
+void tse::MpoleType::_localPass(tsc::ConfigType &conf, ss_vect<T> &ps)
 {
 	int          seg = 0, i;
 	double       dL = 0e0, dL1 = 0e0, dL2 = 0e0,
@@ -194,6 +202,7 @@ void MpoleType::_localPass(ConfigType &conf, ss_vect<T> &ps)
 	// GtoL(ps, dS, dT, Pc0, Pc1, Ps1);
 
 	// Set start
+#ifdef  THOR_SCSI_USE_RADIATION
 	if (conf.emittance && !conf.Cavity_on) {
 		// Needs A^-1.
 		curly_dH_x = 0e0;
@@ -201,6 +210,7 @@ void MpoleType::_localPass(ConfigType &conf, ss_vect<T> &ps)
 			/* Synchrotron integrals */ dI[i] = 0e0;
 		}
 	}
+#endif /* THOR_SCSI_USE_RADIATION */
 
 	switch (Pmethod) {
 
@@ -213,11 +223,15 @@ void MpoleType::_localPass(ConfigType &conf, ss_vect<T> &ps)
 			// 	(PL != 0e0) && (Pirho != 0e0)) get_dI_eta_5(this);
 		} else {
 			// Fringe fields.
-			if (conf.quad_fringe && (PB[Quad+HOMmax] != 0e0))
+#ifdef THOR_SCSI_QUAD_FRINGE
+			if (conf.quad_fringe && (PB[Quad+HOMmax] != 0e0)){
 				tse::quad_fringe(conf, PB[Quad+HOMmax], ps);
+			}
+#endif /* THOR_SCSI_QUAD_FRINGE */
+
 			if (!conf.Cart_Bend) {
 				if (Pirho != 0e0){
-					tse::edgeFeocus(conf, Pirho, PTx1, Pgap, ps);
+					tse::edge_focus(conf, Pirho, PTx1, Pgap, ps);
 				}
 			} else {
 				// here in Carthesian coordinates
@@ -271,68 +285,74 @@ void MpoleType::_localPass(ConfigType &conf, ss_vect<T> &ps)
 
 				/* body calculation */
 				for (seg = 1; seg <= PN; seg++) {
+#ifdef  THOR_SCSI_USE_RADIATION
 					if (conf.emittance && !conf.Cavity_on) {
 						// Needs A^-1.
 						curly_dH_x += is_tps<tps>::get_curly_H(ps);
 						dI[4] += is_tps<tps>::get_dI_eta(ps);
 					}
+#endif /* THOR_SCSI_USE_RADIATION */
 
-					Drift(conf, dL1, ps);
-					thin_kick(conf, Porder, PB, dkL1, Pirho, h_ref, ps);
-					Drift(conf, dL2, ps);
-					thin_kick(conf, Porder, PB, dkL2, Pirho, h_ref, ps);
-
+					drift_pass(conf, dL1, ps);
+					tse::thin_kick(conf, Porder, *this->intp, dkL1, Pirho, h_ref, ps);
+					drift_pass(conf, dL2, ps);
+					tse::thin_kick(conf, Porder, *this->intp, dkL2, Pirho, h_ref, ps);
+#ifdef  THOR_SCSI_USE_RADIATION
 					if (conf.emittance && !conf.Cavity_on) {
 						// Needs A^-1.
 						curly_dH_x += 4e0*is_tps<tps>::get_curly_H(ps);
 						dI[4] += 4e0*is_tps<tps>::get_dI_eta(ps);
 					}
-
-					Drift(conf, dL2, ps);
-					thin_kick(conf, Porder, PB, dkL1, Pirho, h_ref, ps);
-					Drift(conf, dL1, ps);
-
+#endif /* THOR_SCSI_USE_RADIATION */
+					drift_pass(conf, dL2, ps);
+					tse::thin_kick(conf, Porder, *this->intp, dkL1, Pirho, h_ref, ps);
+					drift_pass(conf, dL1, ps);
+#ifdef  THOR_SCSI_USE_RADIATION
 					if (conf.emittance && !conf.Cavity_on) {
 						// Needs A^-1.
 						curly_dH_x += is_tps<tps>::get_curly_H(ps);
 						dI[4] += is_tps<tps>::get_dI_eta(ps);
 					}
+#endif /* THOR_SCSI_USE_RADIATION */
 				}
 				/* end body calculation */
-
+#ifdef  THOR_SCSI_USE_RADIATION
 				if (conf.emittance && !conf.Cavity_on) {
 					// Why only when cavities are not on ?
 					// Needs A^-1.
 					curly_dH_x /= 6e0*PN;
 					dI[1] += PL*is_tps<tps>::get_dI_eta(ps)*Pirho;
 					dI[2] += PL*sqr(Pirho);
-					dI[3] += PL*fabs(cube(Pirho));
+					dI[3] += PL*fabs(tse::cube(Pirho));
 					dI[4] *=
 						PL*Pirho*(sqr(Pirho)+2e0*PBpar[Quad+HOMmax])
 						/(6e0*PN);
-					dI[5] += PL*fabs(cube(Pirho))*curly_dH_x;
+					dI[5] += PL*fabs(tse::cube(Pirho))*curly_dH_x;
 				}
+#endif /* THOR_SCSI_USE_RADIATION */
 			} else {
 				// no symplectic integration
-				thin_kick(conf, Porder, PB, 1e0, 0e0, 0e0, ps);
+				tse::thin_kick(conf, Porder, *this->intp, 1e0, 0e0, 0e0, ps);
 			}
 			// Fringe fields.
 			if (!conf.Cart_Bend) {
 				if (Pirho != 0e0){
-					EdgeFocus(conf, Pirho, PTx2, Pgap, ps);
+					tse::edge_focus(conf, Pirho, PTx2, Pgap, ps);
 				}
 			} else {
 				bend_fringe(conf, -Pirho, ps); p_rot(conf, PTx2, ps);
 			}
+#ifdef THOR_SCSI_QUAD_FRINGE
 			if (conf.quad_fringe && (PB[Quad+HOMmax] != 0e0)){
 				quad_fringe(conf, -PB[Quad+HOMmax], ps);
 			}
+#endif /* THOR_SCSI_QUAD_FRINGE */
 		}
 		break;
 
 	default:
-		std::cerr <<  "Mpole_Pass: Method not supported " << Name
-			  <<  " method " << Pmethod <<  std::endl;
+		std::cerr <<  "Mpole_Pass: Method not supported " << this->name
+			  <<  " method " << this->Pmethod <<  std::endl;
 		throw ts::NotImplemented();
 		break;
 	}
@@ -341,8 +361,9 @@ void MpoleType::_localPass(ConfigType &conf, ss_vect<T> &ps)
 	// LtoG(ps, dS, dT, Pc0, Pc1, Ps1);
 }
 
+#if 0
 template<typename T>
-void tse::MpoleType::_localPass(tsc::ConfigType &conf, ss_vect<T> &ps)
+void tse::MpoleType::_localPass2(tsc::ConfigType &conf, ss_vect<T> &ps)
 {
   int          seg = 0, i;
   double       dL = 0e0, dL1 = 0e0, dL2 = 0e0,
@@ -496,3 +517,4 @@ void tse::MpoleType::_localPass(tsc::ConfigType &conf, ss_vect<T> &ps)
   // now handled by LocalCoordinateElement
   // LtoG(ps, dS, dT, Pc0, Pc1, Ps1);
 }
+#endif
