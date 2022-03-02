@@ -20,8 +20,8 @@ import sphinx_rtd_theme
 # -- Project information -----------------------------------------------------
 
 project = 'thor_scsi'
-copyright = '2021, Johan Bengtsson'
-author = 'Johan Bengtsson'
+copyright = '2021, 2022, Johan Bengtsson, HZB'
+author = 'Johan Bengtsson, Pierre Schnizer'
 
 # The full version, including alpha/beta/rc tags
 release = 'latest'
@@ -38,8 +38,13 @@ extensions = [
     "sphinx.ext.mathjax",
     "sphinx.ext.todo",
     #'sphinx.ext.autodoc',
-    #'sphinx.ext.napoleon',
+    'sphinx.ext.napoleon',
 ]
+napoleon_google_docstring = True
+
+# The master toctree document.
+master_doc = 'index'
+
 # -- Exhale configuration ---------------------------------------------------
 # Setup the breathe extension
 breathe_projects = {
@@ -48,26 +53,28 @@ breathe_projects = {
 breathe_default_project = "thor-scsi"
 
 # For time being just experiment with a subpath
-header_path = "./../../thor/inc/thor_scsi/core/"
-# # Later see
-# header_path = "./../../thor/inc/"
+source_path = "./../../src/"
 
 doxygen_opts = f"""
 # Inputs
-INPUT                  = "{header_path}"
+INPUT                  = "{source_path}"
 
 RECURSIVE              = YES
 FULL_PATH_NAMES        = YES
 
+FILE_PATTERNS          = *.h
+# EXCLUDE_PATTERNS     = *.cpp
 # Options
-ENABLE_PREPROCESSING = YES
-MACRO_EXPANSION = YES
-SKIP_FUNCTION_MACROS = NO
-EXPAND_ONLY_PREDEF = NO
+ENABLE_PREPROCESSING   = YES
+MACRO_EXPANSION        = YES
+SKIP_FUNCTION_MACROS   = NO
+EXPAND_ONLY_PREDEF     = NO
 
-GENERATE_HTML           = NO
-GENERATE_XML            = YES
-XML_PROGRAMLISTING = NO
+HAVE_DOT               = YES
+
+GENERATE_HTML          = NO
+GENERATE_XML           = YES
+XML_PROGRAMLISTING     = NO
 
 JAVADOC_BANNER         = YES
 
@@ -85,7 +92,7 @@ exhale_args = {
     "containmentFolder":     "./api",
     "rootFileName":          "library_root.rst",
     "rootFileTitle":         "Library API",
-    "doxygenStripFromPath":  header_path,
+    "doxygenStripFromPath":  source_path,
     # Suggested optional arguments
     "createTreeView":        True,
     # TIP: if using the sphinx-bootstrap-theme, you need
@@ -113,7 +120,7 @@ language = 'en'
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = []
+exclude_patterns = ['*.cc', '*.cpp', 'on_hold']
 
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = True
