@@ -56,7 +56,7 @@ namespace thor_scsi {
 			virtual inline void show(std::ostream& strm, int level) const override {
 				CellType::show(strm, level);
 				if(level >= 1){
-					strm << " L= '"<<this->PL<<"'";
+					strm << " L="<<this->PL<<"";
 				}
 			}
 
