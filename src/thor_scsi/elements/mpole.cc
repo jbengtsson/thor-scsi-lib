@@ -238,7 +238,7 @@ void tse::FieldKick::_localPass(tsc::ConfigType &conf, ss_vect<T> &ps)
 			}
 
 			/* define integration step */
-			if (Pthick == thick) {
+			if (this->isThick()) {
 				if (!conf.Cart_Bend) {
 					// Polar coordinates.
 					h_ref = Pirho; dL = PL/PN;

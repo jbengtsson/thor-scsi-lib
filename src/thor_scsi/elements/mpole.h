@@ -94,7 +94,22 @@ namespace thor_scsi::elements {
 		int  getIntegrationMethod(void) const {
 			return this->Pmethod;
 		}
-
+		/**
+		 * @brief Use this element as thick one
+		 *
+		 * If not set true it will be a thin one
+		 */
+		void inline asThick(const bool flag){
+			this->Pthick = flag;
+		}
+		/**
+		 * @brief true if a thick elment
+		 *
+		 * thin one otherwise
+		 */
+		bool inline isThick(void) const {
+			return this->Pthick;
+		}
 		inline double GetKpar(int order){
 			throw std::logic_error("Implement harmonic access ");
 			// return PBpar[order+HOMmax];
@@ -164,8 +179,10 @@ namespace thor_scsi::elements {
 			PBrnd,                     ///< random number used for computing PBrms.
 			PB;                        ///< Multipole strengths: total used by integrator
 #endif
-		pthicktype
-			Pthick;
+		/*
+		 * see :any:`isThick` or :any:`asThick` for a description
+		 */
+		bool Pthick;
 		std::vector< std::vector<double> >
 			M_elem                     ///< Transport matrix & orbit.
 			{{0e0, 0e0, 0e0, 0e0, 0e0, 0e0, 0e0},
