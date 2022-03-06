@@ -252,12 +252,17 @@ public:
 		void drift_pass(const thor_scsi::core::ConfigType &conf, const double L, ss_vect<T> &ps);
 
 		/**
-		 * The vector potential for the combined-function sector bend is from:
-		 *  C. Iselin "Lie Transformations and Transport Equations for Combined-
-		 * Function Dipoles" Part. Accel. 17, 143-155 (1985).
+		 * @brief vector potential for the combined-function sector bend
+		 *
+		 * \verbatim embed:rst:leading-asterisk
+		 * see [Iselin:85]_
+		 *
+		 * .. [Iselin:85]  C. Iselin "Lie Transformations and Transport Equations for Combined-
+		 *                 Function Dipoles" Part. Accel. 17, 143-155 (1985).
+		 * \endverbatim
 		 */
 		template<typename T>
-		void thin_kick(thor_scsi::core::ConfigType &conf, const int Order,
+		void thin_kick(const thor_scsi::core::ConfigType &conf, const int Order,
 			       const thor_scsi::core::Field2DInterpolation& intp,
 			       //const MpoleArray &MB,
 			       const double L, const double h_bend, const double h_ref,

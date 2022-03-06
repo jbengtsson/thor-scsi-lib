@@ -6,6 +6,7 @@
 #include <stdexcept>
 #include <ostream>
 
+#include <thor_scsi/core/field_interpolation.h>
 
 // #define THOR_SCSI_USE_F128 1
 #ifdef THOR_SCSI_USE_F128
@@ -28,39 +29,7 @@ namespace thor_scsi::core {
 	typedef std::complex<double> cdbl_intern;
 #endif // THOR_SCSI_USE_F128
 
-	/**
-	 * Pure virtual class of multipoles
-	 *
-	 * External code just requires to calculate multipoles
-	 */
-	struct Field2DInterpolation{
-		/**
-		 * \verbatim embed:rst:leading-asterisk
-		 *
-		 * Args:
-		 *     x: first coordinate (typically horizontal position)
-		 *     y: second coordinate  (typically vertical position)
-		 *     Bx: pointer to variable where field component `x` will be stored
-		 *     By: pointer to variable where field component `y` will be stored
-		 *
-		 * Warning:
-		 *     Note: * thor_scsi* is using a left hand coordinate system.
-		 *     This function here is expecting all coordinates in a left
-		 *     handed coordiante system
-		 *
-		 * \endverbatim
-		 */
-		virtual inline void field(const double x, const double y, double *Bx, double *By) const = 0;
 
-		virtual void show(std::ostream&, int level) const = 0;
-	};
-
-	inline
-	std::ostream& operator<<(std::ostream& strm, const Field2DInterpolation& intp)
-	{
-		intp.show(strm, 0);
-		return strm;
-	}
 
         /**
 	 *  Representation of planar 2D harmonics / multipoles
@@ -106,7 +75,7 @@ namespace thor_scsi::core {
 				h = zero;
 			}
 		};
-
+		virtual inline ~PlanarMultipoles(void){};
 		PlanarMultipoles(PlanarMultipoles&& o):
 			coeffs(std::move(o.coeffs)){this->m_max_multipole = o.m_max_multipole;};
 
@@ -162,8 +131,8 @@ namespace thor_scsi::core {
 		virtual inline void field(const double x, const double y, double *Bx, double * By) const override final{
 			const cdbl z(x, y);
 			const cdbl r = field(z);
-			*Bx = r.real();
-			*By = r.imag();
+			*By = r.real();
+			*Bx = r.imag();
 		}
 
 		/** @brief Check if multipole index is within range of representation

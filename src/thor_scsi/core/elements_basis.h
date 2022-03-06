@@ -31,24 +31,32 @@ namespace thor_scsi {
 #endif
 			bool
 			Reverse;                   ///< reverse elements: rearange the elements in reveresed order
-			double
-			PL;                        ///< Length[m].
 #if 0
 			// should not be required any more
 			PartsKind
 			Pkind;                     ///<  Enumeration for magnet types.
 #endif
 			/**
-			 * @ brief basic element type
+			 * @brief basic element type
 			 *
 			 * "length" is option, and is 0.0 if omitted.
-			 * delegate type to
+			 *
 			 */
-			ElemType(const Config & config) : CellType(config),
-							  PL(config.get<double>("L", 0.0))
-				{};
-			virtual inline double getLength(void) final { return this->PL;};
+			inline ElemType(const Config & config) : CellType(config) {
+				const double l = config.get<double>("L", 0.0);
+				this->setLength(l);
+			};
 
+			virtual inline double getLength(void) const final { return this->PL;};
+			/**
+			 * @brief Set the length of the element [m]
+			 *
+			 * field interpolation treats length 0 special.
+			 *
+			 */
+			virtual inline void setLength(const double length) {
+				this->PL = length;
+			}
 
 			/**
 			 * Todo: implement taking stream or as ostream operator ....
@@ -61,9 +69,8 @@ namespace thor_scsi {
 			}
 
 			// C++ templates not supported for virtual functions.
-
 			/**
-			 * Propagater  step for phase space.
+			 * @brief Propagator step for phase space.
 			 *
 			 * Args:
 			 *    ps : phase space
@@ -109,6 +116,9 @@ namespace thor_scsi {
 			virtual double GetPB(const int n) { return 0e0; };
 
 #endif
+		protected:
+			double PL;                        ///< Length[m].
+
 		};
 
 #if 0

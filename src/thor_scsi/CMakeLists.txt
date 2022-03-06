@@ -71,6 +71,7 @@ set(thor_scsi_core_FILES
   # core/multipoles_extra.cc
   elements/element_helpers.cc
   elements/drift.cc
+  elements/field_kick.cc
   elements/mpole.cc
   elements/utils.cc
   # thor_lib.cc
@@ -141,6 +142,22 @@ target_link_libraries(test_transform_phase_space
 )
 
 add_test(transform_phase_space test_transform_phase_space)
+
+add_executable(a_kick  elements/a_kick.cc)
+target_include_directories(a_kick
+    PUBLIC
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../>"
+    "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
+)
+target_link_libraries(a_kick
+  thor_scsi
+  thor_scsi_core
+  tpsa_lin
+  # PRIVATE Boost::boost
+  #  quadmath
+    ${Boost_PRG_EXEC_MONITOR_LIBRARY}
+    ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
+)
 
 add_executable(test_mpole  elements/test_mpole.cc)
 

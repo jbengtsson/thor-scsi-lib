@@ -33,7 +33,7 @@ BOOST_AUTO_TEST_CASE(test_roll)
 BOOST_AUTO_TEST_CASE(test_roll_small_angle)
 {
 
-	const double test_angle = 1e-3 /* a milli radiant is rather more standard */;
+	const double test_angle = 1e-3 /* a milli radian is rather more standard */;
 
 	auto tf = tsc::Galilean2DTransform();
 	tf.setRoll(test_angle);
@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE(test_dpos_dval)
 
 	const double
 		test_val = .3e-3 /* fraction of a millimeter offset  */,
-		test_angle = 1e-3 /* a milli radiant is rather more standard */;
+		test_angle = 1e-3 /* a milli radian is rather more standard */;
 
 	{
 		auto tf = tsc::Galilean2DTransform();

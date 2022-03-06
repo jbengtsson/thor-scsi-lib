@@ -5,7 +5,7 @@ namespace tsc=thor_scsi::core;
 tsc::CellVoid::CellVoid(const Config& conf)
     :name(conf.get<std::string>("name"))
     ,index(0)
-    ,p_observe(NULL)
+    ,p_observe(nullptr)
     ,p_conf(conf)
 {}
 

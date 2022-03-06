@@ -44,7 +44,15 @@ namespace thor_scsi {
 	{
 		virtual const char* what() const throw()
 			{
-				return "SanityCheckErro";
+				return "Sanity check error";
+			}
+	};
+
+	class PhysicsViolation : public std::exception
+	{
+		virtual const char* what() const throw()
+			{
+				return "Physics domain violated";
 			}
 	};
 

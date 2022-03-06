@@ -17,12 +17,13 @@ double tse::get_psi(const double irho, const double phi, const double gap)
 
   const double k1 = 0.5e0, k2 = 0e0;
 
-  if (phi == 0e0)
-    psi = 0e0;
-  else
-    psi = k1*gap*irho*(1e0+sqr(sin(phir)))/cos(phir)
-          *(1e0 - k2*gap*irho*tan(phir));
-
+  /* replace with local approximation */
+  if (phi == 0e0){
+	  psi = 0e0;
+  } else {
+	  psi = k1*gap*irho*(1e0+sqr(sin(phir)))/cos(phir)
+		  *(1e0 - k2*gap*irho*tan(phir));
+  }
   return psi;
 }
 
@@ -65,7 +66,9 @@ namespace thor_scsi::elements{
 			ps[x_]  += u*ps[px_]; ps[y_] += u*ps[py_];
 			ps[ct_] += u*(1e0+ps[delta_]) - L;
 		}
-		if (conf.pathlength) ps[ct_] += L;
+		if (conf.pathlength){
+			ps[ct_] += L;
+		}
 	}
 
 	/**
@@ -79,7 +82,7 @@ namespace thor_scsi::elements{
 	 *     E.g.: one for dipoles and one for anything else...
 	 */
 	template<typename T>
-	void tse::thin_kick(tsc::ConfigType &conf, const int Order,
+	void tse::thin_kick(const tsc::ConfigType &conf, const int Order,
 			    const thor_scsi::core::Field2DInterpolation& intp,
 			    // const MpoleArray &MB,
 			    const double L, const double h_bend, const double h_ref,
@@ -96,7 +99,6 @@ namespace thor_scsi::elements{
 					&& (Order <= HOMmax)
 #endif
 			    )) {
-			ps0 = ps;
 #warning "field interpolation for bends missing"
 #if 0
 			/*
@@ -158,11 +160,11 @@ namespace thor_scsi::elements{
 	}
 
 }
-//template void tse::drift_pass(tsc::ConfigType &conf, const double, ss_vect<tps> &);
+
 template void tse::drift_pass(const tsc::ConfigType &conf, const double, ss_vect<double> &);
+//template void tse::drift_pass(tsc::ConfigType &conf, const double, ss_vect<tps> &);
 
-template void tse::thin_kick(tsc::ConfigType &conf, const int Order, const tsc::Field2DInterpolation& intp,
+template void tse::thin_kick(const tsc::ConfigType &conf, const int Order, const tsc::Field2DInterpolation& intp,
 			     const double L, const double h_bend, const double h_ref, ss_vect<double> &ps);
-
-//template void tse::thin_kick(tsc::ConfigType &conf, const int Order, const tsc::Field2DInterpolation& intp,
+//template void tse::thin_kick(const tsc::ConfigType &conf, const int Order, const tsc::Field2DInterpolation& intp,
 //			     const double L, const double h_bend, const double h_ref, ss_vect<tps> &ps);
