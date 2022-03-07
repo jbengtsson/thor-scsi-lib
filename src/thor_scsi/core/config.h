@@ -9,62 +9,62 @@ namespace thor_scsi {
 		class ConfigType {
 		public:
 			bool
-			trace, ///< consider to remove (handled by elements now ...)
-				reverse_elem,
-				stable,
-				ErrFlag,
-				Cavity_on,                    ///< if true, cavity turned on
-				radiation,                    ///< if true, radiation turned on
-				emittance,
-				quad_fringe,                  ///< quadrupole hard-edge fringe field.
-				H_exact,                      ///< "Small Ring" Hamiltonian.
-				Cart_Bend,
-				dip_edge_fudge,               ///< Dipole Edge fudge.
-				pathlength,                   ///< Absolute Path Length.
-				Aperture_on,                  ///< Aperture limitation used ?
-				EPU,
-				mat_meth,                     ///< Matrix method.
-				IBS,                          ///< Intrabeam Scattering.
-				tuneflag,
-				chromflag,
-				codflag,
-				mapflag,
-				passflag,
-				overflag,
-				chambre;
+			trace = false, ///< consider to remove (handled by elements now ...)
+				reverse_elem = false,
+				stable = false,
+				ErrFlag  = false,
+				Cavity_on  = false,           ///< if true, cavity turned on
+				radiation  = false,           ///< if true, radiation turned on
+				emittance  = false,
+				quad_fringe  = false,        ///< quadrupole hard-edge fringe field.
+				H_exact  = false,            ///< "Small Ring" Hamiltonian.
+				Cart_Bend  = false,
+				dip_edge_fudge  = false,               ///< Dipole Edge fudge.
+				pathlength  = false,                   ///< Absolute Path Length.
+				Aperture_on = false,                  ///< Aperture limitation used ?
+				EPU  = false,
+				mat_meth  = false,                     ///< Matrix method.
+				IBS  = false,                          ///< Intrabeam Scattering.
+				tuneflag  = false ,
+				chromflag  = false,
+				codflag  = false,
+				mapflag  = false,
+				passflag  = false,
+				overflag = false,
+				chambre  = false;
 
 			long int
-			Cell_nLoc,                    ///< Number of Elements. I thnk not required any more
-				Elem_nFam,                    ///< Number of Families.
-				CODimax;                      /** closed Orbit Finder: max number of
-								 iterations. */
+			Cell_nLoc = -1,                    ///< Number of Elements. I thnk not required any more
+				Elem_nFam = -1,            ///< Number of Families.
+				CODimax =  -1;             /** closed Orbit Finder: max number of
+							       iterations. */
 
 			int
-			bpm,                          ///< BPM Number.
-				hcorr,                        ///< Corrector: Horizontal number,
-				vcorr,                        ///< Corrector: Vertical number.
-				qt,                           //< Corrector: Vertical corrector number. Todo: compare to vcorr
-				gs,                           //< Girder: start marker,
-				ge,                           //< Girder:  end marker.
-				RingType,                     //< 1 if a ring (0 if transfer line).
-				lossplane;                    /** lost in: horizontal    1
+			bpm = -1,                          ///< BPM Number.
+				hcorr = -1,                        ///< Corrector: Horizontal number,
+				vcorr = -1,                        ///< Corrector: Vertical number.
+				qt = -1,                           //< Corrector: Vertical corrector number. Todo: compare to vcorr
+				gs = -1,                           //< Girder: start marker,
+				ge = -1,                           //< Girder:  end marker.
+				RingType = 1,                     //< 1 if a ring (0 if transfer line).
+				lossplane = 0;                    /** lost in: horizontal    1
 								 vertical      2
 								 longitudinal  3 */
 			double
-			dPcommon,                     //< dp for numerical differentiation.
-				dPparticle,                   //< Energy deviation.
-				delta_RF,                     //< RF Acceptance.
-				Omega,                        //< Synchrotron Frequency.
-				U0,                           //< Energy Loss per turn [keV].
-				Alphac,                       //< Linear Momentum Compaction.
-				Energy,                       //< Beam Energy.
-				dE,                           //< Energy Loss.
-				CODeps,                       //< Closed Orbit precision.
-				Qb,                           //< Bunch Charge.
-				alpha_z,                      //< Long. alpha and beta.
-				beta_z,
-				beta0,                        //< Relativistic factors.
-				gamma0;
+			dPcommon = 0e0,                     //< dp for numerical differentiation.
+				dPparticle  = 0e0,                   //< Energy deviation.
+				delta_RF = 0e0,                     //< RF Acceptance.
+				Omega = 0e0,                        //< Synchrotron Frequency.
+				U0 = 0e0,                           //< Energy Loss per turn [keV].
+				Alphac = 0e0,                       //< Linear Momentum Compaction.
+				Energy = 1.7e9,                       //< Beam Energy.
+				dE = 0e0,                           //< Energy Loss.
+				CODeps = 1e-6,                       //< Closed Orbit precision.
+				Qb= 0e0,                           //< Bunch Charge.
+				alpha_z = 0e0,                      //< Long. alpha and beta.
+				beta_z = 0e0,
+				beta0 = 0e0,                        //< Relativistic factors.
+				gamma0 = 0e0;
 			std::vector<double>
 			TotalTune{0e0, 0e0, 0e0},     //< Transverse tunes.
 				Chrom{0e0, 0e0},              //< Linear chromaticities.
