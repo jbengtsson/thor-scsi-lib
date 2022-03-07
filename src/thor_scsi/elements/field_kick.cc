@@ -2,6 +2,7 @@
 #include <thor_scsi/elements/element_helpers.h>
 #include <thor_scsi/elements/utils.h>
 #include <tps/math_pass.h>
+#include <sstream>
 
 namespace ts = thor_scsi;
 namespace tsc = thor_scsi::core;
@@ -126,9 +127,12 @@ void tse::bend_fringe(const tsc::ConfigType &conf, const double hb, ss_vect<T> &
     ps[ct_] = ps1[ct_] - coeff*ps1[px_]*sqr(ps[y_])*(1e0+ps1[delta_])/pz3;
   } else {
     std::cerr << __FILE__ << "::" <<  __FUNCTION__ << ": (bend_fringe): *** Speed of light exceeded!" << std::endl;
+    std::stringstream stream;
+    stream << ": (bend_fringe): *** Speed of light exceeded!" << " u = " << u;
+
     ps[x_] = NAN; ps[px_] = NAN; ps[y_] = NAN; ps[py_] = NAN;
     ps[delta_] = NAN; ps[ct_] = NAN;
-    throw ts::PhysicsViolation();
+    throw ts::PhysicsViolation(stream.str());
   }
 }
 

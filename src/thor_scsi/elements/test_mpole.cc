@@ -222,3 +222,37 @@ BOOST_AUTO_TEST_CASE(test11_mpole_kick_dipole_component_thin_kick_l1)
 
 	}
 }
+
+BOOST_AUTO_TEST_CASE(test21_mpole_kick_dipole_component_thick_kick)
+{
+
+	tsc::ConfigType calc_config;
+	Config C;
+	C.set<std::string>("name", "test");
+	C.set<double>("L", 0.0);
+	tse::MpoleType mpole(C);
+
+        mpole.asThick(true);
+	/* */
+	// (dynamic_cast<tsc::PlanarMultipoles*>(mpole.intp))->setMultipole(1, tsc::cdbl(1e0,0e0));
+
+	boost::test_tools::output_test_stream output;
+	mpole.show(output, 4);
+	BOOST_CHECK( !output.is_empty( false ) );
+
+	const ss_vect<double> ps_orig = {0, 0, 0, 0, 0, 0};
+	{
+		ss_vect<double> ps = ps_orig;
+		mpole.pass(calc_config, ps);
+
+		/* Length 0 -> harmonics turn integral ? */
+		BOOST_CHECK_CLOSE(ps[px_],    1, 1e-14);
+
+		BOOST_CHECK_SMALL(ps[x_],     1e-14);
+		BOOST_CHECK_SMALL(ps[y_],     1e-14);
+		BOOST_CHECK_SMALL(ps[py_],    1e-14);
+		BOOST_CHECK_SMALL(ps[ct_],    1e-14);
+		BOOST_CHECK_SMALL(ps[delta_], 1e-14);
+
+	}
+}
