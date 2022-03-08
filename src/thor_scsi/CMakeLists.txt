@@ -4,8 +4,6 @@ include(../../cmake/gpp_warnings.cmake)
 find_package(flame  REQUIRED COMPONENTS core)
 get_target_property(flame_CORE_LIBRARY flame::flame_core IMPORTED_LOCATION_RELEASE)
 
-# should already be handled by thor_scsi
-find_package(Armadillo REQUIRED)
 
 find_package(Boost 1.52.0 REQUIRED COMPONENTS
   prg_exec_monitor
@@ -102,6 +100,7 @@ target_include_directories(thor_scsi_core
 
 target_link_libraries(thor_scsi_core
 # Todo: need to learn how to include it ...
+  tpsa_lin
   ${flame_CORE_LIBRARY}
   ${ARMADILLO_LIBRARIES}
 )
@@ -143,21 +142,21 @@ target_link_libraries(test_transform_phase_space
 
 add_test(transform_phase_space test_transform_phase_space)
 
-add_executable(a_kick  elements/a_kick.cc)
-target_include_directories(a_kick
-    PUBLIC
-    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../>"
-    "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
-)
-target_link_libraries(a_kick
-  thor_scsi
-  thor_scsi_core
-  tpsa_lin
-  # PRIVATE Boost::boost
-  #  quadmath
-    ${Boost_PRG_EXEC_MONITOR_LIBRARY}
-    ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
-)
+## add_executable(a_kick  elements/a_kick.cc)
+## target_include_directories(a_kick
+##     PUBLIC
+##     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../>"
+##     "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
+## )
+## target_link_libraries(a_kick
+##   thor_scsi
+##   thor_scsi_core
+##   tpsa_lin
+##   # PRIVATE Boost::boost
+##   #  quadmath
+##     ${Boost_PRG_EXEC_MONITOR_LIBRARY}
+##     ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
+## )
 
 add_executable(test_mpole  elements/test_mpole.cc)
 

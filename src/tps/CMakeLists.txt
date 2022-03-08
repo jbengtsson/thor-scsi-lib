@@ -37,6 +37,7 @@ add_library(tpsa_lin SHARED
   ${tpsa_common_FILES}
   ${tpsa_lin_FILES}
   ${tpsa_HEADERS}
+
 )
 add_library(thor_scsi::tpsa_lin ALIAS tpsa_lin)
 
@@ -51,6 +52,7 @@ set_target_properties(tpsa_lin
 )
 
 target_link_libraries(tpsa_lin
+    ${ARMADILLO_LIBRARIES}
 )
 
 include(GNUInstallDirs)
