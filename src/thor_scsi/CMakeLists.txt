@@ -42,6 +42,8 @@ set(thor_scsi_core_HEADERS
   # ${thor_scsi_INCLUDE_DIR}/thor_scsi/core/lattice.h
   # ${thor_scsi_INCLUDE_DIR}/thor_scsi/core/config.h
   # ${thor_scsi_INCLUDE_DIR}/thor_scsi/core/cpp_version.h
+  core/exceptions.h
+  core/config.h
   core/machine.h
   core/cell_void.h
   core/cells.h
@@ -49,12 +51,12 @@ set(thor_scsi_core_HEADERS
   core/transform_phase_space.h
   core/math_comb.h
   core/multipoles.h
+  core/elements_basis.h
 )
 
 set(thor_scsi_core_ELEMENT_HEADERS
-  elements/elements_basis.h
   elements/drift.h
-  elements/elements_mpole.h
+  elements/mpole.h
   elements/element_helpers.h
 )
 
