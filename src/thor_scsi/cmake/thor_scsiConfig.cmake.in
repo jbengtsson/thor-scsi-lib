@@ -6,14 +6,13 @@ include("${CMAKE_CURRENT_LIST_DIR}/thor_scsiTargets.cmake")
 check_required_components(thor_scsi)
 
 
-
 # Todo: add dependency on boost. See top CMakeLists.txt
 include(CMakeFindDependencyMacro)
 # Todo: how to define subpackages
 # Otherwise warning occurs at least cmake 3.16.3
 cmake_policy(SET CMP0057 NEW)
 
-set(_supported_components core tpsa_lin)
+set(_supported_components tpsa_lin core)
 
 # A current hack .. why still needed ?
 set(thor_scsi_FOUND TRUE)
@@ -34,6 +33,7 @@ foreach(_comp ${thor_scsi_FIND_COMPONENTS})
   set(_comp_load_name "${CMAKE_CURRENT_LIST_DIR}/${_comp}Targets.cmake")
   message(STATUS "loadling ${_comp_load_name}")
   include("${_comp_load_name}")
+  message(STATUS "loaded ${_comp_load_name}")
 endforeach()
 
 message(STATUS "thor_scsi_found ${thor_scsi_FOUND}")

@@ -101,7 +101,8 @@ target_include_directories(thor_scsi_core
 
 
 target_link_libraries(thor_scsi_core
-# Todo: need to learn how to include it ...
+  # Todo: need to learn how to instruct cmake that this
+  # depndency will be exported properly
   tpsa_lin
   ${flame_CORE_LIBRARY}
   ${ARMADILLO_LIBRARIES}

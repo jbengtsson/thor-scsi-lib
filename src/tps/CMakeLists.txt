@@ -57,6 +57,8 @@ target_link_libraries(tpsa_lin
 
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
+# Todo: consider if separate tpsa name space?
+set(TPSA_CMAKE_LIB_DIR "${CMAKE_INSTALL_LIBDIR}/cmake/thor_scsi")
 
 # --- tpsa install support  --------------
 install(FILES ${tpsa_HEADERS} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/tps/)
@@ -67,3 +69,11 @@ install(TARGETS tpsa_lin
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
         INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 	)
+
+# generate and install export file
+install(EXPORT tpsa_linTargets
+        FILE tpsa_linTargets.cmake
+	# Todo: consider if separate tpsa name space?
+        NAMESPACE thor_scsi::
+	DESTINATION ${TPSA_CMAKE_LIB_DIR}
+)
