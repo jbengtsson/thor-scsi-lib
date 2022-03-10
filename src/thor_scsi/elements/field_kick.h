@@ -31,6 +31,14 @@
 			p    B rho
 			 0
 */
+
+/*
+
+  Todo: ensure that irho is computed for a dipole sector bend in polar coordiantes
+  (see t2lat.cc
+      M->irho = (M->L != 0.0)? t*M_PI/180.0/M->L : t*M_PI/180.0;)
+
+ */
 namespace thor_scsi::elements {
 	/**
 	 * Calculate multipole kick. The kick is given by
@@ -49,6 +57,17 @@ namespace thor_scsi::elements {
 	 * \verbatim embed:rst:leading-asterisk
 	 *   The magnetic field expansion is represented by a
 	 *   :any:`Field`Field2DInterpolation object:
+	 *
+	 * .. Warning:
+	 *        Derived classes are responsible to compute h_bend and h_ref
+	 *        from given fields and choice of coordinate system (polar or Cartesian)
+	 *
+	 * This code can treat thin lenses, i.e. componets that have a length = 0e0.
+	 * Cartesian local coordinate system is used for thin lenses. For these h_bend = 0e0, and
+	 * href = 0e0.
+	 *
+	 * .. Todo:
+	 *    fix treating Porder
 	 * \endverbatim
 	 */
 	const int HOMmax = 21;
@@ -83,6 +102,8 @@ namespace thor_scsi::elements {
 		 * @brief Use this element as thick one
 		 *
 		 * If not set true it will be a thin one
+		 *
+		 *
 		 */
 		void inline asThick(const bool flag){
 			this->Pthick = flag;
@@ -90,7 +111,25 @@ namespace thor_scsi::elements {
 		/**
 		 * @brief true if a thick elment
 		 *
-		 * thin one otherwise
+		 *
+		 * if true interpolated field value does not need to be
+		 * multiplied with the length thus the field kick element is
+		 * approximated as a very thin lens (length 0 0)
+		 *
+		 *
+		 * \verbatim embed:rst:leading-asterisk
+		 * Returns:
+		 *       true if field interpolation values are used as integral
+		 *       values, false if field interpolation values and length
+		 *       are used for rectangular model
+		 *
+		 * .. Todo::
+		 *
+		 *     remove asIntegral as it is code duplication
+		 *
+		 * \endverbatim
+		 *
+		 *
 		 */
 		bool inline isThick(void) const {
 			return this->Pthick;
@@ -141,7 +180,9 @@ namespace thor_scsi::elements {
 		virtual void inline setLength(const double length) override final {
 			LocalGalileanPRot::setLength(length);
 			if(0e0 == length){
-				this->asIntegral(true);
+				this->asThick(false);
+				// clean it up
+				// this->asIntegral(false);
 			}
 		}
 
@@ -193,8 +234,9 @@ namespace thor_scsi::elements {
 			PdSrnd{0e0, 0e0};          ///<                          random number.
 #endif
 		int
-			PN,                        ///< Number of integration steps.
-			Porder,                    ///< The highest order in PB.
+			PN = 0,                    ///< Number of integration steps.
+			Porder = 0,                ///< The highest order in PB.
+		                                   ///
 			n_design;                  ///< multipole order (design).
 		double
 			PTx1,                      ///<  Bend angle [deg]:  hor. entrance angle

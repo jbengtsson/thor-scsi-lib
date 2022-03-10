@@ -172,7 +172,9 @@ tse::FieldKick::FieldKick(const Config &config) : tse::LocalGalileanPRot(config)
 {
 	// Field interpolation type
 	this->intp = nullptr;
+	this->Porder = HOMmax;
 	this->asIntegral(false);
+	this->asThick(false);
 	this->setIntegrationMethod(config.get<double>("Method", 4));
 	this->setLength(config.get<double>("L", 0.0));
 }
@@ -285,6 +287,7 @@ void tse::FieldKick::_localPass(tsc::ConfigType &conf, ss_vect<T> &ps)
 				}
 
 
+
 				/*
 				 * Symplectic integrator
 				 * 2nd order
@@ -356,8 +359,12 @@ void tse::FieldKick::_localPass(tsc::ConfigType &conf, ss_vect<T> &ps)
 				}
 #endif /* THOR_SCSI_USE_RADIATION */
 			} else {
-				// no symplectic integration
-				tse::thin_kick(conf, Porder, *this->intp, 1e0, 0e0, 0e0, ps);
+				// length has to be zero here
+				/// todo: add a check at least for debug purposes
+
+				const double length = 1.0;
+				std::cerr << "calling thin kick " << std::endl;
+				tse::thin_kick(conf, Porder, *this->intp, length, 0e0, 0e0, ps);
 			}
 			// Fringe fields.
 			if (!conf.Cart_Bend) {

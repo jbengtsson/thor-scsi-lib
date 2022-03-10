@@ -252,10 +252,21 @@ public:
 		void drift_pass(const thor_scsi::core::ConfigType &conf, const double L, ss_vect<T> &ps);
 
 		/**
-		 * @brief vector potential for the combined-function sector bend
+		 * @brief implementation of the thin kick
 		 *
 		 * \verbatim embed:rst:leading-asterisk
-		 * see [Iselin:85]_
+		 * Args:
+		 *   order: optimisation for number of coefficients that require to be evaluatued
+		 *          should go to field interpolation
+		 *
+		 *   h_bend: 1/rho_bend (radius of the the bend, magnetic rigidty of the dipoles)
+		 *   h_ref: 1/rho which is the curvature of the design / reference orbit
+		 *
+		 * Todo:
+		 *     Split up function in different parts or functions
+		 *     E.g.: one for dipoles and one for anything else...
+		 *
+		 * The vector potential for the combined-function sector bend is from: [Iselin:85]_
 		 *
 		 * .. [Iselin:85]  C. Iselin "Lie Transformations and Transport Equations for Combined-
 		 *                 Function Dipoles" Part. Accel. 17, 143-155 (1985).

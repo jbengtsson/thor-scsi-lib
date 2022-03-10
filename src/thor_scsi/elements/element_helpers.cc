@@ -77,6 +77,12 @@ namespace thor_scsi::elements{
 	 *  C. Iselin "Lie Transformations and Transport Equations for Combined-
 	 * Function Dipoles" Part. Accel. 17, 143-155 (1985).
 	 *
+	 * Args:
+	 *   order: optimisation for number of coefficients that require to be evaulatued
+	 *          should go to field interpolation
+	 *
+	 *   h_bend: 1/rho_bend (radius of the the bend, magnetic rigidty of the dipoles)
+	 *   h_ref: $1 / \rho$ for the reference curve / for the comoving frame (curvature of the design or reference orbit)
 	 * Todo:
 	 *     Split up function in different parts or functions
 	 *     E.g.: one for dipoles and one for anything else...
@@ -90,13 +96,17 @@ namespace thor_scsi::elements{
 	{
 		int        j;
 		T          BxoBrho, ByoBrho, ByoBrho1, B[3], u, p_s;
-		ss_vect<T> ps0;
+		ss_vect<T> ps0 = ps;
 
+		/*
+		std::cerr << "Length " << L << " Order " << Order << " h_bend " << h_bend << " h_ref " << h_ref << std::endl
+			  << "ps in " << ps;
+		*/
 		// Todo: what kind of bend is that?
-		if ((h_bend != 0e0) || ((1 <= Order)
+		if ((h_bend != 0e0) || ((1 <= Order) //... needs to be removed
 #if 0
-					//  why this switch
-					&& (Order <= HOMmax)
+					//  why this switch ?
+		    && (Order <= HOMmax)
 #endif
 			    )) {
 #warning "field interpolation for bends missing"
@@ -118,8 +128,9 @@ namespace thor_scsi::elements{
 				// Warning: currently this only works for doubles!
 				const double x = ps[x_];
 				const double y = ps[y_];
-				double Bx, By;
 				intp.field(ps[x_], ps[y_], &BxoBrho, &ByoBrho);
+
+				std::cerr << "interpolated field " << BxoBrho << ", "  << ByoBrho << std::endl;
 
 			}
 #ifdef THOR_SCSI_USE_RADIATION
@@ -132,9 +143,12 @@ namespace thor_scsi::elements{
 			if (h_ref != 0e0) {
 				// Sector bend.
 				if (true) {
+					// std::cerr << "h_bend - h_ref" << h_bend - h_ref << std::endl;
 					ps[px_] -= L*(ByoBrho+(h_bend-h_ref)/2e0+h_ref*h_bend*ps0[x_]
 						      -h_ref*ps0[delta_]);
 					ps[ct_] += L*h_ref*ps0[x_];
+					// std::cerr << "h_ref ps[px_]" <<  ps[px_] << " ps[ct_] " << ps[ct_]
+					//	  << "ps0[delta_] " << ps0[delta_] << std::endl;
 				} else {
 					// The Hamiltonian is split into: H_d + H_k; with [H_d, H_d] = 0.
 					p_s = get_p_s(conf, ps0); u = L*h_ref*ps0[x_]/p_s;
@@ -152,8 +166,11 @@ namespace thor_scsi::elements{
 #endif
 				}
 			} else {
+				// std::cerr << "Calculating horizontal thin kick: By"  << ByoBrho <<  " h_bend=1/rho_bend " << h_bend;
 				// Cartesian bend.
 				ps[px_] -= L*(h_bend+ByoBrho);
+				// std::cerr << "ps[px_] " << ps[px_]  << std::endl;
+
 			}
 			ps[py_] += L*BxoBrho;
 		}
