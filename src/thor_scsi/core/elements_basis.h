@@ -30,7 +30,7 @@ namespace thor_scsi {
 			Name;                      ///< Element name.
 #endif
 			bool
-			Reverse;                   ///< reverse elements: rearange the elements in reveresed order
+			Reverse = true;                   ///< reverse elements: rearange the elements in reveresed order
 #if 0
 			// should not be required any more
 			PartsKind
@@ -117,7 +117,7 @@ namespace thor_scsi {
 
 #endif
 		protected:
-			double PL;                        ///< Length[m].
+			double PL = 0.0;                        ///< Length[m].
 
 		};
 

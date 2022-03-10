@@ -19,13 +19,13 @@ namespace thor_scsi {
 				quad_fringe  = false,        ///< quadrupole hard-edge fringe field.
 				H_exact  = false,            ///< "Small Ring" Hamiltonian.
 				Cart_Bend  = false,
-				dip_edge_fudge  = false,               ///< Dipole Edge fudge.
+				dip_edge_fudge  = true,               ///< Dipole Edge fudge.
 				pathlength  = false,                   ///< Absolute Path Length.
 				Aperture_on = false,                  ///< Aperture limitation used ?
 				EPU  = false,
 				mat_meth  = false,                     ///< Matrix method.
 				IBS  = false,                          ///< Intrabeam Scattering.
-				tuneflag  = false ,
+				tuneflag  = false,
 				chromflag  = false,
 				codflag  = false,
 				mapflag  = false,
