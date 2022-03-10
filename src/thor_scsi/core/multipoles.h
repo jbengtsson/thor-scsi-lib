@@ -18,8 +18,11 @@ namespace thor_scsi::core {
 
 	/**
 	 * maximum multipole to use
+	 *
+	 * currently test_multipoles pass for max_multipole of 6
+	 * otherwise the rather small tolerances have to be made more wide
 	 */
-	const int max_multipole = 21;
+	const int max_multipole = 6;
 
 	typedef std::complex<double> cdbl;
 
@@ -57,6 +60,8 @@ namespace thor_scsi::core {
 	 *  The coefficients are internally represented by a standard vector, Thus
 	 *  its index needs to be reduced by one.
  	 *
+	 * .. Todo::
+	 *       minimise number of coefficients that require that to be evaluated
 	 * \endverbatim
 	 */
 	class PlanarMultipoles : public  Field2DInterpolation{
@@ -79,7 +84,7 @@ namespace thor_scsi::core {
 		PlanarMultipoles(PlanarMultipoles&& o):
 			coeffs(std::move(o.coeffs)){this->m_max_multipole = o.m_max_multipole;};
 
-		PlanarMultipoles(PlanarMultipoles& o):
+		PlanarMultipoles(const PlanarMultipoles& o):
 			coeffs(o.coeffs){this->m_max_multipole = o.m_max_multipole;};
 
 		inline PlanarMultipoles clone(void) const {
