@@ -173,7 +173,7 @@ BOOST_AUTO_TEST_CASE(test11_mpole_kick_dipole_component_thin_kick)
 	mpole.show(output, 4);
 	BOOST_CHECK( !output.is_empty( false ) );
 
-	mpole.show(std::cout, 4);
+	// mpole.show(std::cout, 4);
 
 	const ss_vect<double> ps_orig = {0, 0, 0, 0, 0, 0};
 	{
@@ -198,7 +198,7 @@ BOOST_AUTO_TEST_CASE(test11_mpole_kick_dipole_component_thin_kick)
 #endif
 
 /*
- * review if this test is sensible
+ * test a orbit trim
  */
 BOOST_AUTO_TEST_CASE(test11_mpole_kick_dipole_component_thin_kick_l1)
 {
@@ -221,7 +221,7 @@ BOOST_AUTO_TEST_CASE(test11_mpole_kick_dipole_component_thin_kick_l1)
 		ss_vect<double> ps = ps_orig;
 		mpole.pass(calc_config, ps);
 
-		std::cout << "Ps after kick" << ps << std::endl;
+		// std::cout << "Ps after kick" << ps << std::endl;
 		/* Length 0 -> harmonics turn integral ? */
 		BOOST_CHECK_CLOSE(ps[px_],   -1e-3, 1e-12);
 
@@ -286,6 +286,9 @@ BOOST_AUTO_TEST_CASE(test21_mpole_kick_dipole_component_thick_kick_polar_ideal)
 }
 
 
+/*
+ * test thick kick for 1 mrad
+ */
 BOOST_AUTO_TEST_CASE(test21_mpole_kick_dipole_component_thick_kick_off_momentum)
 {
 	/*
@@ -295,8 +298,8 @@ BOOST_AUTO_TEST_CASE(test21_mpole_kick_dipole_component_thick_kick_off_momentum)
 	Config C;
 	C.set<std::string>("name", "test");
 
-	// const double phi = 1e-3; // 1 mrad
-	const double phi = 1/180e0 * M_PI; // 1 deg
+	const double phi = 1e-3; // 1 mrad
+	// const double phi = 1/180e0 * M_PI; // 1 deg
 	const double length = 1.0;
 	const double rho = length / phi;
 
@@ -306,14 +309,12 @@ BOOST_AUTO_TEST_CASE(test21_mpole_kick_dipole_component_thick_kick_off_momentum)
 	const double x_expected = rho * (1 - cos(phi)) * 1e0/(1 + delta) * delta;
 	const double px_expected = sin(phi) * delta;
 
-	std::cerr  << "length " << length << " rho " << rho
-		   <<  "phi " << phi << " compare " << rho * length << std::endl;
 	C.set<double>("L", length);
 	tse::MpoleType mpole(C);
 
         mpole.asThick(true);
 	mpole.Pirho = 1/rho;
-	mpole.PN = 10;
+	mpole.PN = 1;
 
 	calc_config.Cart_Bend = false;
 
@@ -329,18 +330,20 @@ BOOST_AUTO_TEST_CASE(test21_mpole_kick_dipole_component_thick_kick_off_momentum)
 	ps_orig[delta_] = delta;
 	{
 		ss_vect<double> ps = ps_orig;
-		std::cerr << "ps in " << ps << ", ps orig " << ps_orig << " delta " << delta << std::endl;
 		mpole.pass(calc_config, ps);
 
-		std::cerr << "ps out " << ps << std::endl;
 		/* Length 0 -> harmonics turn integral ? */
-		BOOST_CHECK_CLOSE(ps[x_],     x_expected,  1e-14);
-		BOOST_CHECK_CLOSE(ps[px_],    px_expected, 1e-14);
+		BOOST_CHECK_CLOSE(ps[x_],     x_expected,  1e-7);
+		BOOST_CHECK_CLOSE(ps[px_],    px_expected, 1e-7);
 		BOOST_CHECK_CLOSE(ps[delta_], delta,       1e-14);
+		BOOST_CHECK_SMALL(ps[ct_],                 1e-7);
+
+		// values for 1 mrad
+		BOOST_WARN_CLOSE(ps[x_],     x_expected,  1e-8);
+		BOOST_WARN_CLOSE(ps[px_],    px_expected, 2e-8);
 
 		BOOST_CHECK_SMALL(ps[y_],     1e-14);
 		BOOST_CHECK_SMALL(ps[py_],    1e-14);
-		BOOST_CHECK_SMALL(ps[ct_],    1e-14);
 
 		// BOOST_WARN_CLOSE(ps[x_],     x_expected, 1e-14);
 		// BOOST_WARN_CLOSE(ps[px_],    px_expected, 1e-14);
