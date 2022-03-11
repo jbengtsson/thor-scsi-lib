@@ -136,42 +136,6 @@ namespace thor_scsi::elements {
 		}
 
 		/**
-		 * @brief: field interpolation representing integral values
-		 *
-		 * \verbatim embed:rst:leading-asterisk
-		 * see :meth:`isIntegral` for further details
-		 * \endverbatim
-		 */
-		void inline asIntegral(const bool flag) {
-			assert((flag == true) || (flag == false));
-			this->Pintegral = flag;
-
-		}
-
-		/**
-		 * @brief: field interpolation representing integral values
-		 *
-		 * if true interpolated field value does not need to be
-		 * multiplied with the length.
-		 *
-		 *
-		 * \verbatim embed:rst:leading-asterisk
-		 * Returns:
-		 *       true if field interpolation values are used as integral
-		 *       values, false if field interpolation values and length
-		 *       are used for rectangular model
-		 *
-		 * .. Todo::
-		 *
-		 *     needs to be implemented in the code
-		 *
-		 * \endverbatim
-		 */
-		bool inline isIntegral(void) const {
-			return this->Pintegral;
-		}
-
-		/**
 		 * @brief set length. if length == 0 interpolation will be
 		 *        considered an integral one
 		 *
@@ -181,8 +145,8 @@ namespace thor_scsi::elements {
 			LocalGalileanPRot::setLength(length);
 			if(0e0 == length){
 				this->asThick(false);
-				// clean it up
-				// this->asIntegral(false);
+			} else {
+				this->asThick(true);
 			}
 		}
 
@@ -308,8 +272,6 @@ namespace thor_scsi::elements {
 
 		int  Pmethod;                 ///< Integration Method.
 		bool Pthick;                  ///< Thick or thin element
-		bool Pintegral;               ///< if true field representation
-		                              ///< does not need to be multiplied with the length
 
 	};
 } // Name space

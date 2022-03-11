@@ -401,6 +401,47 @@ BOOST_AUTO_TEST_CASE(test52_sector_bend_delta_pars)
 }
 
 
+BOOST_AUTO_TEST_CASE(test60_higher_orders)
+{
+	tsc::ConfigType calc_config;
+	Config C;
+	const double length = 1, h_bend = 0.0, h_ref = 0.0;
+	const int order = 10;
+
+	for (int n=2; n<=4; ++n){
+		tsc::PlanarMultipoles muls;
+		muls.setMultipole(n, tsc::cdbl(1, 0));
+
+		/* on axis */
+		{
+			ss_vect<double> ps = {0, 0, 0, 0, 0, 0};
+			tse::thin_kick(calc_config, order, muls, length, h_bend, h_ref, ps);
+			BOOST_CHECK_SMALL(ps[x_],     1e-14);
+			BOOST_CHECK_SMALL(ps[px_],    1e-14);
+			BOOST_CHECK_SMALL(ps[y_],     1e-14);
+			BOOST_CHECK_SMALL(ps[py_],    1e-14);
+			BOOST_CHECK_SMALL(ps[ct_],    1e-14);
+			BOOST_CHECK_SMALL(ps[delta_], 1e-14);
+		}
+
+		for (int xi=1; xi<10; ++xi){
+			const double x = xi * 1e-3;
+			/* Todo: check sign */
+			const double px_expected = -pow(x, (n-1));
+
+			ss_vect<double> ps = {x, 0, 0, 0, 0, 0};
+			tse::thin_kick(calc_config, order, muls, length, h_bend, h_ref, ps);
+			BOOST_CHECK_CLOSE(ps[x_],     x,           1e-14);
+			BOOST_CHECK_CLOSE(ps[px_],    px_expected, 1e-14);
+
+			BOOST_CHECK_SMALL(ps[y_],     1e-14);
+			BOOST_CHECK_SMALL(ps[py_],    1e-14);
+			BOOST_CHECK_SMALL(ps[ct_],    1e-14);
+			BOOST_CHECK_SMALL(ps[delta_], 1e-14);
+		}
+
+	}
+}
 
 /*
  * Local Variables:

@@ -173,7 +173,6 @@ tse::FieldKick::FieldKick(const Config &config) : tse::LocalGalileanPRot(config)
 	// Field interpolation type
 	this->intp = nullptr;
 	this->Porder = HOMmax;
-	this->asIntegral(false);
 	this->asThick(false);
 	this->setIntegrationMethod(config.get<double>("Method", 4));
 	this->setLength(config.get<double>("L", 0.0));
@@ -184,7 +183,7 @@ void tse::FieldKick::show(std::ostream& strm, const int level) const
 	tse::LocalGalileanPRot::show(strm, level);
 	if(level >= 1){
 		/* at least intercept it with a blank */
-	  strm << " " << "integrated = " << std::boolalpha << this->isIntegral() << " ";
+		strm << "lens type: " <<  (this->isThick() ? "thick" : "thin") << " ";
 		if(!this->intp){
 			strm << " NO interpolater set!";
 		} else {
@@ -225,6 +224,7 @@ void tse::FieldKick::_localPass(tsc::ConfigType &conf, ss_vect<T> &ps)
 	double       dL = 0e0, dL1 = 0e0, dL2 = 0e0,
 		dkL1 = 0e0, dkL2 = 0e0, h_ref = 0e0;
 
+	const bool debug = false;
 	// now handled by LocalCoordinateElement
 	// GtoL(ps, dS, dT, Pc0, Pc1, Ps1);
 
@@ -363,7 +363,9 @@ void tse::FieldKick::_localPass(tsc::ConfigType &conf, ss_vect<T> &ps)
 				/// todo: add a check at least for debug purposes
 
 				const double length = 1.0;
-				std::cerr << "calling thin kick " << std::endl;
+				if(debug){
+					std::cerr << "calling thin kick " << std::endl;
+				}
 				tse::thin_kick(conf, Porder, *this->intp, length, 0e0, 0e0, ps);
 			}
 			// Fringe fields.

@@ -9,7 +9,6 @@
 namespace tsc = thor_scsi::core;
 namespace tse = thor_scsi::elements;
 
-#if 0
 BOOST_AUTO_TEST_CASE(test01_kick_print)
 {
 	Config C;
@@ -37,18 +36,17 @@ BOOST_AUTO_TEST_CASE(test01_kick_integral_zero_length)
 	{
 		C.set<double>("L", 0.0);
 		tse::FieldKick kick(C);
-		BOOST_CHECK_EQUAL(kick.isIntegral(), true);
+		BOOST_CHECK_EQUAL(kick.isThick(), false);
 	}
 	{
 		C.set<double>("L", 1.0);
 		tse::FieldKick kick(C);
-		BOOST_CHECK_EQUAL(int(kick.isIntegral()), 0);
-		BOOST_CHECK_EQUAL(kick.isIntegral(), false);
+		BOOST_CHECK_EQUAL(kick.isThick(), true);
 	}
 	{
 		C.set<double>("L", 0.0);
 		tse::FieldKick kick(C);
-		BOOST_CHECK_EQUAL(kick.isIntegral(), true);
+		BOOST_CHECK_EQUAL(kick.isThick(), false);
 	}
 }
 
@@ -92,18 +90,18 @@ BOOST_AUTO_TEST_CASE(test10_mpole_kick_zero)
 	tse::MpoleType mpole(C);
 
 	// initialised to 0 length by default
-	BOOST_CHECK_EQUAL(mpole.isIntegral(), true);
+	BOOST_CHECK_EQUAL(mpole.isThick(), false);
 
 	const ss_vect<double> ps_orig = {0, 0, 0, 0, 0, 0};
 	{
 		ss_vect<double> ps = ps_orig;
 		mpole.pass(calc_config, ps);
 
-		BOOST_CHECK_SMALL(ps[x_],  1e-14);
-		BOOST_CHECK_SMALL(ps[y_],  1e-14);
-		BOOST_CHECK_SMALL(ps[px_], 1e-14);
-		BOOST_CHECK_SMALL(ps[py_], 1e-14);
-		BOOST_CHECK_SMALL(ps[ct_], 1e-14);
+		BOOST_CHECK_SMALL(ps[x_],     1e-14);
+		BOOST_CHECK_SMALL(ps[y_],     1e-14);
+		BOOST_CHECK_SMALL(ps[px_],    1e-14);
+		BOOST_CHECK_SMALL(ps[py_],    1e-14);
+		BOOST_CHECK_SMALL(ps[ct_],    1e-14);
 		BOOST_CHECK_SMALL(ps[delta_], 1e-14);
 
 	}
@@ -157,7 +155,10 @@ BOOST_AUTO_TEST_CASE(test11_mpole_kick_longitudinal_one)
 }
 
 
-BOOST_AUTO_TEST_CASE(test11_mpole_kick_dipole_component_thin_kick)
+/*
+ * test a orbit trim: horizontal
+ */
+BOOST_AUTO_TEST_CASE(test12_orbit_trim_horizontal)
 {
 
 	tsc::ConfigType calc_config;
@@ -195,41 +196,197 @@ BOOST_AUTO_TEST_CASE(test11_mpole_kick_dipole_component_thin_kick)
 
 	}
 }
-#endif
 
 /*
- * test a orbit trim
+ * test a orbit trim: vertical
  */
-BOOST_AUTO_TEST_CASE(test11_mpole_kick_dipole_component_thin_kick_l1)
+BOOST_AUTO_TEST_CASE(test13_orbit_trim_vertical)
 {
 
 	tsc::ConfigType calc_config;
 	Config C;
 	C.set<std::string>("name", "test");
-	C.set<double>("L", 1.0);
+	C.set<double>("L", 0.0);
 	tse::MpoleType mpole(C);
 
 	/* */
-	(dynamic_cast<tsc::PlanarMultipoles*>(mpole.intp))->setMultipole(1, tsc::cdbl(1e-3, 0e0));
+	(dynamic_cast<tsc::PlanarMultipoles*>(mpole.intp))->setMultipole(1, tsc::cdbl(0, 1e0));
 
 	boost::test_tools::output_test_stream output;
 	mpole.show(output, 4);
 	BOOST_CHECK( !output.is_empty( false ) );
+
+	// mpole.show(std::cout, 4);
 
 	const ss_vect<double> ps_orig = {0, 0, 0, 0, 0, 0};
 	{
 		ss_vect<double> ps = ps_orig;
 		mpole.pass(calc_config, ps);
 
-		// std::cout << "Ps after kick" << ps << std::endl;
 		/* Length 0 -> harmonics turn integral ? */
-		BOOST_CHECK_CLOSE(ps[px_],   -1e-3, 1e-12);
+		/*
+		 * todo: cross check the sign with coordinate system conventions
+		 *       compare results to tracy
+		 */
+		BOOST_CHECK_CLOSE(ps[py_],    1, 1e-14);
 
-		BOOST_CHECK_SMALL(ps[y_],     1e-12);
-		BOOST_CHECK_SMALL(ps[x_],     1e-12);
-		BOOST_CHECK_SMALL(ps[py_],    1e-14);
-		BOOST_CHECK_SMALL(ps[ct_],    2e-7);
+		BOOST_CHECK_SMALL(ps[x_],     1e-14);
+		BOOST_CHECK_SMALL(ps[y_],     1e-14);
+		BOOST_CHECK_SMALL(ps[px_],    1e-14);
+		BOOST_CHECK_SMALL(ps[ct_],    1e-14);
 		BOOST_CHECK_SMALL(ps[delta_], 1e-14);
+
+	}
+}
+
+BOOST_AUTO_TEST_CASE(test14_higher_orders_normal_multipole)
+{
+	tsc::ConfigType calc_config;
+	Config C;
+	C.set<std::string>("name", "test");
+	C.set<double>("L", 0.0);
+
+	for (int n=2; n<=4; ++n){
+		tse::MpoleType mpole(C);
+		(dynamic_cast<tsc::PlanarMultipoles*>(mpole.intp))->setMultipole(n, tsc::cdbl(1, 0));
+
+		BOOST_CHECK(mpole.isThick() == false);
+		/* on axis */
+		{
+			ss_vect<double> ps = {0, 0, 0, 0, 0, 0};
+			mpole.pass(calc_config, ps);
+
+			BOOST_CHECK_SMALL(ps[x_],     1e-14);
+			BOOST_CHECK_SMALL(ps[px_],    1e-14);
+			BOOST_CHECK_SMALL(ps[y_],     1e-14);
+			BOOST_CHECK_SMALL(ps[py_],    1e-14);
+			BOOST_CHECK_SMALL(ps[ct_],    1e-14);
+			BOOST_CHECK_SMALL(ps[delta_], 1e-14);
+		}
+
+		/* along x */
+		for (int xi=-10; xi<10; ++xi){
+
+			if(xi == 0){
+				/* special comparisons at zero */
+				continue;
+			}
+			const double x = xi * 1e-3;
+			/* Todo: check sign */
+			const double px_expected = -pow(x, (n-1));
+
+			ss_vect<double> ps = {x, 0, 0, 0, 0, 0};
+			mpole.pass(calc_config, ps);
+			BOOST_CHECK_CLOSE(ps[x_],     x,           1e-14);
+			BOOST_CHECK_CLOSE(ps[px_],    px_expected, 1e-14);
+
+			BOOST_CHECK_SMALL(ps[y_],     1e-14);
+			BOOST_CHECK_SMALL(ps[py_],    1e-14);
+			BOOST_CHECK_SMALL(ps[ct_],    1e-14);
+			BOOST_CHECK_SMALL(ps[delta_], 1e-14);
+		}
+
+		/* along y */
+		for (int yi=-10; yi<10; ++yi){
+			if(yi == 0){
+				continue;
+			}
+			const double y = yi * 1e-3;
+
+			/* Todo: check sign */
+			const tsc::cdbl p_expected = pow(tsc::cdbl(0e0, y), (n-1));
+
+			ss_vect<double> ps = {0, 0, y, 0, 0, 0};
+			mpole.pass(calc_config, ps);
+			BOOST_CHECK_CLOSE(ps[y_],     y,                 1e-14);
+			BOOST_CHECK_CLOSE(ps[px_],   -p_expected.real(), 1e-14);
+			BOOST_CHECK_CLOSE(ps[py_],    p_expected.imag(), 1e-14);
+
+			BOOST_CHECK_SMALL(ps[x_],     1e-14);
+			BOOST_CHECK_SMALL(ps[ct_],    1e-14);
+			BOOST_CHECK_SMALL(ps[delta_], 1e-14);
+		}
+
+	}
+}
+
+BOOST_AUTO_TEST_CASE(test15_higher_orders_skew_multipole)
+{
+	tsc::ConfigType calc_config;
+	Config C;
+	C.set<std::string>("name", "test");
+	C.set<double>("L", 0.0);
+
+	for (int n=2; n<=4; ++n){
+		tse::MpoleType mpole(C);
+		tsc::cdbl t_mul = tsc::cdbl(0, 355e0/113e0/double(n));
+		(dynamic_cast<tsc::PlanarMultipoles*>(mpole.intp))->setMultipole(n, t_mul);
+
+		BOOST_CHECK(mpole.isThick() == false);
+		/* on axis */
+		{
+			ss_vect<double> ps = {0, 0, 0, 0, 0, 0};
+			mpole.pass(calc_config, ps);
+
+			BOOST_CHECK_SMALL(ps[x_],     1e-14);
+			BOOST_CHECK_SMALL(ps[px_],    1e-14);
+			BOOST_CHECK_SMALL(ps[y_],     1e-14);
+			BOOST_CHECK_SMALL(ps[py_],    1e-14);
+			BOOST_CHECK_SMALL(ps[ct_],    1e-14);
+			BOOST_CHECK_SMALL(ps[delta_], 1e-14);
+		}
+
+		/* along x */
+		for (int xi=-10; xi<10; ++xi){
+
+			if(xi == 0){
+				/* special comparisons at zero */
+				continue;
+			}
+			const double x = xi * 1e-3;
+			/* Todo: check sign */
+			const tsc::cdbl p_expected = t_mul *  pow(tsc::cdbl(x, 0), (n-1));
+
+			ss_vect<double> ps = {x, 0, 0, 0, 0, 0};
+			mpole.pass(calc_config, ps);
+			BOOST_CHECK_CLOSE(ps[x_],     x,                 1e-14);
+			BOOST_CHECK_CLOSE(ps[px_],    p_expected.real(), 2e-12);
+			BOOST_CHECK_CLOSE(ps[py_],    p_expected.imag(), 2e-12);
+
+			BOOST_CHECK_SMALL(ps[y_],     1e-14);
+			BOOST_CHECK_SMALL(ps[ct_],    1e-14);
+			BOOST_CHECK_SMALL(ps[delta_], 1e-14);
+
+			// accuracy found was 1.5e-16
+			BOOST_WARN_CLOSE(ps[px_],     p_expected.real(), 2e-14);
+			BOOST_WARN_CLOSE(ps[py_],     p_expected.imag(), 3e-14);
+		}
+
+		/* along y */
+		for (int yi=-10; yi<10; ++yi){
+			if(yi == 0){
+				continue;
+			}
+			const double y = yi * 1e-3;
+
+			/* Todo: check sign */
+			const tsc::cdbl p_expected = t_mul *  pow(tsc::cdbl(0, y), (n-1));
+
+			ss_vect<double> ps = {0, 0, y, 0, 0, 0};
+			mpole.pass(calc_config, ps);
+			BOOST_CHECK_CLOSE(ps[y_],     y,                 1e-14);
+			BOOST_CHECK_CLOSE(ps[px_],   -p_expected.real(), 2e-12);
+			BOOST_CHECK_CLOSE(ps[py_],    p_expected.imag(), 2e-12);
+
+			BOOST_CHECK_SMALL(ps[x_],     1e-14);
+			BOOST_CHECK_SMALL(ps[ct_],    1e-14);
+			BOOST_CHECK_SMALL(ps[delta_], 1e-14);
+
+			// accuracy found was 1.5e-16
+			BOOST_WARN_CLOSE(ps[px_],    -p_expected.real(), 2e-14);
+			BOOST_WARN_CLOSE(ps[py_],     p_expected.imag(), 3e-14);
+		}
+
 	}
 }
 

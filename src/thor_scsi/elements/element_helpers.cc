@@ -99,7 +99,7 @@ namespace thor_scsi::elements{
 		ss_vect<T> ps0 = ps;
 
 
-		int debug = false;
+		const int debug = false;
 
 		if(debug){
 		    std::cerr << "Length " << L << " Order " << Order << " h_bend " << h_bend << " h_ref " << h_ref << std::endl
