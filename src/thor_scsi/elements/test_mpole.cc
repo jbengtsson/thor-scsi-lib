@@ -223,18 +223,17 @@ BOOST_AUTO_TEST_CASE(test11_mpole_kick_dipole_component_thin_kick_l1)
 
 		std::cout << "Ps after kick" << ps << std::endl;
 		/* Length 0 -> harmonics turn integral ? */
-		BOOST_CHECK_CLOSE(ps[x_],   -.5e-3, 1e-12);
 		BOOST_CHECK_CLOSE(ps[px_],   -1e-3, 1e-12);
 
-		BOOST_CHECK_SMALL(ps[y_],     1e-14);
+		BOOST_CHECK_SMALL(ps[y_],     1e-12);
+		BOOST_CHECK_SMALL(ps[x_],     1e-12);
 		BOOST_CHECK_SMALL(ps[py_],    1e-14);
 		BOOST_CHECK_SMALL(ps[ct_],    2e-7);
 		BOOST_CHECK_SMALL(ps[delta_], 1e-14);
-
 	}
 }
 
-#if 0
+
 BOOST_AUTO_TEST_CASE(test21_mpole_kick_dipole_component_thick_kick_polar_ideal)
 {
 
@@ -285,7 +284,7 @@ BOOST_AUTO_TEST_CASE(test21_mpole_kick_dipole_component_thick_kick_polar_ideal)
 
 	}
 }
-#endif
+
 
 BOOST_AUTO_TEST_CASE(test21_mpole_kick_dipole_component_thick_kick_off_momentum)
 {
@@ -296,20 +295,24 @@ BOOST_AUTO_TEST_CASE(test21_mpole_kick_dipole_component_thick_kick_off_momentum)
 	Config C;
 	C.set<std::string>("name", "test");
 
-	const double phi = 1e-3; // 1 mrad
+	// const double phi = 1e-3; // 1 mrad
+	const double phi = 1/180e0 * M_PI; // 1 deg
 	const double length = 1.0;
-	const double irho = phi / length;
+	const double rho = length / phi;
 
 	// relative momentum deviation
 	const double delta = 1e-3;
-	const double px_expected = irho * length * delta;
-	const double x_expected = 1e0/2e0 * irho * length * length * delta;
 
+	const double x_expected = rho * (1 - cos(phi)) * 1e0/(1 + delta) * delta;
+	const double px_expected = sin(phi) * delta;
+
+	std::cerr  << "length " << length << " rho " << rho
+		   <<  "phi " << phi << " compare " << rho * length << std::endl;
 	C.set<double>("L", length);
 	tse::MpoleType mpole(C);
 
         mpole.asThick(true);
-	mpole.Pirho = irho;
+	mpole.Pirho = 1/rho;
 	mpole.PN = 10;
 
 	calc_config.Cart_Bend = false;
@@ -331,12 +334,15 @@ BOOST_AUTO_TEST_CASE(test21_mpole_kick_dipole_component_thick_kick_off_momentum)
 
 		std::cerr << "ps out " << ps << std::endl;
 		/* Length 0 -> harmonics turn integral ? */
-		BOOST_CHECK_CLOSE(ps[x_],     x_expected, 1e-14);
+		BOOST_CHECK_CLOSE(ps[x_],     x_expected,  1e-14);
 		BOOST_CHECK_CLOSE(ps[px_],    px_expected, 1e-14);
+		BOOST_CHECK_CLOSE(ps[delta_], delta,       1e-14);
+
 		BOOST_CHECK_SMALL(ps[y_],     1e-14);
 		BOOST_CHECK_SMALL(ps[py_],    1e-14);
 		BOOST_CHECK_SMALL(ps[ct_],    1e-14);
-		BOOST_CHECK_SMALL(ps[delta_], 1e-14);
 
+		// BOOST_WARN_CLOSE(ps[x_],     x_expected, 1e-14);
+		// BOOST_WARN_CLOSE(ps[px_],    px_expected, 1e-14);
 	}
 }

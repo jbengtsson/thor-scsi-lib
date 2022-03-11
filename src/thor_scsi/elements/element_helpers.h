@@ -252,19 +252,24 @@ public:
 		void drift_pass(const thor_scsi::core::ConfigType &conf, const double L, ss_vect<T> &ps);
 
 		/**
-		 * @brief implementation of the thin kick
+		 * @brief implementation of the thin kick (thin lens approximation)
 		 *
 		 * \verbatim embed:rst:leading-asterisk
-		 * Args:
+		 *
+		 * .. Args::
 		 *   order: optimisation for number of coefficients that require to be evaluatued
 		 *          should go to field interpolation
 		 *
 		 *   h_bend: 1/rho_bend (radius of the the bend, magnetic rigidty of the dipoles)
 		 *   h_ref: 1/rho which is the curvature of the design / reference orbit
 		 *
-		 * Todo:
-		 *     Split up function in different parts or functions
-		 *     E.g.: one for dipoles and one for anything else...
+		 * .. Todo::
+		 *
+		 *     * Split up function in different parts or functions:
+		 *       E.g.: one for dipoles and one for anything else.
+		 *     * Consider to combine interpolation with length L and thus not using field interpolation
+		 *       but field integral interpolation
+		 *     * consider renaming function to thin lens
 		 *
 		 * The vector potential for the combined-function sector bend is from: [Iselin:85]_
 		 *
@@ -274,10 +279,8 @@ public:
 		 */
 		template<typename T>
 		void thin_kick(const thor_scsi::core::ConfigType &conf, const int Order,
-			       const thor_scsi::core::Field2DInterpolation& intp,
-			       //const MpoleArray &MB,
-			       const double L, const double h_bend, const double h_ref,
-			       ss_vect<T> &ps);
+			       const thor_scsi::core::Field2DInterpolation& intp, const double L,
+			       const double h_bend, const double h_ref, ss_vect<T> &ps);
 
 }// namespace thor_scsi::elements
 #endif /*  _THOR_SCSI_CORE_ELEMENTS_HELPERS_H_  */

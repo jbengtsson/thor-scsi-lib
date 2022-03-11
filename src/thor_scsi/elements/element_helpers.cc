@@ -98,10 +98,13 @@ namespace thor_scsi::elements{
 		T          BxoBrho, ByoBrho, ByoBrho1, B[3], u, p_s;
 		ss_vect<T> ps0 = ps;
 
-		/*
-		std::cerr << "Length " << L << " Order " << Order << " h_bend " << h_bend << " h_ref " << h_ref << std::endl
-			  << "ps in " << ps;
-		*/
+
+		int debug = false;
+
+		if(debug){
+		    std::cerr << "Length " << L << " Order " << Order << " h_bend " << h_bend << " h_ref " << h_ref << std::endl
+			      << "ps in " << ps;
+		}
 		// Todo: what kind of bend is that?
 		if ((h_bend != 0e0) || ((1 <= Order) //... needs to be removed
 #if 0
@@ -109,28 +112,15 @@ namespace thor_scsi::elements{
 		    && (Order <= HOMmax)
 #endif
 			    )) {
-#warning "field interpolation for bends missing"
-#if 0
-			/*
-			 * Compute magnetic field with Horner's rule.
-			 *
-			 *  Todo: replace it with a call to field ...
-			 *        but requires a dedicated enty
-			 */
-			ByoBrho = MB[Order+HOMmax]; BxoBrho = MB[HOMmax-Order];
-			for (j = Order-1; j >= 1; j--) {
-				ByoBrho1 = ps0[x_]*ByoBrho - ps0[y_]*BxoBrho + MB[j+HOMmax];
-				BxoBrho  = ps0[y_]*ByoBrho + ps0[x_]*BxoBrho + MB[HOMmax-j];
-				ByoBrho  = ByoBrho1;
-			}
-#endif
 			{
 				// Warning: currently this only works for doubles!
 				const double x = ps[x_];
 				const double y = ps[y_];
 				intp.field(ps[x_], ps[y_], &BxoBrho, &ByoBrho);
 
-				std::cerr << "interpolated field " << BxoBrho << ", "  << ByoBrho << std::endl;
+				if(debug){
+					std::cerr << "interpolated field " << BxoBrho << ", "  << ByoBrho << std::endl;
+				}
 
 			}
 #ifdef THOR_SCSI_USE_RADIATION
