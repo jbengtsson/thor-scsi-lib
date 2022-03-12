@@ -98,6 +98,14 @@ namespace thor_scsi::elements {
 		int  getIntegrationMethod(void) const {
 			return this->Pmethod;
 		}
+
+		inline void setIntegrationSteps(const int n){
+			this->PN = n;
+		}
+		inline int getIntegrationSteps(void) const {
+			return this->Pmethod;
+		}
+
 		/**
 		 * @brief Use this element as thick one
 		 *
@@ -149,6 +157,37 @@ namespace thor_scsi::elements {
 				this->asThick(true);
 			}
 		}
+
+		/**
+		 * @Todo: clarify if angle should be treated in radian or degree
+		 *
+		 * @Todo: clarify relation to entrance and exit angle
+		 */
+		inline void setBendingAngle(const double angle){
+			this->Pbending_angle = angle;
+		}
+
+		inline double getBendingAngle(void) const {
+			return this->Pbending_angle;
+		}
+
+		inline void setEntranceAngle(const double angle) {
+			this->PTx1 = angle;
+		}
+
+		inline double getEntranceAngle(void) const{
+			return this->PTx1;
+		}
+
+		inline void setExitAngle(const double angle){
+			this->PTx1 = angle;
+		}
+
+		inline double getExitAngle(void) const {
+			return this->PTx2;
+		}
+
+
 
 		virtual void localPass(thor_scsi::core::ConfigType &conf, ss_vect<double> &ps) override final
 		{ _localPass(conf, ps);}
@@ -203,6 +242,7 @@ namespace thor_scsi::elements {
 		                                   ///
 			n_design;                  ///< multipole order (design).
 		double
+		Pbending_angle,                     ///<  Todo: Already defined or combination of PTx1 and PTx2?
 			PTx1,                      ///<  Bend angle [deg]:  hor. entrance angle
 			PTx2,                      ///<  Bend angle [deg]: hor. exit angle.
 			Pgap,                      ///< Total magnet gap [m].

@@ -27,7 +27,7 @@ namespace thor_scsi::elements {
 				delete intp;
 			}
 		}
-		const char* type_name(void) const override final { return "mpole"; };
+		const char* type_name(void) const override { return "mpole"; };
 
 		//thor_scsi::core::PlanarMultipoles* intp;
 	};

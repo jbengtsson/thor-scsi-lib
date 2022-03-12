@@ -57,7 +57,7 @@ namespace thor_scsi {
 				Omega = 0e0,                        //< Synchrotron Frequency.
 				U0 = 0e0,                           //< Energy Loss per turn [keV].
 				Alphac = 0e0,                       //< Linear Momentum Compaction.
-				Energy = 1.7e9,                       //< Beam Energy.
+				Energy = 1.7e9,                     //< Beam Energy in eV.
 				dE = 0e0,                           //< Energy Loss.
 				CODeps = 1e-6,                       //< Closed Orbit precision.
 				Qb= 0e0,                           //< Bunch Charge.
