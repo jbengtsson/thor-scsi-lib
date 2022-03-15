@@ -36,6 +36,16 @@ namespace thor_scsi::elements {
 			muls.setMultipole(n, K);
 		}
 
+		inline void setMainMultipoleStrength(const thor_scsi::core::cdbl mul){
+			const int n = this->getMainMultipoleNumber();
+			// Watch the apersand ...
+			auto& muls = dynamic_cast<thor_scsi::core::PlanarMultipoles &> (*this->intp);
+			muls.setMultipole(n, mul);
+		}
+
+		inline void setMainMultipoleStrength(const double normal){
+			this->setMainMultipoleStrength(thor_scsi::core::cdbl(normal, 0));
+		}
 		/**
 		 * get the major harmonic number
 		 */
@@ -46,6 +56,22 @@ namespace thor_scsi::elements {
 
 		virtual int getMainMultipoleNumber(void) const = 0;
 		//thor_scsi::core::PlanarMultipoles* intp;
+
+		/**
+		 *
+		 * \verbatim embed:rst:leading-asterisk
+		 *
+		 * .. Warning::
+		 *
+		 *     fix memory handling of interpolation object
+		 *     add move constructor
+		 *
+		 * \endverbatim
+		 */
+		inline const thor_scsi::core::PlanarMultipoles& getMultipoles(void) const {
+			return static_cast<thor_scsi::core::PlanarMultipoles&>(*this->intp);
+		}
+
 	};
 
 

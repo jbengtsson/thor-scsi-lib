@@ -298,7 +298,7 @@ namespace thor_scsi::core {
 		}
 
 		/**
-		 * access to the coefficents.
+		 * @brief access to the coefficents.
 		 *
 		 * \verbatim embed:rst:leading-asterisk
 		 *
@@ -306,11 +306,23 @@ namespace thor_scsi::core {
 		 *     access to the same memory. If you change the coefficients
 		 *     outside you also change them here.
 		 *
-		 * .. Todo::
-		 *
 		 * \endverbatim
 		 */
 		inline std::vector<cdbl_intern>& getCoeffs(void){
+			return this->coeffs;
+		}
+		/**
+		 * @brief: access to the coefficents (const version)
+		 *
+		 * \verbatim embed:rst:leading-asterisk
+		 *
+		 * .. todo::
+		 *    is that here sufficient to make the user clear that these
+		 *    coefficients should be considered constant
+		 *
+		 * \endverbatim
+		 */
+		inline const std::vector<cdbl_intern> getCoeffs(void) const {
 			return this->coeffs;
 		}
 
