@@ -32,7 +32,6 @@ BOOST_AUTO_TEST_CASE(test01_wrong_thin_kick_L0)
 {
 	const ss_vect<double> ps_orig = {0, 0, 0, 0, 0, 0};
 	const double h_ref = 0e0, h_bend = 0e0;
-	const int order = 4;
 	const double length = 0.0;
 
 	tsc::ConfigType calc_config;
@@ -40,7 +39,7 @@ BOOST_AUTO_TEST_CASE(test01_wrong_thin_kick_L0)
 
 	{
 		ss_vect<double> ps = ps_orig;
-		tse::thin_kick(calc_config, order, muls, length, h_bend, h_ref, ps);
+		tse::thin_kick(calc_config, muls, length, h_bend, h_ref, ps);
 		test_ps_small(ps);
 
 	}
@@ -51,7 +50,7 @@ BOOST_AUTO_TEST_CASE(test01_wrong_thin_kick_L0)
 		tsc::PlanarMultipoles muls2 = muls.clone();
 		muls2.setMultipole(i, tsc::cdbl(1.0, 0.0));
 
-		tse::thin_kick(calc_config, order, muls2, length, h_bend, h_ref, ps);
+		tse::thin_kick(calc_config, muls2, length, h_bend, h_ref, ps);
 		test_ps_small(ps);
 	}
 
@@ -62,7 +61,7 @@ BOOST_AUTO_TEST_CASE(test01_wrong_thin_kick_L0)
 		tsc::PlanarMultipoles muls2 = muls.clone();
 		muls2.setMultipole(5, tsc::cdbl(1.0, 0.0));
 
-		tse::thin_kick(calc_config, order, muls2, length, h_bend, h_ref, ps);
+		tse::thin_kick(calc_config, muls2, length, h_bend, h_ref, ps);
 		test_ps_small(ps);
 	}
 }
@@ -72,7 +71,6 @@ BOOST_AUTO_TEST_CASE(test02_wrong_thin_kick_L0_ps_off)
 	const double x = 1, y = 1;
 	const ss_vect<double> ps_orig = {x, 0, y, 0, 0, 0};
 	const double h_ref = 0e0, h_bend = 0e0;
-	const int order = 4;
 	const double length = 0.0;
 
 	tsc::ConfigType calc_config;
@@ -80,7 +78,7 @@ BOOST_AUTO_TEST_CASE(test02_wrong_thin_kick_L0_ps_off)
 
 	{
 		ss_vect<double> ps = ps_orig;
-		tse::thin_kick(calc_config, order, muls, length, h_bend, h_ref, ps);
+		tse::thin_kick(calc_config, muls, length, h_bend, h_ref, ps);
 
 		BOOST_CHECK_CLOSE(ps[x_],     x, 1e-14);
 		BOOST_CHECK_CLOSE(ps[y_],     y, 1e-14);
@@ -96,7 +94,7 @@ BOOST_AUTO_TEST_CASE(test02_wrong_thin_kick_L0_ps_off)
 		tsc::PlanarMultipoles muls2 = muls.clone();
 		muls2.setMultipole(i, tsc::cdbl(1.0, 0.0));
 
-		tse::thin_kick(calc_config, order, muls2, length, h_bend, h_ref, ps);
+		tse::thin_kick(calc_config, muls2, length, h_bend, h_ref, ps);
 
 
 		BOOST_CHECK_CLOSE(ps[x_],     x, 1e-14);
@@ -114,7 +112,6 @@ BOOST_AUTO_TEST_CASE(test03_wrong_thin_kick_L0_ps_off)
 	const double x = -3e-3, px = 7e-3, y = -5e-3, py = 11e-4, delta=13e-4, ct=17e-4;
 	const ss_vect<double> ps_orig = {x, px, y, py, delta, ct};
 	const double h_ref = 0e0, h_bend = 0e0;
-	const int order = 4;
 	const double length = 0;
 
 	tsc::ConfigType calc_config;
@@ -122,7 +119,7 @@ BOOST_AUTO_TEST_CASE(test03_wrong_thin_kick_L0_ps_off)
 
 	{
 		ss_vect<double> ps = ps_orig;
-		tse::thin_kick(calc_config, order, muls, length, h_bend, h_ref, ps);
+		tse::thin_kick(calc_config, muls, length, h_bend, h_ref, ps);
 
 		BOOST_CHECK_CLOSE(ps[x_],     x,     1e-14);
 		BOOST_CHECK_CLOSE(ps[px_],    px,    1e-14);
@@ -138,7 +135,7 @@ BOOST_AUTO_TEST_CASE(test03_wrong_thin_kick_L0_ps_off)
 		tsc::PlanarMultipoles muls2 = muls.clone();
 		muls2.setMultipole(i, tsc::cdbl(1.0, 0.0));
 
-		tse::thin_kick(calc_config, order, muls2, length, h_bend, h_ref, ps);
+		tse::thin_kick(calc_config,  muls2, length, h_bend, h_ref, ps);
 		BOOST_CHECK_CLOSE(ps[x_],     x,     1e-14);
 		BOOST_CHECK_CLOSE(ps[px_],    px,    1e-14);
 		BOOST_CHECK_CLOSE(ps[y_],     y,     1e-14);
@@ -155,7 +152,6 @@ BOOST_AUTO_TEST_CASE(test10_thin_kick_L1_no_field)
 {
 	const ss_vect<double> ps_orig = {0, 0, 0, 0, 0, 0};
 	const double h_ref = 0e0, h_bend = 0e0;
-	const int order = 4;
 	const double length = 1.0;
 
 	tsc::ConfigType calc_config;
@@ -163,7 +159,7 @@ BOOST_AUTO_TEST_CASE(test10_thin_kick_L1_no_field)
 
 	{
 		ss_vect<double> ps = ps_orig;
-		tse::thin_kick(calc_config, order, muls, length, h_bend, h_ref, ps);
+		tse::thin_kick(calc_config, muls, length, h_bend, h_ref, ps);
 		test_ps_small(ps);
 
 	}
@@ -173,7 +169,7 @@ BOOST_AUTO_TEST_CASE(test10_thin_kick_L1_no_field)
 		ss_vect<double> ps = ps_orig;
 		tsc::PlanarMultipoles muls2 = muls.clone();
 
-		tse::thin_kick(calc_config, order, muls2, length / (double(i)), h_bend, h_ref, ps);
+		tse::thin_kick(calc_config, muls2, length / (double(i)), h_bend, h_ref, ps);
 		test_ps_small(ps);
 	}
 
@@ -184,7 +180,6 @@ BOOST_AUTO_TEST_CASE(test11_thin_kick_L1_no_ps_off)
 	const double x = -28e-4, px = -464e-5, y = +37e-4, py = 31e-4, delta=29e-4, ct=23e-4;
 	const ss_vect<double> ps_orig = {x, px, y, py, delta, ct};
 	const double h_ref = 0e0, h_bend = 0e0;
-	const int order = 4;
 	const double length = 355/113;
 
 	tsc::ConfigType calc_config;
@@ -195,7 +190,7 @@ BOOST_AUTO_TEST_CASE(test11_thin_kick_L1_no_ps_off)
 		ss_vect<double> ps = ps_orig;
 		tsc::PlanarMultipoles muls2 = muls.clone();
 
-		tse::thin_kick(calc_config, order, muls2, length * i, h_bend, h_ref, ps);
+		tse::thin_kick(calc_config, muls2, length * i, h_bend, h_ref, ps);
 
 		BOOST_CHECK_CLOSE(ps[x_],     x,     1e-14);
 		BOOST_CHECK_CLOSE(ps[px_],    px,    1e-14);
@@ -215,7 +210,6 @@ BOOST_AUTO_TEST_CASE(test20_thin_kick_L1_dipole)
 
 	muls.setMultipole(1, tsc::cdbl(1e-3, 0e0));
 	const double h_ref = 0e0, h_bend = 0e0;
-	const int order = 4;
 
 	// length is set to zero so that the multipoles are treated as integrals ....
 	const double length = 1.0;
@@ -224,7 +218,7 @@ BOOST_AUTO_TEST_CASE(test20_thin_kick_L1_dipole)
 	{
 		ss_vect<double> ps = ps_orig;
 
-		tse::thin_kick(calc_config, order, muls, length, h_bend, h_ref, ps);
+		tse::thin_kick(calc_config, muls, length, h_bend, h_ref, ps);
 
 		BOOST_CHECK_CLOSE(ps[px_],   -1e-3, 1e-12);
 
@@ -260,8 +254,6 @@ BOOST_AUTO_TEST_CASE(test51_sector_bend_delta)
 	compute_irho_px(phi, length, delta, &irho, &px_expected);
 	const double h_bend = irho, h_ref = irho;
 
-	const int order = 10;
-
 
 	const ss_vect<double> ps_orig = {0, 0, 0, 0, delta, 0};
 	BOOST_CHECK_CLOSE(ps_orig[delta_],  delta, 1e-14);
@@ -269,7 +261,7 @@ BOOST_AUTO_TEST_CASE(test51_sector_bend_delta)
 	{
 		ss_vect<double> ps = ps_orig;
 		// std::cerr << "ps in " << ps << ", ps orig " << ps_orig << " delta " << delta << std::endl;
-		tse::thin_kick(calc_config, order, muls, length, h_bend, h_ref, ps);
+		tse::thin_kick(calc_config,  muls, length, h_bend, h_ref, ps);
 
 		// std::cerr << "ps out " << ps << std::endl;
 		/* Length 0 -> harmonics turn integral ? */
@@ -290,10 +282,6 @@ BOOST_AUTO_TEST_CASE(test52_sector_bend_delta_pars)
 	tsc::ConfigType calc_config;
 	const tsc::PlanarMultipoles muls;
 
-
-	const int order = 10;
-
-
 	/* test different length */
 	{
 		// relative momentum deviation
@@ -313,7 +301,7 @@ BOOST_AUTO_TEST_CASE(test52_sector_bend_delta_pars)
 			compute_irho_px(phi, length, delta, &irho, &px_expected);
 			const double h_bend = irho, h_ref = irho;
 
-			tse::thin_kick(calc_config, order, muls, length, h_bend, h_ref, ps);
+			tse::thin_kick(calc_config,  muls, length, h_bend, h_ref, ps);
 
 			// std::cerr << "ps out " << ps << std::endl;
 			/* Length 0 -> harmonics turn integral ? */
@@ -350,7 +338,7 @@ BOOST_AUTO_TEST_CASE(test52_sector_bend_delta_pars)
 			compute_irho_px(phi, length, delta, &irho, &px_expected);
 			const double h_bend = irho, h_ref = irho;
 
-			tse::thin_kick(calc_config, order, muls, length, h_bend, h_ref, ps);
+			tse::thin_kick(calc_config,  muls, length, h_bend, h_ref, ps);
 
 			// std::cerr << "ps out " << ps << std::endl;
 			/* Length 0 -> harmonics turn integral ? */
@@ -383,7 +371,7 @@ BOOST_AUTO_TEST_CASE(test52_sector_bend_delta_pars)
 
 			ss_vect<double> ps = ps_orig;
 
-			tse::thin_kick(calc_config, order, muls, length, h_bend, h_ref, ps);
+			tse::thin_kick(calc_config,  muls, length, h_bend, h_ref, ps);
 
 			// std::cerr << "ps out " << ps << std::endl;
 			/* Length 0 -> harmonics turn integral ? */
@@ -406,7 +394,6 @@ BOOST_AUTO_TEST_CASE(test60_higher_orders)
 	tsc::ConfigType calc_config;
 	Config C;
 	const double length = 1, h_bend = 0.0, h_ref = 0.0;
-	const int order = 10;
 
 	for (int n=2; n<=4; ++n){
 		tsc::PlanarMultipoles muls;
@@ -415,7 +402,7 @@ BOOST_AUTO_TEST_CASE(test60_higher_orders)
 		/* on axis */
 		{
 			ss_vect<double> ps = {0, 0, 0, 0, 0, 0};
-			tse::thin_kick(calc_config, order, muls, length, h_bend, h_ref, ps);
+			tse::thin_kick(calc_config, muls, length, h_bend, h_ref, ps);
 			BOOST_CHECK_SMALL(ps[x_],     1e-14);
 			BOOST_CHECK_SMALL(ps[px_],    1e-14);
 			BOOST_CHECK_SMALL(ps[y_],     1e-14);
@@ -430,7 +417,7 @@ BOOST_AUTO_TEST_CASE(test60_higher_orders)
 			const double px_expected = -pow(x, (n-1));
 
 			ss_vect<double> ps = {x, 0, 0, 0, 0, 0};
-			tse::thin_kick(calc_config, order, muls, length, h_bend, h_ref, ps);
+			tse::thin_kick(calc_config, muls, length, h_bend, h_ref, ps);
 			BOOST_CHECK_CLOSE(ps[x_],     x,           1e-14);
 			BOOST_CHECK_CLOSE(ps[px_],    px_expected, 1e-14);
 

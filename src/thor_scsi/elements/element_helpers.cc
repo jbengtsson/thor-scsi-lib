@@ -88,11 +88,8 @@ namespace thor_scsi::elements{
 	 *     E.g.: one for dipoles and one for anything else...
 	 */
 	template<typename T>
-	void tse::thin_kick(const tsc::ConfigType &conf, const int Order,
-			    const thor_scsi::core::Field2DInterpolation& intp,
-			    // const MpoleArray &MB,
-			    const double L, const double h_bend, const double h_ref,
-			    ss_vect<T> &ps)
+	void tse::thin_kick(const tsc::ConfigType &conf, const tsc::Field2DInterpolation& intp,
+			    const double L, const double h_bend, const double h_ref, ss_vect<T> &ps)
 	{
 		int        j;
 		T          BxoBrho, ByoBrho, ByoBrho1, B[3], u, p_s;
@@ -101,6 +98,9 @@ namespace thor_scsi::elements{
 
 		const int debug = false;
 
+		// remains of calculation optimisation
+		const int Order = 1;
+
 		if(debug){
 		    std::cerr << "Length " << L << " Order " << Order << " h_bend " << h_bend << " h_ref " << h_ref << std::endl
 			      << "ps in " << ps;
@@ -108,7 +108,7 @@ namespace thor_scsi::elements{
 		// Todo: what kind of bend is that?
 		if ((h_bend != 0e0) || ((1 <= Order) //... needs to be removed
 #if 0
-					//  why this switch ?
+					//  optimisation of number
 		    && (Order <= HOMmax)
 #endif
 			    )) {
@@ -171,7 +171,7 @@ namespace thor_scsi::elements{
 template void tse::drift_pass(const tsc::ConfigType &conf, const double, ss_vect<double> &);
 //template void tse::drift_pass(tsc::ConfigType &conf, const double, ss_vect<tps> &);
 
-template void tse::thin_kick(const tsc::ConfigType &conf, const int Order, const tsc::Field2DInterpolation& intp,
+template void tse::thin_kick(const tsc::ConfigType &conf, const tsc::Field2DInterpolation& intp,
 			     const double L, const double h_bend, const double h_ref, ss_vect<double> &ps);
-//template void tse::thin_kick(const tsc::ConfigType &conf, const int Order, const tsc::Field2DInterpolation& intp,
+//template void tse::thin_kick(const tsc::ConfigType &conf, const tsc::Field2DInterpolation& intp,
 //			     const double L, const double h_bend, const double h_ref, ss_vect<tps> &ps);

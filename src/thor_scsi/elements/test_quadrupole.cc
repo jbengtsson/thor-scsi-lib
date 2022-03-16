@@ -274,11 +274,10 @@ BOOST_AUTO_TEST_CASE(test20_quadrupole_typical_length_eval)
 	{
 		/* normal quadrupole */
 		auto quad = tse::QuadrupoleType(C);
-		quad.setIntegrationSteps(1);
+		quad.setNumberOfIntegrationSteps(1);
 		// quadrupoles are always thin elements
 		BOOST_CHECK(quad.isThick());
-		BOOST_CHECK_SMALL(quad.getInverseRegidity(), 1e-12);
-		std::cout << "quad irho " << quad.getInverseRegidity() << std::endl;
+		BOOST_CHECK_SMALL(quad.getInverseRigidity(), 1e-12);
 		BOOST_CHECK(quad.assumingCurvedTrajectory() == false);
 
 		BOOST_CHECK_CLOSE(quad.getLength(), length,   1e-12);
