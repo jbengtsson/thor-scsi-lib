@@ -175,7 +175,14 @@ tse::FieldKick::FieldKick(const Config &config) : tse::LocalGalileanPRot(config)
 	this->Porder = HOMmax;
 	this->asThick(false);
 	this->setIntegrationMethod(config.get<double>("Method", 4));
+	this->setIntegrationSteps(config.get<double>("N", 1));
 	this->setLength(config.get<double>("L", 0.0));
+
+	this->setBendingAngle(config.get<double>("T", 0.0));
+	this->setEntranceAngle(config.get<double>("T1", 0.0));
+	this->setExitAngle(config.get<double>("T2", 0.0));
+
+
 }
 
 void tse::FieldKick::show(std::ostream& strm, const int level) const

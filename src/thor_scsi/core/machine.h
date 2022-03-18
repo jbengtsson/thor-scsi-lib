@@ -32,6 +32,20 @@ namespace thor_scsi::core {
 		 */
 		Machine(const Config& c);
 		~Machine();
+#if 0
+		// move constructor
+		Machine(Machine&&o) :
+			p_elements = std::move(o.p_elements)
+			p_conf = std::move(o.p_conf),
+			p_trace = std::move(o.p_trace),
+			p_simtype = std::move(o.p_simtype),
+			p_lookup = std::move(o.p_lookup),
+			p_lookup_type = std::move(o.p_lookup_type),
+			p_element_infos = std::move(o.p_element_infos),
+			p_logger = std::move(o.p_logger)
+		{
+		}
+#endif
 
 #if 0  /* NO state */
 		/** @brief Pass the given bunch State through this Machine.

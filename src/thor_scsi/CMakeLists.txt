@@ -8,6 +8,7 @@ get_target_property(flame_CORE_LIBRARY flame::flame_core IMPORTED_LOCATION_RELEA
 find_package(Boost 1.52.0 REQUIRED COMPONENTS
   prg_exec_monitor
   unit_test_framework
+  program_options
   )
 
 message(STATUS "Flame core library ${flame_CORE_LIBRARY}")
@@ -74,6 +75,9 @@ set(thor_scsi_core_FILES
   elements/field_kick.cc
   elements/mpole.cc
   elements/utils.cc
+  elements/marker.cc
+  elements/cavity.cc
+  std_machine/std_machine.cc
   # thor_lib.cc
   # t2cell.cc
   # t2lat.cc
@@ -191,6 +195,8 @@ add_test(transform_phase_space test_transform_phase_space)
 
 
 add_subdirectory(elements)
+add_subdirectory(std_machine)
+add_subdirectory(examples)
 
 # ---- install helpers --
 

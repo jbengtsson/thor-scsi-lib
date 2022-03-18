@@ -20,7 +20,7 @@ namespace thor_scsi {
 			}
 
 
-			const char* type_name() const override final { return "drift"; };
+			const char* type_name() const override final { return "Drift"; };
 			/**
 			 *
 			 * Todo:
@@ -59,6 +59,6 @@ namespace thor_scsi {
 /*
  * Local Variables:
  * mode: c++
- * c-file-style: "python"
+ * c++-file-style: "python"
  * End:
  */
