@@ -44,6 +44,7 @@ add_library(thor_scsi::tpsa_lin ALIAS tpsa_lin)
 target_include_directories(tpsa_lin PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../>
   $<INSTALL_INTERFACE:include/>  # <prefix>/include/mylib
+  ${ARMADILLO_INCLUDE_DIRS}
 )
 
 set_target_properties(tpsa_lin
