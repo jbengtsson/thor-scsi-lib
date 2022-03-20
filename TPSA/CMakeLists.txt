@@ -10,8 +10,11 @@ if(CMAKE_Fortran_COMPILER_ID STREQUAL GNU)
     			-fdefault-integer-8
 			-finteger-4-integer-8
     			-w
-    			-mcmodel=medium
+    			-mcmodel=medium		
     			)
+    add_compile_options(-fpermissive)
+    #    add_compile_options(-fcheck-array-temporaries)
+    add_compile_options(-ff2c)
     if(MSYS)
         # Inconsistencies in size of integers detected by compiler on MSYS platform
         # I guess due to g++ version 11
