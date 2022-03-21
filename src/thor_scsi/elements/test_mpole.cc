@@ -9,46 +9,6 @@
 namespace tsc = thor_scsi::core;
 namespace tse = thor_scsi::elements;
 
-BOOST_AUTO_TEST_CASE(test01_kick_print)
-{
-	Config C;
-	C.set<std::string>("name", "test");
-	C.set<double>("Method", 4.0);
-	tse::FieldKick kick(C);
-
-	{
-		boost::test_tools::output_test_stream output;
-		output << kick;
-		BOOST_CHECK( !output.is_empty( false ) );
-	}
-	{
-		boost::test_tools::output_test_stream output;
-		kick.show(output, 4);
-		BOOST_CHECK( !output.is_empty( false ) );
-	}
-}
-
-BOOST_AUTO_TEST_CASE(test01_kick_integral_zero_length)
-{
-	Config C;
-	C.set<std::string>("name", "test");
-
-	{
-		C.set<double>("L", 0.0);
-		tse::FieldKick kick(C);
-		BOOST_CHECK_EQUAL(kick.isThick(), false);
-	}
-	{
-		C.set<double>("L", 1.0);
-		tse::FieldKick kick(C);
-		BOOST_CHECK_EQUAL(kick.isThick(), true);
-	}
-	{
-		C.set<double>("L", 0.0);
-		tse::FieldKick kick(C);
-		BOOST_CHECK_EQUAL(kick.isThick(), false);
-	}
-}
 
 BOOST_AUTO_TEST_CASE(test02_mpole_print)
 {
@@ -168,7 +128,7 @@ BOOST_AUTO_TEST_CASE(test12_orbit_trim_horizontal)
 	tse::MpoleType mpole(C);
 
 	/* */
-	(dynamic_cast<tsc::PlanarMultipoles*>(mpole.intp))->setMultipole(1, tsc::cdbl(1e0,0e0));
+	mpole.getFieldInterpolator()->setMultipole(1, tsc::cdbl(1e0,0e0));
 
 	boost::test_tools::output_test_stream output;
 	mpole.show(output, 4);
@@ -210,7 +170,7 @@ BOOST_AUTO_TEST_CASE(test13_orbit_trim_vertical)
 	tse::MpoleType mpole(C);
 
 	/* */
-	(dynamic_cast<tsc::PlanarMultipoles*>(mpole.intp))->setMultipole(1, tsc::cdbl(0, 1e0));
+	mpole.getFieldInterpolator()->setMultipole(1, tsc::cdbl(0, 1e0));
 
 	boost::test_tools::output_test_stream output;
 	mpole.show(output, 4);
@@ -248,7 +208,7 @@ BOOST_AUTO_TEST_CASE(test14_higher_orders_normal_multipole)
 
 	for (int n=2; n<=4; ++n){
 		tse::MpoleType mpole(C);
-		(dynamic_cast<tsc::PlanarMultipoles*>(mpole.intp))->setMultipole(n, tsc::cdbl(1, 0));
+		mpole.getFieldInterpolator()->setMultipole(n, tsc::cdbl(1, 0));
 
 		BOOST_CHECK(mpole.isThick() == false);
 		/* on axis */
@@ -320,7 +280,7 @@ BOOST_AUTO_TEST_CASE(test15_higher_orders_skew_multipole)
 	for (int n=2; n<=4; ++n){
 		tse::MpoleType mpole(C);
 		tsc::cdbl t_mul = tsc::cdbl(0, 355e0/113e0/double(n));
-		(dynamic_cast<tsc::PlanarMultipoles*>(mpole.intp))->setMultipole(n, t_mul);
+		mpole.getFieldInterpolator()->setMultipole(n, t_mul);
 
 		BOOST_CHECK(mpole.isThick() == false);
 		/* on axis */
@@ -413,12 +373,12 @@ BOOST_AUTO_TEST_CASE(test21_mpole_kick_dipole_component_thick_kick_polar_ideal)
 	tse::MpoleType mpole(C);
 
         mpole.asThick(true);
-	mpole.Pirho = irho;
-	mpole.PN = 1;
+	mpole.setInverseRigidity(irho);
+	mpole.setNumberOfIntegrationSteps(1);
 
 
 	/* */
-	(dynamic_cast<tsc::PlanarMultipoles*>(mpole.intp))->setMultipole(1, tsc::cdbl(0e0,0e0));
+	mpole.getFieldInterpolator()->setMultipole(1, tsc::cdbl(0e0,0e0));
 
 	boost::test_tools::output_test_stream output;
 	mpole.show(output, 4);
@@ -470,13 +430,13 @@ BOOST_AUTO_TEST_CASE(test21_mpole_kick_dipole_component_thick_kick_off_momentum)
 	tse::MpoleType mpole(C);
 
         mpole.asThick(true);
-	mpole.Pirho = 1/rho;
-	mpole.PN = 1;
+	mpole.setInverseRigidity(1/rho);
+	mpole.setNumberOfIntegrationSteps(1);
 
 	calc_config.Cart_Bend = false;
 
 	/* */
-	(dynamic_cast<tsc::PlanarMultipoles*>(mpole.intp))->setMultipole(1, tsc::cdbl(0e0,0e0));
+	mpole.getFieldInterpolator()->setMultipole(1, tsc::cdbl(0e0,0e0));
 
 	boost::test_tools::output_test_stream output;
 	mpole.show(output, 4);

@@ -140,6 +140,18 @@ namespace thor_scsi::core {
 			*Bx = r.imag();
 		}
 
+		/**
+		 *
+		 * Todo: Gradient here
+		 */
+		inline cdbl gradient(const cdbl unused) const {
+			return this->getMultipole(2);
+		}
+ 		virtual inline void gradient(const double x, const double y, double *Gx, double *Gy) const override final{
+			cdbl tmp = this->gradient(cdbl(x,y));
+			*Gy = tmp.real();
+			*Gx = tmp.imag();
+		}
 		/** @brief Check if multipole index is within range of representation
 
 		    \verbatim embed:rst
@@ -149,7 +161,7 @@ namespace thor_scsi::core {
 
 		    \endverbatim
 		 */
-		inline void checkMultipoleIndex(const unsigned int n){
+		inline void checkMultipoleIndex(const unsigned int n) const {
 			if(n <= 0){
 				// European convention
 				throw std::length_error("multipoles index <= 0");
@@ -168,7 +180,7 @@ namespace thor_scsi::core {
 			std::vector implements the required check
 		    \endverbatim
 		 */
-		inline cdbl getMultipole(const unsigned int n){
+		inline cdbl getMultipole(const unsigned int n) const {
 			this->checkMultipoleIndex(n);
 			unsigned  use_n = n - 1;
 			assert(use_n > 0);
@@ -268,12 +280,12 @@ namespace thor_scsi::core {
 		 *        Implementation correct ?
 		 * \endverbatim
 		 */
-		inline PlanarMultipoles operator * (const double scale) const{
+		inline PlanarMultipoles operator * (const double scale) const {
 			PlanarMultipoles n = this->clone();
 			n *= scale;
 			return n;
 		}
-		inline PlanarMultipoles operator / (const double scale) const{
+		inline PlanarMultipoles operator / (const double scale) const {
 			return *this * (1.0/scale);
 		}
 		/**
@@ -288,7 +300,7 @@ namespace thor_scsi::core {
 		 *      *  Review behaviour if representations of different size
 		 * \endverbatim
 		 */
-		PlanarMultipoles operator +(PlanarMultipoles &other);
+		PlanarMultipoles operator +(PlanarMultipoles &other) const;
 
 		/**
 		 * The maximum index represented.
@@ -298,7 +310,7 @@ namespace thor_scsi::core {
 		}
 
 		/**
-		 * access to the coefficents.
+		 * @brief access to the coefficents.
 		 *
 		 * \verbatim embed:rst:leading-asterisk
 		 *
@@ -306,11 +318,23 @@ namespace thor_scsi::core {
 		 *     access to the same memory. If you change the coefficients
 		 *     outside you also change them here.
 		 *
-		 * .. Todo::
-		 *
 		 * \endverbatim
 		 */
 		inline std::vector<cdbl_intern>& getCoeffs(void){
+			return this->coeffs;
+		}
+		/**
+		 * @brief: access to the coefficents (const version)
+		 *
+		 * \verbatim embed:rst:leading-asterisk
+		 *
+		 * .. todo::
+		 *    is that here sufficient to make the user clear that these
+		 *    coefficients should be considered constant
+		 *
+		 * \endverbatim
+		 */
+		inline const std::vector<cdbl_intern> getCoeffs(void) const {
 			return this->coeffs;
 		}
 

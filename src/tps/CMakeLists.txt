@@ -56,6 +56,24 @@ target_link_libraries(tpsa_lin
     ${ARMADILLO_LIBRARIES}
 )
 
+
+add_executable(test_tpsa_utils
+  test_tpsa_utils.cc
+  tpsa_utils.cc
+)
+target_include_directories(test_tpsa_utils PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../>
+  $<INSTALL_INTERFACE:include/>  # <prefix>/include/mylib
+  )
+
+target_link_libraries(test_tpsa_utils
+    ${Boost_PRG_EXEC_MONITOR_LIBRARY}
+    ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
+)
+
+add_test(tpsa_utils test_tpsa_utils)
+
+
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 # Todo: consider if separate tpsa name space?

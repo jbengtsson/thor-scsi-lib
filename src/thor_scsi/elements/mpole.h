@@ -19,15 +19,16 @@ namespace thor_scsi::elements {
 		 * \endverbatim
 		 */
 		inline MpoleType(const Config &config) : FieldKick(config){
-			intp = new thor_scsi::core::PlanarMultipoles;
+			auto* muls = new thor_scsi::core::PlanarMultipoles;
+			intp.reset(muls);
 		}
 
-		inline ~MpoleType(void){
-			if(intp){
-				delete intp;
-			}
-		}
 		const char* type_name(void) const override { return "mpole"; };
+
+		inline const auto getFieldInterpolator(void) const {
+			return std::static_pointer_cast<thor_scsi::core::PlanarMultipoles>(this->intp);
+		}
+
 
 		//thor_scsi::core::PlanarMultipoles* intp;
 	};

@@ -126,7 +126,8 @@ void tse::bend_fringe(const tsc::ConfigType &conf, const double hb, ss_vect<T> &
     ps[py_] = ps1[py_] + 2e0*coeff*ps1[px_]*ps[y_]/pz;
     ps[ct_] = ps1[ct_] - coeff*ps1[px_]*sqr(ps[y_])*(1e0+ps1[delta_])/pz3;
   } else {
-    std::cerr << __FILE__ << "::" <<  __FUNCTION__ << ": (bend_fringe): *** Speed of light exceeded!" << std::endl;
+	  std::cerr << __FILE__ << "::" <<  __FUNCTION__ << "@" <<  __LINE__
+		    <<" : (bend_fringe): *** Speed of light exceeded!" << std::endl;
     std::stringstream stream;
     stream << ": (bend_fringe): *** Speed of light exceeded!" << " u = " << u;
 
@@ -164,24 +165,185 @@ void tse::quad_fringe(const tsc::ConfigType &conf, const double b2, ss_vect<T> &
 
 
 
-// #define THOR_SCSI_QUAD_FRINGE
-#ifndef THOR_SCSI_QUAD_FRINGE
-#warning "Quadrupole fringe computation disabled by preprocessors"
-#endif /* THOR_SCSI_QUAD_FRINGE */
+void tse::FieldKick::FieldKickForthOrder::computeIntegrationSteps(void)
+{
+
+	if(!parent){
+		return;
+	}
+	const double Pirho = parent->getInverseRigidity(), length = parent->getLength();
+	double dL;
+	auto n_steps = this->getNumberOfIntegrationSteps();
+
+	if(parent->assumingCurvedTrajectory()){
+		// along the arc
+		dL = 2e0/ Pirho * sin(length * Pirho/2e0) / n_steps;
+	}else{
+		// along the straight line
+		dL = length / n_steps;
+	}
+	this->splitIntegrationStep(dL, &this->dL1, &this->dL2, &this->dkL1, &this->dkL2);
+}
+
+void tse::FieldKick::FieldKickForthOrder::splitIntegrationStep(const double dL, double *dL1, double *dL2,
+						    double *dkL1, double *dkL2) const
+{
+	const int n_steps = this->getNumberOfIntegrationSteps();
+
+	*dL1 = this->c_1*dL;
+	*dL2 = this->c_2*dL;
+	*dkL1 = this->d_1*dL;
+	*dkL2 = this->d_2*dL;
+}
+
+template<typename T>
+inline void tse::FieldKick::_initRadiate(const tsc::ConfigType &conf, ss_vect<T> &ps)
+{
+	if (conf.emittance && !conf.Cavity_on) {
+		std::cerr << __FILE__ << "::" << __FUNCTION__ << "@" << __LINE__
+			  << "Code not yet tested " << std::endl;
+		throw thor_scsi::NotImplemented();
+	} else {
+		return;
+	}
+
+#ifdef  THOR_SCSI_USE_RADIATION
+	// Needs A^-1.
+	curly_dH_x = 0e0;
+	for (i = 0; i <= 5; i++){
+		/* Synchrotron integrals */ dI[i] = 0e0;
+	}
+#endif /* THOR_SCSI_USE_RADIATION */
+}
+
+template<typename T>
+inline void tse::FieldKick::_radiateStepOne(const tsc::ConfigType &conf, ss_vect<T> &ps)
+{
+	if (conf.emittance && !conf.Cavity_on) {
+		std::cerr << __FILE__ << "::" << __FUNCTION__ << "@" << __LINE__
+			  << "Code not yet tested " << std::endl;
+		throw thor_scsi::NotImplemented();
+	} else {
+		return;
+	}
+#ifdef  THOR_SCSI_USE_RADIATION
+
+	// Why only when cavities are not on ?
+	// Needs A^-1.
+	curly_dH_x /= 6e0*PN;
+	dI[1] += PL*is_tps<tps>::get_dI_eta(ps)*Pirho;
+	dI[2] += PL*sqr(Pirho);
+	dI[3] += PL*fabs(tse::cube(Pirho));
+	dI[4] *=
+		PL*Pirho*(sqr(Pirho)+2e0*PBpar[Quad+HOMmax])
+		/(6e0*PN);
+		dI[5] += PL*fabs(tse::cube(Pirho))*curly_dH_x;
+
+#endif /* THOR_SCSI_USE_RADIATION */
+}
+
+template<typename T>
+inline void tse::FieldKick::_radiate(tsc::ConfigType &conf, ss_vect<T> &ps)
+{
+	if (conf.emittance && !conf.Cavity_on) {
+		std::cerr << __FILE__ << "::" << __FUNCTION__ << "@" << __LINE__
+			  << "Code not yet tested " << std::endl;
+		throw thor_scsi::NotImplemented();
+	} else {
+		return;
+	}
+#ifdef  THOR_SCSI_USE_RADIATION
+	// Needs A^-1.
+	curly_dH_x += is_tps<tps>::get_curly_H(ps);
+	dI[4] += is_tps<tps>::get_dI_eta(ps);
+#endif /* THOR_SCSI_USE_RADIATION */
+}
+
+/**
+ *
+ * @ brief: 4th order symplectic integrator in the body
+ *
+ *
+ * explanation:
+ * Symplectic integrator
+ * 2nd order
+ *
+ *  L/2 -> bnl -> L/2
+ *
+ * Here 4th order
+ *
+ * 4 th order
+ *
+ * d_1 * L -> c_1 * bnl -> d_2 * L -> c_2 * bnl -> d_1 * L
+ *
+ * d_1 + d_2 + d_1 = L
+ *
+ * d_2 negative drift
+ * c_1 + c_2 = 1
+ */
+template<typename T>
+inline void tse::FieldKick::FieldKickForthOrder::_localPass(tsc::ConfigType &conf, ss_vect<T> &ps)
+{
+	double dL = 0.0, h_ref = 0.0;
+	auto PN = this->integration_steps;
+	const double length = parent->getLength(), Pirho = parent->getInverseRigidity();
+
+	if (!conf.Cart_Bend) {
+		// Polar coordinates.
+		h_ref = Pirho; dL = length/PN;
+	} else {
+		// Cartesian coordinates.
+		h_ref = 0e0;
+		//if (Pirho == 0e0){
+		if(!parent->assumingCurvedTrajectory()){
+			// along the straight line
+			dL = length/PN;
+		}else{
+			// along the arc
+			dL = 2e0/Pirho*sin(length*Pirho/2e0)/PN;
+		}
+	}
+
+	/*
+	 * Calculating the individual pieces
+	 */
+	double dL1, dL2, dkL1, dkL2;
+	this->splitIntegrationStep(dL, &dL1, &dL2, &dkL1, &dkL2);
+
+	auto& intp = *this->getFieldInterpolator().get();
+	auto* parent = this->parent;
+
+	parent->_radiateStepOne(conf, ps);
+
+	/* 4th order integration steps  */
+	for (int seg = 1; seg <= PN; seg++) {
+		parent->_radiate(conf, ps);
+		drift_pass(conf, dL1, ps);
+		tse::thin_kick(conf, intp, dkL1, Pirho, h_ref, ps);
+		drift_pass(conf, dL2, ps);
+		tse::thin_kick(conf, intp, dkL2, Pirho, h_ref, ps);
+		parent->_radiate(conf, ps);
+		drift_pass(conf, dL2, ps);
+		tse::thin_kick(conf, intp, dkL1, Pirho, h_ref, ps);
+		drift_pass(conf, dL1, ps);
+		parent->_radiate(conf, ps);
+	}
+}
+
+
 tse::FieldKick::FieldKick(const Config &config) : tse::LocalGalileanPRot(config)
 {
 	// Field interpolation type
 	this->intp = nullptr;
-	this->Porder = HOMmax;
 	this->asThick(false);
 	this->setIntegrationMethod(config.get<double>("Method", 4));
-	this->setIntegrationSteps(config.get<double>("N", 1));
+	this->setNumberOfIntegrationSteps(config.get<double>("N", 1));
 	this->setLength(config.get<double>("L", 0.0));
 
 	this->setBendingAngle(config.get<double>("T", 0.0));
 	this->setEntranceAngle(config.get<double>("T1", 0.0));
 	this->setExitAngle(config.get<double>("T2", 0.0));
-
+	this->integ4O.setParent(this);
 
 }
 
@@ -197,6 +359,67 @@ void tse::FieldKick::show(std::ostream& strm, const int level) const
 			this->intp->show(strm, level);
 		}
 	}
+}
+
+
+template<typename T>
+void tse::FieldKick::_quadFringe(thor_scsi::core::ConfigType &conf, ss_vect<T> &ps)
+{
+
+	if (!conf.quad_fringe){ return ; }
+
+	std::cerr << __FILE__ << "::" << __FUNCTION__ << "@" << __LINE__
+		  << "Code not yet tested " << std::endl;
+	throw thor_scsi::NotImplemented();
+
+	auto muls = std::dynamic_pointer_cast<tsc::PlanarMultipoles>(this->getFieldInterpolator());
+	if(!muls){
+		std::cerr << __FILE__ << "::" << __FUNCTION__ << "@" << __LINE__
+			  << "Quadfringe can currently only be calculated for "
+			  << " PlanarMultipole interpolator " << std::endl;
+		throw thor_scsi::NotImplemented();
+	}
+	double Gy=0e0, Gx=0e0;
+	muls->gradient(ps[x_], ps[y_], &Gx, &Gy);
+	tse::quad_fringe(conf, Gy, ps);
+
+	/*
+	   if (conf.quad_fringe && (PB[Quad+HOMmax] != 0e0)){
+	         tse::quad_fringe(conf, PB[Quad+HOMmax], ps);
+	   }
+	*/
+}
+
+
+/**
+ * @brief: thin kick: element length 0, integral kick effect
+ *
+ * typically used for implementing correctors
+ *
+ */
+template<typename T>
+inline void tse::FieldKick::_localPassThin(const tsc::ConfigType &conf, ss_vect<T> &ps)
+{
+	// length has to be zero here
+	/// todo: add a check at least for debug purposes
+	const bool debug = false;
+	const double length = 1.0;
+	if(debug){
+		std::cerr << "calling thin kick " << std::endl;
+	}
+	tse::thin_kick(conf, *this->intp, length, 0e0, 0e0, ps);
+}
+
+
+template<typename T>
+inline void tse::FieldKick::_localPassBody(tsc::ConfigType &conf, ss_vect<T> &ps)
+{
+	/* define integration step */
+	if (!this->isThick()) {
+		tse::FieldKick::_localPassThin(conf, ps);
+		return;
+	}
+	this->integ4O._localPass(conf, ps);
 }
 
 /*
@@ -227,180 +450,73 @@ void tse::FieldKick::show(std::ostream& strm, const int level) const
 template<typename T>
 void tse::FieldKick::_localPass(tsc::ConfigType &conf, ss_vect<T> &ps)
 {
-	int          seg = 0, i;
-	double       dL = 0e0, dL1 = 0e0, dL2 = 0e0,
-		dkL1 = 0e0, dkL2 = 0e0, h_ref = 0e0;
 
-	const bool debug = false;
-	// now handled by LocalCoordinateElement
-	// GtoL(ps, dS, dT, Pc0, Pc1, Ps1);
-
-	// Set start
-#ifdef  THOR_SCSI_USE_RADIATION
-	if (conf.emittance && !conf.Cavity_on) {
-		// Needs A^-1.
-		curly_dH_x = 0e0;
-		for (i = 0; i <= 5; i++){
-			/* Synchrotron integrals */ dI[i] = 0e0;
-		}
-	}
-#endif /* THOR_SCSI_USE_RADIATION */
 
 	switch (Pmethod) {
-
-	case Meth_Fourth:
-		// Matrix methodx
-		if (conf.mat_meth && (Porder <= Quad)) {
-			ps = mat_pass(M_elem, ps);
-
-			// if (conf.emittance && !conf.Cavity_on) &&
-			// 	(PL != 0e0) && (Pirho != 0e0)) get_dI_eta_5(this);
-		} else {
-			// Fringe fields.
-#ifdef THOR_SCSI_QUAD_FRINGE
-			if (conf.quad_fringe && (PB[Quad+HOMmax] != 0e0)){
-				tse::quad_fringe(conf, PB[Quad+HOMmax], ps);
-			}
-#endif /* THOR_SCSI_QUAD_FRINGE */
-
-			if (!conf.Cart_Bend) {
-				if (Pirho != 0e0){
-					tse::edge_focus(conf, Pirho, PTx1, Pgap, ps);
-				}
-			} else {
-				// here in Carthesian coordinates
-
-				/* horizontal focusing: purely geometric effect */
-				tse::p_rot(conf, PTx1, ps);
-				/* vertical focusing: leading order effect */
-				bend_fringe(conf, Pirho, ps);
-			}
-
-			/* define integration step */
-			if (this->isThick()) {
-				if (!conf.Cart_Bend) {
-					// Polar coordinates.
-					h_ref = Pirho; dL = PL/PN;
-				} else {
-					// Cartesian coordinates.
-					h_ref = 0e0;
-					if (Pirho == 0e0){
-						// along the straight line
-						dL = PL/PN;
-					}else{
-						// along the arc
-						dL = 2e0/Pirho*sin(PL*Pirho/2e0)/PN;
-					}
-				}
-
-
-
-				/*
-				 * Symplectic integrator
-				 * 2nd order
-				 *
-				 *  L/2 -> bnl -> L/2
-				 *
-				 * Here 4th order
-				 *
-				 * 4 th order
-				 *
-				 * d_1 * L -> c_1 * bnl -> d_2 * L -> c_2 * bnl -> d_1 * L
-				 *
-				 * d_1 + d_2 + d_1 = L
-				 *
-				 * d_2 negative drift
-				 * c_1 + c_2 = 1
-				 */
-
-				/*
-				 * Calculating the individual pieces
-				 */
-				dL1 = this->c_1*dL; dL2 = this->c_2*dL; dkL1 = this->d_1*dL; dkL2 = this->d_2*dL;
-
-				/* body calculation */
-				for (seg = 1; seg <= PN; seg++) {
-#ifdef  THOR_SCSI_USE_RADIATION
-					if (conf.emittance && !conf.Cavity_on) {
-						// Needs A^-1.
-						curly_dH_x += is_tps<tps>::get_curly_H(ps);
-						dI[4] += is_tps<tps>::get_dI_eta(ps);
-					}
-#endif /* THOR_SCSI_USE_RADIATION */
-
-					drift_pass(conf, dL1, ps);
-					tse::thin_kick(conf, Porder, *this->intp, dkL1, Pirho, h_ref, ps);
-					drift_pass(conf, dL2, ps);
-					tse::thin_kick(conf, Porder, *this->intp, dkL2, Pirho, h_ref, ps);
-#ifdef  THOR_SCSI_USE_RADIATION
-					if (conf.emittance && !conf.Cavity_on) {
-						// Needs A^-1.
-						curly_dH_x += 4e0*is_tps<tps>::get_curly_H(ps);
-						dI[4] += 4e0*is_tps<tps>::get_dI_eta(ps);
-					}
-#endif /* THOR_SCSI_USE_RADIATION */
-					drift_pass(conf, dL2, ps);
-					tse::thin_kick(conf, Porder, *this->intp, dkL1, Pirho, h_ref, ps);
-					drift_pass(conf, dL1, ps);
-#ifdef  THOR_SCSI_USE_RADIATION
-					if (conf.emittance && !conf.Cavity_on) {
-						// Needs A^-1.
-						curly_dH_x += is_tps<tps>::get_curly_H(ps);
-						dI[4] += is_tps<tps>::get_dI_eta(ps);
-					}
-#endif /* THOR_SCSI_USE_RADIATION */
-				}
-				/* end body calculation */
-#ifdef  THOR_SCSI_USE_RADIATION
-				if (conf.emittance && !conf.Cavity_on) {
-					// Why only when cavities are not on ?
-					// Needs A^-1.
-					curly_dH_x /= 6e0*PN;
-					dI[1] += PL*is_tps<tps>::get_dI_eta(ps)*Pirho;
-					dI[2] += PL*sqr(Pirho);
-					dI[3] += PL*fabs(tse::cube(Pirho));
-					dI[4] *=
-						PL*Pirho*(sqr(Pirho)+2e0*PBpar[Quad+HOMmax])
-						/(6e0*PN);
-					dI[5] += PL*fabs(tse::cube(Pirho))*curly_dH_x;
-				}
-#endif /* THOR_SCSI_USE_RADIATION */
-			} else {
-				// length has to be zero here
-				/// todo: add a check at least for debug purposes
-
-				const double length = 1.0;
-				if(debug){
-					std::cerr << "calling thin kick " << std::endl;
-				}
-				tse::thin_kick(conf, Porder, *this->intp, length, 0e0, 0e0, ps);
-			}
-			// Fringe fields.
-			if (!conf.Cart_Bend) {
-				if (Pirho != 0e0){
-					tse::edge_focus(conf, Pirho, PTx2, Pgap, ps);
-				}
-			} else {
-				bend_fringe(conf, -Pirho, ps); p_rot(conf, PTx2, ps);
-			}
-#ifdef THOR_SCSI_QUAD_FRINGE
-			if (conf.quad_fringe && (PB[Quad+HOMmax] != 0e0)){
-				quad_fringe(conf, -PB[Quad+HOMmax], ps);
-			}
-#endif /* THOR_SCSI_QUAD_FRINGE */
-		}
-		break;
-
+	case Meth_Fourth: break;
+		/*
+		  Pmethod should be test when set ... thus can not pass
+		  down here
+		*/
 	default:
 		std::cerr <<  "Mpole_Pass: Method not supported " << this->name
 			  <<  " method " << this->Pmethod <<  std::endl;
 		throw ts::NotImplemented();
 		break;
+
 	}
 
-	// now handled by LocalCoordinateElement
-	// LtoG(ps, dS, dT, Pc0, Pc1, Ps1);
+	this->_initRadiate(conf, ps);
+
+	// Set start
+
+	// Matrix method
+	if (conf.mat_meth) {
+		std::cerr << __FILE__ << "::" << __FUNCTION__ << "@" << __LINE__
+			  << ": matrix method not implemented" << std::endl;
+		throw thor_scsi::NotImplemented();
+		/*
+		if(Porder <= Quad){
+			ps = mat_pass(M_elem, ps);
+		}
+		*/
+		return;
+		// if (conf.emittance && !conf.Cavity_on) &&
+		// 	(PL != 0e0) && (Pirho != 0e0)) get_dI_eta_5(this);
+
+	}
+
+	// symplectic integration below
+	// Fringe fields.
+	this->_quadFringe(conf, ps);
+
+	if (!conf.Cart_Bend) {
+		if (this->assumingCurvedTrajectory()){
+			tse::edge_focus(conf, Pirho, PTx1, Pgap, ps);
+		}
+	} else {
+		// here in Carthesian coordinates
+
+		/* horizontal focusing: purely geometric effect */
+		tse::p_rot(conf, PTx1, ps);
+		/* vertical focusing: leading order effect */
+		tse::bend_fringe(conf, Pirho, ps);
+	}
+
+	// Body calculation delegated
+	tse::FieldKick::_localPassBody(conf, ps);
+
+	// Fringe fields.
+	if (!conf.Cart_Bend) {
+		if (this->assumingCurvedTrajectory()){
+			tse::edge_focus(conf, Pirho, PTx2, Pgap, ps);
+		}
+	} else {
+		tse::bend_fringe(conf, -Pirho, ps); p_rot(conf, PTx2, ps);
+	}
+	this->_quadFringe(conf, ps);
 }
+
 
 template void tse::FieldKick::_localPass(tsc::ConfigType &conf, ss_vect<double> &ps);
 // template void tse::FieldKick::_localPass(tsc::ConfigType &conf, ss_vect<tps> &ps);

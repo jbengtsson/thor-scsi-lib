@@ -71,7 +71,14 @@ namespace thor_scsi::elements {
 	 * \endverbatim
 	 */
 	const int HOMmax = 21;
-	typedef std::vector<double> MpoleArray;
+	// typedef std::vector<double> MpoleArray;
+
+
+	/*
+	 *
+	 * SI units are used internally
+	 * apart from energy [GeV]
+	 */
 	class FieldKick : public LocalGalileanPRot {
 	public:
 
@@ -99,11 +106,15 @@ namespace thor_scsi::elements {
 			return this->Pmethod;
 		}
 
-		inline void setIntegrationSteps(const int n){
-			this->PN = n;
+		/*
+		 * @brief: number of times the integration is repeated
+		 */
+		inline void setNumberOfIntegrationSteps(const int n){
+			this->integ4O.setNumberOfIntegrationSteps(n);
 		}
-		inline int getIntegrationSteps(void) const {
-			return this->Pmethod;
+
+		inline int getNumberOfIntegrationSteps(void) const {
+			return this->integ4O.getNumberOfIntegrationSteps();
 		}
 
 		/**
@@ -111,11 +122,12 @@ namespace thor_scsi::elements {
 		 *
 		 * If not set true it will be a thin one
 		 *
-		 *
+		 * see :meth:`isThick` for further details
 		 */
 		void inline asThick(const bool flag){
 			this->Pthick = flag;
 		}
+
 		/**
 		 * @brief true if a thick elment
 		 *
@@ -150,12 +162,37 @@ namespace thor_scsi::elements {
 		 * Todo: review if interface should be kept that manner
 		 */
 		virtual void inline setLength(const double length) override final {
+			// delegate ...
 			LocalGalileanPRot::setLength(length);
 			if(0e0 == length){
 				this->asThick(false);
 			} else {
 				this->asThick(true);
 			}
+		}
+
+		/*
+		 * @brief:
+		 *
+		 * returns
+		 * @f[ \frac{1}{\rho} = irho == 0 @f]
+		 */
+		inline double getInverseRigidity(void) const {
+			return this->Pirho;
+		}
+
+		inline void setInverseRigidity(const double val) {
+			this->Pirho = val;
+		}
+
+		/*
+		 * @brief: element takes geometric effects on the trajectory into account
+		 *
+		 * Checking that
+		 * @f[ \frac{1}{\rho} = irho == 0 @f]
+		 */
+		inline bool assumingCurvedTrajectory(void) const {
+			return !(this->Pirho == 0);
 		}
 
 		/**
@@ -194,14 +231,28 @@ namespace thor_scsi::elements {
 		// virtual void pass(thor_scsi::core::ConfigType &conf, ss_vect<tps> &ps) override final
 		// { _pass(conf, ps);}
 
-		///< Make smart pointer
-		thor_scsi::core::Field2DInterpolation* intp;
 
 	  private:
 		template<typename T>
 			void _localPass(thor_scsi::core::ConfigType &conf, ss_vect<T> &ps);
 
+		template<typename T>
+		        void _localPassThin(const thor_scsi::core::ConfigType &conf, ss_vect<T> &ps);
+
+		template<typename T>
+		        void _localPassBody(thor_scsi::core::ConfigType &conf, ss_vect<T> &ps);
+
+		void inline validateIntegrationMethod(const int n) const {
+			switch(n){
+			case Meth_Fourth:
+				return;
+			default:
+				throw thor_scsi::NotImplemented();
+			}
+		}
+
 	  public:
+
 #if 0
 
 		inline double GetKpar(int order){
@@ -235,21 +286,24 @@ namespace thor_scsi::elements {
 			PdSsys{0e0, 0e0},          ///< Displacement errors [m]: systematic
 			PdSrms{0e0, 0e0},          ///<                          rms
 			PdSrnd{0e0, 0e0};          ///<                          random number.
-#endif
 		int
 			PN = 0,                    ///< Number of integration steps.
-			Porder = 0,                ///< The highest order in PB.
+			Porder = 0;                ///< The highest order in PB.
 		                                   ///
 			n_design;                  ///< multipole order (design).
+#endif
 		double
-		Pbending_angle,                     ///<  Todo: Already defined or combination of PTx1 and PTx2?
-			PTx1,                      ///<  Bend angle [deg]:  hor. entrance angle
-			PTx2,                      ///<  Bend angle [deg]: hor. exit angle.
-			Pgap,                      ///< Total magnet gap [m].
-			Pirho,                     ///< 1/rho [1/m].
-			Pc0,                       ///< Corrections for roll error of bend.
-			Pc1,
-			Ps1;
+		Pbending_angle = 0e0,                     ///<  Todo: Already defined or combination of PTx1 and PTx2?
+			PTx1 = 0e0,                      ///<  Bend angle [deg]:  hor. entrance angle
+			PTx2 = 0e0,                      ///<  Bend angle [deg]: hor. exit angle.
+			Pgap = 0e0;                      ///< Total magnet gap [m].
+
+#if 0
+		double
+			Pc0 = 0e0,                       ///< Corrections for roll error of bend.
+			Pc1 = 0e0,
+			Ps1 = 0e0;
+#endif
 #if 0
 		/* todo: review to implement is a complex arrays */
 		MpoleArray
@@ -263,18 +317,15 @@ namespace thor_scsi::elements {
 		 * see :any:`isThick` or :any:`asThick` for a descriptio
 		 */
 		std::vector< std::vector<double> >
-			M_elem                     ///< Transport matrix & orbit.
+		M_elem                     ///< Transport matrix & orbit.
 			{{0e0, 0e0, 0e0, 0e0, 0e0, 0e0, 0e0},
 			 {0e0, 0e0, 0e0, 0e0, 0e0, 0e0, 0e0},
 			 {0e0, 0e0, 0e0, 0e0, 0e0, 0e0, 0e0},
 			 {0e0, 0e0, 0e0, 0e0, 0e0, 0e0, 0e0},
 			 {0e0, 0e0, 0e0, 0e0, 0e0, 0e0, 0e0},
 			 {0e0, 0e0, 0e0, 0e0, 0e0, 0e0, 0e0}};
-	private:
-		// SI units are used internally
-		// apart from energy [GeV]
-		/*  c_1 = 1/(2*(2-2^(1/3))),    c_2 = (1-2^(1/3))/(2*(2-2^(1/3)))
-		    d_1 = 1/(2-2^(1/3)),        d_2 = -2^(1/3)/(2-2^(1/3))                 */
+
+
 
 		/**
 		 * Symplectic integrator
@@ -296,22 +347,147 @@ namespace thor_scsi::elements {
 		 *
 		 * d_2:  negative thus creates a negative drift
 		 */
-		const double c_1 = 1e0/(2e0*(2e0-thirdroot(2e0)));
-		const double c_2 = 0.5e0 - c_1;
-		const double d_1 = 2e0*c_1;
-		const double d_2 = 1e0 - 2e0*d_1;
 
-		void inline validateIntegrationMethod(const int n) const {
-			switch(n){
-			case Meth_Fourth:
-				return;
-			default:
-				throw thor_scsi::NotImplemented();
-			}
+		inline const auto getFieldInterpolator(void) const {
+			return this->intp;
 		}
 
+		class FieldKickDelegate {
+		public:
+			FieldKickDelegate(FieldKick *parent){
+				this->parent = parent;
+			}
+			FieldKickDelegate(void){
+				this->parent = nullptr;
+			}
+			inline void setNumberOfIntegrationSteps(const int n){
+				this->integration_steps = n;
+				this->computeIntegrationSteps();
+			}
+
+			inline int getNumberOfIntegrationSteps(void) const {
+				return this->integration_steps;
+			}
+
+			inline double getLength(void) const {
+				return parent->getLength();
+			}
+
+			void setParent(FieldKick * p){
+				this->parent = p;
+				this->computeIntegrationSteps();
+			}
+
+		protected:
+			inline const auto getFieldInterpolator(void) const {
+				// required to cast parent to const ?
+				const FieldKick * ptr = this->parent;
+				return ptr->getFieldInterpolator();
+			}
+
+			double PL = 0.0;
+			int integration_steps = 1;
+			FieldKick *parent = nullptr;
+
+		private:
+			//FieldKickOrderDelegate();
+			virtual void computeIntegrationSteps(void) = 0;
+
+		};
+
+
+		class FieldKickForthOrder : public FieldKickDelegate {
+		public:
+			/**
+			 * @brief: calculate lengthes for drifts and kicks
+			 *
+			 * 4th order integration method is given by
+			 */
+			void splitIntegrationStep(const double dL, double *dL1, double *dL2,
+						  double *dkL1, double *dkL2) const;
+
+			//
+			// as it is a templated function ... not defined virtual ...
+			template<typename T>
+			void _localPass(thor_scsi::core::ConfigType &conf, ss_vect<T> &ps);
+
+			inline std::unique_ptr<std::vector<double>> getDriftLength(void) const {
+				auto res = std::make_unique<std::vector<double>>(2);
+				res->at(0) = this->dL1;
+				res->at(1) = this->dL2;
+				return res;
+			}
+
+			inline std::unique_ptr<std::vector<double>> getKickLength(void) const {
+				auto res = std::make_unique<std::vector<double>>(2);
+				res->at(0) = this->dL1;
+				res->at(1) = this->dL2;
+				return res;
+			}
+
+			// not really useful yet ... need to push configuration into
+			// objects
+			// fix for Cartesian bend treatment
+                        // don't use this internal parametes yet
+			void computeIntegrationSteps(void) override final;
+
+		private:
+
+			/*
+			 * c_1 = 1/(2*(2-2^(1/3))),    c_2 = (1-2^(1/3))/(2*(2-2^(1/3)))
+			 *  d_1 = 1/(2-2^(1/3)),        d_2 = -2^(1/3)/(2-2^(1/3))
+			 */
+
+			const double c_1 = 1e0/(2e0*(2e0-thirdroot(2e0)));
+			const double c_2 = 0.5e0 - c_1;
+			const double d_1 = 2e0*c_1;
+			const double d_2 = 1e0 - 2e0*d_1;
+
+			// Consider one set for
+			// an other set for Cartesian Bends
+			double dL1, dL2, dkL1, dkL2;
+
+
+			const int Porder = HOMmax;                ///< The highest order in PB.
+		};
+	public:
+		/**
+		 *
+		 * @todo should a check be made that forth order is requested ?
+		 */
+		inline const FieldKickDelegate& getFieldKickDelegator(void) const {
+			return this->integ4O;
+		}
+
+	private:
+		/*
+		 * @brief: reset parameters for radiation
+		 *
+		 * passing ps to template the function. currently these functions are void
+		 * (perhaps required later on)
+		 */
+		template<typename T>
+		void _initRadiate(const thor_scsi::core::ConfigType &conf,  ss_vect<T> &ps);
+
+		// first step of integration
+		template<typename T>
+		void _radiateStepOne(const thor_scsi::core::ConfigType &conf, ss_vect<T> &ps);
+
+		// calculate the effect of radiation
+		template<typename T>
+		void _radiate(thor_scsi::core::ConfigType &conf, ss_vect<T> &ps);
+
+		// calculate quadfringe if quadrupole and required
+		template<typename T>
+		void _quadFringe(thor_scsi::core::ConfigType &conf, ss_vect<T> &ps);
+
+		FieldKickForthOrder integ4O;
 		int  Pmethod;                 ///< Integration Method.
 		bool Pthick;                  ///< Thick or thin element
+		double Pirho = 0;             ///< 1/rho [1/m].
+
+	protected:
+		std::shared_ptr<thor_scsi::core::Field2DInterpolation> intp = nullptr;
 
 	};
 } // Name space

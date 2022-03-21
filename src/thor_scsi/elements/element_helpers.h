@@ -254,14 +254,10 @@ public:
 		/**
 		 * @brief implementation of the thin kick (thin lens approximation)
 		 *
+		 *   @param h_bend: 1/rho_bend (radius of the the bend, magnetic rigidty of the dipoles)
+		 *   @param h_ref:  1/rho which is the curvature of the design / reference orbit
+		 *
 		 * \verbatim embed:rst:leading-asterisk
-		 *
-		 * .. Args::
-		 *   order: optimisation for number of coefficients that require to be evaluatued
-		 *          should go to field interpolation
-		 *
-		 *   h_bend: 1/rho_bend (radius of the the bend, magnetic rigidty of the dipoles)
-		 *   h_ref: 1/rho which is the curvature of the design / reference orbit
 		 *
 		 * .. Todo::
 		 *
@@ -278,7 +274,7 @@ public:
 		 * \endverbatim
 		 */
 		template<typename T>
-		void thin_kick(const thor_scsi::core::ConfigType &conf, const int Order,
+		void thin_kick(const thor_scsi::core::ConfigType &conf,
 			       const thor_scsi::core::Field2DInterpolation& intp, const double L,
 			       const double h_bend, const double h_ref, ss_vect<T> &ps);
 

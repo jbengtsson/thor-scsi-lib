@@ -1,7 +1,15 @@
 #include <thor_scsi/elements/utils.h>
+#include <cmath>
 
 namespace tse = thor_scsi::elements;
 
+double tse::thirdroot(const double a)
+{
+	const double exponent = 1.0 / 3.0;
+	return pow(a, exponent);
+}
+
+/* a bit historical
 double tse::thirdroot(const double a)
 {
 	int    i;
@@ -15,3 +23,4 @@ double tse::thirdroot(const double a)
 	} while (i != 250);
 	return x;
 }
+*/

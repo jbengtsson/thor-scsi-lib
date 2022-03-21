@@ -13,10 +13,6 @@
 // #include <thor_scsi/core/elements_enums.h>
 #include <thor_scsi/core/config.h>
 
-// #define THOR_SCSI_USE_RADIATION
-#ifndef  THOR_SCSI_USE_RADIATION
-#warning "Radiation computation disabled by preprocessors"
-#endif /* THOR_SCSI_USE_RADIATION */
 
 
 namespace thor_scsi {

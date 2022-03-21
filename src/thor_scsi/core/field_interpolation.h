@@ -12,6 +12,8 @@ namespace thor_scsi::core {
 	struct Field2DInterpolation{
 		virtual ~Field2DInterpolation(){};
 		/**
+		 * @brief interpolate field at position x and y
+		 *
 		 * \verbatim embed:rst:leading-asterisk
 		 *
 		 * Args:
@@ -29,6 +31,13 @@ namespace thor_scsi::core {
 		 */
 		virtual inline void field(const double x, const double y, double *Bx, double *By) const = 0;
 
+		/**
+		 * @brief interpolate the gradient at the current position
+		 *
+		 * \verbatim embed:rst:leading-asterisk
+		 * \endverbatim
+		 */
+		virtual void gradient(const double x, const double y, double *Gx, double *Gy) const = 0;
 		virtual void show(std::ostream&, int level) const = 0;
 
 	};
