@@ -3,6 +3,7 @@
 
 #include <thor_scsi/core/elements_basis.h>
 #include <thor_scsi/core/transform_phase_space.h>
+#include <tps/tps_type.h>
 
 namespace thor_scsi::elements {
 	using thor_scsi::core::ElemType;
@@ -22,15 +23,16 @@ namespace thor_scsi::elements {
 		inline virtual void global2Local(ss_vect<double> &ps) = 0;
 		inline virtual void local2Global(ss_vect<double> &ps) = 0;
 
-		//inline virtual void global2Local(ss_vect<tps> &ps) = 0;
-		//inline virtual void local2Global(ss_vect<tps> &ps) = 0;
+		inline virtual void global2Local(ss_vect<tps> &ps) = 0;
+		inline virtual void local2Global(ss_vect<tps> &ps) = 0;
 
-		virtual  void localPass(thor_scsi::core::ConfigType &conf, ss_vect<double> &ps) = 0;
+		virtual void localPass(thor_scsi::core::ConfigType &conf, ss_vect<double> &ps) = 0;
+		virtual void localPass(thor_scsi::core::ConfigType &conf, ss_vect<tps> &ps) = 0;
 
 		inline void pass(thor_scsi::core::ConfigType &conf, ss_vect<double> &ps) override final
 			{ _pass(conf, ps); };
-		// inline void pass(thor_scsi::core::ConfigType &conf, ss_vect<tps> &ps) override final
-		// { _pass(conf, ps); };
+		inline void pass(thor_scsi::core::ConfigType &conf, ss_vect<tps> &ps) override final
+			{ _pass(conf, ps); };
 
 	private:
 		template<typename T>
@@ -51,19 +53,36 @@ namespace thor_scsi::elements {
 	public:
 		inline LocalGalilean(const Config &config) : LocalCoordinates(config) {}
 		inline virtual void global2Local(ss_vect<double> &ps) override final {
-			this->transform.forward(ps);
+			this->_global2Local(ps);
 		}
 
 		inline virtual void local2Global(ss_vect<double> &ps) override final {
-			this->transform.backward(ps);
+			this->_local2Global(ps);
+		}
+		inline virtual void global2Local(ss_vect<tps> &ps) override final {
+			this->_global2Local(ps);
+		}
+
+		inline virtual void local2Global(ss_vect<tps> &ps) override final {
+			this->_local2Global(ps);
 		}
 
 		thor_scsi::core::PhaseSpaceGalilean2DTransform transform;
+
+	private:
+		template<typename T>
+		void _global2Local(ss_vect<T> &ps){
+			this->transform.forward(ps);
+		}
+		template<typename T>
+		void _local2Global(ss_vect<T> &ps){
+			this->transform.backward(ps);
+		}
 	};
 
 	/*
 	 * @brief: Device in local coordinates translated and rotated
-	 *
+	 * @todo: could the template functions be defind by deriving ...
 	 * see thor_scsi::core::PhaseSpaceGalileanPRot2DTransform for implementation
 	 */
 	class LocalGalileanPRot  : public LocalCoordinates {
@@ -76,8 +95,25 @@ namespace thor_scsi::elements {
 		inline virtual void local2Global(ss_vect<double> &ps) override final {
 			this->transform.backward(ps);
 		}
+		inline virtual void global2Local(ss_vect<tps> &ps) override final {
+			this->_global2Local(ps);
+		}
+
+		inline virtual void local2Global(ss_vect<tps> &ps) override final {
+			this->_local2Global(ps);
+		}
 
 		thor_scsi::core::PhaseSpaceGalileanPRot2DTransform transform;
+
+	private:
+		template<typename T>
+		void _global2Local(ss_vect<T> &ps){
+			this->transform.forward(ps);
+		}
+		template<typename T>
+		void _local2Global(ss_vect<T> &ps){
+			this->transform.backward(ps);
+		}
 	};
 
 

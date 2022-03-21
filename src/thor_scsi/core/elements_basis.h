@@ -75,10 +75,11 @@ namespace thor_scsi {
 			 *      make config constant (after config has been reworked)
 			 */
 			virtual void pass(thor_scsi::core::ConfigType &conf, ss_vect<double> &ps) = 0;
-			// virtual void pass(thor_scsi::core::ConfigType &conf, ss_vect<tps> &ps) = 0;
+			virtual void pass(thor_scsi::core::ConfigType &conf, ss_vect<tps> &ps) = 0;
 
-			template<typename T>
-			void pass(thor_scsi::core::ConfigType &conf, ss_vect<T> &ps);
+			// why is that required here?
+			// template<typename T>
+			// void pass(thor_scsi::core::ConfigType &conf, ss_vect<T> &ps);
 
 
 #if 0

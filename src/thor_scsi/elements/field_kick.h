@@ -233,8 +233,8 @@ namespace thor_scsi::elements {
 
 		virtual void localPass(thor_scsi::core::ConfigType &conf, ss_vect<double> &ps) override final
 		{ _localPass(conf, ps);}
-		// virtual void pass(thor_scsi::core::ConfigType &conf, ss_vect<tps> &ps) override final
-		// { _pass(conf, ps);}
+		virtual void localPass(thor_scsi::core::ConfigType &conf, ss_vect<tps> &ps) override final
+		{ _localPass(conf, ps);}
 
 
 	  private:

@@ -10,6 +10,7 @@
 #include <string>
 #include <vector>
 #include <ostream>
+#include <tps/forward_decl.h>
 
 class tps {
  public:
@@ -73,8 +74,8 @@ class tps {
   friend double abs(const tps &);
   friend double abs2(const tps &);
   friend tps sqrt(const tps &);
-  //inline tps sqr(const tps &a) {return a * a;};
-  friend tps sqr(const tps &);
+  // refrain from defining sqr as friend class: it is defined as inline below
+  // otherwise linking could fail
   friend tps pow(const tps &, const int);
   friend tps exp(const tps &);
   friend tps log(const tps &);
