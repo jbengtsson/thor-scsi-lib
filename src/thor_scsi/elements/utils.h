@@ -12,12 +12,10 @@ namespace thor_scsi::elements{
 	}
 
 	/**
-	 * @brief third cubic root solved by substitution method
+	 * @brief third cubic root solved by pow function
 	 *
-	 * \verbatim embed:rst:leading-asterisk
-	 * .. Todo::
-	 *       Consider replacing it with GSL's cubic function solver.
-	 * \endverbatim
+	 * Currently will only accept values larger than a
+	 * Could be extended to negative values for a if necessary
 	 */
 	double thirdroot(const double a);
 

@@ -5,11 +5,6 @@ find_package(flame  REQUIRED COMPONENTS core)
 get_target_property(flame_CORE_LIBRARY flame::flame_core IMPORTED_LOCATION_RELEASE)
 
 
-find_package(Boost 1.52.0 REQUIRED COMPONENTS
-  prg_exec_monitor
-  unit_test_framework
-  program_options
-  )
 
 message(STATUS "Flame core library ${flame_CORE_LIBRARY}")
 message(STATUS "Flame include dir ${flame_INCLUDE_DIR}")

@@ -352,12 +352,12 @@ namespace thor_scsi::elements {
 			return this->intp;
 		}
 
-		class FieldKickOrderDelegate {
+		class FieldKickDelegate {
 		public:
-			FieldKickOrderDelegate(FieldKick *parent){
+			FieldKickDelegate(FieldKick *parent){
 				this->parent = parent;
 			}
-			FieldKickOrderDelegate(void){
+			FieldKickDelegate(void){
 				this->parent = nullptr;
 			}
 			inline void setNumberOfIntegrationSteps(const int n){
@@ -396,7 +396,7 @@ namespace thor_scsi::elements {
 		};
 
 
-		class FieldKickForthOrder : public FieldKickOrderDelegate {
+		class FieldKickForthOrder : public FieldKickDelegate {
 		public:
 			/**
 			 * @brief: calculate lengthes for drifts and kicks
@@ -450,6 +450,14 @@ namespace thor_scsi::elements {
 
 			const int Porder = HOMmax;                ///< The highest order in PB.
 		};
+	public:
+		/**
+		 *
+		 * @todo should a check be made that forth order is requested ?
+		 */
+		inline const FieldKickDelegate& getFieldKickDelegator(void) const {
+			return this->integ4O;
+		}
 
 	private:
 		/*

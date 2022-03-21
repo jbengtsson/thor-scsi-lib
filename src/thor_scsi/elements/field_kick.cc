@@ -199,17 +199,19 @@ void tse::FieldKick::FieldKickForthOrder::splitIntegrationStep(const double dL, 
 template<typename T>
 inline void tse::FieldKick::_initRadiate(const tsc::ConfigType &conf, ss_vect<T> &ps)
 {
-	std::cerr << __FILE__ << "::" << __FUNCTION__ << "@" << __LINE__
-		  << "Code not yet tested " << std::endl;
-	throw thor_scsi::NotImplemented();
+	if (conf.emittance && !conf.Cavity_on) {
+		std::cerr << __FILE__ << "::" << __FUNCTION__ << "@" << __LINE__
+			  << "Code not yet tested " << std::endl;
+		throw thor_scsi::NotImplemented();
+	} else {
+		return;
+	}
 
 #ifdef  THOR_SCSI_USE_RADIATION
-	if (conf.emittance && !conf.Cavity_on) {
-		// Needs A^-1.
-		curly_dH_x = 0e0;
-		for (i = 0; i <= 5; i++){
-			/* Synchrotron integrals */ dI[i] = 0e0;
-		}
+	// Needs A^-1.
+	curly_dH_x = 0e0;
+	for (i = 0; i <= 5; i++){
+		/* Synchrotron integrals */ dI[i] = 0e0;
 	}
 #endif /* THOR_SCSI_USE_RADIATION */
 }
@@ -217,40 +219,43 @@ inline void tse::FieldKick::_initRadiate(const tsc::ConfigType &conf, ss_vect<T>
 template<typename T>
 inline void tse::FieldKick::_radiateStepOne(const tsc::ConfigType &conf, ss_vect<T> &ps)
 {
-	std::cerr << __FILE__ << "::" << __FUNCTION__ << "@" << __LINE__
-		  << "Code not yet tested " << std::endl;
-	throw thor_scsi::NotImplemented();
-
+	if (conf.emittance && !conf.Cavity_on) {
+		std::cerr << __FILE__ << "::" << __FUNCTION__ << "@" << __LINE__
+			  << "Code not yet tested " << std::endl;
+		throw thor_scsi::NotImplemented();
+	} else {
+		return;
+	}
 #ifdef  THOR_SCSI_USE_RADIATION
 
-	if (conf.emittance && !conf.Cavity_on) {
-		// Why only when cavities are not on ?
-		// Needs A^-1.
-		curly_dH_x /= 6e0*PN;
-		dI[1] += PL*is_tps<tps>::get_dI_eta(ps)*Pirho;
-		dI[2] += PL*sqr(Pirho);
-		dI[3] += PL*fabs(tse::cube(Pirho));
-		dI[4] *=
-			PL*Pirho*(sqr(Pirho)+2e0*PBpar[Quad+HOMmax])
-			/(6e0*PN);
+	// Why only when cavities are not on ?
+	// Needs A^-1.
+	curly_dH_x /= 6e0*PN;
+	dI[1] += PL*is_tps<tps>::get_dI_eta(ps)*Pirho;
+	dI[2] += PL*sqr(Pirho);
+	dI[3] += PL*fabs(tse::cube(Pirho));
+	dI[4] *=
+		PL*Pirho*(sqr(Pirho)+2e0*PBpar[Quad+HOMmax])
+		/(6e0*PN);
 		dI[5] += PL*fabs(tse::cube(Pirho))*curly_dH_x;
-	}
+
 #endif /* THOR_SCSI_USE_RADIATION */
 }
 
 template<typename T>
 inline void tse::FieldKick::_radiate(tsc::ConfigType &conf, ss_vect<T> &ps)
 {
-	std::cerr << __FILE__ << "::" << __FUNCTION__ << "@" << __LINE__
-		  << "Code not yet tested " << std::endl;
-	throw thor_scsi::NotImplemented();
-
-#ifdef  THOR_SCSI_USE_RADIATION
 	if (conf.emittance && !conf.Cavity_on) {
-		// Needs A^-1.
-		curly_dH_x += is_tps<tps>::get_curly_H(ps);
-		dI[4] += is_tps<tps>::get_dI_eta(ps);
+		std::cerr << __FILE__ << "::" << __FUNCTION__ << "@" << __LINE__
+			  << "Code not yet tested " << std::endl;
+		throw thor_scsi::NotImplemented();
+	} else {
+		return;
 	}
+#ifdef  THOR_SCSI_USE_RADIATION
+	// Needs A^-1.
+	curly_dH_x += is_tps<tps>::get_curly_H(ps);
+	dI[4] += is_tps<tps>::get_dI_eta(ps);
 #endif /* THOR_SCSI_USE_RADIATION */
 }
 
@@ -345,11 +350,9 @@ tse::FieldKick::FieldKick(const Config &config) : tse::LocalGalileanPRot(config)
 void tse::FieldKick::show(std::ostream& strm, const int level) const
 {
 	tse::LocalGalileanPRot::show(strm, level);
-	return;
 	if(level >= 1){
 		/* at least intercept it with a blank */
 		strm << "lens type: " <<  (this->isThick() ? "thick" : "thin") << " ";
-		return;
 		if(!this->intp){
 			strm << " NO interpolater set!";
 		} else {
@@ -376,8 +379,9 @@ void tse::FieldKick::_quadFringe(thor_scsi::core::ConfigType &conf, ss_vect<T> &
 			  << " PlanarMultipole interpolator " << std::endl;
 		throw thor_scsi::NotImplemented();
 	}
-	const auto C2 = muls->getMultipole(2);
-	tse::quad_fringe(conf, C2.real(), ps);
+	double Gy=0e0, Gx=0e0;
+	muls->gradient(ps[x_], ps[y_], &Gx, &Gy);
+	tse::quad_fringe(conf, Gy, ps);
 
 	/*
 	   if (conf.quad_fringe && (PB[Quad+HOMmax] != 0e0)){
@@ -487,7 +491,7 @@ void tse::FieldKick::_localPass(tsc::ConfigType &conf, ss_vect<T> &ps)
 	this->_quadFringe(conf, ps);
 
 	if (!conf.Cart_Bend) {
-		if (Pirho != 0e0){
+		if (this->assumingCurvedTrajectory()){
 			tse::edge_focus(conf, Pirho, PTx1, Pgap, ps);
 		}
 	} else {
@@ -504,7 +508,7 @@ void tse::FieldKick::_localPass(tsc::ConfigType &conf, ss_vect<T> &ps)
 
 	// Fringe fields.
 	if (!conf.Cart_Bend) {
-		if (Pirho != 0e0){
+		if (this->assumingCurvedTrajectory()){
 			tse::edge_focus(conf, Pirho, PTx2, Pgap, ps);
 		}
 	} else {

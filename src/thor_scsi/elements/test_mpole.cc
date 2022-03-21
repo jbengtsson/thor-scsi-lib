@@ -9,46 +9,6 @@
 namespace tsc = thor_scsi::core;
 namespace tse = thor_scsi::elements;
 
-BOOST_AUTO_TEST_CASE(test01_kick_print)
-{
-	Config C;
-	C.set<std::string>("name", "test");
-	C.set<double>("Method", 4.0);
-	tse::FieldKick kick(C);
-
-	{
-		boost::test_tools::output_test_stream output;
-		output << kick;
-		BOOST_CHECK( !output.is_empty( false ) );
-	}
-	{
-		boost::test_tools::output_test_stream output;
-		kick.show(output, 4);
-		BOOST_CHECK( !output.is_empty( false ) );
-	}
-}
-
-BOOST_AUTO_TEST_CASE(test01_kick_integral_zero_length)
-{
-	Config C;
-	C.set<std::string>("name", "test");
-
-	{
-		C.set<double>("L", 0.0);
-		tse::FieldKick kick(C);
-		BOOST_CHECK_EQUAL(kick.isThick(), false);
-	}
-	{
-		C.set<double>("L", 1.0);
-		tse::FieldKick kick(C);
-		BOOST_CHECK_EQUAL(kick.isThick(), true);
-	}
-	{
-		C.set<double>("L", 0.0);
-		tse::FieldKick kick(C);
-		BOOST_CHECK_EQUAL(kick.isThick(), false);
-	}
-}
 
 BOOST_AUTO_TEST_CASE(test02_mpole_print)
 {

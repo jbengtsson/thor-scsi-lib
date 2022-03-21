@@ -1,10 +1,10 @@
 #include <thor_scsi/core/multipoles.h>
 #include <thor_scsi/core/math_comb.h>
-
+#include <tps/utils.h>
 namespace tsc = thor_scsi::core;
 
 
-tsc::PlanarMultipoles tsc::PlanarMultipoles::operator + (tsc::PlanarMultipoles &other)
+tsc::PlanarMultipoles tsc::PlanarMultipoles::operator + (tsc::PlanarMultipoles &other) const
 {
 	unsigned int n = std::max(this->getCoeffs().size(), other.getCoeffs().size());
 	unsigned int i;

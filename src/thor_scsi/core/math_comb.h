@@ -2,11 +2,11 @@
 #define _THOR_SCSI_MATH_COMB_H_
 namespace thor_scsi::core {
 	/**
-	 * calculate binomial coefficient
+	 * @brief calculate binomial coefficient
 	 *
-	 * Todo: check if in standard library or in GSL
+	 * @ todo: check if in standard library or in GSL
 	 */
-	unsigned long binom (unsigned long const n, unsigned long const k);
+	// unsigned long binom (unsigned long const n, unsigned long const k);
 }
 #endif /* THOR_SCSI_MATH_COMB_H */
 /*

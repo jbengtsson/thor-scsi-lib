@@ -4,7 +4,8 @@
 
 namespace tsc = thor_scsi;
 
-
+#if 0
+// defined in tps/utils
 unsigned long thor_scsi::core::binom(unsigned long n, unsigned long k) {
 	unsigned long c = 1, i;
 
@@ -24,7 +25,6 @@ unsigned long thor_scsi::core::binom(unsigned long n, unsigned long k) {
 	return c;
 }
 
-#if 0
 double thor_scsi::binom (int const n, int const k)
 {
 	int i;

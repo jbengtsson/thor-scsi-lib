@@ -8,7 +8,7 @@ namespace thor_scsi::elements {
 	/**
 	 * @brief a magnet with a single strong multipole
 	 *
-	 * typically not directly used
+	 * typically not directly used but using derived classes as Quadrupole, Sextupole or Bending
 	 */
 	class ClassicalMagnet : public MpoleType {
 		/*
@@ -22,55 +22,50 @@ namespace thor_scsi::elements {
 			 */
 		}
 
+		/**
+		 *
+		 * \verbatim embed:rst:leading-asterisk
+		 *
+		 * .. Todo::
+		 *    Check if double function is appropriate ...
+		 *
+		 *
+		 * \endverbatim
+		 */
+		inline const auto getMultipoles(void) const {
+			return this->getFieldInterpolator();
+		}
 
 		inline void setMainMultipoleStrength(const Config &config, const int n){
-			auto muls = dynamic_cast<thor_scsi::core::PlanarMultipoles &> (*this->intp);
-			muls.setMultipole(n, config.get<double>("K"));
+			this->getMultipoles()->setMultipole(n, config.get<double>("K"));
 		}
 
 		inline void setMainMultipoleStrength(const Config &config){
-			const int n = this->getMainMultipoleNumber();
 			const double K = config.get<double>("K");
 			// Watch the apersand ...
-			auto& muls = dynamic_cast<thor_scsi::core::PlanarMultipoles &> (*this->intp);
-			muls.setMultipole(n, K);
+			this->setMainMultipoleStrength(K);
 		}
 
 		inline void setMainMultipoleStrength(const thor_scsi::core::cdbl mul){
 			const int n = this->getMainMultipoleNumber();
-			// Watch the apersand ...
-			auto& muls = dynamic_cast<thor_scsi::core::PlanarMultipoles &> (*this->intp);
-			muls.setMultipole(n, mul);
+			this->getMultipoles()->setMultipole(n, mul);
 		}
 
 		inline void setMainMultipoleStrength(const double normal){
 			this->setMainMultipoleStrength(thor_scsi::core::cdbl(normal, 0));
 		}
+
+		inline thor_scsi::core::cdbl getMainMultipoleStrength(void) const {
+			auto n = this->getMainMultipoleNumber();
+			return this->getMultipoles()->getMultipole(n);
+		};
+
 		/**
 		 * get the major harmonic number
 		 */
-		inline thor_scsi::core::cdbl getMainMultipoleStrength(void) const {
-			auto& muls = dynamic_cast<thor_scsi::core::PlanarMultipoles &> (*this->intp);
-			return muls.getMultipole(this->getMainMultipoleNumber());
-		};
-
 		virtual int getMainMultipoleNumber(void) const = 0;
 		//thor_scsi::core::PlanarMultipoles* intp;
 
-		/**
-		 *
-		 * \verbatim embed:rst:leading-asterisk
-		 *
-		 * .. Warning::
-		 *
-		 *     fix memory handling of interpolation object
-		 *     add move constructor
-		 *
-		 * \endverbatim
-		 */
-		inline const thor_scsi::core::PlanarMultipoles& getMultipoles(void) const {
-			return static_cast<thor_scsi::core::PlanarMultipoles&>(*this->intp);
-		}
 
 	};
 

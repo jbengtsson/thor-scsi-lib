@@ -37,6 +37,7 @@ target_link_libraries(test_multipoles_planar
   #  quadmath
   # gsl
   # gslcblas
+  tpsa_lin
     ${Boost_PRG_EXEC_MONITOR_LIBRARY}
     ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
 )

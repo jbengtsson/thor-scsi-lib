@@ -147,10 +147,14 @@ namespace thor_scsi::elements{
 					ps[ct_] += u*(1e0+ps0[delta_]);
 					// ps[px_] -= L*(h_bend*(1e0+h_ref*ps0[x_])-h_ref*p_s);
 
-#warning "field interpolation for sector bends missing"
 #if 0
+#warning "field interpolation for sector bends missing"
+#else
 					// Field expansion up to sextupole like terms.
-					ByoBrho += h_bend - MB[Quad+HOMmax]*h_ref*sqr(ps0[y_])/2e0;
+					//const double B2 = MB[Quad+HOMmax];
+					double Gy, Gx;
+					intp.gradient(ps[x_], ps[y_], &Gx, &Gy);
+					ByoBrho += h_bend - Gy *h_ref*sqr(ps0[y_])/2e0;
 					ps[px_] -= L*((1e0+h_ref*ps0[x_])*ByoBrho-h_ref*p_s);
 					ps[py_] += L*(1e0+h_ref*ps0[x_])*BxoBrho;
 #endif
