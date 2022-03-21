@@ -198,6 +198,7 @@ ss_vect<T> ss_vect<T>::zero(void)
 }
 
 template ss_vect<tps> ss_vect<tps>::zero(void);
+template ss_vect<double> ss_vect<double>::zero(void);
 
 template<>
 ss_vect<double> ss_vect<double>::identity(void)

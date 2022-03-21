@@ -35,8 +35,8 @@ target_include_directories(test_multipoles_planar
 target_link_libraries(test_multipoles_planar
   # PRIVATE Boost::boost
   #  quadmath
-  gsl
-  gslcblas
+  # gsl
+  # gslcblas
     ${Boost_PRG_EXEC_MONITOR_LIBRARY}
     ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
 )

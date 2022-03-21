@@ -481,6 +481,8 @@
       integer nd,nd2,no,nv
       common /ii/no,nv,nd,nd2
       integer h,rh
+!     JB 20/03/22.
+      integer h_arr(1), rh_arr(1)
       integer y(*)
 !
       nt=nv-nd2
@@ -496,7 +498,9 @@
       do i=1,nd2
         iv(i)=y(i)
       enddo
-      call dacct(h,1,iv,nv,rh,1)
+      h_arr(1) = h
+      rh_arr(1) = rh
+      call dacct(h_arr, 1, iv, nv, rh_arr, 1)
       if(nt.gt.0) then
         call dadal(ie,nt)
       endif
