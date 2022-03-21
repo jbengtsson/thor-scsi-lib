@@ -74,7 +74,7 @@ namespace thor_scsi::elements {
 	// typedef std::vector<double> MpoleArray;
 
 
-	/*
+	/**
 	 *
 	 * SI units are used internally
 	 * apart from energy [GeV]
@@ -83,7 +83,9 @@ namespace thor_scsi::elements {
 	public:
 
 		/*
-		 * todo: configuration for method: use int
+		 * @todo configuration for method: use int
+		 *
+		 * @todo field level
 		 */
 		// friend FieldKick* Mpole_Alloc(void);
 		//	ElemType* Elem_Init(const thor_scsi::core::ConfigType &conf, const bool reverse);
@@ -216,8 +218,11 @@ namespace thor_scsi::elements {
 			return this->PTx1;
 		}
 
+		/**
+		 * @todo: add test and check
+		 */
 		inline void setExitAngle(const double angle){
-			this->PTx1 = angle;
+			this->PTx2 = angle;
 		}
 
 		inline double getExitAngle(void) const {
@@ -352,6 +357,10 @@ namespace thor_scsi::elements {
 			return this->intp;
 		}
 
+		/*
+		 * @todo review interaction to configuration to see if integration intervals can be precomputed
+		 *
+		 */
 		class FieldKickDelegate {
 		public:
 			FieldKickDelegate(FieldKick *parent){
@@ -448,7 +457,7 @@ namespace thor_scsi::elements {
 			double dL1, dL2, dkL1, dkL2;
 
 
-			const int Porder = HOMmax;                ///< The highest order in PB.
+			const int Porder = HOMmax;                ///< The highest order in PB. @todo: needs to be removed
 		};
 	public:
 		/**
