@@ -583,7 +583,7 @@ BOOST_AUTO_TEST_CASE(test70_translate_quadrupole_zero)
 	h.applyTranslation(0);
 	h.applyTranslation(0, 0);
 
-	tsc::cdbl dz = (0,0);
+	tsc::cdbl dz(0,0);
 	h.applyTranslation(dz);
 
 
