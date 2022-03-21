@@ -456,8 +456,6 @@ namespace thor_scsi::elements {
 			// an other set for Cartesian Bends
 			double dL1, dL2, dkL1, dkL2;
 
-
-			const int Porder = HOMmax;                ///< The highest order in PB. @todo: needs to be removed
 		};
 	public:
 		/**
