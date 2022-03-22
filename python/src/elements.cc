@@ -1,7 +1,14 @@
 #include <pybind11/stl.h>
-#include "thor_py.h"
 #include <pybind11/pybind11.h>
-#include <thor_scsi/core/elements.h>
+#include "thor_scsi.h"
+#include <thor_scsi/elements/field_kick.h>
+#include <thor_scsi/elements/drift.h>
+#include <thor_scsi/elements/bending.h>
+#include <thor_scsi/elements/quadrupole.h>
+#include <thor_scsi/elements/sextupole.h>
+#include <thor_scsi/elements/octupole.h>
+#include <thor_scsi/elements/cavity.h>
+#include <thor_scsi/elements/marker.h>
 
 using namespace thor_scsi::elements;
 namespace py = pybind11;
@@ -9,24 +16,33 @@ namespace py = pybind11;
 void py_thor_scsi_init_elements(py::module_ &m)
 {
 
+#if 0
 	py::class_<ElemType>(m, "ElemType")
 		// std::string
-		.def_readwrite("Name",    &ElemType::Name)
+		.def_readwrite("name",    &ElemType::name)
+		.def("type_name",  &ElemType::type_name)
 		// bool
 		.def_readwrite("Reverse", &ElemType::Reverse)
 		// double
-		.def_readwrite("PL",      &ElemType::PL)
+		// .def_readwrite("PL",      &ElemType::PL)
+		.def("setLength", &ElemType::setLength)
+		.def("getLength", &ElemType::getLength)
+		.def(py::init<const Config &>())
+		;
+#endif
 		// PartsKind
-		.def_readwrite("Pkind",   &ElemType::Pkind)
+		// .def_readwrite("Pkind",   &ElemType::Pkind)
 		// Virtual class: no constructor.
 		// .def(py::init<>())
-		.def("prt_elem", &ElemType::prt_elem)
-		.def("repr_elem", &ElemType::repr_elem)
-		.def("repr", &ElemType::repr)
-		.def("__repr__", &ElemType::repr)
-		.def("print",    &ElemType::print);
+		// .def("prt_elem", &ElemType::prt_elem)
+		// .def("repr_elem", &ElemType::repr_elem)
+		// .def("repr", &ElemType::repr)
+		//.def("__repr__", &ElemType::repr)
+		// .def("print",    &ElemType::print);
 	//
 
+
+#if 0
 	py::class_<ElemFamType>(m, "ElemFamType")
 		// ElemType
 		// int
@@ -37,11 +53,11 @@ void py_thor_scsi_init_elements(py::module_ &m)
 		// std::vector<string>
 		.def_readwrite("DBNlist", &ElemFamType::DBNlist)
 		.def(py::init<>());
+#endif
+	py::class_<DriftType>(m, "DriftType")
+		.def(py::init<const Config &>());
 
-	py::class_<DriftType, ElemType>(m, "DriftType")
-		.def(py::init<>());
-
-
+#if 0
 	py::class_<MpoleType, ElemType>(m, "MpoleType")
 		// int
 		.def_readwrite("Pmethod",  &MpoleType::Pmethod)
@@ -76,13 +92,17 @@ void py_thor_scsi_init_elements(py::module_ &m)
 		.def_readwrite("M_elem",   &MpoleType::M_elem)
 		.def(py::init<>());
 
+#endif
 
+#if 0
 	py::class_<CavityType,     ElemType>(m, "CavityType")
-		.def(py::init<>());
+		.def(py::init<const Config &>());
 
 	py::class_<MarkerType,     ElemType>(m, "MarkerType")
-		.def(py::init<>());
+		.def(py::init<const Config &>());
+#endif
 
+#if 0
 	py::class_<WigglerType,    ElemType>(m, "WigglerType")
 		.def(py::init<>());
 
@@ -103,6 +123,7 @@ void py_thor_scsi_init_elements(py::module_ &m)
 
     py::class_<MapType,        ElemType>(m, "MapType")
 	    .def(py::init<>());
+#endif
 
 }
 /*

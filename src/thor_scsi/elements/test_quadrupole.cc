@@ -259,7 +259,7 @@ BOOST_AUTO_TEST_CASE(test20_quadrupole_typical_length_eval)
 		quad.setNumberOfIntegrationSteps(1);
 		// quadrupoles are always thin elements
 		BOOST_CHECK(quad.isThick());
-		BOOST_CHECK_SMALL(quad.getInverseRigidity(), 1e-12);
+		BOOST_CHECK_SMALL(quad.getCurvature(), 1e-12);
 		BOOST_CHECK(quad.assumingCurvedTrajectory() == false);
 
 		BOOST_CHECK_CLOSE(quad.getLength(), length,   1e-12);

@@ -28,6 +28,11 @@ copy_file(
 
 d = gsl_conf.gsl_config()
 
+# How to define where the thor scsi library is located?
+prefix = os.path.abspath(
+    os.path.join(os.path.dirname(__name__), os.pardir, os.pardir, 'local')
+)
+print(prefix)
 ext_modules = [
     # Pybind11Extension(
     #    "testbind",
@@ -37,21 +42,21 @@ ext_modules = [
     Pybind11Extension(
         "lib",
         # sorted(["src/thor_py_enums.cc", "src/thor_py.cc"]),
-        ["src/thor_py.cc", "src/enums.cc", "src/config_type.cc",
-         "src/elements.cc", "src/lattice.cc",
+        [ "src/elements.cc", "src/thor_scsi.cc", "src/enums.cc", "src/config_type.cc",
+         # "src/elements.cc", "src/lattice.cc"
         ],
-        include_dirs=["../thor/inc"] + [d["gsl_include"]],
+        include_dirs=[os.path.join(prefix, "include")] + [d["gsl_include"]],
         define_macros=[("_GLIBCXX_DEBUG", 1), ("_GLIBCXX_DEBUG_PEDANTIC", 1)],
         library_dirs=(
-            ["../thor/src/.libs"]
+            [os.path.join(prefix, "lib")]
             #["../../engine/lib"]
         + [d["gsl_lib_dir"]]),
-        libraries=["thor", "tpsa"] + d["gsl_libs"],
+        libraries=["thor_scsi", "thor_scsi_core", "tpsa_lin", "flame", "flame_core"] + d["gsl_libs"],
     ),
 ]
 
 
 setup(cmdclass={"build_ext": build_ext},
-      ext_package='thor',
+      ext_package='thor_scsi',
       ext_modules=ext_modules
 )

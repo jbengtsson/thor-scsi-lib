@@ -5,11 +5,12 @@
 #include <tuple>
 
 #include <thor_scsi/version.h>
-#include <thor_scsi/core/defines.h>
-#include <thor_scsi/core/constants.h>
+#include <tps/enums.h>
+// #include <thor_scsi/core/defines.h>
+#include <thor_scsi/elements/constants.h>
 #include <thor_scsi/core/cells.h>
-#include <thor_scsi/core/elements_enums.h>
-#include "thor_py.h"
+// #include <thor_scsi/core/elements_enums.h>
+#include "thor_scsi.h"
 #include <string>
 #include <sstream>
 
@@ -34,24 +35,25 @@ PYBIND11_MODULE(lib, scsi) {
     py_thor_scsi_init_enums(scsi);
     py_thor_scsi_init_elements(scsi);
     py_thor_scsi_init_config_type(scsi);
-    py_thor_scsi_init_lattice(scsi);
+    // py_thor_scsi_init_lattice(scsi);
 
 
     // Beamline class.
 
     // Constants.
-    scsi.attr("HOMmax") = HOMmax;
-    scsi.attr("c0")     = tsc::c0;
-    scsi.attr("q_e")    = tsc::q_e;
-    scsi.attr("m_e")    = tsc::m_e;
-    scsi.attr("mu_0")   = tsc::mu_0;
-    scsi.attr("eps_0")  = tsc::eps_0;
-    scsi.attr("r_e")    = tsc::r_e;
-    scsi.attr("h_bar")  = tsc::h_bar;
+    //scsi.attr("HOMmax") = HOMmax;
+    scsi.attr("c0")     = tse::speed_of_light;
+    // scsi.attr("q_e")    = tsc::q_e;
+    // scsi.attr("m_e")    = tsc::m_e;
+    // scsi.attr("mu_0")   = tsc::mu_0;
+    // scsi.attr("eps_0")  = tsc::eps_0;
+    // scsi.attr("r_e")    = tsc::r_e;
+    // scsi.attr("h_bar")  = tsc::h_bar;
     /*
     */
     // Enums.
 
+    #if 0
     py::enum_<tse::PartsKind>(scsi, "PartsKind")
       .value("drift",      tse::PartsKind::drift)
       .value("Wigl",       tse::PartsKind::Wigl)
@@ -66,7 +68,9 @@ PYBIND11_MODULE(lib, scsi) {
       .value("Solenoid",   tse::PartsKind::Solenoid)
       .value("Map",        tse::PartsKind::Map)
       .export_values();
+    #endif
 
+    #if 0
     py::enum_<tse::MpoleKind>(scsi, "MpoleKind")
       .value("All",   tse::MpoleKind::All)
       .value("Dip",   tse::MpoleKind::Dip)
@@ -75,14 +79,17 @@ PYBIND11_MODULE(lib, scsi) {
       .value("Oct",   tse::MpoleKind::Oct)
       .value("Dec",   tse::MpoleKind::Dec)
       .value("Dodec", tse::MpoleKind::Dodec);
+    #endif
 
+#if 0
     py::enum_<tse::PlaneKind>(scsi, "Horizontal")
       .value("Horizontal", tse::PlaneKind::Horizontal)
       .value("Vertical",   tse::PlaneKind::Vertical);
+#endif
 
     // Classes.
 
-
+#if 0
     py::class_<tse::CellType>(scsi, "CellType")
       // int
       .def_readwrite("Fnum",       &tse::CellType::Fnum)
@@ -106,6 +113,6 @@ PYBIND11_MODULE(lib, scsi) {
       .def_readwrite("sigma",      &tse::CellType::sigma)
       // tse::CellType
       .def(py::init<>());
-
+#endif
 
 }

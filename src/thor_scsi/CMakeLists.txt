@@ -46,15 +46,28 @@ set(thor_scsi_core_HEADERS
   core/transform.h
   core/transform_phase_space.h
   core/math_comb.h
+  core/field_interpolation.h
   core/multipoles.h
   core/elements_basis.h
 )
 
 set(thor_scsi_core_ELEMENT_HEADERS
+  elements/constants.h
   elements/drift.h
   elements/mpole.h
+  elements/elements_enums.h
+  elements/utils.h
+  elements/field_kick.h
+  elements/element_local_coordinates.h
+  elements/classical_magnet.h
+  elements/bending.h
+  elements/quadrupole.h
+  elements/sextupole.h
+  elements/octupole.h
   elements/element_helpers.h
-)
+  elements/cavity.h
+  elements/marker.h
+  )
 
 set(thor_scsi_core_FILES
   core/transform.cc
@@ -65,11 +78,11 @@ set(thor_scsi_core_FILES
   # Only required if GSL's implementation of Horner's rule to be used
   # or a pure taylor series
   # core/multipoles_extra.cc
+  elements/utils.cc
   elements/element_helpers.cc
   elements/drift.cc
   elements/field_kick.cc
   elements/mpole.cc
-  elements/utils.cc
   elements/marker.cc
   elements/cavity.cc
   std_machine/std_machine.cc
@@ -101,7 +114,7 @@ target_include_directories(thor_scsi_core
 
 target_link_libraries(thor_scsi_core
   # Todo: need to learn how to instruct cmake that this
-  # depndency will be exported properly
+  # dependency will be exported properly
   tpsa_lin
   ${flame_CORE_LIBRARY}
   ${ARMADILLO_LIBRARIES}
@@ -205,7 +218,7 @@ message(STATUS "CMAKE install Dirs  lib: '${CMAKE_INSTALL_LIBDIR}' bin '${CMAKE_
 # --- thor_scsi thor install support  ----
 
 install(FILES ${thor_scsi_core_HEADERS} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/thor_scsi/core/)
-install(FILES ${thor_scsi_core_ELEMENT_HEADERS} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/thor_scsi/core/)
+install(FILES ${thor_scsi_core_ELEMENT_HEADERS} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/thor_scsi/elements/)
 install(TARGETS thor_scsi_core
         EXPORT thor_scsi_coreTargets
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}

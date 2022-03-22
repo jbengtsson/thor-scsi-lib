@@ -1,5 +1,5 @@
 #include <pybind11/stl.h>
-#include "thor_py.h"
+#include "thor_scsi.h"
 #include <pybind11/pybind11.h>
 #include <thor_scsi/core/config.h>
 

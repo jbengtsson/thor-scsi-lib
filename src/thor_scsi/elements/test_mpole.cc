@@ -373,7 +373,7 @@ BOOST_AUTO_TEST_CASE(test21_mpole_kick_dipole_component_thick_kick_polar_ideal)
 	tse::MpoleType mpole(C);
 
         mpole.asThick(true);
-	mpole.setInverseRigidity(irho);
+	mpole.setCurvature(irho);
 	mpole.setNumberOfIntegrationSteps(1);
 
 
@@ -430,7 +430,7 @@ BOOST_AUTO_TEST_CASE(test21_mpole_kick_dipole_component_thick_kick_off_momentum)
 	tse::MpoleType mpole(C);
 
         mpole.asThick(true);
-	mpole.setInverseRigidity(1/rho);
+	mpole.setCurvature(1/rho);
 	mpole.setNumberOfIntegrationSteps(1);
 
 	calc_config.Cart_Bend = false;

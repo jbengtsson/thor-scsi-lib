@@ -261,7 +261,7 @@ BOOST_AUTO_TEST_CASE(test20_sextupole_typical_length_eval)
 		sext.setNumberOfIntegrationSteps(1);
 		// sextrupoles are always thin elements
 		BOOST_CHECK(sext.isThick());
-		BOOST_CHECK_SMALL(sext.getInverseRigidity(), 1e-12);
+		BOOST_CHECK_SMALL(sext.getCurvature(), 1e-12);
 		BOOST_CHECK(sext.assumingCurvedTrajectory() == false);
 
 		BOOST_CHECK_CLOSE(sext.getLength(), length,   1e-12);

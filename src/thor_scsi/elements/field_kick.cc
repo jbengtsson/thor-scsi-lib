@@ -173,7 +173,7 @@ void tse::FieldKick::FieldKickForthOrder::computeIntegrationSteps(void)
 	if(!parent){
 		return;
 	}
-	const double Pirho = parent->getInverseRigidity(), length = parent->getLength();
+	const double Pirho = parent->getCurvature(), length = parent->getLength();
 	double dL;
 	auto n_steps = this->getNumberOfIntegrationSteps();
 
@@ -288,7 +288,7 @@ inline void tse::FieldKick::FieldKickForthOrder::_localPass(tsc::ConfigType &con
 {
 	double dL = 0.0, h_ref = 0.0;
 	auto PN = this->integration_steps;
-	const double length = parent->getLength(), Pirho = parent->getInverseRigidity();
+	const double length = parent->getLength(), Pirho = parent->getCurvature();
 
 	if (!conf.Cart_Bend) {
 		// Polar coordinates.
