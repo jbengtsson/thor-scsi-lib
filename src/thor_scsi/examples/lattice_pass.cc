@@ -26,6 +26,8 @@ static void process_cmd_line(int argc, char *argv[])
 		("py",           po::value<double>()->default_value(0e0), "vertical direction         (left hand coordinate system)")
 		("ct",           po::value<double>()->default_value(0e0), "relative phase deviation   (left hand coordinate system)")
 		("delta",        po::value<double>()->default_value(0e0), "relative impulse deviation (left hand coordinate system)")
+		("inspect,i",    po::value<std::string>()->default_value(""), "name of element to inspect")
+		("number,n",     po::value<int>()->default_value(0), "number of element to inspect")
 		("n_turns",      po::value<int>()->default_value(1),      "propagate n turns (set to zero for none)" )
 		("dump_lattice", po::value<bool>()->default_value(false), "dump read in lattice (to stdout)" )
 		("verbose,v",    po::value<bool>()->default_value(false), "verbose output" )
@@ -66,6 +68,19 @@ static void process(tsc::Machine& machine)
 
 	tsc::ConfigType calc_config;
 
+	auto element_name = vm["inspect"].as<std::string>();
+	if(element_name != ""){
+		int number =  vm["number"].as<int>();
+		auto elem = machine.find(element_name, number);
+		std::cout << "Machine element " << element_name << " number " << number << ": ";
+		if(elem){
+			std::cout << *elem;
+		} else {
+			std::cout << "none found";
+		}
+
+		std::cout << std::endl;
+	}
 	if(n_turns <= 0){
 		if(verbose){
 			std::cout << "No propagation calculation requested" << std::endl;
