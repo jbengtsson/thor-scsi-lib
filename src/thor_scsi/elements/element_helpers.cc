@@ -3,6 +3,7 @@
 #include <thor_scsi/elements/utils.h>
 
 #include <tps/tps_type.h>
+#include <tps/tps.h>
 
 namespace tse = thor_scsi::elements;
 namespace tsc = thor_scsi::core;
@@ -113,9 +114,10 @@ namespace thor_scsi::elements{
 #endif
 			    )) {
 			{
-				// Warning: currently this only works for doubles!
-				const double x = ps[x_];
-				const double y = ps[y_];
+				// Warning: machinery there for non double
+				// Need to understand
+				const auto x = ps[x_];
+				const auto y = ps[y_];
 				intp.field(ps[x_], ps[y_], &BxoBrho, &ByoBrho);
 
 				if(debug){
@@ -152,7 +154,8 @@ namespace thor_scsi::elements{
 #else
 					// Field expansion up to sextupole like terms.
 					//const double B2 = MB[Quad+HOMmax];
-					double Gy, Gx;
+					// need to understand it
+					T Gy, Gx;
 					intp.gradient(ps[x_], ps[y_], &Gx, &Gy);
 					ByoBrho += h_bend - Gy *h_ref*sqr(ps0[y_])/2e0;
 					ps[px_] -= L*((1e0+h_ref*ps0[x_])*ByoBrho-h_ref*p_s);
@@ -173,9 +176,9 @@ namespace thor_scsi::elements{
 }
 
 template void tse::drift_pass(const tsc::ConfigType &conf, const double, ss_vect<double> &);
-//template void tse::drift_pass(tsc::ConfigType &conf, const double, ss_vect<tps> &);
+template void tse::drift_pass(const tsc::ConfigType &conf, const double, ss_vect<tps> &);
 
 template void tse::thin_kick(const tsc::ConfigType &conf, const tsc::Field2DInterpolation& intp,
 			     const double L, const double h_bend, const double h_ref, ss_vect<double> &ps);
-//template void tse::thin_kick(const tsc::ConfigType &conf, const tsc::Field2DInterpolation& intp,
-//			     const double L, const double h_bend, const double h_ref, ss_vect<tps> &ps);
+template void tse::thin_kick(const tsc::ConfigType &conf, const tsc::Field2DInterpolation& intp,
+			     const double L, const double h_bend, const double h_ref, ss_vect<tps> &ps);

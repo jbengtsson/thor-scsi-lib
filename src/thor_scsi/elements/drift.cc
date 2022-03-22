@@ -22,7 +22,7 @@ void tse::DriftType::_pass(const tsc::ConfigType &conf, ss_vect<T> &ps)
 }
 
 template void tse::DriftType::_pass(const tsc::ConfigType &conf, ss_vect<double> &ps);
-//template void tse::DriftType::_pass(const tsc::ConfigType &conf, ss_vect<tps> &ps);
+template void tse::DriftType::_pass(const tsc::ConfigType &conf, ss_vect<tps> &ps);
 
 
 /*

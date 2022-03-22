@@ -7,6 +7,7 @@
 #include <ostream>
 
 #include <thor_scsi/core/field_interpolation.h>
+#include <thor_scsi/core/exceptions.h>
 
 // #define THOR_SCSI_USE_F128 1
 #ifdef THOR_SCSI_USE_F128
@@ -140,6 +141,14 @@ namespace thor_scsi::core {
 			*Bx = r.imag();
 		}
 
+		virtual inline void field(const tps x, const tps y, tps *Bx, tps *By) const override final{
+			// "Need to understand how to interpolate field with tps"
+			throw thor_scsi::NotImplemented();
+		}
+		virtual inline void gradient(const tps x, const tps y, tps *Gx, tps *Gy) const override final{
+			// "Need to understand how to interpolate gradient with tps"
+			throw thor_scsi::NotImplemented();
+		}
 		/**
 		 *
 		 * Todo: Gradient here

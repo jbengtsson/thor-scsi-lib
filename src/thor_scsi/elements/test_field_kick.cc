@@ -60,14 +60,82 @@ BOOST_AUTO_TEST_CASE(test03_default_values)
 	auto kick = tse::FieldKick(C);
 
 	BOOST_CHECK_CLOSE(kick.getLength(), length, 1e-12);
-	BOOST_CHECK_CLOSE(kick.getInverseRigidity(), 0e0, 1e-12);
+	BOOST_CHECK_SMALL(kick.getInverseRigidity(), 1e-12);
 
 	BOOST_CHECK(kick.getNumberOfIntegrationSteps() ==  1);
 	BOOST_CHECK(kick.assumingCurvedTrajectory() ==  false);
 
-	BOOST_CHECK_CLOSE(kick.getBendingAngle(),  0e0, 1e-12);
-	BOOST_CHECK_CLOSE(kick.getEntranceAngle(), 0e0, 1e-12);
-	BOOST_CHECK_CLOSE(kick.getExitAngle(),     0e0, 1e-12);
+	BOOST_CHECK_SMALL(kick.getBendingAngle(),  1e-12);
+	BOOST_CHECK_SMALL(kick.getEntranceAngle(), 1e-12);
+	BOOST_CHECK_SMALL(kick.getExitAngle(),     1e-12);
+}
+
+BOOST_AUTO_TEST_CASE(test04_angle_accessors)
+{
+
+	Config C;
+	const double length = 0.5;
+	C.set<std::string>("name", "test");
+	C.set<double>("L", length);
+
+	/* instantiation sets parameters to zero? */
+	{
+		auto kick = tse::FieldKick(C);
+
+		BOOST_CHECK_SMALL(kick.getBendingAngle(),  1e-12);
+		BOOST_CHECK_SMALL(kick.getEntranceAngle(), 1e-12);
+		BOOST_CHECK_SMALL(kick.getExitAngle(),     1e-12);
+	}
+
+	/* bending angle */
+	{
+		auto kick = tse::FieldKick(C);
+
+		const double bending_angle = 1e0;
+		kick.setBendingAngle(bending_angle);
+
+		BOOST_CHECK_CLOSE(kick.getBendingAngle(),  bending_angle, 1e-12);
+		BOOST_CHECK_SMALL(kick.getEntranceAngle(),                1e-12);
+		BOOST_CHECK_SMALL(kick.getExitAngle(),                    1e-12);
+	}
+
+	/* entrance angle */
+	{
+		auto kick = tse::FieldKick(C);
+
+		const double entrance_angle = 2e0;
+		kick.setEntranceAngle(entrance_angle);
+
+		BOOST_CHECK_CLOSE(kick.getEntranceAngle(),  entrance_angle, 1e-12);
+		BOOST_CHECK_SMALL(kick.getBendingAngle(),                   1e-12);
+		BOOST_CHECK_SMALL(kick.getExitAngle(),                      1e-12);
+	}
+
+	/* exit angle */
+	{
+		auto kick = tse::FieldKick(C);
+
+		const double exit_angle = 7e0;
+		kick.setExitAngle(exit_angle);
+
+		BOOST_CHECK_CLOSE(kick.getExitAngle(),     exit_angle, 1e-12);
+		BOOST_CHECK_SMALL(kick.getBendingAngle(),              1e-12);
+		BOOST_CHECK_SMALL(kick.getEntranceAngle(),             1e-12);
+	}
+
+	/* angles */
+	{
+		auto kick = tse::FieldKick(C);
+
+		const double bending_angle = 2330, entrance_angle = 11e0, exit_angle = 7e0;
+		kick.setBendingAngle(bending_angle);
+		kick.setExitAngle(exit_angle);
+		kick.setEntranceAngle(entrance_angle);
+
+		BOOST_CHECK_CLOSE(kick.getBendingAngle(),  bending_angle, 1e-12);
+		BOOST_CHECK_CLOSE(kick.getEntranceAngle(), entrance_angle, 1e-12);
+		BOOST_CHECK_CLOSE(kick.getExitAngle(),     exit_angle, 1e-12);
+	}
 
 }
 

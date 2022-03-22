@@ -1,7 +1,9 @@
 #include <thor_scsi/elements/field_kick.h>
 #include <thor_scsi/elements/element_helpers.h>
 #include <thor_scsi/elements/utils.h>
+#include <tps/tps_type.h>
 #include <tps/math_pass.h>
+
 #include <sstream>
 
 namespace ts = thor_scsi;
@@ -379,9 +381,12 @@ void tse::FieldKick::_quadFringe(thor_scsi::core::ConfigType &conf, ss_vect<T> &
 			  << " PlanarMultipole interpolator " << std::endl;
 		throw thor_scsi::NotImplemented();
 	}
-	double Gy=0e0, Gx=0e0;
-	muls->gradient(ps[x_], ps[y_], &Gx, &Gy);
-	tse::quad_fringe(conf, Gy, ps);
+#warning "Not calling gradient but doing direct look up"
+	// T Gy=0e0, Gx=0e0;
+	// should be checked how to implement
+	// muls->gradient(ps[x_], ps[y_], &Gx, &Gy);
+	const tsc::cdbl C2 = muls->getMultipole(2);
+	tse::quad_fringe(conf, C2.real(), ps);
 
 	/*
 	   if (conf.quad_fringe && (PB[Quad+HOMmax] != 0e0)){

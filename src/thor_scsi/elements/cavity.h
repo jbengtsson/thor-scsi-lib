@@ -2,6 +2,7 @@
 #define _THOR_SCSI_ELEMENTS_CAVITY_H_
 
 #include <thor_scsi/elements/element_local_coordinates.h>
+#include <tps/tps_type.h>
 
 namespace thor_scsi::elements {
 	/**
@@ -16,9 +17,9 @@ namespace thor_scsi::elements {
 		const char* type_name(void) const override final { return "Cavity"; };
 
 		virtual void localPass(thor_scsi::core::ConfigType &conf, ss_vect<double> &ps) override final
-		{ _localPass(conf, ps);}
-		// virtual void pass(thor_scsi::core::ConfigType &conf, ss_vect<tps> &ps) override final
-		// { _pass(conf, ps);}
+			{ _localPass(conf, ps);}
+		virtual void localPass(thor_scsi::core::ConfigType &conf, ss_vect<tps> &ps) override final
+			{ _localPass(conf, ps);}
 
 		inline void setVoltage(const double val){
 			this->Pvolt = val;
@@ -64,6 +65,8 @@ namespace thor_scsi::elements {
 		 */
 		template<typename T>
 		void _localPass(thor_scsi::core::ConfigType &conf, ss_vect<T> &ps);
+		template<typename T>
+		void _localPass(thor_scsi::core::ConfigType &conf, ss_vect<tps> &ps);
 
 		double
 		Pvolt = 0.0,                     ///< Vrf [V].
