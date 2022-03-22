@@ -10,6 +10,7 @@ namespace thor_scsi {
 		 * Todo:
 		 *    Check if obsoleted by class inheritance
 		 */
+#if 0
 		enum PartsKind
 		{
 			drift      = 0,
@@ -43,6 +44,7 @@ namespace thor_scsi {
 			Vertical   = 2
 		};
 
+#endif
 		enum IntMethKind
 		{
 			Meth_Linear = 0,
@@ -51,13 +53,13 @@ namespace thor_scsi {
 			Meth_Fourth = 4
 		};
 
-
+#if 0
 		const int n_harm_max   = 10,
 			Spreader_max = 10;
 
 		const double
 			max_ampl = 10.0; // [m]
-
+#endif
 
 	}
 }
