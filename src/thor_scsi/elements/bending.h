@@ -45,10 +45,10 @@ namespace thor_scsi::elements {
 			const double length = this->PL;
 			if(length == 0.0){
 				/* nothing should be required any more */
-				this->setInverseRigidity(0.0);
+				this->setCurvature(0.0);
 				return;
 			}
-			this->setInverseRigidity(phi / length);
+			this->setCurvature(phi / length);
 		}
 
 		inline int getMainMultipoleNumber(void) const override final {

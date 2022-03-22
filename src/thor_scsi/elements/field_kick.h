@@ -179,11 +179,11 @@ namespace thor_scsi::elements {
 		 * returns
 		 * @f[ \frac{1}{\rho} = irho == 0 @f]
 		 */
-		inline double getInverseRigidity(void) const {
+		inline double getCurvature(void) const {
 			return this->Pirho;
 		}
 
-		inline void setInverseRigidity(const double val) {
+		inline void setCurvature(const double val) {
 			this->Pirho = val;
 		}
 

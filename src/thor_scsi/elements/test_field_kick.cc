@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE(test03_default_values)
 	auto kick = tse::FieldKick(C);
 
 	BOOST_CHECK_CLOSE(kick.getLength(), length, 1e-12);
-	BOOST_CHECK_SMALL(kick.getInverseRigidity(), 1e-12);
+	BOOST_CHECK_SMALL(kick.getCurvature(), 1e-12);
 
 	BOOST_CHECK(kick.getNumberOfIntegrationSteps() ==  1);
 	BOOST_CHECK(kick.assumingCurvedTrajectory() ==  false);
