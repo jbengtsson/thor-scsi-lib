@@ -114,8 +114,6 @@ std::string ss_vect<T>::pstr(void)
 	return strm.str();
 }
 
-template std::string ss_vect<double>::repr(void);
-template std::string ss_vect<tps>::repr(void);
 
 template<>
 void ss_vect<double>::show(std::ostream& stream, int precision) const
@@ -131,6 +129,8 @@ void ss_vect<double>::print(const std::string &str)
   ss_vect<double>::show(std::cout);
 }
 
+// template std::string ss_vect<double>::repr(void);
+// template std::string ss_vect<tps>::repr(void);
 
 template<typename T>
 ss_vect<T>& ss_vect<T>::operator=(const ss_vect<T> &x)
