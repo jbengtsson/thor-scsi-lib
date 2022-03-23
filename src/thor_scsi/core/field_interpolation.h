@@ -47,6 +47,12 @@ namespace thor_scsi::core {
 		virtual void gradient(const tps x, const tps y, tps *Gx, tps *Gy) const = 0;
 		virtual void show(std::ostream&, int level) const = 0;
 
+		std::string prettyClassname(void) const;
+		// facilitate python representation
+		std::string repr(void) const;
+		std::string pstr(void) const;
+
+
 	};
 
 	inline

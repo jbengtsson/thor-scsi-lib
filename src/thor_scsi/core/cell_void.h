@@ -88,6 +88,10 @@ namespace thor_scsi::core {
 		//! level is a hint as to the verbosity expected by the caller.
 		virtual void show(std::ostream&, int level) const;
 
+		virtual std::string prettyClassname(void) const;
+		// facilite python representation
+		std::string repr(void) const;
+		std::string pstr(void) const;
 		//! Used by Machine::reconfigure() to avoid re-alloc (and iterator invalidation)
 		//! Assumes other has the same type.
 		//! Sub-classes must call base class assign()

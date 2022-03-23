@@ -40,19 +40,33 @@ ext_modules = [
     #    include_dirs=['.'],
     # ),
     Pybind11Extension(
+        "flame",
+        ["src/flame.cc"],
+        include_dirs=[os.path.join(prefix, "include")] + [d["gsl_include"]],
+        library_dirs=([os.path.join(prefix, "lib")]),
+        libraries=["flame", "flame_core"]
+    ),
+
+    Pybind11Extension(
         "lib",
         # sorted(["src/thor_py_enums.cc", "src/thor_py.cc"]),
-        [ "src/elements.cc", "src/thor_scsi.cc", "src/enums.cc", "src/config_type.cc",
-         # "src/elements.cc", "src/lattice.cc"
+        ["src/machine.cc",
+         "src/tps.cc",
+          "src/elements.cc",
+         "src/thor_scsi.cc",
+         "src/config_type.cc",
+         # "src/enums.cc",
+         # "src/lattice.cc"
         ],
         include_dirs=[os.path.join(prefix, "include")] + [d["gsl_include"]],
-        define_macros=[("_GLIBCXX_DEBUG", 1), ("_GLIBCXX_DEBUG_PEDANTIC", 1)],
+        # define_macros=[("_GLIBCXX_DEBUG", 1), ("_GLIBCXX_DEBUG_PEDANTIC", 1)],
         library_dirs=(
             [os.path.join(prefix, "lib")]
             #["../../engine/lib"]
         + [d["gsl_lib_dir"]]),
         libraries=["thor_scsi", "thor_scsi_core", "tpsa_lin", "flame", "flame_core"] + d["gsl_libs"],
     ),
+
 ]
 
 

@@ -36,11 +36,16 @@ template<typename T> class ss_vect {
   void print(const std::string &);
   ///< Todo: consider if adding an unused  level flag for consistency
   void show(std::ostream&, int precision=6) const;
-
+  // For python interface
+  std::string repr(void);
+  // For python interface
+  std::string pstr(void);
 
   ss_vect<double> cst(void) const;
-  T& operator[](const int i) { return ss[i]; }
-  const T& operator[](const int i) const { return ss[i]; }
+  inline T& operator[](const int i) { return ss[i]; }
+  inline const T& operator[](const int i) const { return ss[i]; }
+  inline T& at(const int i)  { return ss.at(i); }
+  inline const T& at(const int i) const  { return ss.at(i); }
 
   ss_vect<T>& operator*=(const double);
   ss_vect<T>& operator*=(const tps &);

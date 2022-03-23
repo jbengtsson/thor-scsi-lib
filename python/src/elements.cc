@@ -1,106 +1,119 @@
 #include <pybind11/stl.h>
+#include <pybind11/complex.h>
 #include <pybind11/pybind11.h>
 #include "thor_scsi.h"
 #include <thor_scsi/elements/field_kick.h>
 #include <thor_scsi/elements/drift.h>
+#include <thor_scsi/elements/marker.h>
 #include <thor_scsi/elements/bending.h>
 #include <thor_scsi/elements/quadrupole.h>
 #include <thor_scsi/elements/sextupole.h>
 #include <thor_scsi/elements/octupole.h>
 #include <thor_scsi/elements/cavity.h>
-#include <thor_scsi/elements/marker.h>
 
-using namespace thor_scsi::elements;
+
+namespace tse = thor_scsi::elements;
+namespace tsc = thor_scsi::core;
 namespace py = pybind11;
 
+
+class PyElemType: public tsc::ElemType {
+public:
+	using tsc::ElemType::ElemType;
+
+	void pass(thor_scsi::core::ConfigType & conf, ss_vect<double>& ps) override {
+		PYBIND11_OVERRIDE_PURE(void, tsc::ElemType, pass, conf, ps);
+	}
+	void pass(thor_scsi::core::ConfigType & conf, ss_vect<tps>& ps) override {
+		PYBIND11_OVERRIDE_PURE(void, tsc::ElemType, pass, conf, ps);
+	}
+	const char * type_name(void) const override {
+		PYBIND11_OVERRIDE_PURE(
+			const char *, /* Return type */
+			tsc::ElemType,      /* Parent class */
+			type_name,          /* Name of function in C++ (must match Python name) */
+			/* Argument(s) */
+			);
+	}
+};
+
+class PyClassicalMagnet: public tse::ClassicalMagnet {
+	using tse::ClassicalMagnet::ClassicalMagnet;
+	int getMainMultipoleNumber(void) const override {
+		PYBIND11_OVERRIDE_PURE(
+			int, /* Return type */
+			tse::ClassicalMagnet,      /* Parent class */
+			getMainMultipoleNumber,          /* Name of function in C++ (must match Python name) */
+			/* Argument(s) */
+			);
+	}
+};
+
+
+static const char pass_d_doc[] = "pass the element (state as doubles)";
+static const char pass_tps_doc[] = "pass the element (state as tps)";
 void py_thor_scsi_init_elements(py::module_ &m)
 {
 
-#if 0
-	py::class_<ElemType>(m, "ElemType")
-		// std::string
-		.def_readwrite("name",    &ElemType::name)
-		.def("type_name",  &ElemType::type_name)
-		// bool
-		.def_readwrite("Reverse", &ElemType::Reverse)
-		// double
-		// .def_readwrite("PL",      &ElemType::PL)
-		.def("setLength", &ElemType::setLength)
-		.def("getLength", &ElemType::getLength)
-		.def(py::init<const Config &>())
-		;
-#endif
-		// PartsKind
-		// .def_readwrite("Pkind",   &ElemType::Pkind)
-		// Virtual class: no constructor.
-		// .def(py::init<>())
-		// .def("prt_elem", &ElemType::prt_elem)
-		// .def("repr_elem", &ElemType::repr_elem)
-		// .def("repr", &ElemType::repr)
-		//.def("__repr__", &ElemType::repr)
-		// .def("print",    &ElemType::print);
-	//
-
-
-#if 0
-	py::class_<ElemFamType>(m, "ElemFamType")
-		// ElemType
-		// int
-		.def_readwrite("nKid",    &ElemFamType::nKid)
-		.def_readwrite("NoDBN",   &ElemFamType::NoDBN)
-		// std::vector<int>
-		.def_readwrite("KidList", &ElemFamType::KidList)
-		// std::vector<string>
-		.def_readwrite("DBNlist", &ElemFamType::DBNlist)
-		.def(py::init<>());
-#endif
-	py::class_<DriftType>(m, "DriftType")
+	py::class_<tsc::ElemType, PyElemType>(m, "ElemType")
+		.def("__str__",       &tsc::CellVoid::pstr)
+		.def("__repr__",      &tsc::CellVoid::repr)
+		.def_readonly("name", &tsc::CellVoid::name)
+		.def("getLength", &tse::DriftType::getLength)
+		.def("setLength", &tse::DriftType::setLength)
+		.def("propagate", py::overload_cast<tsc::ConfigType&, ss_vect<double>&>(&tse::ElemType::pass), pass_d_doc)
+		 .def("propagate", py::overload_cast<tsc::ConfigType&, ss_vect<tps>&>(&tse::ElemType::pass),    pass_tps_doc)
 		.def(py::init<const Config &>());
 
-#if 0
-	py::class_<MpoleType, ElemType>(m, "MpoleType")
-		// int
-		.def_readwrite("Pmethod",  &MpoleType::Pmethod)
-		.def_readwrite("PN",       &MpoleType::PN)
-		.def_readwrite("Porder",   &MpoleType::Porder)
-		.def_readwrite("n_design", &MpoleType::n_design)
-		// double
-		.def_readwrite("PdTpar",   &MpoleType::PdTpar)
-		.def_readwrite("PdTsys",   &MpoleType::PdTsys)
-		.def_readwrite("PdTrms",   &MpoleType::PdTrms)
-		.def_readwrite("PdTrnd",   &MpoleType::PdTrnd)
-		.def_readwrite("PTx1",     &MpoleType::PTx1)
-		.def_readwrite("PTx2",     &MpoleType::PTx2)
-		.def_readwrite("Pgap",     &MpoleType::Pgap)
-		.def_readwrite("Pirho",    &MpoleType::Pirho)
-		.def_readwrite("Pc0",      &MpoleType::Pc0)
-		.def_readwrite("Pc1",      &MpoleType::Pc1)
-		.def_readwrite("Ps1",      &MpoleType::Ps1)
-		// std::vector<double>
-		.def_readwrite("PdSsys",   &MpoleType::PdSsys)
-		.def_readwrite("PdSrms",   &MpoleType::PdSrms)
-		.def_readwrite("PdSrnd",   &MpoleType::PdSrnd)
-		// MpoleArray
-		.def_readwrite("PBpar",    &MpoleType::PBpar)
-		.def_readwrite("PBsys",    &MpoleType::PBsys)
-		.def_readwrite("PBrms",    &MpoleType::PBrms)
-		.def_readwrite("PBrnd",    &MpoleType::PBrnd)
-		.def_readwrite("PB",       &MpoleType::PB)
-		// pthicktype
-		.def_readwrite("Pthick",   &MpoleType::Pthick)
-		// std::vector< std::vector<double> >
-		.def_readwrite("M_elem",   &MpoleType::M_elem)
+	py::class_<tse::DriftType, tsc::ElemType>(m, "Drift")
+		.def(py::init<const Config &>());
+
+	py::class_<tse::MarkerType, tsc::ElemType>(m, "Marker")
+		.def(py::init<const Config &>());
+
+	py::class_<tse::CavityType, tsc::ElemType>(m, "Cavity")
+		.def("setFrequency",      &tse::CavityType::setFrequency)
+		.def("getFrequency",      &tse::CavityType::getFrequency)
+		.def("setVoltage",        &tse::CavityType::setVoltage)
+		.def("getVoltage",        &tse::CavityType::getVoltage)
+		.def("setPhase",          &tse::CavityType::setPhase)
+		.def("getPhase",          &tse::CavityType::getPhase)
+		.def("setHarmonicNumber", &tse::CavityType::setHarmonicNumber)
+		.def("getHarmonicNumber", &tse::CavityType::getHarmonicNumber)
+		.def("propagate", py::overload_cast<tsc::ConfigType&, ss_vect<double>&>(&tse::CavityType::pass), pass_d_doc)
+		.def("propagate", py::overload_cast<tsc::ConfigType&, ss_vect<tps>&>   (&tse::CavityType::pass),    pass_tps_doc)
+		.def(py::init<const Config &>());
+
+	/*
+	 * Needs to be defined as shared ptr class as it is returned as shared pointer
+	 * by classical magnet's method getMultipoles
+	*/
+	py::class_<tsc::PlanarMultipoles, std::shared_ptr<tsc::PlanarMultipoles>>(m, "TwoDimensionalMultipoles")
+		.def("getMultipole", &tsc::PlanarMultipoles::getMultipole)
+		.def("setMultipole", &tsc::PlanarMultipoles::setMultipole)
+		.def("__str__",   &tsc::PlanarMultipoles::pstr)
+		.def("__repr__",  &tsc::PlanarMultipoles::repr)
 		.def(py::init<>());
 
-#endif
-
-#if 0
-	py::class_<CavityType,     ElemType>(m, "CavityType")
+	py::class_<tse::ClassicalMagnet, PyClassicalMagnet, tsc::ElemType>(m, "ClassicalMagnet")
+		//.def("__str__",   &tse::ClassicalMagnet::pstr)
+		//.def("__repr__",  &tse::ClassicalMagnet::repr)
+		.def("getMultipoles",            &tse::ClassicalMagnet::getMultipoles)
+		.def("getMainMultipoleNumber",   &tse::ClassicalMagnet::getMainMultipoleNumber)
+		.def("getMainMultipoleStrength", &tse::ClassicalMagnet::getMainMultipoleStrength)
+		.def("setMainMultipoleStrength", py::overload_cast<const double>(&tse::ClassicalMagnet::setMainMultipoleStrength))
+		.def("setMainMultipoleStrength", py::overload_cast<const tsc::cdbl>(&tse::ClassicalMagnet::setMainMultipoleStrength))
+		.def("propagate", py::overload_cast<tsc::ConfigType&, ss_vect<double>&>(&tse::ClassicalMagnet::pass), pass_d_doc)
+		.def("propagate", py::overload_cast<tsc::ConfigType&, ss_vect<tps>&>   (&tse::ClassicalMagnet::pass),    pass_tps_doc)
 		.def(py::init<const Config &>());
 
-	py::class_<MarkerType,     ElemType>(m, "MarkerType")
+	py::class_<tse::QuadrupoleType, tse::ClassicalMagnet>(m, "Quadrupole")
 		.def(py::init<const Config &>());
-#endif
+	py::class_<tse::SextupoleType, tse::ClassicalMagnet>(m, "Sextupole")
+		.def(py::init<const Config &>());
+	py::class_<tse::OctupoleType, tse::ClassicalMagnet>(m, "Octupole")
+		.def(py::init<const Config &>());
+
 
 #if 0
 	py::class_<WigglerType,    ElemType>(m, "WigglerType")

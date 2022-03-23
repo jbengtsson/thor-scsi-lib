@@ -24,6 +24,12 @@ class tps {
   void print(const std::string &);
   ///< Todo: consider if adding an unused  level flag for consistency
   void show(std::ostream&, int precision=6) const;
+
+  // For python interface
+  std::string repr(void);
+  // For python interface
+  std::string pstr(void);
+
   // initialize TPSA library
    friend void TPSAEps(const double);
   // trace level for TPSALib and LieLib
