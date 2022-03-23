@@ -339,8 +339,8 @@ tse::FieldKick::FieldKick(const Config &config) : tse::LocalGalileanPRot(config)
 	this->intp = nullptr;
 	this->asThick(false);
 	this->setIntegrationMethod(config.get<double>("Method", 4));
-	this->setNumberOfIntegrationSteps(config.get<double>("N", 1));
-	this->setLength(config.get<double>("L", 0.0));
+	this->setNumberOfIntegrationSteps(config.get<double>("N"));
+	this->setLength(config.get<double>("L"));
 
 	this->setBendingAngle(config.get<double>("T", 0.0));
 	this->setEntranceAngle(config.get<double>("T1", 0.0));
@@ -354,7 +354,15 @@ void tse::FieldKick::show(std::ostream& strm, const int level) const
 	tse::LocalGalileanPRot::show(strm, level);
 	if(level >= 1){
 		/* at least intercept it with a blank */
-		strm << "lens type: " <<  (this->isThick() ? "thick" : "thin") << " ";
+		strm << " lens type: " <<  (this->isThick() ? "thick" : "thin") << " ";
+		if(this->isThick()){
+			strm << " n steps " << this->getNumberOfIntegrationSteps() << " " ;
+		}
+		strm << " angles: bending " << this->getBendingAngle()
+		     << " entrance " << this->getEntranceAngle()
+		     << " exit " << this->getExitAngle();
+		strm << " curvature " << this->getCurvature()
+		     << " has curvature " << std::boolalpha << this->assumingCurvedTrajectory();
 		if(!this->intp){
 			strm << " NO interpolater set!";
 		} else {

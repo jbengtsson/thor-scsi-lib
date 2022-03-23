@@ -38,7 +38,8 @@ namespace thor_scsi::elements {
 		 */
 	public:
 		inline BendingType(const Config &config) : ClassicalMagnet(config){
-			this->setMainMultipoleStrength(config);
+			const double gradient = config.get<double>("K");
+			this->getMultipoles()->setMultipole(2, gradient);
 
 			/* set pirho */
 			const double phi = degtorad(this->getBendingAngle());
