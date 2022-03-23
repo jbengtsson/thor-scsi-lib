@@ -29,8 +29,7 @@ static void process_cmd_line(int argc, char *argv[])
 		("inspect,i",    po::value<std::string>()->default_value(""), "name of element to inspect")
 		("number,n",     po::value<int>()->default_value(0), "number of element to inspect")
 		("n_turns",      po::value<int>()->default_value(0),      "propagate n turns (set to zero for none)" )
-		("transport_matrix", po::value<bool>()->default_value(false), "compute transport matrix"
-			)
+		("transport_matrix", po::value<bool>()->default_value(false), "compute transport matrix")
 		("start_element_number,s", po::value<int>()->default_value(0), "first element to use")
 		("end_element_number,e",   po::value<int>()->default_value(-1), "last element to use, (-1) for last element of lattice")
 		("dump_lattice", po::value<bool>()->default_value(false), "dump read in lattice (to stdout)" )
@@ -161,6 +160,9 @@ static void user_compute_transport_matrix(tsc::Machine& machine)
 	}
 	if(last_element == -1){
 		last_element = machine.size();
+		if(last_element >0){
+			last_element--;
+		}
 	}
 	if(verbose){
 		std::cout << "Computing transport matrix from " << first_element
