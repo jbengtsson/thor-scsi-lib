@@ -28,7 +28,11 @@ static void process_cmd_line(int argc, char *argv[])
 		("delta",        po::value<double>()->default_value(0e0), "relative impulse deviation (left hand coordinate system)")
 		("inspect,i",    po::value<std::string>()->default_value(""), "name of element to inspect")
 		("number,n",     po::value<int>()->default_value(0), "number of element to inspect")
-		("n_turns",      po::value<int>()->default_value(1),      "propagate n turns (set to zero for none)" )
+		("n_turns",      po::value<int>()->default_value(0),      "propagate n turns (set to zero for none)" )
+		("transport_matrix", po::value<bool>()->default_value(false), "compute transport matrix"
+			)
+		("start_element_number,s", po::value<int>()->default_value(0), "first element to use")
+		("end_element_number,e",   po::value<int>()->default_value(-1), "last element to use, (-1) for last element of lattice")
 		("dump_lattice", po::value<bool>()->default_value(false), "dump read in lattice (to stdout)" )
 		("verbose,v",    po::value<bool>()->default_value(false), "verbose output" )
 		;
@@ -43,19 +47,79 @@ static void process_cmd_line(int argc, char *argv[])
 }
 
 
-static void process(tsc::Machine& machine)
+
+static void compute_transport_matrix(tsc::Machine& machine, const int first_element, const int last_element)
+{
+
+	bool verbose = vm["verbose"].as<bool>();
+	ss_vect<tps> ps;
+	ps.identity();
+
+	tsc::ConfigType calc_config;
+
+	std::cout << "Starting poincare map computation with " << ps << std::endl;
+	for(int n_elem = first_element; n_elem <= last_element; ++n_elem){
+		auto cv = machine[n_elem];
+		if(verbose){
+			std::cout << "Processing element number " << n_elem
+				  << " element " << *cv << std::endl;
+		}
+		auto elem = dynamic_cast<tsc::ElemType*>(cv);
+		if(elem){
+			elem->pass(calc_config, ps);
+		} else {
+			std::cerr << "Element " << n_elem << "could not be cast to Elemtype"
+				  << " element: " << cv << std::endl;
+			return;
+		}
+
+	}
+	std::cout << "Computed poincare map " << ps << std::endl;
+
+}
+
+
+static void user_compute_transport_matrix(tsc::Machine& machine)
+
 {
 	bool verbose = vm["verbose"].as<bool>();
-
-	if(vm["dump_lattice"].as<bool>()){
-		std::cout << "Machine configuration " << std::endl;
-		for(auto cv : machine){
-			auto& elem = dynamic_cast<tsc::ElemType&>(*cv);
-			std::cout << elem << std::endl;
+	if (!vm["transport_matrix"].as<bool>()) {
+		if(verbose){
+			std::cout << "no one requested to compute a transport matrix" << std::endl;
 		}
+		return;
 	}
+	if(verbose){
+		std::cout << "computing transport matrix" << std::endl;
+	}
+	const int first_element = vm["start_element_number"].as<int>();
+	int last_element = vm["end_element_number"].as<int>();
 
+	if(verbose){
+		std::cout << "user requested " << first_element
+			  << " to "<< last_element  << std::endl;
+	}
+	if(last_element == -1){
+		last_element = machine.size();
+	}
+	if(verbose){
+		std::cout << "Computing transport matrix from " << first_element
+			  << " to " << last_element << " number " << std::endl;
+	}
+	compute_transport_matrix(machine, first_element, last_element);
+}
+
+static void track_n_turns(tsc::Machine& machine)
+{
 	const int n_turns = vm["n_turns"].as<int>();
+	bool verbose = vm["verbose"].as<bool>();
+
+	if (n_turns <= 0) {
+		if (verbose) {
+			std::cout << "No propagation calculation requested" << std::endl;
+		}
+		return;
+	}
 
 	ss_vect<double> ps;
 	ps[x_]     = vm["x_pos"].as<double>();
@@ -65,28 +129,8 @@ static void process(tsc::Machine& machine)
 	ps[ct_]    = vm["ct"].as<double>();
 	ps[delta_] = vm["delta"].as<double>();
 
-
 	tsc::ConfigType calc_config;
 
-	auto element_name = vm["inspect"].as<std::string>();
-	if(element_name != ""){
-		int number =  vm["number"].as<int>();
-		auto elem = machine.find(element_name, number);
-		std::cout << "Machine element " << element_name << " number " << number << ": ";
-		if(elem){
-			std::cout << *elem;
-		} else {
-			std::cout << "none found";
-		}
-
-		std::cout << std::endl;
-	}
-	if(n_turns <= 0){
-		if(verbose){
-			std::cout << "No propagation calculation requested" << std::endl;
-		}
-		return;
-	}
 
 	std::cout << "Start    ps " << ps << std::endl;
 	for(int turn = 0; turn < n_turns; ++turn){
@@ -101,6 +145,35 @@ static void process(tsc::Machine& machine)
 		}
 	}
 	std::cout << "End      ps " << ps << std::endl;
+}
+
+static void process(tsc::Machine& machine)
+{
+	bool verbose = vm["verbose"].as<bool>();
+
+	if(vm["dump_lattice"].as<bool>()){
+		std::cout << "Machine configuration " << std::endl;
+		for(auto cv : machine){
+			auto& elem = dynamic_cast<tsc::ElemType&>(*cv);
+			std::cout << elem << std::endl;
+		}
+	}
+
+	auto element_name = vm["inspect"].as<std::string>();
+	if(element_name != ""){
+		int number =  vm["number"].as<int>();
+		auto elem = machine.find(element_name, number);
+		std::cout << "Machine element " << element_name << " number " << number << ": ";
+		if(elem){
+			std::cout << *elem;
+		} else {
+			std::cout << "none found";
+		}
+
+		std::cout << std::endl;
+	}
+	track_n_turns(machine);
+	user_compute_transport_matrix(machine);
 
 }
 
@@ -127,6 +200,9 @@ int main(int argc, char *argv[])
 		std::cerr<<"Parse error: "<<e.what()<<"\n";
 		return 1;
 	}
+
+	auto machine = tsc::Machine(*config);
+	process(machine);
 
 	try{
 		auto machine = tsc::Machine(*config);
