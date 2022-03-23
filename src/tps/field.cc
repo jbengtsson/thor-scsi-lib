@@ -9,6 +9,21 @@
 #include <iomanip>
 #include <math.h>
 
+
+std::string tps::repr(void)
+{
+	std::stringstream strm;
+	this->show(strm, 16);
+	return strm.str();
+}
+
+std::string tps::pstr(void)
+{
+	std::stringstream strm;
+	this->show(strm, 6);
+	return strm.str();
+}
+
 #if NO_TPSA == 1
 
 void tps::show(std::ostream& stream, int precision) const
@@ -82,6 +97,25 @@ template<>
 void ss_vect<tps>::print(const std::string &str) { std::cout << str << *this; }
 
 #endif
+
+template<typename T>
+std::string ss_vect<T>::repr(void)
+{
+	std::stringstream strm;
+	this->show(strm, 16);
+	return strm.str();
+}
+
+template<typename T>
+std::string ss_vect<T>::pstr(void)
+{
+	std::stringstream strm;
+	this->show(strm, 6);
+	return strm.str();
+}
+
+template std::string ss_vect<double>::repr(void);
+template std::string ss_vect<tps>::repr(void);
 
 template<>
 void ss_vect<double>::show(std::ostream& stream, int precision) const

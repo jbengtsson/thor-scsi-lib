@@ -25,8 +25,8 @@ namespace thor_scsi::elements {
 
 		const char* type_name(void) const override { return "mpole"; };
 
-		inline const auto getFieldInterpolator(void) const {
-			return std::static_pointer_cast<thor_scsi::core::PlanarMultipoles>(this->intp);
+		inline const std::shared_ptr<thor_scsi::core::PlanarMultipoles> getFieldInterpolator(void) const {
+			return std::dynamic_pointer_cast<thor_scsi::core::PlanarMultipoles>(this->intp);
 		}
 
 

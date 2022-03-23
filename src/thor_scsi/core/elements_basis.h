@@ -9,7 +9,8 @@
 #include <string>
 #include <tps/ss_vect.h>
 #include <tps/tps_type.h>
-#include <thor_scsi/core/cells.h>
+// #include <thor_scsi/core/cells.h>
+#include <thor_scsi/core/cell_void.h>
 // #include <thor_scsi/core/elements_enums.h>
 #include <thor_scsi/core/config.h>
 
@@ -18,7 +19,7 @@
 namespace thor_scsi {
 	namespace core {
 		//< Element virtual base class.
-		class ElemType : public CellType {
+		class ElemType : public CellVoid {
 		public:
 #if 0
 			/* already defined in cell_void */
@@ -38,7 +39,7 @@ namespace thor_scsi {
 			 * "length" is option, and is 0.0 if omitted.
 			 *
 			 */
-			inline ElemType(const Config & config) : CellType(config) {
+			inline ElemType(const Config & config) : CellVoid(config) {
 				const double l = config.get<double>("L", 0.0);
 				this->setLength(l);
 			};
@@ -58,7 +59,7 @@ namespace thor_scsi {
 			 * Todo: implement taking stream or as ostream operator ....
 			 */
 			virtual inline void show(std::ostream& strm, int level) const override {
-				CellType::show(strm, level);
+				CellVoid::show(strm, level);
 				if(level >= 1){
 					strm << " L="<<this->PL<<"";
 				}

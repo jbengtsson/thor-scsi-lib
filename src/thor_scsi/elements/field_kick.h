@@ -7,6 +7,7 @@
 #include <thor_scsi/elements/utils.h>
 // move to API
 #include <thor_scsi/core/field_interpolation.h>
+#include <thor_scsi/core/exceptions.h>
 #include <cassert>
 
 /* Calculate multipole kick. The kick is given by

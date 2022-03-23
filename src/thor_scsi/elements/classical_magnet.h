@@ -32,7 +32,7 @@ namespace thor_scsi::elements {
 		 *
 		 * \endverbatim
 		 */
-		inline const auto getMultipoles(void) const {
+		inline const std::shared_ptr<thor_scsi::core::PlanarMultipoles> getMultipoles(void) const {
 			return this->getFieldInterpolator();
 		}
 

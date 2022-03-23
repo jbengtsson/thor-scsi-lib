@@ -17,7 +17,8 @@ void tse::DriftType::_pass(const tsc::ConfigType &conf, ss_vect<T> &ps)
 
 	if (conf.emittance && !conf.Cavity_on){
 		// Needs A^-1.
-		curly_dH_x = is_tps<tps>::get_curly_H(ps);
+		// curly_dH_x = is_tps<tps>::get_curly_H(ps);
+		;
 	}
 }
 

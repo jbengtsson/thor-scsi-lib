@@ -1,32 +1,16 @@
-#include <thor_scsi/core/cell_void.h>
+#include <thor_scsi/core/field_interpolation.h>
 #include <boost/type_index.hpp>
+#include <sstream>
 
 namespace tsc = thor_scsi::core;
 namespace bti = boost::typeindex;
 
-tsc::CellVoid::CellVoid(const Config& conf)
-    :name(conf.get<std::string>("name"))
-    ,index(0)
-    ,p_observe(nullptr)
-    ,p_conf(conf)
-{}
-
-tsc::CellVoid::~CellVoid()
-{
-    delete p_observe;
-}
-
-void tsc::CellVoid::show(std::ostream& strm, int level) const
-{
-    strm<<"cell "<<index<<": "<<name<<" ("<<type_name()<<")";
-}
-
-std::string tsc::CellVoid::prettyClassname(void) const
+std::string tsc::Field2DInterpolation::prettyClassname(void) const
 {
 	return bti::type_id_with_cvr<decltype(this)>().pretty_name();
 }
 
-std::string tsc::CellVoid::pstr(void) const
+std::string tsc::Field2DInterpolation::pstr(void) const
 {
 	std::stringstream strm;
 
@@ -37,7 +21,7 @@ std::string tsc::CellVoid::pstr(void) const
 	return strm.str();
 }
 
-std::string tsc::CellVoid::repr(void) const
+std::string tsc::Field2DInterpolation::repr(void) const
 {
 	std::stringstream strm;
 
