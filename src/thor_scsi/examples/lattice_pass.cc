@@ -201,9 +201,6 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
-	auto machine = tsc::Machine(*config);
-	process(machine);
-
 	try{
 		auto machine = tsc::Machine(*config);
 		process(machine);
