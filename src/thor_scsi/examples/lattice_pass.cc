@@ -57,12 +57,71 @@ static void compute_transport_matrix(tsc::Machine& machine, const int first_elem
 
 	tsc::ConfigType calc_config;
 
-	std::cout << "Starting poincare map computation with " << ps << std::endl;
+	std::cout << "Starting poincare map computation with " << std::endl
+		  << ps << std::endl;
+	if(verbose){
+		std::cout << "Processing elements:";
+	}
+
+	tsc::ElemType* elem = nullptr;
+	for(int n_elem = first_element; n_elem <= last_element; ++n_elem){
+		auto cv = machine[n_elem];
+		elem = dynamic_cast<tsc::ElemType*>(cv);
+		if(elem){
+			if(verbose){
+				/*
+				  std::cout << "Processing element number " << n_elem
+				  << " element ";
+				  cv->show(std::cout, 10);
+				  std::cout << std::endl;
+				*/
+				std::cout << " " << n_elem << ":" << elem->name;
+				elem->pass(calc_config, ps);
+
+			}
+		} else {
+			std::cerr << "Element " << n_elem << "could not be cast to Elemtype"
+				  << " element: " << cv << std::endl;
+			return;
+		}
+
+	}
+	if(verbose){
+		std::cout << std::endl;
+	}
+	if(elem && verbose){
+		std::cout << "Last element ";
+		elem->show(std::cout, 10);
+		std::cout << std::endl;
+
+	}
+	std::cout << "Computed poincare map " << std::endl
+		  << ps << std::endl;
+
+}
+
+static void compute_transport_matrix_dbl(tsc::Machine& machine, const int first_element, const int last_element)
+{
+
+	bool verbose = vm["verbose"].as<bool>();
+	ss_vect<double> ps;
+	ps.zero();
+	ps[x_]  = 1e-3;
+	ps[px_] = 2e-3;
+	ps[y_]  = 3e-3;
+	ps[py_] = 4e-3;
+
+	tsc::ConfigType calc_config;
+
+	std::cout << "Starting poincare map computation with " << std::endl
+		  << ps << std::endl;
 	for(int n_elem = first_element; n_elem <= last_element; ++n_elem){
 		auto cv = machine[n_elem];
 		if(verbose){
 			std::cout << "Processing element number " << n_elem
-				  << " element " << *cv << std::endl;
+				  << " element ";
+			cv->show(std::cout, 10);
+			std::cout << std::endl;
 		}
 		auto elem = dynamic_cast<tsc::ElemType*>(cv);
 		if(elem){
@@ -74,7 +133,8 @@ static void compute_transport_matrix(tsc::Machine& machine, const int first_elem
 		}
 
 	}
-	std::cout << "Computed poincare map " << ps << std::endl;
+	std::cout << "Computed poincare map " << std::endl
+		  << ps << std::endl;
 
 }
 

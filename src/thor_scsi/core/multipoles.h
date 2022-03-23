@@ -63,9 +63,11 @@ namespace thor_scsi::core {
  	 *
 	 * .. Todo::
 	 *       minimise number of coefficients that require that to be evaluated
+	 *       rename to  TwoDimensionalMultipoles
 	 * \endverbatim
 	 */
-	class PlanarMultipoles : public  Field2DInterpolation{
+
+	class PlanarMultipoles : public Field2DInterpolation {
 	public:
 		/**
 		   Just allocates an set of zero multipoles
@@ -123,6 +125,8 @@ namespace thor_scsi::core {
 		 *      complex field By + I * Bx
 		 * \endverbatim
 		 */
+
+#if 0
 		inline cdbl field(const cdbl z) const {
 			int n = this->coeffs.size() -1;
 			cdbl_intern t_field = this->coeffs[n];
@@ -134,6 +138,7 @@ namespace thor_scsi::core {
 			cdbl result(double(t_field.real()), double(t_field.imag()));
 			return result;
 		}
+
 		virtual inline void field(const double x, const double y, double *Bx, double * By) const override final{
 			const cdbl z(x, y);
 			const cdbl r = field(z);
@@ -141,9 +146,43 @@ namespace thor_scsi::core {
 			*Bx = r.imag();
 		}
 
+#endif
+		inline cdbl field(const cdbl z) const {
+			double Bx=NAN, By=NAN;
+			this->field(z.real(), z.imag(), &Bx, &By);
+			cdbl tmp(By, Bx);
+			return tmp;
+		}
+
+		template<typename T>
+		inline void _field(const T x, const T y, T *Bx, T * By)  const {
+			int n = this->coeffs.size() -1;
+			T ByoBrho = this->coeffs[n].real(),  BxoBrho = this->coeffs[n].imag();
+			for(int i=n - 2; i >= 0; --i){
+				cdbl_intern tmp = this->coeffs[i];
+				T ByoBrho1 = x * ByoBrho - y * BxoBrho + tmp.real();
+				BxoBrho    = y * ByoBrho + x * BxoBrho + tmp.imag();
+				ByoBrho = ByoBrho1;
+			}
+			*Bx = (BxoBrho);
+			*By = ByoBrho;
+			/*
+			  MB[HOMmax-Order]
+				ByoBrho = MB[Order+HOMmax]; BxoBrho = MB[HOMmax-Order];
+    for (j = Order-1; j >= 1; j--) {
+      ByoBrho1 = x0[x_]*ByoBrho - x0[y_]*BxoBrho + MB[j+HOMmax];
+      BxoBrho  = x0[y_]*ByoBrho + x0[x_]*BxoBrho + MB[HOMmax-j];
+      ByoBrho  = ByoBrho1;
+    }
+			*/
+
+		}
+		virtual inline void field(const double x, const double y, double *Bx, double * By)  const override final {
+			_field(x, y, Bx, By);
+		}
 		virtual inline void field(const tps x, const tps y, tps *Bx, tps *By) const override final{
 			// "Need to understand how to interpolate field with tps"
-			throw thor_scsi::NotImplemented();
+			_field(x, y, Bx, By);
 		}
 		virtual inline void gradient(const tps x, const tps y, tps *Gx, tps *Gy) const override final{
 			// "Need to understand how to interpolate gradient with tps"
