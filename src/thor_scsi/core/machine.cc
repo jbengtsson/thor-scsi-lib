@@ -49,6 +49,7 @@ tsc::Machine::Machine(const Config& c)
 #endif /* NO state */
 
     typedef Config::vector_t elements_t;
+    std::cerr << "Processing config " << c << std::endl;
     elements_t Es(c.get<elements_t>("elements"));
 
     p_elements_t result;
@@ -65,8 +66,10 @@ tsc::Machine::Machine(const Config& c)
         const std::string& etype(EC.get<std::string>("type"));
 
         p_element_infos_t::iterator eit = p_element_infos.find(etype);
-        if(eit==p_element_infos.end())
+        if(eit==p_element_infos.end()){
+	    std::cerr << "Could not find an element for type " << etype << std::endl;
             throw key_error(etype);
+	}
 
         element_builder_t* builder = eit->second.builder;
 

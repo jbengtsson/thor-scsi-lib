@@ -39,9 +39,13 @@ static void process_cmd_line(int argc, char *argv[])
 	po::store(po::parse_command_line(argc, argv, desc), vm);
 	po::notify(vm);
 
+	const bool verbose = vm["verbose"].as<bool>();
 	if (vm.count("help")) {
 		std::cout << desc << "\n";
 		exit(1);
+	}
+	if(verbose){
+		std::cout << "Finished processing "  << std::endl;
 	}
 }
 

@@ -9,7 +9,9 @@ from thor_scsi.flame import GLPSParser
 import thor_scsi
 from thor_scsi.lib import Accelerator
 p = GLPSParser()
-C = p.parse_file(t_file, False)
-print(Accelerator)
-
-m = Accelerator(C, elements=None)
+with open(t_file) as fp:
+    text = fp.read()
+C = p.parse_byte(text, t_dir)
+m = Accelerator(C)
+print(m)
+elem =  m.find("uq1", 0)
