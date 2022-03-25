@@ -3,10 +3,14 @@
 
 from thor_scsi.flame import GLPSParser
 import thor_scsi
+<<<<<<< HEAD
 from thor_scsi.lib import (Accelerator, ConfigType, ss_vect_tps, ss_vect_double,
                            ss_vect_tps_to_lists)
 from thor_scsi.utils import ss_vect_to_masked_matrix
 import numpy as np
+=======
+from thor_scsi.lib import Accelerator, ConfigType, ss_vect_tps_type, ss_vect_double_type
+>>>>>>> 4d3d143ae28cc55ef0e6c314294798194cf1ae22
 import os.path
 
 #  Find the file
@@ -25,10 +29,13 @@ C = GLPSParser().parse_byte(text, t_dir)
 # The machine creates it then based on the configuration
 m = Accelerator(C)
 
+<<<<<<< HEAD
 print(f"An accelerator with {len(m):d} elements")
 i = 42
 elem = m[i]
 print(f"Element at index {i:03d} = {elem}")
+=======
+>>>>>>> 4d3d143ae28cc55ef0e6c314294798194cf1ae22
 # In this manner one would access an element per name.
 # if of the same name, use the number to find which one it is
 elem =  m.find("b2", 0)
@@ -39,7 +46,10 @@ print(repr(elem))
 # it provides the following methods
 print(dir(elem))
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 4d3d143ae28cc55ef0e6c314294798194cf1ae22
 # Access to the multipoles
 muls = elem.getMultipoles()
 gradient = muls.getMultipole(2)
@@ -61,12 +71,21 @@ Magnetic field:
     main multipole
          number       {elem.getMainMultipoleNumber():2d}
          strength     {elem.getMainMultipoleStrength(): 8.4f}
+<<<<<<< HEAD
 
     multipoles
          number       {len(coeffs)}
          gradient     {gradient}
          higher order {coeffs[2:]}
 
+=======
+
+    multipoles
+         number       {len(coeffs)}
+         gradient     {gradient}
+         higher order {coeffs[2:]}
+
+>>>>>>> 4d3d143ae28cc55ef0e6c314294798194cf1ae22
 
 Angles:                                        even internally managed
                                                in degrees ?
