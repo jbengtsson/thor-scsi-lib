@@ -33,7 +33,14 @@ namespace thor_scsi::core {
 			m_dT(std::move(O.m_dT))
 			{}
 
-		~Galilean2DTransform(){};
+	       ~Galilean2DTransform(){};
+	       Galilean2DTransform& operator= (const Galilean2DTransform& O){
+		       this->m_dS[0] = O.m_dS[0];
+		       this->m_dS[1] = O.m_dS[1];
+		       this->m_dT[0] = O.m_dT[0];
+		       this->m_dT[1] = O.m_dT[1];
+		       return *this;
+	       }
 
 		inline void setdS(const double dx, const double dy)  {
 			m_dS[0] = dx;
@@ -112,6 +119,13 @@ namespace thor_scsi::core {
 			this->c0 = O.c0;
 			this->c1 = O.c1;
 			this->s1 = O.s1;
+		}
+
+		inline PRotTransform& operator= (const PRotTransform& O){
+			this->c0 = O.c0;
+			this->c1 = O.c1;
+			this->s1 = O.s1;
+			return *this;
 		}
 
 		inline void setC0(const double val){this->c0 = val;}

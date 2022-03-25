@@ -52,26 +52,27 @@ class PyClassicalMagnet: public tse::ClassicalMagnet {
 
 static const char pass_d_doc[] = "pass the element (state as doubles)";
 static const char pass_tps_doc[] = "pass the element (state as tps)";
-void py_thor_scsi_init_elements(py::module_ &m)
+void py_thor_scsi_init_elements(py::module &m)
 {
 
-	py::class_<tsc::ElemType, PyElemType>(m, "ElemType")
-		.def("__str__",       &tsc::CellVoid::pstr)
+	py::class_<tsc::ElemType,  PyElemType, std::shared_ptr<tsc::ElemType>> elem_type(m, "ElemType");
+	elem_type.def("__str__",       &tsc::CellVoid::pstr)
 		.def("__repr__",      &tsc::CellVoid::repr)
 		.def_readonly("name", &tsc::CellVoid::name)
 		.def("getLength", &tse::DriftType::getLength)
 		.def("setLength", &tse::DriftType::setLength)
 		.def("propagate", py::overload_cast<tsc::ConfigType&, ss_vect<double>&>(&tse::ElemType::pass), pass_d_doc)
-		 .def("propagate", py::overload_cast<tsc::ConfigType&, ss_vect<tps>&>(&tse::ElemType::pass),    pass_tps_doc)
+		.def("propagate", py::overload_cast<tsc::ConfigType&, ss_vect<tps>&>(&tse::ElemType::pass),    pass_tps_doc)
 		.def(py::init<const Config &>());
 
-	py::class_<tse::DriftType, tsc::ElemType>(m, "Drift")
+	py::class_<tse::DriftType, std::shared_ptr<tse::DriftType>>(m, "Drift", elem_type)
 		.def(py::init<const Config &>());
 
-	py::class_<tse::MarkerType, tsc::ElemType>(m, "Marker")
+	py::class_<tse::MarkerType, std::shared_ptr<tse::MarkerType>>(m, "Marker", elem_type)
 		.def(py::init<const Config &>());
 
-	py::class_<tse::CavityType, tsc::ElemType>(m, "Cavity")
+	//, std::shared_ptr<tse::>
+	py::class_<tse::CavityType, std::shared_ptr<tse::CavityType>>(m, "Cavity", elem_type)
 		.def("setFrequency",      &tse::CavityType::setFrequency)
 		.def("getFrequency",      &tse::CavityType::getFrequency)
 		.def("setVoltage",        &tse::CavityType::setVoltage)
@@ -95,9 +96,11 @@ void py_thor_scsi_init_elements(py::module_ &m)
 		.def("__repr__",  &tsc::PlanarMultipoles::repr)
 		.def(py::init<>());
 
-	py::class_<tse::ClassicalMagnet, PyClassicalMagnet, tsc::ElemType>(m, "ClassicalMagnet")
+	py::class_<tse::ClassicalMagnet, PyClassicalMagnet, std::shared_ptr<tse::ClassicalMagnet>> cm(m, "ClassicalMagnet", elem_type);
+
 		//.def("__str__",   &tse::ClassicalMagnet::pstr)
 		//.def("__repr__",  &tse::ClassicalMagnet::repr)
+	cm
 		.def("getMultipoles",            &tse::ClassicalMagnet::getMultipoles)
 		.def("getMainMultipoleNumber",   &tse::ClassicalMagnet::getMainMultipoleNumber)
 		.def("getMainMultipoleStrength", &tse::ClassicalMagnet::getMainMultipoleStrength)
@@ -107,11 +110,11 @@ void py_thor_scsi_init_elements(py::module_ &m)
 		.def("propagate", py::overload_cast<tsc::ConfigType&, ss_vect<tps>&>   (&tse::ClassicalMagnet::pass),    pass_tps_doc)
 		.def(py::init<const Config &>());
 
-	py::class_<tse::QuadrupoleType, tse::ClassicalMagnet>(m, "Quadrupole")
+	py::class_<tse::QuadrupoleType, std::shared_ptr<tse::QuadrupoleType>>(m, "Quadrupole", cm)
 		.def(py::init<const Config &>());
-	py::class_<tse::SextupoleType, tse::ClassicalMagnet>(m, "Sextupole")
+	py::class_<tse::SextupoleType, std::shared_ptr<tse::SextupoleType>> (m, "Sextupole", cm)
 		.def(py::init<const Config &>());
-	py::class_<tse::OctupoleType, tse::ClassicalMagnet>(m, "Octupole")
+	py::class_<tse::OctupoleType,  std::shared_ptr<tse::OctupoleType>>(m, "Octupole", cm)
 		.def(py::init<const Config &>());
 
 

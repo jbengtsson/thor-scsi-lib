@@ -11,7 +11,7 @@
 
 namespace py = pybind11;
 
-void py_thor_scsi_init_tps(py::module_ &m)
+void py_thor_scsi_init_tps(py::module &m)
 {
 
 	py::enum_<spatial_ind>(m, "spatial_ind")
@@ -39,14 +39,22 @@ void py_thor_scsi_init_tps(py::module_ &m)
 		.def("__repr__", &tps::repr);
 
 
-	declare_field<double>(m, "_double");
-	declare_field<tps>(m, "_tps");
+	// declare_field<double>(m, "_double");
+	// declare_field<tps>(m, "_tps");
 
-	//py::class_<ss_vect<tps>>(m, "ss_vect_tps")
-//		.def(py::init<>());
+	py::class_<ss_vect<tps>>(m, "ss_vect_tps_type")
+		.def("set_identity", &ss_vect<tps>::set_identity)
+		.def("set_zero", &ss_vect<tps>::set_zero)
+		.def("__repr__",  &ss_vect<tps>::repr)
+		.def("__str__",  &ss_vect<tps>::pstr)
+		.def(py::init<>());
 
-	//py::class_<ss_vect<double>>(m, "ss_vect_double")
-	//	.def(py::init<>());
+	py::class_<ss_vect<double>>(m, "ss_vect_double_type")
+		//.def("set_identity", &ss_vect<double>::set_identity)
+		.def("set_zero", &ss_vect<double>::set_zero)
+		.def("__repr__",  &ss_vect<double>::repr)
+		.def("__str__",  &ss_vect<double>::pstr)
+		.def(py::init<>());
 
 
 }

@@ -37,3 +37,4 @@ add_subdirectory(TPSA)
 # C++ implementation part
 add_subdirectory(src)
 # add_subdirectory(thor)
+add_subdirectory(python)

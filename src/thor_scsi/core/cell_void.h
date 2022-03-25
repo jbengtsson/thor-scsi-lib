@@ -58,6 +58,7 @@ namespace thor_scsi::core {
 		 * @throws std::bad_variant_access If a parameter exists, but has the wrong value type
 		 */
 		CellVoid(const Config& conf);
+		CellVoid(CellVoid&& o);
 		virtual ~CellVoid();
 
 		/** Sub-classes must provide an approprate short description string.
@@ -72,7 +73,7 @@ namespace thor_scsi::core {
 		//! The Config used to construct this element.
 		inline const Config& conf() const {return p_conf;}
 
-		const std::string name; //!< Name of this element (unique in its Machine)
+		std::string name; //!< Name of this element (unique in its Machine)
 		size_t index; //!< Index of this element (unique in its Machine)
 
 
@@ -99,7 +100,7 @@ namespace thor_scsi::core {
 		// virtual void assign(const ElementVoid* other ) =0;
 
 	private:
-		Observer *p_observe;
+		Observer *p_observe = nullptr;
 		Config p_conf;
 	        friend class Machine;
 	};

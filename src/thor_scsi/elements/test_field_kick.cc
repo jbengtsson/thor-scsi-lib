@@ -1,4 +1,4 @@
-#define BOOST_TEST_MODULE quadrupole
+#define BOOST_TEST_MODULE field_kick
 #define BOOST_TEST_DYN_LINK
 #include <boost/test/unit_test.hpp>
 #include <boost/test/tools/output_test_stream.hpp>
@@ -14,6 +14,8 @@ BOOST_AUTO_TEST_CASE(test01_kick_print)
 	Config C;
 	C.set<std::string>("name", "test");
 	C.set<double>("Method", 4.0);
+	C.set<double>("N", 1);
+	C.set<double>("L", 1);
 	tse::FieldKick kick(C);
 
 	{
@@ -32,6 +34,7 @@ BOOST_AUTO_TEST_CASE(test02_kick_integral_zero_length)
 {
 	Config C;
 	C.set<std::string>("name", "test");
+	C.set<double>("N", 1);
 
 	{
 		C.set<double>("L", 0.0);
@@ -56,6 +59,7 @@ BOOST_AUTO_TEST_CASE(test03_default_values)
 	const double length = 0.5;
 	C.set<std::string>("name", "test");
 	C.set<double>("L", length);
+	C.set<double>("N", 1);
 
 	auto kick = tse::FieldKick(C);
 
@@ -77,6 +81,7 @@ BOOST_AUTO_TEST_CASE(test04_angle_accessors)
 	const double length = 0.5;
 	C.set<std::string>("name", "test");
 	C.set<double>("L", length);
+	C.set<double>("N", 1);
 
 	/* instantiation sets parameters to zero? */
 	{
@@ -145,6 +150,8 @@ BOOST_AUTO_TEST_CASE(test20_4Order_constants)
 	Config C;
 	const double length = 1.0;
 	C.set<std::string>("name", "test");
+	C.set<double>("N", 1);
+	C.set<double>("L", length);
 
 	auto kick = tse::FieldKick(C);
 	auto delegator = dynamic_cast<const tse::FieldKick::FieldKickForthOrder &>(kick.getFieldKickDelegator());
@@ -173,6 +180,7 @@ BOOST_AUTO_TEST_CASE(test20_4Order_lengthes)
 	const double length = 1.0;
 	C.set<std::string>("name", "test");
 	C.set<double>("L", length);
+	C.set<double>("N", 1);
 
 	auto kick = tse::FieldKick(C);
 	auto delegator = dynamic_cast<const tse::FieldKick::FieldKickForthOrder &>(kick.getFieldKickDelegator());

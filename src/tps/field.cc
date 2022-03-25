@@ -233,12 +233,18 @@ ss_vect<T> ss_vect<T>::zero(void)
 
 template ss_vect<tps> ss_vect<tps>::zero(void);
 template ss_vect<double> ss_vect<double>::zero(void);
+//template void ss_vect<tps>::set_zero(void);
+//template void ss_vect<double>::set_zero(void);
 
 template<>
 ss_vect<double> ss_vect<double>::identity(void)
 {
-  printf("\nidentity: not implemented for ss_vect<double>\n");
-  exit(1);
+  throw std::logic_error("identity: not implemented for ss_vect<double>");
+}
+template<>
+void ss_vect<double>::set_identity(void)
+{
+  throw std::logic_error("identity: not implemented for ss_vect<double>");
 }
 
 template<>
@@ -248,8 +254,26 @@ ss_vect<tps> ss_vect<tps>::identity(void)
    ss[i] = tps(0e0, i+1);
   return *this;
 }
+template <>
+void ss_vect<tps>::set_identity(void)
+  {
+    for (int i = 0; i < ps_dim; i++){
+      this->ss[i] = tps(0e0, i+1);
+    }
+  }
 
+/*
+template<>
+void ss_vect<tps>::set_identity(void)
+{
+  for (int i = 0; i < ps_dim; i++){
+    this->ss[i] = tps(0e0, i+1);
+  }
+}
 
+template void ss_vect<tps>::set_identity(void);
+template void ss_vect<double>::set_identity(void);
+*/
 template<typename CharT, class Traits>
 std::basic_istream<CharT, Traits>&
 operator>>(std::basic_istream<CharT, Traits> &is, ss_vect<tps> &a)

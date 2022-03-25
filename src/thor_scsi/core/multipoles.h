@@ -231,7 +231,8 @@ namespace thor_scsi::core {
 		inline cdbl getMultipole(const unsigned int n) const {
 			this->checkMultipoleIndex(n);
 			unsigned  use_n = n - 1;
-			assert(use_n > 0);
+			// array indices matche the american notation
+			// assert(use_n >= 0);
 			assert(use_n <this->m_max_multipole);
 			cdbl_intern c = this->coeffs[use_n];
 			cdbl res(double(c.real()), double(c.imag()));
@@ -244,7 +245,7 @@ namespace thor_scsi::core {
 		inline void setMultipole(const unsigned int n, const cdbl c){
 			this->checkMultipoleIndex(n);
 			unsigned use_n = n - 1;
-			assert(use_n > 0);
+			// assert(use_n >= 0);
 			assert(use_n <this->m_max_multipole);
 			this->coeffs[use_n] = cdbl_intern(c.real(), c.imag());
 		}

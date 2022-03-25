@@ -11,10 +11,16 @@
 // #include <tps/ss_vect.h>
 // #include <tps/tps_type.h>
 #include <thor_scsi/core/cell_void.h>
+#include <thor_scsi/core/elements_basis.h>
+#include <thor_scsi/core/config.h>
+#include <tps/tps_type.h>
+#include <tps/ss_vect.h>
 #include <ostream>
 
 namespace thor_scsi::core {
 
+	typedef ss_vect<tps> ss_vect_tps;
+	typedef ss_vect<double> ss_vect_dbl;
 	/**
 	 * @brief The core simulate Machine engine
 	 *
@@ -47,7 +53,6 @@ namespace thor_scsi::core {
 		}
 #endif
 
-#if 0  /* NO state */
 		/** @brief Pass the given bunch State through this Machine.
 		 *
 		 * @param S The initial state, will be updated with the final state
@@ -56,10 +61,18 @@ namespace thor_scsi::core {
 		 * @throws std::exception sub-classes for various errors.
 		 *         If an exception is thrown then the state of S is undefined.
 		 */
-		void propagate(StateBase* S,
-			       size_t start=0,
-			       int max=INT_MAX) const;
 
+
+		template <typename T>
+		void _propagate(thor_scsi::core::ConfigType& conf, ss_vect<T> &ps, size_t start, int max);
+		void propagate(thor_scsi::core::ConfigType&, ss_vect_tps &ps,
+			       size_t start=0,
+			       int max=INT_MAX) ;
+		void propagate(thor_scsi::core::ConfigType&, ss_vect_dbl &ps,
+			       size_t start=0,
+			       int max=INT_MAX) ;
+
+#if 0   /* NO state */
 		/** @brief Allocate (with "operator new") an appropriate State object
 		 *
 		 * @param c Configuration describing the initial state
@@ -111,7 +124,7 @@ namespace thor_scsi::core {
 		void set_trace(std::ostream* v) {p_trace=v;}
 
 	private:
-		typedef std::vector<CellVoid*> p_elements_t;
+		typedef std::vector<std::shared_ptr<CellVoid>> p_elements_t;
 
 		struct LookupKey {
 			std::string name;
@@ -125,21 +138,21 @@ namespace thor_scsi::core {
 			}
 		};
 
-		typedef std::map<LookupKey, CellVoid*> p_lookup_t;
+		typedef std::map<LookupKey, std::shared_ptr<CellVoid>> p_lookup_t;
 	public:
 
 		//! @return Number of beamline elements
 		inline size_t size() const { return p_elements.size(); }
 
 		//! Access a beamline element
-		inline CellVoid* operator[](size_t i) { return p_elements[i]; }
+		inline std::shared_ptr<CellVoid> operator[](size_t i) { return p_elements[i]; }
 		//! Access a beamline element
-		inline const CellVoid* operator[](size_t i) const { return p_elements[i]; }
+		inline const std::shared_ptr<CellVoid> operator[](size_t i) const { return p_elements[i]; }
 
 		//! Access a beamline element
-		inline CellVoid* at(size_t i) { return p_elements.at(i); }
+		inline std::shared_ptr<CellVoid> at(size_t i) { return p_elements.at(i); }
 		//! Access a beamline element
-		inline const CellVoid* at(size_t i) const { return p_elements.at(i); }
+		inline const std::shared_ptr<CellVoid> at(size_t i) const { return p_elements.at(i); }
 
 		//! Beamline element iterator
 		typedef p_elements_t::iterator iterator;
@@ -159,15 +172,20 @@ namespace thor_scsi::core {
 		//! Find the nth element with the given name
 		//! @return NULL on failure
 		//! A convienence wrapper around equal_range().
-		CellVoid* find(const std::string& name, size_t nth=0) {
+		std::shared_ptr<CellVoid> find(const std::string& name, size_t nth=0) {
+			// a test if the mimic below creates the
+			return p_elements.at(0);
+
 			p_lookup_t::const_iterator low (p_lookup.lower_bound(LookupKey(name, 0))),
 				high(p_lookup.upper_bound(LookupKey(name, (size_t)-1)));
 			size_t i=0;
 			for(;low!=high;++low,++i) {
-				if(i==nth)
+				if(i==nth){
+					return nullptr;
 					return low->second;
+				}
 			}
-			return NULL;
+			return nullptr;
 		}
 
 		//! iterator for use with equal_range() and equal_range_type()
@@ -216,22 +234,25 @@ namespace thor_scsi::core {
 
 		struct element_builder_t {
 			virtual ~element_builder_t() {}
-			virtual CellVoid* build(const Config& c) =0;
-			virtual void rebuild(CellVoid *o, const Config& c, const size_t idx) =0;
+			virtual std::shared_ptr<CellVoid> build(const Config& c) =0;
+			virtual void rebuild(std::shared_ptr<CellVoid> o, const Config& c, const size_t idx) =0;
 		};
 		template<typename Element>
 		struct element_builder_impl : public element_builder_t {
 			virtual ~element_builder_impl() {}
-			CellVoid* build(const Config& c)
-				{ return new Element(c); }
+			std::shared_ptr<CellVoid> build(const Config& c)
+				{
+					auto tmp = std::make_shared<Element>(Element(c));
+					return std::static_pointer_cast<CellVoid>(tmp);
+				}
 			/**
 			 * WARNING:
 			 *       call to assign missing! (implementation of move ctor).
 			 */
-			void rebuild(CellVoid *o, const Config& c, const size_t idx) override final
+			void rebuild(std::shared_ptr<CellVoid> o, const Config& c, const size_t idx) override final
 			{
-				std::unique_ptr<CellVoid> N(build(c));
-				Element *m = dynamic_cast<Element*>(o);
+				// std::shared_ptr<CellVoid> N(build(c));
+				std::shared_ptr<Element> m = std::dynamic_pointer_cast<Element>(o);
 				if(!m)
 					throw std::runtime_error("reconfigure() can't change element type");
 

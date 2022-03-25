@@ -21,11 +21,6 @@ namespace thor_scsi {
 		//< Element virtual base class.
 		class ElemType : public CellVoid {
 		public:
-#if 0
-			/* already defined in cell_void */
-			std::string
-			Name;                      ///< Element name.
-#endif
 			bool
 			Reverse = true;                   ///< reverse elements: rearange the elements in reveresed order
 #if 0
@@ -43,6 +38,10 @@ namespace thor_scsi {
 				const double l = config.get<double>("L", 0.0);
 				this->setLength(l);
 			};
+
+			ElemType(ElemType&& o) : CellVoid(std::move(o)), PL(std::move(o.PL)) {
+				std::cerr << "ElemType move ctor " << this->name <<  std::endl;
+			}
 
 			virtual inline double getLength(void) const final { return this->PL;};
 			/**

@@ -15,6 +15,8 @@ BOOST_AUTO_TEST_CASE(test02_mpole_print)
 	Config C;
 	C.set<std::string>("name", "test");
 	C.set<double>("Method", 4.0);
+	C.set<double>("N", 1);
+	C.set<double>("L", .2);
 	tse::MpoleType mpole(C);
 
 	{
@@ -35,6 +37,8 @@ BOOST_AUTO_TEST_CASE(test03_mpole_wrong_method)
 	Config C;
 	C.set<std::string>("name", "test");
 	C.set<double>("Method", 5.0);
+	C.set<double>("N", 1);
+	C.set<double>("L", .2);
 	//tse::MpoleType mpole(C);
 
 	BOOST_CHECK_THROW(((tse::MpoleType)(C)), thor_scsi::NotImplemented);
@@ -46,6 +50,8 @@ BOOST_AUTO_TEST_CASE(test10_mpole_kick_zero)
 	tsc::ConfigType calc_config;
 	Config C;
 	C.set<std::string>("name", "test");
+	C.set<double>("N", 1);
+	C.set<double>("L", 0e0);
 
 	tse::MpoleType mpole(C);
 
@@ -72,6 +78,7 @@ BOOST_AUTO_TEST_CASE(test11_mpole_kick_longitudinal_one)
 	tsc::ConfigType calc_config;
 	Config C;
 	C.set<std::string>("name", "test");
+	C.set<double>("N", 1);
 	C.set<double>("L", 1.0);
 	tse::MpoleType mpole(C);
 
@@ -124,6 +131,7 @@ BOOST_AUTO_TEST_CASE(test12_orbit_trim_horizontal)
 	tsc::ConfigType calc_config;
 	Config C;
 	C.set<std::string>("name", "test");
+	C.set<double>("N", 1);
 	C.set<double>("L", 0.0);
 	tse::MpoleType mpole(C);
 
@@ -166,6 +174,7 @@ BOOST_AUTO_TEST_CASE(test13_orbit_trim_vertical)
 	tsc::ConfigType calc_config;
 	Config C;
 	C.set<std::string>("name", "test");
+	C.set<double>("N", 1);
 	C.set<double>("L", 0.0);
 	tse::MpoleType mpole(C);
 
@@ -204,6 +213,7 @@ BOOST_AUTO_TEST_CASE(test14_higher_orders_normal_multipole)
 	tsc::ConfigType calc_config;
 	Config C;
 	C.set<std::string>("name", "test");
+	C.set<double>("N", 1);
 	C.set<double>("L", 0.0);
 
 	for (int n=2; n<=4; ++n){
@@ -275,6 +285,7 @@ BOOST_AUTO_TEST_CASE(test15_higher_orders_skew_multipole)
 	tsc::ConfigType calc_config;
 	Config C;
 	C.set<std::string>("name", "test");
+	C.set<double>("N", 1);
 	C.set<double>("L", 0.0);
 
 	for (int n=2; n<=4; ++n){
@@ -370,6 +381,7 @@ BOOST_AUTO_TEST_CASE(test21_mpole_kick_dipole_component_thick_kick_polar_ideal)
 	const double x_expected = 1e0 / 2e0 * phi * length;
 
 	C.set<double>("L", length);
+	C.set<double>("N", 1);
 	tse::MpoleType mpole(C);
 
         mpole.asThick(true);
@@ -414,6 +426,7 @@ BOOST_AUTO_TEST_CASE(test21_mpole_kick_dipole_component_thick_kick_off_momentum)
 	tsc::ConfigType calc_config;
 	Config C;
 	C.set<std::string>("name", "test");
+	C.set<double>("N", 1);
 
 	const double phi = 1e-3; // 1 mrad
 	// const double phi = 1/180e0 * M_PI; // 1 deg
@@ -450,8 +463,8 @@ BOOST_AUTO_TEST_CASE(test21_mpole_kick_dipole_component_thick_kick_off_momentum)
 		mpole.pass(calc_config, ps);
 
 		/* Length 0 -> harmonics turn integral ? */
-		BOOST_CHECK_CLOSE(ps[x_],     x_expected,  1e-7);
-		BOOST_CHECK_CLOSE(ps[px_],    px_expected, 1e-7);
+		BOOST_CHECK_CLOSE(ps[x_],     x_expected,  1e-6);
+		BOOST_CHECK_CLOSE(ps[px_],    px_expected, 1e-6);
 		BOOST_CHECK_CLOSE(ps[delta_], delta,       1e-14);
 		BOOST_CHECK_SMALL(ps[ct_],                 1e-7);
 

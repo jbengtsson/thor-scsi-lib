@@ -27,6 +27,8 @@ BOOST_AUTO_TEST_CASE(test10_sextupole_ostream)
 	Config C;
 	C.set<std::string>("name", "test");
 	C.set<double>("K", 0.0);
+	C.set<double>("L", 0e0);
+	C.set<double>("N", 1);
 
 	auto sext = tse::SextupoleType(C);
 
@@ -43,10 +45,12 @@ BOOST_AUTO_TEST_CASE(test10_sextupole_K)
 	C.set<std::string>("name", "test");
 	const double chroma = 27e0;
 	C.set<double>("K", chroma);
+	C.set<double>("L", 0e0);
+	C.set<double>("N", 1);
 	const tsc::cdbl ref(chroma, 0e0);
 
 	auto sext = tse::SextupoleType(C);
-	BOOST_CHECK(sext.getMainMultipoleNumber() == 2);
+	BOOST_CHECK(sext.getMainMultipoleNumber() == 3);
 	// sextrupoles are always thin elements
 	BOOST_CHECK(sext.isThick() == false);
 	check_only_sext_set(sext.getMultipoles(), ref);
@@ -66,6 +70,8 @@ BOOST_AUTO_TEST_CASE(test10_sextupole_setMul)
 	C.set<std::string>("name", "test");
 	const double chroma = 36.96e0;
 	C.set<double>("K", chroma);
+	C.set<double>("L", 0e0);
+	C.set<double>("N", 1);
 
 	/* check that setting 0 gets set */
 	{
@@ -148,6 +154,8 @@ BOOST_AUTO_TEST_CASE(test20_sextupole_thin_eval)
 	Config C;
 	C.set<std::string>("name", "test");
 	C.set<double>("K", 0e0);
+	C.set<double>("L", 0e0);
+	C.set<double>("N", 1);
 
 	{
 		auto sext = tse::SextupoleType(C);
@@ -207,7 +215,9 @@ BOOST_AUTO_TEST_CASE(test20_sextupole_thin_eval)
 
 			sext.pass(calc_config, ps);
 
-			BOOST_CHECK_CLOSE(ps[px_],  - x* chroma, 1e-12);
+			// Todo: check sign!!!!
+			const double xc =  - (x* chroma);
+			BOOST_CHECK_CLOSE(ps[px_],         xc, 1e-12);
 			BOOST_CHECK_CLOSE(ps[x_],           x, 1e-14);
 			BOOST_CHECK_SMALL(ps[y_],              1e-14);
 			BOOST_CHECK_SMALL(ps[py_],             1e-14);
@@ -234,12 +244,19 @@ BOOST_AUTO_TEST_CASE(test20_sextupole_thin_eval)
 
 			sext.pass(calc_config, ps);
 
+			// Todo: check sign!!!!
+			const double yc = x * chroma, pspy = ps[py_];
+			std::cerr << "ps[py_] "  << ps[py_] << " yc " << yc << std::endl;
+
 			BOOST_CHECK_CLOSE(ps[py_], x * chroma, 1e-12);
-			BOOST_CHECK_CLOSE(ps[x_],         x, 1e-14);
-			BOOST_CHECK_SMALL(ps[y_],            1e-14);
-			BOOST_CHECK_SMALL(ps[px_],           1e-14);
-			BOOST_CHECK_SMALL(ps[ct_],           1e-14);
-			BOOST_CHECK_SMALL(ps[delta_],        1e-14);
+			BOOST_CHECK_CLOSE(ps[x_],           x, 1e-14);
+			BOOST_CHECK_SMALL(ps[y_],              1e-14);
+			BOOST_CHECK_SMALL(ps[px_],             1e-14);
+			BOOST_CHECK_SMALL(ps[ct_],             1e-14);
+			BOOST_CHECK_SMALL(ps[delta_],          1e-14);
+
+			BOOST_CHECK_CLOSE(pspy, yc, 1e-12);
+
 		}
 	}
 }
@@ -254,6 +271,7 @@ BOOST_AUTO_TEST_CASE(test20_sextupole_typical_length_eval)
 	C.set<std::string>("name", "test");
 	C.set<double>("K", chroma);
 	C.set<double>("L", length);
+	C.set<double>("N", 1);
 
 	{
 		/* normal sextrupole */

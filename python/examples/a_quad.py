@@ -1,7 +1,7 @@
 """Configuring and using a quadrupole
 """
 from thor_scsi.flame import Config
-from thor_scsi.lib import Quadrupole
+from thor_scsi.lib import Quadrupole, ConfigType
 
 C = Config()
 C.setAny("L", 2)
@@ -20,7 +20,11 @@ print(repr(quad))
 print(dir(quad))
 import thor_scsi.lib
 print(dir(thor_scsi.lib))
-from thor_scsi.lib import tps, ss_vect_double, ss_vect_tps
+# print(dir
+from thor_scsi.lib import ss_vect_tps_type
 
-ps = ss_vect_tps.identity()
-quad.propagate(ps)
+ps = ss_vect_tps_type()
+ps.set_identity()
+calc_config = ConfigType()
+quad.propagate(calc_config, ps)
+print("One step\n", ps)

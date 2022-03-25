@@ -34,6 +34,7 @@ static void process_cmd_line(int argc, char *argv[])
 		("end_element_number,e",   po::value<int>()->default_value(-1), "last element to use, (-1) for last element of lattice")
 		("dump_lattice", po::value<bool>()->default_value(false), "dump read in lattice (to stdout)" )
 		("verbose,v",    po::value<bool>()->default_value(false), "verbose output" )
+		("very_verbose,V",    po::value<bool>()->default_value(false), "even more verbose output" )
 		;
 
 	po::store(po::parse_command_line(argc, argv, desc), vm);
@@ -55,6 +56,7 @@ static void compute_transport_matrix(tsc::Machine& machine, const int first_elem
 {
 
 	bool verbose = vm["verbose"].as<bool>();
+	bool very_verbose = vm["very_verbose"].as<bool>();
 	ss_vect<tps> ps;
 	ps.identity();
 
@@ -63,25 +65,32 @@ static void compute_transport_matrix(tsc::Machine& machine, const int first_elem
 	std::cout << "Starting poincare map computation with " << std::endl
 		  << ps << std::endl;
 	if(verbose){
-		std::cout << "Processing elements:";
+		std::cout << "Processing elements: ";
 	}
 
-	tsc::ElemType* elem = nullptr;
+	std::shared_ptr<tsc::ElemType> elem;
 	for(int n_elem = first_element; n_elem <= last_element; ++n_elem){
-		auto cv = machine[n_elem];
-		elem = dynamic_cast<tsc::ElemType*>(cv);
+		if(very_verbose){
+			std::cout << "Processing element number " << n_elem << std::endl;
+			std::cout.flush();
+		}
+		auto cv = machine.at(n_elem);
+		// auto cv = machine[n_elem];
+		if(!cv){
+			throw std::runtime_error("no cv ...");
+		}
+		if(very_verbose){
+			std::cout << "cv[" << cv->index <<"] '"<< cv->name << "', # counts " << cv.use_count() << std::endl;
+		}
+		if(!very_verbose && verbose){
+			std::cout << cv->name << " ";
+		}
+		elem = std::dynamic_pointer_cast<tsc::ElemType>(cv);
 		if(elem){
-			if(verbose){
-				/*
-				  std::cout << "Processing element number " << n_elem
-				  << " element ";
-				  cv->show(std::cout, 10);
-				  std::cout << std::endl;
-				*/
-				std::cout << " " << n_elem << ":" << elem->name;
-				elem->pass(calc_config, ps);
-
+			if(very_verbose){
+				std::cout << "elem '" << elem->name << "', # counts " << cv.use_count() << std::endl;
 			}
+			elem->pass(calc_config, ps);
 		} else {
 			std::cerr << "Element " << n_elem << "could not be cast to Elemtype"
 				  << " element: " << cv << std::endl;
@@ -98,6 +107,26 @@ static void compute_transport_matrix(tsc::Machine& machine, const int first_elem
 		std::cout << std::endl;
 
 	}
+	std::cout << "Computed poincare map " << std::endl
+		  << ps << std::endl;
+
+}
+
+static void compute_transport_matrix_prop(tsc::Machine& machine, const int first_element, const int last_element)
+{
+	bool verbose = vm["verbose"].as<bool>();
+	bool very_verbose = vm["very_verbose"].as<bool>();
+	ss_vect<tps> ps;
+	ps.identity();
+
+	tsc::ConfigType calc_config;
+
+	std::cout << "Starting poincare map computation with " << std::endl
+		  << ps << std::endl;
+	if(verbose){
+		std::cout << "Processing elements: ";
+	}
+	machine.propagate(calc_config, ps, first_element, last_element);
 	std::cout << "Computed poincare map " << std::endl
 		  << ps << std::endl;
 
@@ -126,7 +155,7 @@ static void compute_transport_matrix_dbl(tsc::Machine& machine, const int first_
 			cv->show(std::cout, 10);
 			std::cout << std::endl;
 		}
-		auto elem = dynamic_cast<tsc::ElemType*>(cv);
+		auto elem = std::dynamic_pointer_cast<tsc::ElemType>(cv);
 		if(elem){
 			elem->pass(calc_config, ps);
 		} else {
@@ -172,7 +201,9 @@ static void user_compute_transport_matrix(tsc::Machine& machine)
 		std::cout << "Computing transport matrix from " << first_element
 			  << " to " << last_element << " number " << std::endl;
 	}
-	compute_transport_matrix(machine, first_element, last_element);
+	// compute_transport_matrix(machine, first_element, last_element);
+	machine.set_trace(&std::cout);
+	compute_transport_matrix_prop(machine, first_element, last_element);
 }
 
 static void track_n_turns(tsc::Machine& machine)

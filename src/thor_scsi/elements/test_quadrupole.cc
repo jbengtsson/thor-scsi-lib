@@ -25,6 +25,8 @@ BOOST_AUTO_TEST_CASE(test10_quadrupole_ostream)
 	Config C;
 	C.set<std::string>("name", "test");
 	C.set<double>("K", 0.0);
+	C.set<double>("L", 0e0);
+	C.set<double>("N", 1);
 
 	auto quad = tse::QuadrupoleType(C);
 
@@ -41,6 +43,8 @@ BOOST_AUTO_TEST_CASE(test10_quadrupole_K)
 	C.set<std::string>("name", "test");
 	const double grad = 27e0;
 	C.set<double>("K", grad);
+	C.set<double>("L", 0e0);
+	C.set<double>("N", 1);
 
 	const tsc::cdbl ref(grad, 0e0);
 	auto quad = tse::QuadrupoleType(C);
@@ -64,6 +68,8 @@ BOOST_AUTO_TEST_CASE(test10_quadrupole_setMul)
 	C.set<std::string>("name", "test");
 	const double grad = 27e0;
 	C.set<double>("K", grad);
+	C.set<double>("L", 0e0);
+	C.set<double>("N", 1);
 
 	/* check that setting 0 gets set */
 	{
@@ -146,6 +152,8 @@ BOOST_AUTO_TEST_CASE(test20_quadrupole_thin_eval)
 	Config C;
 	C.set<std::string>("name", "test");
 	C.set<double>("K", 0e0);
+	C.set<double>("L", 0e0);
+	C.set<double>("N", 1);
 
 	{
 		auto quad = tse::QuadrupoleType(C);
@@ -252,6 +260,7 @@ BOOST_AUTO_TEST_CASE(test20_quadrupole_typical_length_eval)
 	C.set<std::string>("name", "test");
 	C.set<double>("K", gradient);
 	C.set<double>("L", length);
+	C.set<double>("N", 1);
 
 	{
 		/* normal quadrupole */

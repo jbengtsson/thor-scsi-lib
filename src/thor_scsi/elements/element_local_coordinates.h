@@ -19,6 +19,11 @@ namespace thor_scsi::elements {
 
 	public:
 		inline LocalCoordinates(const Config &config) : ElemType(config){}
+		virtual ~LocalCoordinates(){}
+		LocalCoordinates(LocalCoordinates&& o) : ElemType(std::move(o)) {
+			std::cerr << __FILE__ << "::" << __FUNCTION__ << " ctor @ " << __LINE__
+				  << " name " << this->name << std::endl;
+		}
 
 		inline virtual void global2Local(ss_vect<double> &ps) = 0;
 		inline virtual void local2Global(ss_vect<double> &ps) = 0;
@@ -52,6 +57,14 @@ namespace thor_scsi::elements {
 
 	public:
 		inline LocalGalilean(const Config &config) : LocalCoordinates(config) {}
+		virtual ~LocalGalilean(){}
+		inline LocalGalilean(LocalGalilean&& o) :
+			LocalCoordinates(std::move(o)),
+			transform(std::move(o.transform))
+			{
+
+			}
+
 		inline virtual void global2Local(ss_vect<double> &ps) override final {
 			this->_global2Local(ps);
 		}
@@ -89,6 +102,14 @@ namespace thor_scsi::elements {
 
 	public:
 		inline LocalGalileanPRot(const Config &config) : LocalCoordinates(config) {}
+		virtual ~LocalGalileanPRot(){}
+		inline LocalGalileanPRot(LocalGalileanPRot&& o) :
+			LocalCoordinates(std::move(o))
+			{
+				this->transform = o.transform;
+				//transform(std::move(o.transform));
+			}
+
 		inline virtual void global2Local(ss_vect<double> &ps) override final {
 			this->transform.forward(ps);
 		}

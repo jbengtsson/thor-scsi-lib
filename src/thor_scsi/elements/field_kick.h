@@ -98,6 +98,8 @@ namespace thor_scsi::elements {
 		// std::string repr_add(void);
 
 		FieldKick(const Config &config);
+		virtual ~FieldKick(){}
+		FieldKick(FieldKick&& O);
 
 		const char* type_name(void) const override { return "field_kick"; };
 		virtual void show(std::ostream& strm, const int level) const override;
@@ -354,8 +356,22 @@ namespace thor_scsi::elements {
 		 * d_2:  negative thus creates a negative drift
 		 */
 
-		inline const auto getFieldInterpolator(void) const {
-			return this->intp;
+		inline auto getFieldInterpolator(void) const {
+			/*
+			  std::cerr << "Getting field interpolator " <<  std::endl;
+			  std::cerr.flush();
+			  std::cerr << " address " << this->intp << std::endl;
+			*/
+			if(!this->intp){
+				throw std::logic_error("interpolator pointer null");
+			}
+			/*
+			  std::cerr << "use count " << this->intp.use_count() << std::endl;
+			  std::cerr.flush();
+			*/
+			auto tmp =  std::const_pointer_cast<thor_scsi::core::Field2DInterpolation>(this->intp);
+			return tmp;
+			// return ;
 		}
 
 		/*
@@ -389,9 +405,12 @@ namespace thor_scsi::elements {
 			}
 
 		protected:
-			inline const auto getFieldInterpolator(void) const {
+			inline auto getFieldInterpolator(void) const {
 				// required to cast parent to const ?
 				const FieldKick * ptr = this->parent;
+				if(!ptr){
+					throw std::runtime_error("Unknown parent!");
+				}
 				return ptr->getFieldInterpolator();
 			}
 
@@ -495,7 +514,7 @@ namespace thor_scsi::elements {
 		double Pirho = 0;             ///< 1/rho [1/m].
 
 	protected:
-		std::shared_ptr<thor_scsi::core::Field2DInterpolation> intp = nullptr;
+		std::shared_ptr<thor_scsi::core::Field2DInterpolation> intp;
 
 	};
 } // Name space

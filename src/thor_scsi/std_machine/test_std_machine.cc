@@ -29,7 +29,7 @@ BOOST_AUTO_TEST_CASE(test10_drift)
 	auto cell = machine.find("d05l2t8r");
 	BOOST_TEST(cell != nullptr);
 
-	auto drift = dynamic_cast<tse::DriftType*>(cell);
+	auto drift = std::dynamic_pointer_cast<tse::DriftType>(cell);
 	BOOST_TEST(drift !=  nullptr);
 
 	const double length_check = drift->getLength();
@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(test20_marker)
 	auto cell = machine.find("start");
 	BOOST_TEST(cell != nullptr);
 
-	auto marker = dynamic_cast<tse::MarkerType*>(cell);
+	auto marker = std::dynamic_pointer_cast<tse::MarkerType>(cell);
 	BOOST_TEST(marker !=  nullptr);
 
 	const double length_check = marker->getLength();
@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE(test30_cavity)
 	auto cell = machine.find("cavh1t8r");
 	BOOST_TEST(cell != nullptr);
 
-	auto cavity = dynamic_cast<tse::CavityType*>(cell);
+	auto cavity = std::dynamic_pointer_cast<tse::CavityType>(cell);
 	BOOST_TEST(cavity !=  nullptr);
 
 	BOOST_CHECK_CLOSE(cavity->getFrequency(),  500e6, 1e-6);
@@ -110,7 +110,7 @@ BOOST_AUTO_TEST_CASE(test50_quadrupole)
 	auto machine = tsc::Machine(*C);
 
 	auto cell = machine[0];
-	auto elem = dynamic_cast<tse::QuadrupoleType*>(cell);
+	auto elem = std::dynamic_pointer_cast<tse::QuadrupoleType>(cell);
 	BOOST_TEST(elem !=  nullptr);
 
 	BOOST_CHECK(elem->getMainMultipoleNumber() == 2);
@@ -133,7 +133,7 @@ BOOST_AUTO_TEST_CASE(test60_sextupole)
 	Config *C = parse.parse_byte(txt);
 	auto machine = tsc::Machine(*C);
 	auto cell = machine[0];
-	auto elem = dynamic_cast<tse::SextupoleType*>(cell);
+	auto elem = std::dynamic_pointer_cast<tse::SextupoleType>(cell);
 	BOOST_TEST(elem !=  nullptr);
 
 	BOOST_CHECK_CLOSE(elem->getLength(),                        0.08, 1e-12);
@@ -147,7 +147,7 @@ BOOST_AUTO_TEST_CASE(test70_octupole)
 {
 	const std::string txt(
 		"Nsext = 10;"
-		"missing: Octupole, L = 0.281, K = 355;\n"
+		"missing: Octupole, L = 0.281, K = 355, N=1;\n"
 		"mini_cell : LINE = (missing);\n"
 		);
 
@@ -156,7 +156,7 @@ BOOST_AUTO_TEST_CASE(test70_octupole)
 	Config *C = parse.parse_byte(txt);
 	auto machine = tsc::Machine(*C);
 	auto cell = machine[0];
-	auto elem = dynamic_cast<tse::OctupoleType*>(cell);
+	auto elem = std::dynamic_pointer_cast<tse::OctupoleType>(cell);
 	BOOST_TEST(elem !=  nullptr);
 
 	BOOST_CHECK_CLOSE(elem->getLength(),                         0.281, 1e-12);

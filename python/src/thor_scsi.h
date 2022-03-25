@@ -52,11 +52,11 @@ void declare_field(py::module &scsi, const std::string &typestr) {
     .def("identity",   &Class::identity);
 }
 
-void py_thor_scsi_init_tps(py::module_ &m);
-void py_thor_scsi_init_elements(py::module_ &m);
-void py_thor_scsi_init_machine(py::module_ &m);
-void py_thor_scsi_init_config_type(py::module_ &m);
+void py_thor_scsi_init_tps(py::module &m);
+void py_thor_scsi_init_elements(py::module &m);
+void py_thor_scsi_init_machine(py::module &m);
+void py_thor_scsi_init_config_type(py::module &m);
 // void py_thor_scsi_init_lattice(py::module_ &m);
-void py_flame_init(py::module_ &m);
+void py_flame_init(py::module &m);
 
 #endif /* _THOR_SCSI_PY_H_ */

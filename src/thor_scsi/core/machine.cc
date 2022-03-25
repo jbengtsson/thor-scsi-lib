@@ -49,7 +49,7 @@ tsc::Machine::Machine(const Config& c)
 #endif /* NO state */
 
     typedef Config::vector_t elements_t;
-    std::cerr << "Processing config " << c << std::endl;
+    // std::cerr << "Processing config " << c << std::endl;
     elements_t Es(c.get<elements_t>("elements"));
 
     p_elements_t result;
@@ -73,9 +73,10 @@ tsc::Machine::Machine(const Config& c)
 
         element_builder_t* builder = eit->second.builder;
 
-        CellVoid *E;
+	std::shared_ptr<CellVoid> E;
         try{
-            E = builder->build(EC);
+            auto tmp  = (builder->build(EC));
+	    E = tmp;
         }catch(key_error& e){
             std::ostringstream strm;
             strm<<"Error while initializing element "<<idx<<" '"<<EC.get<std::string>("name", "<invalid>")
@@ -97,7 +98,8 @@ tsc::Machine::Machine(const Config& c)
 
         *const_cast<size_t*>(&E->index) = idx++; // ugly
 
-        result.push_back(E);
+        //result.push_back(std::make_shared<tsc::CellVoid>(E));
+	result.push_back(E);
         result_l.insert(std::make_pair(LookupKey(E->name, E->index), E));
         result_t.insert(std::make_pair(LookupKey(etype, E->index), E));
     }
@@ -112,38 +114,73 @@ tsc::Machine::Machine(const Config& c)
 
 tsc::Machine::~Machine()
 {
+    return;
+    // Should now be cleared up automatically as shared pointers are used.
+    /*
     for(p_elements_t::iterator it=p_elements.begin(), end=p_elements.end(); it!=end; ++it)
     {
         delete *it;
     }
+    */
+}
+
+template<typename T>
+void
+tsc::Machine::_propagate(thor_scsi::core::ConfigType& conf, ss_vect<T> &ps, size_t start, int max)// const
+{
+
+    const size_t nelem = p_elements.size();
+
+    int next_elem = start;
+    bool retreat = std::signbit(max);
+
+    for(int i=0; next_elem >= 0 && next_elem<nelem && i<abs(max); i++)
+    {
+	size_t n = next_elem;
+	std::shared_ptr<CellVoid> cv = p_elements.at(n);
+
+	if(retreat) {
+	    next_elem--;
+	} else {
+	    next_elem++;
+	}
+	auto elem = std::dynamic_pointer_cast<thor_scsi::core::ElemType>(cv);
+	if(!elem){
+	    std::cerr << "Failed to cast to element to Elemtype " << cv->name << std::endl;
+	    return;
+	}
+	elem->pass(conf, ps);
+
+	//if(E->p_observe)
+	//E->p_observe->view(E, S);
+	if(p_trace)
+	    (*p_trace) << "After ["<< n<< "] " << cv->name << " " <<std::endl << ps << std::endl;
+    }
+}
+
+
+#if 0
+template<> void
+tsc::Machine::_propagate(thor_scsi::core::ConfigType& conf, ss_vect<double> &ps, size_t start, int max);// const;
+template<> void
+tsc::Machine::_propagate(thor_scsi::core::ConfigType& conf, ss_vect<tps> &ps, size_t start, int max);// const;
+template void
+tsc::Machine::_propagate(thor_scsi::core::ConfigType& conf, ss_vect<double> &ps, size_t start, int max);// const;
+template void
+tsc::Machine::_propagate(thor_scsi::core::ConfigType& conf, ss_vect<tps> &ps, size_t start, int max);// const;
+#endif
+void
+tsc::Machine::propagate(thor_scsi::core::ConfigType& conf, ss_vect_dbl &ps, size_t start, int max)// const
+{
+    _propagate(conf, ps, start, max);
+}
+void
+tsc::Machine::propagate(thor_scsi::core::ConfigType& conf, ss_vect_tps  &ps, size_t start, int max)// const
+{
+    _propagate(conf, ps, start, max);
 }
 
 #if 0
-void
-tsc::Machine::propagate(StateBase* S, size_t start, int max) const
-{
-    const size_t nelem = p_elements.size();
-
-    S->next_elem = start;
-    S->retreat = std::signbit(max);
-
-    for(int i=0; S->next_elem<nelem && i<abs(max); i++)
-    {
-        size_t n = S->next_elem;
-        CellVoid* E = p_elements[n];
-        if(S->retreat) {
-            S->next_elem--;
-        } else {
-            S->next_elem++;
-        }
-        E->advance(*S);
-
-        if(E->p_observe)
-            E->p_observe->view(E, S);
-        if(p_trace)
-            (*p_trace) << "After ["<< n<< "] " << E->name << " " << *S << "\n";
-    }
-}
 
 StateBase*
 tsc::Machine::allocState(const Config &c) const

@@ -13,8 +13,13 @@ namespace thor_scsi::core {
 		 *
 		 *  Review if it can be split up for position and direction
 		 */
-		//inline PhasSpaceGalilean2DTransform(PhaseSpaceGalilean2DTransform&& O) :
-		//	Galilean2DTransform(O){}
+		inline PhaseSpaceGalilean2DTransform() : Galilean2DTransform() {}
+		inline virtual ~PhaseSpaceGalilean2DTransform() {};
+		PhaseSpaceGalilean2DTransform(PhaseSpaceGalilean2DTransform&& O) = default;
+		PhaseSpaceGalilean2DTransform& operator= (const PhaseSpaceGalilean2DTransform &O) {
+			(Galilean2DTransform&)(*this) = (const Galilean2DTransform&) (O);
+			return *this;
+		}
 		template<typename T>
 		inline void forward(T & ps){
 			forwardTranslation(ps);
@@ -118,6 +123,15 @@ namespace thor_scsi::core {
 	 */
 	class PhaseSpacePRotTransformMixin: public PRotTransform {
 	public:
+		inline PhaseSpacePRotTransformMixin(void) : PRotTransform() {}
+		inline virtual ~PhaseSpacePRotTransformMixin(void) {};
+
+		PhaseSpacePRotTransformMixin(PhaseSpacePRotTransformMixin&& O)  = default;
+
+		PhaseSpacePRotTransformMixin& operator=(const PhaseSpacePRotTransformMixin& O){
+			static_cast<PRotTransform&>(*this) = static_cast<const PRotTransform&>(O);
+			return *this;
+		}
 		template<typename T>
 		inline void forwardStep1(T & ps){
 			// Simplified rotated p_rot: R^-1(theta_des) prot(phi/2) R(theta_des).
@@ -144,6 +158,22 @@ namespace thor_scsi::core {
 
 	class PhaseSpaceGalileanPRot2DTransform : PhaseSpaceGalilean2DTransform, PhaseSpacePRotTransformMixin {
 	public:
+		inline PhaseSpaceGalileanPRot2DTransform(void) :
+			PhaseSpaceGalilean2DTransform(),
+			PhaseSpacePRotTransformMixin() {}
+		inline virtual ~PhaseSpaceGalileanPRot2DTransform() {};
+
+		inline PhaseSpaceGalileanPRot2DTransform(PhaseSpaceGalileanPRot2DTransform&& o) :
+			PhaseSpaceGalilean2DTransform(std::move(o)),
+			PhaseSpacePRotTransformMixin(std::move(o))
+			{}
+
+		PhaseSpaceGalileanPRot2DTransform& operator= (const PhaseSpaceGalileanPRot2DTransform& o){
+			static_cast<PhaseSpaceGalilean2DTransform&>(*this) = static_cast<const PhaseSpaceGalilean2DTransform&>(o);
+			static_cast<PhaseSpacePRotTransformMixin&>(*this) = static_cast<const PhaseSpacePRotTransformMixin&>(o);
+			return *this;
+		}
+
 		template<typename T>
 		inline void forward(T & ps){
 			PhaseSpacePRotTransformMixin::forwardStep1(ps);

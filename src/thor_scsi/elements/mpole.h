@@ -3,6 +3,7 @@
 
 #include <thor_scsi/elements/field_kick.h>
 #include <thor_scsi/core/multipoles.h>
+#include <iomanip>
 
 namespace thor_scsi::elements {
 	class MpoleType : public FieldKick {
@@ -19,14 +20,19 @@ namespace thor_scsi::elements {
 		 * \endverbatim
 		 */
 		inline MpoleType(const Config &config) : FieldKick(config){
-			auto* muls = new thor_scsi::core::PlanarMultipoles;
-			intp.reset(muls);
+			std::shared_ptr<thor_scsi::core::PlanarMultipoles> tmp(new thor_scsi::core::PlanarMultipoles);
+			this->intp = std::move(std::dynamic_pointer_cast<thor_scsi::core::Field2DInterpolation>(tmp));
+			std::cerr << "Mpole Type: " << std::setw(10) << name << " interpolation object " << this->intp  << std::endl;
+
+			auto parent = dynamic_cast<FieldKick*>(this);
+			std::cerr << "FieldKick:             interpolation object " << parent->getFieldInterpolator()  << std::endl;
 		}
 
 		const char* type_name(void) const override { return "mpole"; };
 
-		inline const std::shared_ptr<thor_scsi::core::PlanarMultipoles> getFieldInterpolator(void) const {
-			return std::dynamic_pointer_cast<thor_scsi::core::PlanarMultipoles>(this->intp);
+		inline auto getFieldInterpolator(void) const {
+			auto p = std::dynamic_pointer_cast<thor_scsi::core::PlanarMultipoles>(this->intp);
+			return std::const_pointer_cast<thor_scsi::core::PlanarMultipoles>(p);
 		}
 
 

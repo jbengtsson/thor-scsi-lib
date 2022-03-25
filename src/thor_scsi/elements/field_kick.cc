@@ -286,6 +286,8 @@ inline void tse::FieldKick::_radiate(tsc::ConfigType &conf, ss_vect<T> &ps)
 template<typename T>
 inline void tse::FieldKick::FieldKickForthOrder::_localPass(tsc::ConfigType &conf, ss_vect<T> &ps)
 {
+
+
 	double dL = 0.0, h_ref = 0.0;
 	auto PN = this->integration_steps;
 	const double length = parent->getLength(), Pirho = parent->getCurvature();
@@ -312,21 +314,30 @@ inline void tse::FieldKick::FieldKickForthOrder::_localPass(tsc::ConfigType &con
 	double dL1, dL2, dkL1, dkL2;
 	this->splitIntegrationStep(dL, &dL1, &dL2, &dkL1, &dkL2);
 
-	auto& intp = *this->getFieldInterpolator().get();
+	// std::cout <<  "local pass " <<  std::endl;
+	// std::cout.flush();
+
+	auto intp_shared_ptr = this->getFieldInterpolator();
+	// std::cout << "intp_shared_ptr  " << intp_shared_ptr << " count " << intp_shared_ptr.use_count() << std::endl;
+
+	auto& t_intp = *(intp_shared_ptr.get());
 	auto* parent = this->parent;
 
+	if(!parent){
+		throw std::logic_error("parent was nullptr");
+	}
 	parent->_radiateStepOne(conf, ps);
 
 	/* 4th order integration steps  */
 	for (int seg = 1; seg <= PN; seg++) {
 		parent->_radiate(conf, ps);
 		drift_pass(conf, dL1, ps);
-		tse::thin_kick(conf, intp, dkL1, Pirho, h_ref, ps);
+		tse::thin_kick(conf, t_intp, dkL1, Pirho, h_ref, ps);
 		drift_pass(conf, dL2, ps);
-		tse::thin_kick(conf, intp, dkL2, Pirho, h_ref, ps);
+		tse::thin_kick(conf, t_intp, dkL2, Pirho, h_ref, ps);
 		parent->_radiate(conf, ps);
 		drift_pass(conf, dL2, ps);
-		tse::thin_kick(conf, intp, dkL1, Pirho, h_ref, ps);
+		tse::thin_kick(conf, t_intp, dkL1, Pirho, h_ref, ps);
 		drift_pass(conf, dL1, ps);
 		parent->_radiate(conf, ps);
 	}
@@ -349,6 +360,28 @@ tse::FieldKick::FieldKick(const Config &config) : tse::LocalGalileanPRot(config)
 
 }
 
+tse::FieldKick::FieldKick(tse::FieldKick&& O)
+	: LocalGalileanPRot(std::move(O))
+
+{
+	this->intp = std::move(O.intp);
+	this->setBendingAngle(O.getBendingAngle());
+	this->setEntranceAngle(O.getEntranceAngle());
+	this->setExitAngle(O.getExitAngle());
+	this->setCurvature(O.getCurvature());
+	this->asThick(O.isThick());
+
+	this->setNumberOfIntegrationSteps(O.getNumberOfIntegrationSteps());
+	this->setIntegrationMethod(O.getIntegrationMethod());
+
+	this->Pgap = O.Pgap;
+	this->integ4O.setParent(this);
+
+	std::cerr << __FILE__ << "::" << __FUNCTION__ << "@" << __LINE__
+		  << " integration method " << this->getIntegrationMethod() << std::endl;
+
+}
+
 void tse::FieldKick::show(std::ostream& strm, const int level) const
 {
 	tse::LocalGalileanPRot::show(strm, level);
@@ -366,6 +399,7 @@ void tse::FieldKick::show(std::ostream& strm, const int level) const
 		if(!this->intp){
 			strm << " NO interpolater set!";
 		} else {
+			strm << " ";
 			this->intp->show(strm, level);
 		}
 	}
@@ -472,8 +506,10 @@ void tse::FieldKick::_localPass(tsc::ConfigType &conf, ss_vect<T> &ps)
 		  down here
 		*/
 	default:
-		std::cerr <<  "Mpole_Pass: Method not supported " << this->name
-			  <<  " method " << this->Pmethod <<  std::endl;
+		std::cerr <<  __FILE__ << "::" << __FUNCTION__<< "@" << __LINE__
+			  << " element '" << this->name << "'"
+			  << " : Method # "<< this->Pmethod << "  not supported "
+			  << std::endl;
 		throw ts::NotImplemented();
 		break;
 

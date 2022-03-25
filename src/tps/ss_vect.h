@@ -92,6 +92,18 @@ template<typename T> class ss_vect {
   ss_vect<T> zero(void);
   ss_vect<T> identity(void);
 
+
+  inline void set_zero(void)
+  {
+    for (int i = 0; i < ps_dim; i++){
+      this->ss[i] = 0e0;
+    }
+  }
+
+
+  //void set_zero(void);
+  void set_identity(void);
+
   friend ss_vect<tps> FExpo(const tps &, const ss_vect<tps> &,
 			    const int, const int, const int);
   friend ss_vect<tps> LieExp(const tps &, const ss_vect<tps> &);
