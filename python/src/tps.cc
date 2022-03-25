@@ -3,6 +3,7 @@
 #include <pybind11/pybind11.h>
 #include <tps/ss_vect.h>
 #include <tps/tps_type.h>
+#include <tps/tpsa_lin.h>
 #include <tps/enums.h>
 #include <string>
 #include <sstream>
@@ -42,19 +43,22 @@ void py_thor_scsi_init_tps(py::module &m)
 	// declare_field<double>(m, "_double");
 	// declare_field<tps>(m, "_tps");
 
-	py::class_<ss_vect<tps>>(m, "ss_vect_tps_type")
+	py::class_<ss_vect<tps>>(m, "ss_vect_tps")
 		.def("set_identity", &ss_vect<tps>::set_identity)
-		.def("set_zero", &ss_vect<tps>::set_zero)
-		.def("__repr__",  &ss_vect<tps>::repr)
-		.def("__str__",  &ss_vect<tps>::pstr)
+		.def("set_zero",     &ss_vect<tps>::set_zero)
+		.def("__repr__",     &ss_vect<tps>::repr)
+		.def("__str__",      &ss_vect<tps>::pstr)
 		.def(py::init<>());
 
-	py::class_<ss_vect<double>>(m, "ss_vect_double_type")
+	py::class_<ss_vect<double>>(m, "ss_vect_double")
 		//.def("set_identity", &ss_vect<double>::set_identity)
 		.def("set_zero", &ss_vect<double>::set_zero)
 		.def("__repr__",  &ss_vect<double>::repr)
 		.def("__str__",  &ss_vect<double>::pstr)
 		.def(py::init<>());
+
+	m.def("lists_to_ss_vect_tps", &stlmattomap_save);
+	m.def("ss_vect_tps_to_lists", &maptostlmat);
 
 
 }

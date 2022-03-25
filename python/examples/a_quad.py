@@ -21,9 +21,9 @@ print(dir(quad))
 import thor_scsi.lib
 print(dir(thor_scsi.lib))
 # print(dir
-from thor_scsi.lib import ss_vect_tps_type
+from thor_scsi.lib import ss_vect_tps
 
-ps = ss_vect_tps_type()
+ps = ss_vect_tps()
 ps.set_identity()
 calc_config = ConfigType()
 quad.propagate(calc_config, ps)

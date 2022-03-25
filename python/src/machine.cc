@@ -21,8 +21,8 @@ void py_thor_scsi_init_machine(py::module &m)
 		.def("propagate", py::overload_cast<tsc::ConfigType&, tsc::ss_vect_dbl&, size_t, int>(&tsc::Machine::propagate), "xxx")
 		.def("propagate", py::overload_cast<tsc::ConfigType&, tsc::ss_vect_tps&, size_t, int>   (&tsc::Machine::propagate),  "xxx")
 
-		//.def("__len__", &tsc::Machine::size)
-		//.def("__getattr__", py::overload_cast<size_t>(&tsc::Machine::at))
+		.def("__len__", &tsc::Machine::size)
+		.def("__getitem__", py::overload_cast<size_t>(&tsc::Machine::at))
 		.def(py::init<const Config &>());
 
 

@@ -171,6 +171,22 @@ ss_vect<tps> stlmattomap(const std::vector< std::vector<double> > &stlmat)
   return map;
 }
 
+ss_vect<tps> stlmattomap_save(const std::vector< std::vector<double> > &stlmat)
+{
+  ss_vect<tps> map;
+
+  const int n = (int)stlmat[0].size();
+
+  for (int j = 0; j < nv_tps; j++)
+    for (int k = -1; k < nv_tps; k++)
+      if (k == -1)
+	put_m_ij(map, j+1, 0, stlmat.at(j).at(n-1));
+      else
+	put_m_ij(map, j+1, k+1, stlmat.at(j).at(k));
+  return map;
+}
+
+
 std::vector< std::vector<double> > maptostlmat(const ss_vect<tps> &map)
 {
   std::vector<double>                row;

@@ -55,6 +55,12 @@ void put_m_ij(ss_vect<tps> &map, const long int i, const long int j,
 	      const double r);
 
 ss_vect<tps> stlmattomap(const std::vector< std::vector<double> > &stlmat);
+/*
+ * Same functionallity as stmattomap, but uses .at internally
+ *
+ * Intend: to be used by python
+ */
+ss_vect<tps> stlmattomap_save(const std::vector< std::vector<double> > &stlmat);
 
 std::vector< std::vector<double> > maptostlmat(const ss_vect<tps> &map);
 

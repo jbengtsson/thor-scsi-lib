@@ -52,15 +52,20 @@ class PyClassicalMagnet: public tse::ClassicalMagnet {
 
 static const char pass_d_doc[] = "pass the element (state as doubles)";
 static const char pass_tps_doc[] = "pass the element (state as tps)";
+/*
+ * I tested if the derived classes have to mention that their memory needs to be
+ * managed by shared pointers. Worked for me only if it is done by shared pointers
+ */
 void py_thor_scsi_init_elements(py::module &m)
 {
 
 	py::class_<tsc::ElemType,  PyElemType, std::shared_ptr<tsc::ElemType>> elem_type(m, "ElemType");
-	elem_type.def("__str__",       &tsc::CellVoid::pstr)
-		.def("__repr__",      &tsc::CellVoid::repr)
-		.def_readonly("name", &tsc::CellVoid::name)
-		.def("getLength", &tse::DriftType::getLength)
-		.def("setLength", &tse::DriftType::setLength)
+	elem_type.def("__str__",       &tsc::ElemType::pstr)
+		.def("__repr__",       &tsc::ElemType::repr)
+		.def_readonly("name",  &tsc::ElemType::name)
+		.def_readonly("index", &tsc::ElemType::index)
+		.def("getLength",      &tse::ElemType::getLength)
+		.def("setLength",      &tse::ElemType::setLength)
 		.def("propagate", py::overload_cast<tsc::ConfigType&, ss_vect<double>&>(&tse::ElemType::pass), pass_d_doc)
 		.def("propagate", py::overload_cast<tsc::ConfigType&, ss_vect<tps>&>(&tse::ElemType::pass),    pass_tps_doc)
 		.def(py::init<const Config &>());
@@ -81,8 +86,6 @@ void py_thor_scsi_init_elements(py::module &m)
 		.def("getPhase",          &tse::CavityType::getPhase)
 		.def("setHarmonicNumber", &tse::CavityType::setHarmonicNumber)
 		.def("getHarmonicNumber", &tse::CavityType::getHarmonicNumber)
-		.def("propagate", py::overload_cast<tsc::ConfigType&, ss_vect<double>&>(&tse::CavityType::pass), pass_d_doc)
-		.def("propagate", py::overload_cast<tsc::ConfigType&, ss_vect<tps>&>   (&tse::CavityType::pass),    pass_tps_doc)
 		.def(py::init<const Config &>());
 
 	/*
@@ -90,16 +93,38 @@ void py_thor_scsi_init_elements(py::module &m)
 	 * by classical magnet's method getMultipoles
 	*/
 	py::class_<tsc::PlanarMultipoles, std::shared_ptr<tsc::PlanarMultipoles>>(m, "TwoDimensionalMultipoles")
-		.def("getMultipole", &tsc::PlanarMultipoles::getMultipole)
-		.def("setMultipole", &tsc::PlanarMultipoles::setMultipole)
-		.def("__str__",   &tsc::PlanarMultipoles::pstr)
-		.def("__repr__",  &tsc::PlanarMultipoles::repr)
+		.def("getMultipole",     &tsc::PlanarMultipoles::getMultipole)
+		.def("setMultipole",     &tsc::PlanarMultipoles::setMultipole)
+		.def("applyRollAngle",   &tsc::PlanarMultipoles::applyRollAngle)
+		.def("__str__",          &tsc::PlanarMultipoles::pstr)
+		.def("__repr__",         &tsc::PlanarMultipoles::repr)
+		.def("getCoefficients",  &tsc::PlanarMultipoles::getCoeffsConst)
+		.def("applyTranslation", py::overload_cast<const tsc::cdbl>(&tsc::PlanarMultipoles::applyTranslation))
+		.def("applyTranslation", py::overload_cast<const double, const double>(&tsc::PlanarMultipoles::applyTranslation))
 		.def(py::init<>());
 
-	py::class_<tse::ClassicalMagnet, PyClassicalMagnet, std::shared_ptr<tse::ClassicalMagnet>> cm(m, "ClassicalMagnet", elem_type);
+	py::class_<tse::FieldKick, std::shared_ptr<tse::FieldKick>> field_kick(m, "FieldKick", elem_type);
+	field_kick
+		.def("isThick",                     &tse::FieldKick::isThick)
+		.def("asThick",                     &tse::FieldKick::asThick)
+		.def("getNumberOfIntegrationSteps", &tse::FieldKick::getNumberOfIntegrationSteps)
+		.def("setNumberOfIntegrationSteps", &tse::FieldKick::setNumberOfIntegrationSteps)
+		.def("getIntegrationMethod",        &tse::FieldKick::getIntegrationMethod)
+		.def("getCurvature",                &tse::FieldKick::getCurvature)
+		.def("setCurvature",                &tse::FieldKick::setCurvature)
+		.def("assumingCurvedTrajectory",    &tse::FieldKick::assumingCurvedTrajectory)
+		.def("getBendingAngle",             &tse::FieldKick::getBendingAngle)
+		.def("setBendingAngle",             &tse::FieldKick::setBendingAngle)
+		.def("setEntranceAngle",            &tse::FieldKick::setEntranceAngle)
+		.def("getEntranceAngle",            &tse::FieldKick::getEntranceAngle)
+		.def("setExitAngle",                &tse::FieldKick::setExitAngle)
+		.def("getExitAngle",                &tse::FieldKick::getExitAngle)
+		.def(py::init<const Config &>());
 
-		//.def("__str__",   &tse::ClassicalMagnet::pstr)
-		//.def("__repr__",  &tse::ClassicalMagnet::repr)
+	py::class_<tse::MpoleType, std::shared_ptr<tse::MpoleType>> mpole_type(m, "Mpole", field_kick);
+	mpole_type
+		.def(py::init<const Config &>());
+	py::class_<tse::ClassicalMagnet, PyClassicalMagnet, std::shared_ptr<tse::ClassicalMagnet>> cm(m, "ClassicalMagnet", mpole_type);
 	cm
 		.def("getMultipoles",            &tse::ClassicalMagnet::getMultipoles)
 		.def("getMainMultipoleNumber",   &tse::ClassicalMagnet::getMainMultipoleNumber)
@@ -114,7 +139,9 @@ void py_thor_scsi_init_elements(py::module &m)
 		.def(py::init<const Config &>());
 	py::class_<tse::SextupoleType, std::shared_ptr<tse::SextupoleType>> (m, "Sextupole", cm)
 		.def(py::init<const Config &>());
-	py::class_<tse::OctupoleType,  std::shared_ptr<tse::OctupoleType>>(m, "Octupole", cm)
+	py::class_<tse::OctupoleType, std::shared_ptr<tse::OctupoleType>>(m, "Octupole", cm)
+		.def(py::init<const Config &>());
+	py::class_<tse::BendingType, std::shared_ptr<tse::BendingType>>(m, "Bending", cm)
 		.def(py::init<const Config &>());
 
 
