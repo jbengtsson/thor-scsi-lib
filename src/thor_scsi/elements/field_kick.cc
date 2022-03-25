@@ -377,6 +377,8 @@ tse::FieldKick::FieldKick(tse::FieldKick&& O)
 	this->Pgap = O.Pgap;
 	this->integ4O.setParent(this);
 
+	return;
+
 	std::cerr << __FILE__ << "::" << __FUNCTION__ << "@" << __LINE__
 		  << " integration method " << this->getIntegrationMethod() << std::endl;
 

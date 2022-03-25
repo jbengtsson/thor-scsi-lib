@@ -173,15 +173,11 @@ namespace thor_scsi::core {
 		//! @return NULL on failure
 		//! A convienence wrapper around equal_range().
 		std::shared_ptr<CellVoid> find(const std::string& name, size_t nth=0) {
-			// a test if the mimic below creates the
-			return p_elements.at(0);
-
 			p_lookup_t::const_iterator low (p_lookup.lower_bound(LookupKey(name, 0))),
 				high(p_lookup.upper_bound(LookupKey(name, (size_t)-1)));
 			size_t i=0;
 			for(;low!=high;++low,++i) {
 				if(i==nth){
-					return nullptr;
 					return low->second;
 				}
 			}

@@ -22,10 +22,11 @@ namespace thor_scsi::elements {
 		inline MpoleType(const Config &config) : FieldKick(config){
 			std::shared_ptr<thor_scsi::core::PlanarMultipoles> tmp(new thor_scsi::core::PlanarMultipoles);
 			this->intp = std::move(std::dynamic_pointer_cast<thor_scsi::core::Field2DInterpolation>(tmp));
-			std::cerr << "Mpole Type: " << std::setw(10) << name << " interpolation object " << this->intp  << std::endl;
-
-			auto parent = dynamic_cast<FieldKick*>(this);
-			std::cerr << "FieldKick:             interpolation object " << parent->getFieldInterpolator()  << std::endl;
+			/*
+			  std::cerr << "Mpole Type: " << std::setw(10) << name << " interpolation object " << this->intp  << std::endl;
+			  auto parent = dynamic_cast<FieldKick*>(this);
+			  std::cerr << "FieldKick:             interpolation object " << parent->getFieldInterpolator()  << std::endl;
+			*/
 		}
 
 		const char* type_name(void) const override { return "mpole"; };

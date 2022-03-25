@@ -15,7 +15,7 @@ tsc::CellVoid::CellVoid(CellVoid&& o):
 	//p_conf(std::move(o.p_conf)),
 	index(std::exchange(o.index, -1))
 {
-	std::cerr << "Cell void move ctor on " <<  o << std::endl;
+	// std::cerr << "Cell void move ctor on " <<  o << std::endl;
 	this->p_conf = o.p_conf;
 	this->p_observe = o.p_observe;
 	o.p_observe = nullptr;

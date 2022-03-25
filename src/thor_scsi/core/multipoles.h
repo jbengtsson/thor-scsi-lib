@@ -387,7 +387,17 @@ namespace thor_scsi::core {
 			return this->coeffs;
 		}
 
-		virtual void show(std::ostream& strm, int level) const override final;
+
+		/**
+		 * @brief: access to coeffcs for python
+		 *
+		 * pybind11 also seems to have limits for disambuigity
+		 */
+		inline const std::vector<cdbl_intern> getCoeffsConst(void) const {
+			return this->getCoeffs();
+		}
+
+virtual void show(std::ostream& strm, int level) const override final;
 
 	private:
 		unsigned int m_max_multipole;

@@ -21,8 +21,10 @@ namespace thor_scsi::elements {
 		inline LocalCoordinates(const Config &config) : ElemType(config){}
 		virtual ~LocalCoordinates(){}
 		LocalCoordinates(LocalCoordinates&& o) : ElemType(std::move(o)) {
+			/*
 			std::cerr << __FILE__ << "::" << __FUNCTION__ << " ctor @ " << __LINE__
 				  << " name " << this->name << std::endl;
+			*/
 		}
 
 		inline virtual void global2Local(ss_vect<double> &ps) = 0;

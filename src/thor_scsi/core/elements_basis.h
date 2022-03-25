@@ -40,7 +40,7 @@ namespace thor_scsi {
 			};
 
 			ElemType(ElemType&& o) : CellVoid(std::move(o)), PL(std::move(o.PL)) {
-				std::cerr << "ElemType move ctor " << this->name <<  std::endl;
+				// std::cerr << "ElemType move ctor " << this->name <<  std::endl;
 			}
 
 			virtual inline double getLength(void) const final { return this->PL;};
