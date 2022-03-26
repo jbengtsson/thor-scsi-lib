@@ -1,6 +1,7 @@
-#define BOOST_TEST_MODULE std_machine
+#define BOOST_TEST_MODULE accelerator
 #define BOOST_TEST_DYN_LINK
 #include <boost/test/unit_test.hpp>
+#include <thor_scsi/std_machine/accelerator.h>
 #include <thor_scsi/std_machine/std_machine.h>
 #include <thor_scsi/elements/drift.h>
 #include <thor_scsi/elements/marker.h>
@@ -11,8 +12,9 @@
 
 namespace tse = thor_scsi::elements;
 namespace tsc = thor_scsi::core;
+namespace ts = thor_scsi;
 
-int reg_done = register_elements();
+int reg_done = ts::register_elements();
 
 
 BOOST_AUTO_TEST_CASE(test10_drift)
@@ -23,14 +25,14 @@ BOOST_AUTO_TEST_CASE(test10_drift)
 
 	GLPSParser parse;
 	Config *C = parse.parse_byte(drift_txt);
-	auto machine = tsc::Machine(*C);
+	auto machine = ts::Accelerator(*C);
 
 	// proper checks required here
 	auto cell = machine.find("d05l2t8r");
-	BOOST_TEST(cell != nullptr);
+	BOOST_TEST(cell);
 
 	auto drift = std::dynamic_pointer_cast<tse::DriftType>(cell);
-	BOOST_TEST(drift !=  nullptr);
+	BOOST_TEST(drift);
 
 	const double length_check = drift->getLength();
 
@@ -48,7 +50,7 @@ BOOST_AUTO_TEST_CASE(test20_marker)
 
 	GLPSParser parse;
 	Config *C = parse.parse_byte(marker_txt);
-	auto machine = tsc::Machine(*C);
+	auto machine = ts::Accelerator(*C);
 
 	// proper checks required here
 	auto cell = machine.find("start");
@@ -73,7 +75,7 @@ BOOST_AUTO_TEST_CASE(test30_cavity)
 
 	GLPSParser parse;
 	Config *C = parse.parse_byte(cavity_txt);
-	auto machine = tsc::Machine(*C);
+	auto machine = ts::Accelerator(*C);
 
 	// proper checks required here
 	auto cell = machine.find("cavh1t8r");
@@ -107,7 +109,7 @@ BOOST_AUTO_TEST_CASE(test50_quadrupole)
 
 	GLPSParser parse;
 	Config *C = parse.parse_byte(txt);
-	auto machine = tsc::Machine(*C);
+	auto machine = ts::Accelerator(*C);
 
 	auto cell = machine[0];
 	auto elem = std::dynamic_pointer_cast<tse::QuadrupoleType>(cell);
@@ -131,7 +133,7 @@ BOOST_AUTO_TEST_CASE(test60_sextupole)
 
 	GLPSParser parse;
 	Config *C = parse.parse_byte(txt);
-	auto machine = tsc::Machine(*C);
+	auto machine = ts::Accelerator(*C);
 	auto cell = machine[0];
 	auto elem = std::dynamic_pointer_cast<tse::SextupoleType>(cell);
 	BOOST_TEST(elem !=  nullptr);
@@ -154,7 +156,7 @@ BOOST_AUTO_TEST_CASE(test70_octupole)
 
 	GLPSParser parse;
 	Config *C = parse.parse_byte(txt);
-	auto machine = tsc::Machine(*C);
+	auto machine = ts::Accelerator(*C);
 	auto cell = machine[0];
 	auto elem = std::dynamic_pointer_cast<tse::OctupoleType>(cell);
 	BOOST_TEST(elem !=  nullptr);

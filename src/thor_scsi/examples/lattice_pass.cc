@@ -1,5 +1,6 @@
 #include <boost/program_options.hpp>
 #include <thor_scsi/std_machine/std_machine.h>
+#include <thor_scsi/std_machine/accelerator.h>
 #include <thor_scsi/core/elements_basis.h>
 #include <tps/ss_vect.h>
 #include <stdlib.h>
@@ -8,6 +9,7 @@
 
 namespace po = boost::program_options;
 namespace tsc = thor_scsi::core;
+namespace ts = thor_scsi;
 
 po::variables_map vm;
 static void process_cmd_line(int argc, char *argv[])
@@ -52,7 +54,7 @@ static void process_cmd_line(int argc, char *argv[])
 
 
 
-static void compute_transport_matrix(tsc::Machine& machine, const int first_element, const int last_element)
+static void compute_transport_matrix(ts::Accelerator& accelerator, const int first_element, const int last_element)
 {
 
 	bool verbose = vm["verbose"].as<bool>();
@@ -74,8 +76,8 @@ static void compute_transport_matrix(tsc::Machine& machine, const int first_elem
 			std::cout << "Processing element number " << n_elem << std::endl;
 			std::cout.flush();
 		}
-		auto cv = machine.at(n_elem);
-		// auto cv = machine[n_elem];
+		auto cv = accelerator.at(n_elem);
+		// auto cv = accelerator[n_elem];
 		if(!cv){
 			throw std::runtime_error("no cv ...");
 		}
@@ -112,7 +114,7 @@ static void compute_transport_matrix(tsc::Machine& machine, const int first_elem
 
 }
 
-static void compute_transport_matrix_prop(tsc::Machine& machine, const int first_element, const int last_element)
+static void compute_transport_matrix_prop(ts::Accelerator& accelerator, const int first_element, const int last_element)
 {
 	bool verbose = vm["verbose"].as<bool>();
 	bool very_verbose = vm["very_verbose"].as<bool>();
@@ -126,13 +128,13 @@ static void compute_transport_matrix_prop(tsc::Machine& machine, const int first
 	if(verbose){
 		std::cout << "Processing elements: ";
 	}
-	machine.propagate(calc_config, ps, first_element, last_element);
+	accelerator.propagate(calc_config, ps, first_element, last_element);
 	std::cout << "Computed poincare map " << std::endl
 		  << ps << std::endl;
 
 }
 
-static void compute_transport_matrix_dbl(tsc::Machine& machine, const int first_element, const int last_element)
+static void compute_transport_matrix_dbl(ts::Accelerator& accelerator, const int first_element, const int last_element)
 {
 
 	bool verbose = vm["verbose"].as<bool>();
@@ -148,7 +150,7 @@ static void compute_transport_matrix_dbl(tsc::Machine& machine, const int first_
 	std::cout << "Starting poincare map computation with " << std::endl
 		  << ps << std::endl;
 	for(int n_elem = first_element; n_elem <= last_element; ++n_elem){
-		auto cv = machine[n_elem];
+		auto cv = accelerator[n_elem];
 		if(verbose){
 			std::cout << "Processing element number " << n_elem
 				  << " element ";
@@ -171,7 +173,7 @@ static void compute_transport_matrix_dbl(tsc::Machine& machine, const int first_
 }
 
 
-static void user_compute_transport_matrix(tsc::Machine& machine)
+static void user_compute_transport_matrix(ts::Accelerator& accelerator)
 
 {
 	bool verbose = vm["verbose"].as<bool>();
@@ -192,7 +194,7 @@ static void user_compute_transport_matrix(tsc::Machine& machine)
 			  << " to "<< last_element  << std::endl;
 	}
 	if(last_element == -1){
-		last_element = machine.size();
+		last_element = accelerator.size();
 		if(last_element >0){
 			last_element--;
 		}
@@ -201,12 +203,12 @@ static void user_compute_transport_matrix(tsc::Machine& machine)
 		std::cout << "Computing transport matrix from " << first_element
 			  << " to " << last_element << " number " << std::endl;
 	}
-	// compute_transport_matrix(machine, first_element, last_element);
-	machine.set_trace(&std::cout);
-	compute_transport_matrix_prop(machine, first_element, last_element);
+	// compute_transport_matrix(accelerator, first_element, last_element);
+	accelerator.set_trace(&std::cout);
+	compute_transport_matrix_prop(accelerator, first_element, last_element);
 }
 
-static void track_n_turns(tsc::Machine& machine)
+static void track_n_turns(ts::Accelerator& accelerator)
 {
 	const int n_turns = vm["n_turns"].as<int>();
 	bool verbose = vm["verbose"].as<bool>();
@@ -236,7 +238,7 @@ static void track_n_turns(tsc::Machine& machine)
 				  << "        ps " << ps << std::endl;
 		}
 
-		for(auto cv : machine){
+		for(auto cv : accelerator){
 			auto& elem = dynamic_cast<tsc::ElemType&>(*cv);
 			elem.pass(calc_config, ps);
 		}
@@ -244,13 +246,13 @@ static void track_n_turns(tsc::Machine& machine)
 	std::cout << "End      ps " << ps << std::endl;
 }
 
-static void process(tsc::Machine& machine)
+static void process(ts::Accelerator& accelerator)
 {
 	bool verbose = vm["verbose"].as<bool>();
 
 	if(vm["dump_lattice"].as<bool>()){
-		std::cout << "Machine configuration " << std::endl;
-		for(auto cv : machine){
+		std::cout << "Accelerator configuration " << std::endl;
+		for(auto cv : accelerator){
 			auto& elem = dynamic_cast<tsc::ElemType&>(*cv);
 			std::cout << elem << std::endl;
 		}
@@ -259,8 +261,8 @@ static void process(tsc::Machine& machine)
 	auto element_name = vm["inspect"].as<std::string>();
 	if(element_name != ""){
 		int number =  vm["number"].as<int>();
-		auto elem = machine.find(element_name, number);
-		std::cout << "Machine element " << element_name << " number " << number << ": ";
+		auto elem = accelerator.find(element_name, number);
+		std::cout << "Accelerator element " << element_name << " number " << number << ": ";
 		if(elem){
 			std::cout << *elem;
 		} else {
@@ -269,8 +271,8 @@ static void process(tsc::Machine& machine)
 
 		std::cout << std::endl;
 	}
-	track_n_turns(machine);
-	user_compute_transport_matrix(machine);
+	track_n_turns(accelerator);
+	user_compute_transport_matrix(accelerator);
 
 }
 
@@ -285,7 +287,7 @@ int main(int argc, char *argv[])
 	std::unique_ptr<Config> config;
 
 	// needs to be called once and only once
-	register_elements();
+	ts::register_elements();
 
 	if(verbose){
 		std::cerr << "Parsing file " << fname << std::endl;
@@ -299,10 +301,10 @@ int main(int argc, char *argv[])
 	}
 
 	try{
-		auto machine = tsc::Machine(*config);
-		process(machine);
+		auto accelerator = ts::Accelerator(*config);
+		process(accelerator);
 	}catch(std::exception& e){
-		std::cerr<<"Machine configuration error: "<<e.what()<<"\n";
+		std::cerr<<"Accelerator configuration error: "<<e.what()<<"\n";
 		return 1;
 	}
 

@@ -15,6 +15,42 @@
 namespace thor_scsi::core {
 	struct CellVoid;
         struct Machine;
+
+	/**
+	 *
+	 *
+	 * Experimenting with the observer.
+	 * influenced by blueske
+	 */
+	enum ObservedState
+	{
+		/**
+		 * a standard unspecified event, e.g. one integration step
+		 * typically issued within the _pass or _localPass method
+		 *  of an element
+		 */
+		event = 0,
+		/**
+		 * observation at start, e.g. called before
+		 * called into the elements _pass method
+		 */
+		start,
+		/**
+		 * observation at end, e.g. called before
+		 * called into the elements _pass method
+		 */
+		end,
+		/**
+		 * typically should never reach an observer
+		 * Don't know if this state will be used
+		 */
+		undefined,
+		/**
+		 * an failure occured during processing. can be useful
+		 * sometimes to record the state
+		 */
+		failure
+	};
         /**
 	 * @brief Allow inspection of intermediate State
 	 *
@@ -25,18 +61,14 @@ namespace thor_scsi::core {
 	struct Observer : public boost::noncopyable
 	{
 		virtual ~Observer() {}
-		//! Called from within Machine::propagate()
 
-		template <typename State>
-		void view(const CellVoid* elem, const State * state);
+		//! Called from within the different elements ...
 
 		// view for state vector of double
-		virtual void view(const CellVoid* elem, const ss_vect<double> &ps) = 0;
+		virtual void view(std::shared_ptr<const CellVoid> elem, const ss_vect<double> &ps, const enum ObservedState, const int cnt) = 0;
 		// view for state vector of truncated power series
-		virtual void view(const CellVoid* elem, const ss_vect<tps> &ps) = 0;
+		virtual void view(std::shared_ptr<const CellVoid> elem, const ss_vect<tps> &ps, const enum ObservedState,  const int cnt) = 0;
 	};
-
-
 
        /**
 	* @brief Base class for all simulated elements ... but here agnostic from advance
@@ -73,17 +105,17 @@ namespace thor_scsi::core {
 		//! The Config used to construct this element.
 		inline const Config& conf() const {return p_conf;}
 
-		std::string name; //!< Name of this element (unique in its Machine)
+		const std::string name; //!< Name of this element (unique in its Machine)
 		size_t index; //!< Index of this element (unique in its Machine)
 
 
-		//! The current observer, or NULL
-		Observer *observer() const { return p_observe; }
+		//! The current observer as shared ptr (required for python)
+		std::shared_ptr<Observer> observer() const { return p_observe; }
 		/** Add Observer which will inspect the output State of this Element.
 		 *  Observer instance musy outlive the Element.
 		 * @param o A new Observer or NULL, will replace any existing pointer.
 		 */
-		void set_observer(Observer *o) { p_observe = o; }
+		void set_observer(std::shared_ptr<Observer> o) { p_observe = o; }
 
 		//! Print information about the element.
 		//! level is a hint as to the verbosity expected by the caller.
@@ -100,7 +132,7 @@ namespace thor_scsi::core {
 		// virtual void assign(const ElementVoid* other ) =0;
 
 	private:
-		Observer *p_observe = nullptr;
+		std::shared_ptr<Observer> p_observe;
 		Config p_conf;
 	        friend class Machine;
 	};

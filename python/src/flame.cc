@@ -18,7 +18,7 @@ void py_flame_init(py::module_ &m)
 	//GLPSParser parse;
 
 	py::class_<GLPSParser>(m, "GLPSParser")
-		.def("parse_file",  py::overload_cast<const char *, const bool>(&GLPSParser::parse_file))
+		//.def("parse_file",  py::overload_cast<const char *, const bool>(&GLPSParser::parse_file))
 		//.def("parse_file",  py::overload_cast<const char *, FILE *, const char *>(&GLPSParser::parse_file))
 		.def("parse_byte",  py::overload_cast<const std::string&, const char *>(&GLPSParser::parse_byte))
 		.def(py::init<>());

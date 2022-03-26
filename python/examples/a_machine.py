@@ -98,9 +98,24 @@ print(ps)
 m.propagate(calc_config, ps, 0, 2000)
 print(ps)
 
-
 tmp = ss_vect_tps_to_lists(ps)
 res = ss_vect_to_masked_matrix(tmp)
 np.set_printoptions(precision=4)
 print(res.data)
 print(res)
+
+separator = "-" * 66
+print(separator)
+# Access to some type
+type_name = "Quadrupole"
+print(f"All elements of type name '{type_name}' ")
+for elem in m.elementsWithNameType(type_name):
+    print(elem)
+print(separator)
+
+elem_name = "chv"
+print(separator)
+print(f"All elements with name {elem_name} ")
+for elem in m.elementsWithName(elem_name):
+    print(repr(elem))
+print(separator)

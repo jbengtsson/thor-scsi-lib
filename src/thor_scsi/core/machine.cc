@@ -112,6 +112,24 @@ tsc::Machine::Machine(const Config& c)
     FLAME_LOG(DEBUG)<<"Complete constructing Machine";
 }
 
+//! Elements with a given name
+tsc::Machine::p_elements_t
+tsc::Machine::elementsWithName(const std::string& name)
+{
+	auto iters = this->equal_range(name);
+	tsc::Machine::p_elements_t sel_elems(std::get<0>(iters), std::get<1>(iters));
+	return sel_elems;
+}
+
+//! Elements with a given name type
+tsc::Machine::p_elements_t
+tsc::Machine::elementsWithNameType(const std::string& name)
+{
+	auto iters = this->equal_range_type(name);
+	tsc::Machine::p_elements_t sel_elems(std::get<0>(iters), std::get<1>(iters));
+	return sel_elems;
+}
+
 tsc::Machine::~Machine()
 {
     return;
@@ -124,61 +142,6 @@ tsc::Machine::~Machine()
     */
 }
 
-template<typename T>
-void
-tsc::Machine::_propagate(thor_scsi::core::ConfigType& conf, ss_vect<T> &ps, size_t start, int max)// const
-{
-
-    const size_t nelem = p_elements.size();
-
-    int next_elem = start;
-    bool retreat = std::signbit(max);
-
-    for(int i=0; next_elem >= 0 && next_elem<nelem && i<abs(max); i++)
-    {
-	size_t n = next_elem;
-	std::shared_ptr<CellVoid> cv = p_elements.at(n);
-
-	if(retreat) {
-	    next_elem--;
-	} else {
-	    next_elem++;
-	}
-	auto elem = std::dynamic_pointer_cast<thor_scsi::core::ElemType>(cv);
-	if(!elem){
-	    std::cerr << "Failed to cast to element to Elemtype " << cv->name << std::endl;
-	    return;
-	}
-	elem->pass(conf, ps);
-
-	//if(E->p_observe)
-	//E->p_observe->view(E, S);
-	if(p_trace)
-	    (*p_trace) << "After ["<< n<< "] " << cv->name << " " <<std::endl << ps << std::endl;
-    }
-}
-
-
-#if 0
-template<> void
-tsc::Machine::_propagate(thor_scsi::core::ConfigType& conf, ss_vect<double> &ps, size_t start, int max);// const;
-template<> void
-tsc::Machine::_propagate(thor_scsi::core::ConfigType& conf, ss_vect<tps> &ps, size_t start, int max);// const;
-template void
-tsc::Machine::_propagate(thor_scsi::core::ConfigType& conf, ss_vect<double> &ps, size_t start, int max);// const;
-template void
-tsc::Machine::_propagate(thor_scsi::core::ConfigType& conf, ss_vect<tps> &ps, size_t start, int max);// const;
-#endif
-void
-tsc::Machine::propagate(thor_scsi::core::ConfigType& conf, ss_vect_dbl &ps, size_t start, int max)// const
-{
-    _propagate(conf, ps, start, max);
-}
-void
-tsc::Machine::propagate(thor_scsi::core::ConfigType& conf, ss_vect_tps  &ps, size_t start, int max)// const
-{
-    _propagate(conf, ps, start, max);
-}
 
 #if 0
 

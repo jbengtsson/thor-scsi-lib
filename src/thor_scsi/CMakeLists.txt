@@ -71,6 +71,7 @@ set(thor_scsi_element_HEADERS
 
 set(thor_scsi_std_machine_HEADERS
   std_machine/std_machine.h
+  std_machine/accelerator.h
 )
 set(thor_scsi_core_FILES
   core/transform.cc
@@ -90,6 +91,7 @@ set(thor_scsi_core_FILES
   elements/marker.cc
   elements/cavity.cc
   std_machine/std_machine.cc
+  std_machine/accelerator.cc
   # thor_lib.cc
   # t2cell.cc
   # t2lat.cc

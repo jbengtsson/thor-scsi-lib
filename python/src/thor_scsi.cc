@@ -34,7 +34,7 @@ PYBIND11_MODULE(lib, scsi) {
 
     py_thor_scsi_init_tps(scsi);
     py_thor_scsi_init_elements(scsi);
-    py_thor_scsi_init_machine(scsi);
+    py_thor_scsi_init_accelerator(scsi);
     py_thor_scsi_init_config_type(scsi);
     // py_thor_scsi_init_lattice(scsi);
 

@@ -13,14 +13,9 @@
 #include <thor_scsi/core/cell_void.h>
 #include <thor_scsi/core/elements_basis.h>
 #include <thor_scsi/core/config.h>
-#include <tps/tps_type.h>
-#include <tps/ss_vect.h>
 #include <ostream>
 
 namespace thor_scsi::core {
-
-	typedef ss_vect<tps> ss_vect_tps;
-	typedef ss_vect<double> ss_vect_dbl;
 	/**
 	 * @brief The core simulate Machine engine
 	 *
@@ -53,24 +48,6 @@ namespace thor_scsi::core {
 		}
 #endif
 
-		/** @brief Pass the given bunch State through this Machine.
-		 *
-		 * @param S The initial state, will be updated with the final state
-		 * @param start The index of the first Element the state will pass through
-		 * @param max The maximum number of elements through which the state will be passed
-		 * @throws std::exception sub-classes for various errors.
-		 *         If an exception is thrown then the state of S is undefined.
-		 */
-
-
-		template <typename T>
-		void _propagate(thor_scsi::core::ConfigType& conf, ss_vect<T> &ps, size_t start, int max);
-		void propagate(thor_scsi::core::ConfigType&, ss_vect_tps &ps,
-			       size_t start=0,
-			       int max=INT_MAX) ;
-		void propagate(thor_scsi::core::ConfigType&, ss_vect_dbl &ps,
-			       size_t start=0,
-			       int max=INT_MAX) ;
 
 #if 0   /* NO state */
 		/** @brief Allocate (with "operator new") an appropriate State object
@@ -210,6 +187,10 @@ namespace thor_scsi::core {
 					      lookup_iterator(high));
 		}
 
+		//! Elements with a given name
+		p_elements_t elementsWithName(const std::string& name);
+		//! Elements with a given name type
+		p_elements_t elementsWithNameType(const std::string& name);
 
 	private:
 		p_elements_t p_elements;

@@ -7,25 +7,22 @@ namespace bti = boost::typeindex;
 tsc::CellVoid::CellVoid(const Config& conf)
 	:name(conf.get<std::string>("name"))
 	,index(0)
-	,p_observe(nullptr)
 	,p_conf(conf)
 {}
 
 tsc::CellVoid::CellVoid(CellVoid&& o):
-	//p_conf(std::move(o.p_conf)),
-	index(std::exchange(o.index, -1))
+	name(std::move(o.name)),
+	index(std::exchange(o.index, -1)),
+	p_observe(std::move(o.p_observe)),
+	p_conf(std::move(o.p_conf))
 {
-	// std::cerr << "Cell void move ctor on " <<  o << std::endl;
-	this->p_conf = o.p_conf;
-	this->p_observe = o.p_observe;
-	o.p_observe = nullptr;
-	this->name = o.name;
 }
 
 tsc::CellVoid::~CellVoid()
 {
 	if (p_observe){
-		std::cerr << "Would delete p_observe" << std::endl;
+		// now handled by shared_ptr
+		// std::cerr << "Would delete p_observe" << std::endl;
 	}
 	// delete p_observe;
 }

@@ -5,6 +5,7 @@
 #include <thor_scsi/elements/field_kick.h>
 #include <thor_scsi/elements/drift.h>
 #include <thor_scsi/elements/marker.h>
+#include <thor_scsi/elements/bpm.h>
 #include <thor_scsi/elements/bending.h>
 #include <thor_scsi/elements/quadrupole.h>
 #include <thor_scsi/elements/sextupole.h>
@@ -37,6 +38,19 @@ public:
 	}
 };
 
+class PyObserver: public tsc::Observer {
+public:
+	using tsc::Observer::Observer;
+
+	void view(std::shared_ptr<const tsc::CellVoid> elem, const ss_vect<double> &ps, const enum tsc::ObservedState os, const int cnt) override {
+		PYBIND11_OVERRIDE_PURE(void, tsc::Observer, view, elem, ps, os, cnt);
+	}
+	void view(std::shared_ptr<const tsc::CellVoid> elem, const ss_vect<tps> &ps, const enum tsc::ObservedState os, const int cnt) override {
+		PYBIND11_OVERRIDE_PURE(void, tsc::Observer, view, elem, ps, os, cnt);
+	}
+};
+
+
 class PyClassicalMagnet: public tse::ClassicalMagnet {
 	using tse::ClassicalMagnet::ClassicalMagnet;
 	int getMainMultipoleNumber(void) const override {
@@ -59,6 +73,17 @@ static const char pass_tps_doc[] = "pass the element (state as tps)";
 void py_thor_scsi_init_elements(py::module &m)
 {
 
+	py::enum_<tsc::ObservedState>(m, "ObservedState")
+		.value("event",     tsc::ObservedState::event)
+		.value("start",     tsc::ObservedState::start)
+		.value("end",       tsc::ObservedState::end)
+		.value("undefined", tsc::ObservedState::undefined)
+		.value("failure",   tsc::ObservedState::failure);
+
+
+	py::class_<tsc::Observer,  PyObserver, std::shared_ptr<tsc::Observer>> observer(m, "Observer");
+	observer.def(py::init<>());
+
 	py::class_<tsc::ElemType,  PyElemType, std::shared_ptr<tsc::ElemType>> elem_type(m, "ElemType");
 	elem_type.def("__str__",       &tsc::ElemType::pstr)
 		.def("__repr__",       &tsc::ElemType::repr)
@@ -66,14 +91,20 @@ void py_thor_scsi_init_elements(py::module &m)
 		.def_readonly("index", &tsc::ElemType::index)
 		.def("getLength",      &tse::ElemType::getLength)
 		.def("setLength",      &tse::ElemType::setLength)
+		.def("getObserver",    &tse::ElemType::observer)
+		.def("setObserver",    &tse::ElemType::set_observer)
 		.def("propagate", py::overload_cast<tsc::ConfigType&, ss_vect<double>&>(&tse::ElemType::pass), pass_d_doc)
 		.def("propagate", py::overload_cast<tsc::ConfigType&, ss_vect<tps>&>(&tse::ElemType::pass),    pass_tps_doc)
 		.def(py::init<const Config &>());
+
 
 	py::class_<tse::DriftType, std::shared_ptr<tse::DriftType>>(m, "Drift", elem_type)
 		.def(py::init<const Config &>());
 
 	py::class_<tse::MarkerType, std::shared_ptr<tse::MarkerType>>(m, "Marker", elem_type)
+		.def(py::init<const Config &>());
+
+	py::class_<tse::BPMType, std::shared_ptr<tse::BPMType>>(m, "BPM", elem_type)
 		.def(py::init<const Config &>());
 
 	//, std::shared_ptr<tse::>

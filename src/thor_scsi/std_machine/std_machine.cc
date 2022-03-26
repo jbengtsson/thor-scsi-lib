@@ -8,11 +8,12 @@
 #include <thor_scsi/elements/cavity.h>
 #include <thor_scsi/elements/bending.h>
 
+namespace ts = thor_scsi;
 namespace tsc = thor_scsi::core;
 namespace tse = thor_scsi::elements;
 
 int
-register_elements(void)
+ts::register_elements(void)
 {
 	tsc::Machine::registerElement<tse::DriftType>("Drift");
 	tsc::Machine::registerElement<tse::CavityType>("Cavity");

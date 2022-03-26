@@ -12,7 +12,7 @@ add_library(lib MODULE
   src/tps.cc
   src/config_type.cc
   src/elements.cc
-  src/machine.cc
+  src/accelerator.cc
   )
 
 target_include_directories(lib
