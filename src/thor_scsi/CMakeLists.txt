@@ -54,11 +54,11 @@ set(thor_scsi_core_HEADERS
 set(thor_scsi_element_HEADERS
   elements/constants.h
   elements/drift.h
-  elements/mpole.h
   elements/elements_enums.h
   elements/utils.h
   elements/field_kick.h
   elements/element_local_coordinates.h
+  elements/mpole.h
   elements/classical_magnet.h
   elements/bending.h
   elements/quadrupole.h
@@ -67,6 +67,7 @@ set(thor_scsi_element_HEADERS
   elements/element_helpers.h
   elements/cavity.h
   elements/marker.h
+  elements/bpm.h
   )
 
 set(thor_scsi_std_machine_HEADERS

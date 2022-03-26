@@ -32,7 +32,16 @@ d = gsl_conf.gsl_config()
 prefix = os.path.abspath(
     os.path.join(os.path.dirname(__name__), os.pardir, os.pardir, 'local')
 )
-print(prefix)
+from pybind11.setup_helpers import ParallelCompile
+
+# Optional multithreaded build
+try:
+    os.environ["NPY_NUM_BUILD_JOBS"]
+except KeyError:
+    os.environ["NPY_NUM_BUILD_JOBS"] = "5"
+
+ParallelCompile("NPY_NUM_BUILD_JOBS").install()
+
 ext_modules = [
     # Pybind11Extension(
     #    "testbind",
@@ -50,9 +59,9 @@ ext_modules = [
     Pybind11Extension(
         "lib",
         # sorted(["src/thor_py_enums.cc", "src/thor_py.cc"]),
-        ["src/machine.cc",
+        ["src/elements.cc",
+         "src/accelerator.cc",
          "src/tps.cc",
-          "src/elements.cc",
          "src/thor_scsi.cc",
          "src/config_type.cc",
          # "src/enums.cc",
