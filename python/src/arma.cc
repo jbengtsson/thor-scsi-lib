@@ -27,7 +27,7 @@ void py_thor_scsi_init_arma(py::module &m)
 				    };/* Number of dimensions */
 				    r.strides = {            /* Strides (in bytes) for each index */
 					    sizeof(double),
-					    sizeof(double) * static_cast<long int>(mat.n_cols)};
+					    sizeof(double) * static_cast<size_t>(mat.n_cols)};
 				    return r;
 			    });
 }
