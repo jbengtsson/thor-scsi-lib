@@ -5,8 +5,9 @@ ps = ss_vect_tps()
 ps.set_identity()
 print(ps)
 
-tmp = ss_vect_tps_to_mat(ps)
-tmp = np.array(tmp)
+rtmp = ss_vect_tps_to_mat(ps)
+print(rtmp)
+tmp = np.array(rtmp)
 np.set_printoptions(precision=4)
 print(tmp)
 

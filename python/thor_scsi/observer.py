@@ -18,7 +18,7 @@ class Observer(_AbstractObserver):
         self.name = None
         self.index = None
         self.res = None
-        self.ps = None
+        self.raw = None
 
     def __repr__(self):
         cls_name = self.__class__.__name__
@@ -26,6 +26,7 @@ class Observer(_AbstractObserver):
         return txt
 
     def reset(self):
+        self.raw = None
         self.res = None
 
     def view(self, element, ps, observed_state, cnt):
@@ -52,6 +53,7 @@ class Observer(_AbstractObserver):
 
         elif observed_state == ObservedState.end:
             # Memory management to be reviewed ...
-            self.res = np.array(ss_vect_tps_to_mat(ps))
+            self.raw = ss_vect_tps_to_mat(ps);
+            self.res = np.array(self.raw)
 
         # Other observed states are not recognised

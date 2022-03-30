@@ -26,29 +26,16 @@ for elem, ob in zip(acc, observers):
 ps = ss_vect_tps()
 ps.set_identity()
 print(ps)
-acc.propagate(calc_config, ps, 0, 3)
-
+acc.propagate(calc_config, ps, 0, 100)
 print(ps)
 
 # Results look a bit strange
 np.set_printoptions(precision=2)
-for cnt, ob in enumerate(observers[:1]):
+for cnt, ob in enumerate(observers[:3]):
     print(f'Observed {ob.index:3d}: {ob.name:20s}')
-    # print(ob.ps)
-
+    print(ob.raw)
     for r in ob.res:
-
         txt = '\t'.join(["{:10.6e}".format(x) for x in r])
         print(txt)
 
     print("\n\n")
-
-    # ps, mat = ss_vect_to_masked_matrix(ob.res)
-    # print(ps)
-    # print()
-    # print(mat)
-    # print()
-    if cnt > 3:
-        break
-    if cnt >1234:
-        break

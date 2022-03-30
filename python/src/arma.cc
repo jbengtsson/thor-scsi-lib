@@ -4,25 +4,32 @@
 
 namespace py = pybind11;
 
+
 void py_thor_scsi_init_arma(py::module &m)
 {
 	//arma::mat;
 
-  py::class_<arma::mat>(m, "Matrix", py::buffer_protocol())
-	  .def_buffer([](arma::mat &mat) -> py::buffer_info {
-			py::buffer_info r;
-			r.ptr = mat.memptr();         /* Pointer to buffer */
-			r.itemsize = sizeof(double); /* Size of one scalar */
-			r.format = py::format_descriptor<double>::format(); /* Python struct-style format descriptor */
-			r.ndim = 2;
-			r.shape = { static_cast<long int>(mat.n_rows),
-				    static_cast<long int>(mat.n_cols)
-			};/* Number of dimensions */
-			r.strides = { sizeof(double) * static_cast<long int>(mat.n_cols),           /* Strides (in bytes) for each index */
-				      sizeof(double) };
-
-			return r;
-		      });
+	py::class_<arma::mat>(m, "Matrix", py::buffer_protocol())
+		.def("__repr__", [](arma::mat &mat) -> std::string {
+					 std::stringstream strm;
+					 mat.print(strm, "<tpsa array>");
+					 return strm.str();
+				 })
+		//.def("__str__", &PyArma::pstr)
+		.def_buffer([](arma::mat &mat) -> py::buffer_info {
+				    py::buffer_info r;
+				    r.ptr = mat.memptr();         /* Pointer to buffer */
+				    r.itemsize = sizeof(double); /* Size of one scalar */
+				    r.format = py::format_descriptor<double>::format(); /* Python struct-style format descriptor */
+				    r.ndim = 2;
+				    r.shape = { static_cast<long int>(mat.n_rows),
+						static_cast<long int>(mat.n_cols)
+				    };/* Number of dimensions */
+				    r.strides = {            /* Strides (in bytes) for each index */
+					    sizeof(double),
+					    sizeof(double) * static_cast<long int>(mat.n_cols)};
+				    return r;
+			    });
 }
 /*
  * Local Variables:
