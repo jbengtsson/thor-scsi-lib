@@ -1,4 +1,5 @@
 #include <pybind11/pybind11.h>
+#include <pybind11/numpy.h>
 #include <armadillo>
 #include "thor_scsi.h"
 
@@ -31,7 +32,38 @@ void py_thor_scsi_init_arma(py::module &m)
 					    static_cast<py::ssize_t>(sizeof(double)),
 					    static_cast<py::ssize_t>(sizeof(double) * n_cols)};
 				    return r;
-			    });
+			    })
+		//.def(py::init([](py::buffer b) {
+		.def(py::init([](py::array_t<double, py::array::c_style|py::array::forcecast> b) {
+				      /* Request a buffer descriptor from Python */
+				      py::buffer_info info = b.request();
+
+				      /* Some sanity checks ... */
+				      if (info.format != py::format_descriptor<double>::format())
+					      throw std::runtime_error("Incompatible format: expected a double array!");
+
+				      if (info.ndim != 2){
+					      std::stringstream strm;
+					      strm << "Incompatible buffer: expected 2 but got "
+						   << info.ndim << "dimensions!";
+					      throw std::runtime_error(strm.str());
+				      }
+
+				      bool need_transpose = false;
+				      if(info.strides[0] != sizeof(double)){
+					      need_transpose = true;
+				      }
+				      /*
+					std::cerr << "Strides [" << info.strides[0] << ", " << info.strides[1] << "]"
+					<< ": need_transpose " << std::boolalpha << need_transpose << std::endl;
+				      */
+				      auto mat = arma::mat(static_cast<const double *>(info.ptr),
+							   info.shape[0], info.shape[1]);
+				      if(need_transpose){
+					      arma::inplace_trans(mat);
+				      }
+				      return mat;
+			      }));
 }
 /*
  * Local Variables:

@@ -67,6 +67,7 @@ std::vector< std::vector<double> > maptostlmat(const ss_vect<tps> &map);
 arma::mat maptomat(const ss_vect<tps> &map);
 
 ss_vect<tps> mattomap(const arma::mat &mat);
+ss_vect<tps> mattomap_check(const arma::mat &mat);
 
 arma::mat stlmattomat(const std::vector< std::vector<double> > &stlmat);
 

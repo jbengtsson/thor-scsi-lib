@@ -34,6 +34,7 @@ target_link_libraries(lib
   thor_scsi_core
   tpsa_lin
   ${flame_CORE_LIBRARY}
+  ${ARMADILLO_LIBRARIES}
   #
   #
   )

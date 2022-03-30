@@ -254,6 +254,24 @@ ss_vect<tps> mattomap(const arma::mat &mat)
 }
 
 
+ss_vect<tps> mattomap_check(const arma::mat &mat)
+{
+	bool check_passed = false;
+	if(mat.n_rows == tps_n || mat.n_cols == tps_n) {
+		check_passed = true;
+	}
+	if(!check_passed){
+		std::stringstream strm;
+		strm << "ss_vect<tps> expected matrix with shape "
+		     << "[" << tps_n << ", " << tps_n << "] but got shape "
+		     << "[" << mat.n_rows << ", " << mat.n_cols << "]";
+
+		throw std::runtime_error(strm.str());
+	}
+	return mattomap(mat);
+}
+
+
 arma::mat stlmattomat(const std::vector< std::vector<double> > &stlmat)
 {
   const int

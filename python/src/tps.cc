@@ -60,7 +60,7 @@ void py_thor_scsi_init_tps(py::module &m)
 
 	//m.def("lists_to_ss_vect_tps", mattomap_save);
 	m.def("ss_vect_tps_to_mat", &maptomat);
-
+	m.def("mat_to_ss_vect_tps", &mattomap_check);
 
 }
 /*
