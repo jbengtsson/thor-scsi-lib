@@ -56,6 +56,9 @@ set(thor_scsi_element_HEADERS
   elements/drift.h
   elements/elements_enums.h
   elements/utils.h
+  elements/radiation_delegate.h
+  elements/radiation_delegate_api.h
+  elements/field_kick_api.h
   elements/field_kick.h
   elements/element_local_coordinates.h
   elements/mpole.h
@@ -87,6 +90,7 @@ set(thor_scsi_core_FILES
   elements/utils.cc
   elements/element_helpers.cc
   elements/drift.cc
+  elements/radiation_delegate.cc
   elements/field_kick.cc
   elements/mpole.cc
   elements/marker.cc

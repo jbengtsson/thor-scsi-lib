@@ -6,8 +6,9 @@
 // #include <thor_scsi/elements/enums.h>
 #include <thor_scsi/elements/utils.h>
 // move to API
-#include <thor_scsi/core/field_interpolation.h>
 #include <thor_scsi/core/exceptions.h>
+#include <thor_scsi/elements/field_kick_api.h>
+#include <thor_scsi/elements/radiation_delegate.h>
 #include <cassert>
 
 /* Calculate multipole kick. The kick is given by
@@ -79,10 +80,17 @@ namespace thor_scsi::elements {
 	 *
 	 * SI units are used internally
 	 * apart from energy [GeV]
+	 *
+	 *
+	 * PhasespaceChange
+	 * FieldPropagate ?
+	 *
+	 * Assumption: The magnetic field is constant within this element.
+	 *             Hence e.g. local curvature and gradient are constant
 	 */
-	class FieldKick : public LocalGalileanPRot {
+	class FieldKick : public FieldKickAPI {
 	public:
-
+		// using thor_scsi::core::ObservedState;
 		/*
 		 * @todo configuration for method: use int
 		 *
@@ -176,19 +184,6 @@ namespace thor_scsi::elements {
 			}
 		}
 
-		/*
-		 * @brief:
-		 *
-		 * returns
-		 * @f[ \frac{1}{\rho} = irho == 0 @f]
-		 */
-		inline double getCurvature(void) const {
-			return this->Pirho;
-		}
-
-		inline void setCurvature(const double val) {
-			this->Pirho = val;
-		}
 
 		/*
 		 * @brief: element takes geometric effects on the trajectory into account
@@ -232,8 +227,6 @@ namespace thor_scsi::elements {
 			return this->PTx2;
 		}
 
-
-
 		virtual void localPass(thor_scsi::core::ConfigType &conf, ss_vect<double> &ps) override final
 		{ _localPass(conf, ps);}
 		virtual void localPass(thor_scsi::core::ConfigType &conf, ss_vect<tps> &ps) override final
@@ -249,6 +242,13 @@ namespace thor_scsi::elements {
 
 		template<typename T>
 		        void _localPassBody(thor_scsi::core::ConfigType &conf, ss_vect<T> &ps);
+
+		// Required as radiation is now handled by a delegate
+		template<typename T>
+		inline void thinKickAndRadiate(const thor_scsi::core::ConfigType &conf,
+					   const thor_scsi::core::Field2DInterpolation& intp,
+					   const double L, const double h_bend, const double h_ref,
+					   ss_vect<T> &ps);
 
 		void inline validateIntegrationMethod(const int n) const {
 			switch(n){
@@ -335,6 +335,7 @@ namespace thor_scsi::elements {
 
 
 
+
 		/**
 		 * Symplectic integrator
 		 * 2nd order
@@ -354,30 +355,10 @@ namespace thor_scsi::elements {
 		 *  @f[c_1 + c_2 = 1 @f]
 		 *
 		 * d_2:  negative thus creates a negative drift
-		 */
-
-		inline auto getFieldInterpolator(void) const {
-			/*
-			  std::cerr << "Getting field interpolator " <<  std::endl;
-			  std::cerr.flush();
-			  std::cerr << " address " << this->intp << std::endl;
-			*/
-			if(!this->intp){
-				throw std::logic_error("interpolator pointer null");
-			}
-			/*
-			  std::cerr << "use count " << this->intp.use_count() << std::endl;
-			  std::cerr.flush();
-			*/
-			auto tmp =  std::const_pointer_cast<thor_scsi::core::Field2DInterpolation>(this->intp);
-			return tmp;
-			// return ;
-		}
-
-		/*
-		 * @todo review interaction to configuration to see if integration intervals can be precomputed
 		 *
+		 * @todo review interaction to configuration to see if integration intervals can be precomputed
 		 */
+
 		class FieldKickDelegate {
 		public:
 			FieldKickDelegate(FieldKick *parent){
@@ -486,23 +467,50 @@ namespace thor_scsi::elements {
 			return this->integ4O;
 		}
 
-	private:
-		/*
-		 * @brief: reset parameters for radiation
-		 *
-		 * passing ps to template the function. currently these functions are void
-		 * (perhaps required later on)
-		 */
-		template<typename T>
-		void _initRadiate(const thor_scsi::core::ConfigType &conf,  ss_vect<T> &ps);
+		inline void setRadiationDelegate(std::shared_ptr<thor_scsi::elements::RadiationDelegateKick> p){
+			this->rad_del = p;
+		}
+		inline auto getRadiationDelegate(void) {
+			return this->rad_del;
+		}
 
-		// first step of integration
+	private:
+		inline bool computeRadiation(const thor_scsi::core::ConfigType &conf){
+			return conf.emittance && !conf.Cavity_on;
+		}
 		template<typename T>
-		void _radiateStepOne(const thor_scsi::core::ConfigType &conf, ss_vect<T> &ps);
+		inline void _synchrotronIntegralsInit(const thor_scsi::core::ConfigType &conf,  ss_vect<T> &ps){
+			if(this->computeRadiation(conf)){
+				auto ob = this->_getRadiationDelegate();
+				if(ob){
+					ob->view(*this, ps, thor_scsi::core::ObservedState::start, 0);
+				}
+			}
+		}
+
+		// first step of synchrotron integrals increment / local contribution
+		// rename it to
+		template<typename T>
+		inline void _synchrotronIntegralsFinish(const thor_scsi::core::ConfigType &conf, ss_vect<T> &ps){
+			if(this->computeRadiation(conf)){
+				auto obj = this->_getRadiationDelegate();
+				if(obj){
+
+					obj->view(*this, ps, thor_scsi::core::ObservedState::end, 0);
+				}
+			}
+		}
 
 		// calculate the effect of radiation
 		template<typename T>
-		void _radiate(thor_scsi::core::ConfigType &conf, ss_vect<T> &ps);
+		inline void _synchrotronIntegralsStep(thor_scsi::core::ConfigType &conf, ss_vect<T> &ps, const int step) {
+			if(this->computeRadiation(conf)){
+				auto obj = this->_getRadiationDelegate();
+				if(obj){
+					obj->view(*this, ps, thor_scsi::core::ObservedState::event, step);
+				}
+			}
+		}
 
 		// calculate quadfringe if quadrupole and required
 		template<typename T>
@@ -513,8 +521,13 @@ namespace thor_scsi::elements {
 		bool Pthick;                  ///< Thick or thin element
 		double Pirho = 0;             ///< 1/rho [1/m].
 
+		inline auto _getRadiationDelegate(void) {
+			return this->rad_del.get();
+		}
+
+
 	protected:
-		std::shared_ptr<thor_scsi::core::Field2DInterpolation> intp;
+		std::shared_ptr<thor_scsi::elements::RadiationDelegateKick> rad_del;
 
 	};
 } // Name space

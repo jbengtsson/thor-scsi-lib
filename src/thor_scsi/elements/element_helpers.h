@@ -11,10 +11,8 @@
 #include <tps/ss_vect.h>
 #include <tps/ss_vect_utils.h>
 #include <tps/tps.h>
-#include <thor_scsi/core/cells.h>
-// #include <thor_scsi/core/elements_enums.h>
 #include <thor_scsi/core/config.h>
-#include <thor_scsi/core/multipoles.h>
+#include <thor_scsi/core/exceptions.h>
 
 #include <exception>
 #include <iostream>
@@ -99,21 +97,21 @@ void get_twoJ(const int n_DOF, const ss_vect<double> &ps,
 template<typename T>
 inline T get_p_s(const thor_scsi::core::ConfigType &conf, const ss_vect<T> &ps)
 {
-  T p_s, p_s2;
+	T p_s, p_s2;
 
-  if (!conf.H_exact)
-    // Small angle axproximation.
-    p_s = 1e0 + ps[delta_];
-  else {
-    p_s2 = sqr(1e0+ps[delta_]) - sqr(ps[px_]) - sqr(ps[py_]);
-    if (p_s2 >= 0e0)
-      p_s = sqrt(p_s2);
-    else {
-//      printf("get_p_s: *** Speed of light exceeded!\n");
-      p_s = NAN;
-    }
-  }
-  return(p_s);
+	if (!conf.H_exact) {
+		// Small angle axproximation.
+		p_s = 1e0 + ps[delta_];
+	} else {
+		p_s2 = sqr(1e0+ps[delta_]) - sqr(ps[px_]) - sqr(ps[py_]);
+		if (p_s2 >= 0e0){
+			p_s = sqrt(p_s2);
+		}  else {
+			throw PhysicsViolation("Speed of light exceeded");
+			p_s = NAN;
+		}
+	}
+	return(p_s);
 }
 
 
@@ -133,9 +131,10 @@ public:
 	/**
 	 *  @brief Compute phase space
 	 */
+	/*
 	static inline void get_ps(const ss_vect<double> &x, thor_scsi::core::CellType *Cell)
 		{ Cell->BeamPos = pstostl(x); }
-
+	*/
 	static inline double set_prm(const int k) { return 1e0; }
 
 	/**
@@ -158,9 +157,6 @@ public:
 		return 0e0;
 	}
 
-	static inline void emittance(const thor_scsi::core::ConfigType &conf, const double B2,
-				     const double u, const double ps0,
-				     const ss_vect<double> &xp) { }
 
 	static inline void diff_mat(const double B2, const double u,
 				    const double ps0, const ss_vect<double> &xp) { }
@@ -171,8 +167,10 @@ public:
 template<>
 class is_tps<tps> {
 public:
+	/*
 	static inline void get_ps(const ss_vect<tps> &x, thor_scsi::core::CellType *Cell)
 		{ Cell->BeamPos = pstostl(x.cst()); Cell->A = maptostlmat(x); }
+	*/
 
 	static inline tps set_prm(const int k) { return tps(0e0, k); }
 
@@ -216,24 +214,6 @@ public:
 	 *
 	 * \endverbatim
 	 */
-	static inline void emittance(thor_scsi::core::ConfigType &conf, const tps &B2_perp,
-				     const tps &ds, const tps &p_s0,
-				     const ss_vect<tps> &A){
-
-		int          j;
-		double       B_66;
-		ss_vect<tps> A_inv;
-
-		if (B2_perp > 0e0) {
-			B_66 = (q_fluct*pow(B2_perp.cst(), 1.5)*pow(p_s0, 4)*ds).cst();
-			A_inv = Inv(A);
-			// D_11 = D_22 = curly_H_x,y * B_66 / 2,
-			// curly_H_x,y = eta_Fl^2 + etap_Fl^2
-			for (j = 0; j < 3; j++)
-				conf.D_rad[j] +=
-					(sqr(A_inv[j*2][delta_])+sqr(A_inv[j*2+1][delta_]))*B_66/2e0;
-		}
-	}
 
 	static inline void diff_mat(const tps &B2_perp, const tps &ds,
 				    const tps &p_s0, ss_vect<tps> &x)
@@ -267,6 +247,12 @@ public:
 		 *       but field integral interpolation
 		 *     * consider renaming function to thin lens
 		 *
+		 *
+		 * .. Warning::
+		 *
+		 *    * cartesion bend with evaluation of gradients not supported curently (code not
+		 *      active
+		 *
 		 * The vector potential for the combined-function sector bend is from: [Iselin:85]_
 		 *
 		 * .. [Iselin:85]  C. Iselin "Lie Transformations and Transport Equations for Combined-
@@ -275,7 +261,9 @@ public:
 		 */
 		template<typename T>
 		void thin_kick(const thor_scsi::core::ConfigType &conf,
-			       const thor_scsi::core::Field2DInterpolation& intp, const double L,
+			       // const thor_scsi::core::Field2DInterpolation& intp,
+			       const T BxoBrho, const T ByoBrho,
+			       const double L,
 			       const double h_bend, const double h_ref, ss_vect<T> &ps);
 
 }// namespace thor_scsi::elements

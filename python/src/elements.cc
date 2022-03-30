@@ -101,7 +101,23 @@ void py_thor_scsi_init_elements(py::module &m)
 	py::class_<tse::DriftType, std::shared_ptr<tse::DriftType>>(m, "Drift", elem_type)
 		.def(py::init<const Config &>());
 
+	py::class_<tse::RadiationDelegate, std::shared_ptr<tse::RadiationDelegate>>(m, "RadiationDelegate")
+		.def("reset",       &tse::RadiationDelegate::reset)
+		.def("getCurlydHx", &tse::RadiationDelegate::getCurlydHx)
+		.def(py::init<>());
+
+	py::class_<tse::RadiationDelegateKick, std::shared_ptr<tse::RadiationDelegateKick>>(m, "RadiationDelegateKick")
+		.def("reset",                              &tse::RadiationDelegateKick::reset)
+		.def("getCurlydHx",                        &tse::RadiationDelegateKick::getCurlydHx)
+		.def("getSynchrotronIntegralsIncrements",  &tse::RadiationDelegateKick::getSynchrotronIntegralsIncrement)
+		.def("getDiffusionCoefficientsIncrements", &tse::RadiationDelegateKick::getDiffusionCoefficientsIncrement)
+		.def("computeDiffusion",                   &tse::RadiationDelegateKick::computeDiffusion)
+		.def("isComputingDiffusion",               &tse::RadiationDelegateKick::isComputingDiffusion)
+		.def(py::init<>());
+
 	py::class_<tse::MarkerType, std::shared_ptr<tse::MarkerType>>(m, "Marker", elem_type)
+		.def("getRadiationDelegate", &tse::MarkerType::getRadiationDelegate)
+		.def("setRadiationDelegate", &tse::MarkerType::setRadiationDelegate)
 		.def(py::init<const Config &>());
 
 	py::class_<tse::BPMType, std::shared_ptr<tse::BPMType>>(m, "BPM", elem_type)
@@ -150,6 +166,8 @@ void py_thor_scsi_init_elements(py::module &m)
 		.def("getEntranceAngle",            &tse::FieldKick::getEntranceAngle)
 		.def("setExitAngle",                &tse::FieldKick::setExitAngle)
 		.def("getExitAngle",                &tse::FieldKick::getExitAngle)
+		.def("getRadiationDelegate",        &tse::FieldKick::getRadiationDelegate)
+		.def("setRadiationDelegate",        &tse::FieldKick::setRadiationDelegate)
 		.def(py::init<const Config &>());
 
 	py::class_<tse::MpoleType, std::shared_ptr<tse::MpoleType>> mpole_type(m, "Mpole", field_kick);

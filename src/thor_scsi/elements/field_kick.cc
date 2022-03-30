@@ -1,3 +1,4 @@
+#include <thor_scsi/core/multipoles.h>
 #include <thor_scsi/elements/field_kick.h>
 #include <thor_scsi/elements/element_helpers.h>
 #include <thor_scsi/elements/utils.h>
@@ -198,68 +199,6 @@ void tse::FieldKick::FieldKickForthOrder::splitIntegrationStep(const double dL, 
 	*dkL2 = this->d_2*dL;
 }
 
-template<typename T>
-inline void tse::FieldKick::_initRadiate(const tsc::ConfigType &conf, ss_vect<T> &ps)
-{
-	if (conf.emittance && !conf.Cavity_on) {
-		std::cerr << __FILE__ << "::" << __FUNCTION__ << "@" << __LINE__
-			  << "Code not yet tested " << std::endl;
-		throw thor_scsi::NotImplemented();
-	} else {
-		return;
-	}
-
-#ifdef  THOR_SCSI_USE_RADIATION
-	// Needs A^-1.
-	curly_dH_x = 0e0;
-	for (i = 0; i <= 5; i++){
-		/* Synchrotron integrals */ dI[i] = 0e0;
-	}
-#endif /* THOR_SCSI_USE_RADIATION */
-}
-
-template<typename T>
-inline void tse::FieldKick::_radiateStepOne(const tsc::ConfigType &conf, ss_vect<T> &ps)
-{
-	if (conf.emittance && !conf.Cavity_on) {
-		std::cerr << __FILE__ << "::" << __FUNCTION__ << "@" << __LINE__
-			  << "Code not yet tested " << std::endl;
-		throw thor_scsi::NotImplemented();
-	} else {
-		return;
-	}
-#ifdef  THOR_SCSI_USE_RADIATION
-
-	// Why only when cavities are not on ?
-	// Needs A^-1.
-	curly_dH_x /= 6e0*PN;
-	dI[1] += PL*is_tps<tps>::get_dI_eta(ps)*Pirho;
-	dI[2] += PL*sqr(Pirho);
-	dI[3] += PL*fabs(tse::cube(Pirho));
-	dI[4] *=
-		PL*Pirho*(sqr(Pirho)+2e0*PBpar[Quad+HOMmax])
-		/(6e0*PN);
-		dI[5] += PL*fabs(tse::cube(Pirho))*curly_dH_x;
-
-#endif /* THOR_SCSI_USE_RADIATION */
-}
-
-template<typename T>
-inline void tse::FieldKick::_radiate(tsc::ConfigType &conf, ss_vect<T> &ps)
-{
-	if (conf.emittance && !conf.Cavity_on) {
-		std::cerr << __FILE__ << "::" << __FUNCTION__ << "@" << __LINE__
-			  << "Code not yet tested " << std::endl;
-		throw thor_scsi::NotImplemented();
-	} else {
-		return;
-	}
-#ifdef  THOR_SCSI_USE_RADIATION
-	// Needs A^-1.
-	curly_dH_x += is_tps<tps>::get_curly_H(ps);
-	dI[4] += is_tps<tps>::get_dI_eta(ps);
-#endif /* THOR_SCSI_USE_RADIATION */
-}
 
 /**
  *
@@ -282,6 +221,8 @@ inline void tse::FieldKick::_radiate(tsc::ConfigType &conf, ss_vect<T> &ps)
  *
  * d_2 negative drift
  * c_1 + c_2 = 1
+ *
+ *
  */
 template<typename T>
 inline void tse::FieldKick::FieldKickForthOrder::_localPass(tsc::ConfigType &conf, ss_vect<T> &ps)
@@ -326,25 +267,39 @@ inline void tse::FieldKick::FieldKickForthOrder::_localPass(tsc::ConfigType &con
 	if(!parent){
 		throw std::logic_error("parent was nullptr");
 	}
-	parent->_radiateStepOne(conf, ps);
+	// computeRadiationIntegralsStart
+	parent->_synchrotronIntegralsInit(conf, ps);
 
 	/* 4th order integration steps  */
 	for (int seg = 1; seg <= PN; seg++) {
-		parent->_radiate(conf, ps);
+		const int rad_step = (seg - 1) * 4;
+		// computeRadiationIntegralsStep
+		parent->_synchrotronIntegralsStep(conf, ps, rad_step);
+
 		drift_pass(conf, dL1, ps);
-		tse::thin_kick(conf, t_intp, dkL1, Pirho, h_ref, ps);
+		// call to radiation before thin kick
+		parent->thinKickAndRadiate(conf, t_intp, dkL1, Pirho, h_ref, ps);
 		drift_pass(conf, dL2, ps);
-		tse::thin_kick(conf, t_intp, dkL2, Pirho, h_ref, ps);
-		parent->_radiate(conf, ps);
+		// call to radiation before thin kick
+		parent->thinKickAndRadiate(conf, t_intp, dkL2, Pirho, h_ref, ps);
+
+		// why this step only here
+		// computeRadiationIntegralsStep
+		parent->_synchrotronIntegralsStep(conf, ps, rad_step + 1);
+
 		drift_pass(conf, dL2, ps);
-		tse::thin_kick(conf, t_intp, dkL1, Pirho, h_ref, ps);
+		// call to radiation before thin kick
+		parent->thinKickAndRadiate(conf, t_intp, dkL1, Pirho, h_ref, ps);
 		drift_pass(conf, dL1, ps);
-		parent->_radiate(conf, ps);
+
+		// computeRadiationIntegralsStep
+		parent->_synchrotronIntegralsStep(conf, ps, rad_step + 2);
 	}
+	parent->_synchrotronIntegralsFinish(conf, ps);
 }
 
 
-tse::FieldKick::FieldKick(const Config &config) : tse::LocalGalileanPRot(config)
+tse::FieldKick::FieldKick(const Config &config) : tse::FieldKickAPI(config)
 {
 	// Field interpolation type
 	this->intp = nullptr;
@@ -361,10 +316,9 @@ tse::FieldKick::FieldKick(const Config &config) : tse::LocalGalileanPRot(config)
 }
 
 tse::FieldKick::FieldKick(tse::FieldKick&& O)
-	: LocalGalileanPRot(std::move(O))
+	: tse::FieldKickAPI(std::move(O))
 
 {
-	this->intp = std::move(O.intp);
 	this->setBendingAngle(O.getBendingAngle());
 	this->setEntranceAngle(O.getEntranceAngle());
 	this->setExitAngle(O.getExitAngle());
@@ -376,7 +330,7 @@ tse::FieldKick::FieldKick(tse::FieldKick&& O)
 
 	this->Pgap = O.Pgap;
 	this->integ4O.setParent(this);
-
+	this->rad_del = std::move(O.rad_del);
 	return;
 
 	std::cerr << __FILE__ << "::" << __FUNCTION__ << "@" << __LINE__
@@ -439,6 +393,33 @@ void tse::FieldKick::_quadFringe(thor_scsi::core::ConfigType &conf, ss_vect<T> &
 	*/
 }
 
+template<typename T>
+inline void tse::FieldKick::thinKickAndRadiate(const thor_scsi::core::ConfigType &conf,
+					   const thor_scsi::core::Field2DInterpolation& intp,
+					   const double L, const double h_bend, const double h_ref,
+					   ss_vect<T> &ps)
+{
+
+	// const auto x = ps[x_];
+	// const auto y = ps[y_];
+ 	T BxoBrho, ByoBrho;
+
+	//intp.field(ps[x_], ps[y_], &BxoBrho, &ByoBrho);
+	/*
+	  if(!this->intp){
+		throw std::logic_error("Interpolation object not set!");
+	}
+	*/
+	intp.field(ps[x_], ps[y_], &BxoBrho, &ByoBrho);
+	std::array<T, 3> B = {BxoBrho, ByoBrho, 0};
+
+	auto rad = this->getRadiationDelegate();
+	if(rad){
+		rad->radiate(conf, ps, L, h_ref, B);
+	}
+	tse::thin_kick(conf, BxoBrho, ByoBrho, L, h_bend, h_ref, ps);
+
+}
 
 /**
  * @brief: thin kick: element length 0, integral kick effect
@@ -456,7 +437,8 @@ inline void tse::FieldKick::_localPassThin(const tsc::ConfigType &conf, ss_vect<
 	if(debug){
 		std::cerr << "calling thin kick " << std::endl;
 	}
-	tse::thin_kick(conf, *this->intp, length, 0e0, 0e0, ps);
+	// call to radiation before thin kick
+	this->thinKickAndRadiate(conf, *this->intp, length, 0e0, 0e0, ps);
 }
 
 
@@ -517,7 +499,7 @@ void tse::FieldKick::_localPass(tsc::ConfigType &conf, ss_vect<T> &ps)
 
 	}
 
-	this->_initRadiate(conf, ps);
+	this->_synchrotronIntegralsInit(conf, ps);
 
 	// Set start
 

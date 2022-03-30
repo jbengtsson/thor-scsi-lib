@@ -10,10 +10,10 @@
 #include <tps/ss_vect.h>
 #include <tps/tps_type.h>
 // #include <thor_scsi/core/cells.h>
+#include <thor_scsi/core/internals.h>
 #include <thor_scsi/core/cell_void.h>
 // #include <thor_scsi/core/elements_enums.h>
 #include <thor_scsi/core/config.h>
-
 
 
 namespace thor_scsi {
