@@ -9,6 +9,7 @@ find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
 cmake_policy(SET CMP0063 NEW)
 add_library(lib MODULE
   src/thor_scsi.cc
+  src/arma.cc
   src/tps.cc
   src/config_type.cc
   src/elements.cc
@@ -17,6 +18,7 @@ add_library(lib MODULE
 
 target_include_directories(lib
   PUBLIC
+  ${ARMADILLO_INCLUDE_DIRS}
   # Hack for pybind11 on Pierre's laptop
     "$<BUILD_INTERFACE:/home/mfp/.local/lib/python3.8/site-packages/pybind11/include/>"
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../src/>"

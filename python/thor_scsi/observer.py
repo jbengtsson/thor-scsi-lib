@@ -3,8 +3,8 @@
 See :class:`Observer`
 '''
 from .lib import (ObservedState, Observer as _AbstractObserver,
-                  ss_vect_tps_to_lists)
-
+                  ss_vect_tps_to_mat)
+import numpy as np
 
 class Observer(_AbstractObserver):
     '''Observer example
@@ -17,18 +17,20 @@ class Observer(_AbstractObserver):
         _AbstractObserver.__init__(self)
         self.name = None
         self.index = None
+        self.res = None
         self.ps = None
 
     def __repr__(self):
         cls_name = self.__class__.__name__
-        txt = f'{cls_name}(name={self.name}, index={self.index}, ps={self.ps})'
+        txt = f'{cls_name}(name={self.name}, index={self.index}, res={self.res})'
         return txt
 
     def reset(self):
-        self.ps = None
+        self.res = None
 
     def view(self, element, ps, observed_state, cnt):
-        '''Current view of state at eleement
+        '''Current view of state at element
+
         Args:
             element:        the element that is observed
             ps:             phase space state
@@ -50,6 +52,6 @@ class Observer(_AbstractObserver):
 
         elif observed_state == ObservedState.end:
             # Memory management to be reviewed ...
-            self.ps = ss_vect_tps_to_lists(ps)
+            self.res = np.array(ss_vect_tps_to_mat(ps))
 
         # Other observed states are not recognised

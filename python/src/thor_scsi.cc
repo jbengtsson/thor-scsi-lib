@@ -32,6 +32,7 @@ namespace tsc = thor_scsi::core;
 PYBIND11_MODULE(lib, scsi) {
     scsi.doc() = "Self-Consistent Symplectic Integrator (SCSI)";
 
+    py_thor_scsi_init_arma(scsi);
     py_thor_scsi_init_tps(scsi);
     py_thor_scsi_init_elements(scsi);
     py_thor_scsi_init_accelerator(scsi);

@@ -1,6 +1,7 @@
 #include <pybind11/stl.h>
 // #include <pybind11/complex.h>
 #include <pybind11/pybind11.h>
+
 #include <tps/ss_vect.h>
 #include <tps/tps_type.h>
 #include <tps/tpsa_lin.h>
@@ -57,8 +58,8 @@ void py_thor_scsi_init_tps(py::module &m)
 		.def("__str__",  &ss_vect<double>::pstr)
 		.def(py::init<>());
 
-	m.def("lists_to_ss_vect_tps", &stlmattomap_save);
-	m.def("ss_vect_tps_to_lists", &maptostlmat);
+	//m.def("lists_to_ss_vect_tps", mattomap_save);
+	m.def("ss_vect_tps_to_mat", &maptomat);
 
 
 }

@@ -3,9 +3,13 @@
 
 from thor_scsi.flame import GLPSParser
 import thor_scsi
-from thor_scsi.lib import (Accelerator, ConfigType, ss_vect_tps, ss_vect_double,
-                           ss_vect_tps_to_lists)
-from thor_scsi.utils import ss_vect_to_masked_matrix
+from thor_scsi.lib import (
+    Accelerator,
+    ConfigType,
+    ss_vect_tps,
+    ss_vect_double,
+    ss_vect_tps_to_mat,
+)
 import numpy as np
 import os.path
 
@@ -13,7 +17,7 @@ import os.path
 t_dir = os.path.join(os.environ["HOME"], "Nextcloud", "thor_scsi")
 t_file = os.path.join(t_dir, "b3_tst.lat")
 
-print(f'Reading lattice file {t_file}')
+print(f"Reading lattice file {t_file}")
 # I had issues reading the lattice file directly thus I preseent
 # the string stream to the parser
 with open(t_file) as fp:
@@ -31,7 +35,7 @@ elem = m[i]
 print(f"Element at index {i:03d} = {elem}")
 # In this manner one would access an element per name.
 # if of the same name, use the number to find which one it is
-elem =  m.find("b2", 0)
+elem = m.find("b2", 0)
 # Element will print out itself
 print(elem)
 # or represent itself
@@ -85,7 +89,6 @@ Propagation
 print(txt)
 
 
-
 # Prepare for calculation ... need the calculation configuration
 # from thor_scsi not from flame
 calc_config = ConfigType()
@@ -98,10 +101,8 @@ print(ps)
 m.propagate(calc_config, ps, 0, 2000)
 print(ps)
 
-tmp = ss_vect_tps_to_lists(ps)
-res = ss_vect_to_masked_matrix(tmp)
+res = ss_vect_tps_to_mat(ps)
 np.set_printoptions(precision=4)
-print(res.data)
 print(res)
 
 separator = "-" * 66

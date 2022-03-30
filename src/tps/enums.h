@@ -7,7 +7,7 @@ const int
   n_m2      = 21,       ///< No of 1st & 2nd order moments: (6 over 5) + 6.
   ps_tr_dim = 4,        ///< Transverse phase-space dim.
   ps_dim    = 6,        ///< 6D phase-space dim.
-  tps_n     = ps_dim+1; ///< 6D phase-space linear terms & cst.
+  tps_n     = ps_dim+1; ///< 6D phase-space linear terms & constant
 
 // Spatial components.
 enum spatial_ind { X_ = 0, Y_ = 1, Z_ = 2 };

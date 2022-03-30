@@ -186,22 +186,41 @@ ss_vect<tps> stlmattomap_save(const std::vector< std::vector<double> > &stlmat)
   return map;
 }
 
-
+/**
+ * @brief export linear truncated power series to standard vectors
+ *
+ * mapping a linear taylor map to the phase space vector and jacobian
+ */
 std::vector< std::vector<double> > maptostlmat(const ss_vect<tps> &map)
 {
   std::vector<double>                row;
   std::vector< std::vector<double> > stlmat;
 
+  // assert(nv_tps == 6);
+
+  // mapping a linear taylor map to the phase space vector and jacobian
+  // first map the
+  row.reserve(nv_tps + 1);
+  stlmat.reserve(nv_tps + 1);
   for (int j = 0; j < nv_tps; j++) {
-    row.clear();
-    for (int k = 0; k < nv_tps; k++)
-      row.push_back(map[j][k+1]);
-    row.push_back(map[j][0]);
-    stlmat.push_back(row);
+	  row.clear();
+	  for (int k = 0; k < nv_tps; k++){
+		  row.push_back(map[j][k+1]);
+	  }
+	  // constant part ... phase space vector
+	  row.push_back(map[j][0]);
+	  stlmat.push_back(row);
   }
   row.clear();
-  for (int k = 0; k < nv_tps; k++)
-    row.push_back(0e0);
+
+  // stl mat here has a shape of
+  // 6 x 7
+
+  // Padding with zeros ... guess it should be a
+  // a plus one
+  for (int k = 0; k < nv_tps; k++){
+	  row.push_back(0e0);
+  }
   stlmat.push_back(row);
   return stlmat;
 }
@@ -209,6 +228,8 @@ std::vector< std::vector<double> > maptostlmat(const ss_vect<tps> &map)
 arma::mat maptomat(const ss_vect<tps> &map)
 {
   arma::mat mat(tps_n, tps_n);
+
+  mat.fill(NAN);
 
   for (int j = 0; j < nv_tps; j++) {
     for (int k = 0; k < nv_tps; k++)

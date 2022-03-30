@@ -43,8 +43,12 @@ static void process_cmd_line(int argc, char *argv[])
 	po::notify(vm);
 
 	const bool verbose = vm["verbose"].as<bool>();
-	if (vm.count("help")) {
-		std::cout << desc << "\n";
+	if (!vm.count("lattice_file")) {
+		std::cout << "A lattice file must be defined" << std::endl;
+		std::cout << desc << std::endl;
+		exit(1);
+	} else 	if (vm.count("help")) {
+		std::cout << desc << std::endl;
 		exit(1);
 	}
 	if(verbose){
@@ -280,7 +284,6 @@ int main(int argc, char *argv[])
 {
 
 	process_cmd_line(argc, argv);
-
 	GLPSParser parse;
 	std::string fname = vm["lattice_file"].as<std::string>();
 	bool verbose = vm["verbose"].as<bool>();

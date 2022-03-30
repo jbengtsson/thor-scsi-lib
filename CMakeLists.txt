@@ -25,6 +25,7 @@ if(NOT CMAKE_BUILD_TYPE)
   message(STATUS "Default to DEBUG build")
 endif()
 
+find_package(Armadillo REQUIRED)
 
 find_package(PythonInterp 3)
 

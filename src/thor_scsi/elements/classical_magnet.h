@@ -33,7 +33,11 @@ namespace thor_scsi::elements {
 		 * \endverbatim
 		 */
 		inline const std::shared_ptr<thor_scsi::core::PlanarMultipoles> getMultipoles(void) const {
-			return this->getFieldInterpolator();
+			auto tmp = this->getFieldInterpolator();
+			if(!tmp){
+				throw std::logic_error("Field interpolator NULL");
+			}
+			return tmp;
 		}
 
 		inline void setMainMultipoleStrength(const Config &config, const int n){

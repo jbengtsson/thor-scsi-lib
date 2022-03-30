@@ -1,4 +1,3 @@
-find_package(Armadillo REQUIRED)
 find_package(Boost 1.52.0 REQUIRED COMPONENTS
   prg_exec_monitor
   unit_test_framework

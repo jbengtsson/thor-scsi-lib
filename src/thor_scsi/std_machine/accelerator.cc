@@ -13,9 +13,9 @@ void
 ts::Accelerator::_propagate(thor_scsi::core::ConfigType& conf, ss_vect<T> &ps, size_t start, int max)// const
 {
 
-	const int nelem = int(this->size());
+	const int nelem = static_cast<int>(this->size());
 
-	int next_elem = start;
+	int next_elem = static_cast<int>(start);
 	bool retreat = std::signbit(max);
 
 	for(int i=0; next_elem >= 0 && next_elem<nelem && i<abs(max); i++)

@@ -45,6 +45,7 @@ namespace thor_scsi::core {
 		 * @todo should Gx and Gy be of type tps or type double
 		 */
 		virtual void gradient(const tps x, const tps y, tps *Gx, tps *Gy) const = 0;
+		virtual void gradient(const tps x, const tps y, double *Gx, double *Gy) const = 0;
 		virtual void show(std::ostream&, int level) const = 0;
 
 		std::string prettyClassname(void) const;
