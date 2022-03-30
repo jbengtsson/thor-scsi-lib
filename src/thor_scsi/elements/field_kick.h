@@ -478,6 +478,10 @@ namespace thor_scsi::elements {
 		inline bool computeRadiation(const thor_scsi::core::ConfigType &conf){
 			return conf.emittance && !conf.Cavity_on;
 		}
+		inline auto _getRadiationDelegate(void) {
+			return this->rad_del.get();
+		}
+
 		template<typename T>
 		inline void _synchrotronIntegralsInit(const thor_scsi::core::ConfigType &conf,  ss_vect<T> &ps){
 			if(this->computeRadiation(conf)){
@@ -521,9 +525,6 @@ namespace thor_scsi::elements {
 		bool Pthick;                  ///< Thick or thin element
 		double Pirho = 0;             ///< 1/rho [1/m].
 
-		inline auto _getRadiationDelegate(void) {
-			return this->rad_del.get();
-		}
 
 
 	protected:
