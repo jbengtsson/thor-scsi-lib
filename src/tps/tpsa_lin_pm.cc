@@ -126,13 +126,33 @@ double tps::operator[](const int k) const
 double tps::operator[](const long int jj[]) const
 {
   double r;
-
   dapek_(ltps, jj, r);
-  return(r);
+  return r;
+
+}
+
+static void _std_array_to_int_array(const tpsa_index jj, long int *arr)
+{
+  for(size_t i=0; i<jj.size(); ++i){
+    arr[i] = jj[i];
+  }
+}
+double tps::operator[](const tpsa_index jj) const
+{
+  long int tmp[jj.size()];
+  _std_array_to_int_array(jj, tmp);
+  double r;
+  dapek_(ltps, tmp, r);
+  return r;
 }
 
 void tps::pook(const long int jj[], const double r) { dapok_(ltps, jj, r); }
 
+void tps::pook(const tpsa_index jj, const double r) {
+  long int tmp[jj.size()];
+  _std_array_to_int_array(jj, tmp);
+  this->pook(tmp, r);
+}
 tps& tps::operator=(const double r) { dacon_(ltps, r); return *this; }
 
 tps& tps::operator+=(const double x) { dacad_(ltps, x, ltps); return *this; }

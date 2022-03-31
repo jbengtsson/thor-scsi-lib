@@ -9,8 +9,13 @@
 #include <tps/config.h>
 #include <string>
 #include <vector>
+#include <array>
 #include <ostream>
+#include <tps/enums.h>
 #include <tps/forward_decl.h>
+
+typedef std::array<long int, ps_dim> tpsa_index;
+
 
 class tps {
  public:
@@ -41,8 +46,13 @@ class tps {
   // const double cst(void) const;
   double cst(void) const;
   double operator[](const int) const;
+
+
   double operator[](const long int []) const;
   void pook(const long int [], const double);
+
+  double operator[](const tpsa_index) const;
+  void pook(const tpsa_index, const double);
 
   /**
    * Todo:

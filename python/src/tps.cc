@@ -83,6 +83,7 @@ static void tps_check_index(const int index)
 	}
 }
 
+
 void py_thor_scsi_init_tps(py::module &m)
 {
 
@@ -102,7 +103,6 @@ void py_thor_scsi_init_tps(py::module &m)
 
 	// Polymorphic number class.
 	// Classes.
-
 	py::class_<tps>(m, "tps")
 		.def(py::init<>())
 		.def(py::init<const double>())
@@ -111,11 +111,23 @@ void py_thor_scsi_init_tps(py::module &m)
 		//.def("cst",      &tps::cst, "constant term")
 		.def("__str__",  &tps::pstr)
 		.def("__repr__", &tps::repr)
-
-		.def("__getitem__", [](const tps &self, const int k){
-					    tps_check_index(k);
-					    return self[k];
+		.def("__getitem__", [](const tps &self, const long int idx){
+					    tps_check_index(idx);
+					    return self[idx];
 				    })
+		.def("peek", [](const tps &self, tpsa_index idx){
+				     for(auto k: idx){
+					     tps_check_index(k);
+				     }
+				     return self[idx];
+			     }, "get value at this set of 7 indices")
+		.def("pook", [](tps &self, tpsa_index idx, double val){
+				     for(auto k: idx){
+					     tps_check_index(k);
+				     }
+				     self.pook(idx, val);
+			     }, "set value at this set of 7 indices")
+
 		.def(py::self -= py::self)
 		.def(py::self *= py::self)
 		.def(py::self /= py::self)
@@ -152,6 +164,7 @@ void py_thor_scsi_init_tps(py::module &m)
 	//m.def("lists_to_ss_vect_tps", mattomap_save);
 	m.def("ss_vect_tps_to_mat", &maptomat);
 	m.def("mat_to_ss_vect_tps", &mattomap_check);
+	m.attr("ps_dim") = ps_dim;
 
 }
 /*

@@ -5,6 +5,11 @@ import numpy as np
 ps = ss_vect_tps()
 ps.set_identity()
 print(ps)
+tps = ps[1]
+index = [0] * 6
+print("peek", tps.peek(index))
+tps.pook(index, 8)
+
 for tps in ps:
     print(tps)
     print ("TPS terms:", ", ".join(["{:.3f}".format(term) for term in tps]))
