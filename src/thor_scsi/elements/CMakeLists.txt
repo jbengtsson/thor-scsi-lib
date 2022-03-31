@@ -13,7 +13,7 @@ target_link_libraries(test_drift
     ${Boost_PRG_EXEC_MONITOR_LIBRARY}
     ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
 )
-add_test(mpole test_mpole)
+add_test(drift test_drift)
 
 add_executable(test_mpole test_mpole.cc)
 target_include_directories(test_mpole

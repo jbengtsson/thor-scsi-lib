@@ -50,9 +50,9 @@ namespace thor_scsi::elements {
 			// return ;
 		}
 	protected:
-		double Pirho;
+		double Pirho = 0e0;
 		std::shared_ptr<thor_scsi::core::Field2DInterpolation> intp;
-		int integration_steps;
+		int integration_steps = 1;
 	};
 
 } // Name space

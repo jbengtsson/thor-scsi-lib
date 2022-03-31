@@ -216,9 +216,11 @@ BOOST_AUTO_TEST_CASE(test20_sextupole_thin_eval)
 			sext.pass(calc_config, ps);
 
 			// Todo: check sign!!!!
-			const double xc =  - (x* chroma);
-			BOOST_CHECK_CLOSE(ps[px_],         xc, 1e-12);
+			const double xc =  - (x* chroma) * i;
+
+			// check for signAPIAPI
 			BOOST_CHECK_CLOSE(ps[x_],           x, 1e-14);
+			BOOST_CHECK_CLOSE(ps[px_],         xc, 1e-14);
 			BOOST_CHECK_SMALL(ps[y_],              1e-14);
 			BOOST_CHECK_SMALL(ps[py_],             1e-14);
 			BOOST_CHECK_SMALL(ps[ct_],             1e-14);
@@ -245,11 +247,12 @@ BOOST_AUTO_TEST_CASE(test20_sextupole_thin_eval)
 			sext.pass(calc_config, ps);
 
 			// Todo: check sign!!!!
-			const double yc = x * chroma, pspy = ps[py_];
+			const double yc = x * chroma * i, pspy = ps[py_];
+			std::cerr << "ps[px_] "  << ps[px_] << " x  " << x  << std::endl;
 			std::cerr << "ps[py_] "  << ps[py_] << " yc " << yc << std::endl;
 
-			BOOST_CHECK_CLOSE(ps[py_], x * chroma, 1e-12);
-			BOOST_CHECK_CLOSE(ps[x_],           x, 1e-14);
+			BOOST_CHECK_CLOSE(ps[py_], x * chroma * i, 1e-12);
+			BOOST_CHECK_CLOSE(ps[x_],              x, 1e-14);
 			BOOST_CHECK_SMALL(ps[y_],              1e-14);
 			BOOST_CHECK_SMALL(ps[px_],             1e-14);
 			BOOST_CHECK_SMALL(ps[ct_],             1e-14);

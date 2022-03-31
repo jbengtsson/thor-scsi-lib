@@ -253,7 +253,7 @@ BOOST_AUTO_TEST_CASE(test20_quadrupole_thin_eval)
 BOOST_AUTO_TEST_CASE(test20_quadrupole_typical_length_eval)
 {
 
-	const double gdl = 27, length=0.1;
+	const double gdl = 5e0, length=1e-3;
 	const double gradient = gdl / length;
 	tsc::ConfigType calc_config;
 	Config C;
@@ -285,6 +285,7 @@ BOOST_AUTO_TEST_CASE(test20_quadrupole_typical_length_eval)
 			const double xs = i * (1e-3), l2 = length / 2e0;
 			const double By = -xs * (gdl), xe = xs + By * l2;
 			ss_vect<double> ps;
+
 
 			ps[x_] = xs;
 			quad.pass(calc_config, ps);
