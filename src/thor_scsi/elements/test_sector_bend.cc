@@ -129,7 +129,7 @@ template<typename T>
 static void
 symplectic_result_check_zeros_elements(T mat)
 {
-	return;
+
 	BOOST_CHECK_SMALL(mat[x_][y_],         1e-12);
 	BOOST_CHECK_SMALL(mat[x_][py_],        1e-12);
 	BOOST_CHECK_SMALL(mat[x_][ct_],        1e-12);
@@ -164,42 +164,75 @@ static void
 symplectic_result_check_non_zeros_elements(ss_vect<tps> ps, arma::mat mat)
 {
 	//arma::inplace_trans(mat);
-	const double psv = ps[x_][x_] ,  matv = mat[x_+1, x_+1];
-	BOOST_CHECK_CLOSE(psv,         (matv),         1e-12);
-	return;
+	const double eps = 1e-6;
+	BOOST_CHECK_CLOSE((ps[x_][x_]),         (mat.at(x_, x_)),         eps);
 
-	BOOST_CHECK_CLOSE((ps[x_][x_]),         (mat[x_, x_]),         1e-12);
+	BOOST_CHECK_CLOSE((ps[x_][px_]),        (mat.at(x_, px_)),        eps);
+	BOOST_CHECK_CLOSE((ps[x_][delta_]),     (mat.at(x_, delta_)),     eps);
 
-	BOOST_CHECK_CLOSE((ps[x_][px_]),        (mat[x_, px_]),        1e-12);
-	BOOST_CHECK_CLOSE((ps[x_][delta_]),     (mat[x_, delta_]),     1e-12);
+	BOOST_CHECK_CLOSE((ps[px_][x_]),        (mat.at(px_, x_)),        eps);
+	BOOST_CHECK_CLOSE((ps[px_][px_]),       (mat.at(px_, px_)),       eps);
+	BOOST_CHECK_CLOSE((ps[px_][delta_]),    (mat.at(px_, delta_)),    eps);
 
-	BOOST_CHECK_CLOSE((ps[px_][x_]),        (mat[px_, x_]),        1e-12);
-	BOOST_CHECK_CLOSE((ps[px_][px_]),       (mat[px_, px_]),       1e-12);
-	BOOST_CHECK_CLOSE((ps[px_][delta_]),    (mat[px_, delta_]),    1e-12);
+	BOOST_CHECK_CLOSE((ps[y_][y_]),         (mat.at(y_, y_)),         eps);
+	BOOST_CHECK_CLOSE((ps[y_][py_]),        (mat.at(y_, py_)),        eps);
 
-	BOOST_CHECK_CLOSE((ps[y_][y_]),         (mat[y_, y_]),         1e-12);
-	BOOST_CHECK_CLOSE((ps[y_][py_]),        (mat[y_, py_]),        1e-12);
+	BOOST_CHECK_CLOSE((ps[py_][y_]),        (mat.at(py_, y_)),        eps);
+	BOOST_CHECK_CLOSE((ps[py_][py_]),       (mat.at(py_, py_)),       eps);
 
-	BOOST_CHECK_CLOSE((ps[py_][y_]),        (mat[py_, y_]),        1e-12);
-	BOOST_CHECK_CLOSE((ps[py_][py_]),       (mat[py_, py_]),       1e-12);
+	BOOST_CHECK_CLOSE((ps[ct_][x_]),        (mat.at(ct_, x_)),        eps);
+	BOOST_CHECK_CLOSE((ps[ct_][px_]),       (mat.at(ct_, px_)),       eps);
+	BOOST_CHECK_CLOSE((ps[ct_][delta_]),    (mat.at(ct_, delta_)),    eps);
+	BOOST_CHECK_CLOSE((ps[ct_][ct_]),       (mat.at(ct_, ct_)),       eps);
 
-	BOOST_CHECK_CLOSE((ps[ct_][x_]),        (mat[ct_, x_]),        1e-12);
-	BOOST_CHECK_CLOSE((ps[ct_][px_]),       (mat[ct_, px_]),       1e-12);
-	BOOST_CHECK_CLOSE((ps[ct_][delta_]),    (mat[ct_, delta_]),    1e-12);
-	BOOST_CHECK_CLOSE((ps[ct_][ct_]),       (mat[ct_, ct_]),       1e-12);
-
-	BOOST_CHECK_CLOSE((ps[delta_][delta_]), (mat[delta_, delta_]), 1e-12);
+	BOOST_CHECK_CLOSE((ps[delta_][delta_]), (mat.at(delta_, delta_)), eps);
 
 
 }
-template<typename T>
-static void
-check_symplectisism(T mat)
+
+
+static arma::mat
+compute_omega_matrix(void)
 {
-	//BOOST_CHECK_SMALL();
+	const int n = 3;
+	arma::mat omega = arma::mat(2*n, 2*n);
+
+	omega.zeros();
+	omega.diag(-3) += -1;
+	omega.diag( 3) +=  1;
+
+	omega.print(std::cout, "omega");
+
+	BOOST_CHECK_CLOSE(arma::det(omega), 1, 1e-12);
+
+	auto tmp = arma::abs(arma::trans(omega) + omega);
+	double test = arma::sum(arma::sum(tmp));
+	BOOST_CHECK_SMALL(test, 1e-12);
+
+
+	arma::mat tmp2 = arma::abs(arma::inv(omega) + omega);
+	double test2 = arma::sum(arma::sum(tmp2));
+	BOOST_CHECK_SMALL(test2, 1e-12);
+	return omega;
 }
 
-template static void check_symplectisism(ss_vect<tps> mat);
+static const auto omega = compute_omega_matrix();
+
+static void
+compute_symplectic_test(arma::mat mat)
+{
+	arma::mat mat_t = arma::trans(mat);
+	auto test = mat_t * (omega * mat);
+
+	test.print(std::cout, "test");
+	mat.print(std::cout, "mat");
+
+}
+static void
+check_symplectisism(arma::mat mat)
+{
+
+}
 
 
 BOOST_AUTO_TEST_CASE(test20_sector_bend_compare)
@@ -212,8 +245,8 @@ BOOST_AUTO_TEST_CASE(test20_sector_bend_compare)
 	C.set<std::string>("name", "test");
 	C.set<double>("K",   b2);
 	C.set<double>("L",   length);
-	C.set<double>("T", phi);
-	C.set<double>("N",   10);
+	C.set<double>("T",  phi);
+	C.set<double>("N",   100);
 
 	auto bend = tse::BendingType(C);
 
@@ -230,16 +263,10 @@ BOOST_AUTO_TEST_CASE(test20_sector_bend_compare)
 
 	bend.pass(calc_config, ps);
 
-	std::cout << "ss_vect " << std::endl << ps << std::endl;
-	std::cout << "ss_mat " << std::endl <<  mat <<std::endl;
-
-	std::cout << ps[x_][px_] << " " <<  mat[x_, px_] << std::endl;
-	std::cout << ps[px_][x_] << " " << mat[px_, x_] << std::endl;
+	// std::cout << ps[x_][px_] << " " <<  mat.at(x_, px_) << std::endl;
+	// std::cout << ps[px_][x_] << " " << mat.at(px_, x_) << std::endl;
 	//symplectic_result_check_zeros_elements(ps);
 	symplectic_result_check_non_zeros_elements(ps, mat);
 
-
-
-
-
+	compute_symplectic_test(mat(arma::span(0, 5), arma::span(0, 5)));
 }
