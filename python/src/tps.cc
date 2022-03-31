@@ -72,7 +72,7 @@ static auto declare_ss_vect(py::module &m, const std::string pyclass_name) {
 static void tps_check_index(const int index)
 {
 	std::stringstream strm;
-	const int max_index = 2;
+	const int max_index = (nv_tps + 1) - 1;
 	if(index < 0){
 		strm << "ss_vect[" << index << "] invalid: < 0!";
 		throw py::index_error(strm.str());
