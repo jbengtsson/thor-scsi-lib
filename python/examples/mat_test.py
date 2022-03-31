@@ -5,6 +5,9 @@ import numpy as np
 ps = ss_vect_tps()
 ps.set_identity()
 print(ps)
+for tps in ps:
+    print(tps)
+    print ("TPS terms:", ", ".join(["{:.3f}".format(term) for term in tps]))
 
 rtmp = ss_vect_tps_to_mat(ps)
 print(rtmp)

@@ -41,7 +41,7 @@ template<typename T> class ss_vect {
   // For python interface
   std::string pstr(void);
 
-  ss_vect<double> cst(void) const;
+  inline ss_vect<double> cst(void) const;
   inline T& operator[](const int i) { return ss[i]; }
   inline const T& operator[](const int i) const { return ss[i]; }
   inline T& at(const int i)  { return ss.at(i); }

@@ -17,6 +17,8 @@ class tps {
   tps(void);
   tps(const double);
   tps(const double, const int);
+  // replace const long int with std::array<const long int, 7>
+  // check length (nv_tps)
   tps(const double, const long int []);
   tps(const tps &);
   ~tps(void);
@@ -134,6 +136,8 @@ class tps {
   friend ss_vect<tps> Taked(const ss_vect<tps> &, const int);
 
 #if NO_TPSA != 1
+  // accessing elements
+  // functions should be inlined?
   friend double getmat(const ss_vect<tps> &map, const int i, const int j);
   friend void putmat(ss_vect<tps> &map, const int i, const int j,
 		     const double r);
