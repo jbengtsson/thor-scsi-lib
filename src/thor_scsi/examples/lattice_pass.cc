@@ -28,7 +28,7 @@ static void process_cmd_line(int argc, char *argv[])
 		("py",           po::value<double>()->default_value(0e0), "vertical direction         (left hand coordinate system)")
 		("ct",           po::value<double>()->default_value(0e0), "relative phase deviation   (left hand coordinate system)")
 		("delta",        po::value<double>()->default_value(0e0), "relative impulse deviation (left hand coordinate system)")
-		("inspect,i",    po::value<std::string>()->default_value(""), "name of element to inspect")
+		("inspect,i",    po::value<std::string>()->default_value(""), "name of element to inspect: if option verbose is used extra information will be printed")
 		("number,n",     po::value<int>()->default_value(0), "number of element to inspect")
 		("n_turns",      po::value<int>()->default_value(0),      "propagate n turns (set to zero for none)" )
 		("transport_matrix", po::value<bool>()->default_value(false), "compute transport matrix")
@@ -268,7 +268,11 @@ static void process(ts::Accelerator& accelerator)
 		auto elem = accelerator.find(element_name, number);
 		std::cout << "Accelerator element " << element_name << " number " << number << ": ";
 		if(elem){
-			std::cout << *elem;
+                        if(verbose){
+				elem->show(std::cout, 12);
+                        }else{
+				std::cout << *elem;
+                        }
 		} else {
 			std::cout << "none found";
 		}
