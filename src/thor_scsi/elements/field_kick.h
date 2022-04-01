@@ -192,7 +192,7 @@ namespace thor_scsi::elements {
 		 * @f[ \frac{1}{\rho} = irho == 0 @f]
 		 */
 		inline bool assumingCurvedTrajectory(void) const {
-			return !(this->Pirho == 0);
+			return !(this->Pirho == 0e0);
 		}
 
 		/**
@@ -523,9 +523,6 @@ namespace thor_scsi::elements {
 		FieldKickForthOrder integ4O;
 		int  Pmethod;                 ///< Integration Method.
 		bool Pthick;                  ///< Thick or thin element
-		double Pirho = 0;             ///< 1/rho [1/m].
-
-
 
 	protected:
 		std::shared_ptr<thor_scsi::elements::RadiationDelegateKick> rad_del;

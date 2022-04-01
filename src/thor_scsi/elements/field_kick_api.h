@@ -50,7 +50,7 @@ namespace thor_scsi::elements {
 			// return ;
 		}
 	protected:
-		double Pirho = 0e0;
+		double Pirho = 0;             ///< 1/rho [1/m].
 		std::shared_ptr<thor_scsi::core::Field2DInterpolation> intp;
 		int integration_steps = 1;
 	};

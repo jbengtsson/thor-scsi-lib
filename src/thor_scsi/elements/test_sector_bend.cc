@@ -94,15 +94,23 @@ BOOST_AUTO_TEST_CASE(test00_consistency)
 BOOST_AUTO_TEST_CASE(test00_sector_bend_ostream)
 {
 	const double length = 1e-3, b2 = 0e0, phi = 0e0, delta = 0e0;
-	auto mat = get_sbend_mat(length, b2, phi, delta);
-	std::cout << "Analytic result:\n" << mat << std::endl;
+	arma::mat mat = get_sbend_mat(length, b2, phi, delta);
+
+	boost::test_tools::output_test_stream output;
+	mat.print(output, "Analytic result");
+	BOOST_CHECK( !output.is_empty( false ) );
+
 }
 
 BOOST_AUTO_TEST_CASE(test01_sector_bend_ostream)
 {
 	const double length = 1e0, b2 = 1e0, phi = 5e0, delta = 0e0;
-	auto mat = get_sbend_mat(length, b2, phi, delta);
-	std::cout << "Analytic result:\n" << mat << std::endl;
+	arma::mat mat = get_sbend_mat(length, b2, phi, delta);
+
+	boost::test_tools::output_test_stream output;
+	mat.print(output, "Analytic result");
+	BOOST_CHECK( !output.is_empty( false ) );
+
 }
 
 BOOST_AUTO_TEST_CASE(test10_sector_bend_ostream)
@@ -165,6 +173,7 @@ symplectic_result_check_non_zeros_elements(ss_vect<tps> ps, arma::mat mat)
 {
 	//arma::inplace_trans(mat);
 	const double eps = 1e-6;
+
 	BOOST_CHECK_CLOSE((ps[x_][x_]),         (mat.at(x_, x_)),         eps);
 
 	BOOST_CHECK_CLOSE((ps[x_][px_]),        (mat.at(x_, px_)),        eps);
@@ -187,7 +196,6 @@ symplectic_result_check_non_zeros_elements(ss_vect<tps> ps, arma::mat mat)
 
 	BOOST_CHECK_CLOSE((ps[delta_][delta_]), (mat.at(delta_, delta_)), eps);
 
-
 }
 
 
@@ -199,48 +207,158 @@ compute_omega_matrix(void)
 	arma::mat omega = arma::mat(2*n, 2*n);
 
 	omega.zeros();
-	for (k = 0; k < 2; k++) {
-	  omega(2*k, 2*k+1) = 1e0;
-	  omega(2*k+1, 2*k) = -1e0;
-	}
-	omega(ct_, delta_) = 1e0;
-	omega(delta_, ct_) = -1e0;
+	omega(x_,     px_   ) =  1e0;
+	omega(px_,    x_    ) = -1e0;
 
-	omega.print(std::cout, "omega");
+	omega(y_,     py_   ) =  1e0;
+	omega(py_,    y_    ) = -1e0;
 
-	BOOST_CHECK_CLOSE(arma::det(omega), 1, 1e-12);
+	// columns and rows are swapped
+	omega(ct_,    delta_) =  1e0;
+	omega(delta_, ct_   ) = -1e0;
 
-	auto tmp = arma::abs(arma::trans(omega) + omega);
-	double test = arma::accu(tmp);
-	BOOST_CHECK_SMALL(test, 1e-12);
+#if 0
+	// just a cracy idea
+	omega(px_,     delta_) =  -1e0;
+	omega(  x_,    ct_   ) =  1e0;
 
-	arma::mat tmp2 = arma::abs(arma::inv(omega) + omega);
-	double test2 = arma::sum(arma::sum(tmp2));
-	BOOST_CHECK_SMALL(test2, 1e-12);
+	omega(delta_, px_    ) =   1e0;
+	omega(ct_,      x_   ) =  -1e0;
+#endif
 
+	// omega.print(std::cout, "Omega");
 	return omega;
 }
 
-static const auto omega = compute_omega_matrix();
+BOOST_AUTO_TEST_CASE(test03_omega_properties)
+{
+	arma::mat omega = compute_omega_matrix();
 
-static void
-compute_symplectic_test(arma::mat mat)
+	BOOST_CHECK_CLOSE(arma::det(omega), 1, 1e-12);
+
+	arma::mat tmp = arma::abs(arma::trans(omega) + omega);
+	// tmp.print(std::cout, "omega test transpose");
+	double omega_trans_omega = arma::accu(tmp);
+	BOOST_CHECK_SMALL(omega_trans_omega, 1e-12);
+
+	arma::mat tmp2 = arma::abs(arma::inv(omega) + omega);
+	// tmp2.print(std::cout, "omega test inverse");
+	double omega_inv_omega = arma::accu(tmp2);
+	BOOST_CHECK_SMALL(omega_inv_omega, 1e-12);
+
+}
+
+static arma::mat
+compute_symplectic_test(arma::mat mat, arma::mat om)
 {
 	arma::mat mat_t = arma::trans(mat);
-	mat.print(std::cout, "compute_symplectic_test:\nmat");
-	arma::mat test = mat_t * (omega * mat);
-	test.print(std::cout, "test");
+	// std::cout << "Compute symplectic test" << std::endl;
+	// mat.print(std::cout, "mat");
+	arma::mat test = mat_t * om * mat;
+	// test.print(std::cout, "test");
+	return test;
 }
+
 static void
-check_symplectisism(arma::mat mat)
+check_symplectisism_submats(const arma::mat mat)
 {
+
+	const double eps = 1e-12;
+	arma::mat om(2,2);
+	om(0, 1) =  1;
+	om(1, 0) = -1;
+
+	arma::mat x_px = compute_symplectic_test(mat(arma::span(0, 1), arma::span(0, 1)), om);
+	double x_px_check = arma::accu(arma::abs(x_px - om));
+	BOOST_CHECK_SMALL(x_px_check, eps);
+
+	arma::mat y_py = compute_symplectic_test(mat(arma::span(2, 3), arma::span(2, 3)), om);
+	double y_py_check = arma::accu(arma::abs(y_py - om));
+	BOOST_CHECK_SMALL(y_py_check, eps);
+
+	arma::mat om_d(2,2);
+	om_d(0, 1) =  -1;
+	om_d(1, 0) =   1;
+
+	arma::mat delta_ct = compute_symplectic_test(mat(arma::span(2, 3), arma::span(2, 3)), om_d);
+	double delta_ct_check = arma::accu(arma::abs(delta_ct - om_d));
+	BOOST_CHECK_SMALL(delta_ct_check, eps);
+}
+
+static void
+check_symplectisism(const arma::mat mat)
+{
+	const double eps = 1e-12;
+
+	check_symplectisism_submats(mat);
+
+	arma::mat omega = compute_omega_matrix();
+	arma::mat a_test = compute_symplectic_test(mat, omega);
+
+	BOOST_CHECK_CLOSE(a_test(x_,     px_    ),  1e0, eps);
+	BOOST_CHECK_CLOSE(a_test(px_,    x_     ), -1e0, eps);
+
+	BOOST_CHECK_CLOSE(a_test(y_,     py_    ),  1e0, eps);
+	BOOST_CHECK_CLOSE(a_test(py_,    y_     ), -1e0, eps);
+
+	BOOST_CHECK_CLOSE(a_test(delta_, ct_    ),  1e0, eps);
+	BOOST_CHECK_CLOSE(a_test(ct_,    delta_ ), -1e0, eps);
+
+	arma::mat expected_zero = a_test - omega;
+	double a_sum = arma::accu(arma::abs(expected_zero));
+	BOOST_CHECK_SMALL(a_sum, eps);
+
+	if (a_sum > eps) {
+		omega.print(std::cout, "omega");
+		a_test.print(std::cout, "expected to match omega");
+		expected_zero.print(std::cout, "test mat: all elements should be zero");
+	}
+}
+
+BOOST_AUTO_TEST_CASE(test20_sector_analytic_result_symplectic)
+{
+
+	tsc::ConfigType calc_config;
+	Config C;
+	const double length = 1e0, b2 = 1e0, phi = 5e0, delta = 0e0;
+
+	arma::mat mat = get_sbend_mat(length, b2, phi, delta);
+	std::cout.setf(std::ios::scientific);
+	std::cout.precision(6);
+	std::cout.width(14);
+	//mat.raw_print(std::cout, "Analytic result:");
+
+	//std::cout << "Symplectic integrator:\n"
+	//	  << std::setw(7) << ps << std::endl;
+
+	// std::cout << ps[x_][px_] << " " <<  mat.at(x_, px_) << std::endl;
+	// std::cout << ps[px_][x_] << " " << mat.at(px_, x_) << std::endl;
+	//symplectic_result_check_zeros_elements(ps);
+	// symplectic_result_check_non_zeros_elements(ps, mat);
+
+	arma::mat  mat_rev(mat);
+	// swap delta and ct
+	mat_rev.col(4) = mat.col(5);
+	mat_rev.col(5) = mat.col(4);
+	mat_rev.row(4) = mat.row(5);
+	mat_rev.row(5) = mat.row(4);
+
+
+	//compute_symplectic_test(mat_rev);
+	check_symplectisism(mat_rev);
+	 //compute_symplectic_test(mat(arma::span(0, 5), arma::span(0, 5)));
+}
+
+static void extract_ps_jac(arma::mat mat, arma::mat *ps, arma::mat *jac)
+{
+	*jac = mat(arma::span(0, 5), arma::span(0, 5));
+	*ps = mat(arma::span(6, 6), arma::span(0, 6));
+
 
 }
 
-
-BOOST_AUTO_TEST_CASE(test20_sector_bend_compare)
+BOOST_AUTO_TEST_CASE(test20_sector_tps_symplectic)
 {
-
 	tsc::ConfigType calc_config;
 	Config C;
 	const double length = 1e0, b2 = 1e0, phi = 5e0, delta = 0e0;
@@ -253,28 +371,74 @@ BOOST_AUTO_TEST_CASE(test20_sector_bend_compare)
 
 	auto bend = tse::BendingType(C);
 
-	std::cout << C << std::endl;
-	bend.show(std::cout, 4); std::cout << std::endl;
-
-	auto mat = get_sbend_mat(length, b2, phi, delta);
-	std::cout.setf(std::ios::scientific);
-	std::cout.precision(6);
-	std::cout.width(14);
-	mat.raw_print(std::cout, "Analytic result:");
+	// std::cout << C << std::endl;
+	// bend.show(std::cout, 4); std::cout << std::endl;
 
 	ss_vect<tps> ps_orig;
 	ps_orig.identity();
 
 	ss_vect<tps> ps = ps_orig;
-
 	bend.pass(calc_config, ps);
-	std::cout << "Symplectic integrator:\n"
-		  << std::setw(7) << ps << std::endl;
 
-	// std::cout << ps[x_][px_] << " " <<  mat.at(x_, px_) << std::endl;
-	// std::cout << ps[px_][x_] << " " << mat.at(px_, x_) << std::endl;
-	//symplectic_result_check_zeros_elements(ps);
-	// symplectic_result_check_non_zeros_elements(ps, mat);
+	arma::mat ps2, jac;
+	extract_ps_jac(maptomat(ps), &ps2, &jac);
 
-	compute_symplectic_test(mat(arma::span(0, 5), arma::span(0, 5)));
+	check_symplectisism(jac);
+
+}
+
+BOOST_AUTO_TEST_CASE(test30_bend_config)
+{
+	tsc::ConfigType calc_config;
+	Config C;
+	const double length = 1e0, b2 = 1e0, phi = 5e0, delta = 0e0, T1=1.2e0, T2=0.75e0;
+	const double phi_rad = phi * M_PI / 180e0;
+	const double curvature = phi_rad / length;
+	C.set<std::string>("name", "test");
+	C.set<double>("K",  b2);
+	C.set<double>("L",  length);
+	C.set<double>("T",  phi);
+	C.set<double>("T1", T1);
+	C.set<double>("T2", T2);
+	C.set<double>("N", 100);
+
+	auto bend_ref = tse::BendingType(C);
+	std::cout << "bend " << bend_ref << std::endl;
+	std::cout << "bend "; bend_ref.show(std::cout, 4); std::cout << std::endl;
+
+	const double eps = 1e-12;
+	{
+		tse::BendingType& bend = bend_ref;
+
+		BOOST_CHECK_CLOSE(bend.getLength(),        length,    eps);
+		BOOST_CHECK_CLOSE(bend.getBendingAngle(),  phi,       eps);
+		BOOST_CHECK_CLOSE(bend.getEntranceAngle(), T1,        eps);
+		BOOST_CHECK_CLOSE(bend.getExitAngle(),     T2,        eps);
+		BOOST_CHECK_CLOSE(bend.getCurvature(),     curvature, eps);
+
+		BOOST_CHECK(bend.assumingCurvedTrajectory() == true);
+
+
+		auto mul = bend.getMultipoles()->getMultipole(2);
+		BOOST_CHECK_CLOSE(mul.real(), b2, eps);
+		BOOST_CHECK_SMALL(mul.imag(),     eps);
+	}
+
+	{
+		tse::BendingType  bend = std::move(bend_ref);
+
+		BOOST_CHECK_CLOSE(bend.getLength(),        length,    eps);
+		BOOST_CHECK_CLOSE(bend.getBendingAngle(),  phi,       eps);
+		BOOST_CHECK_CLOSE(bend.getEntranceAngle(), T1,        eps);
+		BOOST_CHECK_CLOSE(bend.getExitAngle(),     T2,        eps);
+		BOOST_CHECK_CLOSE(bend.getCurvature(),     curvature, eps);
+
+		BOOST_CHECK(bend.assumingCurvedTrajectory() == true);
+
+
+		auto mul = bend.getMultipoles()->getMultipole(2);
+		BOOST_CHECK_CLOSE(mul.real(), b2, eps);
+		BOOST_CHECK_SMALL(mul.imag(),     eps);
+	}
+
 }

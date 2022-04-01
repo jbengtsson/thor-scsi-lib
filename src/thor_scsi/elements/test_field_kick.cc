@@ -61,17 +61,34 @@ BOOST_AUTO_TEST_CASE(test03_default_values)
 	C.set<double>("L", length);
 	C.set<double>("N", 1);
 
-	auto kick = tse::FieldKick(C);
+	auto kick_ref = tse::FieldKick(C);
 
-	BOOST_CHECK_CLOSE(kick.getLength(), length, 1e-12);
-	BOOST_CHECK_SMALL(kick.getCurvature(), 1e-12);
+	{
+		auto& kick = kick_ref;
+		BOOST_CHECK_CLOSE(kick.getLength(), length, 1e-12);
+		BOOST_CHECK_SMALL(kick.getCurvature(), 1e-12);
 
-	BOOST_CHECK(kick.getNumberOfIntegrationSteps() ==  1);
-	BOOST_CHECK(kick.assumingCurvedTrajectory() ==  false);
+		BOOST_CHECK(kick.getNumberOfIntegrationSteps() ==  1);
+		BOOST_CHECK(kick.assumingCurvedTrajectory() ==  false);
 
-	BOOST_CHECK_SMALL(kick.getBendingAngle(),  1e-12);
-	BOOST_CHECK_SMALL(kick.getEntranceAngle(), 1e-12);
-	BOOST_CHECK_SMALL(kick.getExitAngle(),     1e-12);
+		BOOST_CHECK_SMALL(kick.getBendingAngle(),  1e-12);
+		BOOST_CHECK_SMALL(kick.getEntranceAngle(), 1e-12);
+		BOOST_CHECK_SMALL(kick.getExitAngle(),     1e-12);
+	}
+
+	{
+		auto kick = std::move(kick_ref);
+		BOOST_CHECK_CLOSE(kick.getLength(), length, 1e-12);
+		BOOST_CHECK_SMALL(kick.getCurvature(), 1e-12);
+
+		BOOST_CHECK(kick.getNumberOfIntegrationSteps() ==  1);
+		BOOST_CHECK(kick.assumingCurvedTrajectory() ==  false);
+
+		BOOST_CHECK_SMALL(kick.getBendingAngle(),  1e-12);
+		BOOST_CHECK_SMALL(kick.getEntranceAngle(), 1e-12);
+		BOOST_CHECK_SMALL(kick.getExitAngle(),     1e-12);
+	}
+
 }
 
 BOOST_AUTO_TEST_CASE(test04_angle_accessors)
