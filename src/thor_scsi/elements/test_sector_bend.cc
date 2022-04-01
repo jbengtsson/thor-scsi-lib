@@ -207,33 +207,26 @@ compute_omega_matrix(void)
 	arma::mat omega = arma::mat(2*n, 2*n);
 
 	omega.zeros();
-<<<<<<< HEAD
+#if 1
 	omega(x_,     px_   ) =  1e0;
 	omega(px_,    x_    ) = -1e0;
 
 	omega(y_,     py_   ) =  1e0;
 	omega(py_,    y_    ) = -1e0;
-=======
+
+	// columns and rows are swapped
+	omega(ct_,    delta_) =  1e0;
+	omega(delta_, ct_   ) = -1e0;
+
+#else
 	for (k = 0; k < 2; k++) {
 	  omega(2*k, 2*k+1) = 1e0;
 	  omega(2*k+1, 2*k) = -1e0;
 	}
 	omega(ct_, delta_) = -1e0;
 	omega(delta_, ct_) = 1e0;
->>>>>>> 8b3f4def7a7318b713bf6add1e91c096320ce419
-
-	// columns and rows are swapped
-	omega(ct_,    delta_) =  1e0;
-	omega(delta_, ct_   ) = -1e0;
-
-#if 0
-	// just a cracy idea
-	omega(px_,     delta_) =  -1e0;
-	omega(  x_,    ct_   ) =  1e0;
-
-	omega(delta_, px_    ) =   1e0;
-	omega(ct_,      x_   ) =  -1e0;
 #endif
+
 
 	// omega.print(std::cout, "Omega");
 	return omega;
