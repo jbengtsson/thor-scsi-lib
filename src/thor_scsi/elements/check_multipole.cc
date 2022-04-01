@@ -15,13 +15,13 @@ check_only_major_multipole_set(std::shared_ptr<tsc::PlanarMultipoles> muls,
 		  while C/C++ indiciing follows American convention
 		*/
 		if(i == (n_major -1)){
-			if(abs(c.real()) > 1e-3){
+			if(std::abs(c.real()) > 1e-3){
 				BOOST_CHECK_CLOSE(c.real(), ref.real(), 1e-12);
 			} else {
 				BOOST_CHECK_SMALL(c.real(), 1e-12);
 			}
 
-			if(abs(c.imag()) > 1e-3){
+			if(std::abs(c.imag()) > 1e-3){
 				BOOST_CHECK_CLOSE(c.imag(), ref.imag(), 1e-12);
 			} else {
 				BOOST_CHECK_SMALL(c.imag(), 1e-12);

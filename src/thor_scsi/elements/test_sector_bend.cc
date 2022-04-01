@@ -285,7 +285,7 @@ check_symplectisism_submats(const arma::mat mat)
 	om_d(0, 1) =  -1;
 	om_d(1, 0) =   1;
 
-	arma::mat delta_ct = compute_symplectic_test(mat(arma::span(2, 3), arma::span(2, 3)), om_d);
+	arma::mat delta_ct = compute_symplectic_test(mat(arma::span(4, 5), arma::span(4, 5)), om_d);
 	double delta_ct_check = arma::accu(arma::abs(delta_ct - om_d));
 	BOOST_CHECK_SMALL(delta_ct_check, eps);
 }

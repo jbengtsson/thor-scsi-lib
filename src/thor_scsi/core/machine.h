@@ -217,7 +217,7 @@ namespace thor_scsi::core {
 		template<typename Element>
 		struct element_builder_impl : public element_builder_t {
 			virtual ~element_builder_impl() {}
-			std::shared_ptr<CellVoid> build(const Config& c)
+			std::shared_ptr<CellVoid> build(const Config& c) override final
 				{
 					auto tmp = std::make_shared<Element>(Element(c));
 					return std::static_pointer_cast<CellVoid>(tmp);

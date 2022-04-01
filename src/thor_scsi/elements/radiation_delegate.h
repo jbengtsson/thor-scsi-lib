@@ -25,7 +25,7 @@ namespace thor_scsi::elements {
 		virtual void view(const ElemType& kick, const ss_vect<double> &ps, const enum ObservedState state, const int cnt) override;
 		virtual void view(const ElemType& kick, const ss_vect<tps> &ps, const enum ObservedState state, const int cnt) override;
 
-		virtual void show(std::ostream& strm, int level) const;
+		virtual void show(std::ostream& strm, int level) const override final;
 	private:
 		template<typename T>
 		inline void _view(const ElemType&, const ss_vect<T> &ps, const enum ObservedState state, const int cnt);
@@ -79,7 +79,7 @@ namespace thor_scsi::elements {
 		virtual void view(const FieldKickAPI& kick, const ss_vect<double> &ps, const enum ObservedState state, const int cnt) override final;
 		virtual void view(const FieldKickAPI& kick, const ss_vect<tps> &ps, const enum ObservedState state, const int cnt) override final;
 
-		virtual void show(std::ostream& strm, int level) const;
+		virtual void show(std::ostream& strm, int level) const override final;
 		//virtual void view(const ElemType& kick, const ss_vect<double> &ps, const enum ObservedState state, const int cnt) override final;
 		//virtual void view(const ElemType& kick, const ss_vect<tps> &ps, const enum ObservedState state, const int cnt) override final;
 		/**
