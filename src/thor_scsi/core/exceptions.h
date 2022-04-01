@@ -51,21 +51,20 @@ namespace thor_scsi {
         class LoadException: public std::exception {
 	private:
 		std::string m_message;
-	protected:
-		std::string m_prefix;
 	public:
-		explicit LoadException(const std::string& message) : m_message(message) {m_prefix = "";}
+		explicit LoadException(const std::string& message, const std::string& prefix = "") :
+			m_message(prefix + " " + message)
+			{}
 		const char* what() const noexcept override {
-			return (m_prefix + " " + m_message).c_str();
+			return this->m_message.c_str();
 		}
 	};
 
 	class PhysicsViolation : LoadException
 	{
 	public:
-		explicit PhysicsViolation(const std::string& message) : LoadException(message) {
-			m_prefix = "Physics domain violated";
-		}
+		explicit PhysicsViolation(const std::string& message) :
+			LoadException(message, "Physics domain violated") { }
 	};
 
 
