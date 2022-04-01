@@ -358,6 +358,13 @@ void tse::FieldKick::show(std::ostream& strm, const int level) const
 			strm << " ";
 			this->intp->show(strm, level);
 		}
+		auto rad_del = this->getRadiationDelegate();
+		if(!rad_del){
+			strm << " NO radiation delegator set!";
+		} else {
+			strm << " ";
+			rad_del->show(strm, level);
+		}
 	}
 }
 
@@ -370,14 +377,14 @@ void tse::FieldKick::_quadFringe(thor_scsi::core::ConfigType &conf, ss_vect<T> &
 
 	std::cerr << __FILE__ << "::" << __FUNCTION__ << "@" << __LINE__
 		  << "Code not yet tested " << std::endl;
-	throw thor_scsi::NotImplemented();
+	throw thor_scsi::NotImplemented("Quadrupole fringe implemented but code not yet tested");
 
 	auto muls = std::dynamic_pointer_cast<tsc::PlanarMultipoles>(this->getFieldInterpolator());
 	if(!muls){
 		std::cerr << __FILE__ << "::" << __FUNCTION__ << "@" << __LINE__
 			  << "Quadfringe can currently only be calculated for "
 			  << " PlanarMultipole interpolator " << std::endl;
-		throw thor_scsi::NotImplemented();
+		throw thor_scsi::NotImplemented("Quadfringe only works with multipoles as field interpolators");
 	}
 #warning "Not calling gradient but doing direct look up"
 	// T Gy=0e0, Gx=0e0;
@@ -413,7 +420,7 @@ inline void tse::FieldKick::thinKickAndRadiate(const thor_scsi::core::ConfigType
 	intp.field(ps[x_], ps[y_], &BxoBrho, &ByoBrho);
 	std::array<T, 3> B = {BxoBrho, ByoBrho, 0};
 
-	auto rad = this->getRadiationDelegate();
+	auto rad = this->_getRadiationDelegate();
 	if(rad){
 		rad->radiate(conf, ps, L, h_ref, B);
 	}
@@ -494,7 +501,7 @@ void tse::FieldKick::_localPass(tsc::ConfigType &conf, ss_vect<T> &ps)
 			  << " element '" << this->name << "'"
 			  << " : Method # "<< this->Pmethod << "  not supported "
 			  << std::endl;
-		throw ts::NotImplemented();
+		throw ts::SanityCheckError("Methods checked but still ending here?");
 		break;
 
 	}
@@ -507,7 +514,7 @@ void tse::FieldKick::_localPass(tsc::ConfigType &conf, ss_vect<T> &ps)
 	if (conf.mat_meth) {
 		std::cerr << __FILE__ << "::" << __FUNCTION__ << "@" << __LINE__
 			  << ": matrix method not implemented" << std::endl;
-		throw thor_scsi::NotImplemented();
+		throw thor_scsi::NotImplemented("Matrix method not implemented");
 		/*
 		if(Porder <= Quad){
 			ps = mat_pass(M_elem, ps);

@@ -4,6 +4,7 @@
 
 namespace thor_scsi {
 
+#if 0
 	class NotImplemented: public std::exception
 	{
 		virtual const char* what() const throw()
@@ -11,7 +12,7 @@ namespace thor_scsi {
 				return "not implemented";
 			}
 	};
-
+#endif
 	class InvalidPosition: public std::exception
 	{
 		virtual const char* what() const throw()
@@ -40,15 +41,7 @@ namespace thor_scsi {
 
 	};
 
-	class SanityCheckError:  public std::exception
-	{
-		virtual const char* what() const throw()
-			{
-				return "Sanity check error";
-			}
-	};
-
-        class LoadException: public std::exception {
+	class LoadException: public std::exception {
 	private:
 		std::string m_message;
 	public:
@@ -60,7 +53,34 @@ namespace thor_scsi {
 		}
 	};
 
-	class PhysicsViolation : LoadException
+	class SanityCheckError:  public LoadException
+	{
+	public:
+		explicit SanityCheckError(const std::string& message) :
+			LoadException(message, "Sanity check error") { }
+/*
+		virtual const char* what() const throw()
+			{
+				return "Sanity check error";
+			}
+*/
+	};
+
+	class NotImplemented:  public LoadException
+	{
+	public:
+		explicit NotImplemented(const std::string& message) :
+			LoadException(message, "Sanity check error") { }
+		/*
+		virtual const char* what() const throw()
+			{
+				return "Sanity check error";
+			}
+		*/
+	};
+
+
+	class PhysicsViolation : public LoadException
 	{
 	public:
 		explicit PhysicsViolation(const std::string& message) :

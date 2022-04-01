@@ -186,11 +186,11 @@ namespace thor_scsi::core {
 		}
 		virtual inline void gradient(const tps x, const tps y, tps *Gx, tps *Gy) const override final{
 			// "Need to understand how to interpolate gradient with tps"
-			throw thor_scsi::NotImplemented();
+			throw thor_scsi::NotImplemented("Multipoles: gradient in tps not implemented");
 		}
 		virtual inline void gradient(const tps x, const tps y, double *Gx, double *Gy) const override final{
 			// "Need to understand how to interpolate gradient with tps"
-			throw thor_scsi::NotImplemented();
+		        // throw thor_scsi::NotImplemented("Computing gradient in doubles for coordinates in tps x and tps y not implemented");
 			const cdbl pos(0, 0);
 			const cdbl tmp = this->gradient(pos);
 			*Gy = tmp.real();

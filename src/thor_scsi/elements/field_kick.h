@@ -255,7 +255,9 @@ namespace thor_scsi::elements {
 			case Meth_Fourth:
 				return;
 			default:
-				throw thor_scsi::NotImplemented();
+				std::stringstream strm;
+				strm << "Only implemented integration method 4 but found " << n;
+				throw thor_scsi::NotImplemented(strm.str());
 			}
 		}
 
@@ -470,7 +472,7 @@ namespace thor_scsi::elements {
 		inline void setRadiationDelegate(std::shared_ptr<thor_scsi::elements::RadiationDelegateKick> p){
 			this->rad_del = p;
 		}
-		inline auto getRadiationDelegate(void) {
+		inline auto getRadiationDelegate(void) const {
 			return this->rad_del;
 		}
 
