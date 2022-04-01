@@ -215,8 +215,8 @@ compute_omega_matrix(void)
 	omega(py_,    y_    ) = -1e0;
 
 	// columns and rows are swapped
-	omega(ct_,    delta_) =  1e0;
-	omega(delta_, ct_   ) = -1e0;
+	omega(ct_,    delta_) = -1e0;
+	omega(delta_, ct_   ) =  1e0;
 
 #else
 	for (k = 0; k < 2; k++) {
@@ -225,6 +225,7 @@ compute_omega_matrix(void)
 	}
 	omega(ct_, delta_) = -1e0;
 	omega(delta_, ct_) = 1e0;
+
 #endif
 
 
@@ -256,8 +257,10 @@ compute_symplectic_test(arma::mat mat, arma::mat om)
 	arma::mat mat_t = arma::trans(mat);
 	// std::cout << "Compute symplectic test" << std::endl;
 	// mat.print(std::cout, "mat");
-	arma::mat test = mat_t * om * mat;
+	arma::mat test = mat_t * (om * mat);
 	// test.print(std::cout, "test");
+	arma::mat expected_zero = test -om;
+	// expected_zero.print(std::cout, "all should be zero ");
 	return test;
 }
 
@@ -303,8 +306,8 @@ check_symplectisism(const arma::mat mat)
 	BOOST_CHECK_CLOSE(a_test(y_,     py_    ),  1e0, eps);
 	BOOST_CHECK_CLOSE(a_test(py_,    y_     ), -1e0, eps);
 
-	BOOST_CHECK_CLOSE(a_test(delta_, ct_    ),  1e0, eps);
 	BOOST_CHECK_CLOSE(a_test(ct_,    delta_ ), -1e0, eps);
+	BOOST_CHECK_CLOSE(a_test(delta_, ct_    ),  1e0, eps);
 
 	arma::mat expected_zero = a_test - omega;
 	double a_sum = arma::accu(arma::abs(expected_zero));
@@ -328,7 +331,7 @@ BOOST_AUTO_TEST_CASE(test20_sector_analytic_result_symplectic)
 	std::cout.setf(std::ios::scientific);
 	std::cout.precision(6);
 	std::cout.width(14);
-	//mat.raw_print(std::cout, "Analytic result:");
+	//mat.raw_print(std::cout, "Symplectic analytic result:");
 
 	//std::cout << "Symplectic integrator:\n"
 	//	  << std::setw(7) << ps << std::endl;
@@ -346,8 +349,11 @@ BOOST_AUTO_TEST_CASE(test20_sector_analytic_result_symplectic)
 	mat_rev.row(5) = mat.row(4);
 
 
-	//compute_symplectic_test(mat_rev);
-	check_symplectisism(mat_rev);
+	// arma::mat omega = compute_omega_matrix();
+	// arma::mat test = compute_symplectic_test(mat, omega);
+	// test.print("Symplectic: test matrix");
+	// (test - omega).print("Symplectic: comparsion all zeros?");
+	check_symplectisism(mat);
 	 //compute_symplectic_test(mat(arma::span(0, 5), arma::span(0, 5)));
 }
 
@@ -359,7 +365,7 @@ static void extract_ps_jac(arma::mat mat, arma::mat *ps, arma::mat *jac)
 
 }
 
-BOOST_AUTO_TEST_CASE(test20_sector_tps_symplectic)
+BOOST_AUTO_TEST_CASE(test21_sector_tps_symplectic)
 {
 	tsc::ConfigType calc_config;
 	Config C;
@@ -385,6 +391,7 @@ BOOST_AUTO_TEST_CASE(test20_sector_tps_symplectic)
 	arma::mat ps2, jac;
 	extract_ps_jac(maptomat(ps), &ps2, &jac);
 
+	// jac.print("checking jacobian ");
 	check_symplectisism(jac);
 
 }
@@ -405,8 +412,8 @@ BOOST_AUTO_TEST_CASE(test30_bend_config)
 	C.set<double>("N", 100);
 
 	auto bend_ref = tse::BendingType(C);
-	std::cout << "bend " << bend_ref << std::endl;
-	std::cout << "bend "; bend_ref.show(std::cout, 4); std::cout << std::endl;
+	// std::cout << "bend " << bend_ref << std::endl;
+	// std::cout << "bend "; bend_ref.show(std::cout, 4); std::cout << std::endl;
 
 	const double eps = 1e-12;
 	{

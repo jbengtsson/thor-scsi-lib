@@ -229,7 +229,8 @@ arma::mat maptomat(const ss_vect<tps> &map)
 {
   arma::mat mat(tps_n, tps_n);
 
-  mat.fill(NAN);
+  //mat.fill(NAN);
+  mat.fill(0e0);
 
   for (int j = 0; j < nv_tps; j++) {
     for (int k = 0; k < nv_tps; k++)
