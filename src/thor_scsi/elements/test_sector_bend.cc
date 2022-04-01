@@ -203,8 +203,8 @@ compute_omega_matrix(void)
 	  omega(2*k, 2*k+1) = 1e0;
 	  omega(2*k+1, 2*k) = -1e0;
 	}
-	omega(ct_, delta_) = 1e0;
-	omega(delta_, ct_) = -1e0;
+	omega(ct_, delta_) = -1e0;
+	omega(delta_, ct_) = 1e0;
 
 	omega.print(std::cout, "omega");
 
