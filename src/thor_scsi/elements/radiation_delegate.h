@@ -25,6 +25,7 @@ namespace thor_scsi::elements {
 		virtual void view(const ElemType& kick, const ss_vect<double> &ps, const enum ObservedState state, const int cnt) override;
 		virtual void view(const ElemType& kick, const ss_vect<tps> &ps, const enum ObservedState state, const int cnt) override;
 
+		virtual void show(std::ostream& strm, int level) const;
 	private:
 		template<typename T>
 		inline void _view(const ElemType&, const ss_vect<T> &ps, const enum ObservedState state, const int cnt);
@@ -33,6 +34,7 @@ namespace thor_scsi::elements {
 		inline void computeAndStoreCurlyH(const ss_vect<T> &ps);
 
 		double curly_dH_x = 0e0;
+		std::string delegator_name = "";
 	};
 
 	class RadiationDelegateKick: public  RadiationDelegateKickInterface{
@@ -76,6 +78,8 @@ namespace thor_scsi::elements {
 		 */
 		virtual void view(const FieldKickAPI& kick, const ss_vect<double> &ps, const enum ObservedState state, const int cnt) override final;
 		virtual void view(const FieldKickAPI& kick, const ss_vect<tps> &ps, const enum ObservedState state, const int cnt) override final;
+
+		virtual void show(std::ostream& strm, int level) const;
 		//virtual void view(const ElemType& kick, const ss_vect<double> &ps, const enum ObservedState state, const int cnt) override final;
 		//virtual void view(const ElemType& kick, const ss_vect<tps> &ps, const enum ObservedState state, const int cnt) override final;
 		/**
@@ -136,6 +140,8 @@ namespace thor_scsi::elements {
 		bool compute_diffusion = false;
 		double energy = NAN;
 		double q_fluct = NAN;
+
+		std::string delegator_name = "";
 
 
 	};

@@ -5,10 +5,23 @@
 namespace tsc = thor_scsi::core;
 namespace tse = thor_scsi::elements;
 
+std::string tse::RadiationDelegateInterface::repr(void) const
+{
+	std::stringstream strm;
+	strm << *this;
+	return strm.str();
+}
+std::string tse::RadiationDelegateKickInterface::repr(void) const
+{
+	std::stringstream strm;
+	strm << *this;
+	return strm.str();
+}
+
 template <typename T>
 inline void tse::RadiationDelegate::computeAndStoreCurlyH(const ss_vect<T> &ps)
 {
-	this->curly_dH_x = is_tps<tps>::get_curly_H(ps);
+	this->curly_dH_x = is_tps<T>::get_curly_H(ps);
 }
 template <typename T>
 inline void tse::RadiationDelegate::_view(const tsc::ElemType& elem, const ss_vect<T> &ps, const enum tsc::ObservedState state, const int cnt)
@@ -16,6 +29,7 @@ inline void tse::RadiationDelegate::_view(const tsc::ElemType& elem, const ss_ve
 	switch(state){
 	case tsc::ObservedState::start:
 		this->reset();
+		this->delegator_name = elem.name;
 		return;
 		break;
 	case tsc::ObservedState::end:
@@ -99,6 +113,7 @@ inline void tse::RadiationDelegateKick::_view(const FieldKickAPI& kick, const ss
 	switch(state){
 	case tsc::ObservedState::start:
 		this->reset();
+		this->delegator_name = kick.name;
 		return;
 		break;
 	case tsc::ObservedState::event:
@@ -113,6 +128,37 @@ inline void tse::RadiationDelegateKick::_view(const FieldKickAPI& kick, const ss
 		return;
 	}
 }
+void tse::RadiationDelegate::show(std::ostream& strm, int level) const{
+	strm << "RadiationDelegate for " << this->delegator_name << ": curly_dH_x " << this->curly_dH_x << std::endl;
+}
+
+void tse::RadiationDelegateKick::show(std::ostream& strm, int level) const
+{
+	strm << "RadiationDelegateKick for "<< this->delegator_name
+	     << ":, energy " << this->getEnergy()
+	     << " curly_dH_x " << this->curly_dH_x;
+	strm << " synchotron integrals = [";
+	int cnt = 0;
+	for(auto dIe : this->dI){
+		if(cnt){
+			strm << ", ";
+		}
+		strm << dIe;
+		++cnt;
+	}
+	strm << "]";
+	strm << " diffusion = [";
+	cnt = 0;
+	for(auto c : this->D_rad){
+		if(cnt){
+			strm << ", ";
+		}
+		strm << c;
+		++cnt;
+	}
+	strm << "]";
+}
+
 
 template<typename T>
 void get_B2(const double h_ref, const std::array<T,3> B, const ss_vect<T> &xp,

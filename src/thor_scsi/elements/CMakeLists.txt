@@ -107,6 +107,25 @@ target_link_libraries(test_sector_bend
     ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
 )
 
+add_executable(test_radiation_delegate
+  test_radiation_delegate.cc
+  )
+add_test(test_radiation_delegate test_radiation_delegate)
+target_include_directories(test_radiation_delegate
+    PUBLIC
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../>"
+    "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
+)
+target_link_libraries(test_radiation_delegate
+  thor_scsi
+  thor_scsi_core
+  tpsa_lin
+  # PRIVATE Boost::boost
+  #  quadmath
+    ${Boost_PRG_EXEC_MONITOR_LIBRARY}
+    ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
+)
+
 add_executable(test_sextupole
     check_multipole.cc
     test_sextupole.cc

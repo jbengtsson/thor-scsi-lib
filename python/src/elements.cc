@@ -63,6 +63,27 @@ class PyClassicalMagnet: public tse::ClassicalMagnet {
 	}
 };
 
+class PyRadDel: public tse::RadiationDelegateInterface {
+	using tse::RadiationDelegateInterface::RadiationDelegateInterface;
+	void view(const tse::ElemType& elem, const ss_vect<double> &ps, const enum tsc::ObservedState os, const int cnt) override {
+		PYBIND11_OVERRIDE_PURE(void, tse::RadiationDelegateInterface, view, elem, ps, os, cnt);
+	}
+	void view(const tse::ElemType& elem, const ss_vect<tps> &ps, const enum tsc::ObservedState os, const int cnt) override {
+		PYBIND11_OVERRIDE_PURE(void, tse::RadiationDelegateInterface, view, elem, ps, os, cnt);
+	}
+};
+
+
+class PyRadDelKick: public tse::RadiationDelegateKickInterface {
+	using tse::RadiationDelegateKickInterface::RadiationDelegateKickInterface;
+	void view(const tse::FieldKickAPI& elem, const ss_vect<double> &ps, const enum tsc::ObservedState os, const int cnt) override {
+		PYBIND11_OVERRIDE_PURE(void, tse::RadiationDelegateKickInterface, view, elem, ps, os, cnt);
+	}
+	void view(const tse::FieldKickAPI& elem, const ss_vect<tps> &ps, const enum tsc::ObservedState os, const int cnt) override {
+		PYBIND11_OVERRIDE_PURE(void, tse::RadiationDelegateKickInterface, view, elem, ps, os, cnt);
+	}
+};
+
 
 static const char pass_d_doc[] = "pass the element (state as doubles)";
 static const char pass_tps_doc[] = "pass the element (state as tps)";
@@ -101,18 +122,31 @@ void py_thor_scsi_init_elements(py::module &m)
 	py::class_<tse::DriftType, std::shared_ptr<tse::DriftType>>(m, "Drift", elem_type)
 		.def(py::init<const Config &>());
 
-	py::class_<tse::RadiationDelegate, std::shared_ptr<tse::RadiationDelegate>>(m, "RadiationDelegate")
+	py::class_<tse::RadiationDelegateInterface, PyRadDel, std::shared_ptr<tse::RadiationDelegateInterface>> rad_del_int(m, "RadiationDelegateInterface");
+	rad_del_int
+		.def("__repr__", &tse::RadiationDelegateInterface::repr)
+		.def(py::init<>());
+
+	py::class_<tse::RadiationDelegate, std::shared_ptr<tse::RadiationDelegate>>(m, "RadiationDelegate", rad_del_int)
 		.def("reset",       &tse::RadiationDelegate::reset)
 		.def("getCurlydHx", &tse::RadiationDelegate::getCurlydHx)
 		.def(py::init<>());
 
-	py::class_<tse::RadiationDelegateKick, std::shared_ptr<tse::RadiationDelegateKick>>(m, "RadiationDelegateKick")
+	py::class_<tse::RadiationDelegateKickInterface, PyRadDelKick, std::shared_ptr<tse::RadiationDelegateKickInterface>> rad_del_kick_int(m, "RadiationDelegateKickInterface");
+	rad_del_int
+		//.def("__repr__", &tse::RadiationDelegateKickInterface::repr)
+		.def(py::init<>());
+
+	py::class_<tse::RadiationDelegateKick, std::shared_ptr<tse::RadiationDelegateKick>>(m, "RadiationDelegateKick", rad_del_kick_int)
 		.def("reset",                              &tse::RadiationDelegateKick::reset)
 		.def("getCurlydHx",                        &tse::RadiationDelegateKick::getCurlydHx)
 		.def("getSynchrotronIntegralsIncrements",  &tse::RadiationDelegateKick::getSynchrotronIntegralsIncrement)
 		.def("getDiffusionCoefficientsIncrements", &tse::RadiationDelegateKick::getDiffusionCoefficientsIncrement)
 		.def("computeDiffusion",                   &tse::RadiationDelegateKick::computeDiffusion)
 		.def("isComputingDiffusion",               &tse::RadiationDelegateKick::isComputingDiffusion)
+		.def("setEnergy",                          &tse::RadiationDelegateKick::setEnergy)
+		.def("getEnergy",                          &tse::RadiationDelegateKick::getEnergy)
+		.def("__repr__",                           &tse::RadiationDelegateKick::repr)
 		.def(py::init<>());
 
 	py::class_<tse::MarkerType, std::shared_ptr<tse::MarkerType>>(m, "Marker", elem_type)

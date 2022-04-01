@@ -11,12 +11,22 @@ namespace thor_scsi::elements {
 	public:
 		virtual void view(const thor_scsi::core::ElemType& elem, const ss_vect<double> &ps, const enum ObservedState, const int cnt) = 0;
 		virtual void view(const thor_scsi::core::ElemType& elem, const ss_vect<tps> &ps, const enum ObservedState, const int cnt) = 0;
+		virtual void show(std::ostream& strm, int level) const{
+			strm << "RadiationDelegateInterface";
+		}
+		// support for python
+		std::string repr(void) const;
+
 	};
 	class RadiationDelegateKickInterface {
 	public:
 		virtual void view(const FieldKickAPI& kick, const ss_vect<double> &ps, const enum ObservedState, const int cnt) = 0;
 		virtual void view(const FieldKickAPI& kick, const ss_vect<tps> &ps, const enum ObservedState, const int cnt)  = 0;
-
+		virtual void show(std::ostream& strm, int level) const{
+			strm << "RadiationDelegateKickInterface";
+		}
+		// support for python
+		std::string repr(void) const;
 
 	};
 	/**
@@ -32,6 +42,18 @@ namespace thor_scsi::elements {
 	 *
 	 * M. Sands "The hysics of Electron Storage Rings" SLAC-121, p. 98.
 	 */
+	inline
+	std::ostream& operator<<(std::ostream& strm, const RadiationDelegateInterface& rd)
+	{
+		rd.show(strm, 0);
+		return strm;
+	}
+	inline
+	std::ostream& operator<<(std::ostream& strm, const RadiationDelegateKickInterface& rd)
+	{
+		rd.show(strm, 0);
+		return strm;
+	}
 
 } // namespace thor_scsi::elements
 

@@ -140,7 +140,7 @@ public:
 	/**
 	 * @brief Compute (linear) dispersion action
 	 */
-	static inline double get_curly_H(const ss_vect<tps> &x){
+	static inline double get_curly_H(const ss_vect<double> &x){
 		std::cout << "get_curly_H: operation not defined for double" << std::endl;
 		throw std::domain_error("get_curly_H: operation not defined for double");
 		return 0e0;
