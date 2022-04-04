@@ -161,7 +161,9 @@ void tse::RadiationDelegateKick::show(std::ostream& strm, int level) const
 	strm << "]";
 }
 
-
+/**
+ * @brief computing the square of the B field perpendicular to the arc of circle
+ */
 template<typename T>
 void get_B2(const double h_ref, const std::array<T,3> B, const ss_vect<T> &xp,
 	    T &B2_perp, T &B2_par)
@@ -172,11 +174,19 @@ void get_B2(const double h_ref, const std::array<T,3> B, const ss_vect<T> &xp,
   xn = 1e0/sqrt(sqr(1e0+xp[x_]*h_ref)+sqr(xp[px_])+sqr(xp[py_]));
   e[X_] = xp[px_]*xn; e[Y_] = xp[py_]*xn; e[Z_] = (1e0+xp[x_]*h_ref)*xn;
 
+  THOR_SCSI_LOG(DEBUG) << "'Field contribution' h_ref " << h_ref
+		       << " B (" <<  B[X_] << ", " << B[Y_] << ", " << B[Z_] <<")"
+		       << "  unit vectors in the plane 'e' (" <<  e[X_] << ", " << e[Y_] << ", " << e[Z_] <<")"
+		       << " normal to the arc of circle ' xn'" << xn;
+
+
   // left-handed coordinate system
   B2_perp =
     sqr(B[Y_]*e[Z_]-B[Z_]*e[Y_]) + sqr(B[X_]*e[Y_]-B[Y_]*e[X_])
     + sqr(B[Z_]*e[X_]-B[X_]*e[Z_]);
 
+  THOR_SCSI_LOG(DEBUG) << "Square of the magnetic field prependicular to the arc of circle 'B2_perp'"
+		       << B2_perp;
 //  B2_par = sqr(B[X_]*e[X_]+B[Y_]*e[Y_]+B[Z_]*e[Z_]);
 }
 
@@ -219,6 +229,7 @@ void tse::RadiationDelegateKick::radiate(const thor_scsi::core::ConfigType &conf
 	// ddelta/d(ds) = -C_gamma*E_0^3*(1+delta)^2*(B_perp/(Brho))^2/(2*pi)
 	T  p_s0, p_s1, ds, B2_perp = 0e0, B2_par = 0e0;
 	ss_vect<T> cs;
+	ss_vect<T> ps_save = ps;
 
 	THOR_SCSI_LOG(INFO) << "Radiate called for "<<  this->delegator_name << "\n";
 	THOR_SCSI_LOG(INFO) <<  "ps\n" <<  ps;
@@ -245,19 +256,52 @@ void tse::RadiationDelegateKick::radiate(const thor_scsi::core::ConfigType &conf
 
 	// H = -p_s => ds = H*L.
 	ds = (1e0+cs[x_]*h_ref+(sqr(cs[px_])+sqr(cs[py_]))/2e0)*L;
+	THOR_SCSI_LOG(DEBUG) << "'Field contribution' h_ref " << h_ref
+		  << " B (" <<  B[X_] << ", " << B[Y_] << ", " << B[Z_] <<")"
+		  << " cs "  << cs;
 	get_B2(h_ref, B, cs, B2_perp, B2_par);
 
-	const double cl_rad = C_gamma * cube(this->energy) / (2e0 * M_PI);
+	//THOR_SCSI_LOG(INFO)
+	// Test on legacy code
+	// Should be 1 at the end ...
+	const double energy_scale = 1e0;
+	const double cl_rad = C_gamma * cube(this->energy * energy_scale) / (2e0 * M_PI);
 
 	const bool radiation = true;
 	if (radiation) {
+		THOR_SCSI_LOG(INFO) <<  "Actually doing radiaton computing"  << " \n";
+		THOR_SCSI_LOG(INFO) << "cl_rad " << cl_rad <<"\n";
+		THOR_SCSI_LOG(INFO) << "B2 perpendicular\n\t" << B2_perp <<"\n";
+		THOR_SCSI_LOG(INFO) << "element length " << L <<"\n";
+		THOR_SCSI_LOG(INFO) << "energy " << this->getEnergy() <<"\n";
+
 		ps[delta_] -= cl_rad*sqr(p_s0)*B2_perp*ds;
 		p_s1 = get_p_s(conf, ps); ps[px_] = cs[px_]*p_s1; ps[py_] = cs[py_]*p_s1;
+	}
+	if(!check_ps_finite(cs)){
+		std::stringstream strm;
+		strm << "ps unbound "; ps.show(strm, 10, false);
+		std::cerr << strm.str() << std::endl;
+		THOR_SCSI_LOG(ERROR) <<  "Check radiaton" << strm.str() << " \n";
+
+		throw ts::PhysicsViolation(strm.str());
 	}
 
 	if (this->compute_diffusion){
 		this->diffusion(B2_perp, ds, p_s0, cs);
 	}
+
+	if(!check_ps_finite(cs)){
+		std::stringstream strm;
+		strm << "ps unbound "; ps.show(strm, 10, false);
+		std::cerr << strm.str() << std::endl;
+		THOR_SCSI_LOG(ERROR) <<  "Check radiaton" << strm.str() << " \n";
+
+		throw ts::PhysicsViolation(strm.str());
+	}
+	ss_vect<T> dPs = ps - ps_save;
+	THOR_SCSI_LOG(INFO) <<  "Radiation effect on ps\n" << dPs << " \n";
+
 }
 
 

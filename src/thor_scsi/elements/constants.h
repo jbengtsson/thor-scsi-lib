@@ -21,13 +21,19 @@ namespace thor_scsi::elements{
 	const double m_e   = 0.51099906e6;             ///< electron rest mass [eV/c^2].
 	const double h_bar = 6.58211899e-16;           //< reduced Planck constant [eVs].
 
+        /**
+	 * See Sands ....
+	 *
+	 * @todo: remove 1e-9 in calculation of the result
+	 *        if so remeve the energy scale in radiation_delegate
+	 */
 	inline double compute_C_gamma(void)  {
 		const double q_e   = 1.602e-19;                ///< electron charge.
 		const double mu_0  = 4.0*M_PI*1e-7;            // permittivity of free space.
 		const double eps_0 = 1.0/(sqr(speed_of_light)*mu_0);   // permeability of free space.
 		const double r_e   = q_e/(4.0*M_PI*eps_0*m_e); ///< classical electron radius.
 
-		double r =  4e0 * M_PI * r_e / (3e0 * cube(1e-9 * m_e));
+		double r =  4e0 * M_PI * r_e / (3e0 * cube(m_e));
 		return r;
 	}
 

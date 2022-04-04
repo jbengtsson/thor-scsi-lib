@@ -22,7 +22,7 @@ calc_config.Cavity_on = False
 calc_config.emittance = False
 
 radiate = True
-energy = 1.7e9
+energy = 2.5e9
 
 
 class RK(RadiationDelegateKick):
@@ -67,15 +67,17 @@ for e in radiators:
     print(repr(e))
     break
 
-# ps = ss_vect_tps()
-# ps.set_identity()
-ps = ss_vect_double()
-ps.set_zero()
-ps[phase_space_ind.x_] = 1e-3
+if False:
+    ps = ss_vect_double()
+    ps.set_zero()
+    ps[phase_space_ind.x_] = 1e-3
+else:
+    ps = ss_vect_tps()
+    ps.set_identity()
+
 print(ps)
-acc.propagate(calc_config, ps,  0, 19)
+acc.propagate(calc_config, ps,  0, 2000)
 print(ps)
-acc.propagate(calc_config, ps, 19, 20)
-print(ps)
-for a_del in rad_del_kick:
-    print(repr(a_del))
+
+#for a_del in rad_del_kick:
+#    print(repr(a_del))

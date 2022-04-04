@@ -2,7 +2,8 @@
 #include <thor_scsi/std_machine/std_machine.h>
 #include <thor_scsi/std_machine/accelerator.h>
 #include <thor_scsi/elements/radiation_delegate.h>
-#include <thor_scsi/elements/field_kick.h>
+#include <thor_scsi/elements/radiation_delegate.h>
+#include <thor_scsi/elements/bending.h>
 #include <thor_scsi/core/elements_basis.h>
 #include <tps/ss_vect.h>
 #include <stdlib.h>

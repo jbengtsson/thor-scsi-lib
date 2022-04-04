@@ -477,8 +477,7 @@ namespace thor_scsi::elements {
 		}
 
 	private:
-		inline bool computeRadiation(const thor_scsi::core::ConfigType &conf){
-			return conf.radiation;
+		inline bool computeSynchrotronIntegrals(const thor_scsi::core::ConfigType &conf){
 			return conf.emittance && !conf.Cavity_on;
 		}
 		inline auto _getRadiationDelegate(void) {
@@ -487,7 +486,7 @@ namespace thor_scsi::elements {
 
 		template<typename T>
 		inline void _synchrotronIntegralsInit(const thor_scsi::core::ConfigType &conf,  ss_vect<T> &ps){
-			if(this->computeRadiation(conf)){
+			if(this->computeSynchrotronIntegrals(conf)){
 				auto ob = this->_getRadiationDelegate();
 				if(ob){
 					ob->view(*this, ps, thor_scsi::core::ObservedState::start, 0);
@@ -499,7 +498,7 @@ namespace thor_scsi::elements {
 		// rename it to
 		template<typename T>
 		inline void _synchrotronIntegralsFinish(const thor_scsi::core::ConfigType &conf, ss_vect<T> &ps){
-			if(this->computeRadiation(conf)){
+			if(this->computeSynchrotronIntegrals(conf)){
 				auto obj = this->_getRadiationDelegate();
 				if(obj){
 
@@ -511,7 +510,7 @@ namespace thor_scsi::elements {
 		// calculate the effect of radiation
 		template<typename T>
 		inline void _synchrotronIntegralsStep(thor_scsi::core::ConfigType &conf, ss_vect<T> &ps, const int step) {
-			if(this->computeRadiation(conf)){
+			if(this->computeSynchrotronIntegrals(conf)){
 				auto obj = this->_getRadiationDelegate();
 				if(obj){
 					obj->view(*this, ps, thor_scsi::core::ObservedState::event, step);

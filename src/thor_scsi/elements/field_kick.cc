@@ -419,11 +419,11 @@ inline void tse::FieldKick::thinKickAndRadiate(const thor_scsi::core::ConfigType
 	}
 	*/
 	intp.field(ps[x_], ps[y_], &BxoBrho, &ByoBrho);
-	std::array<T, 3> B = {BxoBrho, ByoBrho, 0};
 
 	auto rad = this->getRadiationDelegate();
 	if(rad){
-		THOR_SCSI_LOG(DEBUG) <<  "Check radiaton" << " \n";
+		THOR_SCSI_LOG(DEBUG) <<  "Delegating to computing radiation" << " \n";
+		std::array<T, 3> B = {BxoBrho, ByoBrho + h_bend, 0};
 		rad->radiate(conf, ps, L, h_ref, B);
 	}
 	tse::thin_kick(conf, BxoBrho, ByoBrho, L, h_bend, h_ref, ps);
