@@ -359,27 +359,30 @@ namespace thor_scsi::core {
 		static inline bool detail(int lvl) { return log_detail<=lvl; }
 
 		static void set_logger(const std::shared_ptr<Logger>& p);
+		static std::shared_ptr<Logger> get_logger(void);
 	private:
 		static std::shared_ptr<Logger> p_logger;
 	};
 
-#define FLAME_ERROR 40
-#define FLAME_WARN  30
-#define FLAME_INFO  20
-#define FLAME_DEBUG 10
+#define THOR_SCSI_ERROR 40
+#define THOR_SCSI_WARN  30
+// compatible with python
+#define THOR_SCSI_WARNING THOR_SCSI_WARN
+#define THOR_SCSI_INFO  20
+#define THOR_SCSI_DEBUG 10
 // Super verbose logging, a la the rf cavity element
-#define FLAME_FINE  0
+#define THOR_SCSI_FINE  0
 
-#define FLAME_LOG_ALWAYS(LVL) Machine::LogRecord(__FILE__, __LINE__, FLAME_##LVL)
+#define THOR_SCSI_LOG_ALWAYS(LVL) thor_scsi::core::Machine::LogRecord(__FILE__, __LINE__, THOR_SCSI_##LVL)
 
-#ifndef FLAME_DISABLE_LOG
-#define FLAME_LOG_CHECK(LVL) UNLIKELY(Machine::detail(FLAME_##LVL))
+#ifndef THOR_SCSI_DISABLE_LOG
+#define THOR_SCSI_LOG_CHECK(LVL) UNLIKELY(thor_scsi::core::Machine::detail(THOR_SCSI_##LVL))
 #else
-#define FLAME_LOG_CHECK(LVL) (false)
+#define THOR_SCSI_LOG_CHECK(LVL) (false)
 #endif
 
 //! Hook into redirect-able logging.  Use like an std::ostream w/ operator<<
-#define FLAME_LOG(LVL) if(FLAME_LOG_CHECK(LVL)) FLAME_LOG_ALWAYS(LVL)
+#define THOR_SCSI_LOG(LVL) if(THOR_SCSI_LOG_CHECK(LVL)) THOR_SCSI_LOG_ALWAYS(LVL)
 
 	std::ostream& operator<<(std::ostream&, const Machine& m);
 

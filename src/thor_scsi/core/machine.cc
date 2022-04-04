@@ -32,7 +32,7 @@ tsc::Machine::Machine(const Config& c)
     /* originally: first finding sim state */
     std::string type(c.get<std::string>("sim_type"));
     p_simtype = type;
-    FLAME_LOG(INFO)<<"Constructing Machine w/ sim_type='"<<type<<'\'';
+    THOR_SCSI_LOG(INFO)<<"Constructing Machine w/ sim_type='"<<type<<'\'';
 #endif /* NO state */
 
     info_mutex_t::scoped_lock G(info_mutex);
@@ -109,7 +109,7 @@ tsc::Machine::Machine(const Config& c)
     p_elements.swap(result);
     p_lookup.swap(result_l);
     p_lookup_type.swap(result_t);
-    FLAME_LOG(DEBUG)<<"Complete constructing Machine";
+    THOR_SCSI_LOG(DEBUG)<<"Complete constructing Machine";
 }
 
 //! Elements with a given name
@@ -270,7 +270,7 @@ struct Logcerr : public tsc::Machine::Logger
 Logcerr Logcerr::singleton;
 }
 
-int tsc::Machine::log_detail = FLAME_WARN;
+int tsc::Machine::log_detail = THOR_SCSI_WARN;
 std::shared_ptr<tsc::Machine::Logger> tsc::Machine::p_logger(&Logcerr::singleton, Logcerr::noopdtor);
 
 void tsc::Machine::set_logger(const std::shared_ptr<Logger> &p)
@@ -282,6 +282,11 @@ void tsc::Machine::set_logger(const std::shared_ptr<Logger> &p)
         info_mutex_t::scoped_lock G(info_mutex);
         p_logger.swap(temp);
     }
+}
+
+std::shared_ptr<tsc::Machine::Logger> tsc::Machine::get_logger(void)
+{
+    return p_logger;
 }
 
 tsc::Machine::LogRecord::~LogRecord()
