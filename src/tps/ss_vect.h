@@ -34,8 +34,13 @@ template<typename T> class ss_vect {
 
 
   void print(const std::string &);
-  ///< Todo: consider if adding an unused  level flag for consistency
-  void show(std::ostream&, int precision=6) const;
+  /**
+   * @brief show / print to ostream
+   * @ærg precision: number of digits to use
+   * @ærg with_endl: add an std::endl at the end of the stream (defaults to true)
+   * @todo: consider if adding an unused  level flag for consistency to flame
+   */
+  void show(std::ostream&, int precision=6, bool with_endl=true) const;
   // For python interface
   std::string repr(void);
   // For python interface

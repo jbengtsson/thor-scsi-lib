@@ -2,6 +2,7 @@
 #include <thor_scsi/elements/element_helpers.h>
 #include <thor_scsi/elements/utils.h>
 
+namespace ts = thor_scsi;
 namespace tsc = thor_scsi::core;
 namespace tse = thor_scsi::elements;
 
@@ -186,6 +187,30 @@ void tse::RadiationDelegateKick::setEnergy(const double val)
 }
 
 template<typename T>
+static inline double ps_coor_ref_value(T coor);
+
+static inline double ps_coor_ref_value(double coor)
+{
+	return coor;
+}
+static inline double ps_coor_ref_value(tps coor)
+{
+	return coor.cst();
+}
+template<typename T>
+static bool check_ps_finite(ss_vect<T> ps, const double max_val = 1e3)
+{
+	bool check_ps_finite = true;
+	for(int i=0; i < nv_tps; ++i){
+		double ref_val = ps_coor_ref_value(ps[i]);
+		check_ps_finite &= std::isfinite(ref_val);
+		check_ps_finite &= (std::abs(ref_val) < max_val);
+	}
+	return check_ps_finite;
+}
+
+
+template<typename T>
 void tse::RadiationDelegateKick::radiate(const thor_scsi::core::ConfigType &conf, ss_vect<T> &ps, const double L,
 				     const double h_ref, const std::array<T, 3> B)
 {
@@ -194,8 +219,26 @@ void tse::RadiationDelegateKick::radiate(const thor_scsi::core::ConfigType &conf
 	T  p_s0, p_s1, ds, B2_perp = 0e0, B2_par = 0e0;
 	ss_vect<T> cs;
 
+	if(!check_ps_finite(ps)){
+		std::stringstream strm;
+		strm <<  __FILE__ << "::" << __FUNCTION__ << "@" << __LINE__ - 2
+		     << "ps unbound "; ps.show(strm, 10, false);
+		std::cerr << strm.str() << std::endl;
+		std::cerr.flush();
+		throw ts::PhysicsViolation(strm.str());
+	}
+
 	// Large ring: x' and y' unchanged.
 	p_s0 = get_p_s(conf, ps); cs = ps; cs[px_] /= p_s0; cs[py_] /= p_s0;
+
+	if(!check_ps_finite(cs)){
+		std::stringstream strm;
+		strm <<  __FILE__ << "::" << __FUNCTION__ << "@" << __LINE__ - 2
+		     << "ps unbound "; ps.show(strm, 10, false);
+		std::cerr << strm.str() << std::endl;
+		std::cerr.flush();
+		throw ts::PhysicsViolation(strm.str());
+	}
 
 	// H = -p_s => ds = H*L.
 	ds = (1e0+cs[x_]*h_ref+(sqr(cs[px_])+sqr(cs[py_]))/2e0)*L;
@@ -220,11 +263,13 @@ void tse::RadiationDelegateKick::radiate(const thor_scsi::core::ConfigType &conf
 //template void tse::RadiationDelegate::_view(const FieldKickAPI& kick, const ss_vect<tps> &ps, const enum tsc::ObservedState state, const int cnt);
 void tse::RadiationDelegateKick::view(const FieldKickAPI& kick, const ss_vect<double> &ps, const enum ObservedState state, const int cnt)
 {
+	std::cout<< "Rad Del.view(ss_vect<double>) for element " << kick.name << "at index" << kick.index << std::endl;
 	_view(kick, ps, state, cnt);
 }
 
 void tse::RadiationDelegateKick::view(const FieldKickAPI& kick, const ss_vect<tps> &ps, const enum ObservedState state, const int cnt)
 {
+	std::cout<< "Rad Del.view(ss_vect<tps>) for element " << kick.name << "at index" << kick.index << std::endl;
 	_view(kick, ps, state, cnt);
 }
 template void tse::RadiationDelegateKick::radiate(const thor_scsi::core::ConfigType &conf, ss_vect<double> &ps, const double L,

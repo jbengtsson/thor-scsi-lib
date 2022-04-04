@@ -63,7 +63,7 @@ class PyClassicalMagnet: public tse::ClassicalMagnet {
 	}
 };
 
-class PyRadDel: public tse::RadiationDelegateInterface {
+class PyRadDelInt: public tse::RadiationDelegateInterface {
 	using tse::RadiationDelegateInterface::RadiationDelegateInterface;
 	void view(const tse::ElemType& elem, const ss_vect<double> &ps, const enum tsc::ObservedState os, const int cnt) override {
 		PYBIND11_OVERRIDE_PURE(void, tse::RadiationDelegateInterface, view, elem, ps, os, cnt);
@@ -73,14 +73,34 @@ class PyRadDel: public tse::RadiationDelegateInterface {
 	}
 };
 
+class PyRadDel: public tse::RadiationDelegate {
+	using tse::RadiationDelegate::RadiationDelegate;
+	void view(const tse::ElemType& elem, const ss_vect<double> &ps, const enum tsc::ObservedState os, const int cnt) override {
+		PYBIND11_OVERRIDE(void, tse::RadiationDelegate, view, elem, ps, os, cnt);
+	}
+	void view(const tse::ElemType& elem, const ss_vect<tps> &ps, const enum tsc::ObservedState os, const int cnt) override {
+		PYBIND11_OVERRIDE(void, tse::RadiationDelegate, view, elem, ps, os, cnt);
+	}
+};
 
-class PyRadDelKick: public tse::RadiationDelegateKickInterface {
+
+class PyRadDelKickInt: public tse::RadiationDelegateKickInterface {
 	using tse::RadiationDelegateKickInterface::RadiationDelegateKickInterface;
 	void view(const tse::FieldKickAPI& elem, const ss_vect<double> &ps, const enum tsc::ObservedState os, const int cnt) override {
 		PYBIND11_OVERRIDE_PURE(void, tse::RadiationDelegateKickInterface, view, elem, ps, os, cnt);
 	}
 	void view(const tse::FieldKickAPI& elem, const ss_vect<tps> &ps, const enum tsc::ObservedState os, const int cnt) override {
 		PYBIND11_OVERRIDE_PURE(void, tse::RadiationDelegateKickInterface, view, elem, ps, os, cnt);
+	}
+};
+
+class PyRadDelKick: public tse::RadiationDelegateKick {
+	using tse::RadiationDelegateKick::RadiationDelegateKick;
+	void view(const tse::FieldKickAPI& elem, const ss_vect<double> &ps, const enum tsc::ObservedState os, const int cnt) override {
+		PYBIND11_OVERRIDE(void, tse::RadiationDelegateKick, view, elem, ps, os, cnt);
+	}
+	void view(const tse::FieldKickAPI& elem, const ss_vect<tps> &ps, const enum tsc::ObservedState os, const int cnt) override {
+		PYBIND11_OVERRIDE(void, tse::RadiationDelegateKick, view, elem, ps, os, cnt);
 	}
 };
 
@@ -122,22 +142,22 @@ void py_thor_scsi_init_elements(py::module &m)
 	py::class_<tse::DriftType, std::shared_ptr<tse::DriftType>>(m, "Drift", elem_type)
 		.def(py::init<const Config &>());
 
-	py::class_<tse::RadiationDelegateInterface, PyRadDel, std::shared_ptr<tse::RadiationDelegateInterface>> rad_del_int(m, "RadiationDelegateInterface");
+	py::class_<tse::RadiationDelegateInterface, PyRadDelInt, std::shared_ptr<tse::RadiationDelegateInterface>> rad_del_int(m, "RadiationDelegateInterface");
 	rad_del_int
 		.def("__repr__", &tse::RadiationDelegateInterface::repr)
 		.def(py::init<>());
 
-	py::class_<tse::RadiationDelegate, std::shared_ptr<tse::RadiationDelegate>>(m, "RadiationDelegate", rad_del_int)
+	py::class_<tse::RadiationDelegate, PyRadDel, std::shared_ptr<tse::RadiationDelegate>>(m, "RadiationDelegate", rad_del_int)
 		.def("reset",       &tse::RadiationDelegate::reset)
 		.def("getCurlydHx", &tse::RadiationDelegate::getCurlydHx)
 		.def(py::init<>());
 
-	py::class_<tse::RadiationDelegateKickInterface, PyRadDelKick, std::shared_ptr<tse::RadiationDelegateKickInterface>> rad_del_kick_int(m, "RadiationDelegateKickInterface");
+	py::class_<tse::RadiationDelegateKickInterface, PyRadDelKickInt, std::shared_ptr<tse::RadiationDelegateKickInterface>> rad_del_kick_int(m, "RadiationDelegateKickInterface");
 	rad_del_int
 		//.def("__repr__", &tse::RadiationDelegateKickInterface::repr)
 		.def(py::init<>());
 
-	py::class_<tse::RadiationDelegateKick, std::shared_ptr<tse::RadiationDelegateKick>>(m, "RadiationDelegateKick", rad_del_kick_int)
+	py::class_<tse::RadiationDelegateKick, PyRadDelKick, std::shared_ptr<tse::RadiationDelegateKick>>(m, "RadiationDelegateKick", rad_del_kick_int)
 		.def("reset",                              &tse::RadiationDelegateKick::reset)
 		.def("getCurlydHx",                        &tse::RadiationDelegateKick::getCurlydHx)
 		.def("getSynchrotronIntegralsIncrements",  &tse::RadiationDelegateKick::getSynchrotronIntegralsIncrement)
@@ -146,6 +166,10 @@ void py_thor_scsi_init_elements(py::module &m)
 		.def("isComputingDiffusion",               &tse::RadiationDelegateKick::isComputingDiffusion)
 		.def("setEnergy",                          &tse::RadiationDelegateKick::setEnergy)
 		.def("getEnergy",                          &tse::RadiationDelegateKick::getEnergy)
+		.def("view",
+		     py::overload_cast<const tse::FieldKickAPI&, const ss_vect<double> &, const enum tsc::ObservedState, const int>(&tse::RadiationDelegateKick::view))
+		.def("view",
+		     py::overload_cast<const tse::FieldKickAPI&, const ss_vect<double> &, const enum tsc::ObservedState, const int>(&tse::RadiationDelegateKick::view))
 		.def("__repr__",                           &tse::RadiationDelegateKick::repr)
 		.def(py::init<>());
 

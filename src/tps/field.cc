@@ -26,14 +26,20 @@ std::string tps::pstr(void)
 
 #if NO_TPSA == 1
 
-void tps::show(std::ostream& stream, int precision) const
+void tps::show(std::ostream& stream, int precision, bool with_endl) const
 {
   stream << "cst:" << std::endl
 	 << std::setw(14) << ltps[0] << std::endl << "linear:" << std::endl;
-  for (int i = 1; i <= nv_tps; i++)
+  for (int i = 1; i <= nv_tps; i++){
+    if(i > 0){
+      stream << " ";
+    }
     stream << std::scientific << std::setprecision(precision)
 	      << std::setw(14) << ltps[i];
-  stream << std::endl;
+  }
+  if(with_endl){
+    stream << std::endl;
+  }
 }
 
 void tps::print(const std::string &str)
@@ -51,14 +57,30 @@ void tps::print(const std::string &str)
 }
 
 template<>
-void ss_vect<tps>::show(std::ostream& stream, int precision) const
+void ss_vect<tps>::show(std::ostream& stream, int precision, bool with_endl) const
 {
-
+  if(!with_endl){
+    stream << "[";
+  }
   for (int i = 1; i <= nv_tps; i++) {
-    for (int j = 1; j <= nv_tps; j++)
+    if(!with_endl){
+      stream << "[";
+    }
+    for (int j = 1; j <= nv_tps; j++){
+      if(j > 1){
+	stream << " ";
+      }
       stream << std::scientific << std::setprecision(precision)
 		<< std::setw(14) << get_m_ij(*this, i, j);
-    stream << std::endl;
+    }
+    if(with_endl){
+      stream << std::endl;
+    } else {
+      stream << "]";
+    }
+  }
+  if(!with_endl){
+    stream << "[";
   }
 }
 
@@ -116,10 +138,17 @@ std::string ss_vect<T>::pstr(void)
 
 
 template<>
-void ss_vect<double>::show(std::ostream& stream, int precision) const
+void ss_vect<double>::show(std::ostream& stream, int precision, bool with_endl) const
 {
-  std::cout << std::scientific << std::setprecision(precision) << std::setw(14)
-	    << *this << std::endl;
+  int width = 14;
+  if (precision > 6){
+    width = precision + 8;
+  }
+  stream << std::scientific << std::setprecision(precision) << std::setw(width)
+	      << *this;
+  if(with_endl){
+    stream << std::endl;
+  }
 }
 
 template<>
