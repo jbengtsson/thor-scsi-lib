@@ -337,11 +337,12 @@ static void check_log_level()
 
 
 	std::vector<struct levels> t_levels   = {
-		{"FINE",  THOR_SCSI_FINE},
-		{"DEBUG", THOR_SCSI_DEBUG},
-		{"INFO",  THOR_SCSI_INFO},
-		{"WARN",  THOR_SCSI_WARN},
-		{"ERROR", THOR_SCSI_ERROR}
+		{"FINE",    THOR_SCSI_FINE},
+		{"DEBUG",   THOR_SCSI_DEBUG},
+		{"INFO",    THOR_SCSI_INFO},
+		{"WARN",    THOR_SCSI_WARN},
+		{"WARNING", THOR_SCSI_WARNING},
+		{"ERROR",   THOR_SCSI_ERROR}
 	};
 
 	bool verbose = vm["verbose"].as<bool>();
