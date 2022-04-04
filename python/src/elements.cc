@@ -144,12 +144,18 @@ void py_thor_scsi_init_elements(py::module &m)
 
 	py::class_<tse::RadiationDelegateInterface, PyRadDelInt, std::shared_ptr<tse::RadiationDelegateInterface>> rad_del_int(m, "RadiationDelegateInterface");
 	rad_del_int
-		.def("__repr__", &tse::RadiationDelegateInterface::repr)
+		.def("__repr__",        &tse::RadiationDelegateInterface::repr)
 		.def(py::init<>());
 
 	py::class_<tse::RadiationDelegate, PyRadDel, std::shared_ptr<tse::RadiationDelegate>>(m, "RadiationDelegate", rad_del_int)
-		.def("reset",       &tse::RadiationDelegate::reset)
-		.def("getCurlydHx", &tse::RadiationDelegate::getCurlydHx)
+		.def("reset",             &tse::RadiationDelegate::reset)
+		.def("getCurlydHx",       &tse::RadiationDelegate::getCurlydHx)
+		.def("getDelegatorName",  &tse::RadiationDelegate::getDelegatorName)
+		.def("getDelegatorIndex", &tse::RadiationDelegate::getDelegatorIndex)
+		.def("view",
+		     py::overload_cast<const tse::ElemType&, const ss_vect<double> &, const enum tsc::ObservedState, const int>(&tse::RadiationDelegate::view))
+		.def("view",
+		     py::overload_cast<const tse::ElemType&, const ss_vect<double> &, const enum tsc::ObservedState, const int>(&tse::RadiationDelegate::view))
 		.def(py::init<>());
 
 	py::class_<tse::RadiationDelegateKickInterface, PyRadDelKickInt, std::shared_ptr<tse::RadiationDelegateKickInterface>> rad_del_kick_int(m, "RadiationDelegateKickInterface");
@@ -160,6 +166,8 @@ void py_thor_scsi_init_elements(py::module &m)
 	py::class_<tse::RadiationDelegateKick, PyRadDelKick, std::shared_ptr<tse::RadiationDelegateKick>>(m, "RadiationDelegateKick", rad_del_kick_int)
 		.def("reset",                              &tse::RadiationDelegateKick::reset)
 		.def("getCurlydHx",                        &tse::RadiationDelegateKick::getCurlydHx)
+		.def("getDelegatorName",                   &tse::RadiationDelegateKick::getDelegatorName)
+		.def("getDelegatorIndex",                  &tse::RadiationDelegateKick::getDelegatorIndex)
 		.def("getSynchrotronIntegralsIncrements",  &tse::RadiationDelegateKick::getSynchrotronIntegralsIncrement)
 		.def("getDiffusionCoefficientsIncrements", &tse::RadiationDelegateKick::getDiffusionCoefficientsIncrement)
 		.def("computeDiffusion",                   &tse::RadiationDelegateKick::computeDiffusion)

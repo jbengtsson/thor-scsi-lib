@@ -32,6 +32,7 @@ inline void tse::RadiationDelegate::_view(const tsc::ElemType& elem, const ss_ve
 	case tsc::ObservedState::start:
 		this->reset();
 		this->delegator_name = elem.name;
+		this->delegator_index = elem.index;
 		return;
 		break;
 	case tsc::ObservedState::end:
@@ -116,6 +117,7 @@ inline void tse::RadiationDelegateKick::_view(const FieldKickAPI& kick, const ss
 	case tsc::ObservedState::start:
 		this->reset();
 		this->delegator_name = kick.name;
+		this->delegator_index = kick.index;
 		return;
 		break;
 	case tsc::ObservedState::event:
@@ -131,12 +133,15 @@ inline void tse::RadiationDelegateKick::_view(const FieldKickAPI& kick, const ss
 	}
 }
 void tse::RadiationDelegate::show(std::ostream& strm, int level) const{
-	strm << "RadiationDelegate for " << this->delegator_name << ": curly_dH_x " << this->curly_dH_x << std::endl;
+	strm << "RadiationDelegate for "
+	     << this->delegator_name << "["<< this->delegator_index << "]"
+	     <<" curly_dH_x " << this->curly_dH_x;
 }
 
 void tse::RadiationDelegateKick::show(std::ostream& strm, int level) const
 {
-	strm << "RadiationDelegateKick for "<< this->delegator_name
+	strm << "RadiationDelegateKick for "
+	     << this->delegator_name << "["<< this->delegator_index << "]"
 	     << ":, energy " << this->getEnergy()
 	     << " curly_dH_x " << this->curly_dH_x;
 	strm << " synchotron integrals = [";

@@ -26,6 +26,13 @@ namespace thor_scsi::elements {
 		virtual void view(const ElemType& kick, const ss_vect<tps> &ps, const enum ObservedState state, const int cnt) override;
 
 		virtual void show(std::ostream& strm, int level) const override final;
+
+		std::string getDelegatorName(void){
+			return this->delegator_name;
+		}
+		int getDelegatorIndex(void){
+			return this->delegator_index;
+		}
 	private:
 		template<typename T>
 		inline void _view(const ElemType&, const ss_vect<T> &ps, const enum ObservedState state, const int cnt);
@@ -35,6 +42,7 @@ namespace thor_scsi::elements {
 
 		double curly_dH_x = 0e0;
 		std::string delegator_name = "";
+		int delegator_index = -1;
 	};
 
 	class RadiationDelegateKick: public  RadiationDelegateKickInterface{
@@ -110,6 +118,14 @@ namespace thor_scsi::elements {
 			return this->curly_dH_x;
 		}
 
+		std::string getDelegatorName(void) const {
+			return this->delegator_name;
+		}
+
+		int getDelegatorIndex(void) const {
+			return this->delegator_index;
+		}
+
 	private:
 		//using RadiationDelegateKickInterface::view;
 
@@ -135,6 +151,7 @@ namespace thor_scsi::elements {
 		inline void diffusion(const tps &B2_perp,  const tps &ds, const tps &p_s0,  const ss_vect<tps> &A);
 
 		double curly_dH_x = 0e0;
+		int index = -1;
 		std::array<double, 5> dI;           ///< Local contributions to the synchrotron integrals
 		std::array<double, 3> D_rad;        //< Diffusion coefficients (Floquet space).
 		bool compute_diffusion = false;
@@ -142,7 +159,7 @@ namespace thor_scsi::elements {
 		double q_fluct = NAN;
 
 		std::string delegator_name = "";
-
+		int delegator_index = -1;
 
 	};
 } // namespace thor_scsi::elements
