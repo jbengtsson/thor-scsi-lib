@@ -478,6 +478,7 @@ namespace thor_scsi::elements {
 
 	private:
 		inline bool computeRadiation(const thor_scsi::core::ConfigType &conf){
+			return conf.radiation;
 			return conf.emittance && !conf.Cavity_on;
 		}
 		inline auto _getRadiationDelegate(void) {

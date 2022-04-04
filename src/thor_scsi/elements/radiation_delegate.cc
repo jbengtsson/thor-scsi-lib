@@ -219,6 +219,9 @@ void tse::RadiationDelegateKick::radiate(const thor_scsi::core::ConfigType &conf
 	T  p_s0, p_s1, ds, B2_perp = 0e0, B2_par = 0e0;
 	ss_vect<T> cs;
 
+	std::cout << "Radiate called for "<<  this->delegator_name << "\n";
+	std::cout << "ps\n" <<  ps << std::endl;
+
 	if(!check_ps_finite(ps)){
 		std::stringstream strm;
 		strm <<  __FILE__ << "::" << __FUNCTION__ << "@" << __LINE__ - 2

@@ -420,8 +420,9 @@ inline void tse::FieldKick::thinKickAndRadiate(const thor_scsi::core::ConfigType
 	intp.field(ps[x_], ps[y_], &BxoBrho, &ByoBrho);
 	std::array<T, 3> B = {BxoBrho, ByoBrho, 0};
 
-	auto rad = this->_getRadiationDelegate();
+	auto rad = this->getRadiationDelegate();
 	if(rad){
+	  std::cerr<<  "Check radiaton" << " \n";
 		rad->radiate(conf, ps, L, h_ref, B);
 	}
 	tse::thin_kick(conf, BxoBrho, ByoBrho, L, h_bend, h_ref, ps);

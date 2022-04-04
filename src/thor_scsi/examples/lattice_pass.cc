@@ -1,6 +1,8 @@
 #include <boost/program_options.hpp>
 #include <thor_scsi/std_machine/std_machine.h>
 #include <thor_scsi/std_machine/accelerator.h>
+#include <thor_scsi/elements/radiation_delegate.h>
+#include <thor_scsi/elements/field_kick.h>
 #include <thor_scsi/core/elements_basis.h>
 #include <tps/ss_vect.h>
 #include <stdlib.h>
@@ -9,6 +11,7 @@
 
 namespace po = boost::program_options;
 namespace tsc = thor_scsi::core;
+namespace tse = thor_scsi::elements;
 namespace ts = thor_scsi;
 
 po::variables_map vm;
@@ -29,6 +32,8 @@ static void process_cmd_line(int argc, char *argv[])
 		("ct",           po::value<double>()->default_value(0e0), "relative phase deviation   (left hand coordinate system)")
 		("delta",        po::value<double>()->default_value(0e0), "relative impulse deviation (left hand coordinate system)")
 		("inspect,i",    po::value<std::string>()->default_value(""), "name of element to inspect: if option verbose is used extra information will be printed")
+		("radiate,r",    po::value<bool>()->default_value(false), "enable radiation togther with calculation")
+		("energy,E",     po::value<double>()->default_value(2.5e9), "energy")
 		("number,n",     po::value<int>()->default_value(0), "number of element to inspect")
 		("n_turns",      po::value<int>()->default_value(0),      "propagate n turns (set to zero for none)" )
 		("transport_matrix", po::value<bool>()->default_value(false), "compute transport matrix")
@@ -118,10 +123,26 @@ static void compute_transport_matrix(ts::Accelerator& accelerator, const int fir
 
 }
 
+
+static void add_radiation_delegates(ts::Accelerator& accelerator)
+{
+
+	double energy = vm["energy"].as<double>();
+
+	for(auto cv : accelerator){
+		auto fk = std::dynamic_pointer_cast<tse::FieldKick>(cv);
+		if(fk){
+			auto p_del = std::make_shared<tse::RadiationDelegateKick>();
+			p_del->setEnergy(energy);
+			fk->setRadiationDelegate(p_del);
+		}
+	}
+}
 static void compute_transport_matrix_prop(ts::Accelerator& accelerator, const int first_element, const int last_element)
 {
 	bool verbose = vm["verbose"].as<bool>();
 	bool very_verbose = vm["very_verbose"].as<bool>();
+	bool radiate = vm["radiate"].as<bool>();
 	ss_vect<tps> ps;
 	ps.identity();
 
@@ -132,6 +153,14 @@ static void compute_transport_matrix_prop(ts::Accelerator& accelerator, const in
 	if(verbose){
 		std::cout << "Processing elements: ";
 	}
+	if(radiate){
+		calc_config.radiation = true;
+		add_radiation_delegates(accelerator);
+
+	} else {
+		calc_config.radiation = false;
+	}
+
 	accelerator.propagate(calc_config, ps, first_element, last_element);
 	std::cout << "Computed poincare map " << std::endl
 		  << ps << std::endl;
@@ -208,6 +237,8 @@ static void user_compute_transport_matrix(ts::Accelerator& accelerator)
 			  << " to " << last_element << " number " << std::endl;
 	}
 	// compute_transport_matrix(accelerator, first_element, last_element);
+
+
 	accelerator.set_trace(&std::cout);
 	compute_transport_matrix_prop(accelerator, first_element, last_element);
 }
@@ -216,6 +247,7 @@ static void track_n_turns(ts::Accelerator& accelerator)
 {
 	const int n_turns = vm["n_turns"].as<int>();
 	bool verbose = vm["verbose"].as<bool>();
+	bool radiate = vm["radiate"].as<bool>();
 
 	if (n_turns <= 0) {
 		if (verbose) {
@@ -234,7 +266,12 @@ static void track_n_turns(ts::Accelerator& accelerator)
 
 	tsc::ConfigType calc_config;
 
-
+	if(radiate){
+		calc_config.radiation = true;
+		add_radiation_delegates(accelerator);
+	} else {
+		calc_config.radiation = false;
+	}
 	std::cout << "Start    ps " << ps << std::endl;
 	for(int turn = 0; turn < n_turns; ++turn){
 		if(verbose && (turn > 0)){
