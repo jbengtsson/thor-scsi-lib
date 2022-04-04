@@ -1,4 +1,5 @@
 #include <thor_scsi/core/multipoles.h>
+#include <thor_scsi/core/machine.h>
 #include <thor_scsi/elements/field_kick.h>
 #include <thor_scsi/elements/element_helpers.h>
 #include <thor_scsi/elements/utils.h>
@@ -422,7 +423,7 @@ inline void tse::FieldKick::thinKickAndRadiate(const thor_scsi::core::ConfigType
 
 	auto rad = this->getRadiationDelegate();
 	if(rad){
-	  std::cerr<<  "Check radiaton" << " \n";
+		THOR_SCSI_LOG(DEBUG) <<  "Check radiaton" << " \n";
 		rad->radiate(conf, ps, L, h_ref, B);
 	}
 	tse::thin_kick(conf, BxoBrho, ByoBrho, L, h_bend, h_ref, ps);

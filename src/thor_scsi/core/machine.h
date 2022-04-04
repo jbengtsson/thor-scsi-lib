@@ -359,6 +359,7 @@ namespace thor_scsi::core {
 		static inline bool detail(int lvl) { return log_detail<=lvl; }
 
 		static void set_logger(const std::shared_ptr<Logger>& p);
+		static void set_log_level(int lvl);
 		static std::shared_ptr<Logger> get_logger(void);
 	private:
 		static std::shared_ptr<Logger> p_logger;

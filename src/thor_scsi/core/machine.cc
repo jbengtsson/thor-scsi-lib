@@ -284,6 +284,31 @@ void tsc::Machine::set_logger(const std::shared_ptr<Logger> &p)
     }
 }
 
+void tsc::Machine::set_log_level(int lvl)
+{
+    switch(lvl) {
+    case THOR_SCSI_FINE:
+    case THOR_SCSI_DEBUG:
+    case THOR_SCSI_INFO:
+    case THOR_SCSI_WARN:
+    case THOR_SCSI_ERROR:
+	break;
+
+    default:
+	std::ostringstream strm;
+	strm << "Log level " << lvl << " unkown log level: known levels "
+	     << "fine = "   << THOR_SCSI_FINE
+	     << " debug = " << THOR_SCSI_DEBUG
+	     << " info = "  << THOR_SCSI_INFO
+	     << " warn = "  << THOR_SCSI_WARN
+	     << " error ="  << THOR_SCSI_ERROR
+	     << ".";
+	throw std::runtime_error(strm.str());
+    }
+
+    log_detail = lvl;
+}
+
 std::shared_ptr<tsc::Machine::Logger> tsc::Machine::get_logger(void)
 {
     return p_logger;

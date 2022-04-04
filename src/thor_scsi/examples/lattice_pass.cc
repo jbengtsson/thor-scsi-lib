@@ -14,6 +14,8 @@ namespace tsc = thor_scsi::core;
 namespace tse = thor_scsi::elements;
 namespace ts = thor_scsi;
 
+static int log_level = THOR_SCSI_WARN;
+
 po::variables_map vm;
 static void process_cmd_line(int argc, char *argv[])
 {
@@ -24,7 +26,7 @@ static void process_cmd_line(int argc, char *argv[])
 	po::options_description desc(progname + ":allowed options");
 	desc.add_options()
 		("help,h", "produce help message")
-		("lattice_file", po::value<std::string>(),                 "lattice file name")
+		("lattice_file,L", po::value<std::string>(),                 "lattice file name")
 		("x_pos,x",      po::value<double>()->default_value(0e0), "horizontal position        (left hand coordinate system)")
 		("px",           po::value<double>()->default_value(0e0), "horizontal direction       (left hand coordinate system)")
 		("y_pos,y",      po::value<double>()->default_value(0e0), "vertical position          (left hand coordinate system)")
@@ -39,9 +41,10 @@ static void process_cmd_line(int argc, char *argv[])
 		("transport_matrix", po::value<bool>()->default_value(false), "compute transport matrix")
 		("start_element_number,s", po::value<int>()->default_value(0), "first element to use")
 		("end_element_number,e",   po::value<int>()->default_value(-1), "last element to use, (-1) for last element of lattice")
-		("dump_lattice", po::value<bool>()->default_value(false), "dump read in lattice (to stdout)" )
-		("verbose,v",    po::value<bool>()->default_value(false), "verbose output" )
-		("very_verbose,V",    po::value<bool>()->default_value(false), "even more verbose output" )
+		("dump_lattice",           po::value<bool>()->default_value(false), "dump read in lattice (to stdout)" )
+		("log_level,l",            po::value<std::string>()->default_value("WARNING"), "Logging level: FINE|DEBUG|INFO|WARN|ERROR")
+		("verbose,v",              po::value<bool>()->default_value(false), "verbose output" )
+		("very_verbose,V",         po::value<bool>()->default_value(false), "even more verbose output" )
 		;
 
 	po::store(po::parse_command_line(argc, argv, desc), vm);
@@ -291,6 +294,8 @@ static void process(ts::Accelerator& accelerator)
 {
 	bool verbose = vm["verbose"].as<bool>();
 
+	accelerator.set_log_level(log_level);
+
 	if(vm["dump_lattice"].as<bool>()){
 		std::cout << "Accelerator configuration " << std::endl;
 		for(auto cv : accelerator){
@@ -321,10 +326,52 @@ static void process(ts::Accelerator& accelerator)
 
 }
 
+static void check_log_level()
+{
+
+	struct levels
+	{
+		const char* name;
+		int level;
+	};
+
+
+	std::vector<struct levels> t_levels   = {
+		{"FINE",  THOR_SCSI_FINE},
+		{"DEBUG", THOR_SCSI_DEBUG},
+		{"INFO",  THOR_SCSI_INFO},
+		{"WARN",  THOR_SCSI_WARN},
+		{"ERROR", THOR_SCSI_ERROR}
+	};
+
+	bool verbose = vm["verbose"].as<bool>();
+	std::string log_level_str = vm["log_level"].as<std::string>();
+	if(verbose){
+		std::cerr << "Checking log level " << log_level_str << "\n";
+	}
+
+	for(auto lvl : t_levels){
+
+		if (lvl.name == log_level_str){
+			log_level = lvl.level;
+			if(verbose){
+				std::cerr << "Found log leven " << lvl.name << "\n" ;
+			}
+			return;
+		}
+
+	}
+	std::ostringstream strm;
+	strm << "Unknown log level " << log_level_str << "\n";
+	throw std::runtime_error(strm.str());
+
+}
 int main(int argc, char *argv[])
 {
 
 	process_cmd_line(argc, argv);
+	check_log_level();
+
 	GLPSParser parse;
 	std::string fname = vm["lattice_file"].as<std::string>();
 	bool verbose = vm["verbose"].as<bool>();

@@ -246,7 +246,6 @@ public:
 	}
 
 	void reset(void){
-		return;
 		const static std::stringstream initial;
 
 		this->m_strm.str(std::string());
@@ -335,6 +334,21 @@ BOOST_AUTO_TEST_CASE(test101_logger_stringstream)
 	auto strm_logger = std::dynamic_pointer_cast<Log2StringStream>(logger);
 
 	std::cout << "Stream Logger\n" << strm_logger->get() << std::endl;
+
+	strm_logger->reset();
+
+	THOR_SCSI_LOG(FINE)    << ("Fine test 2");
+	THOR_SCSI_LOG(DEBUG)   << ("Debug test");
+	THOR_SCSI_LOG(INFO)    << ("Info test");
+	THOR_SCSI_LOG(WARN)    << ("Warn test");
+	THOR_SCSI_LOG(WARNING) << ("Warning test");
+	THOR_SCSI_LOG(ERROR)   << ("Error test");
+
+	strm_logger->reset();
+	machine.set_log_level(THOR_SCSI_DEBUG);
+	THOR_SCSI_LOG(DEBUG)   << ("Debug test");
+
+	std::cout << "Stream Logger level test\n" << strm_logger->get() << std::endl;
 
 }
 

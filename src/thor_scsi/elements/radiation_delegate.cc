@@ -1,3 +1,4 @@
+#include <thor_scsi/core/machine.h>
 #include <thor_scsi/elements/radiation_delegate.h>
 #include <thor_scsi/elements/element_helpers.h>
 #include <thor_scsi/elements/utils.h>
@@ -219,15 +220,14 @@ void tse::RadiationDelegateKick::radiate(const thor_scsi::core::ConfigType &conf
 	T  p_s0, p_s1, ds, B2_perp = 0e0, B2_par = 0e0;
 	ss_vect<T> cs;
 
-	std::cout << "Radiate called for "<<  this->delegator_name << "\n";
-	std::cout << "ps\n" <<  ps << std::endl;
+	THOR_SCSI_LOG(INFO) << "Radiate called for "<<  this->delegator_name << "\n";
+	THOR_SCSI_LOG(INFO) <<  "ps\n" <<  ps;
 
 	if(!check_ps_finite(ps)){
 		std::stringstream strm;
-		strm <<  __FILE__ << "::" << __FUNCTION__ << "@" << __LINE__ - 2
-		     << "ps unbound "; ps.show(strm, 10, false);
+		strm <<  "ps unbound "; ps.show(strm, 10, false);
 		std::cerr << strm.str() << std::endl;
-		std::cerr.flush();
+		THOR_SCSI_LOG(ERROR) <<  "Check radiaton" << strm.str() << " \n";
 		throw ts::PhysicsViolation(strm.str());
 	}
 
@@ -236,10 +236,10 @@ void tse::RadiationDelegateKick::radiate(const thor_scsi::core::ConfigType &conf
 
 	if(!check_ps_finite(cs)){
 		std::stringstream strm;
-		strm <<  __FILE__ << "::" << __FUNCTION__ << "@" << __LINE__ - 2
-		     << "ps unbound "; ps.show(strm, 10, false);
+		strm << "ps unbound "; ps.show(strm, 10, false);
 		std::cerr << strm.str() << std::endl;
-		std::cerr.flush();
+		THOR_SCSI_LOG(ERROR) <<  "Check radiaton" << strm.str() << " \n";
+
 		throw ts::PhysicsViolation(strm.str());
 	}
 
