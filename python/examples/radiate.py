@@ -103,9 +103,9 @@ if use_tpsa:
         curly_H_x = a_del.getCurlydHx()
         dI = a_del.getSynchrotronIntegralsIncrements()
         D_rad = a_del.getDiffusionCoefficientsIncrements()
-        txt = f"{name:10s} {idx:4d} curly_H_x {curly_H_x:5f}"
-        txt += "    dI " + ",".join(["{: 10.6f}".format(v) for v in dI])
+        txt = f"{name:10s} {idx:4d} curly_H_x {curly_H_x: 10.6e}"
+        txt += "    dI " + ",".join(["{: 10.6e}".format(v) for v in dI])
         txt += "   "
-        txt += "    D_rad" + ",".join(["{: 10.6f}".format(v) for v in D_rad])
+        txt += "    D_rad" + ",".join(["{: 10.6e}".format(v) for v in D_rad])
         txt += "   "
         print(txt)
