@@ -111,7 +111,7 @@ namespace thor_scsi::elements {
 		}
 
 		inline auto getDiffusionCoefficientsIncrement(void) const {
-			return this->dI;
+			return this->D_rad;
 		}
 
 		inline double getCurlydHx(void) const {

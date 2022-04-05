@@ -163,6 +163,7 @@ void py_thor_scsi_init_elements(py::module &m)
 		//.def("__repr__", &tse::RadiationDelegateKickInterface::repr)
 		.def(py::init<>());
 
+	// Why did it not end up at Johan?
 	py::class_<tse::RadiationDelegateKick, PyRadDelKick, std::shared_ptr<tse::RadiationDelegateKick>>(m, "RadiationDelegateKick", rad_del_kick_int)
 		.def("reset",                              &tse::RadiationDelegateKick::reset)
 		.def("getCurlydHx",                        &tse::RadiationDelegateKick::getCurlydHx)
