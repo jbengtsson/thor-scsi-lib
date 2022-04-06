@@ -82,6 +82,9 @@ namespace thor_scsi::elements {
 			this->_local2Global(ps);
 		}
 
+		inline auto* getTransform(void){
+			return &this->transform;
+		}
 		thor_scsi::core::PhaseSpaceGalilean2DTransform transform;
 
 	private:
@@ -124,6 +127,10 @@ namespace thor_scsi::elements {
 
 		inline virtual void local2Global(ss_vect<tps> &ps) override final {
 			this->_local2Global(ps);
+		}
+
+		inline auto* getTransform(void){
+			return &this->transform;
 		}
 
 		thor_scsi::core::PhaseSpaceGalileanPRot2DTransform transform;

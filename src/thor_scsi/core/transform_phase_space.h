@@ -156,7 +156,7 @@ namespace thor_scsi::core {
 		}
 	};
 
-	class PhaseSpaceGalileanPRot2DTransform : PhaseSpaceGalilean2DTransform, PhaseSpacePRotTransformMixin {
+	class PhaseSpaceGalileanPRot2DTransform : public PhaseSpaceGalilean2DTransform, PhaseSpacePRotTransformMixin {
 	public:
 		inline PhaseSpaceGalileanPRot2DTransform(void) :
 			PhaseSpaceGalilean2DTransform(),

@@ -49,6 +49,7 @@ set(thor_scsi_core_HEADERS
   core/field_interpolation.h
   core/multipoles.h
   core/elements_basis.h
+  core/internals.h
 )
 
 set(thor_scsi_element_HEADERS
