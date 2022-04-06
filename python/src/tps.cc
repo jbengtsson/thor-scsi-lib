@@ -56,6 +56,9 @@ static auto declare_ss_vect(py::module &m, const std::string pyclass_name) {
 					     ss_vect_check_index(k);
 					     a.at(k) = x;
 				     })
+		.def("__copy__",  [](ss_vect<T> &self) {
+					  return ss_vect<T>(self);
+				  })
 		/*
 		.def(py::self += py::self)
 		.def(py::self -= py::self)
