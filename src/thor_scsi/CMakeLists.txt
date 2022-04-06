@@ -72,6 +72,8 @@ set(thor_scsi_element_HEADERS
   elements/cavity.h
   elements/marker.h
   elements/bpm.h
+  # Or should that already be a util ...
+  elements/standard_observer.h
   )
 
 set(thor_scsi_std_machine_HEADERS
@@ -96,6 +98,7 @@ set(thor_scsi_core_FILES
   elements/mpole.cc
   elements/marker.cc
   elements/cavity.cc
+  elements/standard_observer.cc
   std_machine/std_machine.cc
   std_machine/accelerator.cc
   # thor_lib.cc

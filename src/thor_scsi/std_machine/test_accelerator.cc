@@ -12,6 +12,7 @@
 #include <thor_scsi/elements/sextupole.h>
 #include <thor_scsi/elements/octupole.h>
 #include <thor_scsi/elements/bending.h>
+#include <thor_scsi/elements/standard_observer.h>
 #include <sstream>
 #include <string>
 
@@ -199,6 +200,43 @@ BOOST_AUTO_TEST_CASE(test70_octupole)
 	BOOST_CHECK_CLOSE(elem->getMainMultipoleStrength().real(), 355,     1e-12);
 	BOOST_CHECK_SMALL(elem->getMainMultipoleStrength().imag(),          1e-12);
 	BOOST_CHECK(elem->getMainMultipoleNumber() == 4);
+}
+
+BOOST_AUTO_TEST_CASE(test80_standard_observer)
+{
+	const std::string txt(
+		"Nquad = 12;"
+		"q4m2d1r: Quadrupole, L = 0.5, K = 1.4, N = Nquad, Method = 4;"
+		"mini_cell : LINE = (q4m2d1r);\n"
+		);
+
+	GLPSParser parse;
+	Config *C = parse.parse_byte(txt);
+	auto machine = ts::Accelerator(*C);
+
+	for(auto& cv: machine){
+		auto ob = std::make_shared<tse::StandardObserver>();
+		cv->set_observer(std::dynamic_pointer_cast<tsc::Observer>(ob));
+	}
+
+	std::cout << "Machine dump " << std::endl;
+	for(auto& cv: machine){
+		cv->show(std::cout, 10);
+		std::cout << std::endl;
+	}
+
+	ss_vect<tps> ps;
+	ps.set_identity();
+	auto calc_config = tsc::ConfigType();
+
+	machine.propagate(calc_config, ps);
+
+	for(auto cv: machine){
+		cv->show(std::cout, 10);
+		std::cout << std::endl;
+	}
+
+
 }
 
 

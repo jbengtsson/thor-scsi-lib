@@ -59,3 +59,10 @@ std::string tsc::CellVoid::repr(void) const
 	strm << ")";
 	return strm.str();
 }
+
+std::string tsc::Observer::repr(void)
+{
+	std::ostringstream strm;
+	this->show(strm, 0);
+	return strm.str();
+}

@@ -68,6 +68,11 @@ namespace thor_scsi::core {
 		virtual void view(std::shared_ptr<const CellVoid> elem, const ss_vect<double> &ps, const enum ObservedState, const int cnt) = 0;
 		// view for state vector of truncated power series
 		virtual void view(std::shared_ptr<const CellVoid> elem, const ss_vect<tps> &ps, const enum ObservedState,  const int cnt) = 0;
+
+		virtual void show(std::ostream& strm, int level) const = 0;
+
+		///< support for python __repr__ uses show
+		std::string repr(void);
 	};
 
        /**
@@ -143,6 +148,14 @@ namespace thor_scsi::core {
 		cell_void.show(strm, 0);
 		return strm;
 	}
+
+	inline
+	std::ostream& operator<<(std::ostream& strm, const Observer& observer)
+	{
+		observer.show(strm, 0);
+		return strm;
+	}
+
 }
 
 

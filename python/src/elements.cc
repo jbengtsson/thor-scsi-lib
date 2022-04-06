@@ -48,6 +48,10 @@ public:
 	void view(std::shared_ptr<const tsc::CellVoid> elem, const ss_vect<tps> &ps, const enum tsc::ObservedState os, const int cnt) override {
 		PYBIND11_OVERRIDE_PURE(void, tsc::Observer, view, elem, ps, os, cnt);
 	}
+
+	void show(std::ostream& strm, int level) const override {
+		PYBIND11_OVERRIDE_PURE(void, tsc::Observer, strm, level);
+	}
 };
 
 
@@ -240,6 +244,7 @@ void py_thor_scsi_init_elements(py::module &m)
 	py::class_<tse::MpoleType, std::shared_ptr<tse::MpoleType>> mpole_type(m, "Mpole", field_kick);
 	mpole_type
 		.def(py::init<const Config &>());
+
 	py::class_<tse::ClassicalMagnet, PyClassicalMagnet, std::shared_ptr<tse::ClassicalMagnet>> cm(m, "ClassicalMagnet", mpole_type);
 	cm
 		.def("getMultipoles",            &tse::ClassicalMagnet::getMultipoles)
@@ -280,7 +285,7 @@ void py_thor_scsi_init_elements(py::module &m)
 	py::class_<SolenoidType,   ElemType>(m, "SolenoidType")
 		.def(py::init<>());
 
-    py::class_<MapType,        ElemType>(m, "MapType")
+	py::class_<MapType,        ElemType>(m, "MapType")
 	    .def(py::init<>());
 #endif
 

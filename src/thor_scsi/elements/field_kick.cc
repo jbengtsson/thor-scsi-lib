@@ -359,13 +359,24 @@ void tse::FieldKick::show(std::ostream& strm, const int level) const
 			strm << " ";
 			this->intp->show(strm, level);
 		}
+
 		auto rad_del = this->getRadiationDelegate();
 		if(!rad_del){
-			strm << " NO radiation delegator set!";
+			strm << "radiation delegate=None";
 		} else {
-			strm << " ";
+			strm << " radiation delegate=";
 			rad_del->show(strm, level);
 		}
+		strm<< ", ";
+
+		auto observer = this->observer();
+		if(!observer){
+			strm << "observer=None";
+		} else {
+			strm << " observer=";
+			observer->show(strm, level);
+		}
+
 	}
 }
 
