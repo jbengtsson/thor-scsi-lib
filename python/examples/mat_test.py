@@ -1,7 +1,7 @@
 from thor_scsi.lib import (ss_vect_tps, ss_vect_tps_to_mat, Matrix,
                            mat_to_ss_vect_tps)
 import numpy as np
-7,
+
 ps = ss_vect_tps()
 ps.set_identity()
 print(ps)

@@ -40,12 +40,14 @@ def extract_twiss_parameters(A: ss_vect_tps) -> Sequence:
         Currently code just for demonstration purposes
     """
 
-    ps, jac = ss_vect_tps2ps_jac(A)
+    alpha = np.zeros(2)
+    beta  = np.zeros(2)
+    nu    = np.zeros(2)
 
-    # Just to see data
-    alpha = np.array(ps[:2])
-    beta = np.array(ps[2:4])
-    nu = np.array(ps[4:6])
+    for k in range(2):
+        alpha[k] = -A[2*k][2*k]*A[2*k+1][2*k] - A[2*k][2*k+1]*A[2*k+1][2*k+1]
+        beta[k]  = A[2*k][2*k]**2 + A[2*k+1][2*k+1]**2
+        nu[k]    = np.arctan2(A[2*k][2*k+1], A[2*k][2*k])
 
     return alpha, beta, nu
 
