@@ -18,7 +18,7 @@ ts::Accelerator::_propagate(thor_scsi::core::ConfigType& conf, ss_vect<T> &ps, s
 	int next_elem = static_cast<int>(start);
 	bool retreat = std::signbit(max);
 
-	for(int i=0; next_elem >= 0 && next_elem<nelem && i<abs(max); i++)
+	for(int i=start; next_elem >= 0 && next_elem<nelem && i<abs(max); i++)
 	{
 		size_t n = next_elem;
 		std::shared_ptr<tsc::CellVoid> cv = this->at(n);
