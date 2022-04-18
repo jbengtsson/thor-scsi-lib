@@ -379,6 +379,7 @@ def compute_twiss_lat(file_name, acc, calc_config, A):
     sys.stdout = open(file_name, 'w')
 
     s = 0
+    # Should be a local copy (ss_vect<tps>).
     Ak = A
     print("\n     name            s       alpha_x   beta_x     nu_x"
           "      eta_x    etap_x    alpha_y   beta_y     nu_y      eta_y"
