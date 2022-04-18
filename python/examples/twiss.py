@@ -242,15 +242,12 @@ def compute_A_inv(n_dof, eta, v):
 
     for i in range(n):
         if (i+1) % 2 != 0:
-            z = 0e0
-            for j in range(n):
-                for k in range(n):
-                    z += v1[j][i].real*S[j][k]*v1[k][i].imag
+            z = np.linalg.multi_dot([v1[:, i].real, S, v1[:, i].imag])
             sgn = sign(z)
             z = np.sqrt(np.abs(1e0/z))
             for j in range(n):
                 v1[j][i] = z*complex(v1[j][i].real, sgn*v1[j][i].imag)
-
+ 
     for i in range(n):
         A_inv[0][i] = sign(v1[0][0].real)*v1[i][0].real
         A_inv[1][i] = sign(v1[0][0].real)*v1[i][0].imag
