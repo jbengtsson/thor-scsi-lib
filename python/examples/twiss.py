@@ -402,13 +402,54 @@ def compute_ring_twiss(M):
     return A
 
 
-def prt_twiss(eta, alpha, beta, nu):
-    print("\n  eta   = [{:5.3f}, {:5.3f}, {:5.3f}, {:5.3f}]"
+def prt_twiss(str, eta, alpha, beta, nu):
+    print("{:s}"
+          "  eta   = [{:5.3f}, {:5.3f}, {:5.3f}, {:5.3f}]"
           "\n  alpha = [{:5.3f}, {:5.3f}]"
           "\n  beta  = [{:5.3f}, {:5.3f}]"
           "\n  nu    = [{:5.3f}, {:5.3f}]".
-          format(eta[x_], eta[px_], eta[y_], eta[py_], alpha[X_], alpha[Y_],
+          format(str,
+                 eta[x_], eta[px_], eta[y_], eta[py_], alpha[X_], alpha[Y_],
                  beta[X_], beta[Y_], nu[X_], nu[Y_]))
+
+
+def test_stuff(n):
+    map = ss_vect_tps()
+
+    map.set_identity()
+    acc.propagate(calc_config, map,  n, len(acc))
+    acc.propagate(calc_config, map,  0, n)
+    M = get_mat(map)
+    # Reduce matrix from 7x7 to 6x6.
+    M = M[0:6, 0:6]
+    prt_np_mat("\nPoincaré Map:\n", M)
+
+    A = compute_ring_twiss(M)
+    prt_np_mat("\nA:\n", A)
+
+    n_dof = 2
+    n     = 2*n_dof
+
+    [nus, stable] = compute_nus(n_dof, M)
+    print("\ncompute_nus:\n  nu    = [{:5.3f}, {:5.3f}]".
+          format(nus[X_], nus[Y_]))
+
+    [nus, stable] = compute_nus_symp_mat(n_dof, M)
+    print("\ncompute_nus_symp_mat:\n  nu    = [{:5.3f}, {:5.3f}]".
+          format(nus[X_], nus[Y_]))
+
+    [eta, alpha, beta, nu, stable] = compute_twiss_M(M)
+    prt_twiss("\ncompute_twiss_M:\n", eta, alpha, beta, nu)
+
+    [eta, alpha, beta, nu] = compute_twiss_A(A)
+    prt_twiss("\ncompute_twiss_A:\n", eta, alpha, beta, nu)
+
+    [eta, alpha, beta, nu] = compute_twiss_A_A_tp(A)
+    prt_twiss("\ncompute_twiss_A_A_tp:\n", eta, alpha, beta, nu)
+
+    # Cross check.
+    prt_np_mat("\nA^-1*M*A:\n",
+               np.linalg.multi_dot([np.linalg.inv(A), M, A]))
 
 
 t_dir  = os.path.join(os.environ["HOME"], "Nextcloud", "thor_scsi")
@@ -417,45 +458,21 @@ t_file = os.path.join(t_dir, "b3_tst.lat")
 acc         = accelerator_from_config(t_file)
 calc_config = ConfigType()
 
-if True:
-    map = compute_map(acc, calc_config)
-    M = get_mat(map)
-else:
-    n = 15
-    map = ss_vect_tps()
-    map.set_identity()
-    acc.propagate(calc_config, map,  n, len(acc))
-    acc.propagate(calc_config, map,  0, n)
-    M = get_mat(map)
+if False:
+    test_stuff(15)
+
+map = compute_map(acc, calc_config)
+M = get_mat(map)
 
 # Reduce matrix from 7x7 to 6x6.
 M = M[0:6, 0:6]
 prt_np_mat("\nPoincaré Map:\n", M)
 
+[eta, alpha, beta, nu, stable] = compute_twiss_M(M)
+prt_twiss("\ncompute_twiss_M:\n", eta, alpha, beta, nu)
+
 A = compute_ring_twiss(M)
 prt_np_mat("\nA:\n", A)
-
-n_dof = 2
-n     = 2*n_dof
-
-[nus, stable] = compute_nus(n_dof, M)
-print("\ncompute_nus:\n  nu    = [{:5.3f}, {:5.3f}]".
-      format(nus[X_], nus[Y_]))
-
-[nus, stable] = compute_nus_symp_mat(n_dof, M)
-print("\ncompute_nus_symp_mat:\n  nu    = [{:5.3f}, {:5.3f}]".
-      format(nus[X_], nus[Y_]))
-
-[eta, alpha, beta, nu, stable] = compute_twiss_M(M)
-print("\ncompute_twiss_M:")
-prt_twiss(eta, alpha, beta, nu)
-
-[eta, alpha, beta, nu] = compute_twiss_A(A)
-print("\ncompute_twiss_A:")
-prt_twiss(eta, alpha, beta, nu)
-[eta, alpha, beta, nu] = compute_twiss_A_A_tp(A)
-print("\ncompute_twiss_A_A_tp:")
-prt_twiss(eta, alpha, beta, nu)
 
 # Cross check.
 prt_np_mat("\nA^-1*M*A:\n",
@@ -463,21 +480,11 @@ prt_np_mat("\nA^-1*M*A:\n",
 
 compute_twiss_lat("linlat.out", acc, calc_config, get_map(A))
 
-# Swap columns.
-# v[:, [1, 0]] = v[:, [0, 1]]
-# Swap rows.
-# v[[1, 0]] = v[[0, 1]]
 
-# mat = np.zeros((6, 6))
-
-exit()
-
-twiss = linear_optics.compute_twiss_parameters(acc, calc_config)
-twiss.name = "twiss_parameters"
-md = accelerator_info(acc)
-md.attrs = dict(calc_config=calc_config)
-twiss_with_md = xr.merge([twiss, md])
+# twiss = linear_optics.compute_twiss_parameters(acc, calc_config)
+# twiss.name = "twiss_parameters"
+# md = accelerator_info(acc)
+# md.attrs = dict(calc_config=calc_config)
+# twiss_with_md = xr.merge([twiss, md])
 
 # print(res)
-
-# combine
