@@ -12,6 +12,7 @@ from thor_scsi.lib import (
     RadiationDelegate,
     RadiationDelegateKick,
     phase_space_ind,
+    spatial_ind,
     ObservedState,
     ss_vect_tps_to_mat,
 )
@@ -22,8 +23,11 @@ import xarray as xr
 import numpy as np
 import copy
 
-[X_, Y_, Z_] = [0, 1, 2]
-[x_, px_, y_, py_, ct_, delta_] = [0, 1, 2, 3, 5, 4]
+sign = np.sign
+
+X_, Y_, Z_ = spatial_ind.X_, spatial_ind.Y_, spatial_ind.Z_
+
+x_, px_, y_, py_, ct_, delta_ = 0, 1, 2, 3, 5, 4
 
 
 def prt_np_vec(name, vec):
@@ -81,25 +85,30 @@ def compute_nus(n_dof, M):
 
 
 def compute_nus_symp_mat(n_dof, M):
-    # Compute nu for a general symplectic periodic transport matrix;
-    # i.e., not assuming mid-plane symmetry.
+    """Compute nu for a general symplectic periodic transport matrix
+
+    i.e., not assuming mid-plane symmetry.
+    """
     n = 2 * n_dof
 
     [nu, tr] = [np.zeros(2), np.zeros(2)]
 
     # Should be a local copy.
-    M1 = M[0:n, 0:n]
+    M1 = M[:n, :n]
     I = np.identity(n)
     detp = np.linalg.det(M1 - I)
     detm = np.linalg.det(M1 + I)
     for i in range(2):
-        tr[i] = M[2 * i : 2 * i + 2, 2 * i : 2 * i + 2].trace()
+        s = 2 * i
+        e = 2 * i + 1
+        tr[i] = M[s:e, s:e].trace()
+
     sgn = 1e0 if tr[X_] > tr[Y_] else -1e0
     b = (detp - detm) / 16e0
     c = (detp + detm) / 8e0 - 1e0
     b2mc = b ** 2 - c
     if b2mc < 0e0:
-        nu[X_] = nu[Y_] = NAN
+        nu[X_] = nu[Y_] = np.nan
         print("\ncompute_nus_symp_mat: unstable\n")
         return [nu, False]
 
@@ -111,7 +120,7 @@ def compute_nus_symp_mat(n_dof, M):
                 stable = True
                 nu[i] = 1e0 - nu[i]
             else:
-                nu[i] = NAN
+                nu[i] = np.nan
                 print(
                     "\ncompute_nus_symp_mat: unstable {:%s} plane {:%10.3e}\n".format(
                         "hor" if i == 0 else "ver", x
@@ -122,30 +131,23 @@ def compute_nus_symp_mat(n_dof, M):
     return [nu, stable]
 
 
-def sign(x):
-    if x > 0e0:
-        return 1
-    elif x < 0e0:
-        return -1
-    else:
-        return 0
-
-
 def compute_S(n_dof):
     n = 2 * n_dof
     S = np.zeros((n, n))
     for k in range(n_dof):
-        S[2 * k][2 * k + 1] = 1e0
-        S[2 * k + 1][2 * k] = -1e0
+        s = 2 * k
+        e = 2 * k + 1
+        S[s, e] = 1e0
+        S[e, s] = -1e0
     return S
 
 
 def swap(w, i, j):
-    [w[i], w[j]] = [w[j], w[i]]
+    w[i], w[j] = w[j], w[i]
 
 
 def swap_imag(w, i, j):
-    [w[i], w[j]] = [complex(w[i].real, w[j].imag), complex(w[j].real, w[i].imag)]
+    w[i], w[j] = w[i].real + w[j].imag * 1j, w[j].real + w[i].imag * 1j
 
 
 def swap_mat(A, i, j):
@@ -156,15 +158,22 @@ def swap_mat_imag(A, i, j):
     n = len(A)
     for k in range(n):
         c = A[k][i].imag
-        A[k][i] = complex(A[k][i].real, A[k][j].imag)
-        A[k][j] = complex(A[k][j].real, c)
+        A[k][i] = A[k][i].real + A[k][j].imag * 1j
+        A[k][j] = A[k][j].real + c * 1j
 
 
-def closest(x, x1, x2, x3):
-    [dx1, dx2, dx3] = [np.abs(x - x1), np.abs(x - x2), np.abs(x - x3)]
-    if (dx1 < dx2) and (dx1 < dx3):
+def closest(x: float, x1: float, x2: float, x3: float) -> int:
+    """Find the value that is closest to x
+
+    Todo:
+        check if corner cases need to be checked
+        e.g. dx1 == dx2 ...
+    """
+
+    dx1, dx2, dx3 = [np.abs(x - tx) for tx in (x1, x2, x3)]
+    if dx1 < dx2 and dx1 < dx3:
         k = 1
-    elif (dx2 < dx1) and (dx2 < dx3):
+    elif dx2 < dx1 and dx2 < dx3:
         k = 2
     else:
         k = 3
@@ -174,8 +183,8 @@ def closest(x, x1, x2, x3):
 def sort_eigen(n_dof, M, w, v):
     n = 2 * n_dof
 
-    [sin_M, cos_M] = [np.zeros(n_dof), np.zeros(n_dof)]
-    [nu1_M, nu2_M, nu1, nu2] = [np.zeros(3), np.zeros(3), np.zeros(3), np.zeros(3)]
+    sin_M, cos_M = np.zeros(n_dof), np.zeros(n_dof)
+    nu1_M, nu2_M, nu1, nu2 = np.zeros(3), np.zeros(3), np.zeros(3), np.zeros(3)
 
     for i in range(n_dof):
         j = (i + 1) * 2 - 1
@@ -248,8 +257,8 @@ def compute_A_inv(n_dof, eta, v):
             A_inv[5][i] = sign(v1[4][4].real) * v1[i][4].imag
 
     B = np.identity(6)
-    [B[x_, delta_], B[px_, delta_]] = [eta[x_], eta[px_]]
-    [B[ct_, x_], B[ct_, px_]] = [eta[px_], -eta[x_]]
+    B[x_, delta_], B[px_, delta_] = eta[x_], eta[px_]
+    B[ct_, x_], B[ct_, px_] = eta[px_], -eta[x_]
 
     A_inv = np.dot(A_inv, np.linalg.inv(B))
     return [A_inv, v1]
@@ -269,26 +278,30 @@ def compute_dnu(n_dof, A):
 
 
 def compute_A_CS(n_dof, A):
+    """compute Courant Snyder form of A
+    """
     [dnu, R] = [np.zeros(n_dof), np.identity(6)]
 
     dnu = compute_dnu(n_dof, A)
 
     for k in range(n_dof):
-        [c, s] = [np.cos(2e0 * np.pi * dnu[k]), np.sin(2e0 * np.pi * dnu[k])]
-        [R[2 * k][2 * k], R[2 * k][2 * k + 1]] = [c, -s]
-        [R[2 * k + 1][2 * k], R[2 * k + 1][2 * k + 1]] = [s, c]
+        c, s = np.cos(2e0 * np.pi * dnu[k]), np.sin(2e0 * np.pi * dnu[k])
+        R[2 * k][2 * k], R[2 * k][2 * k + 1] = c, -s
+        R[2 * k + 1][2 * k], R[2 * k + 1][2 * k + 1] = s, c
 
     return [np.dot(A, R), dnu]
 
 
 def compute_twiss_A(A):
+    """
+    """
     n_dof = 2
     n = 2 * n_dof
 
     [eta, alpha, beta] = [np.zeros(n), np.zeros(n_dof), np.zeros(n_dof)]
 
     for k in range(n_dof):
-        [eta[2 * k], eta[2 * k + 1]] = [A[2 * k][delta_], A[2 * k + 1][delta_]]
+        eta[2 * k], eta[2 * k + 1] = A[2 * k][delta_], A[2 * k + 1][delta_]
         alpha[k] = -(
             A[2 * k][2 * k] * A[2 * k + 1][2 * k]
             + A[2 * k][2 * k + 1] * A[2 * k + 1][2 * k + 1]
@@ -296,14 +309,14 @@ def compute_twiss_A(A):
         beta[k] = A[2 * k][2 * k] ** 2 + A[2 * k][2 * k + 1] ** 2
     dnu = compute_dnu(n_dof, A)
 
-    return [eta, alpha, beta, dnu]
+    return eta, alpha, beta, dnu
 
 
 def compute_twiss_A_A_tp(A):
     n_dof = 2
     n = 2 * n_dof
 
-    [eta, alpha, beta] = [np.zeros(n), np.zeros(n_dof), np.zeros(n_dof)]
+    eta, alpha, beta = np.zeros(n), np.zeros(n_dof), np.zeros(n_dof)
 
     A_A_tp = np.dot(A[0:n, 0:n], np.transpose(A[0:n, 0:n]))
     for k in range(n_dof):
@@ -312,7 +325,7 @@ def compute_twiss_A_A_tp(A):
         beta[k] = A_A_tp[2 * k][2 * k]
     dnu = compute_dnu(n_dof, A)
 
-    return [eta, alpha, beta, dnu]
+    return eta, alpha, beta, dnu
 
 
 def compute_disp(M):
@@ -325,7 +338,7 @@ def compute_disp(M):
 def compute_twiss_M(M):
     n_dof = 2
 
-    [alpha, beta, nu] = [np.zeros(n_dof), np.zeros(n_dof), np.zeros(n_dof)]
+    alpha, beta, nu = np.zeros(n_dof), np.zeros(n_dof), np.zeros(n_dof)
 
     eta = compute_disp(M)
 
