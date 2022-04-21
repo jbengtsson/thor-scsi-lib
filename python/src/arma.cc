@@ -1,11 +1,25 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
+#include <pybind11/pytypes.h>
 #include <armadillo>
 #include "thor_scsi.h"
 
 namespace py = pybind11;
 
-
+#if 0
+std::cerr << "Analysing row" << std::endl;
+size_t row_start = 0, row_stop = 0, row_step = 0, row_slicelength = 0;
+if (!row.compute(mat.n_rows, &row_start, &row_stop, &row_step, &row_slicelength)) {
+	throw py::error_already_set();
+}
+std::cerr << "Analysing col" << std::endl;
+size_t col_start = 0, col_stop = 0, col_step = 0, col_slicelength = 0;
+if (!col.compute(mat.n_cols, &col_start, &col_stop, &col_step, &col_slicelength)) {
+	throw py::error_already_set();
+}
+std::cerr << "Row access start " << row_start << " step " << row_step << " length " << row_slicelength << std::endl;
+std::cerr << "Col access start " << col_start << " step " << col_step << " length " << col_slicelength << std::endl;
+#endif
 void py_thor_scsi_init_arma(py::module &m)
 {
 	//arma::mat;
@@ -16,6 +30,17 @@ void py_thor_scsi_init_arma(py::module &m)
 					 mat.print(strm, "<tpsa array>");
 					 return strm.str();
 				 })
+		.def("__copy__", [](arma::mat &mat) -> arma::dmat {
+					 return arma::dmat(mat);
+				 })
+		.def("__getitem__", [](arma::mat &mat, py::sequence &seq) -> double {
+					    py::int_ row = seq[0], col =  seq[1];
+					    return mat(row, col);
+				    })
+		.def("__setitem__", [](arma::mat &mat, py::sequence &seq, const double val){
+					    py::int_ row = seq[0], col =  seq[1];
+					    mat(row, col) = val;
+				    })
 		//.def("__str__", &PyArma::pstr)
 		.def_buffer([](arma::mat &mat) -> py::buffer_info {
 				    size_t n_cols = static_cast<size_t>(mat.n_cols);

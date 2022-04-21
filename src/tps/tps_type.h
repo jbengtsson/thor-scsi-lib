@@ -83,9 +83,15 @@ class tps {
   tps& operator/=(const tps &);
 
 #if NO_TPSA == 1
+  // consider to make these functions inline
   friend double get_m_ij(const ss_vect<tps> &map, const int i, const int j);
   friend void put_m_ij(ss_vect<tps> &map, const int i, const int j,
 		       const double r);
+  // Same functionallity as above but using .at internally.
+  friend  double get_m_ij_save(const ss_vect<tps> &map, const int i, const int j);
+  friend void put_m_ij_save(ss_vect<tps> &map, const int i, const int j,
+			    const double r);
+
   friend void dacct_(const ss_vect<tps> &x, const int i,
                      const ss_vect<tps> &y, const int j,
                      ss_vect<tps> &z, const int k);

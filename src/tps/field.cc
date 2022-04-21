@@ -56,6 +56,9 @@ void tps::print(const std::string &str)
 #endif
 }
 
+/**
+ * @todo: add linear part? at least as an option for python ...
+ */
 template<>
 void ss_vect<tps>::show(std::ostream& stream, int precision, bool with_endl) const
 {

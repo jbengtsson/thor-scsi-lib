@@ -86,7 +86,24 @@ static void tps_check_index(const int index)
 	}
 }
 
-
+/**
+ * @brief check that the coordinate is within range
+ *
+ * Consider moving to ss_vect header ...
+ */
+static void ss_vect_tps_check_coor(const int coor)
+{
+	if(coor < 1){
+		std::ostringstream strm;
+		strm << "Coordinate (first index) must be at least 1 but was " << coor;
+		throw py::index_error(strm.str());
+	}
+	if(coor > ps_dim) {
+		std::ostringstream strm;
+		strm << "Coordinate (first index) must be at less than "<< ps_dim << " but was " << coor;
+		throw py::index_error(strm.str());
+	}
+}
 void py_thor_scsi_init_tps(py::module &m)
 {
 
@@ -111,7 +128,8 @@ void py_thor_scsi_init_tps(py::module &m)
 		.def(py::init<const double>())
 		.def(py::init<const double, const int>())
 		//.def(py::init<const double, const std::array<const int, >>())
-		//.def("cst",      &tps::cst, "constant term")
+		.def("cst",      &tps::cst, "constant term")
+		.def("ps",       &tps::ps, "phase space")
 		.def("__str__",  &tps::pstr)
 		.def("__repr__", &tps::repr)
 		.def("__getitem__", [](const tps &self, const long int idx){
@@ -119,12 +137,16 @@ void py_thor_scsi_init_tps(py::module &m)
 					    return self[idx];
 				    })
 		.def("peek", [](const tps &self, tpsa_index idx){
+				     // I think that check is not sufficient
+				     // code crashes
 				     for(auto k: idx){
 					     tps_check_index(k);
 				     }
 				     return self[idx];
 			     }, "get value at this set of 7 indices")
 		.def("pook", [](tps &self, tpsa_index idx, double val){
+				     // I think that check is not sufficient
+				     // code crashes
 				     for(auto k: idx){
 					     tps_check_index(k);
 				     }
@@ -161,8 +183,28 @@ void py_thor_scsi_init_tps(py::module &m)
 
 		;
 
-	auto ss_vect_tps = declare_ss_vect<tps>(m, "ss_vect_tps");
 	auto ss_vect_double = declare_ss_vect<double>(m, "ss_vect_double");
+	auto ss_vect_tps = declare_ss_vect<tps>(m, "ss_vect_tps");
+	ss_vect_tps
+		.def("__getitem__", [](ss_vect<tps> &ps, py::sequence &seq) -> double {
+					    py::int_ coord= seq[0], term =  seq[1];
+					    const int c = coord, t = term;
+					    // std::cerr << "accessing element coord " << c <<  " term " << t << std::endl;
+					    ss_vect_check_index(c);
+					    tps_check_index(t);
+					    // I don't know why this reduces c by 1 internally
+					    return get_m_ij_save(ps, c + 1, t);
+				    })
+		.def("__setitem__", [](ss_vect<tps> &ps, py::sequence &seq, const double val) {
+					    py::int_ coord= seq[0], term =  seq[1];
+					    const int c = coord, t = term;
+					    // std::cerr << "accessing element coord " << c <<  " term " << t << std::endl;
+					    ss_vect_check_index(c);
+					    ss_vect_tps_check_coor(c);
+					    tps_check_index(t);
+					    put_m_ij_save(ps, c + 1, t, val);
+				    });
+
 
 	//m.def("lists_to_ss_vect_tps", mattomap_save);
 	m.def("ss_vect_tps_to_mat", &maptomat);

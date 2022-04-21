@@ -155,6 +155,13 @@ double get_m_ij(const ss_vect<tps> &map, const int i, const int j)
 void put_m_ij(ss_vect<tps> &map, const int i, const int j, const double r)
 { map[i-1].ltps[j] = r; }
 
+double get_m_ij_save(const ss_vect<tps> &map, const int i, const int j)
+{ return map.at(i-1).ltps.at(j); }
+
+
+void put_m_ij_save(ss_vect<tps> &map, const int i, const int j, const double r)
+{ map.at(i-1).ltps.at(j) = r; }
+
 
 ss_vect<tps> stlmattomap(const std::vector< std::vector<double> > &stlmat)
 {

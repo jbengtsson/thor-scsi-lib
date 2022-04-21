@@ -27,6 +27,14 @@ template<typename T> class ss_vect {
 // Let's the compiler synthetize the copy constructor
 //  ss_vect(const T &a) { }
 //  ss_vect(const ss_vect<T> &a) { }
+#if 0
+  // Let's make a copy ctor
+  inline ss_vect(const ss_vect<T> &o): ss(o.ss) {}
+
+  // Let's make a move ctor
+  inline ss_vect(const ss_vect<T> &&o) : ss(std::move(o.ss)) { }
+#endif
+
   template<typename U>
     ss_vect(const U &);
   template<typename U>
@@ -39,11 +47,13 @@ template<typename T> class ss_vect {
    * @ærg precision: number of digits to use
    * @ærg with_endl: add an std::endl at the end of the stream (defaults to true)
    * @todo: consider if adding an unused  level flag for consistency to flame
+   * @todo: add linear part? at least as an option for python. current output is misleading ...
    */
   void show(std::ostream&, int precision=6, bool with_endl=true) const;
-  // For python interface
+
+  // For python interface ... rework for index consistency
   std::string repr(void);
-  // For python interface
+  // For python interface ... rework for index consistency
   std::string pstr(void);
 
   inline ss_vect<double> cst(void) const;
@@ -157,8 +167,9 @@ inline ss_vect<double> ss_vect<tps>::cst(void) const
   int             i;
   ss_vect<double> x;
 
-  for (i = 0; i < ps_dim; i++)
+  for (i = 0; i < ps_dim; i++){
     x[i] = (*this)[i].cst();
+  }
   return x;
 }
 
