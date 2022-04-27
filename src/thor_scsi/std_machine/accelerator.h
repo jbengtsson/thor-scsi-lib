@@ -26,10 +26,10 @@ namespace thor_scsi {
 
 		void propagate(thor_scsi::core::ConfigType&, ss_vect_tps &ps,
 			       size_t start=0,
-			       int max=INT_MAX);
+			       int max_elements=std::numeric_limits<int>::max());
 		void propagate(thor_scsi::core::ConfigType&, ss_vect_dbl &ps,
 			       size_t start=0,
-			       int max=INT_MAX);
+			       int max_elements=std::numeric_limits<int>::max());
 	};
   }
 #endif // _THOR_SCSI_STD_MACHINE_ACCELERATOR_

@@ -9,8 +9,8 @@ inline void tse::StandardObserver::_view(std::shared_ptr<const tsc::CellVoid> el
 	switch(state){
 	case tsc::ObservedState::start:
 		this->reset();
-		this->m_delegator_name = elem->name;
-		this->m_delegator_index = elem->index;
+		this->m_observed_name = elem->name;
+		this->m_observed_index = elem->index;
 		return;
 		break;
 	case tsc::ObservedState::end:
@@ -33,14 +33,31 @@ void tse::StandardObserver::view(std::shared_ptr<const tsc::CellVoid> elem, cons
 }
 
 
-void tse::StandardObserver::show(std::ostream& strm, int level) const
+void tse::StandardObserver::show(std::ostream& strm, const int level) const
 {
 	strm << "StandardObserver("
-	     << "delegator_name=\"" << this->m_delegator_name
-	     << "\", delegator_index=" << this->m_delegator_index
+	     << "observed_name=\"" << this->m_observed_name
+	     << "\", observed_index=" << this->m_observed_index
 	     << ", has_ps=" << this->m_has_ps <<", ps=";
 	this->m_ps.show(strm, 4, false);
 		strm << ", has_tps=" << this->m_has_tps <<", tps=";
 	this->m_tps.show(strm, 4, false);
 	strm << ")";
+}
+
+std::string tse::StandardObserver::_repr(const int level) const
+{
+	std::ostringstream strm;
+	this->show(strm, level);
+	return strm.str();
+}
+
+std::string tse::StandardObserver::repr(void) const
+{
+	return this->_repr(10);
+}
+
+std::string tse::StandardObserver::pstr(void) const
+{
+	return this->_repr(0);
 }

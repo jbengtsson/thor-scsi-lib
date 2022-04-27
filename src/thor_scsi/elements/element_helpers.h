@@ -37,7 +37,7 @@ namespace thor_scsi::elements {
  *
  */
 /**
- * Correction for magnet gap (longitudinal fringe field)
+ * @brief Correction for magnet gap (longitudinal fringe field)
  *
  *
  * irho = h,

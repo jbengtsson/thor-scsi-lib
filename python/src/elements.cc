@@ -11,6 +11,7 @@
 #include <thor_scsi/elements/sextupole.h>
 #include <thor_scsi/elements/octupole.h>
 #include <thor_scsi/elements/cavity.h>
+#include <thor_scsi/elements/standard_observer.h>
 
 
 namespace tse = thor_scsi::elements;
@@ -128,6 +129,19 @@ void py_thor_scsi_init_elements(py::module &m)
 
 	py::class_<tsc::Observer,  PyObserver, std::shared_ptr<tsc::Observer>> observer(m, "Observer");
 	observer.def(py::init<>());
+
+	py::class_<tse::StandardObserver, tsc::Observer, std::shared_ptr<tse::StandardObserver>> std_observer(m, "StandardObserver");
+	std_observer
+		.def("__str__",                  &tse::StandardObserver::pstr)
+		.def("__repr__",                 &tse::StandardObserver::repr)
+		.def("getObservedName",          &tse::StandardObserver::getObservedName)
+		.def("getObservedIndex",         &tse::StandardObserver::getObservedIndex)
+		.def("hasPhaseSpace",            &tse::StandardObserver::hasPhaseSpace)
+		.def("getPhaseSpace",            &tse::StandardObserver::getPhaseSpace)
+		.def("hasTruncatedPowerSeries",  &tse::StandardObserver::hasTruncatedPowerSeries)
+		.def("getTruncatedPowerSeries",  &tse::StandardObserver::getTruncatedPowerSeries)
+		.def("reset",                    &tse::StandardObserver::reset)
+		.def(py::init<>());
 
 	py::class_<tsc::ElemType,  PyElemType, std::shared_ptr<tsc::ElemType>> elem_type(m, "ElemType");
 	elem_type.def("__str__",       &tsc::ElemType::pstr)

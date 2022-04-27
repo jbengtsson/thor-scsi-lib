@@ -10,15 +10,15 @@ ts::Accelerator::Accelerator(const Config & conf) :
 
 template<typename T>
 void
-ts::Accelerator::_propagate(thor_scsi::core::ConfigType& conf, ss_vect<T> &ps, size_t start, int max)// const
+ts::Accelerator::_propagate(thor_scsi::core::ConfigType& conf, ss_vect<T> &ps, size_t start, int max_elements)// const
 {
 
 	const int nelem = static_cast<int>(this->size());
 
 	int next_elem = static_cast<int>(start);
-	bool retreat = std::signbit(max);
+	bool retreat = std::signbit(max_elements);
 
-	for(int i=start; next_elem >= 0 && next_elem<nelem && i<abs(max); i++)
+	for(int i=start; next_elem >= 0 && next_elem<nelem && i<std::abs(max_elements); i++)
 	{
 		size_t n = next_elem;
 		std::shared_ptr<tsc::CellVoid> cv = this->at(n);
@@ -50,12 +50,12 @@ ts::Accelerator::_propagate(thor_scsi::core::ConfigType& conf, ss_vect<T> &ps, s
 
 
 void
-ts::Accelerator::propagate(thor_scsi::core::ConfigType& conf, ss_vect_dbl &ps, size_t start, int max)// const
+ts::Accelerator::propagate(thor_scsi::core::ConfigType& conf, ss_vect_dbl &ps, size_t start, int max_elements)// const
 {
-    _propagate(conf, ps, start, max);
+    _propagate(conf, ps, start, max_elements);
 }
 void
-ts::Accelerator::propagate(thor_scsi::core::ConfigType& conf, ss_vect_tps  &ps, size_t start, int max)// const
+ts::Accelerator::propagate(thor_scsi::core::ConfigType& conf, ss_vect_tps  &ps, size_t start, int max_elements)// const
 {
-    _propagate(conf, ps, start, max);
+    _propagate(conf, ps, start, max_elements);
 }

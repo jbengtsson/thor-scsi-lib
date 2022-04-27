@@ -129,7 +129,7 @@ void py_thor_scsi_init_tps(py::module &m)
 		.def(py::init<const double, const int>())
 		//.def(py::init<const double, const std::array<const int, >>())
 		.def("cst",      &tps::cst, "constant term")
-		.def("ps",       &tps::ps, "phase space")
+		//.def("ps",       &tps::ps, "phase space")
 		.def("__str__",  &tps::pstr)
 		.def("__repr__", &tps::repr)
 		.def("__getitem__", [](const tps &self, const long int idx){
@@ -185,6 +185,7 @@ void py_thor_scsi_init_tps(py::module &m)
 
 	auto ss_vect_double = declare_ss_vect<double>(m, "ss_vect_double");
 	auto ss_vect_tps = declare_ss_vect<tps>(m, "ss_vect_tps");
+#if 0
 	ss_vect_tps
 		.def("__getitem__", [](ss_vect<tps> &ps, py::sequence &seq) -> double {
 					    py::int_ coord= seq[0], term =  seq[1];
@@ -204,7 +205,7 @@ void py_thor_scsi_init_tps(py::module &m)
 					    tps_check_index(t);
 					    put_m_ij_save(ps, c + 1, t, val);
 				    });
-
+#endif
 
 	//m.def("lists_to_ss_vect_tps", mattomap_save);
 	m.def("ss_vect_tps_to_mat", &maptomat);

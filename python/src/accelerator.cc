@@ -22,6 +22,8 @@ void py_thor_scsi_init_accelerator(py::module &m)
 	py::class_<tsc::Machine::LogRecord> log_record(m, "LogRecord");
 	py::class_<tsc::Machine::Logger, std::shared_ptr<tsc::Machine::Logger>> logger(m, "Logger");
 
+	const char prop_doc[] = "propagate phase space through elements";
+	const int imax = std::numeric_limits<int>::max();
 
 	py::class_<ts::Accelerator, std::shared_ptr<ts::Accelerator>>(m, "Accelerator")
 		.def("find",                 &ts::Accelerator::find)
@@ -34,8 +36,10 @@ void py_thor_scsi_init_accelerator(py::module &m)
 		.def("setTrace",             &ts::Accelerator::set_trace, "register the stream to log to")
 		.def("__len__",              &ts::Accelerator::size)
 		.def("__getitem__", py::overload_cast<size_t>(&ts::Accelerator::at))
-		.def("propagate", py::overload_cast<tsc::ConfigType&, ts::ss_vect_dbl&, size_t, int>(&ts::Accelerator::propagate))
-		.def("propagate", py::overload_cast<tsc::ConfigType&, ts::ss_vect_tps&, size_t, int>(&ts::Accelerator::propagate))
+		.def("propagate", py::overload_cast<tsc::ConfigType&, ts::ss_vect_dbl&, size_t, int>(&ts::Accelerator::propagate), prop_doc,
+		     py::arg("calc_config"), py::arg("ps"), py::arg("start") = 0, py::arg("max_elements") = imax)
+		.def("propagate", py::overload_cast<tsc::ConfigType&, ts::ss_vect_tps&, size_t, int>(&ts::Accelerator::propagate), prop_doc,
+		     py::arg("calc_config"), py::arg("ps"), py::arg("start") = 0, py::arg("max_elements") = imax)
 		.def(py::init<const Config &>());
 
 
