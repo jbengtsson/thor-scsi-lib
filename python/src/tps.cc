@@ -104,21 +104,23 @@ static void ss_vect_tps_check_coor(const int coor)
 		throw py::index_error(strm.str());
 	}
 }
+
 void py_thor_scsi_init_tps(py::module &m)
 {
 
-	py::enum_<spatial_ind>(m, "spatial_ind")
-		.value("X_", spatial_ind::X_)
-		.value("Y_", spatial_ind::Y_)
-		.value("Z_", spatial_ind::Z_);
+	py::enum_<spatial_ind>(m, "spatial_index")
+		.value("X", spatial_ind::X_)
+		.value("Y", spatial_ind::Y_)
+		.value("Z", spatial_ind::Z_);
 
-	py::enum_<phase_space_ind>(m, "phase_space_ind")
-		.value("x_",     phase_space_ind::x_)
-		.value("px_",    phase_space_ind::px_)
-		.value("y_",     phase_space_ind::y_)
-		.value("py_",    phase_space_ind::py_)
-		.value("delta_", phase_space_ind::delta_)
-		.value("ct_",    phase_space_ind::ct_);
+	// does not follow standard convention
+	py::enum_<phase_space_ind>(m, "phase_space_index_internal")
+		.value("x",     phase_space_ind::x_)
+		.value("px",    phase_space_ind::px_)
+		.value("y",     phase_space_ind::y_)
+		.value("py",    phase_space_ind::py_)
+		.value("delta", phase_space_ind::delta_)
+		.value("ct",    phase_space_ind::ct_);
 
 
 	// Polymorphic number class.
