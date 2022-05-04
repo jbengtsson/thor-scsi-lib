@@ -459,8 +459,6 @@ else:
 M = M[:6, :6]
 prt_np_mat("\nPoincaré T_Map:\n", M)
 
-A = compute_ring_twiss(M)
-prt_np_mat("\nA:\n", A)
 
 n_dof = 2
 n = 2 * n_dof
