@@ -435,6 +435,32 @@ def prt_twiss(eta, alpha, beta, nu):
     print(txt)
 
 
+def compute_dnu(n_dof, A):
+    eps = 1e-15
+    dnu = np.zeros(n_dof)
+    for k in range(n_dof):
+        if k < 2:
+            dnu[k] = np.arctan2(A[2*k][2*k+1], A[2*k][2*k])/(2e0*np.pi)
+        else:
+            dnu[k] = -np.arctan2(A[ct_][delta_], A[ct_][ct_])/(2e0*np.pi)
+    if dnu[k] < -eps:
+        dnu[k] += 1e0
+    return dnu
+
+
+def compute_A_CS(n_dof, A):
+    [dnu, R] = [np.zeros(n_dof), np.identity(6)]
+
+    dnu = compute_dnu(n_dof, A)
+
+    for k in range(n_dof):
+        [c, s] = [np.cos(2e0*np.pi*dnu[k]), np.sin(2e0*np.pi*dnu[k])]
+        [R[2*k][2*k], R[2*k][2*k+1]]     = [c, -s]
+        [R[2*k+1][2*k], R[2*k+1][2*k+1]] = [s,  c]
+
+    return [np.dot(A, R), dnu]
+
+
 t_dir = os.path.join(os.environ["HOME"], "Nextcloud", "thor_scsi")
 t_file = os.path.join(t_dir, "b3_tst.lat")
 
@@ -474,6 +500,9 @@ print("\ncompute_nus_symp_mat:\n  nu    = [{:5.3f}, {:5.3f}]".format(nus[X_], nu
 eta, alpha, beta, nu, stable = compute_twiss_M(M)
 print("\ncompute_twiss_M:")
 prt_twiss(eta, alpha, beta, nu)
+
+A = compute_ring_twiss(M)
+prt_np_mat("\nA:\n", A)
 
 eta, alpha, beta, nu = compute_twiss_A(A)
 print("\ncompute_twiss_A:")
