@@ -6,8 +6,8 @@ from thor_scsi.utils.output import vec2txt, mat2txt
 from thor_scsi.utils.twiss_output import twiss_ds_to_df
 from thor_scsi.utils.linear_optics import compute_twiss_along_lattice
 from thor_scsi.utils.phase_space_vector import ps_jac2ss_vect_tps
-from thor_scsi.utils.phase_advance import compute_nus_for_symplectic_matrix
-from thor_scsi.utils.courant_snyder import compute_dispersion
+from thor_scsi.utils.phase_advance import compute_nus_for_symplectic_matrix, compute_nus
+from thor_scsi.utils.courant_snyder import compute_dispersion, compute_twiss_M, compute_twiss_A, compute_twiss_A_A_tp
 
 import thor_scsi.lib as tslib
 
@@ -468,7 +468,7 @@ X_ = tslib.spatial_index.X
 Y_ = tslib.spatial_index.Y
 print("\ncompute_nus:\n  nu    = [{:5.3f}, {:5.3f}]".format(nus[X_], nus[Y_]))
 
-nus, stable = compute_nus_symp_mat(n_dof, M)
+nus, stable = compute_nus_for_symplectic_matrix(n_dof, M)
 print("\ncompute_nus_symp_mat:\n  nu    = [{:5.3f}, {:5.3f}]".format(nus[X_], nus[Y_]))
 
 eta, alpha, beta, nu, stable = compute_twiss_M(M)

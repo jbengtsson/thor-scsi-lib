@@ -1,6 +1,8 @@
 from .. import lib as tslib
 import numpy as np
 
+sign = np.sign
+
 
 def compute_dnu(n_dof, A):
     """

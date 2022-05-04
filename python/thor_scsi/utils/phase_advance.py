@@ -8,7 +8,6 @@ import logging
 logger = logging.getLogger("thor_scsi")
 
 
-
 def compute_nu(M):
     """
 
