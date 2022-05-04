@@ -2,40 +2,33 @@
 """
 from thor_scsi.factory import accelerator_from_config
 from thor_scsi.utils import linear_optics
-from thor_scsi.utils.extract_info import accelerator_info
 from thor_scsi.utils.output import vec2txt, mat2txt
+from thor_scsi.utils.twiss_output import twiss_ds_to_df
+from thor_scsi.utils.linear_optics import compute_twiss_along_lattice
+from thor_scsi.utils.phase_space_vector import ps_jac2ss_vect_tps
+from thor_scsi.utils.phase_advance import compute_nus_for_symplectic_matrix
+from thor_scsi.utils.courant_snyder import compute_dispersion
 
-from thor_scsi.lib import (
-    ConfigType,
-    Accelerator,
-    ss_vect_tps,
-    ss_vect_double,
-    RadiationDelegate,
-    RadiationDelegateKick,
-    phase_space_ind,
-    spatial_ind,
-    ObservedState,
-    StandardObserver,
-    ss_vect_tps_to_mat,
-)
+import thor_scsi.lib as tslib
 
 import os
 import sys
 import xarray as xr
+import pandas as pd
 import numpy as np
 import copy
 from typing import Sequence
 
 sign = np.sign
 
-X_, Y_, Z_ = spatial_ind.X_, spatial_ind.Y_, spatial_ind.Z_
+# X_, Y_, Z_ = spatial_ind.X_, spatial_ind.Y_, spatial_ind.Z_
 
-x_ = phase_space_ind.x_
-px_ = phase_space_ind.px_
-y_ = phase_space_ind.y_
-py_ = phase_space_ind.py_
-delta_ = phase_space_ind.delta_
-ct_ = phase_space_ind.ct_
+# x_ = phase_space_ind.x_
+# px_ = phase_space_ind.px_
+# y_ = phase_space_ind.y_
+# py_ = phase_space_ind.py_
+# delta_ = phase_space_ind.delta_
+# ct_ = phase_space_ind.ct_
 
 
 def prt_np_vec(name, vec):
@@ -57,13 +50,13 @@ def prt_np_cmplx_mat(name, mat):
 
 
 def get_mat(t_map):
-    mat = ss_vect_tps_to_mat(t_map)
+    mat = tslib.ss_vect_tps_to_mat(t_map)
     mat = np.array(mat)
     return mat
 
 
 def get_map(M):
-    [Id, t_map] = [ss_vect_tps(), ss_vect_tps()]
+    [Id, t_map] = [tslib.ss_vect_tps(), tslib.ss_vect_tps()]
     Id.set_identity()
     t_map.set_zero()
     for j in range(len(M)):
@@ -72,79 +65,6 @@ def get_map(M):
     return t_map
 
 
-def compute_nu(M):
-    """
-    """
-    tr = M.trace()
-    if tr < 2e0:
-        nu = np.arccos(tr / 2e0) / (2e0 * np.pi)
-        if M[0][1] < 0e0:
-            nu = 1e0 - nu
-        return [nu, True]
-    else:
-        print("\ncompute_nu: unstable\n")
-        return [np.nan, False]
-
-
-def compute_nus(n_dof, M):
-    """
-    """
-    nus = np.zeros(n_dof)
-    stable = [False, False]
-    for k in range(n_dof):
-        [nus[k], stable[k]] = compute_nu(M[2 * k : 2 * k + 2, 2 * k : 2 * k + 2])
-    return [nus, stable]
-
-
-def compute_nus_symp_mat(n_dof: int, M: np.ndarray) -> (float, bool):
-    """Compute nu for a general symplectic periodic transport matrix
-
-    i.e., not assuming mid-plane symmetry.
-    """
-    n = 2 * n_dof
-
-    nu, tr = np.zeros(2), np.zeros(2)
-
-    # Should be a local copy.
-    M1 = copy.copy(M[:n, :n])
-    I = np.identity(n)
-    detp = np.linalg.det(M1 - I)
-    detm = np.linalg.det(M1 + I)
-    for i in range(2):
-        s = 2 * i
-        e = 2 * i + 1
-        tr[i] = M[s:e, s:e].trace()
-
-    if tr[X_] > tr[Y_]:
-        sgn = 1e0
-    else:
-        sgn = -1e0
-
-    b = (detp - detm) / 16e0
-    c = (detp + detm) / 8e0 - 1e0
-
-    b2mc = b ** 2 - c
-    if b2mc < 0e0:
-        nu[X_] = nu[Y_] = np.nan
-        print("\ncompute_nus_symp_mat: unstable\n")
-        return nu, False
-
-    for i in range(2):
-        x = -b + sgn * np.sqrt(b2mc) if i == 0 else -b - sgn * np.sqrt(b2mc)
-        if abs(x) <= 1e0:
-            nu[i] = np.arccos(x) / (2e0 * np.pi)
-            if M1[2 * i][2 * i + 1] < 0e0:
-                stable = True
-                nu[i] = 1e0 - nu[i]
-            else:
-                nu[i] = np.nan
-                plane = ["hor", "vert"][i]
-                txt = "fcompute_nus_symp_mat: unstable {plane:%s} plane: x = {x:%10.3e}"
-                print("\n" + txt + "\n")
-
-                return nu, False
-
-    return nu, stable
 
 
 def compute_S(n_dof):
@@ -224,7 +144,7 @@ def sort_eigen(n_dof, M, w, v):
             print(
                 "sort_eigen: unstable |cos_M[nu_%d]-1e0| = %10.3e\n",
                 i + 1,
-                fabs(cos_M[i] - 1e0),
+                np.absolute(cos_M[i] - 1e0),
             )
             stable = False
         sin_M[i] = sign(M[j - 1][j]) * np.sqrt(1e0 - cos_M[i] ** 2)
@@ -293,6 +213,11 @@ def compute_A_inv(n_dof, eta, v):
             A_inv[5, i] = sign(v1[4][4].real) * v1[i][4].imag
 
     B = np.identity(6)
+    delta_ = tslib.phase_space_index_internal.delta
+    x_ = tslib.phase_space_index_internal.x
+    px_ = tslib.phase_space_index_internal.px
+    ct_ = tslib.phase_space_index_internal.ct
+
     B[x_, delta_], B[px_, delta_] = eta[x_], eta[px_]
     B[ct_, x_], B[ct_, px_] = eta[px_], -eta[x_]
 
@@ -300,274 +225,180 @@ def compute_A_inv(n_dof, eta, v):
     return [A_inv, v1]
 
 
-def compute_dnu(n_dof, A):
-    """
 
-    a lot of special treatment for the internal representation of the matrix
-    """
-    eps = 1e-15
-    dnu = np.zeros(n_dof)
-    for k in range(n_dof):
-        if k < 2:
-            k2 = 2 * k
-            dnu[k] = np.arctan2(A[k2][k2 + 1], A[k2][k2]) / (2e0 * np.pi)
-        else:
-            dnu[k] = -np.arctan2(A[ct_][delta_], A[ct_][ct_]) / (2e0 * np.pi)
-    if dnu[k] < -eps:
-        dnu[k] += 1e0
-    return dnu
-
-
-def compute_A_CS(n_dof, A):
-    """compute Courant Snyder form of A
-
-    Todo:
-        check if dnu and R should not match in shape
-    """
-    dnu = np.zeros(n_dof)
-    # Should that not be n_dof * 2 ?
-    R = np.identity(6)
-
-    dnu = compute_dnu(n_dof, A)
-
-    # Build required rotation submatrices
-    for k in range(n_dof):
-        arg = 2 * np.pi * dnu[k]
-        c = np.cos(arg)
-        s = np.sin(arg)
-        # Rotation matrix
-        tmp = np.array([[c, -s], [s, c]])
-        k2 = 2 * k
-        R[k2 : k2 + 2, k2 : k2 + 2] = tmp
-        continue
-        R[k2, k2], R[k2][k2 + 1] = c, -s
-        R[2 * k + 1][2 * k], R[2 * k + 1][2 * k + 1] = s, c
-
-    Ar = np.dot(A, R)
-    return Ar, dnu
-
-
-def compute_twiss_A(A):
-    """
-    """
-    n_dof = 2
-    n = 2 * n_dof
-
-    [eta, alpha, beta] = [np.zeros(n), np.zeros(n_dof), np.zeros(n_dof)]
-
-    for k in range(n_dof):
-        k2 = 2 * k
-        eta[k2] = A[k2][delta_]
-        eta[k2 + 1] = A[k2 + 1][delta_]
-        alpha[k] = -(A[k2][k2] * A[k2 + 1][k2] + A[k2][k2 + 1] * A[k2 + 1][k2 + 1])
-        beta[k] = A[k2][k2] ** 2 + A[k2][k2 + 1] ** 2
-    dnu = compute_dnu(n_dof, A)
-
-    return eta, alpha, beta, dnu
-
-
-def compute_twiss_A_A_tp(A):
-    """
-
-    Todo:
-      difference ti compute_twiss_A?
-    """
-    n_dof = 2
-    n = 2 * n_dof
-
-    eta, alpha, beta = np.zeros(n), np.zeros(n_dof), np.zeros(n_dof)
-
-    A_A_tp = np.dot(A[0:n, 0:n], np.transpose(A[0:n, 0:n]))
-    for k in range(n_dof):
-        k2 = 2 * k
-        eta[k2], eta[k2 + 1] = A[k2][delta_], A[k2 + 1][delta_]
-        alpha[k] = -A_A_tp[k2][k2 + 1]
-        beta[k] = A_A_tp[k2][k2]
-    dnu = compute_dnu(n_dof, A)
-
-    return eta, alpha, beta, dnu
-
-
-def compute_dispersion(M):
-    """
-    """
-    n = 4
-    I = np.identity(n)
-    D = M[:n, delta_]
-    return np.dot(np.linalg.inv(I - M[:n, :n]), D)
-
-
-def compute_twiss_M(M):
-    n_dof = 2
-
-    alpha, beta, nu = np.zeros(n_dof), np.zeros(n_dof), np.zeros(n_dof)
-
-    eta = compute_dispersion(M)
-
-    stable = [True, True]
-    for k in range(n_dof):
-        k2 = 2 * k
-        cos = M[k2 : k2 + 2, k2 : k2 + 2].trace() / 2e0
-        if abs(cos) >= 1e0:
-            print("\ncompute_twiss_M: {:5.3f}\n".format(cos))
-            stable[k] = False
-        sin = np.sqrt(1e0 - cos ** 2) * sign(M[k2][k2 + 1])
-        alpha[k] = (M[k2][k2] - M[k2 + 1][k2 + 1]) / (2e0 * sin)
-        beta[k] = M[k2][k2 + 1] / sin
-        nu[k] = np.arctan2(sin, cos) / (2e0 * np.pi)
-        if nu[k] < 0e0:
-            nu[k] += 1e0
-
-    return [eta, alpha, beta, nu, stable]
 
 
 def compute_map(acc, calc_config):
     """Propaagate an identity map through the accelerator
     """
-    t_map = ss_vect_tps()
+    t_map = tslib.ss_vect_tps()
     t_map.set_identity()
     # acc.propagate(calc_config, t_map, 0, len(acc))
     acc.propagate(calc_config, t_map)
     return t_map
 
 
-def _extract_tps(elem):
-    """Extract tps data from the elments' observer
-    """
-    ob = elem.getObserver()
-    assert ob.hasTruncatedPowerSeries()
-    return ob.getTruncatedPowerSeries()
+## def compute_twiss_along_lattice(
+##     acc: tslib.Accelerator, calc_config: tslib.ConfigType, A: tslib.ss_vect_tps
+## ) -> xr.Dataset:
+##     """
+##
+##     Args:
+##         acc : an :class:`tlib.Accelerator` instance
+##         calc_config : an :class:`tlib.Config` instance
+##         A :
+##
+##
+##     returns xr.Dataset
+##
+##     Todo:
+##         Consider if tps should be returned too
+##     """
+##
+##     # Instrument it with observers ... I guess I have to keep them here so that
+##     # internally these are not weak references ... to be tested
+##     #
+##     observers = [StandardObserver() for elem in acc]
+##     # Register them to the elments
+##     for ob, elem in zip(observers, acc):
+##         elem.setObserver(ob)
+##
+##     # Propaagate through the accelerator
+##     acc.propagate(calc_config, A)
+##
+##     # Retrieve information
+##
+##     tps_tmp = [_extract_tps(elem) for elem in acc]
+##     data = [tps2twiss(t) for t in tps_tmp]
+##     twiss_pars = [d[1:] for d in data]
+##     disp = [d[0] for d in data]
+##     indices = [elem.index for elem in acc]
+##
+##     tps_tmp = np.array(tps_tmp)
+##     phase_space_coords_names = ["x", "px", "y", "py", "delta", "ct"]
+##
+##     tps = xr.DataArray(
+##         data=tps_tmp,
+##         name="tps",
+##         dims=["index", "phase_coordinate"],
+##         coords=[indices, phase_space_coords_names],
+##     )
+##     dispersion = xr.DataArray(
+##         data=disp,
+##         name="dispersion",
+##         dims=["index", "phase_coordinate"],
+##         coords=[indices, ["x", "px", "y", "py"]],
+##     )
+##     twiss_parameters = xr.DataArray(
+##         twiss_pars,
+##         name="twiss",
+##         dims=["index", "par", "plane"],
+##         coords=[indices, ["alpha", "beta", "dnu"], ["x", "y"]],
+##     )
+##     res = xr.merge([twiss_parameters, dispersion, tps])
+##     return res
 
 
-def tps2twiss(tps) -> (np.ndarray, np.ndarray, np.ndarray, np.ndarray):
-    """
 
-    returns eta, alpha, beta, nu
+# def _compute_twiss_lattice(acc, calc_config, A):
+#     n_dof = 2
+#
+#     nu = np.zeros(n_dof)
+#
+#     s = 0
+#     # Should be a local copy (ss_vect<tps>).
+#     Ak = A
+#     print(
+#         "\n     name            s       alpha_x   beta_x     nu_x"
+#         "      eta_x    etap_x    alpha_y   beta_y     nu_y      eta_y"
+#         "    etap_y"
+#     )
+#     print(
+#         "                    [m]                 [m]                  [m]"
+#         "                          [m]                  [m]"
+#     )
+#     for k in range(len(acc)):
+#         acc.propagate(calc_config, Ak, k, k + 1)
+#         A_mat = get_mat(Ak)[0:6, 0:6]
+#         [eta, alpha, beta, dnu] = compute_twiss_A(A_mat)
+#         nu += dnu
+#         A_mat = compute_A_CS(2, A_mat)[0]
+#         Ak = get_map(A_mat)
+#
+#         print(
+#             "{:4d} {:10s} {:9.5f} {:9.5f} {:9.5f} {:9.5f} {:9.5f} {:9.5f}"
+#             " {:9.5f} {:9.5f} {:9.5f} {:9.5f} {:9.5f}".format(
+#                 k,
+#                 acc[k].name,
+#                 s,
+#                 alpha[X_],
+#                 beta[X_],
+#                 nu[X_],
+#                 eta[x_],
+#                 eta[px_],
+#                 alpha[Y_],
+#                 beta[Y_],
+#                 nu[Y_],
+#                 eta[y_],
+#                 eta[py_],
+#             )
+#         )
 
-    """
-    A_mat = get_mat(tps)[:6, :6]
-    return compute_twiss_A(A_mat)
 
-
-def compute_twiss_along_lattice(
-    acc: Accelerator, calc_config: ConfigType, A: ss_vect_tps
-) -> xr.Dataset:
-    """
-
-    Args:
-        acc : an :class:`tlib.Accelerator` instance
-        calc_config : an :class:`tlib.Config` instance
-        A :
-
-
-    returns xr.Dataset
+def twiss_lattice_entry_to_text(line: xr.Dataset) -> str:
+    """Convert twiss parameters to text
 
     Todo:
-        Consider if tps should be returned too
+       Consider returning a list of lists
     """
 
-    # Instrument it with observers ... I guess I have to keep them here so that
-    # internally these are not weak references ... to be tested
-    #
-    observers = [StandardObserver() for elem in acc]
-    # Register them to the elments
-    for ob, elem in zip(observers, acc):
-        elem.setObserver(ob)
+    k = line.coords["index"].values
 
-    # Propaagate through the accelerator
-    acc.propagate(calc_config, A)
+    k = int(k)
+    name = ""
+    s = -1
 
-    # Retrieve information
-
-    tps_tmp = [_extract_tps(elem) for elem in acc]
-    data = [tps2twiss(t) for t in tps_tmp]
-    twiss_pars = [d[1:] for d in data]
-    disp = [d[0] for d in data]
-    indices = [elem.index for elem in acc]
-
-    tps_tmp = np.array(tps_tmp)
-    phase_space_coords_names = ["x", "px", "y", "py", "delta", "ct"]
-
-    tps = xr.DataArray(
-        data=tps_tmp,
-        name="tps",
-        dims=["index", "phase_coordinate"],
-        coords=[indices, phase_space_coords_names],
+    txt = (
+        # position information
+        f"{k:4d}" "{name:10s} {s:9.5f}"
     )
-    dispersion = xr.DataArray(
-        data=disp,
-        name="dispersion",
-        dims=["index", "phase_coordinate"],
-        coords=[indices, ["x", "px", "y", "py"]],
-    )
-    twiss_parameters = xr.DataArray(
-        twiss_pars,
-        name="twiss",
-        dims=["index", "par", "plane"],
-        coords=[indices, ["alpha", "beta", "dnu"], ["x", "y"]],
-    )
-    res = xr.merge([twiss_parameters, dispersion, tps])
-    return res
 
+    for plane in ["x", "y"]:
+        plane = "x"
+        twiss_p = line.twiss.sel(plane=plane)
 
-def _compute_twiss_lattice(acc, calc_config, A):
-    n_dof = 2
+        alpha = twiss_p.sel(par="alpha").values
+        beta  = twiss_p.sel(par="beta").values
+        nu    = twiss_p.sel(par="dnu").values
 
-    nu = np.zeros(n_dof)
+        disp = line.dispersion
+        eta  = disp.sel(phase_coordinate=plane).values
+        deta = disp.sel(phase_coordinate='p' + plane).values
 
-    s = 0
-    # Should be a local copy (ss_vect<tps>).
-    Ak = A
-    print(
-        "\n     name            s       alpha_x   beta_x     nu_x"
-        "      eta_x    etap_x    alpha_y   beta_y     nu_y      eta_y"
-        "    etap_y"
-    )
-    print(
-        "                    [m]                 [m]                  [m]"
-        "                          [m]                  [m]"
-    )
-    for k in range(len(acc)):
-        acc.propagate(calc_config, Ak, k, k + 1)
-        A_mat = get_mat(Ak)[0:6, 0:6]
-        [eta, alpha, beta, dnu] = compute_twiss_A(A_mat)
-        nu += dnu
-        A_mat = compute_A_CS(2, A_mat)[0]
-        Ak = get_map(A_mat)
-
-        print(
-            "{:4d} {:10s} {:9.5f} {:9.5f} {:9.5f} {:9.5f} {:9.5f} {:9.5f}"
-            " {:9.5f} {:9.5f} {:9.5f} {:9.5f} {:9.5f}".format(
-                k,
-                acc[k].name,
-                s,
-                alpha[X_],
-                beta[X_],
-                nu[X_],
-                eta[x_],
-                eta[px_],
-                alpha[Y_],
-                beta[Y_],
-                nu[Y_],
-                eta[y_],
-                eta[py_],
-            )
+        # one plane
+        txt += (
+            f" {alpha:9.5f} {beta:9.5f} {nu:9.5f}"
+            f" {eta:9.5f} {deta:9.5f}"
         )
 
+    return txt
 
-def compute_twiss_lattice(file_name, acc, calc_config, A):
-    """
-    """
-    compute_twiss_along_lattice(acc, calc_config, A)
 
-    stdout = sys.stdout
-    try:
-        sys.stdout = open(file_name, "w")
-        r = _compute_twiss_lattice(acc, calc_config, A)
-    finally:
-        sys.stdout = stdout
 
-    return r
+
+## def compute_twiss_lattice(file_name, acc, calc_config, A):
+##     """
+##     """
+##     compute_twiss_along_lattice(acc, calc_config, A)
+##
+##     stdout = sys.stdout
+##     try:
+##         sys.stdout = open(file_name, "w")
+##         r = _compute_twiss_lattice(acc, calc_config, A)
+##     finally:
+##         sys.stdout = stdout
+##
+##     return r
 
 
 def compute_ring_twiss(M):
@@ -587,6 +418,14 @@ def compute_ring_twiss(M):
 
 
 def prt_twiss(eta, alpha, beta, nu):
+    x_  = tslib.phase_space_index_internal.x
+    px_ = tslib.phase_space_index_internal.px
+    y_  = tslib.phase_space_index_internal.y
+    py_ = tslib.phase_space_index_internal.py
+
+    X_ = tslib.spatial_index.X
+    Y_ = tslib.spatial_index.Y
+
     txt = (
         f"\n  eta   = [{eta[x_]:5.3f}, {eta[px_]:5.3f}, {eta[y_]:5.3f}, {eta[py_]:5.3f}]"
         f"\n  alpha = [{alpha[X_]:5.3f}, {alpha[Y_]:5.3f}]"
@@ -600,7 +439,7 @@ t_dir = os.path.join(os.environ["HOME"], "Nextcloud", "thor_scsi")
 t_file = os.path.join(t_dir, "b3_tst.lat")
 
 acc = accelerator_from_config(t_file)
-calc_config = ConfigType()
+calc_config = tslib.ConfigType()
 
 if True:
     # propagate through the accelerator
@@ -610,7 +449,7 @@ else:
     # the lattice given is the lattice for a ring
     # so one can start at any point and pass it around
     n = 15
-    t_map = ss_vect_tps()
+    t_map = tslib.ss_vect_tps()
     t_map.set_identity()
     acc.propagate(calc_config, t_map, n)
     acc.propagate(calc_config, t_map, 0, n)
@@ -627,6 +466,8 @@ n_dof = 2
 n = 2 * n_dof
 
 nus, stable = compute_nus(n_dof, M)
+X_ = tslib.spatial_index.X
+Y_ = tslib.spatial_index.Y
 print("\ncompute_nus:\n  nu    = [{:5.3f}, {:5.3f}]".format(nus[X_], nus[Y_]))
 
 nus, stable = compute_nus_symp_mat(n_dof, M)
@@ -646,23 +487,6 @@ prt_twiss(eta, alpha, beta, nu)
 # Cross check.
 prt_np_mat("\nA^-1*M*A:\n", np.linalg.multi_dot([np.linalg.inv(A), M, A]))
 
-compute_twiss_lattice("linlat.out", acc, calc_config, get_map(A))
-
-# Swap columns.
-# v[:, [1, 0]] = v[:, [0, 1]]
-# Swap rows.
-# v[[1, 0]] = v[[0, 1]]
-
-# mat = np.zeros((6, 6))
-
-# exit()
-
-## twiss = linear_optics.compute_twiss_parameters(acc, calc_config)
-## twiss.name = "twiss_parameters"
-## md = accelerator_info(acc)
-## md.attrs = dict(calc_config=calc_config)
-## twiss_with_md = xr.merge([twiss, md])
-
-# print(res)
-
-# combine
+ds = compute_twiss_along_lattice(acc, calc_config, ps_jac2ss_vect_tps(np.zeros(6), A))
+df = twiss_ds_to_df(ds)
+print(df)
