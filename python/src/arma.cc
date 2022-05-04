@@ -41,6 +41,8 @@ void py_thor_scsi_init_arma(py::module &m)
 					    py::int_ row = seq[0], col =  seq[1];
 					    mat(row, col) = val;
 				    })
+		.def("swap_rows", &arma::mat::swap_rows, "swap row1, row2")
+		.def("swap_cols", &arma::mat::swap_cols, "swap col1, col2")
 		//.def("__str__", &PyArma::pstr)
 		.def_buffer([](arma::mat &mat) -> py::buffer_info {
 				    size_t n_cols = static_cast<size_t>(mat.n_cols);
