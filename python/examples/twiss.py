@@ -3,7 +3,7 @@
 from thor_scsi.factory import accelerator_from_config
 from thor_scsi.utils import linear_optics
 from thor_scsi.utils.output import vec2txt, mat2txt
-from thor_scsi.utils.twiss_output import twiss_ds_to_df
+from thor_scsi.utils.twiss_output import twiss_ds_to_df, df_to_tsv, df_header
 from thor_scsi.utils.linear_optics import compute_twiss_along_lattice
 from thor_scsi.utils.phase_space_vector import ps_jac2ss_vect_tps
 from thor_scsi.utils.phase_advance import compute_nus_for_symplectic_matrix, compute_nus
@@ -402,6 +402,27 @@ def twiss_lattice_entry_to_text(line: xr.Dataset) -> str:
 
 
 def compute_ring_twiss(M):
+    """
+
+    * Diagonalise M = A R A^(-1)
+
+    This gives:
+    * Transfrom to the energy dependent fix point
+    * Diagonalising in [x, px, y, py]
+
+       R : Block diagonal
+       :math:`A^(-1)` : From phase space ellipse to Floquet space circle
+
+    * Transfrom from energy dependent fix point math::`\eta` math::`\delta` to
+      origin of phase space
+
+
+    Todo:
+        Revisit naming:
+        Add reference to Johan's Tech Note
+
+    """
+
     n_dof = 2
     n = 2 * n_dof
 
@@ -485,6 +506,9 @@ else:
 M = M[:6, :6]
 prt_np_mat("\nPoincaré T_Map:\n", M)
 
+M_ref = np.load("pc_map.npy")
+
+prt_np_mat("\nPoincaré T_Map - Ref:\n", M - M_ref)
 
 n_dof = 2
 n = 2 * n_dof
@@ -504,16 +528,31 @@ prt_twiss(eta, alpha, beta, nu)
 A = compute_ring_twiss(M)
 prt_np_mat("\nA:\n", A)
 
-eta, alpha, beta, nu = compute_twiss_A(A)
-print("\ncompute_twiss_A:")
-prt_twiss(eta, alpha, beta, nu)
-eta, alpha, beta, nu = compute_twiss_A_A_tp(A)
-print("\ncompute_twiss_A_A_tp:")
-prt_twiss(eta, alpha, beta, nu)
+A_ref = np.load("twiss_A.npy")
+prt_np_mat("\nA - A Ref :\n", A -A_ref)
 
-# Cross check.
-prt_np_mat("\nA^-1*M*A:\n", np.linalg.multi_dot([np.linalg.inv(A), M, A]))
+if False:
+    eta, alpha, beta, nu = compute_twiss_A(A)
+    print("\ncompute_twiss_A:")
+    prt_twiss(eta, alpha, beta, nu)
+    eta, alpha, beta, nu = compute_twiss_A_A_tp(A)
+    print("\ncompute_twiss_A_A_tp:")
+    prt_twiss(eta, alpha, beta, nu)
 
-ds = compute_twiss_along_lattice(acc, calc_config, ps_jac2ss_vect_tps(np.zeros(6), A))
+    # Cross check.
+    prt_np_mat("\nA^-1*M*A:\n", np.linalg.multi_dot([np.linalg.inv(A), M, A]))
+
+a_map = ps_jac2ss_vect_tps(np.zeros(6), A)
+prt_np_mat("A", A)
+print(a_map)
+
+ds = compute_twiss_along_lattice(acc, calc_config, a_map)
 df = twiss_ds_to_df(ds)
-print(df)
+# print(df)
+
+with open("twiss.tsf", "wt") as fp:
+    # fp.write(df_header())
+    # fp.write("\n")
+    fp.write(df_to_tsv(df))
+
+df.to_json("twiss.json")

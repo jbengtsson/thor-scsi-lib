@@ -1,4 +1,6 @@
 from .. import lib as tslib
+from .output import mat2txt
+
 import numpy as np
 
 sign = np.sign
@@ -38,12 +40,24 @@ def compute_dnu(n_dof, A):
 def compute_A_CS(n_dof, A):
     """compute Courant Snyder form of A
 
+    Rotate A to zero a12 (or equivalent for the other planes)
+
     Todo:
         check if dnu and R should not match in shape
     """
+    assert(n_dof == 2)
     dnu = np.zeros(n_dof)
     # Should that not be n_dof * 2 ?
     R = np.identity(6)
+
+    nr, nc = R.shape
+    assert nr == 6
+    assert nc == 6
+
+    nr, nc = A.shape
+    assert nr == 6
+    assert nc == 6
+
 
     dnu = compute_dnu(n_dof, A)
 
@@ -55,11 +69,12 @@ def compute_A_CS(n_dof, A):
         # Rotation matrix
         tmp = np.array([[c, -s], [s, c]])
         k2 = 2 * k
-        R[k2 : k2 + 2, k2 : k2 + 2] = tmp
-        continue
+        # R[k2 : k2 + 2, k2 : k2 + 2] = tmp
+        # continue
         R[k2, k2], R[k2][k2 + 1] = c, -s
         R[2 * k + 1][2 * k], R[2 * k + 1][2 * k + 1] = s, c
 
+    # print(f"Rotation matrix\n{mat2txt(R)}")
     Ar = np.dot(A, R)
     return Ar, dnu
 

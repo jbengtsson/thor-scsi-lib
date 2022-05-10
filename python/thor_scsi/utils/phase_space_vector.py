@@ -36,6 +36,7 @@ def jac_intern_to_std(a: np.ndarray, copy: bool = True) -> np.ndarray:
     rows and columns
 
     """
+    assert(0)
     n = 6
     a = np.atleast_2d(a)
     nr, nc = a.shape
@@ -60,6 +61,7 @@ def ps_intern_to_std(a: np.ndarray, copy: bool = True) -> np.ndarray:
 
     Similar to :func:`jac_intern_to_std`
     """
+    assert(0)
     n = 7
     a = np.atleast_1d(a)
     nr, = a.shape
@@ -80,13 +82,25 @@ def get_mat(t_map):
 
 
 def ss_vect_tps2ps_jac(
-    ps: tslib.ss_vect_tps, std: bool = True
+    ps: tslib.ss_vect_tps, std: bool = False
 ) -> (np.ndarray, np.ndarray):
     """Extract phase space and jacobian from internal ss_vect_tps representation
 
     Args:
        std: output as standard array (i.e. ct in 4th and delta in 5th column)
+
+    Todo:
+       Discuss with Johan which interface should be exported to the user
+
+       Is it common practise in beam dynamics codes to put delta at the 5th column?
+       Would it be better to export block symplectic matrices to the user
+
+    Warning:
+      Currently only std == False is supported. Don't remove the assert below
+      unless you know what you are doing.
     """
+    assert(std == False)
+
     raw = tslib.ss_vect_tps_to_mat(ps)
     tmp = np.array(raw)
     n_jac = 6
