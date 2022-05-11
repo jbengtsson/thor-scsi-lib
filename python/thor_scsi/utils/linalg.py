@@ -268,13 +268,15 @@ def match_eigenvalues_to_plane(M: np.ndarray, w: np.ndarray, v: np.ndarray, *, n
     # construct w and v in the proper order
     wr = [s.payload.w for s in sorters]
     vr = [s.payload.v for s in sorters]
+    nu1 = [s.payload.nu1 for s in sorters]
 
     w = w.copy()
     v = v.copy()
 
     # Find out which have to be rearranged ...
+    # need to understand that ...
+    assert 0
 
-    nu1 = [s.payload.nu1 for s in sorters]
     w = np.array(w)
     # I think I have to transpose this array to get it back to the original
     # dimension order
