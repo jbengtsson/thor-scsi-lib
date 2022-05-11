@@ -75,7 +75,7 @@ def ps_intern_to_std(a: np.ndarray, copy: bool = True) -> np.ndarray:
     return a
 
 
-def get_mat(t_map):
+def map2numpy(t_map):
     mat = tslib.ss_vect_tps_to_mat(t_map)
     mat = np.array(mat)
     return mat
@@ -135,4 +135,5 @@ __all__ = [
     "ps_intern_to_std",
     "ps_jac2ss_vect_tps",
     "ss_vect_tps2ps_jac",
+    "map2numpy",
 ]
