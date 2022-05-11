@@ -139,15 +139,14 @@ def find_phase_space_origin(M: np.ndarray) -> np.ndarray:
     w, v = np.linalg.eig(M_tp)
 
     # Sort eigen values to match the trace of the plane
-    print(f"before sort w:{mat2txt(w)}  ")
-    print(f"before sort v:{mat2txt(v)}  ")
-
+    # print(f"before sort w:{mat2txt(w)}  ")
+    # print(f"before sort v:{mat2txt(v)}  ")
     w, v = match_eigenvalues_to_plane_orig(M_tp, w, v, n_dof=n_dof)
-    wabs = np.absolute(w)
+    # wabs = np.absolute(w)
+    # print(f"sort  wabs   {mat2txt(wabs)}")
+    # print(f"after sort w:{mat2txt(w)}  ")
+    # print(f"after sort v:{mat2txt(v)}  ")
 
-    print(f"sort  wabs   {mat2txt(wabs)}")
-    print(f"after sort w:{mat2txt(w)}  ")
-    print(f"after sort v:{mat2txt(v)}  ")
     eta = compute_dispersion(M)
     A_inv, v1 = compute_A_inv_with_dispersion(v, eta, n_dof=n_dof)
     A = np.linalg.inv(A_inv)
