@@ -456,6 +456,97 @@ def test_stuff(n):
                np.linalg.multi_dot([np.linalg.inv(A), M, A]))
 
 
+# def compute_cod(n_max, eps, delta, s_loc):
+#     ss_vect_double x0, x1, dx
+#     ss_vect_tps    I, dx0, map
+
+#     log = True
+
+#     no = no_tps
+#     danot_(1)
+
+#     first = true
+
+#     if (log) printf("\nCell_getCOD:\n")
+
+#     if (globval.mat_meth && (first || (delta != globval.dPparticle))):
+#         # Recompute transport matrices.
+#         if (log):
+#             printf("  recomputing transport matrices:  delta = %9.3e (%9.3e)"
+# 	           " first = %1d\n",
+# 	           delta, globval.dPparticle, first)
+#         get_lin_maps(delta)
+#         globval.dPparticle = delta
+#         first = False
+
+#     globval.dPparticle = delta
+
+#     n = (globval.Cavity_on)? 6 : 4
+
+#     x0.zero() x0[delta_] = delta
+
+#     if False:
+#         # For 2.5 D.O.F. initial COD estimate is: eta*delta.
+#         for k in range(2):
+#             x0[2*k]   = Cell[2*k].Eta[X_]*delta
+#             x0[2*k+1] = Cell[2*k+1].Etap[X_]*delta
+
+#     if log:
+#         std::cout << std::scientific << std::setprecision(5)
+#         << "\n  0                        x0 ="
+# 	<< std::setw(13) << x0 << "\n"
+
+#     n_iter = 0
+#     I.identity()
+#     dx_abs = 1e30
+#     while (dx_abs >= eps) && (n_iter <= n_max):
+#     n_iter += 1
+#     map.identity()
+#     map += x0
+
+#     Cell_Pass(0, globval.Cell_nLoc, map, s_loc) 
+
+#     if (s_loc == globval.Cell_nLoc):
+#         x1 = map.cst() dx = x0 - x1 dx0 = PInv(map-I-x1, jj)*dx
+#         dx_abs = xabs(n, dx) x0 += dx0.cst()
+#     else:
+#         dx_abs = NAN break
+
+#     if log:
+#         std::cout
+# 	<< std::scientific << std::setprecision(1)
+# 	<< std::setw(3) << n_iter
+# 	<< " err = " << std::setw(7) << dx_abs << "/" << std::setw(7) << eps
+# 	<< std::setprecision(5)	<< "  x0 =" << std::setw(13) << x0 << "\n"
+
+#     cod = dx_abs < eps
+
+#     if cod:
+#         globval.CODvect = x0
+#         getlinmat(6, map, globval.OneTurnMat)
+#         Cell_Pass(0, globval.Cell_nLoc, x0, s_loc)
+#         if log:
+#             cout << "\n  OneTurnMat:\n"
+#             prtmat(6, globval.OneTurnMat)
+#     else:
+#         std::cout << std::scientific << std::setprecision(5)
+# 	<< "\nCell_getCOD: failed to converge after " << n_iter
+# 	<< " iterations:\n"
+# 	<< "  delta =" << std::setw(12) << delta
+# 	<< ", particle lost at element " << s_loc << "\n"
+# 	<< std::scientific << std::setprecision(5)
+# 	<< "  x_0   =" << std::setw(13) << x0 << "\n"
+# 	<< std::scientific << std::setprecision(5)
+# 	<< "  x_k-1 =" << std::setw(13) << Cell[s_loc-1].BeamPos << "\n"
+# 	<< std::scientific << std::setprecision(5)
+# 	<< "  x_k   =" << std::setw(13) << map.cst() << "\n"
+
+#     danot_(no)
+  
+#     return cod
+# }
+
+
 t_dir  = os.path.join(os.environ["HOME"], "Nextcloud", "thor_scsi")
 t_file = os.path.join(t_dir, "b3_tst.lat")
 
@@ -483,6 +574,12 @@ prt_np_mat("\nA^-1*M*A:\n",
            np.linalg.multi_dot([np.linalg.inv(A), M, A]))
 
 compute_twiss_lat("linlat.out", acc, calc_config, get_map(A))
+
+# ds = ds.drop(["elements", "tps"])
+# ds.to_netcdf("twiss.nc")
+# df = twiss_ds_to_df(ds)
+# #print(df)
+# df.to_csv("twiss.csv")
 
 
 # twiss = linear_optics.compute_twiss_parameters(acc, calc_config)
