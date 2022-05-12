@@ -1,13 +1,5 @@
 include(../../cmake/gpp_warnings.cmake)
 
-# yes ... depends on flame ...
-find_package(flame  REQUIRED COMPONENTS core)
-get_target_property(flame_CORE_LIBRARY flame::flame_core IMPORTED_LOCATION_RELEASE)
-
-
-
-message(STATUS "Flame core library ${flame_CORE_LIBRARY}")
-message(STATUS "Flame include dir ${flame_INCLUDE_DIR}")
 
 
 # get_filename_component(thor_scsi_INCLUDE_DIR "${CMAKE_CURRENT_LIST_DIR}//../inc/" ABSOLUTE)

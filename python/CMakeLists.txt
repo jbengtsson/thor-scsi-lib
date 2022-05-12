@@ -26,9 +26,11 @@ add_library(lib MODULE
   src/accelerator.cc
   )
 
+message(STATUS "python wrapper flame include dir ${flame_INCLUDE_DIR}")
 target_include_directories(lib
   PUBLIC
   ${ARMADILLO_INCLUDE_DIRS}
+  ${flame_INCLUDE_DIR}
   # Hack for pybind11 on Pierre's laptop
     "$<BUILD_INTERFACE:/home/mfp/.local/lib/python3.8/site-packages/pybind11/include/>"
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../src/>"
@@ -63,6 +65,7 @@ add_library(flame MODULE
 
 target_include_directories(flame
   PUBLIC
+  ${flame_INCLUDE_DIR}
   # Hack for pybind11 on Pierre's laptop
   # "$<BUILD_INTERFACE:/home/mfp/.local/lib/python3.8/site-packages/pybind11/include/>"
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../src/>"
