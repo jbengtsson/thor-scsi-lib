@@ -4,9 +4,11 @@ Software update strategy
 1. Rework build process and compile files separately
 2. Develop modern API for thor_scsi
 3. Push code base to modern C++
+
   a. namespaces
   b. extensive use of standard library
   c. Library for arrays matrix and vectors: use library for parallel execution
+
 4. Integrate thor_scsi as backbone for AT and PyAT
 5. Implement python interface based on pybind11
 6. Modernize reading lattice files
@@ -22,6 +24,4 @@ Rework build process
 
 1. separate truncated power series in separate file
 2. split up tracy.cc
-3. rework remaining part in tracy.cc, which collects all 
-
-
+3. rework remaining part in tracy.cc, which collects all
