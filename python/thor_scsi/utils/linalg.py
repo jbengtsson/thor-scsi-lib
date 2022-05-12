@@ -308,16 +308,23 @@ def match_eigenvalues_to_plane_orig(M, w, v, *, n_dof):
         can n_dof be derived from the shape of M, w or v?
         Check that shape of M, w, v correspond
 
+        Check reuse of symbol "v":
+            * in the 1. for loop v is assinged to a scalar
+            * 2. and 3. for loop v is not reassigned but seems
+              to be used as vector or matrix ....
+
     Warning:
-        Assuming that this function has side effects!
+        This function had side effects on v and w. These should be
+        removed by the copy functions
     """
 
     sign = np.sign
     n = 2 * n_dof
 
+    v = v.copy()
     w = w.copy()
     w_ret = w
-    v = v.copy()
+    # v is reassigned ... look to todo to the function description
     v_ret = v
 
     sin_M, cos_M = np.zeros(n_dof), np.zeros(n_dof)
@@ -325,7 +332,7 @@ def match_eigenvalues_to_plane_orig(M, w, v, *, n_dof):
 
     for i in range(n_dof):
         j = (i + 1) * 2 - 1
-        # Is this renaming of v intentional ?
+        # Is this renaming of v intentional ? v used as a scalr
         v = (M[j - 1][j - 1] + M[j][j]) / 2
         cos_M[i] = v
         if np.abs(v) > 1e0:
@@ -352,6 +359,7 @@ def match_eigenvalues_to_plane_orig(M, w, v, *, n_dof):
         else:
             nu2[i] = 1.0 - nu1[i]
 
+    # v used as matrix
     for i in range(n_dof):
         c = closest(nu2_M[i], nu2[0], nu2[1], nu2[2])
         if c != i + 1:
