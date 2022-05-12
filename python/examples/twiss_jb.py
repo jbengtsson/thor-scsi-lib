@@ -456,95 +456,97 @@ def test_stuff(n):
                np.linalg.multi_dot([np.linalg.inv(A), M, A]))
 
 
-# def compute_cod(n_max, eps, delta, s_loc):
-#     ss_vect_double x0, x1, dx
-#     ss_vect_tps    I, dx0, map
+def compute_closed_orbit(acc, conf, n_max, eps, delta, s_loc):
+    x0  = ss_vect_double()
+    x1  = ss_vect_double()
+    dx  = ss_vect_double()
+    I   = ss_vect_tps()
+    dx0 = ss_vect_tps()
+    M   = ss_vect_tps()
 
-#     log = True
+    debug = True
 
-#     no = no_tps
-#     danot_(1)
+    if conf.Cavity_on:
+        n = 6
+    else:
+        n = 4
 
-#     first = true
+    no = no_tps
+    danot_(1)
 
-#     if (log) printf("\nCell_getCOD:\n")
+    first = true
 
-#     if (globval.mat_meth && (first || (delta != globval.dPparticle))):
-#         # Recompute transport matrices.
-#         if (log):
-#             printf("  recomputing transport matrices:  delta = %9.3e (%9.3e)"
-# 	           " first = %1d\n",
-# 	           delta, globval.dPparticle, first)
-#         get_lin_maps(delta)
-#         globval.dPparticle = delta
-#         first = False
+    if debug:
+        printf("\nCell_getCOD:\n")
 
-#     globval.dPparticle = delta
+    if (globval.mat_meth and (first or (delta != globval.dPparticle))):
+        # Recompute transport matrices.
+        if (debug):
+            printf("  recomputing transport matrices:  delta = %9.3e (%9.3e)"
+	           " first = %1d\n",
+	           delta, globval.dPparticle, first)
+        get_lin_maps(delta)
+        conf.dPparticle = delta
+        first = False
 
-#     n = (globval.Cavity_on)? 6 : 4
+    conf.dPparticle = delta
 
-#     x0.zero() x0[delta_] = delta
+    x0.zero()
+    x0[delta_] = delta
 
-#     if False:
-#         # For 2.5 D.O.F. initial COD estimate is: eta*delta.
-#         for k in range(2):
-#             x0[2*k]   = Cell[2*k].Eta[X_]*delta
-#             x0[2*k+1] = Cell[2*k+1].Etap[X_]*delta
+    if False:
+        # For 2.5 D.O.F. initial COD estimate is: eta*delta.
+        for k in range(2):
+            x0[2*k]   = Cell[2*k].Eta[X_]*delta
+            x0[2*k+1] = Cell[2*k+1].Etap[X_]*delta
 
-#     if log:
-#         std::cout << std::scientific << std::setprecision(5)
-#         << "\n  0                        x0 ="
-# 	<< std::setw(13) << x0 << "\n"
+    if debug:
+        print("\n  {:d}                        x0 = {:13.5e}\n".format(0, x0))
 
-#     n_iter = 0
-#     I.identity()
-#     dx_abs = 1e30
-#     while (dx_abs >= eps) && (n_iter <= n_max):
-#     n_iter += 1
-#     map.identity()
-#     map += x0
+    n_iter = 0
+    I.identity()
+    dx_abs = 1e30
+    while (dx_abs >= eps) and (n_iter <= n_max):
+        n_iter += 1
+        M.identity()
+        M += x0
 
-#     Cell_Pass(0, globval.Cell_nLoc, map, s_loc) 
+#        acc.propagate(conf, M, s_loc) 
+        acc.propagate(conf, M) 
 
-#     if (s_loc == globval.Cell_nLoc):
-#         x1 = map.cst() dx = x0 - x1 dx0 = PInv(map-I-x1, jj)*dx
-#         dx_abs = xabs(n, dx) x0 += dx0.cst()
-#     else:
-#         dx_abs = NAN break
+        if (s_loc == globval.Cell_nLoc):
+            x1 = M.cst()
+            dx = x0 - x1
+            dx0 = np.linalg.inv((M-I-x1)[n, n])*dx[n]
+            dx_abs = xabs(n, dx)
+            x0 += dx0.cst()
+        else:
+            dx_abs = NAN
+            break
 
-#     if log:
-#         std::cout
-# 	<< std::scientific << std::setprecision(1)
-# 	<< std::setw(3) << n_iter
-# 	<< " err = " << std::setw(7) << dx_abs << "/" << std::setw(7) << eps
-# 	<< std::setprecision(5)	<< "  x0 =" << std::setw(13) << x0 << "\n"
+    if debug:
+        print("{:3d} err = {:7.1e}/{:7.1e}  x0 = {:13.5e}\n".
+              format(n_iter, dx_abs, eps, x0))
 
-#     cod = dx_abs < eps
+    cod = dx_abs < eps
 
-#     if cod:
-#         globval.CODvect = x0
-#         getlinmat(6, map, globval.OneTurnMat)
-#         Cell_Pass(0, globval.Cell_nLoc, x0, s_loc)
-#         if log:
-#             cout << "\n  OneTurnMat:\n"
-#             prtmat(6, globval.OneTurnMat)
-#     else:
-#         std::cout << std::scientific << std::setprecision(5)
-# 	<< "\nCell_getCOD: failed to converge after " << n_iter
-# 	<< " iterations:\n"
-# 	<< "  delta =" << std::setw(12) << delta
-# 	<< ", particle lost at element " << s_loc << "\n"
-# 	<< std::scientific << std::setprecision(5)
-# 	<< "  x_0   =" << std::setw(13) << x0 << "\n"
-# 	<< std::scientific << std::setprecision(5)
-# 	<< "  x_k-1 =" << std::setw(13) << Cell[s_loc-1].BeamPos << "\n"
-# 	<< std::scientific << std::setprecision(5)
-# 	<< "  x_k   =" << std::setw(13) << map.cst() << "\n"
+    if cod:
+        globval.CODvect = x0
+        getlinmat(6, M, globval.OneTurnMat)
+        Cell_Pass(0, globval.Cell_nLoc, x0, s_loc)
+        if debug:
+            print("\n  OneTurnMat:")
+            prtmat(6, globval.OneTurnMat)
+    else:
+        print("\nCell_getCOD: failed to converge after {:d}  delta = {:12.5e}"
+              ", particle lost at element {:3d}  x_0   = {:13.5e}"
+              "  x_k-1 = {:13.5e}  x_k   = {:13.5e}".
+              format(n_iter, delta, s_loc, x0, Cell[s_loc-1].BeamPos,
+                     M.cst()))
 
-#     danot_(no)
+    danot_(no)
   
-#     return cod
-# }
+    return cod
 
 
 t_dir  = os.path.join(os.environ["HOME"], "Nextcloud", "thor_scsi")
