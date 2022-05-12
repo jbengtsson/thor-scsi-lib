@@ -11,6 +11,10 @@ def ss_vect_to_masked_matrix(t_lists: Sequence[Sequence[float]])-> ma.MaskedArra
 
     The lists are not of equal length. Thus a matrix is returned
     with the elements that are not set masked out.
+
+    Todo:
+      Check: is that function not already obsolete?
+      See :func:`thor_scsi.`
     """
     # Contains the data of the phase space vector
     ps_tmp = t_lists[0]

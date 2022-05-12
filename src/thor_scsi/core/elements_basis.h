@@ -73,9 +73,14 @@ namespace thor_scsi {
 			 *
 			 * Todo:
 			 *      make config constant (after config has been reworked)
+			 *      rename to propagate!
 			 */
 			virtual void pass(thor_scsi::core::ConfigType &conf, ss_vect<double> &ps) = 0;
 			virtual void pass(thor_scsi::core::ConfigType &conf, ss_vect<tps> &ps) = 0;
+			/*
+			 * the non linear tps part ... to be made
+			 */
+			// virtual void pass(thor_scsi::core::ConfigType &conf, ss_vect<tps_nlin> &ps) = 0;
 
 			// why is that required here?
 			// template<typename T>
