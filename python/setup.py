@@ -28,6 +28,20 @@ copy_file(
 
 d = gsl_conf.gsl_config()
 
+# How to define where the thor scsi library is located?
+prefix = os.path.abspath(
+    os.path.join(os.path.dirname(__name__), os.pardir, os.pardir, 'local')
+)
+from pybind11.setup_helpers import ParallelCompile
+
+# Optional multithreaded build
+try:
+    os.environ["NPY_NUM_BUILD_JOBS"]
+except KeyError:
+    os.environ["NPY_NUM_BUILD_JOBS"] = "5"
+
+ParallelCompile("NPY_NUM_BUILD_JOBS").install()
+
 ext_modules = [
     # Pybind11Extension(
     #    "testbind",
@@ -35,23 +49,37 @@ ext_modules = [
     #    include_dirs=['.'],
     # ),
     Pybind11Extension(
+        "flame",
+        ["src/flame.cc"],
+        include_dirs=[os.path.join(prefix, "include")] + [d["gsl_include"]],
+        library_dirs=([os.path.join(prefix, "lib")]),
+        libraries=["flame", "flame_core"]
+    ),
+
+    Pybind11Extension(
         "lib",
         # sorted(["src/thor_py_enums.cc", "src/thor_py.cc"]),
-        ["src/thor_py.cc", "src/enums.cc", "src/config_type.cc",
-         "src/elements.cc", "src/lattice.cc",
+        ["src/elements.cc",
+         "src/accelerator.cc",
+         "src/tps.cc",
+         "src/thor_scsi.cc",
+         "src/config_type.cc",
+         # "src/enums.cc",
+         # "src/lattice.cc"
         ],
-        include_dirs=["../thor/inc"] + [d["gsl_include"]],
-        define_macros=[("_GLIBCXX_DEBUG", 1), ("_GLIBCXX_DEBUG_PEDANTIC", 1)],
+        include_dirs=[os.path.join(prefix, "include")] + [d["gsl_include"]],
+        # define_macros=[("_GLIBCXX_DEBUG", 1), ("_GLIBCXX_DEBUG_PEDANTIC", 1)],
         library_dirs=(
-            ["../thor/src/.libs"]
+            [os.path.join(prefix, "lib")]
             #["../../engine/lib"]
         + [d["gsl_lib_dir"]]),
-        libraries=["thor", "tpsa"] + d["gsl_libs"],
+        libraries=["thor_scsi", "thor_scsi_core", "tpsa_lin", "flame", "flame_core"] + d["gsl_libs"],
     ),
+
 ]
 
 
 setup(cmdclass={"build_ext": build_ext},
-      ext_package='thor',
+      ext_package='thor_scsi',
       ext_modules=ext_modules
 )

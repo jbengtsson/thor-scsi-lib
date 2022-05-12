@@ -11,7 +11,18 @@ Welcome to thor_scsi's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-   api/library_root	     
+   api/library_root
+
+
+Class hierachy
+--------------
+
+   class_view_hierarchy
+
+
+Index
+-----
+   index
 
 
 Indices and tables

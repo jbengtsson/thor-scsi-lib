@@ -1,14 +1,14 @@
 #include <pybind11/stl.h>
-#include "thor_py.h"
+#include "thor_scsi.h"
 #include <pybind11/pybind11.h>
 #include <thor_scsi/core/config.h>
 
 namespace tsc = thor_scsi::core;
 namespace py = pybind11;
 
-void py_thor_scsi_init_config_type(py::module_ &m)
+void py_thor_scsi_init_config_type(py::module &m)
 {
-   py::class_<tsc::ConfigType>(m, "ConfigType")
+  py::class_<tsc::ConfigType, std::shared_ptr<tsc::ConfigType>>(m, "ConfigType")
       // bool
       .def_readwrite("trace",          &tsc::ConfigType::trace)
       .def_readwrite("reverse_elem",   &tsc::ConfigType::reverse_elem)
