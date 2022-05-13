@@ -13,6 +13,8 @@
 #include <thor_scsi/elements/octupole.h>
 #include <thor_scsi/elements/bending.h>
 #include <thor_scsi/elements/standard_observer.h>
+#include <thor_scsi/elements/standard_aperture.h>
+#include <thor_scsi/core/config.h>
 #include <sstream>
 #include <string>
 
@@ -387,6 +389,91 @@ BOOST_AUTO_TEST_CASE(test101_logger_stringstream)
 	THOR_SCSI_LOG(DEBUG)   << ("Debug test");
 
 	std::cout << "Stream Logger level test\n" << strm_logger->get() << std::endl;
+
+}
+
+BOOST_AUTO_TEST_CASE(test120_rectangular_aperture)
+{
+	const std::string txt(
+		"Nquad = 12;"
+		"q4m2d1r: Quadrupole, L = 0.5, K = 1.4, N = Nquad, Method = 4;"
+		"mini_cell : LINE = (q4m2d1r);\n"
+		);
+
+	GLPSParser parse;
+	Config *C = parse.parse_byte(txt);
+	auto machine = ts::Accelerator(*C);
+	const double width = 100e-3, height = 50e-3;
+
+	// register the aperture
+	for(auto& cv: machine){
+		auto ap = std::make_shared<tse::RectangularAperture>(width, height);
+		auto elem = std::dynamic_pointer_cast<tse::ElemType>(cv);
+		if(!elem){
+			throw std::runtime_error("Can not cast to elemtype");
+		}
+		elem->setAperture(std::dynamic_pointer_cast<tsc::TwoDimensionalAperture>(ap));
+	}
+
+	auto cv = machine.find("q4m2d1r");
+	auto elem = std::dynamic_pointer_cast<tse::ElemType>(cv);
+
+	// check that it gives at least some output
+	auto ap = elem->getAperture();
+	{
+		boost::test_tools::output_test_stream output;
+		output << ap;
+		BOOST_CHECK( !output.is_empty( false ) );
+	}
+
+	// check phase spaces vectors double ...
+	{
+		ss_vect<double> ps;
+		ps.set_zero();
+
+		bool not_lost = elem->checkAmplitude(ps);
+		BOOST_CHECK( not_lost);
+	}
+	{
+		ss_vect<double> ps;
+		ps.set_zero();
+		// Slightly out is out
+		ps[x_] = width + 1e-3;
+
+		bool not_lost = elem->checkAmplitude(ps);
+		BOOST_CHECK( !not_lost);
+	}
+
+	{
+		ss_vect<tps> ps;
+		ps.set_identity();
+		ps[x_] = width + 1e-3;
+		bool not_lost = elem->checkAmplitude(ps);
+		BOOST_CHECK( !not_lost);
+	}
+
+	// check that propagate will identify it
+	{
+		auto calc_config = tsc::ConfigType();
+		ss_vect<double> ps;
+		ps.set_zero();
+		ps[x_] = width / 2.0;
+
+		calc_config.lossplane = 0;
+		int last_element = machine.propagate(calc_config, ps);
+		BOOST_CHECK(calc_config.lossplane == 0);
+	}
+	// check that propagate will identify it
+	{
+		auto calc_config = tsc::ConfigType();
+		ss_vect<double> ps;
+		ps.set_zero();
+		ps[x_] = width + 1e-3;
+
+		calc_config.lossplane = 0;
+		int last_element = machine.propagate(calc_config, ps);
+		BOOST_CHECK(calc_config.lossplane == tse::PlaneKind::Horizontal);
+	}
 
 }
 
