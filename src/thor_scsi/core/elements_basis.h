@@ -58,13 +58,7 @@ namespace thor_scsi {
 			/**
 			 * Todo: implement taking stream or as ostream operator ....
 			 */
-			virtual inline void show(std::ostream& strm, int level) const override {
-				CellVoid::show(strm, level);
-				if(level >= 1){
-					strm << " L="<<this->PL<<"";
-				}
-			}
-
+			virtual void show(std::ostream& strm, int level) const override;
 			// C++ templates not supported for virtual functions.
 			/**
 			 * @brief Propagator step for phase space.

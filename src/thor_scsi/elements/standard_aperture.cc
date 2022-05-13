@@ -51,9 +51,10 @@ double tse::RectangularAperture::isWithin(const double x, const double y) const
 void tse::RectangularAperture::show(std::ostream& strm, int level) const
 {
 	TwoDimensionalAperture::show(strm, level);
-	strm << " centre (" << this->m_x << ", " << this->m_y << "),"
-	     << " width " << this->m_width2 * 2
-	     << " height " << this->m_height2 * 2;
+	strm << " width=" << this->m_width2 * 2
+	     << ", height=" << this->m_height2 * 2
+	     << ", x=" << this->m_x
+	     << ", y=" << this->m_y;
 }
 
 /*

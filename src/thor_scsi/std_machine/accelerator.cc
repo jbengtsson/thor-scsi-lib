@@ -52,10 +52,12 @@ ts::Accelerator::_propagate(thor_scsi::core::ConfigType& conf, ss_vect<T> &ps, s
 		if(aperture){
 			/* could be any aperture ... */
 			bool flag = elem->checkAmplitude(ps);
-			std::cerr << "Element lost at " << elem
-				  << " with aperture " << elem->getAperture()
-				  << std::endl;
 			if(not flag){
+				std::cerr << "Element lost at ";
+				elem->show(std::cerr, 0);
+				std::cerr   << " with aperture ";
+				aperture->show(std::cerr, 0);
+				std::cerr << std::endl;
 				/* get a guess on the plane */
 				auto rect_apt = std::dynamic_pointer_cast<tse::RectangularAperture>(aperture);
 				if(rect_apt){

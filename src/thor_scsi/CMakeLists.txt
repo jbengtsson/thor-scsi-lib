@@ -67,6 +67,7 @@ set(thor_scsi_std_machine_HEADERS
 set(thor_scsi_core_FILES
   core/transform.cc
   core/cell_void.cc
+  core/elements_basis.cc
   core/machine.cc
   core/math_comb.cc
   core/field_interpolation.cc

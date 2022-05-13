@@ -29,6 +29,9 @@ namespace thor_scsi::core {
 		 * Same naming convention as for CellVoid
 		 */
 		virtual const char * type_name(void) const = 0;
+
+		std::string repr(void) const;
+
 	};
 
 	inline
