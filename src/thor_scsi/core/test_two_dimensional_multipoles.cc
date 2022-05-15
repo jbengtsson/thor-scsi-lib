@@ -853,13 +853,204 @@ BOOST_AUTO_TEST_CASE(test100_translate_quadrupole_small)
 }
 
 // tests for supporting engineering tolerances
-BOOST_AUTO_TEST_CASE(test200_add_multipoles)
+BOOST_AUTO_TEST_CASE(test200_add_multipoles_inplace)
 {
 
 	tsc::TwoDimensionalMultipoles h, h2, h3;
 
 	h.setMultipole(1, tsc::cdbl(1, 0));
-	h2.setMultipole(2, tsc::cdbl(1, 0));
+	h2.setMultipole(2, tsc::cdbl(2, 0));
+	{
+		// cross check harmonics properly set
+		const tsc::cdbl c1 = h.getMultipole(1);
+		const tsc::cdbl c2 = h.getMultipole(2);
+		const tsc::cdbl c3 = h.getMultipole(3);
+
+		BOOST_CHECK_CLOSE(c1.real(), 1, 1e-12);
+		BOOST_CHECK_SMALL(c1.imag(), 1e-12);
+		BOOST_CHECK_SMALL(c2.real(), 1e-12);
+		BOOST_CHECK_SMALL(c2.imag(), 1e-12);
+		BOOST_CHECK_SMALL(c3.real(), 1e-12);
+		BOOST_CHECK_SMALL(c3.imag(), 1e-12);
+	}
+
+	{
+		// cross check harmonics properly set
+		const tsc::cdbl c1 = h2.getMultipole(1);
+		const tsc::cdbl c2 = h2.getMultipole(2);
+		const tsc::cdbl c3 = h2.getMultipole(3);
+
+		BOOST_CHECK_SMALL(c1.real(), 1e-12);
+		BOOST_CHECK_SMALL(c1.imag(), 1e-12);
+		BOOST_CHECK_CLOSE(c2.real(), 2, 1e-12);
+		BOOST_CHECK_SMALL(c2.imag(), 1e-12);
+		BOOST_CHECK_SMALL(c3.real(), 1e-12);
+		BOOST_CHECK_SMALL(c3.imag(), 1e-12);
+	}
+
+	h3 += h2;
+	h3 += h;
+	{
+		// cross check harmonics properly set and maintained after math
+		const tsc::cdbl c1 = h.getMultipole(1);
+		const tsc::cdbl c2 = h.getMultipole(2);
+		const tsc::cdbl c3 = h.getMultipole(3);
+
+		BOOST_CHECK_CLOSE(c1.real(), 1, 1e-12);
+		BOOST_CHECK_SMALL(c1.imag(), 1e-12);
+		BOOST_CHECK_SMALL(c2.real(), 1e-12);
+		BOOST_CHECK_SMALL(c2.imag(), 1e-12);
+		BOOST_CHECK_SMALL(c3.real(), 1e-12);
+		BOOST_CHECK_SMALL(c3.imag(), 1e-12);
+	}
+
+	{
+		// cross check harmonics properly set
+		const tsc::cdbl c1 = h2.getMultipole(1);
+		const tsc::cdbl c2 = h2.getMultipole(2);
+		const tsc::cdbl c3 = h2.getMultipole(3);
+
+		BOOST_CHECK_SMALL(c1.real(), 1e-12);
+		BOOST_CHECK_SMALL(c1.imag(), 1e-12);
+		BOOST_CHECK_CLOSE(c2.real(), 2, 1e-12);
+		BOOST_CHECK_SMALL(c2.imag(), 1e-12);
+		BOOST_CHECK_SMALL(c3.real(), 1e-12);
+		BOOST_CHECK_SMALL(c3.imag(), 1e-12);
+	}
+	{
+		// properly assigned
+		// cross check harmonics properly set
+		const tsc::cdbl c1 = h3.getMultipole(1);
+		const tsc::cdbl c2 = h3.getMultipole(2);
+		const tsc::cdbl c3 = h3.getMultipole(3);
+
+		BOOST_CHECK_CLOSE(c1.real(), 1, 1e-12);
+		BOOST_CHECK_SMALL(c1.imag(), 1e-12);
+		BOOST_CHECK_CLOSE(c2.real(), 2, 1e-12);
+		BOOST_CHECK_SMALL(c2.imag(), 1e-12);
+		BOOST_CHECK_SMALL(c3.real(), 1e-12);
+		BOOST_CHECK_SMALL(c3.imag(), 1e-12);
+	}
+
+
+}
+
+BOOST_AUTO_TEST_CASE(test201_add_multipoles)
+{
+
+	tsc::TwoDimensionalMultipoles h, h2, h3;
+
+	h.setMultipole(1, tsc::cdbl(1, 0));
+	h2.setMultipole(2, tsc::cdbl(2, 0));
+	{
+		// cross check harmonics properly set
+		const tsc::cdbl c1 = h.getMultipole(1);
+		const tsc::cdbl c2 = h.getMultipole(2);
+		const tsc::cdbl c3 = h.getMultipole(3);
+
+		BOOST_CHECK_CLOSE(c1.real(), 1, 1e-12);
+		BOOST_CHECK_SMALL(c1.imag(), 1e-12);
+		BOOST_CHECK_SMALL(c2.real(), 1e-12);
+		BOOST_CHECK_SMALL(c2.imag(), 1e-12);
+		BOOST_CHECK_SMALL(c3.real(), 1e-12);
+		BOOST_CHECK_SMALL(c3.imag(), 1e-12);
+	}
+
+	{
+		// cross check harmonics properly set
+		const tsc::cdbl c1 = h2.getMultipole(1);
+		const tsc::cdbl c2 = h2.getMultipole(2);
+		const tsc::cdbl c3 = h2.getMultipole(3);
+
+		BOOST_CHECK_SMALL(c1.real(), 1e-12);
+		BOOST_CHECK_SMALL(c1.imag(), 1e-12);
+		BOOST_CHECK_CLOSE(c2.real(), 2, 1e-12);
+		BOOST_CHECK_SMALL(c2.imag(), 1e-12);
+		BOOST_CHECK_SMALL(c3.real(), 1e-12);
+		BOOST_CHECK_SMALL(c3.imag(), 1e-12);
+	}
 
 	h3 = (h2 + h);
+
+	{
+		// cross check harmonics properly set and maintained after math
+		const tsc::cdbl c1 = h.getMultipole(1);
+		const tsc::cdbl c2 = h.getMultipole(2);
+		const tsc::cdbl c3 = h.getMultipole(3);
+
+		BOOST_CHECK_CLOSE(c1.real(), 1, 1e-12);
+		BOOST_CHECK_SMALL(c1.imag(), 1e-12);
+		BOOST_CHECK_SMALL(c2.real(), 1e-12);
+		BOOST_CHECK_SMALL(c2.imag(), 1e-12);
+		BOOST_CHECK_SMALL(c3.real(), 1e-12);
+		BOOST_CHECK_SMALL(c3.imag(), 1e-12);
+	}
+
+	{
+		// cross check harmonics properly set
+		const tsc::cdbl c1 = h2.getMultipole(1);
+		const tsc::cdbl c2 = h2.getMultipole(2);
+		const tsc::cdbl c3 = h2.getMultipole(3);
+
+		BOOST_CHECK_SMALL(c1.real(), 1e-12);
+		BOOST_CHECK_SMALL(c1.imag(), 1e-12);
+		BOOST_CHECK_CLOSE(c2.real(), 2, 1e-12);
+		BOOST_CHECK_SMALL(c2.imag(), 1e-12);
+		BOOST_CHECK_SMALL(c3.real(), 1e-12);
+		BOOST_CHECK_SMALL(c3.imag(), 1e-12);
+	}
+	{
+		// properly assigned
+		// cross check harmonics properly set
+		const tsc::cdbl c1 = h3.getMultipole(1);
+		const tsc::cdbl c2 = h3.getMultipole(2);
+		const tsc::cdbl c3 = h3.getMultipole(3);
+
+		BOOST_CHECK_CLOSE(c1.real(), 1, 1e-12);
+		BOOST_CHECK_SMALL(c1.imag(), 1e-12);
+		BOOST_CHECK_CLOSE(c2.real(), 2, 1e-12);
+		BOOST_CHECK_SMALL(c2.imag(), 1e-12);
+		BOOST_CHECK_SMALL(c3.real(), 1e-12);
+		BOOST_CHECK_SMALL(c3.imag(), 1e-12);
+	}
+
+
+}
+
+BOOST_AUTO_TEST_CASE(test210_mul_multipoles_inplace)
+{
+
+	tsc::TwoDimensionalMultipoles h;
+	const double b1 = 5e0, b2 = 7e0, scale = 3e0;
+	h.setMultipole(1, tsc::cdbl(b1, 0));
+	h.setMultipole(2, tsc::cdbl(b2, 0));
+
+	{
+		// properly assigned
+		// cross check harmonics properly set
+		const tsc::cdbl c1 = h.getMultipole(1);
+		const tsc::cdbl c2 = h.getMultipole(2);
+		const tsc::cdbl c3 = h.getMultipole(3);
+		BOOST_CHECK_CLOSE(c1.real(), b1, 1e-12);
+		BOOST_CHECK_SMALL(c1.imag(), 1e-12);
+		BOOST_CHECK_CLOSE(c2.real(), b2, 1e-12);
+		BOOST_CHECK_SMALL(c2.imag(), 1e-12);
+		BOOST_CHECK_SMALL(c3.real(), 1e-12);
+		BOOST_CHECK_SMALL(c3.imag(), 1e-12);
+	}
+
+	h *= scale;
+	{
+		// properly assigned
+		// cross check harmonics properly set
+		const tsc::cdbl c1 = h.getMultipole(1);
+		const tsc::cdbl c2 = h.getMultipole(2);
+		const tsc::cdbl c3 = h.getMultipole(3);
+		BOOST_CHECK_CLOSE(c1.real(), b1 * scale , 1e-12);
+		BOOST_CHECK_SMALL(c1.imag(), 1e-12);
+		BOOST_CHECK_CLOSE(c2.real(), b2 * scale , 1e-12);
+		BOOST_CHECK_SMALL(c2.imag(), 1e-12);
+		BOOST_CHECK_SMALL(c3.real(), 1e-12);
+		BOOST_CHECK_SMALL(c3.imag(), 1e-12);
+	}
 }

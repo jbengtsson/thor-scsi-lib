@@ -1,6 +1,8 @@
 #include <thor_scsi/core/multipoles.h>
 #include <thor_scsi/core/math_comb.h>
 #include <tps/utils.h>
+#include <algorithm>
+
 namespace tsc = thor_scsi::core;
 
 tsc::TwoDimensionalMultipoles::TwoDimensionalMultipoles(const unsigned int h_max)
@@ -51,29 +53,29 @@ tsc::TwoDimensionalMultipoles::TwoDimensionalMultipoles(std::vector<cdbl_intern>
 }
 
 
-
-
-tsc::TwoDimensionalMultipoles tsc::TwoDimensionalMultipoles::operator + (const tsc::TwoDimensionalMultipoles &other) const
+tsc::TwoDimensionalMultipoles& tsc::TwoDimensionalMultipoles::operator += (const tsc::TwoDimensionalMultipoles &other)
 {
+
+	if(this->getCoeffs().size() != other.getCoeffs().size()){
+		throw std::runtime_error("Length of coeffcients does not match");
+	}
+	auto& c = this->getCoeffs();
+	auto& oc = other.getCoeffs();
+
+	std::transform(oc.begin(), oc.end(), c.begin(), c.begin(), std::plus<>());
+
+	return *this;
+}
+
+tsc::TwoDimensionalMultipoles tsc::TwoDimensionalMultipoles::operator+ (const tsc::TwoDimensionalMultipoles &other) const
+{
+
 	unsigned int n = std::max(this->getCoeffs().size(), other.getCoeffs().size());
-	unsigned int i;
-
 	TwoDimensionalMultipoles nh(n);
-	auto ncoeffs = nh.getCoeffs();
-
-	i = 0;
-	for(auto c : this->getCoeffs()){
-		ncoeffs[i] = c;
-		++i;
-	}
-
-	i = 0;
-	for(auto c : other.getCoeffs()){
-		ncoeffs[i] = c;
-		++i;
-	}
-
+	nh += *this;
+	nh += other;
 	return nh;
+
 }
 
 void tsc::TwoDimensionalMultipoles::show(std::ostream& strm, int level) const

@@ -1,11 +1,11 @@
 #ifndef _THOR_SCSI_CORE_MULTIPOLES_H_
 #define _THOR_SCSI_CORE_MULTIPOLES_H_ 1
-#include <vector>
+#include <algorithm>
 #include <complex>
 #include <cassert>
-#include <stdexcept>
 #include <ostream>
-
+#include <vector>
+#include <stdexcept>
 #include <thor_scsi/core/field_interpolation.h>
 #include <thor_scsi/core/exceptions.h>
 
@@ -304,10 +304,12 @@ namespace thor_scsi::core {
 		 *
 		 * \endverbatim
 		 */
-		inline TwoDimensionalMultipoles& operator *= (const double scale){
-			for(unsigned int i = 0; i< this->coeffs.size(); ++i){
-				this->coeffs[i] *= scale;
-			}
+		TwoDimensionalMultipoles& operator *= (const double scale){
+			auto& c = this->coeffs;
+			auto f = [scale](const thor_scsi::core::cdbl_intern c){
+					 return c * scale;
+				 };
+			std::transform(c.begin(), c.end(), c.begin(), f);
 			return *this;
 		}
 
@@ -341,6 +343,7 @@ namespace thor_scsi::core {
 		 * \endverbatim
 		 */
 		TwoDimensionalMultipoles operator +(const TwoDimensionalMultipoles &other) const;
+		TwoDimensionalMultipoles& operator +=(const TwoDimensionalMultipoles &other);
 
 		/**
 		 * The maximum index represented.
