@@ -73,6 +73,10 @@ python/README.rst
 **/__pycache__/
 *.py[cod]
 
+# numpy data files
+*.npy
+.ipynb_checkpoints/
+
 # Documentation: automatically generated files
 # docs/Doxygen/gen_docs/
 # docs/Doxygen/xml/
