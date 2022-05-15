@@ -20,20 +20,20 @@ target_link_libraries(test_transform
 add_test(transform test_transform)
 
 
-add_executable(test_multipoles_planar
-  test_multipoles_planar.cc
+add_executable(test_two_dimensional_multipoles
+  test_two_dimensional_multipoles.cc
   multipoles.cc
   # multipoles_extra.cc
   math_comb.cc
 )
-add_test(multipoles_planar test_multipoles_planar)
+add_test(two_dimensional_multipoles test_two_dimensional_multipoles)
 
-target_include_directories(test_multipoles_planar
+target_include_directories(test_two_dimensional_multipoles
     PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../../>"
     "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )
-target_link_libraries(test_multipoles_planar
+target_link_libraries(test_two_dimensional_multipoles
   # PRIVATE Boost::boost
   #  quadmath
   # gsl
@@ -43,7 +43,7 @@ target_link_libraries(test_multipoles_planar
     ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
 )
 
-target_include_directories(test_multipoles_planar
+target_include_directories(test_two_dimensional_multipoles
     PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../../>"
     "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"

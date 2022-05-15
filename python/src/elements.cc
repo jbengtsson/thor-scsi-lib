@@ -255,15 +255,15 @@ void py_thor_scsi_init_elements(py::module &m)
 	 * Needs to be defined as shared ptr class as it is returned as shared pointer
 	 * by classical magnet's method getMultipoles
 	*/
-	py::class_<tsc::PlanarMultipoles, std::shared_ptr<tsc::PlanarMultipoles>>(m, "TwoDimensionalMultipoles")
-		.def("getMultipole",     &tsc::PlanarMultipoles::getMultipole)
-		.def("setMultipole",     &tsc::PlanarMultipoles::setMultipole)
-		.def("applyRollAngle",   &tsc::PlanarMultipoles::applyRollAngle)
-		.def("__str__",          &tsc::PlanarMultipoles::pstr)
-		.def("__repr__",         &tsc::PlanarMultipoles::repr)
-		.def("getCoefficients",  &tsc::PlanarMultipoles::getCoeffsConst)
-		.def("applyTranslation", py::overload_cast<const tsc::cdbl>(&tsc::PlanarMultipoles::applyTranslation))
-		.def("applyTranslation", py::overload_cast<const double, const double>(&tsc::PlanarMultipoles::applyTranslation))
+	py::class_<tsc::TwoDimensionalMultipoles, std::shared_ptr<tsc::TwoDimensionalMultipoles>>(m, "TwoDimensionalMultipoles")
+		.def("getMultipole",     &tsc::TwoDimensionalMultipoles::getMultipole)
+		.def("setMultipole",     &tsc::TwoDimensionalMultipoles::setMultipole)
+		.def("applyRollAngle",   &tsc::TwoDimensionalMultipoles::applyRollAngle)
+		.def("__str__",          &tsc::TwoDimensionalMultipoles::pstr)
+		.def("__repr__",         &tsc::TwoDimensionalMultipoles::repr)
+		.def("getCoefficients",  &tsc::TwoDimensionalMultipoles::getCoeffsConst)
+		.def("applyTranslation", py::overload_cast<const tsc::cdbl>(&tsc::TwoDimensionalMultipoles::applyTranslation))
+		.def("applyTranslation", py::overload_cast<const double, const double>(&tsc::TwoDimensionalMultipoles::applyTranslation))
 		.def(py::init<>());
 
 	py::class_<tse::FieldKick, std::shared_ptr<tse::FieldKick>> field_kick(m, "FieldKick", elem_type);
