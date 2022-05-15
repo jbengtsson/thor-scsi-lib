@@ -20,7 +20,7 @@ namespace thor_scsi::elements {
 		 * \endverbatim
 		 */
 		inline MpoleType(const Config &config) : FieldKick(config){
-			std::shared_ptr<thor_scsi::core::PlanarMultipoles> tmp(new thor_scsi::core::PlanarMultipoles);
+			std::shared_ptr<thor_scsi::core::TwoDimensionalMultipoles> tmp(new thor_scsi::core::TwoDimensionalMultipoles);
 			this->intp = std::move(std::dynamic_pointer_cast<thor_scsi::core::Field2DInterpolation>(tmp));
 			/*
 			  std::cerr << "Mpole Type: " << std::setw(10) << name << " interpolation object " << this->intp  << std::endl;
@@ -32,12 +32,12 @@ namespace thor_scsi::elements {
 		const char* type_name(void) const override { return "mpole"; };
 
 		inline auto getFieldInterpolator(void) const {
-			auto p = std::dynamic_pointer_cast<thor_scsi::core::PlanarMultipoles>(this->intp);
-			return std::const_pointer_cast<thor_scsi::core::PlanarMultipoles>(p);
+			auto p = std::dynamic_pointer_cast<thor_scsi::core::TwoDimensionalMultipoles>(this->intp);
+			return std::const_pointer_cast<thor_scsi::core::TwoDimensionalMultipoles>(p);
 		}
 
 
-		//thor_scsi::core::PlanarMultipoles* intp;
+		//thor_scsi::core::TwoDimensionalMultipoles* intp;
 	};
 
 } // Name space

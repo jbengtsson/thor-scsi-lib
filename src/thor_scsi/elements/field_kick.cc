@@ -382,7 +382,7 @@ void tse::FieldKick::_quadFringe(thor_scsi::core::ConfigType &conf, ss_vect<T> &
 		  << "Code not yet tested " << std::endl;
 	throw thor_scsi::NotImplemented("Quadrupole fringe implemented but code not yet tested");
 
-	auto muls = std::dynamic_pointer_cast<tsc::PlanarMultipoles>(this->getFieldInterpolator());
+	auto muls = std::dynamic_pointer_cast<tsc::TwoDimensionalMultipoles>(this->getFieldInterpolator());
 	if(!muls){
 		std::cerr << __FILE__ << "::" << __FUNCTION__ << "@" << __LINE__
 			  << "Quadfringe can currently only be calculated for "

@@ -13,7 +13,7 @@
 namespace tsc = thor_scsi::core;
 namespace tse = thor_scsi::elements;
 
-static void check_only_quad_set(std::shared_ptr<tsc::PlanarMultipoles> muls, const tsc::cdbl ref)
+static void check_only_quad_set(std::shared_ptr<tsc::TwoDimensionalMultipoles> muls, const tsc::cdbl ref)
 {
 	check_only_major_multipole_set(muls, ref, 2);
 }
