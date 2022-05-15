@@ -6,8 +6,21 @@
 #include <tps/ss_vect.h>
 
 namespace thor_scsi {
+
 	typedef ss_vect<tps> ss_vect_tps;
 	typedef ss_vect<double> ss_vect_dbl;
+
+	/**
+	 * @brief propagation result of accelerator
+	 *
+	 * Motivated by how one should report lost elements ...
+	 * ConfigType is not the place to store it ...
+	 */
+	class PropagationResult {
+		int last_element;
+		int loss_plane;
+		bool success;
+	};
 
 	class Accelerator : public thor_scsi::core::Machine {
 	public:
@@ -33,6 +46,7 @@ namespace thor_scsi {
 		int propagate(thor_scsi::core::ConfigType&, ss_vect_dbl &ps,
 			       size_t start=0,
 			       int max_elements=std::numeric_limits<int>::max());
+
 	};
   }
 #endif // _THOR_SCSI_STD_MACHINE_ACCELERATOR_

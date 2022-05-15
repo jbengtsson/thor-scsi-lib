@@ -26,8 +26,29 @@ ts::Accelerator::_propagate(thor_scsi::core::ConfigType& conf, ss_vect<T> &ps, s
 	for(int i=start; next_elem >= 0 && next_elem<nelem && i<std::abs(max_elements); i++)
 	{
 		size_t n = next_elem;
-		std::shared_ptr<tsc::CellVoid> cv = this->at(n);
 
+		// Investigating some strange test fails
+#if 1
+		// This version was rechecked ... does not produce strange test results neither
+		// leave it as is
+		std::shared_ptr<tsc::CellVoid> cv = this->at(n);
+#else
+		// This version does not produce test failures ...
+		try{
+			cv = this->at(n);
+		}
+		catch(std::out_of_range &e){
+			THOR_SCSI_LOG(ERROR) << "Failed to retrieve element " << n
+					     << ": "  << e.what() << "\n";
+			throw e;
+		}
+		catch(...){
+			std::exception_ptr p = std::current_exception();
+			THOR_SCSI_LOG(ERROR) << "Failed to retrieve element " << n
+					     << (p ? p.__cxa_exception_type()->name() : "null") << "\n";
+			throw(p);
+		}
+#endif
 		if(retreat) {
 			next_elem--;
 		} else {
@@ -36,7 +57,8 @@ ts::Accelerator::_propagate(thor_scsi::core::ConfigType& conf, ss_vect<T> &ps, s
 		auto elem = std::dynamic_pointer_cast<tsc::ElemType>(cv);
 		if(!elem){
 			// Should raise an exception!
-			std::cerr << "Failed to cast to element to Elemtype " << cv->name << std::endl;
+			// THOR_SCSI_LOG(ERROR) << "Failed to cast to element to Elemtype " << cv->name << "\n";
+			std::runtime_error("Could not cast cell void to elemtype");
 			return next_elem;
 		}
 
@@ -53,11 +75,8 @@ ts::Accelerator::_propagate(thor_scsi::core::ConfigType& conf, ss_vect<T> &ps, s
 			/* could be any aperture ... */
 			bool flag = elem->checkAmplitude(ps);
 			if(not flag){
-				std::cerr << "Element lost at ";
-				elem->show(std::cerr, 0);
-				std::cerr   << " with aperture ";
-				aperture->show(std::cerr, 0);
-				std::cerr << std::endl;
+				THOR_SCSI_LOG(INFO) << "Element lost at " << elem.get()
+						    <<" with aperture " << aperture.get();
 				/* get a guess on the plane */
 				auto rect_apt = std::dynamic_pointer_cast<tse::RectangularAperture>(aperture);
 				if(rect_apt){
@@ -77,6 +96,7 @@ ts::Accelerator::_propagate(thor_scsi::core::ConfigType& conf, ss_vect<T> &ps, s
 		if(trace)
 			(*trace) << "After ["<< n<< "] " << cv->name << " " <<std::endl << ps << std::endl;
 	}
+	return next_elem;
 }
 
 

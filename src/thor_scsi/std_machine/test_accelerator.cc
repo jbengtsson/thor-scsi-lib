@@ -221,23 +221,38 @@ BOOST_AUTO_TEST_CASE(test80_standard_observer)
 		cv->set_observer(std::dynamic_pointer_cast<tsc::Observer>(ob));
 	}
 
-	std::cout << "Machine dump " << std::endl;
-	for(auto& cv: machine){
-		cv->show(std::cout, 10);
-		std::cout << std::endl;
+	{
+		boost::test_tools::output_test_stream output;
+		for(auto& cv: machine){
+			cv->show(output, 10);
+		}
+		BOOST_CHECK( !output.is_empty( false ) );
+
 	}
 
 	ss_vect<tps> ps;
 	ps.set_identity();
 	auto calc_config = tsc::ConfigType();
 
-	machine.propagate(calc_config, ps);
+	int next_element = machine.propagate(calc_config, ps);
+	BOOST_CHECK(next_element == 1);
 
-	for(auto cv: machine){
-		cv->show(std::cout, 10);
-		std::cout << std::endl;
+	// Iteration still works after processing ...
+	{
+		boost::test_tools::output_test_stream output;
+		for(auto& cv: machine){
+			cv->show(output, 10);
+		}
+		BOOST_CHECK( !output.is_empty( false ) );
+
 	}
-
+	auto ob = machine[0]->observer();
+	auto std_ob = std::dynamic_pointer_cast<tse::StandardObserver>(ob);
+	BOOST_CHECK(std_ob);
+	BOOST_CHECK(std_ob->getObservedIndex() == 0);
+	BOOST_CHECK(std_ob->getObservedName() == "q4m2d1r");
+	BOOST_CHECK(std_ob->hasTruncatedPowerSeries());
+	BOOST_CHECK(!std_ob->hasPhaseSpace());
 
 }
 
