@@ -27,28 +27,7 @@ ts::Accelerator::_propagate(thor_scsi::core::ConfigType& conf, ss_vect<T> &ps, s
 	{
 		size_t n = next_elem;
 
-		// Investigating some strange test fails
-#if 1
-		// This version was rechecked ... does not produce strange test results neither
-		// leave it as is
 		std::shared_ptr<tsc::CellVoid> cv = this->at(n);
-#else
-		// This version does not produce test failures ...
-		try{
-			cv = this->at(n);
-		}
-		catch(std::out_of_range &e){
-			THOR_SCSI_LOG(ERROR) << "Failed to retrieve element " << n
-					     << ": "  << e.what() << "\n";
-			throw e;
-		}
-		catch(...){
-			std::exception_ptr p = std::current_exception();
-			THOR_SCSI_LOG(ERROR) << "Failed to retrieve element " << n
-					     << (p ? p.__cxa_exception_type()->name() : "null") << "\n";
-			throw(p);
-		}
-#endif
 		if(retreat) {
 			next_elem--;
 		} else {
