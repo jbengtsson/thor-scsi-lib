@@ -391,7 +391,7 @@ namespace thor_scsi::core {
 			return this->getCoeffs();
 		}
 
-virtual void show(std::ostream& strm, int level) const override final;
+		virtual void show(std::ostream& strm, int level) const override final;
 
 	private:
 		unsigned int m_max_multipole;
@@ -400,18 +400,6 @@ virtual void show(std::ostream& strm, int level) const override final;
 
 	};
 
-#if 0
-	/// convert representation to tracy representation
-	std::vector<double> toTracyRepresentation(const std::vector<cdbl> &coeffs);
-
-
-	// why should one need that ...
-	// void toMultipoleRepresentation(std::vector<cdbl> vec);
-
-	// consider if caching the coefficients internally is a good idea
-	// If all code constantly access them, it would be a good idea
-	// std::vector<<double> coeffs_tracy_representation;
-#endif
 }
 #endif /* _THOR_SCSI_MULTIPOLES_H_ */
 /*
