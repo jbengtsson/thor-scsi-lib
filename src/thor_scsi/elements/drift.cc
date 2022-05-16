@@ -27,7 +27,7 @@ template void tse::DriftType::_pass(const tsc::ConfigType &conf, ss_vect<tps> &p
 
 
 /*
- * Local Variables:-
+ * Local Variables:
  * mode: c++
  * c-file-style: "python"
  * End:
