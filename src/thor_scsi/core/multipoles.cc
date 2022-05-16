@@ -110,39 +110,6 @@ void tsc::TwoDimensionalMultipoles::applyTranslation(const tsc::cdbl dzs)
 	}
 }
 
-#if 0
-std::vector<double> toTracyRepresentation(const std::vector<cdbl> &coeffs)
-{
-	/*
-	 * Todo:
-	 *    Check if this should not always be to size HOMmax
-	 */
-	std::vector<double> tracy_coeffs(coeffs.size() * 2);
-
-	// #define HOMmax   21     // [a_n, b_n] <=> [-HOMmax..HOMmax].
-	int i = 0;
-	for(auto c : coeffs){
-		/*
-		 * the skew harmonics
-		 * Todo:
-		 *     check if tracy requires a negative flag here
-		 */
-		tracy_coeffs[i] = c.imag();
-		++ i;
-	}
-
-	// followed by the normal ones: don't reset i they just follow afterwards
-	/*
-	 * Todo:
-	 *    Check if 0 is normal or skew or empty
-	 */
-	for(auto c : coeffs){
-		tracy_coeffs[i] = c.real();
-	}
-	return tracy_coeffs;
-
-}
-#endif
 
 /*
  * Local Variables:
