@@ -31,8 +31,6 @@ target_include_directories(lib
   PUBLIC
   ${ARMADILLO_INCLUDE_DIRS}
   ${flame_INCLUDE_DIR}
-  # Hack for pybind11 on Pierre's laptop
-    "$<BUILD_INTERFACE:/home/mfp/.local/lib/python3.8/site-packages/pybind11/include/>"
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../src/>"
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../../flame/src/>"
     "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
