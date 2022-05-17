@@ -1,10 +1,5 @@
 include(../../cmake/gpp_warnings.cmake)
 
-
-
-# get_filename_component(thor_scsi_INCLUDE_DIR "${CMAKE_CURRENT_LIST_DIR}//../inc/" ABSOLUTE)
-# get_filename_component(thor_scsi_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../inc/" ABSOLUTE)
-
 add_subdirectory(core)
 
 if(FLAME_INTERNAL)
@@ -15,7 +10,6 @@ else()
 endif()
 
 include_directories(
-#  ${thor_scsi_INCLUDE_DIR}
   ${flame_INCLUDE_DIR}
 )
 
@@ -89,17 +83,6 @@ set(thor_scsi_core_FILES
   elements/standard_observer.cc
   std_machine/std_machine.cc
   std_machine/accelerator.cc
-  # thor_lib.cc
-  # t2cell.cc
-  # t2lat.cc
-  # radia2tracy.cc
-  # legacy/io.cc
-  # ety.cc
-  # eigenv.cc
-  # prtmfile.cc
-  # rdmfile.cc
-  # lsoc.cc
-  # set_errors.cc
 )
 
 add_library(thor_scsi_core SHARED
@@ -110,7 +93,7 @@ add_library(thor_scsi::core ALIAS thor_scsi_core)
 
 target_include_directories(thor_scsi_core
     PUBLIC
-    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../>"
+    "$<BUILD_INTERFACE:${thor_scsi_INCLUDE_DIR}>"
     "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )
 

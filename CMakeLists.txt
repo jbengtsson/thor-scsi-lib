@@ -1,15 +1,19 @@
 cmake_minimum_required(VERSION 3.0.0)
 
 project("thor_scsi" LANGUAGES CXX Fortran)
-# project("thor_scsi")
 
 ENABLE_LANGUAGE(Fortran)
 
 set(THOR_SCSI_VERSION 0.0.1)
 
+# option(PYTHON_MODULE_INSTALL "Install python module" OFF)
+option(PYTHON_MODULE_DEVELOPMENT_INSTALL "Install python binary module to source directory" ON)
+
+
 # specify the C++ standard
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
+
 
 if(CMAKE_COMPILER_IS_GNUCXX)
   add_definitions(-g -ggdb -pedantic -Wall)
@@ -50,5 +54,6 @@ endif()
 add_subdirectory(TPSA)
 # C++ implementation part
 add_subdirectory(src)
-# add_subdirectory(thor)
+
+# python wrapper
 add_subdirectory(python)
