@@ -7,6 +7,13 @@ include(../../cmake/gpp_warnings.cmake)
 
 add_subdirectory(core)
 
+if(FLAME_INTERNAL)
+    set(flame_INCLUDE_DIR "${flame_SOURCE_DIR}/src/")
+    message(STATUS "Using internal flame from subdirectory flame include dir ${flame_INCLUDE_DIR}")
+else()
+    message(STATUS "using external flame library")
+endif()
+
 include_directories(
 #  ${thor_scsi_INCLUDE_DIR}
   ${flame_INCLUDE_DIR}
@@ -19,17 +26,6 @@ set(thor_scsi_HEADERS
 
 # Needs to be fixed ... reorganisation of files
 set(thor_scsi_core_HEADERS
-  # ${thor_scsi_INCLUDE_DIR}/thor_scsi/core/exceptions.h
-  # ${thor_scsi_INCLUDE_DIR}/thor_scsi/core/lattice_filter.h
-  # ${thor_scsi_INCLUDE_DIR}/thor_scsi/core/constants.h
-  # ${thor_scsi_INCLUDE_DIR}/thor_scsi/core/defines.h
-  # ${thor_scsi_INCLUDE_DIR}/thor_scsi/core/elements.h
-  # ${thor_scsi_INCLUDE_DIR}/thor_scsi/core/core.h
-  # ${thor_scsi_INCLUDE_DIR}/thor_scsi/core/elements_enums.h
-  # ${thor_scsi_INCLUDE_DIR}/thor_scsi/core/elements_filter.h
-  # ${thor_scsi_INCLUDE_DIR}/thor_scsi/core/lattice.h
-  # ${thor_scsi_INCLUDE_DIR}/thor_scsi/core/config.h
-  # ${thor_scsi_INCLUDE_DIR}/thor_scsi/core/cpp_version.h
   core/exceptions.h
   core/config.h
   core/machine.h
@@ -123,7 +119,8 @@ target_link_libraries(thor_scsi_core
   # Todo: need to learn how to instruct cmake that this
   # dependency will be exported properly
   tpsa_lin
-  ${flame_CORE_LIBRARY}
+  flame::core
+  # ${flame_CORE_LIBRARY}
   ${ARMADILLO_LIBRARIES}
 )
 

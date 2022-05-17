@@ -1,4 +1,4 @@
-from thor_scsi.flame import GLPSParser, Config
+from thor_scsi.pyflame import GLPSParser, Config
 from thor_scsi.lib import Accelerator
 import os
 

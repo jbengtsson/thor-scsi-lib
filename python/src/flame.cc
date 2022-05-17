@@ -25,7 +25,7 @@ void py_flame_init(py::module_ &m)
 
 }
 
-PYBIND11_MODULE(flame, m) {
+PYBIND11_MODULE(pyflame, m) {
 	m.doc() = "Machinery of FLAME to construct accelerator (but without FLAMES)";
 	py_flame_init(m);
 }

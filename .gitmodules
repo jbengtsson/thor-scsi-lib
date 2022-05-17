@@ -1,0 +1,3 @@
+[submodule "flame"]
+	path = flame
+	url = https://github.com/PierreSchnizer/FLAME.git
