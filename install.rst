@@ -1,6 +1,7 @@
 Installing thor_scsi
 ====================
 
+
 Dependencies
 ------------
 
@@ -10,8 +11,41 @@ Dependencies
     - std::variant
     - std::ranges
 
+- modern fortran compiler
+
 - cmake
 - pybind 11
+- armadillo matrix library
+
+- dependencies for building flame library:
+
+   - flex and bison
+
+
+Packages to be installed on Ubuntu 22 LTS
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. ::
+
+  sudo apt-get install bison flex cmake g++ gfortran libarmadillo-dev libboost-all-dev pybind11-dev python3-xarray
+
+
+
+Checking out repository
+-----------------------
+
+.. ::
+
+   git clone
+
+
+change to the directory then run
+
+.. ::
+
+   git submodule init
+   git submodule update
+
 
 
 Helping CMAKE find subcomponents
