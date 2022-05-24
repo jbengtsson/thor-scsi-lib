@@ -13,7 +13,8 @@ from thor_scsi.lib import (
 #    phase_space_indicator,
     ObservedState,
     ss_vect_tps_to_mat,
-    partialInverse
+    partialInverse,
+    xabs
 )
 
 import os
@@ -84,7 +85,7 @@ def get_map(M):
     map.set_zero()
     for j in range(len(M)):
         for k in range(len(M[0])):
-            map[j] += M[j][k]*Id[k] 
+            map[j] += M[j][k]*Id[k]
     return map
 
 
@@ -477,7 +478,7 @@ def test_stuff(n):
 
 
 def compute_closed_orbit(acc, conf, delta, n_max, eps):
-    jj  = np.zeros(ss_dim)
+    jj  = np.zeros(ss_dim, np.int)
     x0  = ss_vect_double()
     x1  = ss_vect_double()
     dx  = ss_vect_double()
@@ -534,13 +535,14 @@ def compute_closed_orbit(acc, conf, delta, n_max, eps):
         M.set_identity()
         M += x0
 
-#        acc.propagate(conf, M, s_loc) 
-        acc.propagate(conf, M) 
+#        acc.propagate(conf, M, s_loc)
+        acc.propagate(conf, M)
 
         if (True or (s_loc == n_Loc)):
             x1 = M.cst()
             dx = x0 - x1
-            dx0 = partialInverse(M-I-x1)*x
+            tmp = M-I-x1
+            dx0 = partialInverse(tmp, jj) * dx
             dx_abs = xabs(n, dx)
             x0 += dx0.cst()
         else:
@@ -548,8 +550,8 @@ def compute_closed_orbit(acc, conf, delta, n_max, eps):
             break
 
     if debug:
-        print("{:3d} err = {:7.1e}/{:7.1e}  x0 = {:13.5e}\n".
-              format(n_iter, dx_abs, eps, x0))
+        print(f"{n_iter:3d} err = {dx_abs:7.1e}/{eps:7.1e}  x0 = {x0}")
+        prt_np_vec("x0", x0)
 
     cod = dx_abs < eps
 
