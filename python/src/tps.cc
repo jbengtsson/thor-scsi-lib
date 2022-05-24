@@ -39,7 +39,8 @@ static auto declare_ss_vect(py::module &m, const std::string pyclass_name) {
 	a_class
 		.def("set_identity", &ss_vect<T>::set_identity)
 		.def("set_zero",     &ss_vect<T>::set_zero)
-		//.def("cst",          &ss_vect<T>::cst, "return constant term")
+		// J.B. 23-05-22: enabled cst.
+		.def("cst",          &ss_vect<T>::cst, "return constant term")
 		/*
 		.def("__eq__",       [](const ss_vect<T> &self, (const ss_vect<T> &a)){
 					     return self.cst() == a.cst();
@@ -67,6 +68,20 @@ static auto declare_ss_vect(py::module &m, const std::string pyclass_name) {
 		.def(py::self + py::self)
 		.def(py::self - py::self)
 		*/
+		// J.B. 23-05-22: added missing ss_vect<> operators.
+		.def(py::self += py::self)
+		.def(py::self += ss_vect<double>())
+
+		.def(py::self -= py::self)
+		.def(py::self -= ss_vect<double>())
+
+		.def(py::self + py::self)
+		.def(py::self + ss_vect<double>())
+		.def(ss_vect<double>() - py::self)
+
+		.def(py::self - py::self)
+		.def(py::self - ss_vect<double>())
+		.def(ss_vect<double>() - py::self)
 		//
 		.def(py::init<>());
 	return a_class;
@@ -155,6 +170,8 @@ void py_thor_scsi_init_tps(py::module &m)
 				     self.pook(idx, val);
 			     }, "set value at this set of 7 indices")
 
+// Bug J.B. 23-05-22: += missing.
+		.def(py::self += py::self)
 		.def(py::self -= py::self)
 		.def(py::self *= py::self)
 		.def(py::self /= py::self)
@@ -187,6 +204,8 @@ void py_thor_scsi_init_tps(py::module &m)
 
 	auto ss_vect_double = declare_ss_vect<double>(m, "ss_vect_double");
 	auto ss_vect_tps = declare_ss_vect<tps>(m, "ss_vect_tps");
+	m.def("partialInverse", &PInv, "partial inverse depending on the numbers of freedoms");
+	m.def("inverse", &Inv, "full inverse");
 #if 0
 	ss_vect_tps
 		.def("__getitem__", [](ss_vect<tps> &ps, py::sequence &seq) -> double {

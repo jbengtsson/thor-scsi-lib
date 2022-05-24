@@ -12,7 +12,8 @@ from thor_scsi.lib import (
     RadiationDelegateKick,
 #    phase_space_indicator,
     ObservedState,
-    ss_vect_tps_to_mat
+    ss_vect_tps_to_mat,
+    partialInverse
 )
 
 import os
@@ -22,6 +23,53 @@ import numpy as np
 
 [X_, Y_, Z_]                    = [0, 1, 2]
 [x_, px_, y_, py_, ct_, delta_] = [0, 1, 2, 3, 5, 4]
+
+ss_dim = 6
+
+
+def prt_np_vec(str, vec):
+    print(str, end="")
+    for k in range(len(vec)):
+        print("{:15.6e}".format(vec[k]), end="")
+    print()
+
+
+def prt_np_cmplx_vec(str, vec):
+    print(str, end="")
+    for k in range(len(vec)):
+        print("{:12.3e} {:} {:9.3e}i".
+              format(vec[k].real, "+-"[int(vec[k].imag < 0)], abs(vec[k].imag)),
+              end="")
+    print()
+
+
+def prt_np_mat(str, mat):
+    print(str, end="")
+    for k in range(len(mat)):
+        prt_np_vec("", mat[k])
+
+
+def prt_np_cmplx_mat(str, mat):
+    print(str, end="")
+    for k in range(len(mat)):
+        prt_np_cmplx_vec("", mat[k])
+
+
+def prt_ps_vec(str, ps):
+    n = 6
+    print(str, end="")
+    for k in range(n):
+        print("{:11.3e}".format(ps[k]), end="")
+    print()
+
+
+def prt_map(str, map):
+    n = 6
+    print(str, end="")
+    for j in range(n):
+        for k in range(n):
+            print("{:15.6e}".format(map[j][k]), end="")
+        print()
 
 
 def get_mat(map):
@@ -38,34 +86,6 @@ def get_map(M):
         for k in range(len(M[0])):
             map[j] += M[j][k]*Id[k] 
     return map
-
-
-def prt_np_cmplx_vec(str, vec):
-    print(str, end="")
-    for k in range(len(vec)):
-        print("{:12.3e} {:} {:9.3e}i".
-              format(vec[k].real, "+-"[int(vec[k].imag < 0)], abs(vec[k].imag)),
-              end="")
-    print()
-
-
-def prt_np_vec(str, vec):
-    print(str, end="")
-    for k in range(len(vec)):
-        print("{:15.6e}".format(vec[k]), end="")
-    print()
-
-
-def prt_np_cmplx_mat(str, mat):
-    print(str, end="")
-    for k in range(len(mat)):
-        prt_np_cmplx_vec("", mat[k])
-
-
-def prt_np_mat(str, mat):
-    print(str, end="")
-    for k in range(len(mat)):
-        prt_np_vec("", mat[k])
 
 
 def compute_nu(M):
@@ -456,43 +476,45 @@ def test_stuff(n):
                np.linalg.multi_dot([np.linalg.inv(A), M, A]))
 
 
-def compute_closed_orbit(acc, conf, n_max, eps, delta, s_loc):
+def compute_closed_orbit(acc, conf, delta, n_max, eps):
+    jj  = np.zeros(ss_dim)
     x0  = ss_vect_double()
     x1  = ss_vect_double()
     dx  = ss_vect_double()
-    I   = ss_vect_tps()
     dx0 = ss_vect_tps()
+    I   = ss_vect_tps()
     M   = ss_vect_tps()
 
     debug = True
+
+    n_loc = len(acc)
 
     if conf.Cavity_on:
         n = 6
     else:
         n = 4
 
-    no = no_tps
-    danot_(1)
-
-    first = true
+    first = True
 
     if debug:
-        printf("\nCell_getCOD:\n")
+        print("\ncompute_closed_orbit:")
 
-    if (globval.mat_meth and (first or (delta != globval.dPparticle))):
+    if (conf.mat_meth and (first or (delta != conf.dPparticle))):
         # Recompute transport matrices.
         if (debug):
-            printf("  recomputing transport matrices:  delta = %9.3e (%9.3e)"
-	           " first = %1d\n",
-	           delta, globval.dPparticle, first)
+            print("  recomputing transport matrices:  delta = {:9.3e} ({:9.3e})"
+	           " first = %1d".format(delta, conf.dPparticle, first))
         get_lin_maps(delta)
         conf.dPparticle = delta
         first = False
 
     conf.dPparticle = delta
 
-    x0.zero()
+    x0.set_zero()
     x0[delta_] = delta
+
+    for k in range(ss_dim):
+        jj[k] = 1 if k < n else 0
 
     if False:
         # For 2.5 D.O.F. initial COD estimate is: eta*delta.
@@ -501,23 +523,24 @@ def compute_closed_orbit(acc, conf, n_max, eps, delta, s_loc):
             x0[2*k+1] = Cell[2*k+1].Etap[X_]*delta
 
     if debug:
-        print("\n  {:d}                        x0 = {:13.5e}\n".format(0, x0))
+        print("  {:d}".format(0), end="")
+        prt_ps_vec("", x0)
 
     n_iter = 0
-    I.identity()
+    I.set_identity()
     dx_abs = 1e30
     while (dx_abs >= eps) and (n_iter <= n_max):
         n_iter += 1
-        M.identity()
+        M.set_identity()
         M += x0
 
 #        acc.propagate(conf, M, s_loc) 
         acc.propagate(conf, M) 
 
-        if (s_loc == globval.Cell_nLoc):
+        if (True or (s_loc == n_Loc)):
             x1 = M.cst()
             dx = x0 - x1
-            dx0 = np.linalg.inv((M-I-x1)[n, n])*dx[n]
+            dx0 = partialInverse(M-I-x1)*x
             dx_abs = xabs(n, dx)
             x0 += dx0.cst()
         else:
@@ -531,34 +554,35 @@ def compute_closed_orbit(acc, conf, n_max, eps, delta, s_loc):
     cod = dx_abs < eps
 
     if cod:
-        globval.CODvect = x0
-        getlinmat(6, M, globval.OneTurnMat)
-        Cell_Pass(0, globval.Cell_nLoc, x0, s_loc)
+        conf.CODvect = x0
+        getlinmat(6, M, conf.OneTurnMat)
+        Cell_Pass(0, conf.Cell_nLoc, x0, s_loc)
         if debug:
             print("\n  OneTurnMat:")
-            prtmat(6, globval.OneTurnMat)
+            prtmat(6, conf.OneTurnMat)
     else:
-        print("\nCell_getCOD: failed to converge after {:d}  delta = {:12.5e}"
-              ", particle lost at element {:3d}  x_0   = {:13.5e}"
-              "  x_k-1 = {:13.5e}  x_k   = {:13.5e}".
+        print("\ncompute_closed_orbit: failed to converge after {:d}"
+              "  delta = {:12.5e}, particle lost at element {:3d}"
+              "  x_0   = {:13.5e}  x_k-1 = {:13.5e}  x_k   = {:13.5e}".
               format(n_iter, delta, s_loc, x0, Cell[s_loc-1].BeamPos,
                      M.cst()))
 
-    danot_(no)
-  
-    return cod
+    return [x0, cod, s_loc]
 
 
 t_dir  = os.path.join(os.environ["HOME"], "Nextcloud", "thor_scsi")
 t_file = os.path.join(t_dir, "b3_tst.lat")
 
-acc         = accelerator_from_config(t_file)
-calc_config = ConfigType()
+acc  = accelerator_from_config(t_file)
+conf = ConfigType()
 
 if False:
     test_stuff(15)
 
-map = compute_map(acc, calc_config)
+[cod, found, s_loc] = compute_closed_orbit(acc, conf, 0e0, 10, 1e-10)
+exit()
+
+map = compute_map(acc, conf)
 M = get_mat(map)
 
 # Reduce matrix from 7x7 to 6x6.
@@ -575,7 +599,7 @@ prt_np_mat("\nA:\n", A)
 prt_np_mat("\nA^-1*M*A:\n",
            np.linalg.multi_dot([np.linalg.inv(A), M, A]))
 
-compute_twiss_lat("linlat.out", acc, calc_config, get_map(A))
+compute_twiss_lat("linlat.out", acc, conf, get_map(A))
 
 # ds = ds.drop(["elements", "tps"])
 # ds.to_netcdf("twiss.nc")
@@ -584,7 +608,7 @@ compute_twiss_lat("linlat.out", acc, calc_config, get_map(A))
 # df.to_csv("twiss.csv")
 
 
-# twiss = linear_optics.compute_twiss_parameters(acc, calc_config)
+# twiss = linear_optics.compute_twiss_parameters(acc, conf)
 # twiss.name = "twiss_parameters"
 # md = accelerator_info(acc)
 # md.attrs = dict(calc_config=calc_config)

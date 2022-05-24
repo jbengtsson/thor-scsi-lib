@@ -160,7 +160,15 @@ std::ostream& operator<<(std::ostream& strm, ss_vect<T>& s)
 // Class for single particle phase space dynamics
 
 
-
+// J.B. 23-05-22: added ss_vect<double>::cst(void) for completeness.
+template<>
+inline ss_vect<double> ss_vect<double>::cst(void) const
+{
+  printf("\nss_vect<double>::cst(void): *** not defined.\n");
+  exit(1);
+  return(0e0);
+}
+ 
 template<>
 inline ss_vect<double> ss_vect<tps>::cst(void) const
 {
@@ -209,5 +217,8 @@ inline ss_vect<T>::ss_vect(const ss_vect<U> &a)
 
 
 double xabs(long n, ss_vect<double> &x);
+
+ss_vect<tps> PInv(const ss_vect<tps> &x, const long int jj[]);
+ss_vect<tps> Inv(const ss_vect<tps> &);
 
 #endif /* _TPS_SS_VECT_H_ */
