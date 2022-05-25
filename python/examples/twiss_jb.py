@@ -527,7 +527,7 @@ def compute_closed_orbit(acc, conf, delta, n_max, eps):
 
     if debug:
         print("  {:d}".format(0), end="")
-        prt_ps_vec("                ", x0)
+        prt_ps_vec("                  ", x0)
 
     n_iter = 0
     I.set_identity()
@@ -552,9 +552,9 @@ def compute_closed_orbit(acc, conf, delta, n_max, eps):
             dx_abs = NAN
             break
 
-    if debug:
-        print(f"{n_iter:3d} {dx_abs:7.1e}/{eps:7.1e}", end="")
-        prt_np_vec("", "11.3e", x0)
+        if debug:
+            print(f"{n_iter:3d} {dx_abs:7.1e} ({eps:7.1e})", end="")
+            prt_np_vec("", "11.3e", x0)
 
     cod = dx_abs < eps
 
