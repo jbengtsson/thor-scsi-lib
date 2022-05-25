@@ -52,6 +52,28 @@ tsc::TwoDimensionalMultipoles::TwoDimensionalMultipoles(std::vector<cdbl_intern>
 	this->m_max_multipole = this->coeffs.size();
 }
 
+tsc::TwoDimensionalMultipoles& tsc::TwoDimensionalMultipoles::operator *= (const std::vector<double> &scale)
+{
+	auto& c = this->coeffs;
+	size_t n_coeff = c.size(), n_scale = scale.size();
+	if(n_coeff != n_scale){
+		// Check for exception matching python length error
+		std::stringstream strm;
+		strm << "Received " << n_scale << " elements for scaling."
+		     << " this does not match the number of coefficients " << n_coeff
+		     << " .";
+		std::runtime_error(strm.str());
+	}
+	std::transform(c.begin(), c.end(), scale.begin(), c.begin(), std::multiplies<>());
+	return *this;
+}
+
+tsc::TwoDimensionalMultipoles  tsc::TwoDimensionalMultipoles::operator * (const std::vector<double> &scale) const
+{
+	TwoDimensionalMultipoles nh = this->clone();
+	nh *= scale;
+	return nh;
+}
 
 tsc::TwoDimensionalMultipoles& tsc::TwoDimensionalMultipoles::operator += (const tsc::TwoDimensionalMultipoles &other)
 {

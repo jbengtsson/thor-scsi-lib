@@ -330,6 +330,11 @@ namespace thor_scsi::core {
 		inline TwoDimensionalMultipoles operator / (const double scale) const {
 			return *this * (1.0/scale);
 		}
+		/*
+		 * Scaling each individual by a vector
+		 */
+		TwoDimensionalMultipoles& operator *= (const std::vector<double>& scale);
+		TwoDimensionalMultipoles  operator * (const std::vector<double>& scale) const;
 		/**
 		 * add
 		 *
