@@ -24,14 +24,16 @@ import numpy as np
 
 [X_, Y_, Z_]                    = [0, 1, 2]
 [x_, px_, y_, py_, ct_, delta_] = [0, 1, 2, 3, 5, 4]
+[Dip, Quad, Sext]               = [1, 2, 3]
 
 ss_dim = 6
 
 
-def prt_np_vec(str, vec):
+def prt_np_vec(str, fmt, vec):
+    fmt_str = "{:" + fmt + "}"
     print(str, end="")
     for k in range(len(vec)):
-        print("{:15.6e}".format(vec[k]), end="")
+        print(fmt_str.format(vec[k]), end="")
     print()
 
 
@@ -44,10 +46,10 @@ def prt_np_cmplx_vec(str, vec):
     print()
 
 
-def prt_np_mat(str, mat):
+def prt_np_mat(str, fmt, mat):
     print(str, end="")
     for k in range(len(mat)):
-        prt_np_vec("", mat[k])
+        prt_np_vec("", fmt, mat[k])
 
 
 def prt_np_cmplx_mat(str, mat):
@@ -441,7 +443,7 @@ def test_stuff(n):
     M = get_mat(map)
     # Reduce matrix from 7x7 to 6x6.
     M = M[0:6, 0:6]
-    prt_np_mat("\nPoincaré Map:\n", M)
+    prt_np_mat("\nPoincaré Map:\n", "14.6e", M)
 
     m51 = M[x_][x_]*M[px_][delta_] - M[px_][x_]*M[x_][delta_]
     m52 = M[x_][px_]*M[px_][delta_] - M[px_][px_]*M[x_][delta_]
@@ -450,7 +452,7 @@ def test_stuff(n):
           format(M[ct_][x_], M[ct_][px_]))
 
     A = compute_ring_twiss(M)
-    prt_np_mat("\nA:\n", A)
+    prt_np_mat("\nA:\n", "14.6e", A)
 
     n_dof = 2
     n     = 2*n_dof
@@ -473,12 +475,12 @@ def test_stuff(n):
     prt_twiss("\ncompute_twiss_A_A_tp:\n", eta, alpha, beta, nu)
 
     # Cross check.
-    prt_np_mat("\nA^-1*M*A:\n",
+    prt_np_mat("\nA^-1*M*A:\n", "14.6e",
                np.linalg.multi_dot([np.linalg.inv(A), M, A]))
 
 
 def compute_closed_orbit(acc, conf, delta, n_max, eps):
-    jj  = np.zeros(ss_dim, np.int)
+    jj  = np.zeros(ss_dim, int)
     x0  = ss_vect_double()
     x1  = ss_vect_double()
     dx  = ss_vect_double()
@@ -525,7 +527,7 @@ def compute_closed_orbit(acc, conf, delta, n_max, eps):
 
     if debug:
         print("  {:d}".format(0), end="")
-        prt_ps_vec("", x0)
+        prt_ps_vec("                ", x0)
 
     n_iter = 0
     I.set_identity()
@@ -536,6 +538,7 @@ def compute_closed_orbit(acc, conf, delta, n_max, eps):
         M += x0
 
 #        acc.propagate(conf, M, s_loc)
+        s_loc = n_loc
         acc.propagate(conf, M)
 
         if (True or (s_loc == n_Loc)):
@@ -550,18 +553,18 @@ def compute_closed_orbit(acc, conf, delta, n_max, eps):
             break
 
     if debug:
-        print(f"{n_iter:3d} err = {dx_abs:7.1e}/{eps:7.1e}  x0 = {x0}")
-        prt_np_vec("x0", x0)
+        print(f"{n_iter:3d} {dx_abs:7.1e}/{eps:7.1e}", end="")
+        prt_np_vec("", "11.3e", x0)
 
     cod = dx_abs < eps
 
     if cod:
         conf.CODvect = x0
-        getlinmat(6, M, conf.OneTurnMat)
-        Cell_Pass(0, conf.Cell_nLoc, x0, s_loc)
+        conf.OneTurnMat = get_mat(M)
+#        acc.propagate(conf, x0, s_loc)
+        acc.propagate(conf, x0)
         if debug:
-            print("\n  OneTurnMat:")
-            prtmat(6, conf.OneTurnMat)
+            prt_np_mat("\nPoincaré Map:\n", "14.6e", conf.OneTurnMat)
     else:
         print("\ncompute_closed_orbit: failed to converge after {:d}"
               "  delta = {:12.5e}, particle lost at element {:3d}"
@@ -581,24 +584,30 @@ conf = ConfigType()
 if False:
     test_stuff(15)
 
-[cod, found, s_loc] = compute_closed_orbit(acc, conf, 0e0, 10, 1e-10)
+cod, found, s_loc = compute_closed_orbit(acc, conf, 0e0, 10, 1e-10)
+elem = acc.find("uq1", 1)
+#print(repr(elem.getMultipoles()))
+muls = elem.getMultipoles()
+muls.setMultipole(Dip, 1e-3 - 1e-3j)
+print("\n", repr(elem))
+cod, found, s_loc = compute_closed_orbit(acc, conf, 0e0, 10, 1e-10)
 exit()
 
-map = compute_map(acc, conf)
-M = get_mat(map)
+t_map = compute_map(acc, conf)
+M = get_mat(t_map)
 
 # Reduce matrix from 7x7 to 6x6.
 M = M[0:6, 0:6]
-prt_np_mat("\nPoincaré Map:\n", M)
+prt_np_mat("\nPoincaré Map:\n", "14.6e", M)
 
 [eta, alpha, beta, nu, stable] = compute_twiss_M(M)
 prt_twiss("\ncompute_twiss_M:\n", eta, alpha, beta, nu)
 
 A = compute_ring_twiss(M)
-prt_np_mat("\nA:\n", A)
+prt_np_mat("\nA:\n", "14.6e", A)
 
 # Cross check.
-prt_np_mat("\nA^-1*M*A:\n",
+prt_np_mat("\nA^-1*M*A:\n", "14.6e",
            np.linalg.multi_dot([np.linalg.inv(A), M, A]))
 
 compute_twiss_lat("linlat.out", acc, conf, get_map(A))
