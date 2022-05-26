@@ -33,21 +33,70 @@ user can inspect or store this specific set of commands.
 
 The pseudo random number generator to be used is under users control.
 It has to conform to the :class:`ǹumpy.random.Generator` API. Thus
-the user can control the seed and similar aspects by the pseudo random
-number generator's API.
+the user can control the seed and similar aspects by the pseudo
+random number generator's API.
 
 If replay of random number generation is of interest, please note
 that the sequence of engineering distribution commands supplied to
 :func:`create_commands_for_randomised_state` is important. It will
 make calls to the random number generator in the order as the
-commands are applied. Please also note that changing the vector size
-has an impact. Thus it is currently discussed if the element properties,
-that are vectors should benignly ignore elements of the scale or
-add vector that are beyond the size of the vector to work on.
-This would allow e.g. to apply the same engineering values to the
-multipoles if e.g. 4 or 10 multipole are used, as long as the
-same vector length is used in the instances of
+commands are applied. Please also note that changing the vector
+size has an impact. Thus it is currently discussed if the element
+properties, that are vectors should benignly ignore elements of
+the scale or add vector that are beyond the size of the vector to
+work on. This would allow e.g. to apply the same engineering values
+to the multipoles if e.g. 4 or 10 multipole are used, as long as
+the same vector length is used in the instances of
 :class:`EngineeringDistributionCommand`.
+
+
+Todo:
+
+    * consider interface change: provide generators with a similar
+      interface as :func:`create_commands` but returing a generator
+      instead
+
+    * consider changing commands info on element:
+
+        * handle properties as separate properties implementing get
+          and set
+
+        * properties should have a reference to an "element info"
+
+        * this element info should contain as much information as
+          required so that a user could find out which element of
+          the lattice was to be changed to a particular value.
+
+          Compare this to just storing its index: if a component is
+          split up the index is not reliable source of information.
+
+        Exporters / importers should be able to handle that many
+        properties could reference to the same eleemnt.
+
+    * a good information that would allow tracing the individual
+        element could be
+
+        * element type name
+        * element name
+        * element index within its family
+        * main beam dynamics parameters:
+
+          * element length
+          * for magnets: e.g. main multipole number
+          * for quadrupoles: gradient strength
+          * for cavities: frequency and voltage
+
+        These inforamtion are not ment to be reporcesed by an
+        function but rather help the experienced user to trace
+        back which element should be changed.
+
+
+    * consider if created :class:`EngineeringCommand` should
+      reference the corresponding
+      :class:`EngineeringDistributionCommand` so that user could
+      process the list if required
+
+    * implement utility functions simplfying common tasks
 """
 import thor_scsi.lib as tslib
 import numpy as np
@@ -64,7 +113,8 @@ class EngineeringCommand:
     """Command for applying a specific set or value for exeucting engineering studies
 
     Todo:
-       * consider json import / export: thus long term storage could be feasible
+        * consider json import / export: thus long term storage
+          could be feasible
     """
 
     # Method name on how to retrieve the object and to set it
@@ -85,13 +135,14 @@ class EngineeringDistributionCommand:
     """Command for creating engineering command abstract class
 
     Todo:
-        How to handle vector length:
-         Let's compute too many factors and ignore if there
-         are too many?
+        * How to handle vector length= :
+          Let's compute too many factors and ignore if there
+          are too many?
 
-         Shall that be done by the appropriate element?
+        * Shall that be done by the appropriate element?
 
-       consider json import / export: thus long term storage could be feasible
+        * consider json import / export: thus long term storage
+          could be feasible
     """
 
     # Method name on how to set the string
@@ -147,17 +198,20 @@ class AddEngineeringDistributionCommand(EngineeringDistributionCommand):
 
 
 def apply_factors(
-    acc: tslib.Accelerator, commands: Sequence[EngineeringCommand], copy: bool = True
+    elements: Sequence[tslib.ElemType],
+    commands: Sequence[EngineeringCommand],
+    copy: bool = True,
 ) -> tslib.Accelerator:
     """Applies factors found in the dataset to the different objects of the accelerator
 
 
     Please note the factors here are static ... user is expected to
-    generate a different factors dataset for any single setting: i.e if random
-    studies are made look to function XXX that will support you in
-    generating these factors.
+    generate a different factors dataset for any single setting: i.e
+    if random studies are made look to function XXX that will support
+    you in generating these factors.
 
-    Furthermore user can apply it at again or chain calls with different files
+    Furthermore user can apply it at again or chain calls with
+    different lists
 
     Todo:
        * How to apply it to each individual multipole?
@@ -169,9 +223,16 @@ def apply_factors(
     if copy:
         acc = acc.copy()
 
+    if copy:
+        all_indices = [cmd.element_index for cmd in commands]
+        all_indices = set(all_indices)
+        acc.copy_elements(element_indices=element_indices)
+
     # Iterate over the dataset and apply
     for cmd in commands:
-        element = cmd.element_index
+        # Within this command it is assumed that the index is good enough
+        # to go ahead
+        element = elements[cmd.element_index]
         # XXX check get / set method name against a positive list?
         get_method = getattr(element, cmd.get_method_name)
         set_method = getattr(element, cmd.set_method_name)
