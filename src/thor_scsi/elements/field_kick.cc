@@ -368,15 +368,6 @@ void tse::FieldKick::show(std::ostream& strm, const int level) const
 			rad_del->show(strm, level);
 		}
 		strm<< ", ";
-
-		auto observer = this->observer();
-		if(!observer){
-			strm << "observer=None";
-		} else {
-			strm << " observer=";
-			observer->show(strm, level);
-		}
-
 	}
 }
 
