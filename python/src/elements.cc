@@ -12,6 +12,7 @@
 #include <thor_scsi/elements/octupole.h>
 #include <thor_scsi/elements/cavity.h>
 #include <thor_scsi/elements/standard_observer.h>
+#include <thor_scsi/elements/standard_aperture.h>
 
 
 namespace tse = thor_scsi::elements;
@@ -55,6 +56,18 @@ public:
 	}
 };
 
+class Py2DAperture: public tsc::TwoDimensionalAperture {
+public:
+	using tsc::TwoDimensionalAperture::TwoDimensionalAperture;
+
+	double isWithin(const double x, const double y) const override {
+		PYBIND11_OVERRIDE_PURE(double, tsc::TwoDimensionalAperture, x, y);
+	};
+	const char * type_name(void) const override {
+		PYBIND11_OVERRIDE_PURE(const char *, tsc::TwoDimensionalAperture, void);
+	};
+
+};
 
 class PyClassicalMagnet: public tse::ClassicalMagnet {
 	using tse::ClassicalMagnet::ClassicalMagnet;
@@ -143,6 +156,22 @@ void py_thor_scsi_init_elements(py::module &m)
 		.def("reset",                    &tse::StandardObserver::reset)
 		.def(py::init<>());
 
+	py::class_<tsc::TwoDimensionalAperture,  Py2DAperture, std::shared_ptr<tsc::TwoDimensionalAperture>> aperture(m, "Aperture");
+	aperture.def("__repr__", &tsc::TwoDimensionalAperture::repr)
+		.def(py::init<>());
+
+	const char rect_ap_doc[] = "initialise rectangular aperture";
+	py::class_<tse::RectangularAperture, tsc::TwoDimensionalAperture, std::shared_ptr<tse::RectangularAperture>> rect_ap(m, "RectangularAperture");
+	rect_ap.def(py::init<const double, const double, const double, const double>(), rect_ap_doc,
+		    py::arg("width"), py::arg("height"), py::arg("x") = 0, py::arg("y") = 0);
+
+	const char circ_ap_doc[] = "initialise round aperture";
+	py::class_<tse::CircularAperture, tsc::TwoDimensionalAperture, std::shared_ptr<tse::CircularAperture>> circ_ap(m, "CircularAperture");
+	circ_ap.def(py::init<const double, const double, const double>(), circ_ap_doc,
+		    py::arg("radius"), py::arg("x") = 0, py::arg("y") = 0);
+
+
+
 	py::class_<tsc::ElemType,  PyElemType, std::shared_ptr<tsc::ElemType>> elem_type(m, "ElemType");
 	elem_type.def("__str__",       &tsc::ElemType::pstr)
 		.def("__repr__",       &tsc::ElemType::repr)
@@ -152,6 +181,8 @@ void py_thor_scsi_init_elements(py::module &m)
 		.def("setLength",      &tse::ElemType::setLength)
 		.def("getObserver",    &tse::ElemType::observer)
 		.def("setObserver",    &tse::ElemType::set_observer)
+		.def("getAperture",    &tse::ElemType::getAperture)
+		.def("setAperture",    &tse::ElemType::setAperture)
 		.def("propagate", py::overload_cast<tsc::ConfigType&, ss_vect<double>&>(&tse::ElemType::pass), pass_d_doc)
 		.def("propagate", py::overload_cast<tsc::ConfigType&, ss_vect<tps>&>(&tse::ElemType::pass),    pass_tps_doc)
 		.def(py::init<const Config &>());

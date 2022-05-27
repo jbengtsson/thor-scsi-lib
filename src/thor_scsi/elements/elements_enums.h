@@ -38,13 +38,14 @@ namespace thor_scsi {
 			Dodec = 6
 		};
 
+
+#endif
 		enum PlaneKind
 		{
 			Horizontal = 1,
 			Vertical   = 2
 		};
 
-#endif
 		enum IntMethKind
 		{
 			Meth_Linear = 0,

@@ -14,7 +14,7 @@
 #include <tps/enums.h>
 #include <tps/forward_decl.h>
 
-typedef std::array<long int, ps_dim> tpsa_index;
+typedef std::array<long int, ss_dim> tpsa_index;
 
 
 class tps {

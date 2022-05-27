@@ -20,11 +20,16 @@ set(thor_scsi_HEADERS
 
 # Needs to be fixed ... reorganisation of files
 set(thor_scsi_core_HEADERS
+#<<<<<<< flame-integration
+#=======
+#  core/aperture.h
+#>>>>>>> master
   core/exceptions.h
   core/config.h
   core/machine.h
   core/cell_void.h
   core/cells.h
+  core/aperture.h
   core/transform.h
   core/transform_phase_space.h
   core/math_comb.h
@@ -56,6 +61,7 @@ set(thor_scsi_element_HEADERS
   elements/bpm.h
   # Or should that already be a util ...
   elements/standard_observer.h
+  elements/standard_aperture.h
   )
 
 set(thor_scsi_std_machine_HEADERS
@@ -65,10 +71,12 @@ set(thor_scsi_std_machine_HEADERS
 set(thor_scsi_core_FILES
   core/transform.cc
   core/cell_void.cc
+  core/elements_basis.cc
   core/machine.cc
   core/math_comb.cc
   core/field_interpolation.cc
   core/multipoles.cc
+  core/aperture.cc
   # Only required if GSL's implementation of Horner's rule to be used
   # or a pure taylor series
   # core/multipoles_extra.cc
@@ -81,6 +89,7 @@ set(thor_scsi_core_FILES
   elements/marker.cc
   elements/cavity.cc
   elements/standard_observer.cc
+  elements/standard_aperture.cc
   std_machine/std_machine.cc
   std_machine/accelerator.cc
 )

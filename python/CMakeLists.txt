@@ -16,8 +16,13 @@ target_include_directories(lib
   PUBLIC
   ${ARMADILLO_INCLUDE_DIRS}
   ${flame_INCLUDE_DIR}
-    "$<BUILD_INTERFACE:${thor_scsi_INCLUDE_DIR}>"
-    "$<BUILD_INTERFACE:${flame_INCLUDE_DIR}>"
+#<<<<<<< flame-integration
+#    "$<BUILD_INTERFACE:${thor_scsi_INCLUDE_DIR}>"
+#    "$<BUILD_INTERFACE:${flame_INCLUDE_DIR}>"
+#=======
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../src/>"
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../../flame/src/>"
+#>>>>>>> master
     "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )
 

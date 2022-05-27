@@ -181,3 +181,22 @@ target_link_libraries(test_cavity
     ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
 )
 add_test(cavity test_cavity)
+
+add_executable(test_standard_aperture
+  test_standard_aperture.cc
+  )
+add_test(aperture test_standard_aperture)
+
+target_include_directories(test_standard_aperture
+    PUBLIC
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../../>"
+    "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
+)
+
+target_link_libraries(test_standard_aperture
+  thor_scsi
+  thor_scsi_core
+  tpsa_lin
+    ${Boost_PRG_EXEC_MONITOR_LIBRARY}
+    ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
+)
