@@ -29,11 +29,16 @@ import numpy as np
 ss_dim = 6
 
 
+def get_mat(map):
+    mat = ss_vect_tps_to_mat(map)
+    mat = np.array(mat)
+    return mat
+
+
 def prt_np_vec(str, fmt, vec):
-    fmt_str = "{:" + fmt + "}"
     print(str, end="")
     for k in range(len(vec)):
-        print(fmt_str.format(vec[k]), end="")
+        print(f"{vec[k]:{fmt}}", end="")
     print()
 
 
@@ -62,23 +67,12 @@ def prt_ps_vec(str, ps):
     n = 6
     print(str, end="")
     for k in range(n):
-        print("{:11.3e}".format(ps[k]), end="")
+        print(f"{ps[k]:11.3e}", end="")
     print()
 
 
-def prt_map(str, map):
-    n = 6
-    print(str, end="")
-    for j in range(n):
-        for k in range(n):
-            print("{:15.6e}".format(map[j][k]), end="")
-        print()
-
-
-def get_mat(map):
-    mat = ss_vect_tps_to_mat(map)
-    mat = np.array(mat)
-    return mat
+def prt_map(str, fmt, map):
+    prt_np_mat(str, fmt, get_mat(map))
 
 
 def get_map(M):
@@ -353,7 +347,7 @@ def compute_twiss_M(M):
     for k in range(n_dof):
         cos = M[2*k:2*k+2, 2*k:2*k+2].trace()/2e0
         if abs(cos) >= 1e0:
-            print("\ncompute_twiss_M: {:5.3f}\n".format(cos))
+            print(f"\ncompute_twiss_M: {cos:5.3f}")
             stable[k] = False
         sin      = np.sqrt(1e0-cos**2)*sign(M[2*k][2*k+1])
         alpha[k] = (M[2*k][2*k]-M[2*k+1][2*k+1])/(2e0*sin)
@@ -397,11 +391,10 @@ def compute_twiss_lat(file_name, acc, calc_config, A):
         A_mat = compute_A_CS(2, A_mat)[0]
         Ak = get_map(A_mat)
 
-        print("{:4d} {:10s} {:9.5f} {:9.5f} {:9.5f} {:9.5f} {:9.5f} {:9.5f}"
-              " {:9.5f} {:9.5f} {:9.5f} {:9.5f} {:9.5f}".
-              format(k, acc[k].name, s,
-                     alpha[X_], beta[X_], nu[X_], eta[x_], eta[px_],
-                     alpha[Y_], beta[Y_], nu[Y_], eta[y_], eta[py_]))
+        print(f"{k:4d} {acc[k].name:10s} {s:9.5f} {alpha[X_]:9.5f}"
+              " {beta[X_]:9.5f} {nu[X_]:9.5f} {eta[x_]:9.5f} {eta[px_]:9.5f}"
+              " {alpha[Y_]:9.5f} {beta[Y_]:9.5f} {nu[Y_]:9.5f} {eta[y_]:9.5f}"
+              " {eta[py_]:9.5f}")
 
     sys.stdout = stdout
 
@@ -424,14 +417,12 @@ def compute_ring_twiss(M):
 
 
 def prt_twiss(str, eta, alpha, beta, nu):
-    print("{:s}"
-          "  eta   = [{:5.3f}, {:5.3f}, {:5.3f}, {:5.3f}]"
-          "\n  alpha = [{:5.3f}, {:5.3f}]"
-          "\n  beta  = [{:5.3f}, {:5.3f}]"
-          "\n  nu    = [{:5.3f}, {:5.3f}]".
-          format(str,
-                 eta[x_], eta[px_], eta[y_], eta[py_], alpha[X_], alpha[Y_],
-                 beta[X_], beta[Y_], nu[X_], nu[Y_]))
+    print(f"{str:s}"
+          "  eta   = [{eta[x_]:5.3f}, {eta[px_]:5.3f}"
+          ", {eta[y_]:5.3f}, {eta[py_]:5.3f}]"
+          "\n  alpha = [{alpha[X_]:5.3f}, {alpha[Y_]:5.3f}]"
+          "\n  beta  = [{beta[X_]:5.3f}, {beta[Y_]:5.3f}]"
+          "\n  nu    = [{nu[X_]:5.3f}, {nu[Y_]:5.3f}]")
 
 
 def test_stuff(n):
@@ -447,9 +438,8 @@ def test_stuff(n):
 
     m51 = M[x_][x_]*M[px_][delta_] - M[px_][x_]*M[x_][delta_]
     m52 = M[x_][px_]*M[px_][delta_] - M[px_][px_]*M[x_][delta_]
-    print("\nm_15 = {:21.14e} m_16 {:21.14e}".format(m51, m52))
-    print("m_15 = {:21.14e} m_16 {:21.14e}".
-          format(M[ct_][x_], M[ct_][px_]))
+    print(f"\nm_15 = {m51:21.14e} m_16 = {m52:21.14e}")
+    print(f"m_15 = {M[ct_][x_]:21.14e} m_16 = {M[ct_][px_]:21.14e}")
 
     A = compute_ring_twiss(M)
     prt_np_mat("\nA:\n", "14.6e", A)
@@ -458,12 +448,11 @@ def test_stuff(n):
     n     = 2*n_dof
 
     [nus, stable] = compute_nus(n_dof, M)
-    print("\ncompute_nus:\n  nu    = [{:5.3f}, {:5.3f}]".
-          format(nus[X_], nus[Y_]))
+    print(f"\ncompute_nus:\n  nu    = [{nus[X_]:5.3f}, {nus[Y_]:5.3f}]")
 
     [nus, stable] = compute_nus_symp_mat(n_dof, M)
-    print("\ncompute_nus_symp_mat:\n  nu    = [{:5.3f}, {:5.3f}]".
-          format(nus[X_], nus[Y_]))
+    print(f"\ncompute_nus_symp_mat:\n  nu    = "
+          "[{nus[X_]:5.3f}, {nus[Y_]:5.3f}]")
 
     [eta, alpha, beta, nu, stable] = compute_twiss_M(M)
     prt_twiss("\ncompute_twiss_M:\n", eta, alpha, beta, nu)
@@ -505,8 +494,8 @@ def compute_closed_orbit(acc, conf, delta, n_max, eps):
     if (conf.mat_meth and (first or (delta != conf.dPparticle))):
         # Recompute transport matrices.
         if (debug):
-            print("  recomputing transport matrices:  delta = {:9.3e} ({:9.3e})"
-	           " first = %1d".format(delta, conf.dPparticle, first))
+            print(f"  recomputing transport matrices:  delta = {delta:9.3e}"
+                  " ({conf.dPparticle:9.3e}) first = {first:1d")
         get_lin_maps(delta)
         conf.dPparticle = delta
         first = False
@@ -526,7 +515,7 @@ def compute_closed_orbit(acc, conf, delta, n_max, eps):
             x0[2*k+1] = Cell[2*k+1].Etap[X_]*delta
 
     if debug:
-        print("  {:d}".format(0), end="")
+        print(f"  {0:d}", end="")
         prt_ps_vec("                  ", x0)
 
     n_iter = 0
@@ -566,11 +555,10 @@ def compute_closed_orbit(acc, conf, delta, n_max, eps):
         if debug:
             prt_np_mat("\nPoincaré Map:\n", "14.6e", conf.OneTurnMat)
     else:
-        print("\ncompute_closed_orbit: failed to converge after {:d}"
-              "  delta = {:12.5e}, particle lost at element {:3d}"
-              "  x_0   = {:13.5e}  x_k-1 = {:13.5e}  x_k   = {:13.5e}".
-              format(n_iter, delta, s_loc, x0, Cell[s_loc-1].BeamPos,
-                     M.cst()))
+        print(f"\ncompute_closed_orbit: failed to converge after {n_iter:d}"
+              "  delta = {delta:12.5e}, particle lost at element {s_loc:3d}"
+              "  x_0   = {x0:13.5e}  x_k-1 = {Cell[s_loc-1].BeamPos:13.5e}"
+              "  x_k   = {M.cst():13.5e}")
 
     return [x0, cod, s_loc]
 
