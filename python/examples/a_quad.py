@@ -1,6 +1,6 @@
 """Configuring and using a quadrupole
 """
-from thor_scsi.flame import Config
+from thor_scsi.pyflame import Config
 from thor_scsi.lib import Quadrupole, ConfigType
 
 C = Config()

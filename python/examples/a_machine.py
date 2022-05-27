@@ -1,7 +1,7 @@
 """Reading a lattice file
 """
 
-from thor_scsi.flame import GLPSParser
+from thor_scsi.pyflame import GLPSParser
 import thor_scsi
 from thor_scsi.lib import (
     Accelerator,

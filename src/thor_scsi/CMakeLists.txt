@@ -1,14 +1,15 @@
 include(../../cmake/gpp_warnings.cmake)
 
-
-
-# get_filename_component(thor_scsi_INCLUDE_DIR "${CMAKE_CURRENT_LIST_DIR}//../inc/" ABSOLUTE)
-# get_filename_component(thor_scsi_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../inc/" ABSOLUTE)
-
 add_subdirectory(core)
 
+if(FLAME_INTERNAL)
+    set(flame_INCLUDE_DIR "${flame_SOURCE_DIR}/src/")
+    message(STATUS "Using internal flame from subdirectory flame include dir ${flame_INCLUDE_DIR}")
+else()
+    message(STATUS "using external flame library")
+endif()
+
 include_directories(
-#  ${thor_scsi_INCLUDE_DIR}
   ${flame_INCLUDE_DIR}
 )
 
@@ -19,7 +20,10 @@ set(thor_scsi_HEADERS
 
 # Needs to be fixed ... reorganisation of files
 set(thor_scsi_core_HEADERS
-  core/aperture.h
+#<<<<<<< flame-integration
+#=======
+#  core/aperture.h
+#>>>>>>> master
   core/exceptions.h
   core/config.h
   core/machine.h
@@ -88,17 +92,6 @@ set(thor_scsi_core_FILES
   elements/standard_aperture.cc
   std_machine/std_machine.cc
   std_machine/accelerator.cc
-  # thor_lib.cc
-  # t2cell.cc
-  # t2lat.cc
-  # radia2tracy.cc
-  # legacy/io.cc
-  # ety.cc
-  # eigenv.cc
-  # prtmfile.cc
-  # rdmfile.cc
-  # lsoc.cc
-  # set_errors.cc
 )
 
 add_library(thor_scsi_core SHARED
@@ -109,7 +102,7 @@ add_library(thor_scsi::core ALIAS thor_scsi_core)
 
 target_include_directories(thor_scsi_core
     PUBLIC
-    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../>"
+    "$<BUILD_INTERFACE:${thor_scsi_INCLUDE_DIR}>"
     "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )
 
@@ -118,7 +111,8 @@ target_link_libraries(thor_scsi_core
   # Todo: need to learn how to instruct cmake that this
   # dependency will be exported properly
   tpsa_lin
-  ${flame_CORE_LIBRARY}
+  flame::core
+  # ${flame_CORE_LIBRARY}
   ${ARMADILLO_LIBRARIES}
 )
 

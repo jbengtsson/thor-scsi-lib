@@ -1,21 +1,6 @@
 find_package(pybind11 2.9 REQUIRED)
 find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
 
-
-# detect virtualenv and set Pip args accordingly
-if(DEFINED ENV{VIRTUAL_ENV} OR DEFINED ENV{CONDA_PREFIX})
-  set(_pip_args)
-else()
-  set(_pip_args "--user")
-endif()
-
-
-
-## # install PyPI Python package using pip
-## execute_process(COMMAND ${Python_EXECUTABLE} -m pip install ${_pip_args} ${_pypkg_name})
-## # install Python package locally in development mode
-## execute_process(COMMAND ${Python_EXECUTABLE} -m pip install ${_pip_args} -e .)
-
 cmake_policy(SET CMP0063 NEW)
 add_library(lib MODULE
   src/thor_scsi.cc
@@ -31,8 +16,13 @@ target_include_directories(lib
   PUBLIC
   ${ARMADILLO_INCLUDE_DIRS}
   ${flame_INCLUDE_DIR}
+#<<<<<<< flame-integration
+#    "$<BUILD_INTERFACE:${thor_scsi_INCLUDE_DIR}>"
+#    "$<BUILD_INTERFACE:${flame_INCLUDE_DIR}>"
+#=======
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../src/>"
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../../flame/src/>"
+#>>>>>>> master
     "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )
 
@@ -54,24 +44,19 @@ pybind11_strip(lib)
 set_target_properties(lib PROPERTIES CXX_VISIBILITY_PRESET "hidden"
                                          CUDA_VISIBILITY_PRESET "hidden")
 
-# pybind11_add_module(flame
-#   src/flame.cc
-#  )
-add_library(flame MODULE
+add_library(pyflame MODULE
   src/flame.cc
   )
 
-target_include_directories(flame
+target_include_directories(pyflame
   PUBLIC
   ${flame_INCLUDE_DIR}
-  # Hack for pybind11 on Pierre's laptop
-  # "$<BUILD_INTERFACE:/home/mfp/.local/lib/python3.8/site-packages/pybind11/include/>"
-    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../src/>"
-    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../../flame/src/>"
+    "$<BUILD_INTERFACE:${thor_scsi_INCLUDE_DIR}>"
+    "$<BUILD_INTERFACE:${flame_INCLUDE_DIR}>"
     "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )
 
-target_link_libraries(flame
+target_link_libraries(pyflame
   pybind11::module
   pybind11::lto
   pybind11::windows_extras
@@ -82,9 +67,9 @@ target_link_libraries(flame
   #
   #
   )
-pybind11_extension(flame)
-pybind11_strip(flame)
-set_target_properties(flame
+pybind11_extension(pyflame)
+pybind11_strip(pyflame)
+set_target_properties(pyflame
   PROPERTIES
   CXX_VISIBILITY_PRESET "hidden"
   CUDA_VISIBILITY_PRESET "hidden"
@@ -93,9 +78,26 @@ set_target_properties(flame
 
 # For development ... let's copy the built shared objects to thor_scsi
 # For final installation: use setup.py
+if(PYTHON_MODULE_DEVELOPMENT_INSTALL)
+  message(STATUS "copying python dynamic built libraries to source dir ${CMAKE_CURRENT_SOURCE_DIR}")
+  install(TARGETS pyflame DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/thor_scsi)
+  install(TARGETS lib DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/thor_scsi)
+endif()
 
-##add_custom_target(copy-thor-scsi-lib ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/lib.cpython-38-x86_64-linux-gnu.so)
-##add_custom_command(
-##                   OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/thor_scsi/lib.cpython-38-x86_64-linux-gnu.so
-##                   COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/lib.cpython-38-x86_64-linux-gnu.so ${CMAKE_CURRENT_SOURCE_DIR}/thor_scsi
-##                   DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/lib.cpython-38-x86_64-linux-gnu.so)
+# detect virtualenv and set Pip args accordingly
+if(DEFINED ENV{VIRTUAL_ENV} OR DEFINED ENV{CONDA_PREFIX})
+  set(_pip_args)
+else()
+  set(_pip_args "--user")
+endif()
+
+
+if(PYTHON_MODULE_INSTALL)
+    # not proper code (nor tested)
+    # execute_process(COMMAND ${Python3_EXECUTABLE} -m pip install ${_pip_args} ${_pypkg_name})
+endif()
+if(PYTHON_MODULE_DEVELOPMENT_INSTALL)
+    # not proper code (nor tested)
+    # install Python package locally in development mode
+    #  execute_process(COMMAND ${Python3_EXECUTABLE} -m pip install ${_pip_args} -e )
+endif()
