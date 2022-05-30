@@ -8,14 +8,17 @@ from thor_scsi.utils import engineering
 
 indices = np.arange(5)
 
+mul_prop = engineering.Property(
+    element_info=None, set_method_name="setMultipoles", get_method_name="getMultipoles"
+)
+
+
 eng_cmd = engineering.ScaleEngineeringDistributionCommand(
-    element_index=-1,
+    t_property=mul_prop,
     loc=0,
     size=1e-3,
     distribution_name="normal",
-    set_method_name="setMultipoles",
-    get_method_name="getMultipoles",
-    vector_length=2,
+    vector_length=2
     # vector_length=20,
 )
 print(eng_cmd)

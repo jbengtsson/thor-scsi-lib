@@ -34,6 +34,7 @@ void py_thor_scsi_init_accelerator(py::module &m)
 		.def("elementsWithNameType", &ts::Accelerator::elementsWithNameType)
 		.def("setLogger",            &ts::Accelerator::set_logger)
 		.def("setTrace",             &ts::Accelerator::set_trace, "register the stream to log to")
+		//.def("__copy__",             &ts::Accelerator::clone, "make a copy of the accelerator")
 		.def("__len__",              &ts::Accelerator::size)
 		.def("__getitem__", py::overload_cast<size_t>(&ts::Accelerator::at))
 		.def("propagate", py::overload_cast<tsc::ConfigType&, ts::ss_vect_dbl&, size_t, int>(&ts::Accelerator::propagate), prop_doc,
