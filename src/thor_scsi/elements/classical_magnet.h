@@ -32,7 +32,7 @@ namespace thor_scsi::elements {
 		 *
 		 * \endverbatim
 		 */
-		inline const std::shared_ptr<thor_scsi::core::PlanarMultipoles> getMultipoles(void) const {
+		inline const std::shared_ptr<thor_scsi::core::TwoDimensionalMultipoles> getMultipoles(void) const {
 			auto tmp = this->getFieldInterpolator();
 			if(!tmp){
 				throw std::logic_error("Field interpolator NULL");
@@ -68,7 +68,7 @@ namespace thor_scsi::elements {
 		 * get the major harmonic number
 		 */
 		virtual int getMainMultipoleNumber(void) const = 0;
-		//thor_scsi::core::PlanarMultipoles* intp;
+		//thor_scsi::core::TwoDimensionalMultipoles* intp;
 
 
 	};

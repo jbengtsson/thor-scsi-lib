@@ -4,7 +4,7 @@
 namespace tsc = thor_scsi::core;
 
 void
-check_only_major_multipole_set(std::shared_ptr<tsc::PlanarMultipoles> muls,
+check_only_major_multipole_set(std::shared_ptr<tsc::TwoDimensionalMultipoles> muls,
 			       const tsc::cdbl ref, const size_t n_major)
 {
 	const auto& coeffs =  muls->getCoeffs();

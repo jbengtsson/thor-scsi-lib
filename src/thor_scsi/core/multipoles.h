@@ -1,11 +1,11 @@
 #ifndef _THOR_SCSI_CORE_MULTIPOLES_H_
 #define _THOR_SCSI_CORE_MULTIPOLES_H_ 1
-#include <vector>
+#include <algorithm>
 #include <complex>
 #include <cassert>
-#include <stdexcept>
 #include <ostream>
-
+#include <vector>
+#include <stdexcept>
 #include <thor_scsi/core/field_interpolation.h>
 #include <thor_scsi/core/exceptions.h>
 
@@ -67,33 +67,26 @@ namespace thor_scsi::core {
 	 * \endverbatim
 	 */
 
-	class PlanarMultipoles : public Field2DInterpolation {
+	class TwoDimensionalMultipoles : public Field2DInterpolation {
 	public:
 		/**
 		   Just allocates an set of zero multipoles
 		 */
-		inline PlanarMultipoles(const unsigned int h_max=max_multipole){
-			if(h_max<=1){
-				throw std::logic_error("max multipole must be at least 1");
-			}
-			this->m_max_multipole = h_max;
-			this->coeffs.resize(h_max);
-			const cdbl_intern zero(0.0, 0.0);
-			for(auto h : this->coeffs){
-				h = zero;
-			}
-		};
-		virtual inline ~PlanarMultipoles(void){};
-		PlanarMultipoles(PlanarMultipoles&& o):
-			coeffs(std::move(o.coeffs)){this->m_max_multipole = o.m_max_multipole;};
+		TwoDimensionalMultipoles(const unsigned int h_max=max_multipole);
+		TwoDimensionalMultipoles(std::vector<cdbl_intern> const coeffs);
+		virtual inline ~TwoDimensionalMultipoles(void){};
+		// Why do I need a copy constructor ?? Did I miss an assignment operator
+		// TwoDimensionalMultipoles(const TwoDimensionalMultipoles& o);
+		TwoDimensionalMultipoles(const TwoDimensionalMultipoles&& o);
 
-		PlanarMultipoles(const PlanarMultipoles& o):
-			coeffs(o.coeffs){this->m_max_multipole = o.m_max_multipole;};
+		// Required e.g. for engineering tolerance studies
+		TwoDimensionalMultipoles& operator= (const  TwoDimensionalMultipoles &o);
 
-		inline PlanarMultipoles clone(void) const {
-			return PlanarMultipoles(std::vector<cdbl_intern>(this->coeffs));
+		TwoDimensionalMultipoles clone(void) const;
+
+		inline size_t size(void) const {
+			return this->coeffs.size();
 		}
-
 	private:
 		/**
 		 * \verbatim embed:rst:leading-asterisk
@@ -104,13 +97,6 @@ namespace thor_scsi::core {
 		 *     coeffs: a vector of complex coefficients
 		 * \endverbatim
 		 */
-		inline PlanarMultipoles(std::vector<cdbl_intern> const coeffs) {
-			if(coeffs.size()<=1){
-				throw std::logic_error("max multipole must be at least 1");
-			}
-			this->coeffs = coeffs;
-			this->m_max_multipole = this->coeffs.size();
-		}
 
 	public:
 		/**
@@ -321,10 +307,12 @@ namespace thor_scsi::core {
 		 *
 		 * \endverbatim
 		 */
-		inline PlanarMultipoles& operator *= (const double scale){
-			for(unsigned int i = 0; i< this->coeffs.size(); ++i){
-				this->coeffs[i] *= scale;
-			}
+		TwoDimensionalMultipoles& operator *= (const double scale){
+			auto& c = this->coeffs;
+			auto f = [scale](const thor_scsi::core::cdbl_intern c){
+					 return c * scale;
+				 };
+			std::transform(c.begin(), c.end(), c.begin(), f);
 			return *this;
 		}
 
@@ -337,14 +325,21 @@ namespace thor_scsi::core {
 		 *        Implementation correct ?
 		 * \endverbatim
 		 */
-		inline PlanarMultipoles operator * (const double scale) const {
-			PlanarMultipoles n = this->clone();
+		inline TwoDimensionalMultipoles operator * (const double scale) const {
+			TwoDimensionalMultipoles n = this->clone();
 			n *= scale;
 			return n;
 		}
-		inline PlanarMultipoles operator / (const double scale) const {
+		inline TwoDimensionalMultipoles operator / (const double scale) const {
 			return *this * (1.0/scale);
 		}
+		/*
+		 * @brief: Scaling each individual by a vector
+		 *
+		 * @args: bengin: ignore if surplas number of scaling vector elements are provided
+		 */
+		TwoDimensionalMultipoles& operator *= (const std::vector<double>& scale);
+		TwoDimensionalMultipoles  operator * (const std::vector<double>& scale) const;
 		/**
 		 * add
 		 *
@@ -357,12 +352,13 @@ namespace thor_scsi::core {
 		 *      *  Review behaviour if representations of different size
 		 * \endverbatim
 		 */
-		PlanarMultipoles operator +(PlanarMultipoles &other) const;
+		TwoDimensionalMultipoles operator +(const TwoDimensionalMultipoles &other) const;
+		TwoDimensionalMultipoles& operator +=(const TwoDimensionalMultipoles &other);
 
 		/**
 		 * The maximum index represented.
 		 */
-		inline unsigned int getMultipoleMaxIndex(void){
+		inline unsigned int getMultipoleMaxIndex(void) const {
 			return this->m_max_multipole;
 		}
 
@@ -377,7 +373,7 @@ namespace thor_scsi::core {
 		 *
 		 * \endverbatim
 		 */
-		inline std::vector<cdbl_intern>& getCoeffs(void){
+		inline std::vector<cdbl_intern>& getCoeffs(void) {
 			return this->coeffs;
 		}
 		/**
@@ -391,7 +387,7 @@ namespace thor_scsi::core {
 		 *
 		 * \endverbatim
 		 */
-		inline const std::vector<cdbl_intern> getCoeffs(void) const {
+		inline const std::vector<cdbl_intern>& getCoeffs(void) const {
 			return this->coeffs;
 		}
 
@@ -401,11 +397,11 @@ namespace thor_scsi::core {
 		 *
 		 * pybind11 also seems to have limits for disambuigity
 		 */
-		inline const std::vector<cdbl_intern> getCoeffsConst(void) const {
+		inline const std::vector<cdbl_intern>& getCoeffsConst(void) const {
 			return this->getCoeffs();
 		}
 
-virtual void show(std::ostream& strm, int level) const override final;
+		virtual void show(std::ostream& strm, int level) const override final;
 
 	private:
 		unsigned int m_max_multipole;
@@ -414,18 +410,6 @@ virtual void show(std::ostream& strm, int level) const override final;
 
 	};
 
-#if 0
-	/// convert representation to tracy representation
-	std::vector<double> toTracyRepresentation(const std::vector<cdbl> &coeffs);
-
-
-	// why should one need that ...
-	// void toMultipoleRepresentation(std::vector<cdbl> vec);
-
-	// consider if caching the coefficients internally is a good idea
-	// If all code constantly access them, it would be a good idea
-	// std::vector<<double> coeffs_tracy_representation;
-#endif
 }
 #endif /* _THOR_SCSI_MULTIPOLES_H_ */
 /*

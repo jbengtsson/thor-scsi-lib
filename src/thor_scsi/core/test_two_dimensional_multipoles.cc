@@ -1,4 +1,4 @@
-#define BOOST_TEST_MODULE multipoles_planar
+#define BOOST_TEST_MODULE two_dimensional_multipoles
 #define BOOST_TEST_DYN_LINK
 #include <boost/test/unit_test.hpp>
 #include <boost/test/tools/output_test_stream.hpp>
@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE(test01_complex_angle)
 BOOST_AUTO_TEST_CASE(test01_init_zero)
 {
 
-	auto h = tsc::PlanarMultipoles();
+	auto h = tsc::TwoDimensionalMultipoles();
 	auto hmax = tsc::max_multipole;
 	// coefficient by interface
 	BOOST_CHECK_CLOSE(h.getMultipole(1).real(), 0, 1e-42);
@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE(test01_init_zero)
 
 BOOST_AUTO_TEST_CASE(test02_show)
 {
-	auto h = tsc::PlanarMultipoles();
+	auto h = tsc::TwoDimensionalMultipoles();
 	{
 		boost::test_tools::output_test_stream output;
 		output << h;
@@ -84,7 +84,7 @@ BOOST_AUTO_TEST_CASE(test02_show)
 
 BOOST_AUTO_TEST_CASE(test10_set_harmonic_dipole)
 {
-	auto h = tsc::PlanarMultipoles();
+	auto h = tsc::TwoDimensionalMultipoles();
 
 	// pure dipole
 	h.setMultipole(1, tsc::cdbl(1, 0));
@@ -142,7 +142,7 @@ BOOST_AUTO_TEST_CASE(test10_set_harmonic_dipole)
 BOOST_AUTO_TEST_CASE(test20_set_harmonic_quadrupole)
 {
 
-	auto h = tsc::PlanarMultipoles();
+	auto h = tsc::TwoDimensionalMultipoles();
 
 	// pure quadrupole
 	h.setMultipole(2, tsc::cdbl(1, 0));
@@ -182,7 +182,7 @@ BOOST_AUTO_TEST_CASE(test20_set_harmonic_quadrupole)
 BOOST_AUTO_TEST_CASE(test30_set_scale_sextupole)
 {
 	// pure quadrupole
-	auto h = tsc::PlanarMultipoles();
+	auto h = tsc::TwoDimensionalMultipoles();
 	h.setMultipole(3, tsc::cdbl(.1, -.3));
 	BOOST_CHECK_CLOSE(h.getMultipole(3).real(),  0.1, 1e-42);
 	BOOST_CHECK_CLOSE(h.getMultipole(3).imag(), -0.3, 1e-42);
@@ -200,7 +200,7 @@ BOOST_AUTO_TEST_CASE(test30_set_scale_sextupole)
 BOOST_AUTO_TEST_CASE(test40_rotate_quadrupole)
 {
 
-	auto h = tsc::PlanarMultipoles();
+	auto h = tsc::TwoDimensionalMultipoles();
 
 	// pure quadrupole
 	h.setMultipole(2, tsc::cdbl(1, 0));
@@ -227,7 +227,7 @@ BOOST_AUTO_TEST_CASE(test41_rotate_quadrupole_consistency)
 
 	return;
 
-	auto h = tsc::PlanarMultipoles();
+	auto h = tsc::TwoDimensionalMultipoles();
 
 	const int n = 2;
 	// pure quadrupole
@@ -293,7 +293,7 @@ BOOST_AUTO_TEST_CASE(test41_rotate_quadrupole_consistency)
 
 BOOST_AUTO_TEST_CASE(test50_octupole_field)
 {
-	auto h = tsc::PlanarMultipoles();
+	auto h = tsc::TwoDimensionalMultipoles();
 
 	const int n = 4;
 
@@ -339,7 +339,7 @@ BOOST_AUTO_TEST_CASE(test50_octupole_field)
 
 BOOST_AUTO_TEST_CASE(test62_rotate_dipole)
 {
-	auto h = tsc::PlanarMultipoles();
+	auto h = tsc::TwoDimensionalMultipoles();
 	const int n = 1;
 	// pure dipole
 	h.setMultipole(n, tsc::cdbl(1, 0));
@@ -395,7 +395,7 @@ BOOST_AUTO_TEST_CASE(test62_rotate_dipole)
 
 BOOST_AUTO_TEST_CASE(test63_rotate_octupole)
 {
-	auto h = tsc::PlanarMultipoles();
+	auto h = tsc::TwoDimensionalMultipoles();
 
 	const int n = 4;
 	// pure quadrupole
@@ -501,7 +501,7 @@ BOOST_AUTO_TEST_CASE(test63_rotate_octupole)
 
 BOOST_AUTO_TEST_CASE(test60_rotate_octupole_small_angle)
 {
-	auto h = tsc::PlanarMultipoles();
+	auto h = tsc::TwoDimensionalMultipoles();
 
 
 	const int n = 4;
@@ -573,7 +573,7 @@ BOOST_AUTO_TEST_CASE(test60_rotate_octupole_small_angle)
 BOOST_AUTO_TEST_CASE(test70_translate_quadrupole_zero)
 {
 
-	auto h = tsc::PlanarMultipoles();
+	auto h = tsc::TwoDimensionalMultipoles();
 
 	// pure quadrupole .. assuming harmonics have been checked
 	h.setMultipole(2, tsc::cdbl(1, 0));
@@ -600,7 +600,7 @@ BOOST_AUTO_TEST_CASE(test70_translate_quadrupole_zero)
 BOOST_AUTO_TEST_CASE(test80_translate_quadrupole_one)
 {
 
-	tsc::PlanarMultipoles h = tsc::PlanarMultipoles();
+	tsc::TwoDimensionalMultipoles h = tsc::TwoDimensionalMultipoles();
 
 	// pure quadrupole .. assuming harmonics have been checked
 	h.setMultipole(2, tsc::cdbl(1, 0));
@@ -657,7 +657,7 @@ BOOST_AUTO_TEST_CASE(test80_translate_quadrupole_one)
 // A typical quadrupole for a MBA machine fairly misplaced
 BOOST_AUTO_TEST_CASE(test90_translate_quadrupole_test_field)
 {
-	tsc::PlanarMultipoles h = tsc::PlanarMultipoles();
+	tsc::TwoDimensionalMultipoles h = tsc::TwoDimensionalMultipoles();
 
 	// pure quadrupole .. assuming harmonics have been checked
 	h.setMultipole(2, tsc::cdbl(1, 0) * 95e0);
@@ -694,7 +694,7 @@ BOOST_AUTO_TEST_CASE(test91_translate_sextupole)
 {
 	const double sextupole = 100;
 	const tsc::cdbl dz(1, 0);
-	tsc::PlanarMultipoles h = tsc::PlanarMultipoles();
+	tsc::TwoDimensionalMultipoles h = tsc::TwoDimensionalMultipoles();
 	h.setMultipole(3, tsc::cdbl(1, 0) * sextupole);
 	const tsc::cdbl pos0(0, 0), pos1(0, .5), pos2(1., 0);
 
@@ -739,7 +739,7 @@ BOOST_AUTO_TEST_CASE(test92_translate_octupole)
 	const double octupole = 1000;
 
 	const tsc::cdbl dz(1, 0);
-	tsc::PlanarMultipoles h = tsc::PlanarMultipoles();
+	tsc::TwoDimensionalMultipoles h = tsc::TwoDimensionalMultipoles();
 	h.setMultipole(4, tsc::cdbl(1, 0) * octupole);
 	const tsc::cdbl pos0(0, 0), pos1(0, .5), pos2(1., 0);
 
@@ -788,7 +788,7 @@ BOOST_AUTO_TEST_CASE(test92_translate_octupole)
 BOOST_AUTO_TEST_CASE(test100_translate_quadrupole_small)
 {
 
-	tsc::PlanarMultipoles h = tsc::PlanarMultipoles();
+	tsc::TwoDimensionalMultipoles h = tsc::TwoDimensionalMultipoles();
 	const double unit = 1e-4, rref=40e-3;
 	//  realistic example
 	const tsc::cdbl dz(1e-4/rref, .3e-3/rref);
@@ -850,4 +850,367 @@ BOOST_AUTO_TEST_CASE(test100_translate_quadrupole_small)
 	BOOST_CHECK_SMALL(field2.imag() - check2.imag(), 2e-3);
 	BOOST_WARN_SMALL(field2.imag() - check2.imag(), 1e-15);
 
+}
+
+// tests for supporting engineering tolerances
+BOOST_AUTO_TEST_CASE(test200_add_multipoles_inplace)
+{
+
+	tsc::TwoDimensionalMultipoles h, h2, h3;
+
+	h.setMultipole(1, tsc::cdbl(1, 0));
+	h2.setMultipole(2, tsc::cdbl(2, 0));
+	{
+		// cross check harmonics properly set
+		const tsc::cdbl c1 = h.getMultipole(1);
+		const tsc::cdbl c2 = h.getMultipole(2);
+		const tsc::cdbl c3 = h.getMultipole(3);
+
+		BOOST_CHECK_CLOSE(c1.real(), 1, 1e-12);
+		BOOST_CHECK_SMALL(c1.imag(), 1e-12);
+		BOOST_CHECK_SMALL(c2.real(), 1e-12);
+		BOOST_CHECK_SMALL(c2.imag(), 1e-12);
+		BOOST_CHECK_SMALL(c3.real(), 1e-12);
+		BOOST_CHECK_SMALL(c3.imag(), 1e-12);
+	}
+
+	{
+		// cross check harmonics properly set
+		const tsc::cdbl c1 = h2.getMultipole(1);
+		const tsc::cdbl c2 = h2.getMultipole(2);
+		const tsc::cdbl c3 = h2.getMultipole(3);
+
+		BOOST_CHECK_SMALL(c1.real(), 1e-12);
+		BOOST_CHECK_SMALL(c1.imag(), 1e-12);
+		BOOST_CHECK_CLOSE(c2.real(), 2, 1e-12);
+		BOOST_CHECK_SMALL(c2.imag(), 1e-12);
+		BOOST_CHECK_SMALL(c3.real(), 1e-12);
+		BOOST_CHECK_SMALL(c3.imag(), 1e-12);
+	}
+
+	h3 += h2;
+	h3 += h;
+	{
+		// cross check harmonics properly set and maintained after math
+		const tsc::cdbl c1 = h.getMultipole(1);
+		const tsc::cdbl c2 = h.getMultipole(2);
+		const tsc::cdbl c3 = h.getMultipole(3);
+
+		BOOST_CHECK_CLOSE(c1.real(), 1, 1e-12);
+		BOOST_CHECK_SMALL(c1.imag(), 1e-12);
+		BOOST_CHECK_SMALL(c2.real(), 1e-12);
+		BOOST_CHECK_SMALL(c2.imag(), 1e-12);
+		BOOST_CHECK_SMALL(c3.real(), 1e-12);
+		BOOST_CHECK_SMALL(c3.imag(), 1e-12);
+	}
+
+	{
+		// cross check harmonics properly set
+		const tsc::cdbl c1 = h2.getMultipole(1);
+		const tsc::cdbl c2 = h2.getMultipole(2);
+		const tsc::cdbl c3 = h2.getMultipole(3);
+
+		BOOST_CHECK_SMALL(c1.real(), 1e-12);
+		BOOST_CHECK_SMALL(c1.imag(), 1e-12);
+		BOOST_CHECK_CLOSE(c2.real(), 2, 1e-12);
+		BOOST_CHECK_SMALL(c2.imag(), 1e-12);
+		BOOST_CHECK_SMALL(c3.real(), 1e-12);
+		BOOST_CHECK_SMALL(c3.imag(), 1e-12);
+	}
+	{
+		// properly assigned
+		// cross check harmonics properly set
+		const tsc::cdbl c1 = h3.getMultipole(1);
+		const tsc::cdbl c2 = h3.getMultipole(2);
+		const tsc::cdbl c3 = h3.getMultipole(3);
+
+		BOOST_CHECK_CLOSE(c1.real(), 1, 1e-12);
+		BOOST_CHECK_SMALL(c1.imag(), 1e-12);
+		BOOST_CHECK_CLOSE(c2.real(), 2, 1e-12);
+		BOOST_CHECK_SMALL(c2.imag(), 1e-12);
+		BOOST_CHECK_SMALL(c3.real(), 1e-12);
+		BOOST_CHECK_SMALL(c3.imag(), 1e-12);
+	}
+
+
+}
+
+BOOST_AUTO_TEST_CASE(test201_add_multipoles)
+{
+
+	tsc::TwoDimensionalMultipoles h, h2, h3;
+
+	h.setMultipole(1, tsc::cdbl(1, 0));
+	h2.setMultipole(2, tsc::cdbl(2, 0));
+	{
+		// cross check harmonics properly set
+		const tsc::cdbl c1 = h.getMultipole(1);
+		const tsc::cdbl c2 = h.getMultipole(2);
+		const tsc::cdbl c3 = h.getMultipole(3);
+
+		BOOST_CHECK_CLOSE(c1.real(), 1, 1e-12);
+		BOOST_CHECK_SMALL(c1.imag(), 1e-12);
+		BOOST_CHECK_SMALL(c2.real(), 1e-12);
+		BOOST_CHECK_SMALL(c2.imag(), 1e-12);
+		BOOST_CHECK_SMALL(c3.real(), 1e-12);
+		BOOST_CHECK_SMALL(c3.imag(), 1e-12);
+	}
+
+	{
+		// cross check harmonics properly set
+		const tsc::cdbl c1 = h2.getMultipole(1);
+		const tsc::cdbl c2 = h2.getMultipole(2);
+		const tsc::cdbl c3 = h2.getMultipole(3);
+
+		BOOST_CHECK_SMALL(c1.real(), 1e-12);
+		BOOST_CHECK_SMALL(c1.imag(), 1e-12);
+		BOOST_CHECK_CLOSE(c2.real(), 2, 1e-12);
+		BOOST_CHECK_SMALL(c2.imag(), 1e-12);
+		BOOST_CHECK_SMALL(c3.real(), 1e-12);
+		BOOST_CHECK_SMALL(c3.imag(), 1e-12);
+	}
+
+	h3 = (h2 + h);
+
+	{
+		// cross check harmonics properly set and maintained after math
+		const tsc::cdbl c1 = h.getMultipole(1);
+		const tsc::cdbl c2 = h.getMultipole(2);
+		const tsc::cdbl c3 = h.getMultipole(3);
+
+		BOOST_CHECK_CLOSE(c1.real(), 1, 1e-12);
+		BOOST_CHECK_SMALL(c1.imag(), 1e-12);
+		BOOST_CHECK_SMALL(c2.real(), 1e-12);
+		BOOST_CHECK_SMALL(c2.imag(), 1e-12);
+		BOOST_CHECK_SMALL(c3.real(), 1e-12);
+		BOOST_CHECK_SMALL(c3.imag(), 1e-12);
+	}
+
+	{
+		// cross check harmonics properly set
+		const tsc::cdbl c1 = h2.getMultipole(1);
+		const tsc::cdbl c2 = h2.getMultipole(2);
+		const tsc::cdbl c3 = h2.getMultipole(3);
+
+		BOOST_CHECK_SMALL(c1.real(), 1e-12);
+		BOOST_CHECK_SMALL(c1.imag(), 1e-12);
+		BOOST_CHECK_CLOSE(c2.real(), 2, 1e-12);
+		BOOST_CHECK_SMALL(c2.imag(), 1e-12);
+		BOOST_CHECK_SMALL(c3.real(), 1e-12);
+		BOOST_CHECK_SMALL(c3.imag(), 1e-12);
+	}
+	{
+		// properly assigned
+		// cross check harmonics properly set
+		const tsc::cdbl c1 = h3.getMultipole(1);
+		const tsc::cdbl c2 = h3.getMultipole(2);
+		const tsc::cdbl c3 = h3.getMultipole(3);
+
+		BOOST_CHECK_CLOSE(c1.real(), 1, 1e-12);
+		BOOST_CHECK_SMALL(c1.imag(), 1e-12);
+		BOOST_CHECK_CLOSE(c2.real(), 2, 1e-12);
+		BOOST_CHECK_SMALL(c2.imag(), 1e-12);
+		BOOST_CHECK_SMALL(c3.real(), 1e-12);
+		BOOST_CHECK_SMALL(c3.imag(), 1e-12);
+	}
+
+
+}
+
+BOOST_AUTO_TEST_CASE(test210_mul_multipoles_inplace)
+{
+
+	tsc::TwoDimensionalMultipoles h;
+	const double b1 = 5e0, b2 = 7e0, scale = 3e0;
+	h.setMultipole(1, tsc::cdbl(b1, 0));
+	h.setMultipole(2, tsc::cdbl(b2, 0));
+
+	{
+		// properly assigned
+		// cross check harmonics properly set
+		const tsc::cdbl c1 = h.getMultipole(1);
+		const tsc::cdbl c2 = h.getMultipole(2);
+		const tsc::cdbl c3 = h.getMultipole(3);
+		BOOST_CHECK_CLOSE(c1.real(), b1, 1e-12);
+		BOOST_CHECK_SMALL(c1.imag(), 1e-12);
+		BOOST_CHECK_CLOSE(c2.real(), b2, 1e-12);
+		BOOST_CHECK_SMALL(c2.imag(), 1e-12);
+		BOOST_CHECK_SMALL(c3.real(), 1e-12);
+		BOOST_CHECK_SMALL(c3.imag(), 1e-12);
+	}
+
+	h *= scale;
+	{
+		// properly assigned
+		// cross check harmonics properly set
+		const tsc::cdbl c1 = h.getMultipole(1);
+		const tsc::cdbl c2 = h.getMultipole(2);
+		const tsc::cdbl c3 = h.getMultipole(3);
+		BOOST_CHECK_CLOSE(c1.real(), b1 * scale , 1e-12);
+		BOOST_CHECK_SMALL(c1.imag(), 1e-12);
+		BOOST_CHECK_CLOSE(c2.real(), b2 * scale , 1e-12);
+		BOOST_CHECK_SMALL(c2.imag(), 1e-12);
+		BOOST_CHECK_SMALL(c3.real(), 1e-12);
+		BOOST_CHECK_SMALL(c3.imag(), 1e-12);
+	}
+}
+
+BOOST_AUTO_TEST_CASE(test220_mul_multipoles)
+{
+
+	tsc::TwoDimensionalMultipoles h;
+	const double b1 = 5e0, b2 = 7e0, scale = 3e0;
+	h.setMultipole(1, tsc::cdbl(b1, 0));
+	h.setMultipole(2, tsc::cdbl(b2, 0));
+
+	{
+		// properly assigned
+		// cross check harmonics properly set
+		const tsc::cdbl c1 = h.getMultipole(1);
+		const tsc::cdbl c2 = h.getMultipole(2);
+		const tsc::cdbl c3 = h.getMultipole(3);
+		BOOST_CHECK_CLOSE(c1.real(), b1, 1e-12);
+		BOOST_CHECK_SMALL(c1.imag(), 1e-12);
+		BOOST_CHECK_CLOSE(c2.real(), b2, 1e-12);
+		BOOST_CHECK_SMALL(c2.imag(), 1e-12);
+		BOOST_CHECK_SMALL(c3.real(), 1e-12);
+		BOOST_CHECK_SMALL(c3.imag(), 1e-12);
+	}
+
+	tsc::TwoDimensionalMultipoles h2 = h * scale;
+	{
+		// properly assigned
+		// cross check harmonics not modified
+		const tsc::cdbl c1 = h.getMultipole(1);
+		const tsc::cdbl c2 = h.getMultipole(2);
+		const tsc::cdbl c3 = h.getMultipole(3);
+		BOOST_CHECK_CLOSE(c1.real(), b1, 1e-12);
+		BOOST_CHECK_SMALL(c1.imag(), 1e-12);
+		BOOST_CHECK_CLOSE(c2.real(), b2, 1e-12);
+		BOOST_CHECK_SMALL(c2.imag(), 1e-12);
+		BOOST_CHECK_SMALL(c3.real(), 1e-12);
+		BOOST_CHECK_SMALL(c3.imag(), 1e-12);
+	}
+	{
+		// properly assigned
+		// cross check harmonics properly set
+		const tsc::cdbl c1 = h2.getMultipole(1);
+		const tsc::cdbl c2 = h2.getMultipole(2);
+		const tsc::cdbl c3 = h2.getMultipole(3);
+		BOOST_CHECK_CLOSE(c1.real(), b1 * scale , 1e-12);
+		BOOST_CHECK_SMALL(c1.imag(), 1e-12);
+		BOOST_CHECK_CLOSE(c2.real(), b2 * scale , 1e-12);
+		BOOST_CHECK_SMALL(c2.imag(), 1e-12);
+		BOOST_CHECK_SMALL(c3.real(), 1e-12);
+		BOOST_CHECK_SMALL(c3.imag(), 1e-12);
+	}
+}
+
+
+static double ret_zero(const double val)
+{
+	return 0e0;
+}
+
+BOOST_AUTO_TEST_CASE(test240_mul_multipoles_vector_inplace)
+{
+
+	const double b1 = 5e0, b2 = 7e0, s1 = 11e0, s2=13e0;
+
+	tsc::TwoDimensionalMultipoles h;
+	std::vector<double> scale(h.getCoeffs().size());
+	h.setMultipole(1, tsc::cdbl(b1, 0));
+	h.setMultipole(2, tsc::cdbl(b2, 0));
+
+	std::transform(scale.begin(), scale.end(), scale.begin(),  ret_zero);
+	scale[0] = s1;
+	scale[1] = s2;
+
+	{
+		// properly assigned
+		// cross check harmonics properly set
+		const tsc::cdbl c1 = h.getMultipole(1);
+		const tsc::cdbl c2 = h.getMultipole(2);
+		const tsc::cdbl c3 = h.getMultipole(3);
+		BOOST_CHECK_CLOSE(c1.real(), b1, 1e-12);
+		BOOST_CHECK_SMALL(c1.imag(), 1e-12);
+		BOOST_CHECK_CLOSE(c2.real(), b2, 1e-12);
+		BOOST_CHECK_SMALL(c2.imag(), 1e-12);
+		BOOST_CHECK_SMALL(c3.real(), 1e-12);
+		BOOST_CHECK_SMALL(c3.imag(), 1e-12);
+	}
+
+	h *= scale;
+	{
+		// properly assigned
+		// cross check harmonics properly set
+		const tsc::cdbl c1 = h.getMultipole(1);
+		const tsc::cdbl c2 = h.getMultipole(2);
+		const tsc::cdbl c3 = h.getMultipole(3);
+		BOOST_CHECK_CLOSE(c1.real(), b1 * s1 , 1e-12);
+		BOOST_CHECK_SMALL(c1.imag(), 1e-12);
+		BOOST_CHECK_CLOSE(c2.real(), b2 * s2 , 1e-12);
+		BOOST_CHECK_SMALL(c2.imag(), 1e-12);
+		BOOST_CHECK_SMALL(c3.real(), 1e-12);
+		BOOST_CHECK_SMALL(c3.imag(), 1e-12);
+	}
+}
+
+BOOST_AUTO_TEST_CASE(test250_mul_multipoles_vector)
+{
+
+	const double b1 = 5e0, b2 = 7e0, s1 = 1./11e0, s2=1./13e0;
+
+	tsc::TwoDimensionalMultipoles h;
+	std::vector<double> scale(h.getCoeffs().size());
+	h.setMultipole(1, tsc::cdbl(b1, 0));
+	h.setMultipole(2, tsc::cdbl(b2, 0));
+
+	std::transform(scale.begin(), scale.end(), scale.begin(),  ret_zero);
+	scale[0] = s1;
+	scale[1] = s2;
+
+	{
+		// properly assigned
+		// cross check harmonics properly set
+		const tsc::cdbl c1 = h.getMultipole(1);
+		const tsc::cdbl c2 = h.getMultipole(2);
+		const tsc::cdbl c3 = h.getMultipole(3);
+		BOOST_CHECK_CLOSE(c1.real(), b1, 1e-12);
+		BOOST_CHECK_SMALL(c1.imag(), 1e-12);
+		BOOST_CHECK_CLOSE(c2.real(), b2, 1e-12);
+		BOOST_CHECK_SMALL(c2.imag(), 1e-12);
+		BOOST_CHECK_SMALL(c3.real(), 1e-12);
+		BOOST_CHECK_SMALL(c3.imag(), 1e-12);
+	}
+
+	tsc::TwoDimensionalMultipoles h2 = h * scale;
+
+	{
+		// properly assigned
+		// cross check h unchanged
+		const tsc::cdbl c1 = h.getMultipole(1);
+		const tsc::cdbl c2 = h.getMultipole(2);
+		const tsc::cdbl c3 = h.getMultipole(3);
+		BOOST_CHECK_CLOSE(c1.real(), b1, 1e-12);
+		BOOST_CHECK_SMALL(c1.imag(), 1e-12);
+		BOOST_CHECK_CLOSE(c2.real(), b2, 1e-12);
+		BOOST_CHECK_SMALL(c2.imag(), 1e-12);
+		BOOST_CHECK_SMALL(c3.real(), 1e-12);
+		BOOST_CHECK_SMALL(c3.imag(), 1e-12);
+	}
+
+	{
+		// properly assigned
+		// cross check harmonics properly set
+		const tsc::cdbl c1 = h2.getMultipole(1);
+		const tsc::cdbl c2 = h2.getMultipole(2);
+		const tsc::cdbl c3 = h2.getMultipole(3);
+		BOOST_CHECK_CLOSE(c1.real(), b1 * s1 , 1e-12);
+		BOOST_CHECK_SMALL(c1.imag(), 1e-12);
+		BOOST_CHECK_CLOSE(c2.real(), b2 * s2 , 1e-12);
+		BOOST_CHECK_SMALL(c2.imag(), 1e-12);
+		BOOST_CHECK_SMALL(c3.real(), 1e-12);
+		BOOST_CHECK_SMALL(c3.imag(), 1e-12);
+	}
 }

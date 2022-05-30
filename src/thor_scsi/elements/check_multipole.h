@@ -4,7 +4,7 @@
 #include <thor_scsi/core/multipoles.h>
 
 void
-check_only_major_multipole_set(std::shared_ptr<thor_scsi::core::PlanarMultipoles> muls,
+check_only_major_multipole_set(std::shared_ptr<thor_scsi::core::TwoDimensionalMultipoles> muls,
 			       const thor_scsi::core::cdbl ref, const size_t n_major);
 
 

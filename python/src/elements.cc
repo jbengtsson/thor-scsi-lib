@@ -1,6 +1,8 @@
 #include <pybind11/stl.h>
 #include <pybind11/complex.h>
+#include <pybind11/operators.h>
 #include <pybind11/pybind11.h>
+#include <pybind11/numpy.h>
 #include "thor_scsi.h"
 #include <thor_scsi/elements/field_kick.h>
 #include <thor_scsi/elements/drift.h>
@@ -255,16 +257,60 @@ void py_thor_scsi_init_elements(py::module &m)
 	 * Needs to be defined as shared ptr class as it is returned as shared pointer
 	 * by classical magnet's method getMultipoles
 	*/
-	py::class_<tsc::PlanarMultipoles, std::shared_ptr<tsc::PlanarMultipoles>>(m, "TwoDimensionalMultipoles")
-		.def("getMultipole",     &tsc::PlanarMultipoles::getMultipole)
-		.def("setMultipole",     &tsc::PlanarMultipoles::setMultipole)
-		.def("applyRollAngle",   &tsc::PlanarMultipoles::applyRollAngle)
-		.def("__str__",          &tsc::PlanarMultipoles::pstr)
-		.def("__repr__",         &tsc::PlanarMultipoles::repr)
-		.def("getCoefficients",  &tsc::PlanarMultipoles::getCoeffsConst)
-		.def("applyTranslation", py::overload_cast<const tsc::cdbl>(&tsc::PlanarMultipoles::applyTranslation))
-		.def("applyTranslation", py::overload_cast<const double, const double>(&tsc::PlanarMultipoles::applyTranslation))
-		.def(py::init<>());
+	py::class_<tsc::TwoDimensionalMultipoles, std::shared_ptr<tsc::TwoDimensionalMultipoles>>(m, "TwoDimensionalMultipoles", py::buffer_protocol())
+		.def("getMultipole",     &tsc::TwoDimensionalMultipoles::getMultipole)
+		.def("setMultipole",     &tsc::TwoDimensionalMultipoles::setMultipole)
+		.def("applyRollAngle",   &tsc::TwoDimensionalMultipoles::applyRollAngle)
+		.def("__str__",          &tsc::TwoDimensionalMultipoles::pstr)
+		.def("__repr__",         &tsc::TwoDimensionalMultipoles::repr)
+		.def("getCoefficients",  &tsc::TwoDimensionalMultipoles::getCoeffsConst)
+		.def("applyTranslation", py::overload_cast<const tsc::cdbl>(&tsc::TwoDimensionalMultipoles::applyTranslation))
+		.def("applyTranslation", py::overload_cast<const double, const double>(&tsc::TwoDimensionalMultipoles::applyTranslation))
+		.def(py::self += py::self)
+		.def(py::self + py::self)
+		.def(py::self *= double())
+		.def(py::self * double())
+		.def(py::self *= std::vector<double>())
+		.def(py::self * std::vector<double>())
+		.def_buffer([](tsc::TwoDimensionalMultipoles &muls) -> py::buffer_info {
+				    std::vector<tsc::cdbl_intern> coeffs = muls.getCoeffs();
+				    size_t n = coeffs.size();
+				    py::buffer_info r;
+				    r.ptr = coeffs.data();         /* Pointer to buffer */
+				    r.itemsize = sizeof(tsc::cdbl_intern); /* Size of one scalar */
+				    r.format = py::format_descriptor<tsc::cdbl_intern>::format(); /* Python struct-style format descriptor */
+				    r.ndim = 1;
+				    r.shape = { static_cast<py::ssize_t>(n)};/* Number of dimensions */
+				    r.strides = {
+					    /* Strides (in bytes) for each index */
+					    static_cast<py::ssize_t>(sizeof(tsc::cdbl_intern))
+				    };
+				    return r;
+			    })
+		.def(py::init<std::vector<tsc::cdbl_intern>>())
+#if 0
+		.def(py::init([](py::array_t<tsc::cdbl_intern, py::array::c_style|py::array::forcecast> b) {
+				      /* Request a buffer descriptor from Python */
+				      py::buffer_info info = b.request();
+
+				      /* Some sanity checks ... */
+				      if (info.format != py::format_descriptor<tsc::cdbl_intern>::format())
+					      throw std::runtime_error("Incompatible format: expected a double array!");
+
+				      if (info.ndim != 1){
+					      std::stringstream strm;
+					      strm << "Incompatible buffer: expected 1 but got "
+						   << info.ndim << "dimensions!";
+					      throw std::runtime_error(strm.str());
+				      }
+				      /*
+				      std::vector<tsc mat = arma::mat(static_cast<const double *>(info.ptr),
+							   info.shape[0], info.shape[1]);
+				      */
+				      return mat;
+			      }))
+#endif
+		.def(py::init<const unsigned int>(), "initalise multipoles", py::arg("h_max") = tsc::max_multipole);
 
 	py::class_<tse::FieldKick, std::shared_ptr<tse::FieldKick>> field_kick(m, "FieldKick", elem_type);
 	field_kick

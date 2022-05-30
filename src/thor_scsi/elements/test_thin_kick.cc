@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE(test01_wrong_thin_kick_L0)
 	const double length = 0.0;
 
 	tsc::ConfigType calc_config;
-	const tsc::PlanarMultipoles muls;
+	const tsc::TwoDimensionalMultipoles muls;
 
 	{
 		ss_vect<double> ps = ps_orig;
@@ -61,7 +61,7 @@ BOOST_AUTO_TEST_CASE(test01_wrong_thin_kick_L0)
 	for(int i=1; i <= 4; ++i)
 	{
 		ss_vect<double> ps = ps_orig;
-		tsc::PlanarMultipoles muls2 = muls.clone();
+		tsc::TwoDimensionalMultipoles muls2 = muls.clone();
 		muls2.setMultipole(i, tsc::cdbl(1.0, 0.0));
 
 		thin_kick(calc_config, muls2, length, h_bend, h_ref, ps);
@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_CASE(test01_wrong_thin_kick_L0)
 		// Leave an extra instance here ... in case an extra test is
 		// required
 		ss_vect<double> ps = ps_orig;
-		tsc::PlanarMultipoles muls2 = muls.clone();
+		tsc::TwoDimensionalMultipoles muls2 = muls.clone();
 		muls2.setMultipole(5, tsc::cdbl(1.0, 0.0));
 
 		thin_kick(calc_config, muls2, length, h_bend, h_ref, ps);
@@ -88,7 +88,7 @@ BOOST_AUTO_TEST_CASE(test02_wrong_thin_kick_L0_ps_off)
 	const double length = 0.0;
 
 	tsc::ConfigType calc_config;
-	const tsc::PlanarMultipoles muls;
+	const tsc::TwoDimensionalMultipoles muls;
 
 	{
 		ss_vect<double> ps = ps_orig;
@@ -105,7 +105,7 @@ BOOST_AUTO_TEST_CASE(test02_wrong_thin_kick_L0_ps_off)
 	for(int i=1; i <= 4; ++i)
 	{
 		ss_vect<double> ps = ps_orig;
-		tsc::PlanarMultipoles muls2 = muls.clone();
+		tsc::TwoDimensionalMultipoles muls2 = muls.clone();
 		muls2.setMultipole(i, tsc::cdbl(1.0, 0.0));
 
 		thin_kick(calc_config, muls2, length, h_bend, h_ref, ps);
@@ -129,7 +129,7 @@ BOOST_AUTO_TEST_CASE(test03_wrong_thin_kick_L0_ps_off)
 	const double length = 0;
 
 	tsc::ConfigType calc_config;
-	const tsc::PlanarMultipoles muls;
+	const tsc::TwoDimensionalMultipoles muls;
 
 	{
 		ss_vect<double> ps = ps_orig;
@@ -146,7 +146,7 @@ BOOST_AUTO_TEST_CASE(test03_wrong_thin_kick_L0_ps_off)
 	for(int i=1; i <= 4; ++i)
 	{
 		ss_vect<double> ps = ps_orig;
-		tsc::PlanarMultipoles muls2 = muls.clone();
+		tsc::TwoDimensionalMultipoles muls2 = muls.clone();
 		muls2.setMultipole(i, tsc::cdbl(1.0, 0.0));
 
 		thin_kick(calc_config,  muls2, length, h_bend, h_ref, ps);
@@ -169,7 +169,7 @@ BOOST_AUTO_TEST_CASE(test10_thin_kick_L1_no_field)
 	const double length = 1.0;
 
 	tsc::ConfigType calc_config;
-	const tsc::PlanarMultipoles muls;
+	const tsc::TwoDimensionalMultipoles muls;
 
 	{
 		ss_vect<double> ps = ps_orig;
@@ -181,7 +181,7 @@ BOOST_AUTO_TEST_CASE(test10_thin_kick_L1_no_field)
 	for(int i=1; i <= 4; ++i)
 	{
 		ss_vect<double> ps = ps_orig;
-		tsc::PlanarMultipoles muls2 = muls.clone();
+		tsc::TwoDimensionalMultipoles muls2 = muls.clone();
 
 		thin_kick(calc_config, muls2, length / (double(i)), h_bend, h_ref, ps);
 		test_ps_small(ps);
@@ -197,12 +197,12 @@ BOOST_AUTO_TEST_CASE(test11_thin_kick_L1_no_ps_off)
 	const double length = 355/113;
 
 	tsc::ConfigType calc_config;
-	const tsc::PlanarMultipoles muls;
+	const tsc::TwoDimensionalMultipoles muls;
 
 	for(int i=1; i <= 4; ++i)
 	{
 		ss_vect<double> ps = ps_orig;
-		tsc::PlanarMultipoles muls2 = muls.clone();
+		tsc::TwoDimensionalMultipoles muls2 = muls.clone();
 
 		thin_kick(calc_config, muls2, length * i, h_bend, h_ref, ps);
 
@@ -220,7 +220,7 @@ BOOST_AUTO_TEST_CASE(test11_thin_kick_L1_no_ps_off)
 BOOST_AUTO_TEST_CASE(test20_thin_kick_L1_dipole)
 {
 	tsc::ConfigType calc_config;
-	tsc::PlanarMultipoles muls;
+	tsc::TwoDimensionalMultipoles muls;
 
 	muls.setMultipole(1, tsc::cdbl(1e-3, 0e0));
 	const double h_ref = 0e0, h_bend = 0e0;
@@ -256,7 +256,7 @@ static void compute_irho_px(const double phi, const double length, const double 
 BOOST_AUTO_TEST_CASE(test51_sector_bend_delta)
 {
 	tsc::ConfigType calc_config;
-	const tsc::PlanarMultipoles muls;
+	const tsc::TwoDimensionalMultipoles muls;
 
 
 	const double phi = 1e-3; // 1 mrad
@@ -294,7 +294,7 @@ BOOST_AUTO_TEST_CASE(test51_sector_bend_delta)
 BOOST_AUTO_TEST_CASE(test52_sector_bend_delta_pars)
 {
 	tsc::ConfigType calc_config;
-	const tsc::PlanarMultipoles muls;
+	const tsc::TwoDimensionalMultipoles muls;
 
 	/* test different length */
 	{
@@ -410,7 +410,7 @@ BOOST_AUTO_TEST_CASE(test60_higher_orders)
 	const double length = 1, h_bend = 0.0, h_ref = 0.0;
 
 	for (int n=2; n<=4; ++n){
-		tsc::PlanarMultipoles muls;
+		tsc::TwoDimensionalMultipoles muls;
 		muls.setMultipole(n, tsc::cdbl(1, 0));
 
 		/* on axis */
