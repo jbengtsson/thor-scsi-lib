@@ -73,6 +73,7 @@ namespace thor_scsi::core {
 		   Just allocates an set of zero multipoles
 		 */
 		TwoDimensionalMultipoles(const unsigned int h_max=max_multipole);
+		TwoDimensionalMultipoles(std::vector<cdbl_intern> const coeffs);
 		virtual inline ~TwoDimensionalMultipoles(void){};
 		// Why do I need a copy constructor ?? Did I miss an assignment operator
 		// TwoDimensionalMultipoles(const TwoDimensionalMultipoles& o);
@@ -83,6 +84,9 @@ namespace thor_scsi::core {
 
 		TwoDimensionalMultipoles clone(void) const;
 
+		inline size_t size(void) const {
+			return this->coeffs.size();
+		}
 	private:
 		/**
 		 * \verbatim embed:rst:leading-asterisk
@@ -93,7 +97,6 @@ namespace thor_scsi::core {
 		 *     coeffs: a vector of complex coefficients
 		 * \endverbatim
 		 */
-		TwoDimensionalMultipoles(std::vector<cdbl_intern> const coeffs);
 
 	public:
 		/**
@@ -331,7 +334,9 @@ namespace thor_scsi::core {
 			return *this * (1.0/scale);
 		}
 		/*
-		 * Scaling each individual by a vector
+		 * @brief: Scaling each individual by a vector
+		 *
+		 * @args: bengin: ignore if surplas number of scaling vector elements are provided
 		 */
 		TwoDimensionalMultipoles& operator *= (const std::vector<double>& scale);
 		TwoDimensionalMultipoles  operator * (const std::vector<double>& scale) const;
@@ -382,7 +387,7 @@ namespace thor_scsi::core {
 		 *
 		 * \endverbatim
 		 */
-		inline const std::vector<cdbl_intern> getCoeffs(void) const {
+		inline const std::vector<cdbl_intern>& getCoeffs(void) const {
 			return this->coeffs;
 		}
 
@@ -392,7 +397,7 @@ namespace thor_scsi::core {
 		 *
 		 * pybind11 also seems to have limits for disambuigity
 		 */
-		inline const std::vector<cdbl_intern> getCoeffsConst(void) const {
+		inline const std::vector<cdbl_intern>& getCoeffsConst(void) const {
 			return this->getCoeffs();
 		}
 

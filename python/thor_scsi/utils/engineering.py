@@ -109,6 +109,48 @@ import copy
 
 
 @dataclass
+class ElementInfo:
+
+    # on what to works
+    element_index: int
+
+
+class Property:
+
+    # Method name on how to retrieve the object and to set it
+    # calls for a better abstraction
+
+    def __init__(
+        self, *, element_info: ElementInfo, set_method_name: str, get_method_name: str
+    ):
+        self.element_info = ElementInfo
+        self.get_method_name = get_method_name
+        self.set_method_name = set_method_name
+
+    def set(self, *, element, value):
+        method = getattr(element, self.set_method_name)
+        return method(value)
+
+    def get(self, *, element, value):
+        method = getattr(element, self.get_method_name)
+        return method(value)
+
+    def __repr__(self):
+        cls_name = self.__class__.__name__
+        txt = (
+            f"{cls_name}(element_info={self.element_info}"
+            f"set_method_name={self.set_method_name},"
+            f" get_method_name={self.get_method_name})"
+        )
+        return txt
+
+    def forElementInfo(self, element_info: ElementInfo):
+        p = copy.copy(self)
+        p.element_info = element_info
+        return p
+
+
+@dataclass
 class EngineeringCommand:
     """Command for applying a specific set or value for exeucting engineering studies
 
@@ -117,17 +159,11 @@ class EngineeringCommand:
           could be feasible
     """
 
-    # Method name on how to retrieve the object and to set it
-    # calls for a better abstraction
-    set_method_name: str
-    get_method_name: str
-
     # I assume that I can scale all factors
     scale_factors: np.ndarray
     add_factors: np.ndarray
 
-    # on what to works
-    element_index: int
+    t_property: Property
 
 
 @dataclass
@@ -146,17 +182,13 @@ class EngineeringDistributionCommand:
     """
 
     # Method name on how to set the string
-    set_method_name: str
-    get_method_name: str
+    t_property: Property
 
     # I assume that a numpy random generator distribution will be
     # used. many of these just use these properties
     loc: float
     size: float
     distribution_name: str
-
-    # on what to work
-    element_index: int
 
     # find out how to use size properly
     vector_length: int
@@ -168,11 +200,9 @@ class EngineeringDistributionCommand:
         rng_method = getattr(rng, self.distribution_name)
         add_factors, scale_factors = self._create_factors(rng_method)
         cmd = EngineeringCommand(
-            element_index=self.element_index,
             scale_factors=scale_factors,
             add_factors=add_factors,
-            set_method_name=self.set_method_name,
-            get_method_name=self.get_method_name,
+            t_property=self.t_property,
         )
         return cmd
 
@@ -221,25 +251,22 @@ def apply_factors(
     """
 
     if copy:
-        acc = acc.copy()
+        acc = elements.copy()
 
     if copy:
-        all_indices = [cmd.element_index for cmd in commands]
+        all_indices = [cmd.property.elment_info.element_index for cmd in commands]
         all_indices = set(all_indices)
-        acc.copy_elements(element_indices=element_indices)
+        acc.copy_elements(element_indices=all_indices)
 
     # Iterate over the dataset and apply
     for cmd in commands:
         # Within this command it is assumed that the index is good enough
         # to go ahead
-        element = elements[cmd.element_index]
-        # XXX check get / set method name against a positive list?
-        get_method = getattr(element, cmd.get_method_name)
-        set_method = getattr(element, cmd.set_method_name)
+        element = elements[cmd.t_property.element_info.element_index]
 
-        a_property = get_method()
-        new_property = cmd.scale_factors * a_property + cmd.add_factors
-        set_method(new_property)
+        value = cmd.t_property.get(element)
+        n_value = cmd.scale_factors * value + cmd.add_factors
+        cmd.t_property.set(element, n_value)
 
 
 def create_commands(
@@ -309,6 +336,8 @@ def create_distribution_commands(
 
     def new_command(element_index: int) -> EngineeringDistributionCommand:
         cmd = copy.copy(reference_command)
+
+        ElementInfo(element_index=element_index)
         cmd.element_index = element_index
         return cmd
 
