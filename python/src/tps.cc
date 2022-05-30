@@ -154,7 +154,6 @@ void py_thor_scsi_init_tps(py::module &m)
 				     }
 				     self.pook(idx, val);
 			     }, "set value at this set of 7 indices")
-
 		.def(py::self -= py::self)
 		.def(py::self *= py::self)
 		.def(py::self /= py::self)
@@ -187,6 +186,11 @@ void py_thor_scsi_init_tps(py::module &m)
 
 	auto ss_vect_double = declare_ss_vect<double>(m, "ss_vect_double");
 	auto ss_vect_tps = declare_ss_vect<tps>(m, "ss_vect_tps");
+	ss_vect_tps.def(py::self * ss_vect<double>());
+
+	m.def("partialInverse", &PInv, "partial inverse depending on the numbers of freedoms");
+	m.def("inverse", &Inv, "full inverse");
+
 #if 0
 	ss_vect_tps
 		.def("__getitem__", [](ss_vect<tps> &ps, py::sequence &seq) -> double {

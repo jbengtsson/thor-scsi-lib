@@ -124,7 +124,7 @@ template<typename T> class ss_vect {
   friend ss_vect<tps> LieExp(const tps &, const ss_vect<tps> &);
   friend ss_vect<tps> LieFlo(const ss_vect<tps> &, const ss_vect<tps> &);
   // Q(nv, nv) = P(nd2, nd2)^-1
-  friend ss_vect<tps> Inv(const ss_vect<tps> &);
+  // friend ss_vect<tps> Inv(const ss_vect<tps> &);
   // Q(nv, nv) = P(nv, nv)^-1
   friend ss_vect<tps> Inv_Ext(const ss_vect<tps> &);
   friend ss_vect<tps> PInv(const ss_vect<tps> &, const long int []);
@@ -209,5 +209,9 @@ inline ss_vect<T>::ss_vect(const ss_vect<U> &a)
 
 
 double xabs(long n, ss_vect<double> &x);
+
+
+ss_vect<tps> PInv(const ss_vect<tps> &x, const long int jj[]);
+ss_vect<tps> Inv(const ss_vect<tps> &);
 
 #endif /* _TPS_SS_VECT_H_ */
