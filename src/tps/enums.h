@@ -6,16 +6,15 @@ const int
   max_str   = 132,
   n_m2      = 21,       ///< No of 1st & 2nd order moments: (6 over 5) + 6.
   ps_tr_dim = 4,        ///< Transverse phase-space dim.
-
 /*
  *
  */
   ps_dim    = 6,        ///< 6D phase-space dim.
 #ifdef NO_TPSA
-  ss_dim    = ps_dim,        ///< 6D phase-space dim.
+  ss_dim    = ps_dim,
 #else
 #warning "unchecked code"
-  ss_dim    = ps_dim +1,        ///< 6D phase-space dim.
+  ss_dim    = ps_dim +1,
 #endif
   tps_n     = ps_dim+1; ///< 6D phase-space linear terms & constant
 

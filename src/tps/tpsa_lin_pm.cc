@@ -19,6 +19,7 @@
 #include <exception>
 #include <iostream>
 #include <iomanip>
+#include <cassert>
 #include <math.h>
 
 // extern const int nv_tps, nd_tps, iref_tps;
@@ -352,6 +353,20 @@ ss_vect<tps> Inv(const ss_vect<tps> &x)
 
   dainv_(x, nv_tps, y, nv_tps);
   return y;
+}
+
+ss_vect<tps> PInv(const ss_vect<tps> &x, const tpsa_index &idx)
+{
+  long int jj[ss_dim];
+
+  if(ss_dim != idx.size()){
+    throw std::runtime_error("tpsa index.size() != ss_dim");
+  }
+
+  for(size_t i=0; i<idx.size(); ++i){
+    jj[i] = idx[i];
+  }
+  return PInv(x, jj);
 }
 
 ss_vect<tps> PInv(const ss_vect<tps> &x, const long int jj[])
