@@ -1,4 +1,4 @@
-"""Prototype code for Use Case: compute twiss parameters.
+"""Use Case prototype code for: Compute twiss parameters.
 """
 
 
@@ -344,12 +344,14 @@ def compute_A_inv(n_dof, eta, v):
     S = compute_S(n_dof)
 
     # Normalize the eigenvectors.
-    res = np.linalg.multi_dot([np.transpose(v1), S, v1])
+    res = v1.T @ S @ v1
     for k in range(2):
         res_12 = res[2*k][2*k+1].imag
         scl = sign(res_12)*np.sqrt(np.abs(res_12/2e0))
         v1[:, 2*k] /= scl
         v1[:, 2*k+1] /= scl
+
+    prt_np_cmplx_mat("\nv1^* S v1:\n", v1.T @ S @ v1)
 
     # Construct A^-1 from the real & imaginary parts of the eigenvectors.
     for k in range(n_dof):
@@ -361,7 +363,7 @@ def compute_A_inv(n_dof, eta, v):
     [B[x_, delta_], B[px_, delta_]] = [eta[x_],   eta[px_]]
     [B[ct_, x_],    B[ct_, px_]]    = [eta[px_], -eta[x_]]
 
-    A_inv = np.dot(A_inv, np.linalg.inv(B))
+    A_inv = A_inv @ np.linalg.inv(B)
     return [A_inv, v1]
 
 
@@ -388,7 +390,7 @@ def compute_A_CS(n_dof, A):
         [R[2*k][2*k], R[2*k][2*k+1]]     = [c, -s]
         [R[2*k+1][2*k], R[2*k+1][2*k+1]] = [s,  c]
 
-    return [np.dot(A, R), dnu]
+    return [A @ R, dnu]
 
 
 def compute_twiss_A(A):
@@ -412,7 +414,7 @@ def compute_twiss_A_A_tp(A):
 
     [eta, alpha, beta] = [np.zeros(n), np.zeros(n_dof), np.zeros(n_dof)]
 
-    A_A_tp = np.dot(A[0:n, 0:n], np.transpose(A[0:n, 0:n]))
+    A_A_tp = A[0:n, 0:n] @ A[0:n, 0:n].T
     for k in range(n_dof):
         [eta[2*k], eta[2*k+1]] = [A[2*k][delta_], A[2*k+1][delta_]]
         alpha[k] = -A_A_tp[2*k][2*k+1]
@@ -426,7 +428,7 @@ def compute_disp(M):
     n = 4
     I = np.identity(n)
     D = M[0:n, delta_]
-    return np.dot(np.linalg.inv(I-M[0:n, 0:n]), D)
+    return np.linalg.inv(I-M[0:n, 0:n]) @ D
 
 
 def compute_twiss_M(M):
@@ -496,7 +498,8 @@ def compute_ring_twiss(M):
     n_dof = 2
     n     = 2*n_dof
 
-    M_tp = np.transpose(M[0:n, 0:n])
+    # Compute the left eigenvectors for M.
+    M_tp = M[0:n, 0:n].T
     [w, v] = np.linalg.eig(M_tp)
     sort_eigen(n_dof, M_tp, w, v)
 

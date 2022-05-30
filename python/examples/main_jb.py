@@ -63,8 +63,7 @@ def test_stuff(n, conf):
     tw.prt_twiss("\ncompute_twiss_A_A_tp:\n", eta, alpha, beta, nu)
 
     # Cross check.
-    tw.prt_np_mat("\nA^-1*M*A:\n", "14.6e",
-                  np.linalg.multi_dot([np.linalg.inv(A), M, A]))
+    tw.prt_np_mat("\nA^-1*M*A:\n", "14.6e", np.linalg.inv(A) @ M @ A)
 
 
 t_dir  = os.path.join(os.environ["HOME"], "Nextcloud", "thor_scsi")
@@ -76,33 +75,34 @@ conf = ConfigType()
 if False:
     test_stuff(15, conf)
 
-cod, found, s_loc = tw.compute_closed_orbit(acc, conf, 0e0, 10, 1e-10)
-elem = acc.find("uq1", 1)
-#print(repr(elem.getMultipoles()))
-muls = elem.getMultipoles()
-muls.setMultipole(Dip, 1e-3 - 1e-3j)
-print("\n", repr(elem))
-cod, found, s_loc = tw.compute_closed_orbit(acc, conf, 0e0, 10, 1e-10)
-exit()
+if not False:
+    cod, found, s_loc = tw.compute_closed_orbit(acc, conf, 0e0, 10, 1e-10)
+    elem = acc.find("uq1", 1)
+    #print(repr(elem.getMultipoles()))
+    muls = elem.getMultipoles()
+    muls.setMultipole(Dip, 1e-3 - 1e-3j)
+    print("\n", repr(elem))
+    cod, found, s_loc = tw.compute_closed_orbit(acc, conf, 0e0, 10, 1e-10)
 
-t_map = tw.compute_map(acc, conf)
-M = tw.get_mat(t_map)
 
-# Reduce matrix from 7x7 to 6x6.
-M = M[0:6, 0:6]
-tw.prt_np_mat("\nPoincaré Map:\n", "14.6e", M)
+if False:
+    t_map = tw.compute_map(acc, conf)
+    M = tw.get_mat(t_map)
 
-[eta, alpha, beta, nu, stable] = tw.compute_twiss_M(M)
-tw.prt_twiss("\ncompute_twiss_M:\n", eta, alpha, beta, nu)
+    # Reduce matrix from 7x7 to 6x6.
+    M = M[0:6, 0:6]
+    tw.prt_np_mat("\nPoincaré Map:\n", "14.6e", M)
 
-A = tw.compute_ring_twiss(M)
-tw.prt_np_mat("\nA:\n", "14.6e", A)
+    [eta, alpha, beta, nu, stable] = tw.compute_twiss_M(M)
+    tw.prt_twiss("\ncompute_twiss_M:\n", eta, alpha, beta, nu)
 
-# Cross check.
-tw.prt_np_mat("\nA^-1*M*A:\n", "14.6e",
-              np.linalg.multi_dot([np.linalg.inv(A), M, A]))
+    A = tw.compute_ring_twiss(M)
+    tw.prt_np_mat("\nA:\n", "14.6e", A)
 
-tw.compute_twiss_lat("linlat.out", acc, conf, tw.get_map(A))
+    # Cross check.
+    tw.prt_np_mat("\nA^-1*M*A:\n", "14.6e", np.linalg.inv(A) @ M @ A)
+
+    tw.compute_twiss_lat("linlat.out", acc, conf, tw.get_map(A))
 
 # ds = ds.drop(["elements", "tps"])
 # ds.to_netcdf("twiss.nc")
