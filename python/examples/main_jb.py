@@ -14,6 +14,7 @@ from thor_scsi.lib import (
 )
 
 from examples import twiss_jb as tw
+from examples import benchmark_jb as bm
 
 from thor_scsi.factory import accelerator_from_config
 #from thor_scsi.utils import linear_optics
