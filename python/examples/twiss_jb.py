@@ -1,30 +1,28 @@
-"""Read lattice file and calculate radiation
+"""Prototype code for Use Case: compute twiss parameters.
 """
-from thor_scsi.factory import accelerator_from_config
-from thor_scsi.utils import linear_optics
-from thor_scsi.utils.extract_info import accelerator_info
+
+
+import sys
+
+import numpy as np
+#import xarray as xr
 
 from thor_scsi.lib import (
     ConfigType,
     ss_vect_tps,
     ss_vect_double,
-    RadiationDelegate,
-    RadiationDelegateKick,
+#    RadiationDelegate,
+#    RadiationDelegateKick,
 #    phase_space_indicator,
-    ObservedState,
+#    ObservedState,
     ss_vect_tps_to_mat,
     partialInverse,
     xabs
 )
 
-import os
-import sys
-import xarray as xr
-import numpy as np
 
 [X_, Y_, Z_]                    = [0, 1, 2]
 [x_, px_, y_, py_, ct_, delta_] = [0, 1, 2, 3, 5, 4]
-[Dip, Quad, Sext]               = [1, 2, 3]
 
 ss_dim = 6
 
@@ -73,6 +71,101 @@ def prt_ps_vec(str, ps):
 
 def prt_map(str, fmt, map):
     prt_np_mat(str, fmt, get_mat(map))
+
+
+def compute_closed_orbit(acc, conf, delta, n_max, eps):
+    jj  = np.zeros(ss_dim, int)
+    x0  = ss_vect_double()
+    x1  = ss_vect_double()
+    dx  = ss_vect_double()
+    dx0 = ss_vect_tps()
+    I   = ss_vect_tps()
+    M   = ss_vect_tps()
+
+    debug = True
+
+    n_loc = len(acc)
+
+    if conf.Cavity_on:
+        n = 6
+    else:
+        n = 4
+
+    first = True
+
+    if debug:
+        print("\ncompute_closed_orbit:")
+
+    if (conf.mat_meth and (first or (delta != conf.dPparticle))):
+        # Recompute transport matrices.
+        if (debug):
+            print(f"  recomputing transport matrices:  delta = {delta:9.3e}"
+                  " ({conf.dPparticle:9.3e}) first = {first:1d")
+        get_lin_maps(delta)
+        conf.dPparticle = delta
+        first = False
+
+    conf.dPparticle = delta
+
+    x0.set_zero()
+    x0[delta_] = delta
+
+    for k in range(ss_dim):
+        jj[k] = 1 if k < n else 0
+
+    if False:
+        # For 2.5 D.O.F. initial COD estimate is: eta*delta.
+        for k in range(2):
+            x0[2*k]   = Cell[2*k].Eta[X_]*delta
+            x0[2*k+1] = Cell[2*k+1].Etap[X_]*delta
+
+    if debug:
+        print(f"  {0:d}", end="")
+        prt_ps_vec("                  ", x0)
+
+    n_iter = 0
+    I.set_identity()
+    dx_abs = 1e30
+    while (dx_abs >= eps) and (n_iter <= n_max):
+        n_iter += 1
+        M.set_identity()
+        M += x0
+
+#        acc.propagate(conf, M, s_loc)
+        s_loc = n_loc
+        acc.propagate(conf, M)
+
+        if (True or (s_loc == n_Loc)):
+            x1 = M.cst()
+            dx = x0 - x1
+            tmp = M-I-x1
+            dx0 = partialInverse(tmp, jj) * dx
+            dx_abs = xabs(n, dx)
+            x0 += dx0.cst()
+        else:
+            dx_abs = NAN
+            break
+
+        if debug:
+            print(f"{n_iter:3d} {dx_abs:7.1e} ({eps:7.1e})", end="")
+            prt_np_vec("", "11.3e", x0)
+
+    cod = dx_abs < eps
+
+    if cod:
+        conf.CODvect = x0
+        conf.OneTurnMat = get_mat(M)
+#        acc.propagate(conf, x0, s_loc)
+        acc.propagate(conf, x0)
+        if debug:
+            prt_np_mat("\nPoincaré Map:\n", "14.6e", conf.OneTurnMat)
+    else:
+        print(f"\ncompute_closed_orbit: failed to converge after {n_iter:d}"
+              "  delta = {delta:12.5e}, particle lost at element {s_loc:3d}"
+              "  x_0   = {x0:13.5e}  x_k-1 = {Cell[s_loc-1].BeamPos:13.5e}"
+              "  x_k   = {M.cst():13.5e}")
+
+    return [x0, cod, s_loc]
 
 
 def get_map(M):
@@ -417,200 +510,4 @@ def compute_ring_twiss(M):
 
 
 def prt_twiss(str, eta, alpha, beta, nu):
-    print(f"{str:s}"
-          "  eta   = [{eta[x_]:5.3f}, {eta[px_]:5.3f}"
-          ", {eta[y_]:5.3f}, {eta[py_]:5.3f}]"
-          "\n  alpha = [{alpha[X_]:5.3f}, {alpha[Y_]:5.3f}]"
-          "\n  beta  = [{beta[X_]:5.3f}, {beta[Y_]:5.3f}]"
-          "\n  nu    = [{nu[X_]:5.3f}, {nu[Y_]:5.3f}]")
-
-
-def test_stuff(n):
-    map = ss_vect_tps()
-
-    map.set_identity()
-    acc.propagate(calc_config, map,  n, len(acc))
-    acc.propagate(calc_config, map,  0, n)
-    M = get_mat(map)
-    # Reduce matrix from 7x7 to 6x6.
-    M = M[0:6, 0:6]
-    prt_np_mat("\nPoincaré Map:\n", "14.6e", M)
-
-    m51 = M[x_][x_]*M[px_][delta_] - M[px_][x_]*M[x_][delta_]
-    m52 = M[x_][px_]*M[px_][delta_] - M[px_][px_]*M[x_][delta_]
-    print(f"\nm_15 = {m51:21.14e} m_16 = {m52:21.14e}")
-    print(f"m_15 = {M[ct_][x_]:21.14e} m_16 = {M[ct_][px_]:21.14e}")
-
-    A = compute_ring_twiss(M)
-    prt_np_mat("\nA:\n", "14.6e", A)
-
-    n_dof = 2
-    n     = 2*n_dof
-
-    [nus, stable] = compute_nus(n_dof, M)
-    print(f"\ncompute_nus:\n  nu    = [{nus[X_]:5.3f}, {nus[Y_]:5.3f}]")
-
-    [nus, stable] = compute_nus_symp_mat(n_dof, M)
-    print(f"\ncompute_nus_symp_mat:\n  nu    = "
-          "[{nus[X_]:5.3f}, {nus[Y_]:5.3f}]")
-
-    [eta, alpha, beta, nu, stable] = compute_twiss_M(M)
-    prt_twiss("\ncompute_twiss_M:\n", eta, alpha, beta, nu)
-
-    [eta, alpha, beta, nu] = compute_twiss_A(A)
-    prt_twiss("\ncompute_twiss_A:\n", eta, alpha, beta, nu)
-
-    [eta, alpha, beta, nu] = compute_twiss_A_A_tp(A)
-    prt_twiss("\ncompute_twiss_A_A_tp:\n", eta, alpha, beta, nu)
-
-    # Cross check.
-    prt_np_mat("\nA^-1*M*A:\n", "14.6e",
-               np.linalg.multi_dot([np.linalg.inv(A), M, A]))
-
-
-def compute_closed_orbit(acc, conf, delta, n_max, eps):
-    jj  = np.zeros(ss_dim, int)
-    x0  = ss_vect_double()
-    x1  = ss_vect_double()
-    dx  = ss_vect_double()
-    dx0 = ss_vect_tps()
-    I   = ss_vect_tps()
-    M   = ss_vect_tps()
-
-    debug = True
-
-    n_loc = len(acc)
-
-    if conf.Cavity_on:
-        n = 6
-    else:
-        n = 4
-
-    first = True
-
-    if debug:
-        print("\ncompute_closed_orbit:")
-
-    if (conf.mat_meth and (first or (delta != conf.dPparticle))):
-        # Recompute transport matrices.
-        if (debug):
-            print(f"  recomputing transport matrices:  delta = {delta:9.3e}"
-                  " ({conf.dPparticle:9.3e}) first = {first:1d")
-        get_lin_maps(delta)
-        conf.dPparticle = delta
-        first = False
-
-    conf.dPparticle = delta
-
-    x0.set_zero()
-    x0[delta_] = delta
-
-    for k in range(ss_dim):
-        jj[k] = 1 if k < n else 0
-
-    if False:
-        # For 2.5 D.O.F. initial COD estimate is: eta*delta.
-        for k in range(2):
-            x0[2*k]   = Cell[2*k].Eta[X_]*delta
-            x0[2*k+1] = Cell[2*k+1].Etap[X_]*delta
-
-    if debug:
-        print(f"  {0:d}", end="")
-        prt_ps_vec("                  ", x0)
-
-    n_iter = 0
-    I.set_identity()
-    dx_abs = 1e30
-    while (dx_abs >= eps) and (n_iter <= n_max):
-        n_iter += 1
-        M.set_identity()
-        M += x0
-
-#        acc.propagate(conf, M, s_loc)
-        s_loc = n_loc
-        acc.propagate(conf, M)
-
-        if (True or (s_loc == n_Loc)):
-            x1 = M.cst()
-            dx = x0 - x1
-            tmp = M-I-x1
-            dx0 = partialInverse(tmp, jj) * dx
-            dx_abs = xabs(n, dx)
-            x0 += dx0.cst()
-        else:
-            dx_abs = NAN
-            break
-
-        if debug:
-            print(f"{n_iter:3d} {dx_abs:7.1e} ({eps:7.1e})", end="")
-            prt_np_vec("", "11.3e", x0)
-
-    cod = dx_abs < eps
-
-    if cod:
-        conf.CODvect = x0
-        conf.OneTurnMat = get_mat(M)
-#        acc.propagate(conf, x0, s_loc)
-        acc.propagate(conf, x0)
-        if debug:
-            prt_np_mat("\nPoincaré Map:\n", "14.6e", conf.OneTurnMat)
-    else:
-        print(f"\ncompute_closed_orbit: failed to converge after {n_iter:d}"
-              "  delta = {delta:12.5e}, particle lost at element {s_loc:3d}"
-              "  x_0   = {x0:13.5e}  x_k-1 = {Cell[s_loc-1].BeamPos:13.5e}"
-              "  x_k   = {M.cst():13.5e}")
-
-    return [x0, cod, s_loc]
-
-
-t_dir  = os.path.join(os.environ["HOME"], "Nextcloud", "thor_scsi")
-t_file = os.path.join(t_dir, "b3_tst.lat")
-
-acc  = accelerator_from_config(t_file)
-conf = ConfigType()
-
-if False:
-    test_stuff(15)
-
-cod, found, s_loc = compute_closed_orbit(acc, conf, 0e0, 10, 1e-10)
-elem = acc.find("uq1", 1)
-#print(repr(elem.getMultipoles()))
-muls = elem.getMultipoles()
-muls.setMultipole(Dip, 1e-3 - 1e-3j)
-print("\n", repr(elem))
-cod, found, s_loc = compute_closed_orbit(acc, conf, 0e0, 10, 1e-10)
-exit()
-
-t_map = compute_map(acc, conf)
-M = get_mat(t_map)
-
-# Reduce matrix from 7x7 to 6x6.
-M = M[0:6, 0:6]
-prt_np_mat("\nPoincaré Map:\n", "14.6e", M)
-
-[eta, alpha, beta, nu, stable] = compute_twiss_M(M)
-prt_twiss("\ncompute_twiss_M:\n", eta, alpha, beta, nu)
-
-A = compute_ring_twiss(M)
-prt_np_mat("\nA:\n", "14.6e", A)
-
-# Cross check.
-prt_np_mat("\nA^-1*M*A:\n", "14.6e",
-           np.linalg.multi_dot([np.linalg.inv(A), M, A]))
-
-compute_twiss_lat("linlat.out", acc, conf, get_map(A))
-
-# ds = ds.drop(["elements", "tps"])
-# ds.to_netcdf("twiss.nc")
-# df = twiss_ds_to_df(ds)
-# #print(df)
-# df.to_csv("twiss.csv")
-
-
-# twiss = linear_optics.compute_twiss_parameters(acc, conf)
-# twiss.name = "twiss_parameters"
-# md = accelerator_info(acc)
-# md.attrs = dict(calc_config=calc_config)
-# twiss_with_md = xr.merge([twiss, md])
-
-# print(res)
+    print(f"{str:s}  eta   = [{eta[x_]:5.3f}, {eta[px_]:5.3f}, {eta[y_]:5.3f}, {eta[py_]:5.3f}]\n  alpha = [{alpha[X_]:5.3f}, {alpha[Y_]:5.3f}]\n  beta  = [{beta[X_]:5.3f}, {beta[Y_]:5.3f}]\n  nu    = [{nu[X_]:5.3f}, {nu[Y_]:5.3f}]")
