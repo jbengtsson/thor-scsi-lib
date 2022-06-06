@@ -32,6 +32,9 @@ namespace thor_scsi::elements {
 			return this->integration_steps;
 		}
 
+		inline void setFieldInterpolator(std::shared_ptr<thor_scsi::core::Field2DInterpolation> a_intp){
+			this->intp = a_intp;
+		}
 		inline auto getFieldInterpolator(void) const {
 			/*
 			  std::cerr << "Getting field interpolator " <<  std::endl;

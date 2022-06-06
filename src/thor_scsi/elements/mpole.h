@@ -36,6 +36,13 @@ namespace thor_scsi::elements {
 			return std::const_pointer_cast<thor_scsi::core::TwoDimensionalMultipoles>(p);
 		}
 
+		inline void setFieldInterpolator(std::shared_ptr<thor_scsi::core::TwoDimensionalMultipoles> intp) {
+			auto p = std::dynamic_pointer_cast<thor_scsi::core::Field2DInterpolation>(intp);
+			if(!p){
+				throw std::runtime_error("Could not cast multipole to Field2DInterpolation");
+			}
+			this->intp = p;
+		}
 
 		//thor_scsi::core::TwoDimensionalMultipoles* intp;
 	};

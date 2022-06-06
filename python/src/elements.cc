@@ -124,6 +124,102 @@ class PyRadDelKick: public tse::RadiationDelegateKick {
 	}
 };
 
+class PyField2DInterpolation: public tsc::Field2DInterpolation{
+public:
+	using tsc::Field2DInterpolation::Field2DInterpolation;
+#if 0
+	void field_py(const py::array<double, 2> pos, std::array<double, 2> field) const {
+		PYBIND11_OVERRIDE_PURE(void, PyField2DInterpolationIntermediate, field_py, pos, field);
+	}
+#endif
+	virtual void field_py(const py::array_t<double> &t_pos, py::array_t<double> &t_field) const {
+		PYBIND11_OVERRIDE(void, PyField2DInterpolation, field_py, t_pos, t_field);
+	}
+	virtual void field_py(const py::array_t<tps> &t_pos, py::array_t<tps> &t_field) const {
+		PYBIND11_OVERRIDE(void, PyField2DInterpolation, field_py, t_pos, t_field);
+	}
+	virtual void gradient_py(const std::array<double, 2> &t_pos, std::array<double, 2> &t_field) const {
+		PYBIND11_OVERRIDE(void, PyField2DInterpolation, gradient_py, t_pos, t_field);
+	}
+	virtual void gradient_py(const std::array<tps, 2> &t_pos, std::array<tps, 2> &t_field) const {
+		PYBIND11_OVERRIDE(void, PyField2DInterpolation, gradient_py, t_pos, t_field);
+	}
+	virtual void gradient_py(const std::array<tps, 2> &t_pos, std::array<double, 2> &t_field) const {
+		PYBIND11_OVERRIDE(void, PyField2DInterpolation, gradient_py, t_pos, t_field);
+	}
+private:
+	template<typename T>
+	inline void _field(const T x, const T y, T *Bx, T *By) const {
+		auto pos = py::array_t<T>({2}), t_field = py::array_t<T>({2});
+		T *pos_p = static_cast<T *>(pos.request().ptr),
+			*field_p = static_cast<T *>(t_field.request().ptr);
+		pos_p[0] = x;
+		pos_p[1] = y;
+		this->field_py(pos, t_field);
+		*Bx = field_p[0];
+		*By = field_p[1];
+
+		std::cerr << "By " << *By <<  ",  Bx" <<  *Bx << std::endl;
+	}
+	template<typename T>
+	inline void _gradient(const T x, const T y, T *Bx, T *By) const {
+	}
+
+public:
+	void field(const double x, const double y, double *Bx, double *By) const override {
+		this->_field(x, y, Bx, By);
+	}
+	void field(const tps x, const tps y, tps *Bx, tps *By) const override {
+		//this->_field(x, y, Bx, By);
+		throw std::runtime_error("field with tps to python not implemented");
+	}
+	void gradient(const double x, const double y, double *Gx, double *Gy) const  override{
+		PYBIND11_OVERRIDE_PURE(void, tsc::Field2DInterpolation, gradient, x, y, Gx, Gy);
+	}
+	void gradient(const tps x, const tps y, tps *Gx, tps *Gy) const   override {
+		PYBIND11_OVERRIDE_PURE(void, tsc::Field2DInterpolation, gradient, x, y, Gx, Gy);
+	}
+	void gradient(const tps x, const tps y, double *Gx, double *Gy) const  override{
+		PYBIND11_OVERRIDE_PURE(void, tsc::Field2DInterpolation, gradient, x, y, Gx, Gy);
+	}
+
+	void show(std::ostream& strm, int level) const override {
+		const std::string txt = (level <= 1) ? this->pstr() : this->repr();
+		strm << txt;
+	}
+
+	std::string repr(void) const {
+		PYBIND11_OVERRIDE_NAME(std::string, tsc::Field2DInterpolation, "__repr__", repr);
+	}
+
+	std::string pstr(void) const {
+		PYBIND11_OVERRIDE_NAME(std::string, tsc::Field2DInterpolation, "__str__", pstr);
+	}
+
+};
+
+
+class PyField2DInterpolationProxy: public tsc::Field2DInterpolation
+{
+};
+#if 0
+class PyFieldKick: public tse::FieldKick {
+	using tse::FieldKick::FieldKick;
+
+	void show(std::ostream& strm, int level) const override {
+		const std::string txt = (level <= 1) ? this->pstr() : this->repr();
+		strm << txt;
+	}
+
+	std::string repr(void) const {
+		PYBIND11_OVERRIDE_NAME(std::string, tsc::FieldKick, "__repr__", repr);
+	}
+
+	std::string pstr(void) const {
+		PYBIND11_OVERRIDE_NAME(std::string, tsc::FieldKick, "__str__", pstr);
+	}
+};
+#endif
 
 static const char pass_d_doc[] = "pass the element (state as doubles)";
 static const char pass_tps_doc[] = "pass the element (state as tps)";
@@ -257,19 +353,69 @@ void py_thor_scsi_init_elements(py::module &m)
 	 * Needs to be defined as shared ptr class as it is returned as shared pointer
 	 * by classical magnet's method getMultipoles
 	*/
-	py::class_<tsc::TwoDimensionalMultipoles, std::shared_ptr<tsc::TwoDimensionalMultipoles>>(m, "TwoDimensionalMultipoles", py::buffer_protocol())
+
+
+	// py::class_<tsc::Observer,  PyObserver, std::shared_ptr<tsc::Observer>> observer(m, "Observer");
+	// observer.def(py::init<>());
+	py::class_<tsc::Field2DInterpolation, PyField2DInterpolation,  std::shared_ptr<tsc::Field2DInterpolation>> field2dintp(m, "Field2DInterpolation");
+	field2dintp
+		// can I write the following lines in a c++-14 compatible way
+		//.def("field",        py::overload_cast<const double, const double, double *, double *>(&tsc::Field2DInterpolation::field))
+		.def("field",  [](tsc::Field2DInterpolation &intp, const py::array_t<double> t_pos) -> py::array_t<double> {
+				py::buffer_info t_pos_buf = t_pos.request();
+				if (t_pos_buf.ndim != 1){
+					throw std::runtime_error("position must be a vector");
+				}
+				if (t_pos_buf.size != 2){
+					throw std::runtime_error("position must be a vector of size 2");
+				}
+				auto t_field = py::array_t<double>(t_pos_buf.size);
+				py::buffer_info t_field_buf = t_field.request();
+				double *pos_p =  static_cast<double *>(t_pos_buf.ptr);
+				double *field_p =  static_cast<double *>(t_field_buf.ptr);
+
+				intp.field(pos_p[0], pos_p[1], &field_p[0], &field_p[1]);
+				// std::cerr << "Returning field " << field_p[0] << ", " << field_p[1] << "\n";
+				return t_field;
+			})
+		.def("field",  [](tsc::Field2DInterpolation &intp, const std::array<tps, 2> t_pos, std::array<tps, 2> t_field) -> void {
+				       tps Bx, By;
+				       intp.field(t_pos[0], t_pos[1], &Bx, &By);
+				       t_field[0] = Bx;
+				       t_field[1] = By;
+			       }
+		)
+		.def(py::init<>());
+
+	/*
+	py::class_<PyField2DInterpolation, std::shared_ptr<PyField2DInterpolation>> field2dintp(m, "Field2DInterpolation", _field2dintp);
+	field2dintp
+		.def("field", static_cast<void (PyField2DInterpolation::*)(const std::array<double, 2>&,  std::array<double, 2>&) const>(&PyField2DInterpolation::field_py))
+		.def("field", static_cast<void (PyField2DInterpolation::*)(const std::array<tps, 2>&, std::array<tps, 2>&) const>(&PyField2DInterpolation::field_py))
+		.def(py::init<>());
+	*/
+	py::class_<tsc::TwoDimensionalMultipoles, std::shared_ptr<tsc::TwoDimensionalMultipoles>> multipole(m, "TwoDimensionalMultipoles", field2dintp
+													    , py::buffer_protocol()
+		);
+	multipole
 		.def("getMultipole",     &tsc::TwoDimensionalMultipoles::getMultipole)
 		.def("setMultipole",     &tsc::TwoDimensionalMultipoles::setMultipole)
 		.def("applyRollAngle",   &tsc::TwoDimensionalMultipoles::applyRollAngle)
 		.def("__str__",          &tsc::TwoDimensionalMultipoles::pstr)
 		.def("__repr__",         &tsc::TwoDimensionalMultipoles::repr)
+		.def("__len__",          &tsc::TwoDimensionalMultipoles::size)
 		.def("getCoefficients",  &tsc::TwoDimensionalMultipoles::getCoeffsConst)
+		//.def("field", static_cast<void (tsc::Field2DInterpolation::*)(const double, const double, double *, double *) const>(&tsc::TwoDimensionalMultipoles::field))
+		//.def("field", static_cast<void (tsc::Field2DInterpolation::*)(const tps, const tps, tps *, tps *) const>(&tsc::TwoDimensionalMultipoles::field))
 		.def("applyTranslation", py::overload_cast<const tsc::cdbl>(&tsc::TwoDimensionalMultipoles::applyTranslation))
 		.def("applyTranslation", py::overload_cast<const double, const double>(&tsc::TwoDimensionalMultipoles::applyTranslation))
 		.def(py::self += py::self)
 		.def(py::self + py::self)
+		.def(py::self += double())
+		.def(py::self + double())
 		.def(py::self *= double())
 		.def(py::self * double())
+		// .def(double() * py::self)
 		.def(py::self *= std::vector<double>())
 		.def(py::self * std::vector<double>())
 		.def_buffer([](tsc::TwoDimensionalMultipoles &muls) -> py::buffer_info {
@@ -312,6 +458,20 @@ void py_thor_scsi_init_elements(py::module &m)
 #endif
 		.def(py::init<const unsigned int>(), "initalise multipoles", py::arg("h_max") = tsc::max_multipole);
 
+#if 0
+	py::class_<tsc::BegninTwoDimensionalMultipoles, std::shared_ptr<tsc::BegninTwoDimensionalMultipoles>>(m, "BegninTwoDimensionalMultipoles", multipole)
+		.def(py::self += py::self)
+		.def(py::self + py::self)
+#if 0
+		.def(py::self += double())
+		.def(py::self + double())
+		.def(py::self *= double())
+		.def(py::self * double())
+#endif
+		.def(py::self *= std::vector<double>())
+		.def(py::self * std::vector<double>());
+#endif
+
 	py::class_<tse::FieldKick, std::shared_ptr<tse::FieldKick>> field_kick(m, "FieldKick", elem_type);
 	field_kick
 		.def("isThick",                     &tse::FieldKick::isThick)
@@ -330,6 +490,9 @@ void py_thor_scsi_init_elements(py::module &m)
 		.def("getExitAngle",                &tse::FieldKick::getExitAngle)
 		.def("getRadiationDelegate",        &tse::FieldKick::getRadiationDelegate)
 		.def("setRadiationDelegate",        &tse::FieldKick::setRadiationDelegate)
+		.def("getFieldInterpolator",        &tse::FieldKick::getFieldInterpolator)
+		.def("setFieldInterpolator",        &tse::FieldKick::setFieldInterpolator)
+
 		.def(py::init<const Config &>());
 
 	py::class_<tse::MpoleType, std::shared_ptr<tse::MpoleType>> mpole_type(m, "Mpole", field_kick);
@@ -339,6 +502,8 @@ void py_thor_scsi_init_elements(py::module &m)
 	py::class_<tse::ClassicalMagnet, PyClassicalMagnet, std::shared_ptr<tse::ClassicalMagnet>> cm(m, "ClassicalMagnet", mpole_type);
 	cm
 		.def("getMultipoles",            &tse::ClassicalMagnet::getMultipoles)
+		//.def("getBegninMultipoles",      &tse::ClassicalMagnet::getBegninMultipoles)
+		.def("setMultipoles",            &tse::ClassicalMagnet::setMultipoles)
 		.def("getMainMultipoleNumber",   &tse::ClassicalMagnet::getMainMultipoleNumber)
 		.def("getMainMultipoleStrength", &tse::ClassicalMagnet::getMainMultipoleStrength)
 		.def("setMainMultipoleStrength", py::overload_cast<const double>(&tse::ClassicalMagnet::setMainMultipoleStrength))

@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <complex>
 #include <cassert>
+#include <memory>
 #include <ostream>
 #include <vector>
 #include <stdexcept>
@@ -36,7 +37,7 @@ namespace thor_scsi::core {
 
 
         /**
-	 *  Representation of planar 2D harmonics / multipoles
+	 *  @brief: Representation of planar 2D harmonics / multipoles
 	 *
 	 *  @f[
 	 *     \mathbf{B(z)} = B_y + i B_x =
@@ -62,8 +63,10 @@ namespace thor_scsi::core {
 	 *  its index needs to be reduced by one.
  	 *
 	 * .. Todo::
-	 *       minimise number of coefficients that require that to be evaluated
-	 *       rename to  TwoDimensionalMultipoles
+	 *
+	 *       * minimise number of coefficients that require that to be evaluated
+	 *       * separate operator (+, -) interface to a begnin and a strict one
+	 *         (similar to pandas data frames .loc and .iloc)
 	 * \endverbatim
 	 */
 
@@ -125,7 +128,7 @@ namespace thor_scsi::core {
 			return result;
 		}
 
-		virtual inline void field(const double x, const double y, double *Bx, double * By) const override final{
+	       virtual inline void field(const double x, const double y, double *Bx, double * By) const override final{
 			const cdbl z(x, y);
 			const cdbl r = field(z);
 			*By = r.real();
@@ -297,6 +300,12 @@ namespace thor_scsi::core {
 			applyTranslation(dx, 0.0);
 		}
 
+	private:
+		TwoDimensionalMultipoles& right_multiply (const std::vector<double>& scale, const bool begnin);
+		TwoDimensionalMultipoles& right_add (const TwoDimensionalMultipoles &other, const bool begnin);
+
+	public:
+
 		/**
 		 *  scale all multipoles by a factor scale in place
 		 *
@@ -355,7 +364,10 @@ namespace thor_scsi::core {
 		TwoDimensionalMultipoles operator +(const TwoDimensionalMultipoles &other) const;
 		TwoDimensionalMultipoles& operator +=(const TwoDimensionalMultipoles &other);
 
-		/**
+	        TwoDimensionalMultipoles operator +(const double other) const;
+		TwoDimensionalMultipoles& operator +=(const double other);
+
+	        /**
 		 * The maximum index represented.
 		 */
 		inline unsigned int getMultipoleMaxIndex(void) const {
@@ -403,12 +415,36 @@ namespace thor_scsi::core {
 
 		virtual void show(std::ostream& strm, int level) const override final;
 
-	private:
+	protected:
 		unsigned int m_max_multipole;
 		std::vector<cdbl_intern> coeffs;
 
 
 	};
+
+  #if 0
+        /**
+	 * @brief: Representation of planar 2D harmonics / multipoles, begnin for excess elements
+	 *
+	 * Functionally the same implementation as the base class, but will ignore excess elements
+	 *
+	 */
+	class BegninTwoDimensionalMultipolesDelegator {
+	public:
+		BegninTwoDimensionalMultipolesDelegator(std::shared_ptr<TwoDimensionalMultipoles> obj);
+		BegninTwoDimensionalMultipolesDelegator clone(void) const;
+
+		// Shall one provide a short cut to the other operators too?
+		BegninTwoDimensionalMultipolesDelegator& operator *= (const std::vector<double>& scale);
+		BegninTwoDimensionalMultipolesDelegator  operator * (const std::vector<double>& scale) const;
+
+		BegninTwoDimensionalMultipolesDelegator operator +(const TwoDimensionalMultipoles &other) const;
+		BegninTwoDimensionalMultipolesDelegator& operator +=(const TwoDimensionalMultipoles &other);
+
+	private:
+		std::shared_ptr<TwoDimensionalMultipoles> delegate;
+	};
+#endif
 
 }
 #endif /* _THOR_SCSI_MULTIPOLES_H_ */
