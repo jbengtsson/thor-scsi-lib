@@ -22,7 +22,7 @@ def test10_multiply_multipoles():
     assert mul.getMultipole(2).real == pytest.approx(8)
 
 
-def test11_multiply_multipoles_scalar():
+def test11_multiply_multipoles_scalar_int():
     mul = tslib.TwoDimensionalMultipoles()
     mul.setMultipole(1, 2)
     mul.setMultipole(2, 4)
@@ -32,6 +32,45 @@ def test11_multiply_multipoles_scalar():
     print(mul)
 
     n_mul = mul * 2
+    # Former multipoles still the same
+    assert mul.getMultipole(1).real == pytest.approx(2)
+    assert mul.getMultipole(2).real == pytest.approx(4)
+
+    assert n_mul.getMultipole(1).real == pytest.approx(4)
+    assert n_mul.getMultipole(2).real == pytest.approx(8)
+
+
+def test11_multiply_multipoles_scalar_float():
+    mul = tslib.TwoDimensionalMultipoles()
+    mul.setMultipole(1, 2)
+    mul.setMultipole(2, 4)
+
+    assert mul.getMultipole(1).real == pytest.approx(2)
+    assert mul.getMultipole(2).real == pytest.approx(4)
+    print(mul)
+
+    n_mul = mul * float(2.0)
+    # Former multipoles still the same
+    assert mul.getMultipole(1).real == pytest.approx(2)
+    assert mul.getMultipole(2).real == pytest.approx(4)
+
+    assert n_mul.getMultipole(1).real == pytest.approx(4)
+    assert n_mul.getMultipole(2).real == pytest.approx(8)
+
+def test12_multiply_multipoles_scalar_float():
+    """float on the other side ...
+
+    Commutative law needs to be explicitly implemented
+    """
+    mul = tslib.TwoDimensionalMultipoles()
+    mul.setMultipole(1, 2)
+    mul.setMultipole(2, 4)
+
+    assert mul.getMultipole(1).real == pytest.approx(2)
+    assert mul.getMultipole(2).real == pytest.approx(4)
+    print(mul)
+
+    n_mul = float(2.0) * mul
     # Former multipoles still the same
     assert mul.getMultipole(1).real == pytest.approx(2)
     assert mul.getMultipole(2).real == pytest.approx(4)
