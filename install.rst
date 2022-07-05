@@ -36,20 +36,11 @@ Checking out repository
 
 .. ::
 
-   git clone
+   git clone https://github.com/jbengtsson/thor-scsi-lib.git
 
 
-change to the directory then
-
-
-for the time being run:
-
-..::
-
-   git checkout flame-integration
-
-
-if that was successful please run
+change to the directory (persumably) `thor-scsi-lib`. If that was
+successful please run
 
 .. ::
 
@@ -82,8 +73,11 @@ then in this directory execute
   cmake ..
 
 
-This willl create the build file. Typicslly this is a make file. In case you use make
-type
+This will create the build file. Typically this is a make file. In
+case the cmake command fails, please remove at least the
+`CMakeCache.txt` file in the build directory.
+
+When cmake worked, trigger the build. In case you use make type
 
 .. ::
 
@@ -95,24 +89,34 @@ If build was successful use
 
   cmake --install . --prefix=/path/to/install/to
 
-with `/path/to/install/to` the absolute path of the directory you would like to install to.
+with `/path/to/install/to` the absolute path of the directory you
+would like to install to.
+
+**NB: The libaries implementing the python interface will be
+      currently installed in the source tree into directory
+      `python/thor_scsi`. Have a look below for details
+      of loading dynamic objects from non standard directories
 
 
 Helping CMAKE find subcomponents
 --------------------------------
 
-Cmake checks that the version of required subcomponents is sufficient. If it reports that one of the components
-is not sufficiently new, I recommend to follow the following steps:
+Cmake checks that the version of required subcomponents is
+sufficient. If it reports that one of the components is not
+sufficiently new, I recommend to follow the following steps:
 
-1. follow the instructions below required to make camke identify the component
+1. follow the instructions below required to make camke identify
+   the component
 2. After the cmake found the components  I recommend to
 
    1. remove the build directory
    2. create a new build directory
    3. run cmake in this clean directory.
 
-Reason: cmake stores cache files and directories in the build directory. These can still information from former cmake
-runs. In my experience some rather strange configuration / build problems are cured in this manner
+Reason: cmake stores cache files and directories in the build
+directory. These can still information from former cmake runs. In
+my experience some rather strange configuration / build problems
+are cured in this manner.
 
 
 
@@ -128,12 +132,12 @@ If your version pybind 11 is rejected by cmake:
    pip3 install pybind11
    ```
 
-   it can be that you have to use the `--user` flag so that it is installed
-   within your environment.
+   it can be that you have to use the `--user` flag so that it is
+   installed within your environment.
 
 
-2. help cmake find the installation. E.g. for a local installation on ubuntu (focal)
-   it is typically found at
+2. help cmake find the installation. E.g. for a local installation
+   on ubuntu (focal) it is typically found at
 
    ```shell
 
@@ -141,8 +145,8 @@ If your version pybind 11 is rejected by cmake:
 
    ```
 
-   If still an too old version of pybind11 is found, please set the environment
-   variable pybind11_DIR to the correct directory
+   If still an too old version of pybind11 is found, please set
+   the environment variable pybind11_DIR to the correct directory
    ```shell
     export pybind11_DIR=$HOME/.local/lib/python3.8/site-packages/pybind11
    ```
@@ -151,20 +155,59 @@ If your version pybind 11 is rejected by cmake:
 Bison
 -----
 
-THe standard `bison` tool installed on mac os is not modern enough In our experience bison distributed
-with `brew` can be used. To check if correct brew is installed in your shell run
+THe standard `bison` tool installed on mac os is not modern enough.
+In our experience bison distributed with `brew` can be used. To
+check if correct brew is installed in your shell run
 
 .. ::
 
    bison --config
 
-THe one installed on MAC OS is of major version 2 while version 3 is used for the parser used here.
+The one installed on MAC OS is of major version 2 while version 3
+is used for the parser used here. It seems that cmake does not
+flag if the found bison binary is too old.
+
+The following steps show what can be done, so that cmake will find
+a sufficiently modern bison. So if not already installed, install
+brew on your mac. Then follow `brew`  instruction to install
+`bison`. Please find out where bison is located. (e.g.
+`/usr/local/Cellar/bison/...`). Please add the directory of the
+bison binary to the PATH variable (e.g. if you are using bash)
+
+```shell
+
+export PATH=/path/to/bison:$PATH
+
+```
+
+Clear your build directory as explained above and check that a
+sufficient modern bison version is found.
+
+Loading dynamic objects from non standard locations
+---------------------------------------------------
+
+The libraries of thor-scsi-lib or the libraries for the python
+interface can be installed in non standard places.
+
+Linux
+~~~~~
+One solution can be to define the directory in LD_LIBRARY_PATH e.g.:
+```shell
+
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/path/to/install/to/lib/
+
+```
 
 
-So if not already installed, install brew on your mac. Then follow `brew`  instruction to install `bison`. Now the
-`PATH` variable needs to be modifed so that cmake will find bison. Now you need to find where `bison`
 
+MAC OS
+~~~~~~
+One solution can be to define the directory in LD_LIBRARY_PATH e.g.:
+```shell
 
+export DYLD_LIBRARY_PATH=$LD_LIBRARY_PATH:/path/to/install/to/lib/
+
+```
 
 
 Documentation
