@@ -25,7 +25,8 @@ Dependencies
 Packages to be installed on Ubuntu 22 LTS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. ::
+Install packages that could be missing
+::
 
   sudo apt-get install bison flex cmake g++ gfortran libarmadillo-dev libboost-all-dev pybind11-dev python3-xarray
 
@@ -34,7 +35,8 @@ Packages to be installed on Ubuntu 22 LTS
 Checking out repository
 -----------------------
 
-.. ::
+
+::
 
    git clone https://github.com/jbengtsson/thor-scsi-lib.git
 
@@ -42,7 +44,7 @@ Checking out repository
 change to the directory (persumably) `thor-scsi-lib`. If that was
 successful please run
 
-.. ::
+::
 
    git submodule init
    git submodule update
@@ -53,14 +55,14 @@ Getting ready to build
 
 create a directory "build"
 
-.. ::
+::
 
    mkdir build
 
 
 then change to this directory
 
-.. ::
+::
 
   cd build
 
@@ -68,7 +70,7 @@ then change to this directory
 then in this directory execute
 
 
-.. ::
+::
 
   cmake ..
 
@@ -79,13 +81,13 @@ case the cmake command fails, please remove at least the
 
 When cmake worked, trigger the build. In case you use make type
 
-.. ::
+::
 
   make
 
 If build was successful use
 
-.. ::
+::
 
   cmake --install . --prefix=/path/to/install/to
 
@@ -128,6 +130,7 @@ If your version pybind 11 is rejected by cmake:
 1. install it using pip
 
    ::
+
       pip3 install pybind11
 
 
@@ -138,14 +141,16 @@ If your version pybind 11 is rejected by cmake:
 2. help cmake find the installation. E.g. for a local installation
    on ubuntu (focal) it is typically found at
 
-   ..highlight:: shell
+::
+
       ls -d  $HOME/.local/lib/python3.8/site-packages/pybind11
 
 
    If still an too old version of pybind11 is found, please set
    the environment variable pybind11_DIR to the correct directory
 
-   ..highlight:: shell
+   ::
+
        export pybind11_DIR=$HOME/.local/lib/python3.8/site-packages/pybind11
 
 
@@ -193,6 +198,7 @@ Linux
 One solution can be to define the directory in LD_LIBRARY_PATH e.g.:
 
 ::
+
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/path/to/install/to/lib/
 
 
@@ -205,6 +211,7 @@ One solution can be to define the directory in LD_LIBRARY_PATH e.g.:
 
 
 ::
+
     export DYLD_LIBRARY_PATH=$LD_LIBRARY_PATH:/path/to/install/to/lib/
 
 
