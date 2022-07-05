@@ -127,10 +127,10 @@ If your version pybind 11 is rejected by cmake:
 
 1. install it using pip
 
-   ```python
+   ..highlight:: shell
 
-   pip3 install pybind11
-   ```
+      pip3 install pybind11
+
 
    it can be that you have to use the `--user` flag so that it is
    installed within your environment.
@@ -139,17 +139,18 @@ If your version pybind 11 is rejected by cmake:
 2. help cmake find the installation. E.g. for a local installation
    on ubuntu (focal) it is typically found at
 
-   ```shell
+   ..highlight:: shell
 
-    ls -d  $HOME/.local/lib/python3.8/site-packages/pybind11
+      ls -d  $HOME/.local/lib/python3.8/site-packages/pybind11
 
-   ```
 
    If still an too old version of pybind11 is found, please set
    the environment variable pybind11_DIR to the correct directory
-   ```shell
-    export pybind11_DIR=$HOME/.local/lib/python3.8/site-packages/pybind11
-   ```
+
+   ..highlight:: shell
+
+       export pybind11_DIR=$HOME/.local/lib/python3.8/site-packages/pybind11
+
 
 
 Bison
@@ -159,9 +160,9 @@ THe standard `bison` tool installed on mac os is not modern enough.
 In our experience bison distributed with `brew` can be used. To
 check if correct brew is installed in your shell run
 
-.. ::
+..highlight:: shell
 
-   bison --config
+    bison --config
 
 The one installed on MAC OS is of major version 2 while version 3
 is used for the parser used here. It seems that cmake does not
@@ -174,11 +175,12 @@ brew on your mac. Then follow `brew`  instruction to install
 `/usr/local/Cellar/bison/...`). Please add the directory of the
 bison binary to the PATH variable (e.g. if you are using bash)
 
-```shell
 
-export PATH=/path/to/bison:$PATH
+..highlight:: shell
 
-```
+    export PATH=/path/to/bison:$PATH
+
+
 
 Clear your build directory as explained above and check that a
 sufficient modern bison version is found.
@@ -192,22 +194,23 @@ interface can be installed in non standard places.
 Linux
 ~~~~~
 One solution can be to define the directory in LD_LIBRARY_PATH e.g.:
-```shell
 
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/path/to/install/to/lib/
+..highlight:: shell
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/path/to/install/to/lib/
 
-```
+
 
 
 
 MAC OS
 ~~~~~~
 One solution can be to define the directory in LD_LIBRARY_PATH e.g.:
-```shell
 
-export DYLD_LIBRARY_PATH=$LD_LIBRARY_PATH:/path/to/install/to/lib/
 
-```
+..highlight:: shell
+    export DYLD_LIBRARY_PATH=$LD_LIBRARY_PATH:/path/to/install/to/lib/
+
+
 
 
 Documentation
