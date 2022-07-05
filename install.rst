@@ -94,10 +94,10 @@ If build was successful use
 with `/path/to/install/to` the absolute path of the directory you
 would like to install to.
 
-**NB: The libaries implementing the python interface will be
-      currently installed in the source tree into directory
-      `python/thor_scsi`. Have a look below for details
-      of loading dynamic objects from non standard directories
+**NB**: The libaries implementing the python interface will be
+        currently installed in the source tree into directory
+        `python/thor_scsi`. Have a look below for details
+        of loading dynamic objects from non standard directories
 
 
 Helping CMAKE find subcomponents
@@ -141,7 +141,7 @@ If your version pybind 11 is rejected by cmake:
 2. help cmake find the installation. E.g. for a local installation
    on ubuntu (focal) it is typically found at
 
-::
+   ::
 
       ls -d  $HOME/.local/lib/python3.8/site-packages/pybind11
 
@@ -212,7 +212,7 @@ One solution can be to define the directory in LD_LIBRARY_PATH e.g.:
 
 ::
 
-    export DYLD_LIBRARY_PATH=$LD_LIBRARY_PATH:/path/to/install/to/lib/
+    export DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH:/path/to/install/to/lib/
 
 
 
