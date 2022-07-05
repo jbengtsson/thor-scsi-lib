@@ -127,8 +127,7 @@ If your version pybind 11 is rejected by cmake:
 
 1. install it using pip
 
-   ..highlight:: shell
-
+   ::
       pip3 install pybind11
 
 
@@ -140,7 +139,6 @@ If your version pybind 11 is rejected by cmake:
    on ubuntu (focal) it is typically found at
 
    ..highlight:: shell
-
       ls -d  $HOME/.local/lib/python3.8/site-packages/pybind11
 
 
@@ -148,7 +146,6 @@ If your version pybind 11 is rejected by cmake:
    the environment variable pybind11_DIR to the correct directory
 
    ..highlight:: shell
-
        export pybind11_DIR=$HOME/.local/lib/python3.8/site-packages/pybind11
 
 
@@ -160,7 +157,7 @@ THe standard `bison` tool installed on mac os is not modern enough.
 In our experience bison distributed with `brew` can be used. To
 check if correct brew is installed in your shell run
 
-..highlight:: shell
+::
 
     bison --config
 
@@ -176,7 +173,7 @@ brew on your mac. Then follow `brew`  instruction to install
 bison binary to the PATH variable (e.g. if you are using bash)
 
 
-..highlight:: shell
+::
 
     export PATH=/path/to/bison:$PATH
 
@@ -195,7 +192,7 @@ Linux
 ~~~~~
 One solution can be to define the directory in LD_LIBRARY_PATH e.g.:
 
-..highlight:: shell
+::
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/path/to/install/to/lib/
 
 
@@ -207,7 +204,7 @@ MAC OS
 One solution can be to define the directory in LD_LIBRARY_PATH e.g.:
 
 
-..highlight:: shell
+::
     export DYLD_LIBRARY_PATH=$LD_LIBRARY_PATH:/path/to/install/to/lib/
 
 
