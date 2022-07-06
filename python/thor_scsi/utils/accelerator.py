@@ -1,6 +1,9 @@
 """Utils for calculating with the accelerator
 """
 import thor_scsi.lib as tslib
+from .extract_info import accelerator_info
+import numpy as np
+import xarray as xr
 from typing import Sequence
 
 
@@ -18,3 +21,50 @@ def instrument_with_standard_observers(
     for ob, elem in zip(observers, acc):
         elem.setObserver(ob)
     return observers
+
+
+def extract_orbit_from_standard_observers(acc: tslib.Accelerator) -> xr.Dataset:
+    """
+    """
+
+    observers = [elem.getObserver() for elem in acc]
+    observers = np.array(observers)
+
+    # Required later to index into the final xarray
+    has_observer = np.array([True if ob else False for ob in observers])
+
+    # The ones that are not null
+    ob_sub = observers[has_observer]
+
+    # check that all have seen data
+    with_observer = np.array([ob.hasTruncatedPowerSeries() for ob in ob_sub])
+    lf = np.sum(with_observer)
+    lo = len(ob_sub)
+    if lf != lo:
+        raise AssertionError(f"Have {lo} observers but only {lf} has (valid) data")
+
+    indices = np.arange(len(with_observer))
+    indices = indices[with_observer == True]
+    phase_space_coords_names = ["x", "px", "y", "py", "ct", "delta"]
+    tps_tmp = [ob.getTruncatedPowerSeries() for ob in ob_sub]
+    tps = xr.DataArray(
+        data=tps_tmp,
+        name="tps",
+        dims=["index", "phase_coordinate"],
+        coords=[indices, phase_space_coords_names],
+    )
+    ps = xr.DataArray(
+        data=[t.cst() for t in tps_tmp],
+        name="tps",
+        dims=["index", "phase_coordinate"],
+        coords=[indices, phase_space_coords_names],
+    )
+    info = accelerator_info(acc).isel(index=(with_observer == True))
+    res = info.merge(dict(tps=tps, ps=ps))
+    return res
+
+
+__all__ = [
+    "instrument_with_standard_observers",
+    "extract_orbit_from_standard_observers",
+]
