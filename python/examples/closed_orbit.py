@@ -22,9 +22,11 @@ from thor_scsi.utils.output import mat2txt, vec2txt
 import matplotlib.pyplot as plt
 import os
 
-t_dir = os.path.join(os.environ["HOME"], "Nextcloud", "thor_scsi")
-t_file = os.path.join(t_dir, "b3_tst.lat")
+# t_dir = os.path.join(os.environ["HOME"], "Nextcloud", "thor_scsi")
+# t_file = os.path.join(t_dir, "b3_tst.lat")
 
+t_file = os.path.join("lattices", "tme.lat")
+t_file = os.path.join("lattices", "tme_rb.lat")
 acc = accelerator_from_config(t_file)
 conf = ConfigType()
 
@@ -76,7 +78,8 @@ line_y, = ax_y.plot(
 )
 
 
-elem = acc.find("uq1", 0)
+# elem = acc.find("uq1", 0)
+elem = acc.find("QF", 0)
 muls = elem.getMultipoles()
 muls.setMultipole(1, 1e-3 - 1e-3j)
 observers_perturbated = instrument_with_standard_observers(acc)
@@ -138,6 +141,7 @@ for ax in [ax_x, ax_y]:
     ax.axis(axis)
 for ax in [ax_x, ax_y]:
     ax.legend()
+plt.show()
 
 # If you run it in e.g. ipython have fun inspecting the results
 # or the observers. These should still contain the data from them
