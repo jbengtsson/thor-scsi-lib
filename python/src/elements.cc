@@ -269,7 +269,6 @@ void py_thor_scsi_init_elements(py::module &m)
 		    py::arg("radius"), py::arg("x") = 0, py::arg("y") = 0);
 
 
-
 	py::class_<tsc::ElemType,  PyElemType, std::shared_ptr<tsc::ElemType>> elem_type(m, "ElemType");
 	elem_type.def("__str__",       &tsc::ElemType::pstr)
 		.def("__repr__",       &tsc::ElemType::repr)
@@ -503,7 +502,7 @@ void py_thor_scsi_init_elements(py::module &m)
 	cm
 		.def("getMultipoles",            &tse::ClassicalMagnet::getMultipoles)
 		//.def("getBegninMultipoles",      &tse::ClassicalMagnet::getBegninMultipoles)
-		.def("setMultipoles",            &tse::ClassicalMagnet::setMultipoles)
+		// .def("setMultipoles",            &tse::ClassicalMagnet::setMultipoles)
 		.def("getMainMultipoleNumber",   &tse::ClassicalMagnet::getMainMultipoleNumber)
 		.def("getMainMultipoleStrength", &tse::ClassicalMagnet::getMainMultipoleStrength)
 		.def("setMainMultipoleStrength", py::overload_cast<const double>(&tse::ClassicalMagnet::setMainMultipoleStrength))
