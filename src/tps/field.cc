@@ -8,7 +8,7 @@
 #include <sstream>
 #include <iomanip>
 #include <math.h>
-
+#include <cassert>
 
 std::string tps::repr(void)
 {
@@ -360,6 +360,8 @@ double xabs(long n, ss_vect<double> &x)
 {
   long    i;
   double  sum;
+
+  assert(n <= x.size());
 
   sum = 0.0;
   for (i = 0; i < n; i++)

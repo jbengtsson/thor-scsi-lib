@@ -207,7 +207,16 @@ void py_thor_scsi_init_tps(py::module &m)
 	// m.def("partialInverse", &PInv, "partial inverse depending on the numbers of freedoms");
 	m.def("partialInverse", py::overload_cast<const ss_vect<tps>&, const tpsa_index&>(&PInv), "partial inverse depending on the numbers of freedoms");
 	m.def("inverse", &Inv, "full inverse");
-	m.def("xabs", xabs);
+	m.def("xabs", [](int n, ss_vect<double>&x) -> double {
+			      if (n > ss_dim){
+				      std::stringstream strm;
+				      strm << "Index n " << n
+					   << " larger than ss_dim = " << ss_dim;
+				      throw std::out_of_range(strm.str());
+			      }
+			      return xabs(n, x);
+		 },
+		"computes vector norm", py::arg("n"), py::arg("x"));
 
 #if 0
 	ss_vect_tps
@@ -235,6 +244,7 @@ void py_thor_scsi_init_tps(py::module &m)
 	m.def("ss_vect_tps_to_mat", &maptomat);
 	m.def("mat_to_ss_vect_tps", &mattomap_check);
 	m.attr("ps_dim") = ps_dim;
+	m.attr("ss_dim") = ss_dim;
 
 }
 /*
