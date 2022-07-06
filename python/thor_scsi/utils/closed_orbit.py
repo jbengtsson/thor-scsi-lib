@@ -46,26 +46,15 @@ def compute_closed_orbit(
         *
     """
 
-    x0 = tslib.ss_vect_double()
-    # x1 = tslib.ss_vect_double()
-    # dx = tslib.ss_vect_double()
+    logger.debug("computing closed orbit")
+    conf.dPparticle = delta
 
-    # dx0 = tslib.ss_vect_tps()
-    I = tslib.ss_vect_tps()
-    I.set_identity()
-
-    M = tslib.ss_vect_tps()
-
-    # I
-    jj = np.zeros(tslib.ss_dim, np.int)
     if conf.Cavity_on:
         n = 6
     else:
         n = 4
 
-    logger.debug("computing closed orbit")
-    conf.dPparticle = delta
-
+    x0 = tslib.ss_vect_double()
     if n == 4:
         x0.set_zero()
         x0[tslib.phase_space_index_internal.delta] = delta
@@ -77,17 +66,21 @@ def compute_closed_orbit(
     else:
         raise AssertionError("Only implemented for 4D or 6D phase space")
 
-    # create the triangular matrix for jj
+    logger.debug("x0 %s", x0)
+
+    # create weighting matrix for inverse calculation
+    jj = np.zeros(tslib.ss_dim, np.int)
     for k in range(tslib.ss_dim):
         jj[k] = 1 if k < n else 0
 
-    logger.debug("x0 %s", x0)
+    I = tslib.ss_vect_tps()
+    I.set_identity()
+    M = tslib.ss_vect_tps()
 
     dx_abs = 1e30
 
     closed_orbit = False
     n_elements = len(acc)
-
     # Newton's method for root finding
     for n_iter in range(max_iter):
         if dx_abs < eps:
