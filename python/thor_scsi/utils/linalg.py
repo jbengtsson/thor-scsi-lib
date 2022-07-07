@@ -314,8 +314,7 @@ def match_eigenvalues_to_plane_orig(M, w, v, *, n_dof):
               to be used as vector or matrix ....
 
     Warning:
-        This function had side effects on v and w. These should be
-        removed by the copy functions
+        raise an exception if a non stable solution was find
     """
 
     sign = np.sign
@@ -323,6 +322,7 @@ def match_eigenvalues_to_plane_orig(M, w, v, *, n_dof):
 
     v = v.copy()
     w = w.copy()
+
     w_ret = w
     # v is reassigned ... look to todo to the function description
     v_ret = v
@@ -332,16 +332,18 @@ def match_eigenvalues_to_plane_orig(M, w, v, *, n_dof):
 
     for i in range(n_dof):
         j = (i + 1) * 2 - 1
-        # Is this renaming of v intentional ? v used as a scalr
-        v = (M[j - 1][j - 1] + M[j][j]) / 2
-        cos_M[i] = v
-        if np.abs(v) > 1e0:
+        # Is this renaming of v intentional ? v used as a scalar
+        vtmp = (M[j - 1][j - 1] + M[j][j]) / 2
+        cos_M[i] = vtmp
+        if np.abs(vtmp) > 1e0:
             logger.warning(
                 "sort_eigen: unstable |cos_M[nu_{i +1}]-1e0| = {:10.3e}",
                 i + 1,
-                np.absolute(v - 1e0),
+                np.absolute(vtmp - 1e0),
             )
             stable = False
+            # Check if an exception should be raised here?
+
         sin_M[i] = sign(M[j - 1][j]) * np.sqrt(1e0 - cos_M[i] ** 2)
         #
         nu1_M[i] = np.arctan2(sin_M[i], cos_M[i]) / (2 * np.pi)
@@ -374,7 +376,11 @@ def match_eigenvalues_to_plane_orig(M, w, v, *, n_dof):
     for i in range(n_dof):
         if (0.5 - nu1_M[i]) * (0.5 - nu1[i]) < 0e0:
             j = i * 2 + 1
-            swap_mat_imag(v, j - 1, j)
+            try:
+                swap_mat_imag(v, j - 1, j)
+            except Exception as exc:
+                logger.error(f"v {v}")
+                raise exc
             swap_imag(w, j - 1, j)
 
     return w_ret, v_ret
