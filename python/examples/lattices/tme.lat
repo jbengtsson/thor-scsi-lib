@@ -26,6 +26,8 @@ phi_b = 5.0/scl; rho0 = L_b/(phi_b*pi/180.0);
 # {a = 2.0/L_b;
 # phi_b = 5.0*10.0/8.970684; rho0 = L_b*log(2.0)/(phi_b*pi/180.0);}
 
+START  : Marker;
+
 rho1 = rho0*(1.0+a*0*ds);
 B_1: Bending, L = L_b/n_b, T = ds*180.0/(rho1*pi), T1 = 0.0, T2 = 0.0, K=0,
      N = Nbend, Method = Meth;

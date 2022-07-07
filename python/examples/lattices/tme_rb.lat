@@ -28,6 +28,7 @@ RB_B: Bending, L = L_RB, T = PHI_RB, T1 = 0.0, T2 = 0.0, K=0,
     N = 1, Method = Meth;
 ND_RB: Drift, L = -L_RB/2.0;
 RB: LINE=(ND_RB, RB_B, ND_RB);
+START  : Marker;
 
 
 QF: Quadrupole, L = 0.0, K =  1.39953,  N = Nquad, Method = Meth;
@@ -37,6 +38,6 @@ H_CELL: LINE=(D4, QD, D3, QF, D2, RB, D1, B_H);
 H_CELL_INV: LINE=(B_H, D1, RB, D2, QF, D3, QD, D4);
 tLINE:  LINE=(H_CELL, H_CELL_INV);
 
-RING: LINE=(tLINE, CAV);
+RING: LINE=(START, tLINE, CAV);
 
 CELL: RING, SYMMETRY = 1;
