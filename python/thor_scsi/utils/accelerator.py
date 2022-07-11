@@ -1,4 +1,7 @@
 """Utils for calculating with the accelerator
+
+Todo:
+    check if Facade should be created hiding all the functionallity
 """
 import thor_scsi.lib as tslib
 from .extract_info import accelerator_info
@@ -23,11 +26,11 @@ def instrument_with_standard_observers(
     return observers
 
 
-def extract_orbit_from_standard_observers(acc: tslib.Accelerator) -> xr.Dataset:
+def extract_orbit_from_standard_observers(
+    observers: Sequence[tslib.StandardObserver], info: xr.Dataset
+) -> xr.Dataset:
     """
     """
-
-    observers = [elem.getObserver() for elem in acc]
     observers = np.array(observers)
 
     # Required later to index into the final xarray
@@ -59,12 +62,24 @@ def extract_orbit_from_standard_observers(acc: tslib.Accelerator) -> xr.Dataset:
         dims=["index", "phase_coordinate"],
         coords=[indices, phase_space_coords_names],
     )
-    info = accelerator_info(acc).isel(index=(with_observer == True))
+    info = info.isel(index=(with_observer == True))
     res = info.merge(dict(tps=tps, ps=ps))
     return res
+
+
+def extract_orbit_from_accelerator_with_standard_observers(
+    acc: Sequence[tslib.ElemType]
+) -> xr.Dataset:
+    """
+    """
+
+    observers = [elem.getObserver() for elem in acc]
+    info = accelerator_info(acc)
+    return extract_orbit_from_standard_observers(observers, info)
 
 
 __all__ = [
     "instrument_with_standard_observers",
     "extract_orbit_from_standard_observers",
+    "extract_orbit_from_accelerator_with_standard_observers"
 ]

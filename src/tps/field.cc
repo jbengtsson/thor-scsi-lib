@@ -361,7 +361,7 @@ double xabs(long n, ss_vect<double> &x)
   long    i;
   double  sum;
 
-  assert(n <= x.size());
+  assert(n <= ss_dim);
 
   sum = 0.0;
   for (i = 0; i < n; i++)

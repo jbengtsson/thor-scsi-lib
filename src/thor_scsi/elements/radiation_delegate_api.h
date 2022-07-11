@@ -34,7 +34,7 @@ namespace thor_scsi::elements {
 	 *
 	 * @f[
 	 *     \frac{\mathrm{d}\delta}{\mathrm{d}(ds)} =
-	 *           -C_{\gamma} \, E_0^3 \, (1 + \ðelta)^2 \, \left( \frac{B_{perp}}{B \rho}\right)^2
+	 *           -C_{\gamma} \, E_0^3 \, (1 + \delta)^2 \, \left( \frac{B_{perp}}{B \rho}\right)^2
 	 *                \frac{1}{2\pi}
 	 * @f]
 	 *
