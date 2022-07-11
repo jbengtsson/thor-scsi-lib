@@ -1,32 +1,12 @@
-#include <pybind11/stl.h>
 #include <pybind11/pybind11.h>
-// #include <pybind11/operators.h>
-#include <vector>
-#include <tuple>
-
 #include <thor_scsi/version.h>
-#include <tps/enums.h>
-// #include <thor_scsi/core/defines.h>
 #include <thor_scsi/elements/constants.h>
-#include <thor_scsi/core/cells.h>
-// #include <thor_scsi/core/elements_enums.h>
 #include "thor_scsi.h"
 #include <string>
 #include <sstream>
 
 namespace py = pybind11;
 namespace tse = thor_scsi::elements;
-namespace tsc = thor_scsi::core;
-
-
-// Polymorphic number template class wrapper.
-
-
-
-/*
- * get_eps_x: provide the memory and return it to python
- *            TODO: check for memory leaks!
- */
 
 
 PYBIND11_MODULE(lib, scsi) {

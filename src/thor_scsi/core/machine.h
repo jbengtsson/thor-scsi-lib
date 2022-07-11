@@ -49,22 +49,6 @@ namespace thor_scsi::core {
 #endif
 
 
-#if 0   /* NO state */
-		/** @brief Allocate (with "operator new") an appropriate State object
-		 *
-		 * @param c Configuration describing the initial state
-		 * @return A pointer to the new state (never NULL).  The caller takes responsibility for deleteing.
-		 * @throws std::exception sub-classes for various errors, mostly incorrect Config.
-		 */
-		StateBase* allocState(const Config& c) const;
-
-		//! Allocate new State with empty Config
-		//! Equivalent to allocState(Config())
-		inline StateBase* allocState() const {
-			Config defaults;
-			return allocState(defaults);
-		}
-#endif /* NO state */
 
 		//! Fetch Config used to construct this Machine
 		inline const Config& conf() const { return p_conf; }
@@ -200,14 +184,6 @@ namespace thor_scsi::core {
 		std::ostream* p_trace;
 		Config p_conf;
 
-#if 0  /* NO state */
-		typedef StateBase* (*state_builder_t)(const Config& c);
-		template<typename State>
-		struct state_builder_impl {
-			static StateBase* build(const Config& c)
-				{ return new State(c); }
-		};
-#endif  /* NO state */
 
 		struct element_builder_t {
 			virtual ~element_builder_t() {}
@@ -246,9 +222,6 @@ namespace thor_scsi::core {
 		 */
 		struct element_info {
 			std::string name;
-#if 0  /* NO state */
-			state_builder_t builder;
-#endif
 			element_builder_t *builder;
 			// typedef std::map<std::string, element_builder_t*> elements_t;
 			// elements_t elements;
@@ -260,10 +233,6 @@ namespace thor_scsi::core {
 
 		typedef std::map<std::string, element_info> p_element_infos_t;
 		static p_element_infos_t p_element_infos;
-
-#if 0  /* NO state */
-		static void p_registerState(const char *name, state_builder_t b);
-#endif  /* NO state */
 
 		/**
 		 * demands that the element name is unique
@@ -293,14 +262,6 @@ namespace thor_scsi::core {
 		 *   ...
 		 * @endcode
 		 */
-
-#if 0  /* NO state */
-		template<typename State>
-		static void registerState(const char *name)
-			{
-				p_registerState(name, &state_builder_impl<State>::build);
-			}
-#endif  /* NO state */
 
 		/**
 		 * @brief Register a new Element type with the simulation framework

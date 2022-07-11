@@ -263,66 +263,12 @@ namespace thor_scsi::elements {
 
 	  public:
 
-#if 0
-
-		inline double GetKpar(int order){
-			throw std::logic_error("Implement harmonic access ");
-			// return PBpar[order+HOMmax];
-		}
-
-		inline void SetKpar(int order, double val){
-			throw std::logic_error("Implement harmonic access ");
-			// PBpar[order+HOMmax] = val;
-		}
-
-		/**
-		 *  sets up the  calculation of the Euclidian group: translation
-		 */
-		void SetdS(void);
-		void SetdT(void);
-		/**
-		 * triggers calculation of member PB from members PBrms, PBrnd, PBsys
-		 */
-		void SetPB(const int n);
-		double GetdT(void);
-		double GetPB(const int n);
-		double
-			// should be covered by transform
-			PdTpar,                    ///< Roll angle [deg]: design
-			PdTsys,                    //<                    systematic
-			PdTrms,                    ///<                    rms
-			PdTrnd;                    ///<                    random number.
-		std::vector<double>
-			PdSsys{0e0, 0e0},          ///< Displacement errors [m]: systematic
-			PdSrms{0e0, 0e0},          ///<                          rms
-			PdSrnd{0e0, 0e0};          ///<                          random number.
-		int
-			PN = 0,                    ///< Number of integration steps.
-			Porder = 0;                ///< The highest order in PB.
-		                                   ///
-			n_design;                  ///< multipole order (design).
-#endif
 		double
 		Pbending_angle = 0e0,                     ///<  Todo: Already defined or combination of PTx1 and PTx2?
 			PTx1 = 0e0,                      ///<  Bend angle [deg]:  hor. entrance angle
 			PTx2 = 0e0,                      ///<  Bend angle [deg]: hor. exit angle.
 			Pgap = 0e0;                      ///< Total magnet gap [m].
 
-#if 0
-		double
-			Pc0 = 0e0,                       ///< Corrections for roll error of bend.
-			Pc1 = 0e0,
-			Ps1 = 0e0;
-#endif
-#if 0
-		/* todo: review to implement is a complex arrays */
-		MpoleArray
-			PBpar,                             ///< Multipole strengths: design
-			PBsys,                     ///< Multipole strengths: systematic
-			PBrms,                     ///< Multipole strengths: random variation \f$ <\sigma> \f$
-			PBrnd,                     ///< random number used for computing PBrms.
-			PB;                        ///< Multipole strengths: total used by integrator
-#endif
 		/*
 		 * see :any:`isThick` or :any:`asThick` for a descriptio
 		 */
