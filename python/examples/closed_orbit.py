@@ -26,7 +26,7 @@ import os
 # t_file = os.path.join(t_dir, "b3_tst.lat")
 
 t_file = os.path.join("lattices", "tme.lat")
-t_file = os.path.join("lattices", "tme_rb.lat")
+# t_file = os.path.join("lattices", "tme_rb.lat")
 acc = accelerator_from_config(t_file)
 conf = ConfigType()
 
