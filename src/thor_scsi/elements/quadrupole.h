@@ -13,6 +13,9 @@ namespace thor_scsi::elements {
 		inline int getMainMultipoleNumber(void) const override final {
 			return 2;
 		};
+		inline bool isSkew(void) const override final {
+			return false;
+		};
 		const char* type_name(void) const override final { return "Quadrupole"; };
 	};
 

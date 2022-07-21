@@ -12,6 +12,7 @@
 #include <thor_scsi/elements/quadrupole.h>
 #include <thor_scsi/elements/sextupole.h>
 #include <thor_scsi/elements/octupole.h>
+#include <thor_scsi/elements/corrector.h>
 #include <thor_scsi/elements/cavity.h>
 #include <thor_scsi/elements/standard_observer.h>
 #include <thor_scsi/elements/standard_aperture.h>
@@ -78,6 +79,14 @@ class PyClassicalMagnet: public tse::ClassicalMagnet {
 			int, /* Return type */
 			tse::ClassicalMagnet,      /* Parent class */
 			getMainMultipoleNumber,          /* Name of function in C++ (must match Python name) */
+			/* Argument(s) */
+			);
+	}
+	bool isSkew(void) const override {
+		PYBIND11_OVERRIDE_PURE(
+			bool, /* Return type */
+			tse::ClassicalMagnet,      /* Parent class */
+			isSkew,          /* Name of function in C++ (must match Python name) */
 			/* Argument(s) */
 			);
 	}
@@ -471,8 +480,23 @@ void py_thor_scsi_init_elements(py::module &m)
 		.def(py::self * std::vector<double>());
 #endif
 
+
+	/*
+	 * causes seg fault .... memory management ...
+	 *
+	py::class_<tsc::PhaseSpaceGalileanPRot2DTransform, std::shared_ptr<tsc::PhaseSpaceGalileanPRot2DTransform>> prtf(m, "PhaseSpaceGalileanPRot2DTransform");
+	prtf
+		.def("setDx", &tsc::PhaseSpaceGalileanPRot2DTransform::setDx);
+	*/
 	py::class_<tse::FieldKick, std::shared_ptr<tse::FieldKick>> field_kick(m, "FieldKick", elem_type);
 	field_kick
+		// .def("getTransform",                &tse::FieldKick::getTransform) // causes segfault
+		.def("setDx",                       [](tse::FieldKick &kick, const double dx){kick.getTransform()->setDx(dx);})
+		.def("setDy",                       [](tse::FieldKick &kick, const double dy){kick.getTransform()->setDy(dy);})
+		.def("setRoll",                     [](tse::FieldKick &kick, const double roll){kick.getTransform()->setRoll(roll);})
+		.def("getDx",                       [](tse::FieldKick &kick) -> double {return kick.getTransform()->getDx();})
+		.def("getDy",                       [](tse::FieldKick &kick) -> double {return kick.getTransform()->getDy();})
+		.def("getRoll",                     [](tse::FieldKick &kick) -> double {return kick.getTransform()->getRoll();})
 		.def("isThick",                     &tse::FieldKick::isThick)
 		.def("asThick",                     &tse::FieldKick::asThick)
 		.def("getNumberOfIntegrationSteps", &tse::FieldKick::getNumberOfIntegrationSteps)
@@ -491,7 +515,6 @@ void py_thor_scsi_init_elements(py::module &m)
 		.def("setRadiationDelegate",        &tse::FieldKick::setRadiationDelegate)
 		.def("getFieldInterpolator",        &tse::FieldKick::getFieldInterpolator)
 		.def("setFieldInterpolator",        &tse::FieldKick::setFieldInterpolator)
-
 		.def(py::init<const Config &>());
 
 	py::class_<tse::MpoleType, std::shared_ptr<tse::MpoleType>> mpole_type(m, "Mpole", field_kick);
@@ -505,6 +528,7 @@ void py_thor_scsi_init_elements(py::module &m)
 		// .def("setMultipoles",            &tse::ClassicalMagnet::setMultipoles)
 		.def("getMainMultipoleNumber",   &tse::ClassicalMagnet::getMainMultipoleNumber)
 		.def("getMainMultipoleStrength", &tse::ClassicalMagnet::getMainMultipoleStrength)
+		.def("getMainMultipoleStrengthComponent", &tse::ClassicalMagnet::getMainMultipoleStrengthComponent)
 		.def("setMainMultipoleStrength", py::overload_cast<const double>(&tse::ClassicalMagnet::setMainMultipoleStrength))
 		.def("setMainMultipoleStrength", py::overload_cast<const tsc::cdbl>(&tse::ClassicalMagnet::setMainMultipoleStrength))
 		.def("propagate", py::overload_cast<tsc::ConfigType&, ss_vect<double>&>(&tse::ClassicalMagnet::pass), pass_d_doc)
@@ -518,6 +542,10 @@ void py_thor_scsi_init_elements(py::module &m)
 	py::class_<tse::OctupoleType, std::shared_ptr<tse::OctupoleType>>(m, "Octupole", cm)
 		.def(py::init<const Config &>());
 	py::class_<tse::BendingType, std::shared_ptr<tse::BendingType>>(m, "Bending", cm)
+		.def(py::init<const Config &>());
+	py::class_<tse::HorizontalSteererType, std::shared_ptr<tse::HorizontalSteererType>>(m, "HorizontalSteerer", cm)
+		.def(py::init<const Config &>());
+	py::class_<tse::VerticalSteererType, std::shared_ptr<tse::VerticalSteererType>>(m, "VerticalSteerer", cm)
 		.def(py::init<const Config &>());
 
 
