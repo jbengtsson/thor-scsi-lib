@@ -26,7 +26,9 @@ class ClosedOrbitResult:
 def compute_closed_orbit(
     acc: tslib.Accelerator,
     conf: tslib.ConfigType,
-    delta: float,
+    *,
+    delta: float = None,
+    x0: tslib.ss_vect_double = None,
     max_iter: int = 10,
     eps: float = 1e-10,
 ) -> ClosedOrbitResult:
@@ -47,25 +49,29 @@ def compute_closed_orbit(
     """
 
     logger.debug("computing closed orbit")
-    conf.dPparticle = delta
 
     if conf.Cavity_on:
         n = 6
     else:
         n = 4
 
-    x0 = tslib.ss_vect_double()
-    if n == 4:
-        x0.set_zero()
-        x0[tslib.phase_space_index_internal.delta] = delta
-    elif n == 6:
-        # To be revisited ...
-        # if delta != 0 add eta * delta
-        x0.set_zero()
-        x0[tslib.phase_space_index_internal.delta] = delta
+    if x0 is None:
+        conf.dPparticle = delta
+        x0 = tslib.ss_vect_double()
+        if n == 4:
+            x0.set_zero()
+            x0[tslib.phase_space_index_internal.delta] = delta
+        elif n == 6:
+            # To be revisited ...
+            # if delta != 0 add eta * delta
+            x0.set_zero()
+            x0[tslib.phase_space_index_internal.delta] = delta
+        else:
+            raise AssertionError("Only implemented for 4D or 6D phase space")
     else:
-        raise AssertionError("Only implemented for 4D or 6D phase space")
-
+        if delta is not None:
+            raise AssertionError("if x0 is given delta must be None")
+        conf.dPparticle = x0[tslib.phase_space_index_internal.delta]
     logger.debug("x0 %s", x0)
 
     # create weighting matrix for inverse calculation
