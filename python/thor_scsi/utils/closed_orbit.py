@@ -50,6 +50,12 @@ def compute_closed_orbit(
 
     logger.debug("computing closed orbit")
 
+    if eps <= 0e0:
+        raise AssertionError(f"tolerance {eps} <= 0e0")
+
+    if x0 is not None and not np.isfinite(x0).all():
+        raise AssertionError(f"given start {x0} is not finite!")
+
     if conf.Cavity_on:
         n = 6
     else:
@@ -124,7 +130,11 @@ def compute_closed_orbit(
         )
 
     else:
-        raise AssertionError("Exceeded maximum iterations f{max_iter}")
+        logger.error(
+            f"compute closed orbit did not finish within {max_iter} "
+            f"iterations. x0 = {x0}, target: eps = {eps} reached {dx_abs}"
+        )
+        raise AssertionError(f"Exceeded maximum iterations {max_iter}")
 
     # has a closed orbit been reached
     if closed_orbit:
