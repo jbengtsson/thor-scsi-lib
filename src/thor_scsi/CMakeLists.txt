@@ -20,15 +20,10 @@ set(thor_scsi_HEADERS
 
 # Needs to be fixed ... reorganisation of files
 set(thor_scsi_core_HEADERS
-#<<<<<<< flame-integration
-#=======
-#  core/aperture.h
-#>>>>>>> master
   core/exceptions.h
   core/config.h
   core/machine.h
   core/cell_void.h
-  core/cells.h
   core/aperture.h
   core/transform.h
   core/transform_phase_space.h

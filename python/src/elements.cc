@@ -496,6 +496,7 @@ void py_thor_scsi_init_elements(py::module &m)
 
 	py::class_<tse::MpoleType, std::shared_ptr<tse::MpoleType>> mpole_type(m, "Mpole", field_kick);
 	mpole_type
+		.def("getFieldInterpolator",            &tse::ClassicalMagnet::getFieldInterpolator)
 		.def(py::init<const Config &>());
 
 	py::class_<tse::ClassicalMagnet, PyClassicalMagnet, std::shared_ptr<tse::ClassicalMagnet>> cm(m, "ClassicalMagnet", mpole_type);
