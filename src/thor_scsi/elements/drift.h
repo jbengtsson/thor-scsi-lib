@@ -31,16 +31,6 @@ namespace thor_scsi {
 			//	// transform = O->transform
 			//	ElementVoidBase::assign(other);
 			//}
-
-#if 0
-			void print(const std::string &);
-			std::string repr(void);
-			virtual std::string repr(void) override final{ return "Dift repr: implement me!";} ;
-			void SetdS(void) {};
-			void SetdT(void) {};
-			void SetPB(const int n) {};
-			double GetdT(void) { return 0e0; };
-#endif
 			// double GetPB(const int n) { return 0e0; };
 
 			inline void pass(thor_scsi::core::ConfigType &conf, ss_vect<double> &ps) override final

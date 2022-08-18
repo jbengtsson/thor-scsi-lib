@@ -58,7 +58,7 @@ def extract_orbit_from_standard_observers(
     )
     ps = xr.DataArray(
         data=[t.cst() for t in tps_tmp],
-        name="tps",
+        name="ps",
         dims=["index", "phase_coordinate"],
         coords=[indices, phase_space_coords_names],
     )
