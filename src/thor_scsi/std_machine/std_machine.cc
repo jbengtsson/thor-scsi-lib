@@ -7,6 +7,7 @@
 #include <thor_scsi/elements/bpm.h>
 #include <thor_scsi/elements/cavity.h>
 #include <thor_scsi/elements/bending.h>
+#include <thor_scsi/elements/corrector.h>
 
 namespace ts = thor_scsi;
 namespace tsc = thor_scsi::core;
@@ -22,6 +23,8 @@ ts::register_elements(void)
 	tsc::Machine::registerElement<tse::QuadrupoleType>("Quadrupole");
 	tsc::Machine::registerElement<tse::SextupoleType>("Sextupole");
 	tsc::Machine::registerElement<tse::OctupoleType>("Octupole");
+	tsc::Machine::registerElement<tse::HorizontalSteererType>("HorizontalSteerer");
+	tsc::Machine::registerElement<tse::VerticalSteererType>("VerticalSteerer");
 	tsc::Machine::registerElement<tse::BendingType>("Bending");
 
 	// tsc::Machine::registerElement<tse::MpoleType>("mpole");
