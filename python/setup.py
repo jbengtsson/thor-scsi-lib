@@ -29,6 +29,7 @@ d = gsl_conf.gsl_config()
 
 # How to define where the thor scsi library is located?
 prefix = os.path.abspath(os.path.join(os.path.dirname(__name__), os.pardir, os.pardir))
+prefix = os.path.abspath(os.path.join(os.environ["HOME"], ".local"))
 from pybind11.setup_helpers import ParallelCompile
 
 # Optional multithreaded build
