@@ -135,7 +135,7 @@ Contributions
 -------------
 * The symplectic integrator for *RADIA kick maps*:
 
-    P\. Elleaume *A New Approach to the Electron Beam Dynamics in Undulators and Wigglers”* `EPAC 1992.`_
+    P\. Elleaume *A New Approach to the Electron Beam Dynamics in Undulators and Wigglers* `EPAC 1992.`_
 
     .. _`EPAC 1992.`: https://accelconf.web.cern.ch/e92/PDF/EPAC1992_0661.PDF
 
