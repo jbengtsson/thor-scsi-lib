@@ -336,13 +336,11 @@ def match_eigenvalues_to_plane_orig(M, w, v, *, n_dof):
         vtmp = (M[j - 1][j - 1] + M[j][j]) / 2
         cos_M[i] = vtmp
         if np.abs(vtmp) > 1e0:
-            logger.warning(
-                "sort_eigen: unstable |cos_M[nu_{i +1}]-1e0| = {:10.3e}",
-                i + 1,
-                np.absolute(vtmp - 1e0),
-            )
+            txt = f"sort_eigen: unstable |cos_M[nu_{i+1}]-1e0| = {np.absolute(vtmp - 1e0):10.3e}"
+            logger.warning(txt)
             stable = False
             # Check if an exception should be raised here?
+            raise ValueError(txt)
 
         sin_M[i] = sign(M[j - 1][j]) * np.sqrt(1e0 - cos_M[i] ** 2)
         #

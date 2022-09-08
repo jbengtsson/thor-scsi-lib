@@ -22,16 +22,14 @@ t_dir = os.path.dirname(__file__)
 par_dir = os.path.normpath(os.path.join(t_dir, os.pardir))
 readme_name = "README.rst"
 copy_file(
-    os.path.join(par_dir, readme_name), os.path.join(t_dir, readme_name),
-    update=True
+    os.path.join(par_dir, readme_name), os.path.join(t_dir, readme_name), update=True
 )
 
 d = gsl_conf.gsl_config()
 
 # How to define where the thor scsi library is located?
-prefix = os.path.abspath(
-    os.path.join(os.path.dirname(__name__), os.pardir, os.pardir, 'local')
-)
+prefix = os.path.abspath(os.path.join(os.path.dirname(__name__), os.pardir, os.pardir))
+prefix = os.path.abspath(os.path.join(os.environ["HOME"], ".local"))
 from pybind11.setup_helpers import ParallelCompile
 
 # Optional multithreaded build
@@ -51,35 +49,35 @@ ext_modules = [
     Pybind11Extension(
         "flame",
         ["src/flame.cc"],
-        include_dirs=[os.path.join(prefix, "include")] + [d["gsl_include"]],
+        include_dirs=[d["gsl_include"]] + [os.path.join(prefix, "include")],
         library_dirs=([os.path.join(prefix, "lib")]),
-        libraries=["flame", "flame_core"]
+        libraries=["flame", "flame_core"],
     ),
-
     Pybind11Extension(
         "lib",
-        # sorted(["src/thor_py_enums.cc", "src/thor_py.cc"]),
-        ["src/elements.cc",
-         "src/accelerator.cc",
-         "src/tps.cc",
-         "src/thor_scsi.cc",
-         "src/config_type.cc",
-         # "src/enums.cc",
-         # "src/lattice.cc"
-        ],
-        include_dirs=[os.path.join(prefix, "include")] + [d["gsl_include"]],
+        sorted(
+            [
+                "src/thor_scsi.cc",
+                "src/arma.cc",
+                "src/tps.cc",
+                "src/config_type.cc",
+                "src/elements.cc",
+                "src/accelerator.cc",
+            ]
+        ),
+        include_dirs=[d["gsl_include"]] + [os.path.join(prefix, "include")],
         # define_macros=[("_GLIBCXX_DEBUG", 1), ("_GLIBCXX_DEBUG_PEDANTIC", 1)],
         library_dirs=(
             [os.path.join(prefix, "lib")]
-            #["../../engine/lib"]
-        + [d["gsl_lib_dir"]]),
-        libraries=["thor_scsi", "thor_scsi_core", "tpsa_lin", "flame", "flame_core"] + d["gsl_libs"],
+            # ["../../engine/lib"]
+            + [d["gsl_lib_dir"]]
+        ),
+        libraries=["thor_scsi", "thor_scsi_core", "tpsa_lin", "flame", "flame_core"]
+        + d["gsl_libs"],
     ),
-
 ]
 
 
-setup(cmdclass={"build_ext": build_ext},
-      ext_package='thor_scsi',
-      ext_modules=ext_modules
+setup(
+    cmdclass={"build_ext": build_ext}, ext_package="thor_scsi", ext_modules=ext_modules
 )

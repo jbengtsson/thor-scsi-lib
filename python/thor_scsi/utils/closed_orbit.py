@@ -26,7 +26,9 @@ class ClosedOrbitResult:
 def compute_closed_orbit(
     acc: tslib.Accelerator,
     conf: tslib.ConfigType,
-    delta: float,
+    *,
+    delta: float = None,
+    x0: tslib.ss_vect_double = None,
     max_iter: int = 10,
     eps: float = 1e-10,
 ) -> ClosedOrbitResult:
@@ -47,25 +49,35 @@ def compute_closed_orbit(
     """
 
     logger.debug("computing closed orbit")
-    conf.dPparticle = delta
+
+    if eps <= 0e0:
+        raise AssertionError(f"tolerance {eps} <= 0e0")
+
+    if x0 is not None and not np.isfinite(x0).all():
+        raise AssertionError(f"given start {x0} is not finite!")
 
     if conf.Cavity_on:
         n = 6
     else:
         n = 4
 
-    x0 = tslib.ss_vect_double()
-    if n == 4:
-        x0.set_zero()
-        x0[tslib.phase_space_index_internal.delta] = delta
-    elif n == 6:
-        # To be revisited ...
-        # if delta != 0 add eta * delta
-        x0.set_zero()
-        x0[tslib.phase_space_index_internal.delta] = delta
+    if x0 is None:
+        conf.dPparticle = delta
+        x0 = tslib.ss_vect_double()
+        if n == 4:
+            x0.set_zero()
+            x0[tslib.phase_space_index_internal.delta] = delta
+        elif n == 6:
+            # To be revisited ...
+            # if delta != 0 add eta * delta
+            x0.set_zero()
+            x0[tslib.phase_space_index_internal.delta] = delta
+        else:
+            raise AssertionError("Only implemented for 4D or 6D phase space")
     else:
-        raise AssertionError("Only implemented for 4D or 6D phase space")
-
+        if delta is not None:
+            raise AssertionError("if x0 is given delta must be None")
+        conf.dPparticle = x0[tslib.phase_space_index_internal.delta]
     logger.debug("x0 %s", x0)
 
     # create weighting matrix for inverse calculation
@@ -118,7 +130,11 @@ def compute_closed_orbit(
         )
 
     else:
-        raise AssertionError("Exceeded maximum iterations f{max_iter}")
+        logger.error(
+            f"compute closed orbit did not finish within {max_iter} "
+            f"iterations. x0 = {x0}, target: eps = {eps} reached {dx_abs}"
+        )
+        raise AssertionError(f"Exceeded maximum iterations {max_iter}")
 
     # has a closed orbit been reached
     if closed_orbit:

@@ -21,6 +21,14 @@ namespace thor_scsi::elements {
 			 *  a subclass
 			 */
 		}
+		/**
+		 * get the major harmonic number
+		 */
+		virtual int getMainMultipoleNumber(void) const = 0;
+		/**
+		 * is it a skew multipole ?
+		 */
+		virtual bool isSkew(void) const = 0;
 
 		/**
 		 *
@@ -40,10 +48,6 @@ namespace thor_scsi::elements {
 			return tmp;
 		}
 
-		inline void setMainMultipoleStrength(const Config &config, const int n){
-			this->getMultipoles()->setMultipole(n, config.get<double>("K"));
-		}
-
 		inline void setMainMultipoleStrength(const Config &config){
 			const double K = config.get<double>("K");
 			// Watch the apersand ...
@@ -55,8 +59,16 @@ namespace thor_scsi::elements {
 			this->getMultipoles()->setMultipole(n, mul);
 		}
 
-		inline void setMainMultipoleStrength(const double normal){
-			this->setMainMultipoleStrength(thor_scsi::core::cdbl(normal, 0));
+		inline void setMainMultipoleStrength(const Config &config, const int n){
+			double K = config.get<double>("K");
+			this->setMainMultipoleStrength(K);
+		}
+
+		inline void setMainMultipoleStrength(const double part){
+			double re=0e0, im=0e0;
+			if(!this->isSkew()){re = part; } else {	im = part;}
+			const thor_scsi::core::cdbl Cn(re, im);
+			this->setMainMultipoleStrength(Cn);
 		}
 
 		inline thor_scsi::core::cdbl getMainMultipoleStrength(void) const {
@@ -64,16 +76,16 @@ namespace thor_scsi::elements {
 			return this->getMultipoles()->getMultipole(n);
 		};
 
-		/**
-		 * get the major harmonic number
-		 */
-		virtual int getMainMultipoleNumber(void) const = 0;
-		//thor_scsi::core::TwoDimensionalMultipoles* intp;
+		inline double getMainMultipoleStrengthComponent(void) const {
+			auto cm = this->getMainMultipoleStrength();
+			if(this->isSkew()){
+				return cm.imag();
+			}
+			return cm.real();
+		}
 
 
 	};
-
-
 } // Name space
 
 #endif // _THOR_SCSI_ELEMENTS_CLASSICAL_MAGNET_H_
