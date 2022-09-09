@@ -146,15 +146,42 @@ namespace thor_scsi::core {
 		template<typename T>
 		inline void _field(const T x, const T y, T *Bx, T * By)  const {
 			int n = this->coeffs.size() -1;
-			T ByoBrho = this->coeffs[n].real(),  BxoBrho = this->coeffs[n].imag();
+			T rBy = this->coeffs[n].real(),  rBx = this->coeffs[n].imag(), trBy(0.0), term1, term2;
+
 			for(int i=n - 2; i >= 0; --i){
 				cdbl_intern tmp = this->coeffs[i];
+#if 0
 				T ByoBrho1 = x * ByoBrho - y * BxoBrho + tmp.real();
 				BxoBrho    = y * ByoBrho + x * BxoBrho + tmp.imag();
 				ByoBrho = ByoBrho1;
+#endif
+
+#if 0
+				trBy = x * rBy - y * rBx + tmp.real();
+				rBx  = y * rBy + x * rBx + tmp.imag();
+				rBy = std::move(trBy);
+
+				term1 = x; term1 *= rBy; term2 =  y * rBx;
+				trBy = term1; trBy -= term2; trBy += tmp.real();
+
+				term1 = y; term1 *= rBy; term2 =  x * rBx;
+				rBx = term1; rBx += term2; rBx += tmp.imag();
+				rBy = trBy;
+
+#else
+
+				term1 = x; term1 *= rBy; term2 = y; term2 *= rBx;
+				trBy = term1; trBy -= term2; trBy += tmp.real();
+
+				term1 = y; term1 *= rBy; term2 =  x; term2 *= rBx;
+				rBx = term1; rBx += term2; rBx += tmp.imag();
+				rBy = std::move(trBy);
+#endif
+
+
 			}
-			*Bx = (BxoBrho);
-			*By = ByoBrho;
+			*Bx = rBx;
+			*By = rBy;
 			/*
 			  MB[HOMmax-Order]
 				ByoBrho = MB[Order+HOMmax]; BxoBrho = MB[HOMmax-Order];
