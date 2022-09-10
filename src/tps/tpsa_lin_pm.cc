@@ -73,7 +73,12 @@ tps::tps(void) {
   char name[11];
 
   if (!ini_tps) TPSA_Ini();
-  seq_tps++; sprintf(name, "tps-%-5hu", seq_tps);
+  seq_tps++;
+#if NO_TPSA == 1
+#else
+#warning "not off"
+  sprintf(name, "tps-%-5hu", seq_tps);
+#endif
   daall_(ltps, 1, name, no_tps, nv_tps); dacon_(ltps, 0.0);
 }
 
@@ -82,7 +87,11 @@ tps::tps(const double r)
   char name[11];
 
   if (!ini_tps) TPSA_Ini();
-  seq_tps++; sprintf(name, "tps-%-5hu", seq_tps);
+  seq_tps++;
+#if NO_TPSA == 1
+#else
+  sprintf(name, "tps-%-5hu", seq_tps);
+#endif
   daall_(ltps, 1, name, no_tps, nv_tps); dacon_(ltps, r);
 }
 
@@ -103,7 +112,11 @@ tps::tps(const tps &x) {
   char name[11];
 
   if (!ini_tps) TPSA_Ini();
-  seq_tps++; sprintf(name, "tps-%-5hu", seq_tps);
+  seq_tps++;
+#if NO_TPSA == 1
+#else
+  sprintf(name, "tps-%-5hu", seq_tps);
+#endif
   daall_(ltps, 1, name, no_tps, nv_tps);
   dacop_(x.ltps, ltps);
 }
