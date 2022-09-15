@@ -164,9 +164,8 @@ std::ostream& operator<<(std::ostream& strm, ss_vect<T>& s)
 template<>
 inline ss_vect<double> ss_vect<double>::cst(void) const
 {
-  printf("\nss_vect<double>::cst(void): *** not defined.\n");
-  exit(1);
-  return(0e0);
+    throw std::runtime_error("\nss_vect<double>::cst(void): *** not defined.\n");
+    return(0e0);
 }
 
 template<>
