@@ -24,6 +24,7 @@ void py_thor_scsi_init_accelerator(py::module &m)
 
 	const char prop_doc[] = "propagate phase space through elements";
 	const int imax = std::numeric_limits<int>::max();
+	const size_t n_turns=1;
 
 	py::class_<ts::Accelerator, std::shared_ptr<ts::Accelerator>>(m, "Accelerator")
 		.def("find",                 &ts::Accelerator::find)
@@ -37,10 +38,10 @@ void py_thor_scsi_init_accelerator(py::module &m)
 		//.def("__copy__",             &ts::Accelerator::clone, "make a copy of the accelerator")
 		.def("__len__",              &ts::Accelerator::size)
 		.def("__getitem__", py::overload_cast<size_t>(&ts::Accelerator::at))
-		.def("propagate", py::overload_cast<tsc::ConfigType&, ts::ss_vect_dbl&, size_t, int>(&ts::Accelerator::propagate), prop_doc,
-		     py::arg("calc_config"), py::arg("ps"), py::arg("start") = 0, py::arg("max_elements") = imax)
-		.def("propagate", py::overload_cast<tsc::ConfigType&, ts::ss_vect_tps&, size_t, int>(&ts::Accelerator::propagate), prop_doc,
-		     py::arg("calc_config"), py::arg("ps"), py::arg("start") = 0, py::arg("max_elements") = imax)
+		.def("propagate", py::overload_cast<tsc::ConfigType&, ts::ss_vect_dbl&, size_t, int, size_t>(&ts::Accelerator::propagate), prop_doc,
+		     py::arg("calc_config"), py::arg("ps"), py::arg("start") = 0, py::arg("max_elements") = imax, py::arg("n_turns") = n_turns)
+		.def("propagate", py::overload_cast<tsc::ConfigType&, ts::ss_vect_tps&, size_t, int, size_t>(&ts::Accelerator::propagate), prop_doc,
+		     py::arg("calc_config"), py::arg("ps"), py::arg("start") = 0, py::arg("max_elements") = imax, py::arg("n_turns") = n_turns)
 		.def(py::init<const Config &>());
 
 
