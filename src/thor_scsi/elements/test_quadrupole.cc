@@ -163,6 +163,7 @@ BOOST_AUTO_TEST_CASE(test20_quadrupole_thin_eval)
 
 		/* no multipole */
 		for(int i = -1; i <= 1; ++i){
+			gtpsa::ss_vect<double> ps{0,0,0,0,0,0};
 			const double x = i;
 
 			gtpsa::ss_vect<double> ps{0,0,0,0,0,0};
