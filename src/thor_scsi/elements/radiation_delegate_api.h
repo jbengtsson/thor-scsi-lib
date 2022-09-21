@@ -2,15 +2,17 @@
 #define _THOR_SCSI_RADIATION_OBSERVER_API_H_ 1
 #include <thor_scsi/elements/field_kick_api.h>
 #include <thor_scsi/core/elements_basis.h>
-#include <tps/ss_vect.h>
+#include <gtpsa/tpsa.hpp>
+#include <gtpsa/ss_vect.h>
 #include <tps/tps_type.h>
 
 namespace thor_scsi::elements {
 	using thor_scsi::core::ObservedState;
 	class RadiationDelegateInterface {
 	public:
-		virtual void view(const thor_scsi::core::ElemType& elem, const ss_vect<double> &ps, const enum ObservedState, const int cnt) = 0;
-		virtual void view(const thor_scsi::core::ElemType& elem, const ss_vect<tps> &ps, const enum ObservedState, const int cnt) = 0;
+		virtual void view(const thor_scsi::core::ElemType& elem, const gtpsa::ss_vect<double>      &ps, const enum ObservedState, const int cnt) = 0;
+		virtual void view(const thor_scsi::core::ElemType& elem, const gtpsa::ss_vect<tps>         &ps, const enum ObservedState, const int cnt) = 0;
+		virtual void view(const thor_scsi::core::ElemType& elem, const gtpsa::ss_vect<gtpsa::tpsa> &ps, const enum ObservedState, const int cnt) = 0;
 		virtual void show(std::ostream& strm, int level) const{
 			strm << "RadiationDelegateInterface";
 		}
@@ -20,8 +22,9 @@ namespace thor_scsi::elements {
 	};
 	class RadiationDelegateKickInterface {
 	public:
-		virtual void view(const FieldKickAPI& kick, const ss_vect<double> &ps, const enum ObservedState, const int cnt) = 0;
-		virtual void view(const FieldKickAPI& kick, const ss_vect<tps> &ps, const enum ObservedState, const int cnt)  = 0;
+		virtual void view(const FieldKickAPI& kick, const gtpsa::ss_vect<double>      &ps, const enum ObservedState, const int cnt) = 0;
+		virtual void view(const FieldKickAPI& kick, const gtpsa::ss_vect<gtpsa::tpsa> &ps, const enum ObservedState, const int cnt) = 0;
+		virtual void view(const FieldKickAPI& kick, const gtpsa::ss_vect<tps>         &ps, const enum ObservedState, const int cnt) = 0;
 		virtual void show(std::ostream& strm, int level) const{
 			strm << "RadiationDelegateKickInterface";
 		}

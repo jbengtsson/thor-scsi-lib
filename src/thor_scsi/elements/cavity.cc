@@ -1,11 +1,14 @@
 #include <thor_scsi/elements/cavity.h>
 #include <thor_scsi/elements/element_helpers.h>
 #include <thor_scsi/elements/constants.h>
+#include <gtpsa/utils.hpp>
+
 #include <cmath>
 #include <ostream>
 
 namespace tsc = thor_scsi::core;
 namespace tse = thor_scsi::elements;
+
 
 tse::CavityType::CavityType(const Config &config) :  LocalGalilean(config)
 {
@@ -13,14 +16,15 @@ tse::CavityType::CavityType(const Config &config) :  LocalGalilean(config)
 	this->setVoltage(config.get<double>("Voltage"));
 }
 
+
 template<typename T>
-void tse::CavityType::_localPass(tsc::ConfigType &conf, ss_vect<T> &ps)
+void tse::CavityType::_localPropagate(tsc::ConfigType &conf, gtpsa::ss_vect<T> &ps)
 {
 
 	const double L = this->PL, c0 = speed_of_light;
 	const bool debug = false;
 
-	drift_pass(conf, L/2e0, ps);
+	drift_propagate(conf, L/2e0, ps);
 
 	if(debug){
 		std::cout << "cavity on " << conf.Cavity_on << std::endl;
@@ -38,15 +42,18 @@ void tse::CavityType::_localPass(tsc::ConfigType &conf, ss_vect<T> &ps)
 		ps[delta_] += delta;
 
 #ifdef THOR_SCSI_USE_RADIATION
-		if (conf.radiation) conf.dE -= is_double<T>::cst(delta);
+		if (conf.radiation) conf.dE -= gtpsa::cst(delta);
 #endif
 		if (conf.pathlength) ps[ct_] -= this->Ph/this->Pfreq*c0;
 	}
-	drift_pass(conf, L/2e0, ps);
+	drift_propagate(conf, L/2e0, ps);
 }
 
-template void tse::CavityType::_localPass(tsc::ConfigType &conf, ss_vect<double> &ps);
-template void tse::CavityType::_localPass(tsc::ConfigType &conf, ss_vect<tps> &ps);
+// template void tse::CavityType::_localPropagate(tsc::ConfigType &conf, ss_vect<double>             &ps);
+// template void tse::CavityType::_localPropagate(tsc::ConfigType &conf, ss_vect<tps>                &ps);
+template void tse::CavityType::_localPropagate(tsc::ConfigType &conf, gtpsa::ss_vect<double>      &ps);
+template void tse::CavityType::_localPropagate(tsc::ConfigType &conf, gtpsa::ss_vect<tps>         &ps);
+template void tse::CavityType::_localPropagate(tsc::ConfigType &conf, gtpsa::ss_vect<gtpsa::tpsa> &ps);
 
 /*
  * Local Variables:

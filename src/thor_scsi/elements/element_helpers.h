@@ -8,9 +8,10 @@
  */
 #include <vector>
 #include <string>
-#include <tps/ss_vect.h>
-#include <tps/ss_vect_utils.h>
-#include <tps/tps.h>
+// #include <tps/ss_vect.h>
+// #include <tps/ss_vect_utils.h>
+#include <tps/tps_type.h>
+#include <gtpsa/ss_vect.h>
 #include <thor_scsi/core/config.h>
 #include <thor_scsi/core/exceptions.h>
 
@@ -18,7 +19,7 @@
 #include <iostream>
 #include <string>
 
-#include <tps/tpsa_lin.h>
+// #include <tps/tpsa_lin.h>
 // #include <thor_scsi/process/t2ring_common.h>
 
 
@@ -77,8 +78,8 @@ namespace thor_scsi::elements {
  * \endverbatim
  *
  */
-void get_twoJ(const int n_DOF, const ss_vect<double> &ps,
-	      const ss_vect<tps> &A, double twoJ[]);
+void get_twoJ(const int n_DOF, const gtpsa::ss_vect<double> &ps,
+	      const gtpsa::ss_vect<tps> &A, double twoJ[]);
 
 /**
  *
@@ -95,9 +96,9 @@ void get_twoJ(const int n_DOF, const ss_vect<double> &ps,
  *  @brief Compute longitudinal momentum
  */
 template<typename T>
-inline T get_p_s(const thor_scsi::core::ConfigType &conf, const ss_vect<T> &ps)
+inline T get_p_s(const thor_scsi::core::ConfigType &conf, const gtpsa::ss_vect<T> &ps)
 {
-	T p_s, p_s2;
+	T p_s(ps[0]), p_s2(ps[0]);
 
 	if (!conf.H_exact) {
 		// Small angle axproximation.
@@ -140,7 +141,7 @@ public:
 	/**
 	 * @brief Compute (linear) dispersion action
 	 */
-	static inline double get_curly_H(const ss_vect<double> &x){
+	static inline double get_curly_H(const gtpsa::ss_vect<double> &x){
 		std::cout << "get_curly_H: operation not defined for double" << std::endl;
 		throw std::domain_error("get_curly_H: operation not defined for double");
 		return 0e0;
@@ -151,15 +152,20 @@ public:
 	 *
 	 * Todo: Check which one
 	 */
-	static inline double get_dI_eta(const ss_vect<tps> &A){
+	static inline double get_dI_eta(const gtpsa::ss_vect<tps> &A){
 		std::cout << "get_dI_eta: operation not defined for double" << std::endl;
-		throw std::domain_error("get_dI_eta: operation not defined for double");
+		throw std::domain_error("get_dI_eta: operation not defined for tps");
+		return 0e0;
+	}
+	static inline double get_dI_eta(const gtpsa::ss_vect<gtpsa::tpsa> &A){
+		std::cout << "get_dI_eta: operation not defined for gtpsa::tpsa" << std::endl;
+		throw std::domain_error("get_dI_eta: operation not defined for gtpsa::tpsa");
 		return 0e0;
 	}
 
 
 	static inline void diff_mat(const double B2, const double u,
-				    const double ps0, const ss_vect<double> &xp) { }
+				    const double ps0, const gtpsa::ss_vect<double> &xp) { }
 
 };
 
@@ -174,12 +180,12 @@ public:
 
 	static inline tps set_prm(const int k) { return tps(0e0, k); }
 
-	static inline double get_curly_H(const ss_vect<tps> &A){
+	static inline double get_curly_H(const gtpsa::ss_vect<tps> &A){
 		int             j;
-		double          curly_H[2];
-		ss_vect<double> eta;
+		double          curly_H[2], unused=0e0;
+		gtpsa::ss_vect<double> eta(unused);
 
-		eta.zero();
+		eta.set_zero();
 		for (j = 0; j < 4; j++)
 			eta[j] = A[j][delta_];
 
@@ -188,7 +194,7 @@ public:
 		return curly_H[X_];
 	}
 
-	static inline double get_dI_eta(const ss_vect<tps> &A){
+	static inline double get_dI_eta(const gtpsa::ss_vect<tps> &A){
 		return A[x_][delta_];
 	}
 
@@ -216,7 +222,7 @@ public:
 	 */
 
 	static inline void diff_mat(const tps &B2_perp, const tps &ds,
-				    const tps &p_s0, ss_vect<tps> &x)
+				    const tps &p_s0, gtpsa::ss_vect<tps> &x)
 		{ }
 
 
@@ -229,7 +235,7 @@ public:
 		 * See drift.h for DriftType, which is an implementation as separate lattice lement
 		 */
 		template<typename T>
-		void drift_pass(const thor_scsi::core::ConfigType &conf, const double L, ss_vect<T> &ps);
+		void drift_propagate(const thor_scsi::core::ConfigType &conf, const double L, gtpsa::ss_vect<T> &ps);
 
 		/**
 		 * @brief implementation of the thin kick (thin lens approximation)
@@ -264,7 +270,7 @@ public:
 			       // const thor_scsi::core::Field2DInterpolation& intp,
 			       const T BxoBrho, const T ByoBrho,
 			       const double L,
-			       const double h_bend, const double h_ref, ss_vect<T> &ps);
+			       const double h_bend, const double h_ref, gtpsa::ss_vect<T> &ps);
 
 }// namespace thor_scsi::elements
 #endif /*  _THOR_SCSI_CORE_ELEMENTS_HELPERS_H_  */

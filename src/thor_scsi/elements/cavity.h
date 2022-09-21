@@ -16,10 +16,11 @@ namespace thor_scsi::elements {
 
 		const char* type_name(void) const override final { return "Cavity"; };
 
-		virtual void localPass(thor_scsi::core::ConfigType &conf, ss_vect<double> &ps) override final
-			{ _localPass(conf, ps);}
-		virtual void localPass(thor_scsi::core::ConfigType &conf, ss_vect<tps> &ps) override final
-			{ _localPass(conf, ps);}
+		// virtual void localPropagate(thor_scsi::core::ConfigType &conf, ss_vect<double>             &ps) override final { _localPropagate(conf, ps); }
+		// virtual void localPropagate(thor_scsi::core::ConfigType &conf, ss_vect<tps>                &ps) override final { _localPropagate(conf, ps); }
+		virtual void localPropagate(thor_scsi::core::ConfigType &conf, gtpsa::ss_vect<double>      &ps) override final { _localPropagate(conf, ps); }
+		virtual void localPropagate(thor_scsi::core::ConfigType &conf, gtpsa::ss_vect<tps>         &ps) override final { _localPropagate(conf, ps); }
+		virtual void localPropagate(thor_scsi::core::ConfigType &conf, gtpsa::ss_vect<gtpsa::tpsa> &ps) override final { _localPropagate(conf, ps); }
 
 		inline void setVoltage(const double val){
 			this->Pvolt = val;
@@ -63,10 +64,9 @@ namespace thor_scsi::elements {
 		 *
 		 * \endverbatim
 		 */
-		template<typename T>
-		void _localPass(thor_scsi::core::ConfigType &conf, ss_vect<T> &ps);
-		template<typename T>
-		void _localPass(thor_scsi::core::ConfigType &conf, ss_vect<tps> &ps);
+		template<typename T> void _localPropagate(thor_scsi::core::ConfigType &conf, gtpsa::ss_vect<T> &ps);
+		// template<typename T>
+		// void _localPropagate(thor_scsi::core::ConfigType &conf, gtpsa::ss_vect<tpsa> &ps);
 
 		double
 		Pvolt = 0.0,                     ///< Vrf [V].

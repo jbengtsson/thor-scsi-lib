@@ -22,8 +22,9 @@ namespace thor_scsi::elements {
 		/*
 		 * Used for computing curly_dHx
 		 */
-		virtual void view(const ElemType& kick, const ss_vect<double> &ps, const enum ObservedState state, const int cnt) override;
-		virtual void view(const ElemType& kick, const ss_vect<tps> &ps, const enum ObservedState state, const int cnt) override;
+		virtual void view(const ElemType& kick, const gtpsa::ss_vect<double>      &ps, const enum ObservedState state, const int cnt) override;
+		virtual void view(const ElemType& kick, const gtpsa::ss_vect<tps>         &ps, const enum ObservedState state, const int cnt) override;
+		virtual void view(const ElemType& kick, const gtpsa::ss_vect<gtpsa::tpsa> &ps, const enum ObservedState state, const int cnt) override;
 
 		virtual void show(std::ostream& strm, int level) const override final;
 
@@ -35,10 +36,10 @@ namespace thor_scsi::elements {
 		}
 	private:
 		template<typename T>
-		inline void _view(const ElemType&, const ss_vect<T> &ps, const enum ObservedState state, const int cnt);
+		inline void _view(const ElemType&, const gtpsa::ss_vect<T> &ps, const enum ObservedState state, const int cnt);
 
 		template<typename T>
-		inline void computeAndStoreCurlyH(const ss_vect<T> &ps);
+		inline void computeAndStoreCurlyH(const gtpsa::ss_vect<T> &ps);
 
 		double curly_dH_x = 0e0;
 		std::string delegator_name = "";
@@ -84,12 +85,13 @@ namespace thor_scsi::elements {
 		/*
 		 * Used for computing synchrotron integrals
 		 */
-		virtual void view(const FieldKickAPI& kick, const ss_vect<double> &ps, const enum ObservedState state, const int cnt) override;
-		virtual void view(const FieldKickAPI& kick, const ss_vect<tps> &ps, const enum ObservedState state, const int cnt) override;
+		virtual void view(const FieldKickAPI& kick, const gtpsa::ss_vect<double>      &ps, const enum ObservedState state, const int cnt) override;
+		virtual void view(const FieldKickAPI& kick, const gtpsa::ss_vect<tps>         &ps, const enum ObservedState state, const int cnt) override;
+		virtual void view(const FieldKickAPI& kick, const gtpsa::ss_vect<gtpsa::tpsa> &ps, const enum ObservedState state, const int cnt) override;
 
 		virtual void show(std::ostream& strm, int level) const override final;
-		//virtual void view(const ElemType& kick, const ss_vect<double> &ps, const enum ObservedState state, const int cnt) override final;
-		//virtual void view(const ElemType& kick, const ss_vect<tps> &ps, const enum ObservedState state, const int cnt) override final;
+		//virtual void view(const ElemType& kick, const gtpsa::ss_vect<double> &ps, const enum ObservedState state, const int cnt) override final;
+		//virtual void view(const ElemType& kick, const gtpsa::ss_vect<tps> &ps, const enum ObservedState state, const int cnt) override final;
 		/**
 		 * @brief Radiation effect due to local field
 		 *
@@ -104,7 +106,7 @@ namespace thor_scsi::elements {
 		 * M. Sands "The hysics of Electron Storage Rings" SLAC-121, p. 98.
 		 */
 		template<typename T>
-		void radiate(const thor_scsi::core::ConfigType &conf, ss_vect<T> &x, const double L, const double h_ref, const std::array<T, 3> B);
+		void radiate(const thor_scsi::core::ConfigType &conf, gtpsa::ss_vect<T> &x, const double L, const double h_ref, const std::array<T, 3> B);
 
 		inline auto getSynchrotronIntegralsIncrement(void) const {
 			return this->dI;
@@ -137,18 +139,18 @@ namespace thor_scsi::elements {
 		 */
 		//
 		template<typename T>
-		inline void synchrotronIntegralsFinish(const FieldKickAPI &kick, const ss_vect<T> &ps);
+		inline void synchrotronIntegralsFinish(const FieldKickAPI &kick, const gtpsa::ss_vect<T> &ps);
 
 		// calculate the effect of radiation
 		template<typename T>
 		inline void //radiate
-		synchrotronIntegralsStep(const ss_vect<T> &ps);
+		synchrotronIntegralsStep(const gtpsa::ss_vect<T> &ps);
 
 		template<typename T>
-		inline void _view(const FieldKickAPI&, const ss_vect<T> &ps, const enum ObservedState state, const int cnt);
+		inline void _view(const FieldKickAPI&, const gtpsa::ss_vect<T> &ps, const enum ObservedState state, const int cnt);
 
-		inline void diffusion(const double B2, const double u, const double ps0, const ss_vect<double> &xp) { }
-		inline void diffusion(const tps &B2_perp,  const tps &ds, const tps &p_s0,  const ss_vect<tps> &A);
+		template<typename T>
+		void diffusion(const T &B2_perp, const T &ds, const T &p_s0,  const gtpsa::ss_vect<T> &A);
 
 		double curly_dH_x = 0e0;
 		int index = -1;

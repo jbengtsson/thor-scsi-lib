@@ -2,6 +2,7 @@
 #define _THOR_SCSI_CORE_TRANSFORM_PHASE_SPACE_H_ 1
 
 #include <tps/enums.h>
+#include <gtpsa/utils.hpp>
 #include <thor_scsi/core/transform.h>
 
 namespace thor_scsi::core {
@@ -66,7 +67,7 @@ namespace thor_scsi::core {
 		 * todo: external storage ....
 		 */
 		inline void forwardRotation(T& ps){
-			T ps1 = ps;
+		        T ps1 = clone(ps);
 			auto& R =  this->m_dT;
 			ps[x_]  =  R[X_] * ps1[x_]  + R[Y_] * ps1[y_];
 			ps[px_] =  R[X_] * ps1[px_] + R[Y_] * ps1[py_];

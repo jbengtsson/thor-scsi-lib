@@ -7,8 +7,9 @@
 
 namespace thor_scsi {
 
-	typedef ss_vect<tps> ss_vect_tps;
-	typedef ss_vect<double> ss_vect_dbl;
+	typedef gtpsa::ss_vect<tps>         ss_vect_tps;
+	typedef gtpsa::ss_vect<gtpsa::tpsa> ss_vect_tpsa;
+	typedef gtpsa::ss_vect<double>      ss_vect_dbl;
 
 	/**
 	 * @brief propagation result of accelerator
@@ -38,12 +39,15 @@ namespace thor_scsi {
 		 * @todo proper interface design!
 		 */
 		template <typename T>
-		int _propagate(thor_scsi::core::ConfigType& conf, ss_vect<T>& ps, size_t start, int max, size_t n_turns);
+		int _propagate(thor_scsi::core::ConfigType& conf, gtpsa::ss_vect<T>& ps, size_t start, int max, size_t n_turns);
 
-		int propagate(thor_scsi::core::ConfigType&, ss_vect_tps &ps,
+		int propagate(thor_scsi::core::ConfigType&, ss_vect_tps  &ps,
 			      size_t start=0,
 			      int max_elements=std::numeric_limits<int>::max(), size_t n_turns=1);
-		int propagate(thor_scsi::core::ConfigType&, ss_vect_dbl &ps,
+		int propagate(thor_scsi::core::ConfigType&, ss_vect_tpsa &ps,
+			       size_t start=0,
+			      int max_elements=std::numeric_limits<int>::max(), size_t n_turns=1);
+		int propagate(thor_scsi::core::ConfigType&, ss_vect_dbl  &ps,
 			       size_t start=0,
 			      int max_elements=std::numeric_limits<int>::max(), size_t n_turns=1);
 

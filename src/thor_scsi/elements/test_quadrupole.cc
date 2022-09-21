@@ -7,7 +7,6 @@
 #include <thor_scsi/core/multipoles.h>
 #include <thor_scsi/elements/quadrupole.h>
 #include "check_multipole.h"
-#include <tps/ss_vect.h>
 #include <ostream>
 
 namespace tsc = thor_scsi::core;
@@ -161,12 +160,12 @@ BOOST_AUTO_TEST_CASE(test20_quadrupole_thin_eval)
 
 		/* no multipole */
 		for(int i = -1; i <= 1; ++i){
-			ss_vect<double> ps;
+			gtpsa::ss_vect<double> ps{0,0,0,0,0,0};
 			const double x = i;
 			ps[x_] = x;
 
 
-			quad.pass(calc_config, ps);
+			quad.propagate(calc_config, ps);
 
 			BOOST_CHECK_CLOSE(ps[x_],     x, 1e-14);
 			BOOST_CHECK_SMALL(ps[y_],        1e-14);
@@ -185,8 +184,8 @@ BOOST_AUTO_TEST_CASE(test20_quadrupole_thin_eval)
 		}
 
 		quad.setMainMultipoleStrength(tsc::cdbl(1e0/i, 0e0));
-		ss_vect<double> ps;
-		quad.pass(calc_config, ps);
+		gtpsa::ss_vect<double> ps{0,0,0,0,0,0};;
+		quad.propagate(calc_config, ps);
 
 		BOOST_CHECK_SMALL(ps[x_],     1e-14);
 		BOOST_CHECK_SMALL(ps[y_],     1e-14);
@@ -207,11 +206,10 @@ BOOST_AUTO_TEST_CASE(test20_quadrupole_thin_eval)
 				continue;
 			}
 
-			ss_vect<double> ps;
 			const double x = i;
-			ps[x_] = x;
+			gtpsa::ss_vect<double> ps({double(i), 0e0, 0e0, 0e0, 0e0, 0e0});
 
-			quad.pass(calc_config, ps);
+			quad.propagate(calc_config, ps);
 
 			BOOST_CHECK_CLOSE(ps[px_],  - x* grad, 1e-12);
 			BOOST_CHECK_CLOSE(ps[x_],           x, 1e-14);
@@ -234,11 +232,10 @@ BOOST_AUTO_TEST_CASE(test20_quadrupole_thin_eval)
 				continue;
 			}
 
-			ss_vect<double> ps;
 			const double x = i;
-			ps[x_] = x;
+			gtpsa::ss_vect<double> ps({double(i), 0e0, 0e0, 0e0, 0e0, 0e0});
 
-			quad.pass(calc_config, ps);
+			quad.propagate(calc_config, ps);
 
 			BOOST_CHECK_CLOSE(ps[py_], x * grad, 1e-12);
 			BOOST_CHECK_CLOSE(ps[x_],         x, 1e-14);
@@ -284,11 +281,11 @@ BOOST_AUTO_TEST_CASE(test20_quadrupole_typical_length_eval)
 
 			const double xs = i * (1e-3), l2 = length / 2e0;
 			const double By = -xs * (gdl), xe = xs + By * l2;
-			ss_vect<double> ps;
+			gtpsa::ss_vect<double> ps{0,0,0,0,0,0};
 
 
 			ps[x_] = xs;
-			quad.pass(calc_config, ps);
+			quad.propagate(calc_config, ps);
 
 			BOOST_CHECK_CLOSE(ps[px_],  By, 2);
 			BOOST_CHECK_CLOSE(ps[x_],   xe, 0.5);

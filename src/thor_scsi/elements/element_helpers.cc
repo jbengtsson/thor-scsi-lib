@@ -3,7 +3,7 @@
 #include <thor_scsi/elements/utils.h>
 
 #include <tps/tps_type.h>
-#include <tps/tps.h>
+// #include <tps/tps.h>
 
 namespace tse = thor_scsi::elements;
 namespace tsc = thor_scsi::core;
@@ -30,34 +30,38 @@ double tse::get_psi(const double irho, const double phi, const double gap)
 }
 
 
-void tse::get_twoJ(const int n_DOF, const ss_vect<double> &ps, const ss_vect<tps> &A,
+void tse::get_twoJ(const int n_DOF, const gtpsa::ss_vect<double> &ps, const gtpsa::ss_vect<tps> &A,
 	      double twoJ[])
 {
   int             j, no;
   long int        jj[ps_dim];
-  ss_vect<double> z;
+  const double unused=0e0;
+  gtpsa::ss_vect<double> z(unused);
 
-  no = no_tps;
-  danot_(1);
+  throw std::runtime_error("get_twoJ needs to be ported");
+  // no = no_tps;
+  // sets the truncation order of calculation
+  // danot_(1);
 
   for (j = 0; j < ps_dim; j++)
     jj[j] = (j < 2*n_DOF)? 1 : 0;
 
-  z = (PInv(A, jj)*ps).cst();
+  // inspect if mad_tpsa_pminv can be used?
+  // z = (PInv(A, jj)*ps).cst();
 
   for (j = 0; j < n_DOF; j++)
     twoJ[j] = sqr(z[2*j]) + sqr(z[2*j+1]);
 
-  danot_(no);
+  // danot_(no);
 }
 
 
 namespace thor_scsi::elements{
 
 	template<typename T>
-	void tse::drift_pass(const tsc::ConfigType &conf, const double L, ss_vect<T> &ps)
+	void tse::drift_propagate(const tsc::ConfigType &conf, const double L, gtpsa::ss_vect<T> &ps)
 	{
-		T u;
+	        T u(ps[0]);
 
 		if (!conf.H_exact) {
 			// Small angle axproximation.
@@ -92,12 +96,12 @@ namespace thor_scsi::elements{
 	 */
 	template<typename T>
 	void tse::thin_kick(const tsc::ConfigType &conf, const T BxoBrho, const T ByoBrho,
-			    const double L, const double h_bend, const double h_ref, ss_vect<T> &ps)
+			    const double L, const double h_bend, const double h_ref, gtpsa::ss_vect<T> &ps)
 	{
 		int        j;
 		// T          BxoBrho, ByoBrho, ByoBrho1, B[3],
-		T u, p_s;
-		ss_vect<T> ps0 = ps;
+		T u(ps[0]), p_s(ps[0]);
+		gtpsa::ss_vect<T> ps0 = ps;
 
 
 		const int debug = false;
@@ -174,10 +178,14 @@ namespace thor_scsi::elements{
 
 }
 
-template void tse::drift_pass(const tsc::ConfigType &conf, const double, ss_vect<double> &);
-template void tse::drift_pass(const tsc::ConfigType &conf, const double, ss_vect<tps> &);
+template void tse::drift_propagate(const tsc::ConfigType &conf, const double, gtpsa::ss_vect<double>      &);
+template void tse::drift_propagate(const tsc::ConfigType &conf, const double, gtpsa::ss_vect<tps>         &);
+template void tse::drift_propagate(const tsc::ConfigType &conf, const double, gtpsa::ss_vect<gtpsa::tpsa> &);
+
 
 template void tse::thin_kick(const tsc::ConfigType &conf, const double BxoBrho, const double ByoBrho,
-			     const double L, const double h_bend, const double h_ref, ss_vect<double> &ps);
+			     const double L, const double h_bend, const double h_ref, gtpsa::ss_vect<double> &ps);
 template void tse::thin_kick(const tsc::ConfigType &conf, const tps BxoBrho, const tps ByoBrho,
-			     const double L, const double h_bend, const double h_ref, ss_vect<tps> &ps);
+			     const double L, const double h_bend, const double h_ref, gtpsa::ss_vect<tps> &ps);
+template void tse::thin_kick(const tsc::ConfigType &conf, const gtpsa::tpsa BxoBrho, const gtpsa::tpsa ByoBrho,
+			     const double L, const double h_bend, const double h_ref, gtpsa::ss_vect<gtpsa::tpsa> &ps);

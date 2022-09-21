@@ -1,6 +1,6 @@
 add_executable(test_drift test_drift.cc)
 target_include_directories(test_drift
-    PUBLIC
+  PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../>"
     "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )
@@ -8,6 +8,7 @@ target_link_libraries(test_drift
   thor_scsi
   thor_scsi_core
   tpsa_lin
+  gtpsa
   # PRIVATE Boost::boost
   #  quadmath
     ${Boost_PRG_EXEC_MONITOR_LIBRARY}
@@ -25,6 +26,7 @@ target_link_libraries(test_mpole
   thor_scsi
   thor_scsi_core
   tpsa_lin
+  gtpsa
   # PRIVATE Boost::boost
   #  quadmath
     ${Boost_PRG_EXEC_MONITOR_LIBRARY}
@@ -41,6 +43,7 @@ target_include_directories(test_thin_kick
 target_link_libraries(test_thin_kick
   thor_scsi
   thor_scsi_core
+  gtpsa
   # PRIVATE Boost::boost
   #  quadmath
     ${Boost_PRG_EXEC_MONITOR_LIBRARY}
@@ -62,6 +65,7 @@ target_link_libraries(test_field_kick
   thor_scsi
   thor_scsi_core
   tpsa_lin
+  gtpsa
   # PRIVATE Boost::boost
   #  quadmath
     ${Boost_PRG_EXEC_MONITOR_LIBRARY}
@@ -82,6 +86,7 @@ target_link_libraries(test_quadrupole
   thor_scsi
   thor_scsi_core
   tpsa_lin
+  gtpsa
   # PRIVATE Boost::boost
   #  quadmath
     ${Boost_PRG_EXEC_MONITOR_LIBRARY}
@@ -101,6 +106,7 @@ target_link_libraries(test_sector_bend
   thor_scsi
   thor_scsi_core
   tpsa_lin
+  gtpsa
   # PRIVATE Boost::boost
   #  quadmath
     ${Boost_PRG_EXEC_MONITOR_LIBRARY}
@@ -120,6 +126,7 @@ target_link_libraries(test_radiation_delegate
   thor_scsi
   thor_scsi_core
   tpsa_lin
+  gtpsa
   # PRIVATE Boost::boost
   #  quadmath
     ${Boost_PRG_EXEC_MONITOR_LIBRARY}
@@ -139,6 +146,7 @@ target_link_libraries(test_radiation_sector_bend
   thor_scsi
   thor_scsi_core
   tpsa_lin
+  gtpsa
   # PRIVATE Boost::boost
   #  quadmath
     ${Boost_PRG_EXEC_MONITOR_LIBRARY}
@@ -159,6 +167,7 @@ target_link_libraries(test_sextupole
   thor_scsi
   thor_scsi_core
   tpsa_lin
+  gtpsa
   # PRIVATE Boost::boost
   #  quadmath
     ${Boost_PRG_EXEC_MONITOR_LIBRARY}
@@ -175,6 +184,7 @@ target_link_libraries(test_cavity
   thor_scsi
   thor_scsi_core
   tpsa_lin
+  gtpsa
   # PRIVATE Boost::boost
   #  quadmath
     ${Boost_PRG_EXEC_MONITOR_LIBRARY}
@@ -197,6 +207,7 @@ target_link_libraries(test_standard_aperture
   thor_scsi
   thor_scsi_core
   tpsa_lin
+  gtpsa
     ${Boost_PRG_EXEC_MONITOR_LIBRARY}
     ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
 )

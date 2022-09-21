@@ -227,28 +227,27 @@ namespace thor_scsi::elements {
 			return this->PTx2;
 		}
 
-		virtual void localPass(thor_scsi::core::ConfigType &conf, ss_vect<double> &ps) override final
-		{ _localPass(conf, ps);}
-		virtual void localPass(thor_scsi::core::ConfigType &conf, ss_vect<tps> &ps) override final
-		{ _localPass(conf, ps);}
+		virtual void localPropagate(thor_scsi::core::ConfigType &conf, gtpsa::ss_vect<double>      &ps) override final { _localPropagate(conf, ps);}
+		virtual void localPropagate(thor_scsi::core::ConfigType &conf, gtpsa::ss_vect<gtpsa::tpsa> &ps) override final { _localPropagate(conf, ps);}
+		virtual void localPropagate(thor_scsi::core::ConfigType &conf, gtpsa::ss_vect<tps>         &ps) override final { _localPropagate(conf, ps);}
 
 
 	  private:
 		template<typename T>
-			void _localPass(thor_scsi::core::ConfigType &conf, ss_vect<T> &ps);
+			void _localPropagate(thor_scsi::core::ConfigType &conf, gtpsa::ss_vect<T> &ps);
 
 		template<typename T>
-		        void _localPassThin(const thor_scsi::core::ConfigType &conf, ss_vect<T> &ps);
+		        void _localPropagateThin(const thor_scsi::core::ConfigType &conf, gtpsa::ss_vect<T> &ps);
 
 		template<typename T>
-		        void _localPassBody(thor_scsi::core::ConfigType &conf, ss_vect<T> &ps);
+		        void _localPropagateBody(thor_scsi::core::ConfigType &conf, gtpsa::ss_vect<T> &ps);
 
 		// Required as radiation is now handled by a delegate
 		template<typename T>
 		inline void thinKickAndRadiate(const thor_scsi::core::ConfigType &conf,
 					   const thor_scsi::core::Field2DInterpolation& intp,
 					   const double L, const double h_bend, const double h_ref,
-					   ss_vect<T> &ps);
+					   gtpsa::ss_vect<T> &ps);
 
 		void inline validateIntegrationMethod(const int n) const {
 			switch(n){
@@ -367,7 +366,7 @@ namespace thor_scsi::elements {
 			//
 			// as it is a templated function ... not defined virtual ...
 			template<typename T>
-			void _localPass(thor_scsi::core::ConfigType &conf, ss_vect<T> &ps);
+			void _localPropagate(thor_scsi::core::ConfigType &conf, gtpsa::ss_vect<T> &ps);
 
 			inline std::unique_ptr<std::vector<double>> getDriftLength(void) const {
 				auto res = std::make_unique<std::vector<double>>(2);
@@ -431,7 +430,7 @@ namespace thor_scsi::elements {
 		}
 
 		template<typename T>
-		inline void _synchrotronIntegralsInit(const thor_scsi::core::ConfigType &conf,  ss_vect<T> &ps){
+		inline void _synchrotronIntegralsInit(const thor_scsi::core::ConfigType &conf,  gtpsa::ss_vect<T> &ps){
 			if(this->computeSynchrotronIntegrals(conf)){
 				auto ob = this->_getRadiationDelegate();
 				if(ob){
@@ -443,7 +442,7 @@ namespace thor_scsi::elements {
 		// first step of synchrotron integrals increment / local contribution
 		// rename it to
 		template<typename T>
-		inline void _synchrotronIntegralsFinish(const thor_scsi::core::ConfigType &conf, ss_vect<T> &ps){
+		inline void _synchrotronIntegralsFinish(const thor_scsi::core::ConfigType &conf, gtpsa::ss_vect<T> &ps){
 			if(this->computeSynchrotronIntegrals(conf)){
 				auto obj = this->_getRadiationDelegate();
 				if(obj){
@@ -455,7 +454,7 @@ namespace thor_scsi::elements {
 
 		// calculate the effect of radiation
 		template<typename T>
-		inline void _synchrotronIntegralsStep(thor_scsi::core::ConfigType &conf, ss_vect<T> &ps, const int step) {
+		inline void _synchrotronIntegralsStep(thor_scsi::core::ConfigType &conf, gtpsa::ss_vect<T> &ps, const int step) {
 			if(this->computeSynchrotronIntegrals(conf)){
 				auto obj = this->_getRadiationDelegate();
 				if(obj){
@@ -466,7 +465,7 @@ namespace thor_scsi::elements {
 
 		// calculate quadfringe if quadrupole and required
 		template<typename T>
-		void _quadFringe(thor_scsi::core::ConfigType &conf, ss_vect<T> &ps);
+		void _quadFringe(thor_scsi::core::ConfigType &conf, gtpsa::ss_vect<T> &ps);
 
 		FieldKickForthOrder integ4O;
 		int  Pmethod;                 ///< Integration Method.
