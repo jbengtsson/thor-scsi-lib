@@ -41,10 +41,7 @@ static void process_cmd_line(int argc, char *argv[])
 		("number,n",               po::value<int>()        ->default_value(-1),         "number of element to inspect")
 		("n-turns",                po::value<int>()        ->default_value(1),         "propagate n turns (set to zero for none)" )
 		("n-warmup-turns",         po::value<int>()        ->default_value(0),         "propagate n turn (if none no timing run will be made)" )
-<<<<<<< HEAD
 		("tps",                    po::value<bool>()       ->default_value(0),         "compute transport matrix also with tpsa lin" )
-=======
->>>>>>> Uodated space state vector and template instantiation
 		("transport-matrix",       po::value<bool>()       ->default_value(false),     "compute transport matrix")
 		("start-element-number,s", po::value<int>()        ->default_value(0),         "first element to use")
 		("end-element-number,e",   po::value<int>()        ->default_value(-1),        "last element to use, (-1) for last element of lattice")
