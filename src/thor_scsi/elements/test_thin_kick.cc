@@ -53,11 +53,7 @@ BOOST_AUTO_TEST_CASE(test01_wrong_thin_kick_L0)
 
 	{
 		gtpsa::ss_vect<double> ps = ps_orig;
-<<<<<<< HEAD
 		thin_kick(calc_config, muls, length, h_bend, h_ref, ps_orig, ps);
-=======
-		thin_kick(calc_config, muls, length, h_bend, h_ref, ps);
->>>>>>> Using mad-ng's gtpsa for truncated power series calculations
 		test_ps_small(ps);
 
 	}
@@ -96,11 +92,7 @@ BOOST_AUTO_TEST_CASE(test02_wrong_thin_kick_L0_ps_off)
 
 	{
 		gtpsa::ss_vect<double> ps = ps_orig;
-<<<<<<< HEAD
 		thin_kick(calc_config, muls, length, h_bend, h_ref, ps_orig, ps);
-=======
-		thin_kick(calc_config, muls, length, h_bend, h_ref, ps);
->>>>>>> Using mad-ng's gtpsa for truncated power series calculations
 
 		BOOST_CHECK_CLOSE(ps[x_],     x, 1e-14);
 		BOOST_CHECK_CLOSE(ps[y_],     y, 1e-14);
@@ -141,11 +133,7 @@ BOOST_AUTO_TEST_CASE(test03_wrong_thin_kick_L0_ps_off)
 
 	{
 		gtpsa::ss_vect<double> ps = ps_orig;
-<<<<<<< HEAD
 		thin_kick(calc_config, muls, length, h_bend, h_ref, ps_orig, ps);
-=======
-		thin_kick(calc_config, muls, length, h_bend, h_ref, ps);
->>>>>>> Using mad-ng's gtpsa for truncated power series calculations
 
 		BOOST_CHECK_CLOSE(ps[x_],     x,     1e-14);
 		BOOST_CHECK_CLOSE(ps[px_],    px,    1e-14);
@@ -185,11 +173,7 @@ BOOST_AUTO_TEST_CASE(test10_thin_kick_L1_no_field)
 
 	{
 		gtpsa::ss_vect<double> ps = ps_orig;
-<<<<<<< HEAD
 		thin_kick(calc_config, muls, length, h_bend, h_ref, ps_orig, ps);
-=======
-		thin_kick(calc_config, muls, length, h_bend, h_ref, ps);
->>>>>>> Using mad-ng's gtpsa for truncated power series calculations
 		test_ps_small(ps);
 
 	}

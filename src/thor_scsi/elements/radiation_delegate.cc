@@ -51,12 +51,21 @@ inline void tse::RadiationDelegate::_view(const tsc::ElemType& elem, const gtpsa
 //void tse::RadiationDelegate::_view(const tsc::ElemType& elem, const gtpsa::ss_vect<tps> &ps, const enum tsc::ObservedState state, const int cnt);
 void tse::RadiationDelegate::view(const tsc::ElemType& elem, const gtpsa::ss_vect<double>      &ps, const enum tsc::ObservedState state, const int cnt)
 {
+<<<<<<< HEAD
 	_view(elem, ps, state, cnt);
 }
 void tse::RadiationDelegate::view(const tsc::ElemType& elem, const gtpsa::ss_vect<tps>         &ps, const enum tsc::ObservedState state, const int cnt)
 {
 	_view(elem, ps, state, cnt);
 }
+=======
+	_view(elem, ps, state, cnt);
+}
+void tse::RadiationDelegate::view(const tsc::ElemType& elem, const gtpsa::ss_vect<tps>         &ps, const enum tsc::ObservedState state, const int cnt)
+{
+	_view(elem, ps, state, cnt);
+}
+>>>>>>> Using mad-ng's gtpsa for truncated power series calculations
 void tse::RadiationDelegate::view(const tsc::ElemType& elem, const gtpsa::ss_vect<gtpsa::tpsa> &ps, const enum tsc::ObservedState state, const int cnt)
 {
 	_view(elem, ps, state, cnt);
