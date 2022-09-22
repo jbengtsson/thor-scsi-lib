@@ -278,6 +278,7 @@ inline void tse::FieldKick::FieldKickForthOrder::_localPropagate(tsc::ConfigType
 
 #ifdef SYNCHROTRON_INTEGRALS
 	// computeRadiationIntegralsStart
+#ifdef SYNCHROTRON_INTEGRALS
 	parent->_synchrotronIntegralsInit(conf, ps);
 #endif /* SYNCHROTRON_INTEGRALS */
 
@@ -302,6 +303,7 @@ inline void tse::FieldKick::FieldKickForthOrder::_localPropagate(tsc::ConfigType
 #ifdef SYNCHROTRON_INTEGRALS
 		// why this step only here
 		// computeRadiationIntegralsStep
+#ifdef SYNCHROTRON_INTEGRALS
 		parent->_synchrotronIntegralsStep(conf, ps, rad_step + 1);
 #endif /* SYNCHROTRON_INTEGRALS */
 
@@ -312,6 +314,7 @@ inline void tse::FieldKick::FieldKickForthOrder::_localPropagate(tsc::ConfigType
 
 #ifdef SYNCHROTRON_INTEGRALS
 		// computeRadiationIntegralsStep
+#ifdef SYNCHROTRON_INTEGRALS
 		parent->_synchrotronIntegralsStep(conf, ps, rad_step + 2);
 #endif /* SYNCHROTRON_INTEGRALS */
 	}

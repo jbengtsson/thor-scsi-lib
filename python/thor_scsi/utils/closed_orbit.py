@@ -86,12 +86,8 @@ def compute_closed_orbit(
 
     # create weighting matrix for inverse calculation
     jj = np.zeros(tslib.ss_dim, np.int)
-<<<<<<< HEAD
-
-    # jj[:n] = 1  # select active phase space coordinates
-=======
     jj[:n] = 1 # select active phase space coordinates
->>>>>>> [Task] Develop radiation
+
     for k in range(tslib.ss_dim):
         jj[k] = 1 if k < n else 0
 
@@ -117,7 +113,10 @@ def compute_closed_orbit(
         # prepare return map
         M.set_identity()
         M += x0
+<<<<<<< HEAD
         logger.warning(f"{n_iter=},  Start propagation at \n {M.cst()}\n")
+=======
+>>>>>>> radiate: simplified example
         next_element = acc.propagate(conf, M)
 
         if next_element == n_elements:
@@ -137,8 +136,11 @@ def compute_closed_orbit(
             x0 += dx0.cst()
             # dx_aps = np.sqrt(np.sum(dx[:n] ** 2))
             dx_abs = tslib.xabs(n, dx)
+<<<<<<< HEAD
 
             logger.warning(f"{n_iter=},  End propagation at \n {x0}\n")
+=======
+>>>>>>> radiate: simplified example
         else:
             dx_abs = np.nan
             break
