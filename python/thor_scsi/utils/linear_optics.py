@@ -125,7 +125,7 @@ def find_phase_space_origin(M: np.ndarray) -> np.ndarray:
 
 
     Todo:
-        Revisit naming:
+        Revisit naming: fix point instead of origin
         Add reference to Johan's Tech Note
 
     """
@@ -169,6 +169,9 @@ def compute_map(
 
 def propagate_and_find_phase_space_orgin(acc, calc_config):
     """propagate once around ring. use this map to find phase space origin
+
+    Todo:
+         Rename phase space origin fix point
     """
     t_map = compute_map(acc, calc_config)
     M = map2numpy(t_map)
