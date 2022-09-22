@@ -81,6 +81,11 @@ else:
 #    them before calculation starts (sum it up afterwards
 
 
+# real part damping time
+# compute eigenvalues and thus A too (similar as for finding twiss
+# r = closed_orbit
+# use r.one_turn_map
+
 print(ps)
 acc.propagate(calc_config, ps, 0, 2000)
 print(ps)
