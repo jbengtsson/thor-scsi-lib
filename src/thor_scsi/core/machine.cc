@@ -18,6 +18,11 @@ void tsc::Machine::updateElementList(p_elements_t& elements)
 
     p_lookup_t lookup_name, lookup_type;
 
+    // keep sequence order ...
+    for(size_t index = 0; index < elements.size(); ++index){
+	auto& e_ptr = elements[index];
+	e_ptr->index = index;
+    }
     for(auto& E: elements){
 	lookup_name.insert(std::make_pair(LookupKey(E->name, E->index), E));
 	lookup_type.insert(std::make_pair(LookupKey(E->type_name(), E->index), E));

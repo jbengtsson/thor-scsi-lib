@@ -31,7 +31,7 @@ namespace thor_scsi {
 		/**
 		 * @brief inititsialse accelerator with a list of elements
 		 */
-	        Accelerator(const std::vector<std::shared_ptr<thor_scsi::core::CellVoid>>& elements);
+	        Accelerator(const std::vector<std::shared_ptr<thor_scsi::core::ElemType>>& elements);
 		/** @brief pass the given state through the machine
 		 *
 		 * @param conf Configuration of calculation
