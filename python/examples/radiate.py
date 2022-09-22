@@ -24,18 +24,13 @@ from thor_scsi.lib import (
 )
 from thor_scsi.lib import phase_space_index_internal as phase_space_ind
 
-<<<<<<< HEAD
-logging.basicConfig(level="DEBUG")
-=======
 import xarray as xr
 
 logging.basicConfig(level="DEBUG")
->>>>>>> utils:
 from thor_scsi.factory import accelerator_from_config
 from thor_scsi.utils.accelerator import instrument_with_radiators
 from thor_scsi.utils.radiate import calculate_radiation
-=======
->>>>>>> Enum renamed, updated radiate.py.
+
 import os
 import numpy as np
 

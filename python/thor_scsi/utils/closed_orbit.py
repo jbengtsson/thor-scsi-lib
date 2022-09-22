@@ -87,7 +87,10 @@ def compute_closed_orbit(
     # create weighting matrix for inverse calculation
     jj = np.zeros(tslib.ss_dim, np.int)
     jj[:n] = 1 # select active phase space coordinates
+<<<<<<< HEAD
 
+=======
+>>>>>>> [Task] Develop radiation
     for k in range(tslib.ss_dim):
         jj[k] = 1 if k < n else 0
 
