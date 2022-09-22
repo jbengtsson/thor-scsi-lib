@@ -3,15 +3,11 @@ if(CMAKE_Fortran_COMPILER_ID STREQUAL GNU)
     message(STATUS "Compiling with GNU Fortran ${CMAKE_Fortran_COMPILER_VERSION}")
     # Inconsistencies in size of integers detected by compiler on MSYS platform
     # I guess due to g++ version 11: now moving to default
-    add_compile_options(-g
-                        -O2
-    			-Wall
-    			-fbounds-check
-    			-fdefault-integer-8
-			-finteger-4-integer-8
-    			-w
-    			-mcmodel=medium		
-    			)
+    add_compile_options(-g -O2 -Wall -fbounds-check
+      -fdefault-integer-8 -finteger-4-integer-8
+      -w
+      -mcmodel=medium
+      )
     add_compile_options(-fpermissive)
     #    add_compile_options(-fcheck-array-temporaries)
     add_compile_options(-ff2c)
@@ -31,9 +27,17 @@ if(CMAKE_Fortran_COMPILER_ID STREQUAL GNU)
     	#	             -mcmodel=medium
     	#		    )
         # add_compile_options(-fpermissive)
-    endif()
+      endif()
+elseif(CMAKE_Fortran_COMPILER_ID STREQUAL Flang)
+    add_compile_options(-g -O2 -Wall -fbounds-check
+      -fdefault-integer-8 -finteger-4-integer-8
+      -w
+      -mcmodel=medium)
+    add_compile_options(-fpermissive)
+    add_compile_options(-ff2c)
+    message(STATUS "Compiling with flang")
 else()
-    message(STATUS "Not compiling with GNU Fortran")
+  message(STATUS "Not compiling with GNU Fortran nor with flang but ${CMAKE_Fortran_COMPILER_ID}")
 endif()
 
 set(tpsa_lie_files ./LieLib.f)
