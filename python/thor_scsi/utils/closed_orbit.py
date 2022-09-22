@@ -62,6 +62,7 @@ def compute_closed_orbit(
         n = 4
 
     if x0 is None:
+        assert delta is not None
         conf.dPparticle = delta
         x0 = tslib.ss_vect_double()
         if n == 4:
@@ -82,6 +83,7 @@ def compute_closed_orbit(
 
     # create weighting matrix for inverse calculation
     jj = np.zeros(tslib.ss_dim, np.int)
+    jj[:n] = 1  # select active phase space coordinates
     for k in range(tslib.ss_dim):
         jj[k] = 1 if k < n else 0
 
@@ -102,7 +104,6 @@ def compute_closed_orbit(
         # prepare return map
         M.set_identity()
         M += x0
-
         next_element = acc.propagate(conf, M)
 
         if next_element == n_elements:
@@ -120,6 +121,7 @@ def compute_closed_orbit(
 
             # Next start point following line search ?
             x0 += dx0.cst()
+            # dx_aps = np.sqrt(np.sum(dx[:n] ** 2))
             dx_abs = tslib.xabs(n, dx)
         else:
             dx_abs = np.nan

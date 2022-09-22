@@ -8,23 +8,49 @@ namespace tsc = thor_scsi::core;
 namespace tse = thor_scsi::elements;
 
 
-ts::Accelerator::Accelerator(const Config & conf) :
-  tsc::Machine(conf)
+static tsc::p_elements_t
+vec_elem_type_to_cell_void(const std::vector<std::shared_ptr<thor_scsi::core::ElemType>>&  elements)
+{
+       tsc::p_elements_t cells;
+       cells.reserve(elements.size());
+       /* order needs to be preserved */
+       for(size_t i=0; i < elements.size(); ++i){
+	   cells.push_back(std::dynamic_pointer_cast<tsc::CellVoid>(elements[i]));
+       }
+       return cells;
+
+}
+ts::Accelerator::Accelerator(const Config & conf)
+    :tsc::Machine(conf)
 {}
+
+ts::Accelerator::Accelerator(const std::vector<std::shared_ptr<thor_scsi::core::ElemType>>&  elements)
+    :tsc::Machine(vec_elem_type_to_cell_void(elements))
+{
+
+#if 0
+    // Waiting that machine is reogranised ...
+    this->updateElementList(cells);
+#endif
+}
 
 
 template<typename T>
 int
-ts::Accelerator::_propagate(thor_scsi::core::ConfigType& conf, ss_vect<T> &ps, size_t start, int max_elements)// const
+ts::Accelerator::_propagate(thor_scsi::core::ConfigType& conf, ss_vect<T> &ps, size_t start, int max_elements, size_t n_turns)// const
 {
 
 	const int nelem = static_cast<int>(this->size());
 
-	int next_elem = static_cast<int>(start);
 	bool retreat = std::signbit(max_elements);
+	int next_elem = static_cast<int>(start);
 
-	for(int i=start; next_elem >= 0 && next_elem<nelem && i<std::abs(max_elements); i++)
-	{
+	for(size_t turn=0; turn<n_turns; ++turn) {
+	    //next_elem = static_cast<int>(start);
+	    next_elem = 0;
+	    //for(int i=start; next_elem >= 0 && next_elem<nelem && i<std::abs(max_elements); i++)
+	    for(int i=0; next_elem >= 0 && next_elem<nelem && i<std::abs(max_elements); i++)
+	    {
 		size_t n = next_elem;
 
 		std::shared_ptr<tsc::CellVoid> cv = this->at(n);
@@ -74,19 +100,20 @@ ts::Accelerator::_propagate(thor_scsi::core::ConfigType& conf, ss_vect<T> &ps, s
 		auto trace = this->trace();
 		if(trace)
 			(*trace) << "After ["<< n<< "] " << cv->name << " " <<std::endl << ps << std::endl;
+	    }
 	}
 	return next_elem;
 }
 
 
 int
-ts::Accelerator::propagate(thor_scsi::core::ConfigType& conf, ss_vect_dbl &ps, size_t start, int max_elements)// const
+ts::Accelerator::propagate(thor_scsi::core::ConfigType& conf, ss_vect_dbl &ps, size_t start, int max_elements, size_t n_turns)// const
 {
-	return _propagate(conf, ps, start, max_elements);
+    return _propagate(conf, ps, start, max_elements, n_turns);
 }
 
 int
-ts::Accelerator::propagate(thor_scsi::core::ConfigType& conf, ss_vect_tps  &ps, size_t start, int max_elements)// const
+ts::Accelerator::propagate(thor_scsi::core::ConfigType& conf, ss_vect_tps  &ps, size_t start, int max_elements, size_t n_turns)// const
 {
-	return _propagate(conf, ps, start, max_elements);
+    return _propagate(conf, ps, start, max_elements, n_turns);
 }

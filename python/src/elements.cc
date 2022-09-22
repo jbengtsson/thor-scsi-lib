@@ -278,7 +278,8 @@ void py_thor_scsi_init_elements(py::module &m)
 		    py::arg("radius"), py::arg("x") = 0, py::arg("y") = 0);
 
 
-	py::class_<tsc::ElemType,  PyElemType, std::shared_ptr<tsc::ElemType>> elem_type(m, "ElemType");
+	py::class_<tsc::CellVoid, std::shared_ptr<tsc::CellVoid>> cell_void(m, "CellVoid");
+	py::class_<tsc::ElemType,  PyElemType, std::shared_ptr<tsc::ElemType>> elem_type(m, "ElemType", cell_void);
 	elem_type.def("__str__",       &tsc::ElemType::pstr)
 		.def("__repr__",       &tsc::ElemType::repr)
 		.def_readonly("name",  &tsc::ElemType::name)
