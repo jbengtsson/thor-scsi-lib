@@ -43,7 +43,7 @@ void py_thor_scsi_init_accelerator(py::module &m)
 		.def("propagate", py::overload_cast<tsc::ConfigType&, ts::ss_vect_tps&, size_t, int, size_t>(&ts::Accelerator::propagate), prop_doc,
 		     py::arg("calc_config"), py::arg("ps"), py::arg("start") = 0, py::arg("max_elements") = imax, py::arg("n_turns") = n_turns)
 		.def(py::init<const Config &>())
-		.def(py::init<const std::vector<std::shared_ptr<thor_scsi::core::CellVoid>>&>())
+		.def(py::init<const std::vector<std::shared_ptr<thor_scsi::core::ElemType>>&>())
 		;
 
 
