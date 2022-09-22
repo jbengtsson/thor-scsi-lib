@@ -9,7 +9,7 @@ t_file = os.path.join("lattices", "tme.lat")
 acc = accelerator_from_config(t_file)
 conf = tslib.ConfigType()
 
-if False:
+if True:
     ps = tslib.ss_vect_double()
     ps.set_zero()
 else:
@@ -25,10 +25,15 @@ for i in range(100):
     acc.propagate(conf, ps)
 
 # Measurement
-nturns = 200
+n_turns = 200 #* 1000
 tic = time.clock_gettime_ns(0)
-for i in range(nturns):
+for i in range(n_turns):
     acc.propagate(conf, ps)
 tac = time.clock_gettime_ns(0)
 dt = (tac - tic) / 1e6
-print(f"Wall time for {nturns}: {dt} ms ")
+print(f"Wall time for {n_turns}: {dt} ms ")
+tic = time.clock_gettime_ns(0)
+acc.propagate(conf, ps, n_turns=n_turns * 10000)
+tac = time.clock_gettime_ns(0)
+dt = (tac - tic) / 1e6
+print(f"Wall time for {n_turns}: {dt} ms ")
