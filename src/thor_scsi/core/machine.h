@@ -16,6 +16,7 @@
 #include <ostream>
 
 namespace thor_scsi::core {
+	typedef std::vector<std::shared_ptr<CellVoid>> p_elements_t;
 	/**
 	 * @brief The core simulate Machine engine
 	 *
@@ -32,7 +33,12 @@ namespace thor_scsi::core {
 		 * @param c A Config instance, such as that returned by GLPSParser::parse_file().
 		 */
 		Machine(const Config& c);
+	        Machine(const p_elements_t& elements);
+	        Machine(p_elements_t& elements);
 		~Machine();
+
+		void updateElementList(p_elements_t& elements);
+
 #if 0
 		// move constructor
 		Machine(Machine&&o) :
@@ -85,7 +91,6 @@ namespace thor_scsi::core {
 		void set_trace(std::ostream* v) {p_trace=v;}
 
 	private:
-		typedef std::vector<std::shared_ptr<CellVoid>> p_elements_t;
 
 		struct LookupKey {
 			std::string name;

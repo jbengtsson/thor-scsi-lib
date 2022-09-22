@@ -8,9 +8,25 @@ namespace tsc = thor_scsi::core;
 namespace tse = thor_scsi::elements;
 
 
-ts::Accelerator::Accelerator(const Config & conf) :
-  tsc::Machine(conf)
+ts::Accelerator::Accelerator(const Config & conf)
+    :tsc::Machine(conf)
 {}
+
+ts::Accelerator::Accelerator(const std::vector<std::shared_ptr<thor_scsi::core::CellVoid>>&  elements)
+    :tsc::Machine(elements)
+{
+
+#if 0
+    // Waiting that machine is reogranised ...
+    tsc::p_elements_t cells;
+    cells.reserve(elements.size());
+    /* order needs to be preserved */
+    for(size_t i=0; i < elements.size(); ++i){
+	cells.push_back(std::dynamic_pointer_cast<tsc::CellVoid>(elements[i]));
+    }
+    this->updateElementList(cells);
+#endif
+}
 
 
 template<typename T>

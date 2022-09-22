@@ -24,7 +24,14 @@ namespace thor_scsi {
 
 	class Accelerator : public thor_scsi::core::Machine {
 	public:
+		/**
+		 * @brief inititsialse accelerator with a configuration file
+		 */
 		Accelerator(const Config &conf);
+		/**
+		 * @brief inititsialse accelerator with a list of elements
+		 */
+	        Accelerator(const std::vector<std::shared_ptr<thor_scsi::core::CellVoid>>& elements);
 		/** @brief pass the given state through the machine
 		 *
 		 * @param conf Configuration of calculation
