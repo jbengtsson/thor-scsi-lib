@@ -152,7 +152,7 @@ namespace thor_scsi::elements {
 
 		double curly_dH_x = 0e0;
 		int index = -1;
-		std::array<double, 5> dI;           ///< Local contributions to the synchrotron integrals
+		std::array<double, 6> dI;           ///< Local contributions to the synchrotron integrals
 		std::array<double, 3> D_rad;        //< Diffusion coefficients (Floquet space).
 		bool compute_diffusion = false;
 		double energy = NAN;
