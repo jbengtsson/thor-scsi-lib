@@ -170,8 +170,8 @@ namespace thor_scsi::elements {
 		template<typename T>
 		void diffusion(const T &B2_perp, const T &ds, const T &p_s0,  const gtpsa::ss_vect<T> &A);
 
-		double curly_dH_x;
-		int index;
+		double curly_dH_x = 0e0;
+		int index = -1;
 		std::array<double, 6> dI;           ///< Local contributions to the synchrotron integrals
 		std::array<double, 3> D_rad;        //< Diffusion coefficients (Floquet space).
 		bool compute_diffusion = false;
