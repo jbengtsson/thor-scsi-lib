@@ -269,13 +269,17 @@ inline void tse::FieldKick::FieldKickForthOrder::_localPass(tsc::ConfigType &con
 		throw std::logic_error("parent was nullptr");
 	}
 	// computeRadiationIntegralsStart
+#ifdef SYNCHROTRON_INTEGRALS
 	parent->_synchrotronIntegralsInit(conf, ps);
+#endif /* SYNCHROTRON_INTEGRALS */
 
 	/* 4th order integration steps  */
 	for (int seg = 1; seg <= PN; seg++) {
 		const int rad_step = (seg - 1) * 4;
 		// computeRadiationIntegralsStep
+#ifdef SYNCHROTRON_INTEGRALS
 		parent->_synchrotronIntegralsStep(conf, ps, rad_step);
+#endif /* SYNCHROTRON_INTEGRALS */
 
 		drift_pass(conf, dL1, ps);
 		// call to radiation before thin kick
@@ -286,7 +290,9 @@ inline void tse::FieldKick::FieldKickForthOrder::_localPass(tsc::ConfigType &con
 
 		// why this step only here
 		// computeRadiationIntegralsStep
+#ifdef SYNCHROTRON_INTEGRALS
 		parent->_synchrotronIntegralsStep(conf, ps, rad_step + 1);
+#endif /* SYNCHROTRON_INTEGRALS */
 
 		drift_pass(conf, dL2, ps);
 		// call to radiation before thin kick
@@ -294,9 +300,13 @@ inline void tse::FieldKick::FieldKickForthOrder::_localPass(tsc::ConfigType &con
 		drift_pass(conf, dL1, ps);
 
 		// computeRadiationIntegralsStep
+#ifdef SYNCHROTRON_INTEGRALS
 		parent->_synchrotronIntegralsStep(conf, ps, rad_step + 2);
+#endif /* SYNCHROTRON_INTEGRALS */
 	}
+#ifdef SYNCHROTRON_INTEGRALS
 	parent->_synchrotronIntegralsFinish(conf, ps);
+#endif /* SYNCHROTRON_INTEGRALS */
 }
 
 
@@ -510,7 +520,9 @@ void tse::FieldKick::_localPass(tsc::ConfigType &conf, ss_vect<T> &ps)
 
 	}
 
+#ifdef SYNCHROTRON_INTEGRALS
 	this->_synchrotronIntegralsInit(conf, ps);
+#endif /* SYNCHROTRON_INTEGRALS */
 
 	// Set start
 

@@ -333,7 +333,11 @@ def match_eigenvalues_to_plane_orig(M, w, v, *, n_dof):
     for i in range(n_dof):
         j = (i + 1) * 2 - 1
         # Is this renaming of v intentional ? v used as a scalar
-        vtmp = (M[j - 1][j - 1] + M[j][j]) / 2
+        try:
+            vtmp = (M[j - 1][j - 1] + M[j][j]) / 2
+        except IndexError as ie:
+            logger.error(f"{i=}, {j=}")
+            raise
         cos_M[i] = vtmp
         if np.abs(vtmp) > 1e0:
             txt = f"sort_eigen: unstable |cos_M[nu_{i+1}]-1e0| = {np.absolute(vtmp - 1e0):10.3e}"
