@@ -233,7 +233,6 @@ void tse::RadiationDelegateKick::radiate(const thor_scsi::core::ConfigType &conf
 	// M. Sands "The Physics of Electron Storage Rings" SLAC-121, p. 98.
 	// ddelta/d(ds) = -C_gamma*E_0^3*(1+delta)^2*(B_perp/(Brho))^2/(2*pi)
 	T  p_s0, p_s1, ds, B2_perp = 0e0, B2_par = 0e0;
-	ss_vect<T> cs;
 	ss_vect<T> ps_save = ps;
 
 	THOR_SCSI_LOG(INFO) << "Radiate called for "<<  this->delegator_name << "\n";
@@ -247,8 +246,12 @@ void tse::RadiationDelegateKick::radiate(const thor_scsi::core::ConfigType &conf
 		throw ts::PhysicsViolation(strm.str());
 	}
 
+	// longitudinal component
+	p_s0 = get_p_s(conf, ps);
+	ss_vect<T> cs = ps; //.clone()
 	// Large ring: x' and y' unchanged.
-	p_s0 = get_p_s(conf, ps); cs = ps; cs[px_] /= p_s0; cs[py_] /= p_s0;
+	cs[px_] /= p_s0;
+	cs[py_] /= p_s0;
 
 	if(!check_ps_finite(cs)){
 		std::stringstream strm;
@@ -264,6 +267,7 @@ void tse::RadiationDelegateKick::radiate(const thor_scsi::core::ConfigType &conf
 	THOR_SCSI_LOG(DEBUG) << "'Field contribution' h_ref " << h_ref
 		  << " B (" <<  B[X_] << ", " << B[Y_] << ", " << B[Z_] <<")"
 		  << " cs "  << cs;
+	// compute perpendicular to curvature
 	get_B2(h_ref, B, cs, B2_perp, B2_par);
 
 	//THOR_SCSI_LOG(INFO)

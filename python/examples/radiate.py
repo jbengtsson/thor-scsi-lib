@@ -83,6 +83,26 @@ else:
     ps = ss_vect_tps()
     ps.set_identity()
 
+
+# First step:
+#
+# use closed orbit
+# 1. calculate fix point and Poincarè Map M with damped system (i.e. radiation on
+#    and cavity on (without dispersion in a second case)
+# 2. diagonalise M = A $\Gamma$ A$^{-1}$
+# 3. eigenvalues:
+#        - complex part: tunes,
+#        - real part: damping times  (refer equation)
+#    use eigen values of symplectic matrix to identify the planes
+# 4. propagate A, thin kick will create diffusion coeffs (don't forget to zero
+#    them before calculation starts (sum it up afterwards
+
+
+real part damping time
+compute eigenvalues and thus A too (similar as for finding twiss
+r = closed_orbit
+use r.one_turn_map
+
 print(ps)
 acc.propagate(calc_config, ps,  0, 2000)
 print(ps)
@@ -97,12 +117,15 @@ if use_tpsa:
         txt = f"{name:10s} {idx:4d} curly_H_x {curly_H_x:5f}"
         print(txt)
 
+    I = np.array([a_del.getSynchrotronIntegralsIncrements() for a_del in rad_del_kick])
+
     for a_del in rad_del_kick:
         name = a_del.getDelegatorName()
         idx = a_del.getDelegatorIndex()
         curly_H_x = a_del.getCurlydHx()
         dI = a_del.getSynchrotronIntegralsIncrements()
         D_rad = a_del.getDiffusionCoefficientsIncrements()
+
         txt = f"{name:10s} {idx:4d} curly_H_x {curly_H_x: 10.6e}"
         txt += "    dI " + ",".join(["{: 10.6e}".format(v) for v in dI])
         txt += "   "

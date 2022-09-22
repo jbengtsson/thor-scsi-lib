@@ -82,6 +82,7 @@ def compute_closed_orbit(
 
     # create weighting matrix for inverse calculation
     jj = np.zeros(tslib.ss_dim, np.int)
+    jj[:n] = 1 # select active phase space coordinates
     for k in range(tslib.ss_dim):
         jj[k] = 1 if k < n else 0
 
@@ -120,7 +121,8 @@ def compute_closed_orbit(
 
             # Next start point following line search ?
             x0 += dx0.cst()
-            dx_abs = tslib.xabs(n, dx)
+            dx_aps = np.sqrt(np.sum(dx[:n]**2))
+            # dx_abs = tslib.xabs(n, dx)
         else:
             dx_abs = np.nan
             break
