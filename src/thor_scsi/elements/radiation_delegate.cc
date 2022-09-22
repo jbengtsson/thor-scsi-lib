@@ -263,6 +263,8 @@ void tse::RadiationDelegateKick::radiate(const thor_scsi::core::ConfigType &conf
 #else
 	// M. Sands "The Physics of Electron Storage Rings" SLAC-121, p. 98.
 	// ddelta/d(ds) = -C_gamma*E_0^3*(1+delta)^2*(B_perp/(Brho))^2/(2*pi)
+	T  p_s0, p_s1, ds, B2_perp = 0e0, B2_par = 0e0;
+	ss_vect<T> ps_save = ps;
 
         T B2_perp = gtpsa::same_as_instance(B[0]);
         T B2_par = gtpsa::same_as_instance(B[2]);
