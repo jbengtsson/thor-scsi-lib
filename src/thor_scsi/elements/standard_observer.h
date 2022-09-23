@@ -46,7 +46,7 @@ namespace thor_scsi::elements{
 			this->m_has_ps = this->m_has_tps = false;
 		}
 
-		void show(std::ostream& strm, const int level) const;
+		void show(std::ostream& strm, const int level) const override final;
 
 		// python support
 		std::string repr(void) const;
