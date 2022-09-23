@@ -22,8 +22,8 @@ from thor_scsi.utils.output import mat2txt, vec2txt
 import matplotlib.pyplot as plt
 import os
 
-# t_dir = os.path.join(os.environ["HOME"], "Nextcloud", "thor_scsi")
-# t_file = os.path.join(t_dir, "b3_tst.lat")
+t_dir = os.path.join(os.environ["HOME"], "Nextcloud", "thor_scsi")
+t_file = os.path.join(t_dir, "b3_tst.lat")
 
 t_file = os.path.join("lattices", "tme.lat")
 # t_file = os.path.join("lattices", "tme_rb.lat")
@@ -35,7 +35,7 @@ conf = ConfigType()
 observers_non_perturbated = instrument_with_standard_observers(acc)
 # Observers will then flag if new data has arrived
 [ob.reset() for ob in observers_non_perturbated]
-result = compute_closed_orbit(acc, conf, 0e0, max_iter=10, eps=1e-10)
+result = compute_closed_orbit(acc, conf, delta=0e0, max_iter=10, eps=1e-10)
 
 fmt = (
     """Orbit: {}
@@ -87,7 +87,7 @@ observers_perturbated = instrument_with_standard_observers(acc)
 # Not strictly necessary here as a new set or observers was
 # created and registered.
 [ob.reset() for ob in observers_perturbated]
-result = compute_closed_orbit(acc, conf, 0e0, max_iter=10, eps=1e-10)
+result = compute_closed_orbit(acc, conf, delta=0e0, max_iter=10, eps=1e-10)
 
 print(
     fmt.format(

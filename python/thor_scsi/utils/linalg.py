@@ -260,7 +260,7 @@ def match_eigenvalues_to_plane(M: np.ndarray, w: np.ndarray, v: np.ndarray, *, n
         for i, ph in enumerate(nu2_M)
     ]
     # Just to be sure that there is no mess left ....
-    del nu1, nu2, v, w
+    del nu1, nu2# , v, w
     sorters.sort()
     logger.warning(f"sorting result {sorters}")
     logger.warning(f"eigenvector values {nu2_M}")
@@ -275,7 +275,7 @@ def match_eigenvalues_to_plane(M: np.ndarray, w: np.ndarray, v: np.ndarray, *, n
 
     # Find out which have to be rearranged ...
     # need to understand that ...
-    assert 0
+    # assert 0
 
     w = np.array(w)
     # I think I have to transpose this array to get it back to the original
