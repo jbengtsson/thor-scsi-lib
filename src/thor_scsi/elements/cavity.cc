@@ -11,6 +11,7 @@ tse::CavityType::CavityType(const Config &config) :  LocalGalilean(config)
 {
 	this->setFrequency(config.get<double>("Frequency"));
 	this->setVoltage(config.get<double>("Voltage"));
+	this->setHarmonicNumber(config.get<double>("harnum"));
 }
 
 template<typename T>
@@ -23,23 +24,38 @@ void tse::CavityType::_localPass(tsc::ConfigType &conf, ss_vect<T> &ps)
 	drift_pass(conf, L/2e0, ps);
 
 	if(debug){
-		std::cout << "cavity on " << conf.Cavity_on << std::endl;
-		std::cout << "   voltage " << this->Pvolt << std::endl;
+		std::cout << "cavity on " << conf.Cavity_on
+			  <<  "   frequency " << this->Pfreq
+			  <<  "   voltage " << this->Pvolt
+			  <<  "radiation on " << conf.radiation
+
+			  << std::endl;
 	}
 
 	if (conf.Cavity_on && this->Pvolt != 0e0) {
-		const T delta = - this->Pvolt / (conf.Energy)
+		auto energy = conf.Energy;
+		if(!std::isfinite(energy)){
+			throw std::runtime_error("Energy is not NaN and cavity calculation requested");
+		}
+		// if(np.finite(energy))
+		const T delta = - this->Pvolt / (energy)
 			*sin(2e0*M_PI*this->Pfreq/c0*ps[ct_]+this->phi);
 
 		if(debug){
-			std::cout << "Cavity computed delta " << delta << std::endl;
+			std::cout << "Cavity computed delta " << delta
+				  << " cavity phase " << this->phi
+				  << " energy "<< conf.Energy
+				  << " speed of light " << c0
+				  << " M_PI" << M_PI
+				  << " ct  " << ps[ct_]
+				  << std::endl;
 		}
 
 		ps[delta_] += delta;
 
-#ifdef THOR_SCSI_USE_RADIATION
+//#ifdef THOR_SCSI_USE_RADIATION
 		if (conf.radiation) conf.dE -= is_double<T>::cst(delta);
-#endif
+//#endif
 		if (conf.pathlength) ps[ct_] -= this->Ph/this->Pfreq*c0;
 	}
 	drift_pass(conf, L/2e0, ps);
