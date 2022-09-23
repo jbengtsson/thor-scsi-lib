@@ -64,18 +64,23 @@ def calculate_radiation(
         # keep variable as long as you need to do calculations
         rad_del = instrument_with_radiators(acc, energy=energy)
 
-    if not calc_config:
+    if calc_config is None:
+        raise AssertionError
         calc_config = tslib.ConfigType()
         calc_config.radiation = True
         # is this used anywhere?
-        calc_config.emittance = True
+        calc_config.emittance = False
         calc_config.Cavity_on = True
+
+    calc_config.Energy = energy
+    logger.debug(
+        f"calc_config radiation { calc_config.radiation} emmittance {calc_config.emittance} Cavity on {calc_config.Cavity_on}"
+    )
 
     # Compute the fixed point ... radation is on
     r = compute_closed_orbit(acc, calc_config, delta=0e0)
     print("r.one_turn_map")
     print(mat2txt(r.one_turn_map))
-
     # diagonalise M
     n = 2 * dof
     M_tp = np.transpose(r.one_turn_map[:n, :n])
@@ -100,7 +105,6 @@ def calculate_radiation(
     print(mat2txt(M_tp))
     eta = np.zeros(6, np.float)
     A_inv, v1 = linalg.compute_A_inv_prev(dof, eta, v)
-
 
     A = np.linalg.inv(A_inv)
 

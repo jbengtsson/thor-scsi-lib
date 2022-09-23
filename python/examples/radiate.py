@@ -5,6 +5,18 @@ import xarray as xr
 
 logging.basicConfig(level="DEBUG")
 from thor_scsi.factory import accelerator_from_config
+from thor_scsi.lib import (
+    ConfigType,
+    ss_vect_tps,
+    ss_vect_double,
+    RadiationDelegate,
+    RadiationDelegateKick,
+    ObservedState
+)
+from thor_scsi.lib import phase_space_index_internal as phase_space_ind
+
+logging.basicConfig(level="DEBUG")
+from thor_scsi.factory import accelerator_from_config
 from thor_scsi.utils.accelerator import instrument_with_radiators
 from thor_scsi.utils.radiate import calculate_radiation
 import os
@@ -13,6 +25,7 @@ import numpy as np
 import thor_scsi.lib as tslib
 
 import thor_scsi.lib as tslib
+
 t_dir = os.path.join(os.environ["HOME"], "Nextcloud", "thor_scsi")
 t_file = os.path.join(t_dir, "b3_tst.lat")
 
@@ -24,6 +37,17 @@ b2 = acc.find("b2", 0)
 
 energy = 2.5e9
 
+# cav.setVoltage(cav.getVoltage() * 1./2.)
+# cav.setVoltage(0)
+cav = acc.find("cav", 0)
+print("acc cavity", repr(cav))
+txt=\
+    f"""Cavity info
+frequency         {cav.getFrequency()/1e6} MHz",
+voltage           {cav.getVoltage()/1e6} MV
+harmonic number   {cav.getHarmonicNumber()}
+    """
+print(txt)
 
 # cav.setVoltage(cav.getVoltage() * 1./2.)
 # cav.setVoltage(0)
@@ -80,7 +104,6 @@ else:
 #    use eigen values of symplectic matrix to identify the planes
 # 4. propagate A, thin kick will create diffusion coeffs (don't forget to zero
 #    them before calculation starts (sum it up afterwards
-
 
 
 print(ps)
