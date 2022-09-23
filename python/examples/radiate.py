@@ -1,5 +1,9 @@
 """Read lattice file and calculate radiation
 """
+import logging
+import xarray as xr
+
+logging.basicConfig(level="DEBUG")
 from thor_scsi.factory import accelerator_from_config
 from thor_scsi.lib import (
     ConfigType,
@@ -12,18 +16,52 @@ from thor_scsi.lib import (
 from thor_scsi.lib import phase_space_index_internal as phase_space_ind
 
 import os
+import numpy as np
 
 import thor_scsi.lib as tslib
+
 t_dir = os.path.join(os.environ["HOME"], "Nextcloud", "thor_scsi")
 t_file = os.path.join(t_dir, "b3_tst.lat")
 
 acc = accelerator_from_config(t_file)
+print(" ".join([elem.name for elem in acc]))
+print("Length", np.sum([elem.getLength() for elem in acc]))
+
+b2 = acc.find("b2", 0)
+
+energy = 2.5e9
 
 
+# cav.setVoltage(cav.getVoltage() * 1./2.)
+# cav.setVoltage(0)
+cav = acc.find("cav", 0)
+print("acc cavity", repr(cav))
+txt=\
+    f"""Cavity info
+frequency         {cav.getFrequency()/1e6} MHz",
+voltage           {cav.getVoltage()/1e6} MV
+harmonic number   {cav.getHarmonicNumber()}
+    """
+print(txt)
 
 radiate = True
 if radiate:
-    r = calculate_radiation(acc, energy=2.5e0)
+    calc_config = tslib.ConfigType()
+    calc_config.radiation = True
+    # is this used anywhere?
+    calc_config.emittance = False
+    calc_config.Cavity_on = True
+
+    print(
+        "calc_config",
+        calc_config.radiation,
+        calc_config.emittance,
+        calc_config.Cavity_on,
+    )
+
+    r = calculate_radiation(
+        acc, energy=2.5e9, calc_config=calc_config, install_radiators=True
+    )
 
 exit()
 
@@ -51,9 +89,8 @@ else:
 #    them before calculation starts (sum it up afterwards
 
 
-
 print(ps)
-acc.propagate(calc_config, ps,  0, 2000)
+acc.propagate(calc_config, ps, 0, 2000)
 print(ps)
 
 
