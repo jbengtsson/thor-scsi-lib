@@ -58,15 +58,9 @@ void tse::CavityType::_localPropagate(tsc::ConfigType &conf, gtpsa::ss_vect<T> &
 
 		ps[delta_] += delta;
 
-<<<<<<< HEAD
 #ifdef THOR_SCSI_USE_RADIATION
 		if (conf.radiation) conf.dE -= gtpsa::cst(delta);
 #endif
-=======
-//#ifdef THOR_SCSI_USE_RADIATION
-		if (conf.radiation) conf.dE -= is_double<T>::cst(delta);
-//#endif
->>>>>>> cavity check: energy defaults to NaN in config
 		if (conf.pathlength) ps[ct_] -= this->Ph/this->Pfreq*c0;
 	}
 	drift_propagate(conf, L/2e0, ps);
