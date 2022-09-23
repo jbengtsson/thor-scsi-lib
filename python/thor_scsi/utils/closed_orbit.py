@@ -113,11 +113,9 @@ def compute_closed_orbit(
         # prepare return map
         M.set_identity()
         M += x0
-<<<<<<< HEAD
-        logger.warning(f"{n_iter=},  Start propagation at \n {M.cst()}\n")
-=======
->>>>>>> radiate: simplified example
+        # logger.debug(f"{n_iter=},  Start propagation at \n {M.cst()}\n {M}")
         next_element = acc.propagate(conf, M)
+        # logger.debug(f"{n_iter=},  End propagation at \n {M.cst()}\n {M}")
 
         if next_element == n_elements:
             # Managed to get around the ring ... good
@@ -136,11 +134,9 @@ def compute_closed_orbit(
             x0 += dx0.cst()
             # dx_aps = np.sqrt(np.sum(dx[:n] ** 2))
             dx_abs = tslib.xabs(n, dx)
-<<<<<<< HEAD
+
 
             logger.warning(f"{n_iter=},  End propagation at \n {x0}\n")
-=======
->>>>>>> radiate: simplified example
         else:
             dx_abs = np.nan
             break
