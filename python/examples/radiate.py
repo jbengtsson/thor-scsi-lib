@@ -33,9 +33,9 @@ acc = accelerator_from_config(t_file)
 print(" ".join([elem.name for elem in acc]))
 print("Length", np.sum([elem.getLength() for elem in acc]))
 
-b2 = acc.find("b2", 0)
+# b2 = acc.find("b2", 0)
 
-energy = 2.5e9
+# energy = 2.5e9
 
 # cav.setVoltage(cav.getVoltage() * 1./2.)
 # cav.setVoltage(0)
