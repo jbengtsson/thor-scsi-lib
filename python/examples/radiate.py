@@ -1,8 +1,6 @@
 """Read lattice file and calculate radiation
 """
 import logging
-<<<<<<< HEAD
-<<<<<<< HEAD
 import copy
 import xarray as xr
 
@@ -12,11 +10,6 @@ print("\nlogger:\n", logger)
 logger.setLevel("DEBUG")
 # Levels: DEBUG, INFO, WARNING, ERROR, and CRITICAL.
 
-=======
-import xarray as xr
-
-logging.basicConfig(level="DEBUG")
->>>>>>> utils:
 from thor_scsi.factory import accelerator_from_config
 from thor_scsi.utils.accelerator import instrument_with_radiators
 
