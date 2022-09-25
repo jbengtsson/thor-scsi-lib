@@ -62,6 +62,89 @@ x_, px_, y_, py_, ct_, delta_ = [
 
 import thor_scsi.lib as tslib
 
+from thor_scsi.utils import linalg
+from thor_scsi.utils.closed_orbit import compute_closed_orbit
+from thor_scsi.utils import linear_optics as lo
+
+from thor_scsi.utils.output import vec2txt, mat2txt
+
+
+X_ = 0
+Y_ = 1
+Z_ = 2
+
+
+def acos2(sin, cos):
+    # Calculate the normalised phase advance from the trace = 2*2*pi* nu of
+    # the Poincaré map; i.e., assuming mid-plane symmetry.
+    # The sin part is used to determine the quadrant.
+    mu = np.arccos(cos)
+    if sin < 0e0:
+        mu = 2e0*np.pi - mu
+    return mu
+
+
+def calculate_nu(M):
+    tr = M.trace()
+    # Check if stable.
+    if tr < 2e0:
+        calculate_nu(tr/2e0,  M[0][1])/(2e0*np.pi)
+        return nu
+    else:
+        print("\ncalculate_nu: unstable\n")
+        return float('nan')
+
+
+def calculate_nus(n_dof, M):
+    nus = np.zeros(n_dof, float)
+    for k in range(n_dof):
+        nus[k] = calculate_nu(M[2*k:2*k+2, 2*k:2*k+2])/(2e0*np.pi)
+        if n_dof == 3:
+            nus[2] = 1e0 - nus[2]
+    return nus
+
+
+def calculate_nu_symp(M):
+    # Calculate normalised phase advance from a symplectic periodic matrix.
+    dof = 2
+    n = 2*dof
+    I = np.identity(n)
+    tr = np.zeros(3, float)
+    for k in range(3):
+        tr[k] = np.trace(M[2*k:2*k+2, 2*k:2*k+2])
+    M4b4 = M[0:n, 0:n]
+    [p1, pm1] = [np.linalg.det(M4b4-I), np.linalg.det(M4b4+I)]
+    [po2, q] = [(p1-pm1)/16e0, (p1+pm1)/8e0 - 1e0]
+    if tr[X_] > tr[Y_]:
+        sgn = 1
+    else:
+        sgn = -1
+    [x, y] = [-po2+sgn*np.sqrt(po2**2-q), -po2-sgn*np.sqrt(po2**2-q)]
+    nu = \
+        [acos2(M[0][1], x)/(2e0*np.pi), acos2(M[2][3], y)/(2e0*np.pi),
+         1e0-acos2(M[4][5], tr[Z_]/2e0)/(2e0*np.pi)]
+    return np.array(nu)
+
+
+def find_closest_nu(nu, w):
+    min = 1e30
+    for k in range(w.size):
+        nu_k = acos2(w[k].imag, w[k].real)/(2e0*np.pi)
+        diff =  np.abs(nu_k-nu)
+        if diff < min:
+            [ind, min] = [k, diff]
+    return ind
+
+
+def sort_eigen_vec(dof, nu, w):
+    order = []
+    for k in range(dof):
+        order.append(find_closest_nu(nu[k], w))
+    for k in range(dof):
+        order.append(find_closest_nu(1e0-nu[k], w))
+    return np.array(order)
+
+
 t_dir = os.path.join(os.environ["HOME"], "Nextcloud", "thor_scsi")
 # t_file = os.path.join(t_dir, "b3_tst.lat")
 t_file = os.path.join(t_dir, "b3_sf_40Grad_JB.lat")
