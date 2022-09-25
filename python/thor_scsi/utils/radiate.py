@@ -157,7 +157,8 @@ def calculate_radiation(
 
     # diagonalise M
     n = 2 * dof
-    M_tp = np.transpose(r.one_turn_map[:n, :n])
+    M = r.one_turn_map[:n, :n]
+    M_tp = np.transpose(M)
 
     # Finds eigen values and eigen vectors ... same functionallity as in
     # find_phase_space_origin / find_phase_space_fix_point
@@ -183,9 +184,11 @@ def calculate_radiation(
     print("\nv_ord:")
     print(mat2txt(v_ord))
 
-    eta = np.zeros(6, np.float)
+    eta = lo.compute_dispersion(M)
+    print(eta)
+    # eta = np.zeros(6, np.float)
     A_inv, v1 = linalg.compute_A_inv_prev(dof, eta, v_ord)
-
+    # A_inv, v1 = lo.compute_A_inv_with_dispersion(v_ord, eta, n_dof=dof)
     A = np.linalg.inv(A_inv)
     print("\nA:")
     print(mat2txt(A))
