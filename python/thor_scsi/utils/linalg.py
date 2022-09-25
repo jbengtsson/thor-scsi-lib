@@ -11,7 +11,26 @@ from .phase_space_vector import omega_block_matrix as _obm
 from .math import minimum_distance_above_threshold
 from dataclasses import dataclass
 
+from thor_scsi.utils.output import vec2txt, mat2txt
+
 logger = logging.getLogger("thor_scsi")
+
+
+def chop_cmplx_vec(vec, eps):
+    for k in range(vec.size):
+        [x, y] = [vec[k].real, vec[k].imag]
+        if np.abs(x) < eps:
+            x = 0e0
+        if np.abs(y) < eps:
+            y = 0e0
+        vec[k] = complex(x, y)
+    return vec
+
+
+def chop_cmplx_mat(mat, eps):
+    for k in range(mat[:, 0].size):
+        chop_cmplx_vec(mat[k, :], eps)
+    return mat
 
 
 @functools.lru_cache(maxsize=3)
@@ -412,7 +431,7 @@ def compute_A_inv(v: np.ndarray, *, n_dof=3, copy=True) -> (np.ndarray, np.ndarr
     # Iterate over the degree of freedoms
     for dof in range(n_dof):
         i = dof * 2
-        z = np.linalg.multi_dot([v[:, i].real, S, v[:, i].imag])
+        z = [v[:, i].real @ S @ v[:, i].imag]
         # sgn = np.sign(z)
         # tmp = v[:, i].real + sgn * v[:, i].imag * 1j
         zs = np.sqrt(np.absolute(1.0 / z))
@@ -507,11 +526,17 @@ def compute_A_inv_prev(n_dof, eta, v):
 
     for i in range(n):
         if (i + 1) % 2:
-            z = np.linalg.multi_dot([v1[:, i].real, S, v1[:, i].imag])
+            z = [v1[:, i].real @ S @ v1[:, i].imag]
             sgn = sign(z)
             z = np.sqrt(np.abs(1e0 / z))
             for j in range(n):
                 v1[j, i] = z * (v1[j, i].real + sgn * v1[j, i].imag * 1j)
+                v1[j, i+1] = z * (v1[j, i+1].real + sgn * v1[j, i+1].imag * 1j)
+
+    print("\nv:")
+    print(mat2txt(v1))
+    print("\nv^T.omega.v:")
+    print(mat2txt(chop_cmplx_mat(np.array(v1.T @ S @ v), 1e-15)))
 
     for i in range(n):
         A_inv[0, i] = sign(v1[0][0].real) * v1[i][0].real
@@ -522,15 +547,17 @@ def compute_A_inv_prev(n_dof, eta, v):
             A_inv[4, i] = sign(v1[4][4].real) * v1[i][4].real
             A_inv[5, i] = sign(v1[4][4].real) * v1[i][4].imag
 
-    # Small correction for dispersion ?
-    B = np.identity(6)
-    delta_ = tslib.phase_space_index_internal.delta
-    x_ = tslib.phase_space_index_internal.x
-    px_ = tslib.phase_space_index_internal.px
-    ct_ = tslib.phase_space_index_internal.ct
+    if n_dof == 2:
+        # If coasting beam, translate to momentum dependent fix point.
+        B = np.identity(6)
+        delta_ = tslib.phase_space_index_internal.delta
+        x_ = tslib.phase_space_index_internal.x
+        px_ = tslib.phase_space_index_internal.px
+        ct_ = tslib.phase_space_index_internal.ct
 
-    B[x_, delta_], B[px_, delta_] = eta[x_], eta[px_]
-    B[ct_, x_], B[ct_, px_] = eta[px_], -eta[x_]
+        B[x_, delta_], B[px_, delta_] = eta[x_], eta[px_]
+        B[ct_, x_], B[ct_, px_] = eta[px_], -eta[x_]
 
-    A_inv = np.dot(A_inv, np.linalg.inv(B))
+        A_inv = B @ A_inv
+
     return A_inv, v1

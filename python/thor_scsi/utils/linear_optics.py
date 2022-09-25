@@ -29,7 +29,7 @@ def compute_dispersion(M: np.ndarray) -> np.ndarray:
     id_mat = np.identity(n)
     D = M[:n, tslib.phase_space_index_internal.delta]
 
-    return np.dot(np.linalg.inv(id_mat - M[:n, :n]), D)
+    return np.linalg.inv(id_mat - M[:n, :n]) @ D
 
 
 #: scale arctan2 (a12/a11) to Floquet coordinates (correct?)
