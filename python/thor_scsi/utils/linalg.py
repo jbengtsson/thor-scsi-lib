@@ -11,6 +11,7 @@ from .phase_space_vector import omega_block_matrix as _obm
 from .math import minimum_distance_above_threshold
 from dataclasses import dataclass
 
+from .courant_snyder import compute_A_CS
 from thor_scsi.utils.output import vec2txt, mat2txt
 
 logger = logging.getLogger("thor_scsi")
@@ -508,6 +509,10 @@ def compute_A_inv_prev(n_dof, eta, v):
     S = omega_block_matrix(n_dof)
 
     # Normalise eigenvectors: A^T.omega.A = omega.
+    v1[:, 0] *= 1j
+    v1[:, 1] *= -1j
+    # v1[:, 2] *= 1j
+    # v1[:, 3] *= -1j
     for i in range(n_dof):
         z = v1[:, 2*i].real @ S @ v1[:, 2*i].imag
         sgn_im = sign(z)
@@ -521,14 +526,7 @@ def compute_A_inv_prev(n_dof, eta, v):
     for i in range(n_dof):
         [A_inv[2*i, :n], A_inv[2*i+1, :n]] = [v1[:, 2*i].real,  v1[:, 2*i].imag]
 
-    # for i in range(n):
-    #     A_inv[0, i] = sign(v1[0][0].real) * v1[i][0].real
-    #     A_inv[1, i] = sign(v1[0][0].real) * v1[i][0].imag
-    #     A_inv[2, i] = sign(v1[2][2].real) * v1[i][2].real
-    #     A_inv[3, i] = sign(v1[2][2].real) * v1[i][2].imag
-    #     if n > 4:
-    #         A_inv[4, i] = sign(v1[4][4].real) * v1[i][4].real
-    #         A_inv[5, i] = sign(v1[4][4].real) * v1[i][4].imag
+    print("\nA_inv_CS:\n"+mat2txt(compute_A_CS(n_dof, A_inv)[0]))
 
     if n_dof == 2:
         # If coasting beam, translate to momentum dependent fix point.
@@ -542,6 +540,8 @@ def compute_A_inv_prev(n_dof, eta, v):
         B[x_, delta_], B[px_, delta_] = eta[x_], eta[px_]
         B[ct_, x_], B[ct_, px_]       = eta[px_], -eta[x_]
 
-        A_inv = B @ A_inv
+        A_inv = A_inv @ np.linalg.inv(B)
+
+    print("\nA_inv_CS:\n"+mat2txt(compute_A_CS(n_dof, A_inv)[0]))
 
     return A_inv, v1
