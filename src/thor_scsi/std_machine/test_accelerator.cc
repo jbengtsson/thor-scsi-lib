@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_CASE(test30_cavity)
 {
 
 	const std::string cavity_txt(
-		"cavh1t8r: Cavity, Frequency = 500e6, Voltage = 0.5e6;\n"
+		"cavh1t8r: Cavity, Frequency = 500e6, Voltage = 0.5e6, harnum=538;\n"
 		"mini_cell : LINE = (cavh1t8r);\n"
 		);
 
