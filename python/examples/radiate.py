@@ -178,7 +178,7 @@ calc_config = tslib.ConfigType()
 calc_config.radiation = radiate
 # is this used anywhere?
 calc_config.emittance = False
-calc_config.Cavity_on = True
+calc_config.Cavity_on = not True
 
 print(
     "calc_config",
