@@ -33,6 +33,36 @@ Y_ = 1
 Z_ = 2
 
 
+def chop_vec(vec, eps):
+    for k in range(vec.size):
+        if np.abs(vec[k]) < eps:
+            vec[k] = 0e0
+    return vec
+
+
+def chop_mat(mat, eps):
+    for k in range(mat[:, 0].size):
+        chop_vec(mat[k, :], eps)
+    return mat
+
+
+def chop_cmplx_vec(vec, eps):
+    for k in range(vec.size):
+        [x, y] = [vec[k].real, vec[k].imag]
+        if np.abs(x) < eps:
+            x = 0e0
+        if np.abs(y) < eps:
+            y = 0e0
+        vec[k] = complex(x, y)
+    return vec
+
+
+def chop_cmplx_mat(mat, eps):
+    for k in range(mat[:, 0].size):
+        chop_cmplx_vec(mat[k, :], eps)
+    return mat
+
+
 def acos2(sin, cos):
     # Calculate the normalised phase advance from the trace = 2*2*pi* nu of
     # the Poincaré map; i.e., assuming mid-plane symmetry.
@@ -63,15 +93,14 @@ def calculate_nus(n_dof, M):
     return nus
 
 
-def calculate_nu_symp(M):
+def calculate_nu_symp(n_dof, M):
     # Calculate normalised phase advance from a symplectic periodic matrix.
-    dof = 2
     n = 2*dof
-    I = np.identity(n)
-    tr = np.zeros(3, float)
-    for k in range(3):
+    I = np.identity(4)
+    tr = np.zeros(n_dof, float)
+    for k in range(n_dof):
         tr[k] = np.trace(M[2*k:2*k+2, 2*k:2*k+2])
-    M4b4 = M[0:n, 0:n]
+    M4b4 = M[0:4, 0:4]
     [p1, pm1] = [np.linalg.det(M4b4-I), np.linalg.det(M4b4+I)]
     [po2, q] = [(p1-pm1)/16e0, (p1+pm1)/8e0 - 1e0]
     if tr[X_] > tr[Y_]:
@@ -79,9 +108,10 @@ def calculate_nu_symp(M):
     else:
         sgn = -1
     [x, y] = [-po2+sgn*np.sqrt(po2**2-q), -po2-sgn*np.sqrt(po2**2-q)]
-    nu = \
-        [acos2(M[0][1], x)/(2e0*np.pi), acos2(M[2][3], y)/(2e0*np.pi),
-         1e0-acos2(M[4][5], tr[Z_]/2e0)/(2e0*np.pi)]
+    nu = []
+    nu.extend([acos2(M[0][1], x)/(2e0*np.pi), acos2(M[2][3], y)/(2e0*np.pi)])
+    if n_dof == 3:
+        nu.append(1e0-acos2(M[4][5], tr[Z_]/2e0)/(2e0*np.pi))
     return np.array(nu)
 
 
@@ -99,7 +129,6 @@ def sort_eigen_vec(dof, nu, w):
     order = []
     for k in range(dof):
         order.append(find_closest_nu(nu[k], w))
-    for k in range(dof):
         order.append(find_closest_nu(1e0-nu[k], w))
     return np.array(order)
 
@@ -134,7 +163,7 @@ calc_config = tslib.ConfigType()
 calc_config.radiation = radiate
 # is this used anywhere?
 calc_config.emittance = False
-calc_config.Cavity_on = not True
+calc_config.Cavity_on = True
 
 print(
     "calc_config",
@@ -145,62 +174,77 @@ print(
 
 calc_config.Energy = 2.5e9
 
-dof = 2
+if calc_config.Cavity_on == True:
+    dof = 3
+else:
+    dof = 2
 n = 2 * dof
 
 r = compute_closed_orbit(acc, calc_config, delta=0e0)
 M = r.one_turn_map[:6, :6]
-print("\nM:")
-print(mat2txt(M))
+print("\nM:\n"+mat2txt(M))
 
+nu_symp = calculate_nu_symp(dof, M)
 # Diagonalise M.
 M_tp = M.T[:n, :n]
 [w, v] = np.linalg.eig(M_tp)
-print("\nlambda:")
+nu_eig = []
 for w_k in w:
-    nu_k = acos2(w_k.imag, w_k.real)/(2e0*np.pi)
-    print(" %7.5f" % (nu_k), end="")
-print()
+    nu_eig.append(acos2(w_k.imag, w_k.real)/(2e0*np.pi))
+nu_eig = np.array(nu_eig)
 
-nu = calculate_nu_symp(r.one_turn_map)
-print("\nnu = [{:7.5f}, {:7.5f}, {:7.5f}]".format(nu[X_], nu[Y_], nu[Z_]))
+print("\nnu_symp:\n"+vec2txt(nu_symp))
+print("\nnu_eig:\n"+vec2txt(nu_eig))
+print("\nlambda:\n"+vec2txt(w))
+print("\nv:\n"+mat2txt(v))
 
-nu[Z_] = 1e0 - nu[Z_]
-order = sort_eigen_vec(dof, nu, w)
-print("\norder:\n", order)
-print("\nw:")
-print(vec2txt(w))
-print("\nv:")
-print(mat2txt(v))
+# nu_symp[Z_] = 1e0 - nu_symp[Z_]
+order = sort_eigen_vec(dof, nu_symp, w)
+
 w_ord = np.zeros(n, complex)
 v_ord = np.zeros((n, n), complex)
-for k in range(dof):
-    [w_ord[2*k], w_ord[2*k+1]] = np.array([w[order[k]], w[order[k+dof]]])
-    [v_ord[:, 2*k], v_ord[:, 2*k+1]] = [v[:, order[k]], v[:, order[k+dof]]]
-print("\nw:")
-print(vec2txt(w_ord))
-print("\nv:")
-print(mat2txt(v_ord))
+nu_eig_ord = np.zeros(n, float)
+for k in range(n):
+    w_ord[k] = w[order[k]]
+    v_ord[:, k] = v[:, order[k]]
+    nu_eig_ord[k] = acos2(w_ord[k].imag, w_ord[k].real)/(2e0*np.pi)
+
+print("\norder:\n", order)
+print("\nnu_eig_ord:\n"+vec2txt(nu_eig_ord))
+print("\nlambda_ord:\n"+vec2txt(w_ord))
+print("\nv_ord:\n"+mat2txt(v_ord))
+print("\nv_ord^T.M.(v_ord^T)^-1:\n"+mat2txt(
+    chop_cmplx_mat(v_ord.T @ M[:n, :n] @ np.linalg.inv(v_ord.T), 1e-13)))
 
 eta = lo.compute_dispersion(M)
 print("\neta:\n", eta)
 
 if True:
-    [A, v1] = linalg.compute_A_inv_prev(dof, eta, v_ord)
+    [A_inv, v1] = linalg.compute_A_inv_prev(dof, eta, v_ord)
 else:
     # Busted: called by compute_A_inv_with_dispersion.
-    # [A, v1] = linalg.compute_A_inv(v_ord, n_dof=dof)
+    # [A_inv, v1] = linalg.compute_A_inv(v_ord, n_dof=dof)
     [A_inv, v1] = lo.compute_A_inv_with_dispersion(v_ord, eta, n_dof=dof)
 
-print("\nA:")
-print(mat2txt(A))
-[A, dnu] = lo.compute_A_CS(dof, A)
-print("\ndnu:", dnu)
-print("\nA_CS:")
-print(mat2txt(A))
-A_inv = np.linalg.inv(A)
-print("\nR:")
-print(mat2txt(A_inv @ M @ A))
+print("\nv1:\n"+mat2txt(v1))
+print("\nv1^T.M.(v1^T)^-1:\n"+mat2txt(
+    chop_cmplx_mat(v1.T @ M[:n, :n] @ np.linalg.inv(v1.T), 1e-13)))
+print("\nv1^T.omega.(v1^T)^-1:\n"+mat2txt(
+    chop_cmplx_mat(v1.T @ linalg.omega_block_matrix(dof) @ v1, 1e-13)))
+print("\nA_inv:\n"+mat2txt(chop_mat(A_inv, 1e-13)))
+print("\nA_inv^T.omega.A_inv:\n"+mat2txt(
+    chop_mat(A_inv[:n, :n].T @ linalg.omega_block_matrix(dof) @ A_inv[:n, :n],
+             1e-13)))
+[A_inv_CS, _] = lo.compute_A_CS(dof, A_inv)
+print("\nA_inv_CS:\n"+mat2txt(chop_mat(A_inv_CS, 1e-10)))
+print("\nA_inv_CS^T.omega.A_inv_CS:\n"+mat2txt(chop_mat(
+    A_inv_CS[:n, :n].T @ linalg.omega_block_matrix(dof) @ A_inv_CS[:n, :n],
+    1e-13)))
+
+A = np.linalg.inv(A_inv)
+
+print("\nR:\n"+mat2txt(chop_mat(A_inv @ M @ A, 1e-10)))
+
 exit()
 
 r = calculate_radiation(

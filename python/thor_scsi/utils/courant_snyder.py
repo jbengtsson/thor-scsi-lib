@@ -20,7 +20,7 @@ def compute_dnu(n_dof, A):
     """
     eps = 1e-15
 
-    ct_ = tslib.phase_space_index_internal.ct
+    ct_    = tslib.phase_space_index_internal.ct
     delta_ = tslib.phase_space_index_internal.delta
 
     a = np.zeros(n_dof)
