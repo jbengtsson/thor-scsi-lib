@@ -62,11 +62,11 @@ x_, px_, y_, py_, ct_, delta_ = [
 
 import thor_scsi.lib as tslib
 
-from thor_scsi.utils import linalg
+# from thor_scsi.utils.linalg import match_eigenvalues_to_plane_orig
 from thor_scsi.utils.closed_orbit import compute_closed_orbit
-from thor_scsi.utils import linear_optics as lo
-
 from thor_scsi.utils.output import vec2txt, mat2txt
+from thor_scsi.utils.linear_optics import compute_dispersion, compute_A_CS
+from thor_scsi.utils.linalg import compute_A_inv_prev, omega_block_matrix
 
 
 X_ = 0
