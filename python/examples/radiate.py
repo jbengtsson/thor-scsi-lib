@@ -74,6 +74,36 @@ Y_ = 1
 Z_ = 2
 
 
+def chop_vec(vec, eps):
+    for k in range(vec.size):
+        if np.abs(vec[k]) < eps:
+            vec[k] = 0e0
+    return vec
+
+
+def chop_mat(mat, eps):
+    for k in range(mat[:, 0].size):
+        chop_vec(mat[k, :], eps)
+    return mat
+
+
+def chop_cmplx_vec(vec, eps):
+    for k in range(vec.size):
+        [x, y] = [vec[k].real, vec[k].imag]
+        if np.abs(x) < eps:
+            x = 0e0
+        if np.abs(y) < eps:
+            y = 0e0
+        vec[k] = complex(x, y)
+    return vec
+
+
+def chop_cmplx_mat(mat, eps):
+    for k in range(mat[:, 0].size):
+        chop_cmplx_vec(mat[k, :], eps)
+    return mat
+
+
 def acos2(sin, cos):
     # Calculate the normalised phase advance from the trace = 2*2*pi* nu of
     # the Poincaré map; i.e., assuming mid-plane symmetry.
@@ -104,15 +134,14 @@ def calculate_nus(n_dof, M):
     return nus
 
 
-def calculate_nu_symp(M):
+def calculate_nu_symp(n_dof, M):
     # Calculate normalised phase advance from a symplectic periodic matrix.
-    dof = 2
     n = 2*dof
-    I = np.identity(n)
-    tr = np.zeros(3, float)
-    for k in range(3):
+    I = np.identity(4)
+    tr = np.zeros(n_dof, float)
+    for k in range(n_dof):
         tr[k] = np.trace(M[2*k:2*k+2, 2*k:2*k+2])
-    M4b4 = M[0:n, 0:n]
+    M4b4 = M[0:4, 0:4]
     [p1, pm1] = [np.linalg.det(M4b4-I), np.linalg.det(M4b4+I)]
     [po2, q] = [(p1-pm1)/16e0, (p1+pm1)/8e0 - 1e0]
     if tr[X_] > tr[Y_]:
@@ -120,9 +149,10 @@ def calculate_nu_symp(M):
     else:
         sgn = -1
     [x, y] = [-po2+sgn*np.sqrt(po2**2-q), -po2-sgn*np.sqrt(po2**2-q)]
-    nu = \
-        [acos2(M[0][1], x)/(2e0*np.pi), acos2(M[2][3], y)/(2e0*np.pi),
-         1e0-acos2(M[4][5], tr[Z_]/2e0)/(2e0*np.pi)]
+    nu = []
+    nu.extend([acos2(M[0][1], x)/(2e0*np.pi), acos2(M[2][3], y)/(2e0*np.pi)])
+    if n_dof == 3:
+        nu.append(1e0-acos2(M[4][5], tr[Z_]/2e0)/(2e0*np.pi))
     return np.array(nu)
 
 
@@ -140,7 +170,6 @@ def sort_eigen_vec(dof, nu, w):
     order = []
     for k in range(dof):
         order.append(find_closest_nu(nu[k], w))
-    for k in range(dof):
         order.append(find_closest_nu(1e0-nu[k], w))
     return np.array(order)
 
