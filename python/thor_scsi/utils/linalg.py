@@ -524,24 +524,20 @@ def compute_A_inv_prev(n_dof, eta, v):
              / scl]
 
     for i in range(n_dof):
-        [A_inv[2*i, :n], A_inv[2*i+1, :n]] = [v1[:, 2*i].real,  v1[:, 2*i].imag]
-
-    print("\nA_inv_CS:\n"+mat2txt(compute_A_CS(n_dof, A_inv)[0]))
+        [A_inv[2*i, :n], A_inv[2*i+1, :n]] = [v1[:, 2*i].real, v1[:, 2*i].imag]
 
     if n_dof == 2:
-        # If coasting beam, translate to momentum dependent fix point.
+        # If coasting beam translate to momentum dependent fix point.
         print("\ncompute_A_inv_prev: coasting beam")
         delta_ = tslib.phase_space_index_internal.delta
-        x_ = tslib.phase_space_index_internal.x
-        px_ = tslib.phase_space_index_internal.px
-        ct_ = tslib.phase_space_index_internal.ct
+        x_     = tslib.phase_space_index_internal.x
+        px_    = tslib.phase_space_index_internal.px
+        ct_    = tslib.phase_space_index_internal.ct
 
         B = np.identity(6)
         B[x_, delta_], B[px_, delta_] = eta[x_], eta[px_]
         B[ct_, x_], B[ct_, px_]       = eta[px_], -eta[x_]
 
         A_inv = A_inv @ np.linalg.inv(B)
-
-    print("\nA_inv_CS:\n"+mat2txt(compute_A_CS(n_dof, A_inv)[0]))
 
     return A_inv, v1
