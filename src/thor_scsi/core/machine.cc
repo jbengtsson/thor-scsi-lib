@@ -13,6 +13,25 @@ info_mutex_t info_mutex;
 namespace tsc=thor_scsi::core;
 
 
+void tsc::Machine::updateElementList(p_elements_t& elements)
+{
+
+    p_lookup_t lookup_name, lookup_type;
+
+    // keep sequence order ...
+    for(size_t index = 0; index < elements.size(); ++index){
+	auto& e_ptr = elements[index];
+	e_ptr->index = index;
+    }
+    for(auto& E: elements){
+	lookup_name.insert(std::make_pair(LookupKey(E->name, E->index), E));
+	lookup_type.insert(std::make_pair(LookupKey(E->type_name(), E->index), E));
+    }
+    p_elements.swap(elements);
+    p_lookup.swap(lookup_name);
+    p_lookup_type.swap(lookup_type);
+
+}
 /*
  * Original code:
  *    1. create state (or sim type)
@@ -21,6 +40,22 @@ namespace tsc=thor_scsi::core;
  *
  *  Now switching over: only simulation state
  */
+tsc::Machine::Machine(const p_elements_t& elements)
+    :p_elements()
+    ,p_trace(nullptr)
+{
+    p_elements_t a_cpy(elements.size());
+    std::copy(elements.begin(), elements.end(), a_cpy.begin());
+    this->updateElementList(a_cpy);
+}
+
+tsc::Machine::Machine(p_elements_t& elements)
+    :p_elements()
+    ,p_trace(nullptr)
+{
+    this->updateElementList(elements);
+}
+
 tsc::Machine::Machine(const Config& c)
     :p_elements()
     ,p_trace(nullptr)
@@ -53,7 +88,6 @@ tsc::Machine::Machine(const Config& c)
     elements_t Es(c.get<elements_t>("elements"));
 
     p_elements_t result;
-    p_lookup_t result_l, result_t;
     result.reserve(Es.size());
 
     size_t idx=0;
@@ -100,33 +134,29 @@ tsc::Machine::Machine(const Config& c)
 
         //result.push_back(std::make_shared<tsc::CellVoid>(E));
 	result.push_back(E);
-        result_l.insert(std::make_pair(LookupKey(E->name, E->index), E));
-        result_t.insert(std::make_pair(LookupKey(etype, E->index), E));
     }
 
     G.unlock();
 
-    p_elements.swap(result);
-    p_lookup.swap(result_l);
-    p_lookup_type.swap(result_t);
+    this->updateElementList(result);
     THOR_SCSI_LOG(DEBUG)<<"Complete constructing Machine";
 }
 
 //! Elements with a given name
-tsc::Machine::p_elements_t
+tsc::p_elements_t
 tsc::Machine::elementsWithName(const std::string& name)
 {
 	auto iters = this->equal_range(name);
-	tsc::Machine::p_elements_t sel_elems(std::get<0>(iters), std::get<1>(iters));
+	tsc::p_elements_t sel_elems(std::get<0>(iters), std::get<1>(iters));
 	return sel_elems;
 }
 
 //! Elements with a given name type
-tsc::Machine::p_elements_t
+tsc::p_elements_t
 tsc::Machine::elementsWithNameType(const std::string& name)
 {
 	auto iters = this->equal_range_type(name);
-	tsc::Machine::p_elements_t sel_elems(std::get<0>(iters), std::get<1>(iters));
+	tsc::p_elements_t sel_elems(std::get<0>(iters), std::get<1>(iters));
 	return sel_elems;
 }
 
@@ -245,7 +275,7 @@ namespace thor_scsi::core {
         // Not handling sim type explict any more
         // strm<<"sim_type: "<<m.p_info.name<<"\n
          strm<<"#Elements: "<<m.p_elements.size()<<"\n";
-	for(tsc::Machine::p_elements_t::const_iterator it=m.p_elements.begin(),
+	 for(auto it=m.p_elements.begin(),
 	      end=m.p_elements.end(); it!=end; ++it)
 	{
 	    (*it)->show(strm, 0);
