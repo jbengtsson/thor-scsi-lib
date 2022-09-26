@@ -21,14 +21,13 @@ static int reg_done = ts::register_elements();
 
 BOOST_AUTO_TEST_CASE(test10_two_elements_list)
 {
-#if 0
     const std::string drift_txt(
 	"d05l2t8r: Drift, L = 0.42;\n"
 	"mini_cell : LINE = (d05l2t8r);\n"
 	);
 
     const std::string bending_txt(
-	"bend   : Bending, L = 1.1, N=10, T = 20, K =-1.2, T1 = 5, T2 = 7, N=9, method=4;\n"
+	"bend   : Bending, L = 1.1, N=10, T = 20, K =-1.2, T1 = 5, T2 = 7, method=4;\n"
 	"mini_cell : LINE = (bend);\n"
 	);
 
@@ -37,28 +36,18 @@ BOOST_AUTO_TEST_CASE(test10_two_elements_list)
     Config *C_bending = parse.parse_byte(bending_txt);
 
 
-    // tse::DriftType drift(*C_drift);
-    // tse::BendingType bend(*C_bending);
-    // std::cout << *C_drift;
-    // std::cout << *C_bending;
-
     std::vector<std::shared_ptr<thor_scsi::core::ElemType>> elems;
     elems.reserve(2);
-    std::cout <<  "Building elems"  << std::endl;
-    elems.push_back(std::make_shared<tse::DriftType>(*C_drift));
-    std::cout <<  "Built drift"  << std::endl;
-    elems.push_back(std::make_shared<tse::BendingType>(*C_bending));
-     std::cout <<  "Built bend"  << std::endl;
+    elems.push_back(std::make_shared<tse::DriftType> (C_drift->get<std::vector<Config>>("elements").at(0)));
+    elems.push_back(std::make_shared<tse::BendingType>(C_bending->get<std::vector<Config>>("elements").at(0)));
     auto machine = ts::Accelerator(elems);
 
     BOOST_CHECK_EQUAL(machine.size(), 2);
-
     BOOST_CHECK_EQUAL(machine.at(0)->type_name(), "Drift"    );
     BOOST_CHECK_EQUAL(machine.at(0)->name,        "d05l2t8r" );
     BOOST_CHECK_EQUAL(machine.at(1)->type_name(), "Bending"  );
     BOOST_CHECK_EQUAL(machine.at(1)->name,        "bend"     );
 
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(test20_two_elements_confg)
@@ -87,7 +76,7 @@ BOOST_AUTO_TEST_CASE(test20_two_elements_confg)
     configs.push_back(config_bend);
     config.setAny("elements", configs);
 
-    std::cout << "Config " << config << std::endl;
+    // std::cout << "Config " << config << std::endl;
 
     auto machine = ts::Accelerator(config);
 
