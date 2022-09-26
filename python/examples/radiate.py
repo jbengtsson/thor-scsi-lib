@@ -225,7 +225,7 @@ calc_config = tslib.ConfigType()
 
 calc_config.radiation = True
 calc_config.emittance = False
-calc_config.Cavity_on = True
+calc_config.Cavity_on = not True
 
 print("\ncalc_config:\n [radiation, emittance, Cavity_on] = ",
       calc_config.radiation, calc_config.emittance, calc_config.Cavity_on)
