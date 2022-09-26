@@ -21,11 +21,11 @@ import numpy as np
 
 import thor_scsi.lib as tslib
 
-from thor_scsi.utils import linalg
+# from thor_scsi.utils.linalg import match_eigenvalues_to_plane_orig
 from thor_scsi.utils.closed_orbit import compute_closed_orbit
-from thor_scsi.utils import linear_optics as lo
-
 from thor_scsi.utils.output import vec2txt, mat2txt
+from thor_scsi.utils.linear_optics import compute_dispersion, compute_A_CS
+from thor_scsi.utils.linalg import compute_A_inv_prev, omega_block_matrix
 
 
 X_ = 0
@@ -216,11 +216,11 @@ print("\nv_ord:\n"+mat2txt(v_ord))
 print("\nv_ord^T.M.(v_ord^T)^-1:\n"+mat2txt(
     chop_cmplx_mat(v_ord.T @ M[:n, :n] @ np.linalg.inv(v_ord.T), 1e-13)))
 
-eta = lo.compute_dispersion(M)
+eta = compute_dispersion(M)
 print("\neta:\n", eta)
 
 if True:
-    [A_inv, v1] = linalg.compute_A_inv_prev(dof, eta, v_ord)
+    [A_inv, v1] = compute_A_inv_prev(dof, eta, v_ord)
 else:
     # Busted: called by compute_A_inv_with_dispersion.
     # [A_inv, v1] = linalg.compute_A_inv(v_ord, n_dof=dof)
@@ -230,15 +230,15 @@ print("\nv1:\n"+mat2txt(v1))
 print("\nv1^T.M.(v1^T)^-1:\n"+mat2txt(
     chop_cmplx_mat(v1.T @ M[:n, :n] @ np.linalg.inv(v1.T), 1e-13)))
 print("\nv1^T.omega.(v1^T)^-1:\n"+mat2txt(
-    chop_cmplx_mat(v1.T @ linalg.omega_block_matrix(dof) @ v1, 1e-13)))
+    chop_cmplx_mat(v1.T @ omega_block_matrix(dof) @ v1, 1e-13)))
 print("\nA_inv:\n"+mat2txt(chop_mat(A_inv, 1e-13)))
 print("\nA_inv^T.omega.A_inv:\n"+mat2txt(
-    chop_mat(A_inv[:n, :n].T @ linalg.omega_block_matrix(dof) @ A_inv[:n, :n],
+    chop_mat(A_inv[:n, :n].T @ omega_block_matrix(dof) @ A_inv[:n, :n],
              1e-13)))
-[A_inv_CS, _] = lo.compute_A_CS(dof, A_inv)
+[A_inv_CS, _] = compute_A_CS(dof, A_inv)
 print("\nA_inv_CS:\n"+mat2txt(chop_mat(A_inv_CS, 1e-10)))
 print("\nA_inv_CS^T.omega.A_inv_CS:\n"+mat2txt(chop_mat(
-    A_inv_CS[:n, :n].T @ linalg.omega_block_matrix(dof) @ A_inv_CS[:n, :n],
+    A_inv_CS[:n, :n].T @ omega_block_matrix(dof) @ A_inv_CS[:n, :n],
     1e-13)))
 
 A = np.linalg.inv(A_inv)
