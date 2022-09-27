@@ -31,7 +31,9 @@ from thor_scsi.utils.accelerator import instrument_with_radiators
 from thor_scsi.utils.radiate import calculate_radiation
 
 import os
+
 import numpy as np
+import scipy as sp
 
 import numpy as np
 import scipy as sp
@@ -66,7 +68,7 @@ import thor_scsi.lib as tslib
 from thor_scsi.utils.closed_orbit import compute_closed_orbit
 from thor_scsi.utils.output import vec2txt, mat2txt
 from thor_scsi.utils.linear_optics import compute_dispersion, compute_A_CS
-from thor_scsi.utils.linalg import compute_A_inv_prev, omega_block_matrix
+from thor_scsi.utils.linalg import compute_A_prev, omega_block_matrix
 
 
 X_ = 0
@@ -105,8 +107,9 @@ def chop_cmplx_mat(mat, eps):
 
 
 def acos2(sin, cos):
-    # Calculate the normalised phase advance from the trace = 2*2*pi* nu of
-    # the Poincaré map; i.e., assuming mid-plane symmetry.
+    # Calculate the normalised phase advance from the Poincaré map:
+    #   Tr{M} = 2 cos(2 pi nu)
+    # i.e., assuming mid-plane symmetry.
     # The sin part is used to determine the quadrant.
     mu = np.arccos(cos)
     if sin < 0e0:
@@ -167,11 +170,11 @@ def find_closest_nu(nu, w):
 
 
 def sort_eigen_vec(dof, nu, w):
-    order = []
+    order = np.zeros(2*dof, int)
     for k in range(dof):
-        order.append(find_closest_nu(nu[k], w))
-        order.append(find_closest_nu(1e0-nu[k], w))
-    return np.array(order)
+        order[2*k]   = find_closest_nu(nu[k], w)
+        order[2*k+1] = find_closest_nu(1e0-nu[k], w)
+    return order
 
 
 t_dir = os.path.join(os.environ["HOME"], "Nextcloud", "thor_scsi")
