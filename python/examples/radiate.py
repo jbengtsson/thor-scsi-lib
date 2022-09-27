@@ -21,7 +21,9 @@ from thor_scsi.factory import accelerator_from_config
 from thor_scsi.utils.accelerator import instrument_with_radiators
 from thor_scsi.utils.radiate import calculate_radiation
 import os
+
 import numpy as np
+import scipy as sp
 
 import thor_scsi.lib as tslib
 
@@ -29,7 +31,7 @@ import thor_scsi.lib as tslib
 from thor_scsi.utils.closed_orbit import compute_closed_orbit
 from thor_scsi.utils.output import vec2txt, mat2txt
 from thor_scsi.utils.linear_optics import compute_dispersion, compute_A_CS
-from thor_scsi.utils.linalg import compute_A_inv_prev, omega_block_matrix
+from thor_scsi.utils.linalg import compute_A_prev, omega_block_matrix
 
 
 X_ = 0
@@ -68,8 +70,9 @@ def chop_cmplx_mat(mat, eps):
 
 
 def acos2(sin, cos):
-    # Calculate the normalised phase advance from the trace = 2*2*pi* nu of
-    # the Poincaré map; i.e., assuming mid-plane symmetry.
+    # Calculate the normalised phase advance from the Poincaré map:
+    #   Tr{M} = 2 cos(2 pi nu)
+    # i.e., assuming mid-plane symmetry.
     # The sin part is used to determine the quadrant.
     mu = np.arccos(cos)
     if sin < 0e0:
@@ -130,11 +133,11 @@ def find_closest_nu(nu, w):
 
 
 def sort_eigen_vec(dof, nu, w):
-    order = []
+    order = np.zeros(2*dof, int)
     for k in range(dof):
-        order.append(find_closest_nu(nu[k], w))
-        order.append(find_closest_nu(1e0-nu[k], w))
-    return np.array(order)
+        order[2*k]   = find_closest_nu(nu[k], w)
+        order[2*k+1] = find_closest_nu(1e0-nu[k], w)
+    return order
 
 
 t_dir = os.path.join(os.environ["HOME"], "Nextcloud", "thor_scsi")
@@ -187,6 +190,8 @@ print(
     calc_config.Cavity_on,
 )
 
+debug_prt = not False
+
 calc_config.Energy = 2.5e9
 
 if calc_config.Cavity_on == True:
@@ -201,63 +206,56 @@ print("\nM:\n"+mat2txt(M))
 
 nu_symp = calculate_nu_symp(dof, M)
 # Diagonalise M.
-M_tp = M.T[:n, :n]
-[w, v] = np.linalg.eig(M_tp)
-nu_eig = []
-for w_k in w:
-    nu_eig.append(acos2(w_k.imag, w_k.real)/(2e0*np.pi))
-nu_eig = np.array(nu_eig)
+[w, u] = np.linalg.eig(M[:n, :n])
 
-print("\nnu_symp:\n"+vec2txt(nu_symp))
-print("\nnu_eig:\n"+vec2txt(nu_eig))
-print("\nlambda:\n"+vec2txt(w))
-print("\nv:\n"+mat2txt(v))
+nu_eig = np.zeros(n)
+for k in range(n):
+    nu_eig[k] = acos2(w[k].imag, w[k].real)/(2e0*np.pi)
 
-# nu_symp[Z_] = 1e0 - nu_symp[Z_]
+if debug_prt:
+    print("\nu:\n"+mat2txt(u))
+    print("\nnu_symp:\n"+vec2txt(nu_symp))
+    print("\nnu_eig:\n"+vec2txt(nu_eig))
+    print("\nlambda:\n"+vec2txt(w))
+    # print("\nu:\n"+mat2txt(u))
+
 order = sort_eigen_vec(dof, nu_symp, w)
 
 w_ord = np.zeros(n, complex)
-v_ord = np.zeros((n, n), complex)
+u_ord = np.zeros((n, n), complex)
 nu_eig_ord = np.zeros(n, float)
 for k in range(n):
     w_ord[k] = w[order[k]]
-    v_ord[:, k] = v[:, order[k]]
+    u_ord[:, k] = u[:, order[k]]
     nu_eig_ord[k] = acos2(w_ord[k].imag, w_ord[k].real)/(2e0*np.pi)
 
-print("\norder:\n", order)
-print("\nnu_eig_ord:\n"+vec2txt(nu_eig_ord))
-print("\nlambda_ord:\n"+vec2txt(w_ord))
-print("\nv_ord:\n"+mat2txt(v_ord))
-print("\nv_ord^T.M.(v_ord^T)^-1:\n"+mat2txt(
-    chop_cmplx_mat(v_ord.T @ M[:n, :n] @ np.linalg.inv(v_ord.T), 1e-13)))
+if debug_prt:
+    print("\norder:\n", order)
+    print("\nnu_eig_ord:\n"+vec2txt(nu_eig_ord))
+    print("\nlambda_ord:\n"+vec2txt(w_ord))
+    # print("\nu_ord:\n"+mat2txt(u_ord))
+    print("\nu_ord^-1.M.u_ord:\n"+mat2txt(
+        chop_cmplx_mat(np.linalg.inv(u_ord) @ M[:n, :n] @ u_ord, 1e-15)))
 
 eta = compute_dispersion(M)
-print("\neta:\n", eta)
 
-if True:
-    [A_inv, v1] = compute_A_inv_prev(dof, eta, v_ord)
-else:
-    # Busted: called by compute_A_inv_with_dispersion.
-    # [A_inv, v1] = linalg.compute_A_inv(v_ord, n_dof=dof)
-    [A_inv, v1] = lo.compute_A_inv_with_dispersion(v_ord, eta, n_dof=dof)
+if debug_prt:
+    print("\neta:\n", eta)
 
-print("\nv1:\n"+mat2txt(v1))
-print("\nv1^T.M.(v1^T)^-1:\n"+mat2txt(
-    chop_cmplx_mat(v1.T @ M[:n, :n] @ np.linalg.inv(v1.T), 1e-13)))
-print("\nv1^T.omega.(v1^T)^-1:\n"+mat2txt(
-    chop_cmplx_mat(v1.T @ omega_block_matrix(dof) @ v1, 1e-13)))
-print("\nA_inv:\n"+mat2txt(chop_mat(A_inv, 1e-13)))
-print("\nA_inv^T.omega.A_inv:\n"+mat2txt(
-    chop_mat(A_inv[:n, :n].T @ omega_block_matrix(dof) @ A_inv[:n, :n],
-             1e-13)))
-[A_inv_CS, _] = compute_A_CS(dof, A_inv)
-print("\nA_inv_CS:\n"+mat2txt(chop_mat(A_inv_CS, 1e-10)))
-print("\nA_inv_CS^T.omega.A_inv_CS:\n"+mat2txt(chop_mat(
-    A_inv_CS[:n, :n].T @ omega_block_matrix(dof) @ A_inv_CS[:n, :n],
-    1e-13)))
+[A, u1] = compute_A_prev(dof, eta, u_ord)
+A_inv = np.linalg.inv(A)
 
-A = np.linalg.inv(A_inv)
+if debug_prt:
+    print("\nu1:\n"+mat2txt(u1))
+    print("\nu1^-1.M.u1:\n"+mat2txt(
+        chop_cmplx_mat(np.linalg.inv(u1) @ M[:n, :n] @ u1, 1e-13)))
+    print("\nu1^T.omega.u1:\n"+mat2txt(
+        chop_cmplx_mat(u1.T @ omega_block_matrix(dof) @ u1, 1e-13)))
+    print("\nA:\n"+mat2txt(chop_mat(A_inv, 1e-13)))
+    print("\nA^T.omega.A:\n"+mat2txt(chop_mat(
+        A[:n, :n].T @ omega_block_matrix(dof) @ A[:n, :n], 1e-13)))
 
+print("\nA_CS:\n"+mat2txt(chop_mat(compute_A_CS(dof, A)[0], 1e-10)))
 print("\nR:\n"+mat2txt(chop_mat(A_inv @ M @ A, 1e-10)))
 
 exit()

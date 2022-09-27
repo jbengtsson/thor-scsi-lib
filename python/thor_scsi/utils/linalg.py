@@ -490,7 +490,7 @@ def compute_A_inv_with_dispersion(
     return A_inv, v
 
 
-def compute_A_inv_prev(n_dof, eta, v):
+def compute_A_prev(n_dof, eta, u):
     """
 
     Original version thanks to Johan
@@ -503,32 +503,27 @@ def compute_A_inv_prev(n_dof, eta, v):
     n = 2 * n_dof
 
     # Should be a local copy.
-    # v1 = np.array(v)
-    v1 = _copy.copy(v)
-    A_inv = np.identity(6)
+    # u1 = np.array(u)
+    u1 = _copy.copy(u)
+    A = np.identity(6)
     S = omega_block_matrix(n_dof)
 
     # Normalise eigenvectors: A^T.omega.A = omega.
-    v1[:, 0] *= 1j
-    v1[:, 1] *= -1j
-    # v1[:, 2] *= 1j
-    # v1[:, 3] *= -1j
     for i in range(n_dof):
-        z = v1[:, 2*i].real @ S @ v1[:, 2*i].imag
+        z = u1[:, 2*i].real @ S @ u1[:, 2*i].imag
         sgn_im = sign(z)
         scl = np.sqrt(np.abs(z))
-        sgn_vec = sign(v1[2*i][2*i].real)
-        [v1[:, 2*i], v1[:, 2*i+1]] = \
-            [sgn_vec * (v1[:, 2*i].real + sgn_im * v1[:, 2*i].imag * 1j) / scl,
-             sgn_vec * (v1[:, 2*i+1].real + sgn_im * v1[:, 2*i+1].imag * 1j)
+        sgn_vec = sign(u1[2*i][2*i].real)
+        [u1[:, 2*i], u1[:, 2*i+1]] = \
+            [sgn_vec * (u1[:, 2*i].real + sgn_im * u1[:, 2*i].imag * 1j) / scl,
+             sgn_vec * (u1[:, 2*i+1].real + sgn_im * u1[:, 2*i+1].imag * 1j)
              / scl]
 
     for i in range(n_dof):
-        [A_inv[2*i, :n], A_inv[2*i+1, :n]] = [v1[:, 2*i].real, v1[:, 2*i].imag]
+        [A[:n, 2*i], A[:n, 2*i+1]] = [u1[:, 2*i].real, u1[:, 2*i].imag]
 
     if n_dof == 2:
         # If coasting beam translate to momentum dependent fix point.
-        print("\ncompute_A_inv_prev: coasting beam")
         delta_ = tslib.phase_space_index_internal.delta
         x_     = tslib.phase_space_index_internal.x
         px_    = tslib.phase_space_index_internal.px
@@ -538,6 +533,6 @@ def compute_A_inv_prev(n_dof, eta, v):
         B[x_, delta_], B[px_, delta_] = eta[x_], eta[px_]
         B[ct_, x_], B[ct_, px_]       = eta[px_], -eta[x_]
 
-        A_inv = A_inv @ np.linalg.inv(B)
+        A = B @ A
 
-    return A_inv, v1
+    return A, u1
