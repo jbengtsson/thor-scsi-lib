@@ -490,7 +490,7 @@ def compute_A_inv_with_dispersion(
     return A_inv, v
 
 
-def compute_A_prev(n_dof, eta, u):
+def compute_A(n_dof, eta, u):
     """
 
     Original version thanks to Johan
@@ -523,11 +523,11 @@ def compute_A_prev(n_dof, eta, u):
         [A[:n, 2*i], A[:n, 2*i+1]] = [u1[:, 2*i].real, u1[:, 2*i].imag]
 
     if n_dof == 2:
-        # If coasting beam translate to momentum dependent fix point.
-        delta_ = tslib.phase_space_index_internal.delta
+        # For coasting beam translate to momentum dependent fix point.
         x_     = tslib.phase_space_index_internal.x
         px_    = tslib.phase_space_index_internal.px
         ct_    = tslib.phase_space_index_internal.ct
+        delta_ = tslib.phase_space_index_internal.delta
 
         B = np.identity(6)
         B[x_, delta_], B[px_, delta_] = eta[x_], eta[px_]
@@ -535,4 +535,6 @@ def compute_A_prev(n_dof, eta, u):
 
         A = B @ A
 
-    return A, u1
+    A_inv = np.linalg.inv(A)
+
+    return A, A_inv, u1
