@@ -68,7 +68,7 @@ import thor_scsi.lib as tslib
 from thor_scsi.utils.closed_orbit import compute_closed_orbit
 from thor_scsi.utils.output import vec2txt, mat2txt
 from thor_scsi.utils.linear_optics import compute_dispersion, compute_A_CS
-from thor_scsi.utils.linalg import compute_A_prev, omega_block_matrix
+from thor_scsi.utils.linalg import compute_A, omega_block_matrix
 
 
 X_ = 0
@@ -228,10 +228,16 @@ calc_config = tslib.ConfigType()
 
 calc_config.radiation = True
 calc_config.emittance = False
-calc_config.Cavity_on = not True
+calc_config.Cavity_on = True
 
-print("\ncalc_config:\n [radiation, emittance, Cavity_on] = ",
-      calc_config.radiation, calc_config.emittance, calc_config.Cavity_on)
+print(
+    "calc_config",
+    calc_config.radiation,
+    calc_config.emittance,
+    calc_config.Cavity_on,
+)
+
+debug_prt = False
 
 calc_config.Energy = energy
 
@@ -253,20 +259,64 @@ exit()
 
 r = compute_closed_orbit(acc, calc_config, delta=0e0)
 M = r.one_turn_map[:6, :6]
-# print("\nM:\n" + mat2txt(M))
-tune_x, tune_y, tune_long = calculate_nu_symp(3, M)
+print("\nM:\n"+mat2txt(M))
 
-print(f"\n{tune_x=:.16f} {tune_y=:.16f} {tune_long=:.16f}")
+nu_symp = calculate_nu_symp(dof, M)
+# Diagonalise M.
+[w, u] = np.linalg.eig(M[:n, :n])
 
-exit()
+nu_eig = np.zeros(n)
+for k in range(n):
+    nu_eig[k] = acos2(w[k].imag, w[k].real)/(2e0*np.pi)
 
-# r = calculate_radiation(
-#     acc, energy=2.5e9, calc_config=calc_config, install_radiators=True
-# )
+if debug_prt:
+    print("\nu:\n"+mat2txt(u))
+    print("\nnu_symp:\n"+vec2txt(nu_symp))
+    print("\nnu_eig:\n"+vec2txt(nu_eig))
+    print("\nlambda:\n"+vec2txt(w))
+    # print("\nu:\n"+mat2txt(u))
 
-compute_M_diag(dof, M)
+order = sort_eigen_vec(dof, nu_symp, w)
 
-# exit()
+w_ord = np.zeros(n, complex)
+u_ord = np.zeros((n, n), complex)
+nu_eig_ord = np.zeros(n, float)
+for k in range(n):
+    w_ord[k]      = w[order[k]]
+    u_ord[:, k]   = u[:, order[k]]
+    nu_eig_ord[k] = acos2(w_ord[k].imag, w_ord[k].real)/(2e0*np.pi)
+
+if debug_prt:
+    print("\norder:\n", order)
+    print("\nnu_eig_ord:\n"+vec2txt(nu_eig_ord))
+    print("\nlambda_ord:\n"+vec2txt(w_ord))
+    # print("\nu_ord:\n"+mat2txt(u_ord))
+    print("\nu_ord^-1.M.u_ord:\n"+mat2txt(
+        chop_cmplx_mat(np.linalg.inv(u_ord) @ M[:n, :n] @ u_ord, 1e-15)))
+
+eta = compute_dispersion(M)
+
+if debug_prt:
+    print("\neta:\n", eta)
+
+[A, A_inv, u1] = compute_A(dof, eta, u_ord)
+
+if debug_prt:
+    print("\nu1:\n"+mat2txt(u1))
+    print("\nu1^-1.M.u1:\n"+mat2txt(
+        chop_cmplx_mat(np.linalg.inv(u1) @ M[:n, :n] @ u1, 1e-13)))
+    print("\nu1^T.omega.u1:\n"+mat2txt(
+        chop_cmplx_mat(u1.T @ omega_block_matrix(dof) @ u1, 1e-13)))
+    print("\nA:\n"+mat2txt(chop_mat(A_inv, 1e-13)))
+    print("\nA^T.omega.A:\n"+mat2txt(chop_mat(
+        A[:n, :n].T @ omega_block_matrix(dof) @ A[:n, :n], 1e-13)))
+
+print("\nA_CS:\n"+mat2txt(chop_mat(compute_A_CS(dof, A)[0], 1e-10)))
+print("\nR:\n"+mat2txt(chop_mat(A_inv @ M @ A, 1e-10)))
+
+r = calculate_radiation(
+    acc, energy=2.5e9, calc_config=calc_config, install_radiators=True
+)
 
 
 use_tpsa = True
