@@ -27,7 +27,7 @@ import thor_scsi.lib as tslib
 from thor_scsi.utils.closed_orbit import compute_closed_orbit
 from thor_scsi.utils.output import vec2txt, mat2txt
 from thor_scsi.utils.linear_optics import compute_dispersion, compute_A_CS
-from thor_scsi.utils.linalg import compute_A_prev, omega_block_matrix
+from thor_scsi.utils.linalg import compute_A, omega_block_matrix
 
 
 X_ = 0
@@ -166,7 +166,7 @@ calc_config = tslib.ConfigType()
 calc_config.radiation = radiate
 # is this used anywhere?
 calc_config.emittance = False
-calc_config.Cavity_on = not True
+calc_config.Cavity_on = True
 
 print(
     "calc_config",
@@ -175,7 +175,7 @@ print(
     calc_config.Cavity_on,
 )
 
-debug_prt = not False
+debug_prt = False
 
 calc_config.Energy = 2.5e9
 
@@ -210,8 +210,8 @@ w_ord = np.zeros(n, complex)
 u_ord = np.zeros((n, n), complex)
 nu_eig_ord = np.zeros(n, float)
 for k in range(n):
-    w_ord[k] = w[order[k]]
-    u_ord[:, k] = u[:, order[k]]
+    w_ord[k]      = w[order[k]]
+    u_ord[:, k]   = u[:, order[k]]
     nu_eig_ord[k] = acos2(w_ord[k].imag, w_ord[k].real)/(2e0*np.pi)
 
 if debug_prt:
@@ -227,8 +227,7 @@ eta = compute_dispersion(M)
 if debug_prt:
     print("\neta:\n", eta)
 
-[A, u1] = compute_A_prev(dof, eta, u_ord)
-A_inv = np.linalg.inv(A)
+[A, A_inv, u1] = compute_A(dof, eta, u_ord)
 
 if debug_prt:
     print("\nu1:\n"+mat2txt(u1))
@@ -242,8 +241,6 @@ if debug_prt:
 
 print("\nA_CS:\n"+mat2txt(chop_mat(compute_A_CS(dof, A)[0], 1e-10)))
 print("\nR:\n"+mat2txt(chop_mat(A_inv @ M @ A, 1e-10)))
-
-exit()
 
 r = calculate_radiation(
     acc, energy=2.5e9, calc_config=calc_config, install_radiators=True

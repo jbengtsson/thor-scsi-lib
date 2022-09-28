@@ -187,9 +187,7 @@ def calculate_radiation(
     eta = lo.compute_dispersion(M)
     print(eta)
     # eta = np.zeros(6, np.float)
-    A_inv, v1 = linalg.compute_A_inv_prev(dof, eta, v_ord)
-    # A_inv, v1 = lo.compute_A_inv_with_dispersion(v_ord, eta, n_dof=dof)
-    A = np.linalg.inv(A_inv)
+    A, A_inv, v1 = linalg.compute_A(dof, eta, v_ord)
     print("\nA:")
     print(mat2txt(A))
     return
