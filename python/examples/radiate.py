@@ -66,8 +66,8 @@ import thor_scsi.lib as tslib
 
 # from thor_scsi.utils.linalg import match_eigenvalues_to_plane_orig
 from thor_scsi.utils.closed_orbit import compute_closed_orbit
-from thor_scsi.utils.output import vec2txt, mat2txt
-from thor_scsi.utils.linear_optics import compute_M_diag
+from thor_scsi.utils.output import vec2txt, mat2txt, chop_array
+from thor_scsi.utils.linear_optics import compute_M_diag, calculate_nu_symp
 
 
 t_dir = os.path.join(os.environ["HOME"], "Nextcloud", "thor_scsi")
@@ -92,42 +92,30 @@ energy = 2.5e9
 # cav.setVoltage(0)
 cav = acc.find("cav", 0)
 print("acc cavity", repr(cav))
-txt=\
-    f"""Cavity info
+txt = f"""Cavity info
 frequency         {cav.getFrequency()/1e6} MHz",
 voltage           {cav.getVoltage()/1e6} MV
 harmonic number   {cav.getHarmonicNumber()}
     """
 print(txt)
 
-# cav.setVoltage(cav.getVoltage() * 1./2.)
-# cav.setVoltage(0)
-print("\nCavity", repr(cav))
-txt = f"""\nCavity info:
-  f [MHz] {1e-6*cav.getFrequency()}",
-  V [MV]  {1e-6*cav.getVoltage()}
-  h       {cav.getHarmonicNumber()}
-"""
-print(txt)
-
-mbb = acc.find("mbb", 0)
-print("{:s}: N = {:d}".
-      format(mbb.name, mbb.getNumberOfIntegrationSteps()))
-
 # Install radiators that radiation is calculated
 rad_del_kicks = instrument_with_radiators(acc, energy=energy)
 
+radiate = False
 calc_config = tslib.ConfigType()
 
 calc_config.radiation = True
 calc_config.emittance = False
 calc_config.Cavity_on = True
 
+print("\n\nradiation ON")
+calc_config.radiation = True
+calc_config.emittance = False
+calc_config.Cavity_on = True
+
 print(
-    "calc_config",
-    calc_config.radiation,
-    calc_config.emittance,
-    calc_config.Cavity_on,
+    "calc_config", calc_config.radiation, calc_config.emittance, calc_config.Cavity_on
 )
 
 debug_prt = False
@@ -152,15 +140,21 @@ exit()
 
 r = compute_closed_orbit(acc, calc_config, delta=0e0)
 M = r.one_turn_map[:6, :6]
-print("\nM:\n"+mat2txt(M))
+# print("\nM:\n" + mat2txt(M))
+tune_x, tune_y, tune_long = calculate_nu_symp(3, M)
 
-compute_M_diag(dof, M)
+print(f"\n{tune_x=:.16f} {tune_y=:.16f} {tune_long=:.16f}")
 
 exit()
 
-r = calculate_radiation(
-    acc, energy=2.5e9, calc_config=calc_config, install_radiators=True
-)
+# r = calculate_radiation(
+#     acc, energy=2.5e9, calc_config=calc_config, install_radiators=True
+# )
+
+compute_M_diag(dof, M)
+
+# exit()
+
 
 
 use_tpsa = True

@@ -30,7 +30,7 @@ X_, Y_, Z_ = [
     tslib.phase_space_index_internal.y,
     tslib.phase_space_index_internal.py,
     tslib.phase_space_index_internal.ct,
-    tslib.phase_space_index_internal.delta
+    tslib.phase_space_index_internal.delta,
 ]
 
 
