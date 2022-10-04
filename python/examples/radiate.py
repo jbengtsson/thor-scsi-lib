@@ -7,9 +7,10 @@ from thor_scsi.lib import (
     ss_vect_double,
     RadiationDelegate,
     RadiationDelegateKick,
-    phase_space_ind,
     ObservedState
 )
+from thor_scsi.lib import phase_space_index_internal as phase_space_ind
+
 import os
 
 t_dir = os.path.join(os.environ["HOME"], "Nextcloud", "thor_scsi")
