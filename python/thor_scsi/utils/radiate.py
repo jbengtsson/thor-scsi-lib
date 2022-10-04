@@ -54,28 +54,28 @@ def calculate_radiation(
 
     """
 
-    if install_radiators:
-        logger.debug("Installing radiators")
-        # keep variable as long as you need to do calculations
-        rad_del = instrument_with_radiators(acc, energy=energy)
-
-    if calc_config is None:
-        raise AssertionError
-        calc_config = tslib.ConfigType()
-        calc_config.radiation = True
-        # is this used anywhere?
-        calc_config.emittance = False
-        calc_config.Cavity_on = True
-
     calc_config.Energy = energy
     logger.debug(
         f"calc_config radiation { calc_config.radiation} emmittance {calc_config.emittance} Cavity on {calc_config.Cavity_on}"
     )
 
+    if install_radiators:
+        logger.debug("Installing radiators")
+        # keep variable as long as you need to do calculations
+        rad_del = instrument_with_radiators(acc, energy=energy)
+
+    if not calc_config:
+        calc_config = tslib.ConfigType()
+        calc_config.radiation = True
+        # is this used anywhere?
+        calc_config.emittance = True
+        calc_config.Cavity_on = True
+
     # Compute the fixed point ... radation is on
     r = compute_closed_orbit(acc, calc_config, delta=0e0)
     print("r.one_turn_map")
     print(mat2txt(r.one_turn_map))
+
     # diagonalise M
     n = 2 * dof
     M_tp = np.transpose(r.one_turn_map[:n, :n])
@@ -85,12 +85,22 @@ def calculate_radiation(
     w, v = np.linalg.eig(M_tp)
     print("v")
     print(mat2txt(v))
+
     w, v = linalg.match_eigenvalues_to_plane(M_tp, w, v, n_dof=dof)
     print("v matched to planes ?")
     print(mat2txt(v))
     # print(mat2txt(M_t))
     eta = np.zeros(6, np.float)
     A_inv, v1 = linalg.compute_A_inv_prev(dof, eta, v)
+
+    # w, v = linalg.match_eigenvalues_to_plane_orig(M_tp, w, v, n_dof=dof)
+    # print("v matched to planes ?")
+    # print(mat2txt(v))
+    print("M_tp")
+    print(mat2txt(M_tp))
+    eta = np.zeros(6, np.float)
+    A_inv, v1 = linalg.compute_A_inv_prev(dof, eta, v)
+
 
     A = np.linalg.inv(A_inv)
 
@@ -99,6 +109,7 @@ def calculate_radiation(
     print("Atmp ")
     print(mat2txt(Atmp))
     # Atmp[[2, 3, 4, 5], :] = Atmp[[4, 5, 2, 3], :]
+    Atmp[[2,3,4,5], :] = Atmp[[4,5,2,3],:]
     print("Atmp resuffled")
     print(mat2txt(Atmp))
     Ap = array2ss_vect_tps(Atmp)
