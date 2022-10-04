@@ -2,6 +2,10 @@ include(../../cmake/gpp_warnings.cmake)
 
 add_subdirectory(core)
 
+add_compile_definitions(
+  GTSPA_ONLY_OPTIMISED_OPS
+  )
+
 if(FLAME_INTERNAL)
     set(flame_INCLUDE_DIR "${flame_SOURCE_DIR}/src/")
     message(STATUS "Using internal flame from subdirectory flame include dir ${flame_INCLUDE_DIR}")
@@ -116,6 +120,7 @@ target_link_libraries(thor_scsi_core
 set_target_properties(thor_scsi_core
   PROPERTIES
     SOVERSION 0
+    LIBRARY_OUTPUT_NAME thor_scsi_core_gtpsa
 )
 
 
@@ -137,6 +142,11 @@ target_include_directories(thor_scsi
     "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )
 
+set_target_properties(thor_scsi
+  PROPERTIES
+    SOVERSION 0
+    LIBRARY_OUTPUT_NAME thor_scsi_gtpsa
+)
 
 add_executable(test_transform_phase_space
   core/test_transform_phase_space.cc
