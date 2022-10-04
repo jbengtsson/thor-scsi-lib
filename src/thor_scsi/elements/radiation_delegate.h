@@ -47,6 +47,11 @@ namespace thor_scsi::elements {
 		int delegator_index = -1;
 	};
 
+	/**
+	 *
+	 * @note synchrotron integrals are not used nor has their
+	 *       functionality been checked
+	 */
 	class RadiationDelegateKick: public  RadiationDelegateKickInterface{
 	public:
 		RadiationDelegateKick(void){
@@ -70,6 +75,10 @@ namespace thor_scsi::elements {
 
 		// should be renamed to diffusion coefficient ...
 		// add in coment that it is a prerequisite for emittance calculations
+		/*
+		 * @brief computing diffusion coefficients
+		 * @todo review if it would be a better approach to store B66
+		 */
 		inline void computeDiffusion(const bool flag){
 			this->compute_diffusion = flag;
 		}
