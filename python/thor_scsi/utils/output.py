@@ -17,6 +17,36 @@ def sign(x: float) -> int:
         return 0
 
 
+def chop_vec(vec, eps):
+    for k in range(vec.size):
+        if np.abs(vec[k]) < eps:
+            vec[k] = 0e0
+    return vec
+
+
+def chop_mat(mat, eps):
+    for k in range(mat[:, 0].size):
+        chop_vec(mat[k, :], eps)
+    return mat
+
+
+def chop_cmplx_vec(vec, eps):
+    for k in range(vec.size):
+        [x, y] = [vec[k].real, vec[k].imag]
+        if np.abs(x) < eps:
+            x = 0e0
+        if np.abs(y) < eps:
+            y = 0e0
+        vec[k] = complex(x, y)
+    return vec
+
+
+def chop_cmplx_mat(mat, eps):
+    for k in range(mat[:, 0].size):
+        chop_cmplx_vec(mat[k, :], eps)
+    return mat
+
+
 def complex2txt(val: complex) -> str:
     """Convert a complex number to text
 
