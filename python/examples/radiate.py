@@ -11,6 +11,8 @@ logger.setLevel("DEBUG")
 # Levels: DEBUG, INFO, WARNING, ERROR, and CRITICAL.
 
 from thor_scsi.factory import accelerator_from_config
+from thor_scsi.utils.accelerator import instrument_with_radiators
+
 from thor_scsi.lib import (
     ConfigType,
     ss_vect_tps,
