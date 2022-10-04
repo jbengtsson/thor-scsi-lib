@@ -449,7 +449,7 @@ thinKickAndRadiate(const thor_scsi::core::ConfigType &conf,
 	}
 	*/
 
-	// THOR_SCSI_LOG(DEBUG) << "\n  thinKickAndRadiate ->: ps = " << ps << "\n";
+	THOR_SCSI_LOG(DEBUG) << "\n  thinKickAndRadiate ->: ps = " << ps << "\n";
 
 	intp.field(ps[x_], ps[y_], &BxoBrho, &ByoBrho);
 
@@ -465,7 +465,7 @@ thinKickAndRadiate(const thor_scsi::core::ConfigType &conf,
 	}
 	tse::thin_kick(conf, BxoBrho, ByoBrho, L, h_bend, h_ref, ps0, ps);
 
-	// THOR_SCSI_LOG(DEBUG) << "\n<- thinKickAndRadiate: ps = " << ps << "\n";
+	THOR_SCSI_LOG(DEBUG) << "\n<- thinKickAndRadiate: ps = " << ps << "\n";
 }
 
 /**

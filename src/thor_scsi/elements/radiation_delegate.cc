@@ -340,13 +340,6 @@ void tse::RadiationDelegateKick::radiate(const thor_scsi::core::ConfigType &conf
 	  C_gamma * cube(this->energy * energy_scale) / (2e0 * M_PI);
 
 	if (radiation) {
-		THOR_SCSI_LOG(INFO)
-		  <<  "\nRadiation computation:\n"
-		  << "  cl_rad  = " << cl_rad << "\n"
-		  << "  B2_perp = " << B2_perp << "\n"
-		  << "  L       = " << L << "\n"
-		  << "  E       = " << this->getEnergy() << "\n";
-
 		ps[delta_] -= cl_rad*sqr(p_s0)*B2_perp*ds;
 		T p_s1 = get_p_s(conf, ps);
 		ps[px_] = cs[px_]*p_s1;
