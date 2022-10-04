@@ -24,6 +24,7 @@ from thor_scsi.lib import (
 )
 from thor_scsi.lib import phase_space_index_internal as phase_space_ind
 
+<<<<<<< HEAD
 logging.basicConfig(level="DEBUG")
 =======
 import xarray as xr
@@ -33,6 +34,8 @@ logging.basicConfig(level="DEBUG")
 from thor_scsi.factory import accelerator_from_config
 from thor_scsi.utils.accelerator import instrument_with_radiators
 from thor_scsi.utils.radiate import calculate_radiation
+=======
+>>>>>>> Enum renamed, updated radiate.py.
 import os
 import numpy as np
 
@@ -41,7 +44,6 @@ import scipy as sp
 
 import thor_scsi.lib as tslib
 
-<<<<<<< HEAD
 # from thor_scsi.utils.linalg import match_eigenvalues_to_plane_orig
 from thor_scsi.utils.closed_orbit import compute_closed_orbit
 from thor_scsi.utils.output import vec2txt, mat2txt, chop_array
@@ -64,15 +66,12 @@ x_, px_, y_, py_, ct_, delta_ = [
 ]
 
 
-=======
->>>>>>> utils:
 t_dir = os.path.join(os.environ["HOME"], "Nextcloud", "thor_scsi")
 # t_file = os.path.join(t_dir, "b3_tst.lat")
 t_file = os.path.join(t_dir, "b3_sf_40Grad_JB.lat")
 
 acc = accelerator_from_config(t_file)
 print(" ".join([elem.name for elem in acc]))
-<<<<<<< HEAD
 print("\nC = ", np.sum([elem.getLength() for elem in acc]))
 
 # b2 = acc.find("b2", 0)
@@ -119,18 +118,10 @@ calc_config = tslib.ConfigType()
 calc_config.radiation = True
 calc_config.emittance = False
 calc_config.Cavity_on = True
-=======
-print("Length", np.sum([elem.getLength() for elem in acc]))
-
-b2 = acc.find("b2", 0)
-
-energy = 2.5e9
->>>>>>> utils:
 
 print("\ncalc_config:\n [radiation, emittance, Cavity_on] = ",
       calc_config.radiation, calc_config.emittance, calc_config.Cavity_on)
 
-<<<<<<< HEAD
 calc_config.Energy = energy
 
 if calc_config.Cavity_on == True:
@@ -146,38 +137,6 @@ ps[delta_] =  0e-6
 print("\nps_0 = ", ps)
 acc.propagate(calc_config, ps, 8, 8)
 print("ps_1 = ", ps)
-=======
-# cav.setVoltage(cav.getVoltage() * 1./2.)
-# cav.setVoltage(0)
-cav = acc.find("cav", 0)
-print("acc cavity", repr(cav))
-txt=\
-    f"""Cavity info
-frequency         {cav.getFrequency()/1e6} MHz",
-voltage           {cav.getVoltage()/1e6} MV
-harmonic number   {cav.getHarmonicNumber()}
-    """
-print(txt)
-
-radiate = True
-if radiate:
-    calc_config = tslib.ConfigType()
-    calc_config.radiation = True
-    # is this used anywhere?
-    calc_config.emittance = False
-    calc_config.Cavity_on = True
-
-    print(
-        "calc_config",
-        calc_config.radiation,
-        calc_config.emittance,
-        calc_config.Cavity_on,
-    )
-
-    r = calculate_radiation(
-        acc, energy=2.5e9, calc_config=calc_config, install_radiators=True
-    )
->>>>>>> utils:
 
 exit()
 
