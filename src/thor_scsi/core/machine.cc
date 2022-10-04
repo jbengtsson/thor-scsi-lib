@@ -139,7 +139,7 @@ tsc::Machine::Machine(const Config& c)
     G.unlock();
 
     this->updateElementList(result);
-    THOR_SCSI_LOG(DEBUG)<<"Complete constructing Machine";
+    THOR_SCSI_LOG(DEBUG) << "\nLattice:";
 }
 
 //! Elements with a given name
@@ -300,7 +300,11 @@ struct Logcerr : public tsc::Machine::Logger
 Logcerr Logcerr::singleton;
 }
 
+#if 1
+int tsc::Machine::log_detail = THOR_SCSI_DEBUG;
+#else
 int tsc::Machine::log_detail = THOR_SCSI_WARN;
+#endif
 std::shared_ptr<tsc::Machine::Logger> tsc::Machine::p_logger(&Logcerr::singleton, Logcerr::noopdtor);
 
 void tsc::Machine::set_logger(const std::shared_ptr<Logger> &p)

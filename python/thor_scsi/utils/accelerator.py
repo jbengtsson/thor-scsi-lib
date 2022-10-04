@@ -53,9 +53,8 @@ def instrument_with_radiators(
 
     elems = [elem for elem in acc if isinstance(elem, (tslib.Mpole,))]
     logger.info(
-        "Radiators added to following elements:'{}'".format(
-            ", ".join([e.name for e in elems])
-        )
+        "\nRadiators added to:\n({})".
+        format(", ".join([e.name for e in elems]))
     )
 
     rad_del_kick = [tslib.RadiationDelegateKick() for elem in elems]
