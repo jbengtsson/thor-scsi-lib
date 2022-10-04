@@ -102,7 +102,7 @@ inline void tse::RadiationDelegateKick::diffusion(const tps &B2_perp,  const tps
 		A_inv = Inv(A);
 		// D_11 = D_22 = curly_H_x,y * B_66 / 2,
 		// curly_H_x,y = eta_Fl^2 + etap_Fl^2
-		for (j = 0; j < 3; j++){
+		for (j = 0; j < 3; ++j){
 			this->D_rad[j] +=
 				(sqr(A_inv[j*2][delta_])+sqr(A_inv[j*2+1][delta_]))*B_66/2e0;
 		}
