@@ -66,7 +66,8 @@ namespace thor_scsi::elements{
 		if (!conf.H_exact) {
 			// Small angle axproximation.
 			u = L/(1e0+ps[delta_]);
-			ps[x_]  += u*ps[px_]; ps[y_] += u*ps[py_];
+			ps[x_]  += u*ps[px_];
+			ps[y_]  += u*ps[py_];
 			ps[ct_] += u*(sqr(ps[px_])+sqr(ps[py_]))/(2e0*(1e0+ps[delta_]));
 		} else {
 			u = L/tse::get_p_s(conf, ps);

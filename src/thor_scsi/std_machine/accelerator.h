@@ -3,7 +3,7 @@
 
 #include <thor_scsi/core/machine.h>
 #include <tps/tps_type.h>
-#include <tps/ss_vect.h>
+// #include <tps/ss_vect.h>
 
 namespace thor_scsi {
 

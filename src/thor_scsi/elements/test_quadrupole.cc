@@ -12,6 +12,9 @@
 namespace tsc = thor_scsi::core;
 namespace tse = thor_scsi::elements;
 
+auto desc = std::make_shared<gtpsa::desc>(6, 6);
+const auto t_ref = gtpsa::tpsa(desc, 1);
+
 static void check_only_quad_set(std::shared_ptr<tsc::TwoDimensionalMultipoles> muls, const tsc::cdbl ref)
 {
 	check_only_major_multipole_set(muls, ref, 2);
@@ -160,19 +163,34 @@ BOOST_AUTO_TEST_CASE(test20_quadrupole_thin_eval)
 
 		/* no multipole */
 		for(int i = -1; i <= 1; ++i){
-			gtpsa::ss_vect<double> ps{0,0,0,0,0,0};
 			const double x = i;
-			ps[x_] = x;
 
+			gtpsa::ss_vect<double> ps{0,0,0,0,0,0};
+			ps[x_] = x;
 
 			quad.propagate(calc_config, ps);
 
-			BOOST_CHECK_CLOSE(ps[x_],     x, 1e-14);
-			BOOST_CHECK_SMALL(ps[y_],        1e-14);
-			BOOST_CHECK_SMALL(ps[px_],       1e-14);
-			BOOST_CHECK_SMALL(ps[py_],       1e-14);
-			BOOST_CHECK_SMALL(ps[ct_],       1e-14);
-			BOOST_CHECK_SMALL(ps[delta_],    1e-14);
+			BOOST_CHECK_CLOSE(ps[x_],      x, 1e-14);
+			BOOST_CHECK_SMALL(ps[y_],         1e-14);
+			BOOST_CHECK_SMALL(ps[px_],        1e-14);
+			BOOST_CHECK_SMALL(ps[py_],        1e-14);
+			BOOST_CHECK_SMALL(ps[ct_],        1e-14);
+			BOOST_CHECK_SMALL(ps[delta_],     1e-14);
+
+
+			gtpsa::ss_vect<gtpsa::tpsa> tps(t_ref);
+			tps[x_] = x;
+
+			quad.propagate(calc_config, ps);
+
+			auto cst = tps.cst();
+			BOOST_CHECK_CLOSE(cst[x_],     x, 1e-14);
+			BOOST_CHECK_SMALL(cst[y_],        1e-14);
+			BOOST_CHECK_SMALL(cst[px_],       1e-14);
+			BOOST_CHECK_SMALL(cst[py_],       1e-14);
+			BOOST_CHECK_SMALL(cst[ct_],       1e-14);
+			BOOST_CHECK_SMALL(cst[delta_],    1e-14);
+
 		}
 	}
 
@@ -187,12 +205,22 @@ BOOST_AUTO_TEST_CASE(test20_quadrupole_thin_eval)
 		gtpsa::ss_vect<double> ps{0,0,0,0,0,0};;
 		quad.propagate(calc_config, ps);
 
-		BOOST_CHECK_SMALL(ps[x_],     1e-14);
-		BOOST_CHECK_SMALL(ps[y_],     1e-14);
-		BOOST_CHECK_SMALL(ps[px_],    1e-14);
-		BOOST_CHECK_SMALL(ps[py_],    1e-14);
-		BOOST_CHECK_SMALL(ps[ct_],    1e-14);
-		BOOST_CHECK_SMALL(ps[delta_], 1e-14);
+		BOOST_CHECK_SMALL(ps[x_],      1e-14);
+		BOOST_CHECK_SMALL(ps[y_],      1e-14);
+		BOOST_CHECK_SMALL(ps[px_],     1e-14);
+		BOOST_CHECK_SMALL(ps[py_],     1e-14);
+		BOOST_CHECK_SMALL(ps[ct_],     1e-14);
+		BOOST_CHECK_SMALL(ps[delta_],  1e-14);
+
+		gtpsa::ss_vect<gtpsa::tpsa> tps(t_ref);
+		auto cst = tps.cst();
+		BOOST_CHECK_SMALL(cst[x_],     1e-14);
+		BOOST_CHECK_SMALL(cst[y_],     1e-14);
+		BOOST_CHECK_SMALL(cst[px_],    1e-14);
+		BOOST_CHECK_SMALL(cst[py_],    1e-14);
+		BOOST_CHECK_SMALL(cst[ct_],    1e-14);
+		BOOST_CHECK_SMALL(cst[delta_], 1e-14);
+
 	}
 
 	{
@@ -207,16 +235,30 @@ BOOST_AUTO_TEST_CASE(test20_quadrupole_thin_eval)
 			}
 
 			const double x = i;
-			gtpsa::ss_vect<double> ps({double(i), 0e0, 0e0, 0e0, 0e0, 0e0});
+			gtpsa::ss_vect<double> ps({x, 0e0, 0e0, 0e0, 0e0, 0e0});
 
 			quad.propagate(calc_config, ps);
 
-			BOOST_CHECK_CLOSE(ps[px_],  - x* grad, 1e-12);
-			BOOST_CHECK_CLOSE(ps[x_],           x, 1e-14);
-			BOOST_CHECK_SMALL(ps[y_],              1e-14);
-			BOOST_CHECK_SMALL(ps[py_],             1e-14);
-			BOOST_CHECK_SMALL(ps[ct_],             1e-14);
-			BOOST_CHECK_SMALL(ps[delta_],          1e-14);
+			BOOST_CHECK_CLOSE(ps [px_],  - x* grad, 1e-12);
+			BOOST_CHECK_CLOSE(ps [x_],           x, 1e-14);
+			BOOST_CHECK_SMALL(ps [y_],              1e-14);
+			BOOST_CHECK_SMALL(ps [py_],             1e-14);
+			BOOST_CHECK_SMALL(ps [ct_],             1e-14);
+			BOOST_CHECK_SMALL(ps [delta_],          1e-14);
+
+
+			gtpsa::ss_vect<gtpsa::tpsa> tps(t_ref);
+			tps[x_] = x;
+			BOOST_CHECK_CLOSE(tps[x_].cst(), x, 1e-12);
+			auto cst = tps.cst();
+
+			BOOST_CHECK_CLOSE(cst[px_],  - x* grad, 1e-12);
+			BOOST_CHECK_CLOSE(cst[x_],           x, 1e-14);
+			BOOST_CHECK_SMALL(cst[y_],              1e-14);
+			BOOST_CHECK_SMALL(cst[py_],             1e-14);
+			BOOST_CHECK_SMALL(cst[ct_],             1e-14);
+			BOOST_CHECK_SMALL(cst[delta_],          1e-14);
+
 		}
 	}
 
@@ -233,16 +275,28 @@ BOOST_AUTO_TEST_CASE(test20_quadrupole_thin_eval)
 			}
 
 			const double x = i;
-			gtpsa::ss_vect<double> ps({double(i), 0e0, 0e0, 0e0, 0e0, 0e0});
+			gtpsa::ss_vect<double> ps({x, 0e0, 0e0, 0e0, 0e0, 0e0});
 
 			quad.propagate(calc_config, ps);
 
-			BOOST_CHECK_CLOSE(ps[py_], x * grad, 1e-12);
-			BOOST_CHECK_CLOSE(ps[x_],         x, 1e-14);
-			BOOST_CHECK_SMALL(ps[y_],            1e-14);
-			BOOST_CHECK_SMALL(ps[px_],           1e-14);
-			BOOST_CHECK_SMALL(ps[ct_],           1e-14);
-			BOOST_CHECK_SMALL(ps[delta_],        1e-14);
+			BOOST_CHECK_CLOSE(ps [py_], x * grad, 1e-12);
+			BOOST_CHECK_CLOSE(ps [x_],         x, 1e-14);
+			BOOST_CHECK_SMALL(ps [y_],            1e-14);
+			BOOST_CHECK_SMALL(ps [px_],           1e-14);
+			BOOST_CHECK_SMALL(ps [ct_],           1e-14);
+			BOOST_CHECK_SMALL(ps [delta_],        1e-14);
+
+
+			gtpsa::ss_vect<gtpsa::tpsa> tps(t_ref);
+			tps[x_] = x;
+			auto cst = tps.cst();
+
+			BOOST_CHECK_CLOSE(cst[py_], x * grad, 1e-12);
+			BOOST_CHECK_CLOSE(cst[x_],         x, 1e-14);
+			BOOST_CHECK_SMALL(cst[y_],            1e-14);
+			BOOST_CHECK_SMALL(cst[px_],           1e-14);
+			BOOST_CHECK_SMALL(cst[ct_],           1e-14);
+			BOOST_CHECK_SMALL(cst[delta_],        1e-14);
 		}
 	}
 }
@@ -287,14 +341,28 @@ BOOST_AUTO_TEST_CASE(test20_quadrupole_typical_length_eval)
 			ps[x_] = xs;
 			quad.propagate(calc_config, ps);
 
-			BOOST_CHECK_CLOSE(ps[px_],  By, 2);
-			BOOST_CHECK_CLOSE(ps[x_],   xe, 0.5);
-			BOOST_WARN_CLOSE(ps[px_],   By, 1.8);
-			BOOST_WARN_CLOSE(ps[x_],    xe, 0.06);
+			BOOST_CHECK_CLOSE(ps[px_],   By, 2);
+			BOOST_CHECK_CLOSE(ps[x_],    xe, 0.5);
+			BOOST_WARN_CLOSE( ps[px_],   By, 1.8);
+			BOOST_WARN_CLOSE( ps[x_],    xe, 0.06);
 			BOOST_CHECK_SMALL(ps[ct_],       4e-5);
 			BOOST_CHECK_SMALL(ps[y_],        1e-14);
 			BOOST_CHECK_SMALL(ps[py_],       1e-14);
 			BOOST_CHECK_SMALL(ps[delta_],    1e-14);
+
+			gtpsa::ss_vect<gtpsa::tpsa> tps(t_ref);
+			tps[x_] = xs;
+			auto cst = tps.cst();
+
+			BOOST_CHECK_CLOSE(cst[px_],   By, 2);
+			BOOST_CHECK_CLOSE(cst[x_],    xe, 0.5);
+			BOOST_WARN_CLOSE( cst[px_],   By, 1.8);
+			BOOST_WARN_CLOSE( cst[x_],    xe, 0.06);
+			BOOST_CHECK_SMALL(cst[ct_],       4e-5);
+			BOOST_CHECK_SMALL(cst[y_],        1e-14);
+			BOOST_CHECK_SMALL(cst[py_],       1e-14);
+			BOOST_CHECK_SMALL(cst[delta_],    1e-14);
+
 		}
 	}
 }
