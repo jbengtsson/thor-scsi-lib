@@ -17,7 +17,11 @@ import logging
 logger = logging.getLogger("thor_scsi")
 
 
-[X_, Y_, Z_] = [0, 1, 2]
+X_, Y_, Z_ = [
+    tslib.spatial_index.X,
+    tslib.spatial_index.Y,
+    tslib.spatial_index.Z
+]
 
 [x_, px_, y_, py_, ct_, delta_] = [
     tslib.phase_space_index_internal.x,
@@ -25,7 +29,7 @@ logger = logging.getLogger("thor_scsi")
     tslib.phase_space_index_internal.y,
     tslib.phase_space_index_internal.py,
     tslib.phase_space_index_internal.ct,
-    tslib.phase_space_index_internal.delta,
+    tslib.phase_space_index_internal.delta
 ]
 
 

@@ -46,10 +46,13 @@ ts::Accelerator::_propagate(thor_scsi::core::ConfigType& conf, ss_vect<T> &ps, s
 	int next_elem = static_cast<int>(start);
 
 	for(size_t turn=0; turn<n_turns; ++turn) {
-	    //next_elem = static_cast<int>(start);
+#if 1
+	    next_elem = static_cast<int>(start-1);
+	    for(int i=start-1; next_elem >= 0 && next_elem<nelem && i<std::abs(max_elements); i++)
+#else
 	    next_elem = 0;
-	    //for(int i=start; next_elem >= 0 && next_elem<nelem && i<std::abs(max_elements); i++)
 	    for(int i=0; next_elem >= 0 && next_elem<nelem && i<std::abs(max_elements); i++)
+#endif
 	    {
 		size_t n = next_elem;
 

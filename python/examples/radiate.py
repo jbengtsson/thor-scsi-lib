@@ -4,7 +4,11 @@ import logging
 import copy
 import xarray as xr
 
-# logging.basicConfig(level="DEBUG")
+logging.basicConfig(level="DEBUG")
+logger = logging.getLogger("thor_scsi")
+print("\nlogger:\n", logger)
+logger.setLevel("DEBUG")
+# Levels: DEBUG, INFO, WARNING, ERROR, and CRITICAL.
 
 from thor_scsi.factory import accelerator_from_config
 from thor_scsi.lib import (
@@ -34,13 +38,29 @@ from thor_scsi.utils.output import vec2txt, mat2txt, chop_array
 from thor_scsi.utils.linear_optics import compute_M_diag, calculate_nu_symp
 
 
+X_, Y_, Z_ = [
+    tslib.spatial_index.X,
+    tslib.spatial_index.Y,
+    tslib.spatial_index.Z
+]
+
+x_, px_, y_, py_, ct_, delta_ = [
+    tslib.phase_space_index_internal.x,
+    tslib.phase_space_index_internal.px,
+    tslib.phase_space_index_internal.y,
+    tslib.phase_space_index_internal.py,
+    tslib.phase_space_index_internal.ct,
+    tslib.phase_space_index_internal.delta
+]
+
+
 t_dir = os.path.join(os.environ["HOME"], "Nextcloud", "thor_scsi")
 # t_file = os.path.join(t_dir, "b3_tst.lat")
 t_file = os.path.join(t_dir, "b3_sf_40Grad_JB.lat")
 
 acc = accelerator_from_config(t_file)
 print(" ".join([elem.name for elem in acc]))
-print("Length", np.sum([elem.getLength() for elem in acc]))
+print("\nC = ", np.sum([elem.getLength() for elem in acc]))
 
 # b2 = acc.find("b2", 0)
 
@@ -66,35 +86,29 @@ print(txt)
 
 # cav.setVoltage(cav.getVoltage() * 1./2.)
 # cav.setVoltage(0)
-cav = acc.find("cav", 0)
-print("acc cavity", repr(cav))
-txt = f"""Cavity info
-frequency         {cav.getFrequency()/1e6} MHz",
-voltage           {cav.getVoltage()/1e6} MV
-harmonic number   {cav.getHarmonicNumber()}
-    """
+print("\nCavity", repr(cav))
+txt = f"""\nCavity info:
+  f [MHz] {1e-6*cav.getFrequency()}",
+  V [MV]  {1e-6*cav.getVoltage()}
+  h       {cav.getHarmonicNumber()}
+"""
 print(txt)
+
+mbb = acc.find("mbb", 0)
+print("{:s}: N = {:d}".
+      format(mbb.name, mbb.getNumberOfIntegrationSteps()))
 
 # Install radiators that radiation is calculated
 rad_del_kicks = instrument_with_radiators(acc, energy=energy)
 
-radiate = False
 calc_config = tslib.ConfigType()
-calc_config.radiation = radiate
-# is this used anywhere?
-calc_config.emittance = False
-calc_config.Cavity_on = True
 
-print("\n\nradiation ON")
 calc_config.radiation = True
 calc_config.emittance = False
 calc_config.Cavity_on = True
 
-print(
-    "calc_config", calc_config.radiation, calc_config.emittance, calc_config.Cavity_on
-)
-
-debug_prt = False
+print("\ncalc_config:\n [radiation, emittance, Cavity_on] = ",
+      calc_config.radiation, calc_config.emittance, calc_config.Cavity_on)
 
 calc_config.Energy = energy
 
@@ -105,12 +119,14 @@ else:
 
 ps = tslib.ss_vect_double()
 ps.set_zero()
-print("ps start\n", ps)
-acc.propagate(calc_config, ps)
-print("ps end\n", ps)
+ps[x_]     =  0e-3
+ps[y_]     = -0e-3
+ps[delta_] =  0e-6
+print("\nps_0 = ", ps)
+acc.propagate(calc_config, ps, 8, 8)
+print("ps_1 = ", ps)
 
 exit()
-
 
 r = compute_closed_orbit(acc, calc_config, delta=0e0)
 M = r.one_turn_map[:6, :6]
@@ -143,8 +159,8 @@ else:
 # First step:
 #
 # use closed orbit
-# 1. calculate fix point and Poincarè Map M with damped system (i.e. radiation on
-#    and cavity on (without dispersion in a second case)
+# 1. calculate fix point and Poincarè Map M with damped system (i.e. radiation
+#    on and cavity on (without dispersion in a second case)
 # 2. diagonalise M = A $\Gamma$ A$^{-1}$
 # 3. eigenvalues:
 #        - complex part: tunes,
