@@ -179,13 +179,6 @@ void get_B2(const double h_ref, const std::array<T,3> B, const ss_vect<T> &xp,
   xn = 1e0/sqrt(sqr(1e0+xp[x_]*h_ref)+sqr(xp[px_])+sqr(xp[py_]));
   e[X_] = xp[px_]*xn; e[Y_] = xp[py_]*xn; e[Z_] = (1e0+xp[x_]*h_ref)*xn;
 
-  THOR_SCSI_LOG(DEBUG)
-    << "\nField contribution:\n  h_ref = " << h_ref
-    << "\n  B     = (" <<  B[X_] << ", " << B[Y_] << ", "
-    << B[Z_] << ")"
-    << "\n  e^    = (" <<  e[X_] << ", " << e[Y_] << ", " << e[Z_] <<")"
-    << "\n  x_n   = " << xn;
-
   // left-handed coordinate system
   B2_perp =
     sqr(B[Y_]*e[Z_]-B[Z_]*e[Y_]) + sqr(B[X_]*e[Y_]-B[Y_]*e[X_])
@@ -245,8 +238,13 @@ radiate(const thor_scsi::core::ConfigType &conf, ss_vect<T> &ps, const double L,
 	if(!radiation){
 	    return;
 	}
+#if 0
 	THOR_SCSI_LOG(INFO)
-	  << "\nRadiate:\n" << this->delegator_name << "\n" << "  ps = " << ps;
+	  << "\nRadiate ->:\n" << this->delegator_name << "\n" << "  ps = "
+	  << ps;
+#else
+	THOR_SCSI_LOG(INFO) << "\nRadiate ->:\n" << "\n" << "  ps = " << ps;
+#endif
 
 	if(!check_ps_finite(ps)){
 		std::stringstream strm;
@@ -276,10 +274,6 @@ radiate(const thor_scsi::core::ConfigType &conf, ss_vect<T> &ps, const double L,
 
 	// H = -p_s => ds = H*L.
 	ds = (1e0+cs[x_]*h_ref+(sqr(cs[px_])+sqr(cs[py_]))/2e0)*L;
-	THOR_SCSI_LOG(DEBUG)
-	  << "\nField contribution:\n  h_ref = " << h_ref
-	  << "\n  B     = (" <<  B[X_] << ", " << B[Y_] << ", " << B[Z_] << ")"
-	  << "\n  cs    = " <<  cs;
 	// Compute perpendicular reference curve for comoving frame.
 	get_B2(h_ref, B, cs, B2_perp, B2_par);
 
@@ -291,13 +285,6 @@ radiate(const thor_scsi::core::ConfigType &conf, ss_vect<T> &ps, const double L,
 	  C_gamma * cube(this->energy * energy_scale) / (2e0 * M_PI);
 
 	if (radiation) {
-		THOR_SCSI_LOG(INFO)
-		  <<  "\nRadiation computation:\n"
-		  << "  cl_rad  = " << cl_rad << "\n"
-		  << "  B2_perp = " << B2_perp << "\n"
-		  << "  L       = " << L << "\n"
-		  << "  E       = " << this->getEnergy() << "\n";
-
 		ps[delta_] -= cl_rad*sqr(p_s0)*B2_perp*ds;
 		p_s1 = get_p_s(conf, ps);
 		ps[px_] = cs[px_]*p_s1;
@@ -326,7 +313,13 @@ radiate(const thor_scsi::core::ConfigType &conf, ss_vect<T> &ps, const double L,
 
 		throw ts::PhysicsViolation(strm.str());
 	}
-	THOR_SCSI_LOG(INFO) << "\nps = " << ps << " \n";
+#if 0
+	THOR_SCSI_LOG(INFO)
+	  << "\nRadiate ->:\n" << this->delegator_name << "\n" << "  ps = "
+	  << ps;
+#else
+	THOR_SCSI_LOG(INFO) << "\nRadiate ->:\n" << "\n" << "  ps = " << ps;
+#endif
 }
 
 
