@@ -137,8 +137,7 @@ class PyField2DInterpolation: public tsc::Field2DInterpolation{
 public:
 	using tsc::Field2DInterpolation::Field2DInterpolation;
 #if 0
-	// clang g++-11 not accepting this code yet
-	void field_py(const py::array<double, 2> pos, std::array<double, 2> field) const {
+	void field_py(const std::array<double, 2> pos, std::array<double, 2> field) const {
 		PYBIND11_OVERRIDE_PURE(void, PyField2DInterpolationIntermediate, field_py, pos, field);
 	}
 #endif
@@ -164,17 +163,6 @@ public:
 	}
 #endif
 private:
-	template<typename T>
-	inline void _field(const T x, const T y, T *Bx, T *By) const {
-		auto pos = py::array_t<T>({2}), t_field = py::array_t<T>({2});
-		T *pos_p = static_cast<T *>(pos.request().ptr),
-			*field_p = static_cast<T *>(t_field.request().ptr);
-		pos_p[0] = x;
-		pos_p[1] = y;
-		// clang g++-11 not accepting this code yet
-		// this->field_py(pos, t_field);
-		*Bx = field_p[0];
-		*By = field_p[1];
 
 	template<typename T>
 	inline void _gradient(const T x, const T y, T *Bx, T *By) const {
