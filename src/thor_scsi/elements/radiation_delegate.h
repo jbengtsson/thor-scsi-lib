@@ -9,17 +9,11 @@ namespace thor_scsi::elements {
 	class RadiationDelegate: public  RadiationDelegateInterface{
 	public:
 		~RadiationDelegate(void){};
-<<<<<<< HEAD
 		inline RadiationDelegate(void)
 			: curly_dH_x(0e0)
 			, delegator_name("")
 			, delegator_index(-1)
 			{ this->reset(); }
-=======
-		inline RadiationDelegate(void){
-			this->reset();
-		}
->>>>>>> compatbile to clang
 
 		inline void reset(void) {
 			this->curly_dH_x = 0e0;
@@ -31,14 +25,9 @@ namespace thor_scsi::elements {
 		/*
 		 * Used for computing curly_dHx
 		 */
-<<<<<<< HEAD
 		virtual void view(const ElemType& kick, const gtpsa::ss_vect<double>      &ps, const enum ObservedState state, const int cnt) override;
 		virtual void view(const ElemType& kick, const gtpsa::ss_vect<tps>         &ps, const enum ObservedState state, const int cnt) override;
 		virtual void view(const ElemType& kick, const gtpsa::ss_vect<gtpsa::tpsa> &ps, const enum ObservedState state, const int cnt) override;
-=======
-		virtual void view(const ElemType& kick, const ss_vect<double> &ps, const enum ObservedState state, const int cnt) override;
-		virtual void view(const ElemType& kick, const ss_vect<tps>    &ps, const enum ObservedState state, const int cnt) override;
->>>>>>> compatbile to clang
 
 		virtual void show(std::ostream& strm, int level) const override final;
 
@@ -114,14 +103,9 @@ namespace thor_scsi::elements {
 		/*
 		 * Used for computing synchrotron integrals
 		 */
-<<<<<<< HEAD
 		virtual void view(const FieldKickAPI& kick, const gtpsa::ss_vect<double>      &ps, const enum ObservedState state, const int cnt) override;
 		virtual void view(const FieldKickAPI& kick, const gtpsa::ss_vect<tps>         &ps, const enum ObservedState state, const int cnt) override;
 		virtual void view(const FieldKickAPI& kick, const gtpsa::ss_vect<gtpsa::tpsa> &ps, const enum ObservedState state, const int cnt) override;
-=======
-		virtual void view(const FieldKickAPI& kick, const ss_vect<double> &ps, const enum ObservedState state, const int cnt) override;
-		virtual void view(const FieldKickAPI& kick, const ss_vect<tps>    &ps, const enum ObservedState state, const int cnt) override;
->>>>>>> compatbile to clang
 
 		virtual void show(std::ostream& strm, int level) const override final;
 		//virtual void view(const ElemType& kick, const gtpsa::ss_vect<double> &ps, const enum ObservedState state, const int cnt) override final;
