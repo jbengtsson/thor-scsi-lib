@@ -61,6 +61,7 @@ x_, px_, y_, py_, ct_, delta_ = [
 ]
 
 
+import thor_scsi.lib as tslib
 t_dir = os.path.join(os.environ["HOME"], "Nextcloud", "thor_scsi")
 # t_file = os.path.join(t_dir, "b3_tst.lat")
 t_file = os.path.join(t_dir, "b3_sf_40Grad_JB.lat")
@@ -69,6 +70,7 @@ acc = accelerator_from_config(t_file)
 print(" ".join([elem.name for elem in acc]))
 print("\nC = ", np.sum([elem.getLength() for elem in acc]))
 
+<<<<<<< HEAD
 # b2 = acc.find("b2", 0)
 
 energy = 2.5e9
@@ -152,6 +154,15 @@ compute_M_diag(dof, M)
 
 # exit()
 
+=======
+
+
+radiate = True
+if radiate:
+    r = calculate_radiation(acc, energy=2.5e0)
+
+exit()
+>>>>>>> radiate: simplified example
 
 use_tpsa = True
 if not use_tpsa:
