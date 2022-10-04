@@ -20,6 +20,7 @@ namespace thor_scsi::elements {
 	};
 	class RadiationDelegateKickInterface {
 	public:
+		~RadiationDelegateKickInterface(void){}
 		virtual void view(const FieldKickAPI& kick, const ss_vect<double> &ps, const enum ObservedState, const int cnt) = 0;
 		virtual void view(const FieldKickAPI& kick, const ss_vect<tps> &ps, const enum ObservedState, const int cnt)  = 0;
 		virtual void show(std::ostream& strm, int level) const{

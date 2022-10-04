@@ -11,6 +11,8 @@ namespace tsc = thor_scsi::core;
 namespace ts = thor_scsi;
 namespace py = pybind11;
 
+static const size_t n_turns=1;
+static const int imax = std::numeric_limits<int>::max();
 
 void py_thor_scsi_init_accelerator(py::module &m)
 {
@@ -23,8 +25,8 @@ void py_thor_scsi_init_accelerator(py::module &m)
 	py::class_<tsc::Machine::Logger, std::shared_ptr<tsc::Machine::Logger>> logger(m, "Logger");
 
 	const char prop_doc[] = "propagate phase space through elements";
-	const int imax = std::numeric_limits<int>::max();
-	const size_t n_turns=1;
+
+
 
 	py::class_<ts::Accelerator, std::shared_ptr<ts::Accelerator>>(m, "Accelerator")
 		.def("find",                 &ts::Accelerator::find)
