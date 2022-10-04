@@ -6,7 +6,7 @@ from .courant_snyder import compute_A_CS
 from .extract_info import accelerator_info
 from .accelerator import instrument_with_standard_observers
 from .phase_space_vector import omega_block_matrix, map2numpy
-from .output import mat2txt, chop_mat
+from .output import mat2txt, vec2txt, chop_array
 
 import xarray as xr
 import numpy as np
@@ -19,11 +19,14 @@ logger = logging.getLogger("thor_scsi")
 
 [X_, Y_, Z_] = [0, 1, 2]
 
-[x_, px_, y_, py_, ct_, delta_] = \
-    [tslib.phase_space_index_internal.x, tslib.phase_space_index_internal.px,
-     tslib.phase_space_index_internal.y, tslib.phase_space_index_internal.py,
-     tslib.phase_space_index_internal.ct,
-     tslib.phase_space_index_internal.delta]
+[x_, px_, y_, py_, ct_, delta_] = [
+    tslib.phase_space_index_internal.x,
+    tslib.phase_space_index_internal.px,
+    tslib.phase_space_index_internal.y,
+    tslib.phase_space_index_internal.py,
+    tslib.phase_space_index_internal.ct,
+    tslib.phase_space_index_internal.delta,
+]
 
 
 def acos2(sin, cos):
@@ -33,7 +36,7 @@ def acos2(sin, cos):
     # The sin part is used to determine the quadrant.
     mu = np.arccos(cos)
     if sin < 0e0:
-        mu = 2e0*np.pi - mu
+        mu = 2e0 * np.pi - mu
     return mu
 
 
@@ -41,59 +44,76 @@ def calculate_nu(M):
     tr = M.trace()
     # Check if stable.
     if tr < 2e0:
-        calculate_nu(tr/2e0,  M[0][1])/(2e0*np.pi)
+        calculate_nu(tr / 2e0, M[0][1]) / (2e0 * np.pi)
         return nu
     else:
         print("\ncalculate_nu: unstable\n")
-        return float('nan')
+        return float("nan")
 
 
 def calculate_nus(n_dof, M):
     nus = np.zeros(n_dof, float)
     for k in range(n_dof):
-        nus[k] = calculate_nu(M[2*k:2*k+2, 2*k:2*k+2])/(2e0*np.pi)
+        nus[k] = calculate_nu(M[2 * k : 2 * k + 2, 2 * k : 2 * k + 2]) / (2e0 * np.pi)
         if n_dof == 3:
             nus[2] = 1e0 - nus[2]
     return nus
 
 
 def calculate_nu_symp(n_dof, M):
-    # Calculate normalised phase advance from a symplectic periodic matrix.
-    n = 2*n_dof
+    """Calculate normalised phase advance from a symplectic periodic matrix.
+    """
+    n = 2 * n_dof
     I = np.identity(4)
     tr = np.zeros(n_dof, float)
     for k in range(n_dof):
-        tr[k] = np.trace(M[2*k:2*k+2, 2*k:2*k+2])
+        tr[k] = np.trace(M[2 * k : 2 * k + 2, 2 * k : 2 * k + 2])
     M4b4 = M[0:4, 0:4]
-    [p1, pm1] = [np.linalg.det(M4b4-I), np.linalg.det(M4b4+I)]
-    [po2, q] = [(p1-pm1)/16e0, (p1+pm1)/8e0 - 1e0]
+    p1  = np.linalg.det(M4b4 - I)
+    pm1 = np.linalg.det(M4b4 + I)
+    po2, q = (p1 - pm1) / 16e0, (p1 + pm1) / 8e0 - 1e0
     if tr[X_] > tr[Y_]:
         sgn = 1
     else:
         sgn = -1
-    [x, y] = [-po2+sgn*np.sqrt(po2**2-q), -po2-sgn*np.sqrt(po2**2-q)]
+
+    radix = sgn * np.sqrt(po2 ** 2 - q)
+    x, y = -po2 + radix, -po2 - radix
     nu = []
-    nu.extend([acos2(M[0][1], x)/(2e0*np.pi), acos2(M[2][3], y)/(2e0*np.pi)])
+    nu.extend([
+        acos2(M[0][1], x) / (2e0 * np.pi),
+        acos2(M[2][3], y) / (2e0 * np.pi)
+    ])
     if n_dof == 3:
-        nu.append(1e0-acos2(M[4][5], tr[Z_]/2e0)/(2e0*np.pi))
+        nu.append(1e0 - acos2(M[4][5], tr[Z_] / 2e0) / (2e0 * np.pi))
     return np.array(nu)
 
 
 def find_closest_nu(nu, w):
     min = 1e30
     for k in range(w.size):
-        nu_k = acos2(w[k].imag, w[k].real)/(2e0*np.pi)
-        diff =  np.abs(nu_k-nu)
+        nu_k = acos2(w[k].imag, w[k].real) / (2e0 * np.pi)
+        diff = np.abs(nu_k - nu)
         if diff < min:
             [ind, min] = [k, diff]
     return ind
 
 
 def sort_eigen_vec(dof, nu, w):
-    order = np.zeros(2*dof, int)
+    """
+    Args:
+        nu : eigenvalues / computed tunes
+        dof: degrees of freedom
+        w :  complex eigen values (from eigen vector computation
+             procedure)
+
+    Todo:
+        Check that vectors are long enough ...
+    """
+    order = np.zeros(2 * dof, int)
     for k in range(dof):
-        order[2*k]   = find_closest_nu(nu[k], w)
-        order[2*k+1] = find_closest_nu(1e0-nu[k], w)
+        order[2 * k] = find_closest_nu(nu[k], w)
+        order[2 * k + 1] = find_closest_nu(1e0 - nu[k], w)
     return order
 
 
@@ -117,24 +137,26 @@ def compute_A(n_dof, eta, u):
 
     # Normalise eigenvectors: A^T.omega.A = omega.
     for i in range(n_dof):
-        z = u1[:, 2*i].real @ S @ u1[:, 2*i].imag
+        z = u1[:, 2 * i].real @ S @ u1[:, 2 * i].imag
         sgn_im = sign(z)
         scl = np.sqrt(np.abs(z))
-        sgn_vec = sign(u1[2*i][2*i].real)
-        [u1[:, 2*i], u1[:, 2*i+1]] = \
-            [sgn_vec * (u1[:, 2*i].real + sgn_im * u1[:, 2*i].imag * 1j) / scl,
-             sgn_vec * (u1[:, 2*i+1].real + sgn_im * u1[:, 2*i+1].imag * 1j)
-             / scl]
+        sgn_vec = sign(u1[2 * i][2 * i].real)
+        [u1[:, 2 * i], u1[:, 2 * i + 1]] = [
+            sgn_vec * (u1[:, 2 * i].real + sgn_im * u1[:, 2 * i].imag * 1j) / scl,
+            sgn_vec
+            * (u1[:, 2 * i + 1].real + sgn_im * u1[:, 2 * i + 1].imag * 1j)
+            / scl,
+        ]
 
     for i in range(n_dof):
-        [A[:n, 2*i], A[:n, 2*i+1]] = [u1[:, 2*i].real, u1[:, 2*i].imag]
+        [A[:n, 2 * i], A[:n, 2 * i + 1]] = [u1[:, 2 * i].real, u1[:, 2 * i].imag]
 
     if n_dof == 2:
         # For coasting beam translate to momentum dependent fix point.
 
         B = np.identity(6)
         B[x_, delta_], B[px_, delta_] = eta[x_], eta[px_]
-        B[ct_, x_], B[ct_, px_]       = eta[px_], -eta[x_]
+        B[ct_, x_], B[ct_, px_] = eta[px_], -eta[x_]
 
         A = B @ A
 
@@ -383,24 +405,36 @@ def compute_twiss_along_lattice(
     return res
 
 
-def compute_M_diag(dof, M):
-    debug_prt = False
+def compute_M_diag(
+    dof: int, M: np.ndarray, debug_prt: bool = False
+) -> [np.ndarray, np.ndarray]:
+    """
 
+    Args:
+        M: transfer matrix
+        dof: degrees of freedom
+
+
+    Return:
+
+    See xxx reference
+    """
     n = 2 * dof
 
     nu_symp = calculate_nu_symp(dof, M)
     # Diagonalise M.
     [w, u] = np.linalg.eig(M[:n, :n])
 
+    # nu_eig = acos2(w.imag, w.real) / (2e0 * np.pi)
     nu_eig = np.zeros(n)
     for k in range(n):
-        nu_eig[k] = acos2(w[k].imag, w[k].real)/(2e0*np.pi)
+        nu_eig[k] = acos2(w[k].imag, w[k].real) / (2e0 * np.pi)
 
     if debug_prt:
-        print("\nu:\n"+mat2txt(u))
-        print("\nnu_symp:\n"+vec2txt(nu_symp))
-        print("\nnu_eig:\n"+vec2txt(nu_eig))
-        print("\nlambda:\n"+vec2txt(w))
+        print("\nu:\n" + mat2txt(u))
+        print("\nnu_symp:\n" + vec2txt(nu_symp))
+        print("\nnu_eig:\n" + vec2txt(nu_eig))
+        print("\nlambda:\n" + vec2txt(w))
         # print("\nu:\n"+mat2txt(u))
 
     order = sort_eigen_vec(dof, nu_symp, w)
@@ -409,17 +443,19 @@ def compute_M_diag(dof, M):
     u_ord = np.zeros((n, n), complex)
     nu_eig_ord = np.zeros(n, float)
     for k in range(n):
-        w_ord[k]      = w[order[k]]
-        u_ord[:, k]   = u[:, order[k]]
-        nu_eig_ord[k] = acos2(w_ord[k].imag, w_ord[k].real)/(2e0*np.pi)
+        w_ord[k] = w[order[k]]
+        u_ord[:, k] = u[:, order[k]]
+        nu_eig_ord[k] = acos2(w_ord[k].imag, w_ord[k].real) / (2e0 * np.pi)
 
     if debug_prt:
         print("\norder:\n", order)
-        print("\nnu_eig_ord:\n"+vec2txt(nu_eig_ord))
-        print("\nlambda_ord:\n"+vec2txt(w_ord))
+        print("\nnu_eig_ord:\n" + vec2txt(nu_eig_ord))
+        print("\nlambda_ord:\n" + vec2txt(w_ord))
         # print("\nu_ord:\n"+mat2txt(u_ord))
-        print("\nu_ord^-1.M.u_ord:\n"+mat2txt(
-            chop_cmplx_mat(np.linalg.inv(u_ord) @ M[:n, :n] @ u_ord, 1e-15)))
+        print(
+            "\nu_ord^-1.M.u_ord:\n"
+            + mat2txt(chop_array(np.linalg.inv(u_ord) @ M[:n, :n] @ u_ord, 1e-15))
+        )
 
     eta = compute_dispersion(M)
 
@@ -429,17 +465,27 @@ def compute_M_diag(dof, M):
     [A, A_inv, u1] = compute_A(dof, eta, u_ord)
 
     if debug_prt:
-        print("\nu1:\n"+mat2txt(u1))
-        print("\nu1^-1.M.u1:\n"+mat2txt(
-            chop_cmplx_mat(np.linalg.inv(u1) @ M[:n, :n] @ u1, 1e-13)))
-        print("\nu1^T.omega.u1:\n"+mat2txt(
-            chop_cmplx_mat(u1.T @ omega_block_matrix(dof) @ u1, 1e-13)))
-        print("\nA:\n"+mat2txt(chop_mat(A_inv, 1e-13)))
-        print("\nA^T.omega.A:\n"+mat2txt(chop_mat(
-            A[:n, :n].T @ omega_block_matrix(dof) @ A[:n, :n], 1e-13)))
+        print("\nu1:\n" + mat2txt(u1))
+        print(
+            "\nu1^-1.M.u1:\n"
+            + mat2txt(chop_array(np.linalg.inv(u1) @ M[:n, :n] @ u1, 1e-13))
+        )
+        print(
+            "\nu1^T.omega.u1:\n"
+            + mat2txt(chop_array(u1.T @ omega_block_matrix(dof) @ u1, 1e-13))
+        )
+        print("\nA:\n" + mat2txt(chop_mat(A_inv, 1e-13)))
+        print(
+            "\nA^T.omega.A:\n"
+            + mat2txt(
+                chop_array(A[:n, :n].T @ omega_block_matrix(dof) @ A[:n, :n], 1e-13)
+            )
+        )
 
-    print("\nA_CS:\n"+mat2txt(chop_mat(compute_A_CS(dof, A)[0], 1e-10)))
-    print("\nR:\n"+mat2txt(chop_mat(A_inv @ M @ A, 1e-10)))
+    print("\nA_CS:\n" + mat2txt(chop_array(compute_A_CS(dof, A)[0], 1e-10)))
+    print("\nR:\n" + mat2txt(chop_array(A_inv @ M @ A, 1e-10)))
+
+    return A, A_inv
 
 
-__all__ = ["compute_twiss_along_lattice", "jac2twiss"]
+__all__ = ["compute_twiss_along_lattice", "jac2twiss", "compute_M_diag"]

@@ -197,8 +197,12 @@ void get_B2(const double h_ref, const std::array<T,3> B, const ss_vect<T> &xp,
 
 void tse::RadiationDelegateKick::setEnergy(const double val)
 {
-	this->energy =val;
-	this->q_fluct = C_q*C_gamma/(M_PI*sqr(1e-9*m_e))*pow(this->energy, 5e0);
+        // energy in eV
+	this->energy = val;
+
+	// the equation below is for GeV
+	auto energy_GeV = this->energy / 1e9;
+	this->q_fluct = C_q*C_gamma/(M_PI*sqr(1e-9*m_e))*pow(energy_GeV, 5e0);
 
 }
 
@@ -235,6 +239,11 @@ void tse::RadiationDelegateKick::radiate(const thor_scsi::core::ConfigType &conf
 	T  p_s0, p_s1, ds, B2_perp = 0e0, B2_par = 0e0;
 	ss_vect<T> ps_save = ps;
 
+	const bool radiation = conf.radiation;
+	const bool compute_diffusion = conf.emittance;
+	if(!radiation){
+	    return;
+	}
 	THOR_SCSI_LOG(INFO) << "Radiate called for "<<  this->delegator_name << "\n";
 	THOR_SCSI_LOG(INFO) <<  "ps\n" <<  ps;
 
@@ -276,7 +285,6 @@ void tse::RadiationDelegateKick::radiate(const thor_scsi::core::ConfigType &conf
 	const double energy_scale = 1e0;
 	const double cl_rad = C_gamma * cube(this->energy * energy_scale) / (2e0 * M_PI);
 
-	const bool radiation = true;
 	if (radiation) {
 		THOR_SCSI_LOG(INFO) <<  "Actually doing radiaton computing"  << " \n";
 		THOR_SCSI_LOG(INFO) << "cl_rad " << cl_rad <<"\n";
@@ -296,7 +304,7 @@ void tse::RadiationDelegateKick::radiate(const thor_scsi::core::ConfigType &conf
 		throw ts::PhysicsViolation(strm.str());
 	}
 
-	if (this->compute_diffusion){
+	if (compute_diffusion){
 		this->diffusion(B2_perp, ds, p_s0, cs);
 	}
 

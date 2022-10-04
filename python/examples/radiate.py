@@ -1,9 +1,10 @@
 """Read lattice file and calculate radiation
 """
 import logging
+import copy
 import xarray as xr
 
-#logging.basicConfig(level="DEBUG")
+# logging.basicConfig(level="DEBUG")
 
 from thor_scsi.factory import accelerator_from_config
 from thor_scsi.lib import (
@@ -25,12 +26,12 @@ import thor_scsi.lib as tslib
 
 # from thor_scsi.utils.linalg import match_eigenvalues_to_plane_orig
 from thor_scsi.utils.closed_orbit import compute_closed_orbit
-from thor_scsi.utils.output import vec2txt, mat2txt
-from thor_scsi.utils.linear_optics import compute_M_diag
+from thor_scsi.utils.output import vec2txt, mat2txt, chop_array
+from thor_scsi.utils.linear_optics import compute_M_diag, calculate_nu_symp
 
 
 t_dir = os.path.join(os.environ["HOME"], "Nextcloud", "thor_scsi")
-#t_file = os.path.join(t_dir, "b3_tst.lat")
+# t_file = os.path.join(t_dir, "b3_tst.lat")
 t_file = os.path.join(t_dir, "b3_sf_40Grad_JB.lat")
 
 acc = accelerator_from_config(t_file)
@@ -39,63 +40,88 @@ print("Length", np.sum([elem.getLength() for elem in acc]))
 
 # b2 = acc.find("b2", 0)
 
-# energy = 2.5e9
+energy = 2.5e9
+# Just to test diffusion
+# energy = 2.5
+
+# Planes x y z
+# from thor_scsi.lib import spatial_index
+# print(spatial_index)
 
 
 # cav.setVoltage(cav.getVoltage() * 1./2.)
 # cav.setVoltage(0)
 cav = acc.find("cav", 0)
 print("acc cavity", repr(cav))
-txt=\
-    f"""Cavity info
+txt = f"""Cavity info
 frequency         {cav.getFrequency()/1e6} MHz",
 voltage           {cav.getVoltage()/1e6} MV
 harmonic number   {cav.getHarmonicNumber()}
     """
 print(txt)
 
-radiate = not True
+# Install radiators that radiation is calculated
+rad_del_kicks = instrument_with_radiators(acc, energy=energy)
+
+radiate = False
 calc_config = tslib.ConfigType()
 calc_config.radiation = radiate
 # is this used anywhere?
 calc_config.emittance = False
 calc_config.Cavity_on = True
 
+print("\n\nradiation ON")
+calc_config.radiation = True
+calc_config.emittance = False
+calc_config.Cavity_on = True
+
 print(
-    "calc_config",
-    calc_config.radiation,
-    calc_config.emittance,
-    calc_config.Cavity_on,
+    "calc_config", calc_config.radiation, calc_config.emittance, calc_config.Cavity_on
 )
 
 debug_prt = False
 
-calc_config.Energy = 2.5e9
+calc_config.Energy = energy
 
 if calc_config.Cavity_on == True:
     dof = 3
 else:
     dof = 2
 
-r = compute_closed_orbit(acc, calc_config, delta=0e0)
-M = r.one_turn_map[:6, :6]
-print("\nM:\n"+mat2txt(M))
-
-compute_M_diag(dof, M)
+ps = tslib.ss_vect_double()
+ps.set_zero()
+print("ps start\n", ps)
+acc.propagate(calc_config, ps)
+print("ps end\n", ps)
 
 exit()
 
-r = calculate_radiation(
-    acc, energy=2.5e9, calc_config=calc_config, install_radiators=True
-)
+
+r = compute_closed_orbit(acc, calc_config, delta=0e0)
+M = r.one_turn_map[:6, :6]
+# print("\nM:\n" + mat2txt(M))
+tune_x, tune_y, tune_long = calculate_nu_symp(3, M)
+
+print(f"\n{tune_x=:.16f} {tune_y=:.16f} {tune_long=:.16f}")
+
+exit()
+
+# r = calculate_radiation(
+#     acc, energy=2.5e9, calc_config=calc_config, install_radiators=True
+# )
+
+compute_M_diag(dof, M)
+
+# exit()
+
 
 use_tpsa = True
 if not use_tpsa:
-    ps = ss_vect_double()
+    ps = tslib.ss_vect_double()
     ps.set_zero()
-    ps[phase_space_ind.x_] = 1e-3
+    ps[tslib.phase_space_ind.x_] = 1e-3
 else:
-    ps = ss_vect_tps()
+    ps = tslib.ss_vect_tps()
     ps.set_identity()
 
 
@@ -113,11 +139,58 @@ else:
 #    them before calculation starts (sum it up afterwards
 
 
-print(ps)
-acc.propagate(calc_config, ps, 0, 2000)
-print(ps)
 
 
+# print("Poincaré map calulation .... ")
+# print("radiation OFF")
+# print("start point")
+# ps_start = copy.copy(ps)
+# print(ps)
+# print(ps.cst())
+
+
+
+# calc_config.radiation = False
+# acc.propagate(calc_config, ps, 0, 2000)
+# print(ps)
+
+
+print("\n\nradiation ON")
+calc_config.radiation = True
+calc_config.emittance = True
+calc_config.Cavity_on = True
+# ps_wr = copy.copy(ps_start)
+
+r = compute_closed_orbit(acc, calc_config, delta=0e0)
+M = r.one_turn_map[:6, :6]
+
+# print("\nM:\n" + mat2txt(M))
+print("\n\nFixed point:\n", vec2txt(r.x0))
+tune_x, tune_y, tune_long = calculate_nu_symp(3, M)
+print(f"\n{tune_x=:.16f} {tune_y=:.16f} {tune_long=:.16f}")
+
+exit()
+
+def extract_diffusion_coefficient():
+    dD_rad = np.array([rk.getDiffusionCoefficientsIncrements() for rk in rad_del_kicks])
+    print("Diffusion coefficients\n")
+    print(dD_rad)
+    D_rad = np.add.accumulate(dD_rad, axis=0)
+    return D_rad
+
+
+print(ps_wr)
+acc.propagate(calc_config, ps_wr, 0, 2000)
+print(ps_wr.cst())
+print(ps_wr)
+print("Effect of radiation")
+print(ps_wr - ps)
+print(ps_wr.cst() - ps.cst())
+
+
+exit()
+print(extract_diffusion_coefficient())
+use_tpsa = False
 if use_tpsa:
     # Inspect curly_H in
     for a_del in rad_del:

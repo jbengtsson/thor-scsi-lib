@@ -14,7 +14,7 @@ namespace thor_scsi::elements{
 	/**
 	 * @brief third cubic root solved by pow function
 	 *
-	 * Currently will only accept values larger than a
+	 * Currently will only accept values larger than zero.
 	 * Could be extended to negative values for a if necessary
 	 */
 	double thirdroot(const double a);
