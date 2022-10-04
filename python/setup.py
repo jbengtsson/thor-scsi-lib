@@ -40,7 +40,6 @@ boost_prefix="/usr/include"
 if sys.platform == "darwin":
     boost_prefix=os.path.join("/", "usr", "local", "include")
 
-
 from pybind11.setup_helpers import ParallelCompile
 
 # Optional multithreaded build
@@ -60,7 +59,7 @@ ext_modules = [
     Pybind11Extension(
         "flame",
         ["src/flame.cc"],
-        include_dirs=[d["gsl_include"]] + [os.path.join(prefix, "include")] + [boost_prefix],
+        include_dirs=[d["gsl_include"]] + [os.path.join(prefix, "include"), boost_prefix],
         library_dirs=([os.path.join(prefix, "lib")]),
         libraries=["flame", "flame_core"],
     ),
@@ -76,7 +75,7 @@ ext_modules = [
                 "src/accelerator.cc",
             ]
         ),
-        include_dirs=[d["gsl_include"]] + [os.path.join(prefix, "include")] + [boost_prefix],
+        include_dirs=[d["gsl_include"]] + [os.path.join(prefix, "include"), boost_prefix],
         # define_macros=[("_GLIBCXX_DEBUG", 1), ("_GLIBCXX_DEBUG_PEDANTIC", 1)],
         library_dirs=(
             [os.path.join(prefix, "lib")]
