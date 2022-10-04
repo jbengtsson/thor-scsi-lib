@@ -219,6 +219,15 @@ void get_B2(const double h_ref, const std::array<T,3> B, const gtpsa::ss_vect<T>
   T xn = 1e0/sqrt(sqr(1e0+xp[x_]*h_ref)+sqr(xp[px_])+sqr(xp[py_]));
   std::array<T, 3> e = {xp[px_]*xn, xp[py_]*xn, (1e0+xp[x_]*h_ref)*xn};
 
+  THOR_SCSI_LOG(DEBUG)
+    << "\nField contribution:\n  h_ref = " << h_ref
+    << "\n  B     = (" <<  B[X_] << ", " << B[Y_] << ", "
+    << B[Z_] << ")"
+    << "\n  e^    = (" <<  e[X_] << ", " << e[Y_] << ", " << e[Z_] <<")"
+    << "\n  x_n   = " << xn;
+
+
+
   // left-handed coordinate system
   B2_perp =
     sqr(B[Y_]*e[Z_]-B[Z_]*e[Y_]) + sqr(B[X_]*e[Y_]-B[Y_]*e[X_])
@@ -264,7 +273,6 @@ void tse::RadiationDelegateKick::radiate(const thor_scsi::core::ConfigType &conf
 	// M. Sands "The Physics of Electron Storage Rings" SLAC-121, p. 98.
 	// ddelta/d(ds) = -C_gamma*E_0^3*(1+delta)^2*(B_perp/(Brho))^2/(2*pi)
 	T  p_s0, p_s1, ds, B2_perp = 0e0, B2_par = 0e0;
-	ss_vect<T> ps_save = ps;
 
         T B2_perp = gtpsa::same_as_instance(B[0]);
         T B2_par = gtpsa::same_as_instance(B[2]);
@@ -317,10 +325,11 @@ void tse::RadiationDelegateKick::radiate(const thor_scsi::core::ConfigType &conf
 
 	// H = -p_s => ds = H*L.
 	T ds = (1e0+cs[x_]*h_ref+(sqr(cs[px_])+sqr(cs[py_]))/2e0)*L;
-	THOR_SCSI_LOG(DEBUG) << "'Field contribution' h_ref " << h_ref
-		  << " B (" <<  B[X_] << ", " << B[Y_] << ", " << B[Z_] <<")"
-			     << " cs "  << cs.clone();
-	// compute perpendicular to curvature
+	THOR_SCSI_LOG(DEBUG)
+	  << "\nField contribution:\n  h_ref = " << h_ref
+	  << "\n  B     = (" <<  B[X_] << ", " << B[Y_] << ", " << B[Z_] << ")"
+	  << "\n  cs    = " <<  cs;
+	// Compute perpendicular reference curve for comoving frame.
 	get_B2(h_ref, B, cs, B2_perp, B2_par);
 
 	//THOR_SCSI_LOG(INFO)
@@ -331,6 +340,13 @@ void tse::RadiationDelegateKick::radiate(const thor_scsi::core::ConfigType &conf
 	  C_gamma * cube(this->energy * energy_scale) / (2e0 * M_PI);
 
 	if (radiation) {
+		THOR_SCSI_LOG(INFO)
+		  <<  "\nRadiation computation:\n"
+		  << "  cl_rad  = " << cl_rad << "\n"
+		  << "  B2_perp = " << B2_perp << "\n"
+		  << "  L       = " << L << "\n"
+		  << "  E       = " << this->getEnergy() << "\n";
+
 		ps[delta_] -= cl_rad*sqr(p_s0)*B2_perp*ds;
 		T p_s1 = get_p_s(conf, ps);
 		ps[px_] = cs[px_]*p_s1;

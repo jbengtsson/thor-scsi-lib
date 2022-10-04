@@ -70,6 +70,22 @@ from thor_scsi.utils.output import vec2txt, mat2txt, chop_array
 from thor_scsi.utils.linear_optics import compute_M_diag, calculate_nu_symp
 
 
+X_, Y_, Z_ = [
+    tslib.spatial_index.X,
+    tslib.spatial_index.Y,
+    tslib.spatial_index.Z
+]
+
+x_, px_, y_, py_, ct_, delta_ = [
+    tslib.phase_space_index_internal.x,
+    tslib.phase_space_index_internal.px,
+    tslib.phase_space_index_internal.y,
+    tslib.phase_space_index_internal.py,
+    tslib.phase_space_index_internal.ct,
+    tslib.phase_space_index_internal.delta
+]
+
+
 t_dir = os.path.join(os.environ["HOME"], "Nextcloud", "thor_scsi")
 # t_file = os.path.join(t_dir, "b3_tst.lat")
 t_file = os.path.join(t_dir, "b3_sf_40Grad_JB.lat")
@@ -88,37 +104,35 @@ energy = 2.5e9
 # from thor_scsi.lib import spatial_index
 # print(spatial_index)
 
+<<<<<<< HEAD
+=======
+cav = acc.find("cav", 0)
+>>>>>>> Debugging radiation: augmented, edited, and formatted debugging log messages.
 # cav.setVoltage(cav.getVoltage() * 1./2.)
 # cav.setVoltage(0)
-cav = acc.find("cav", 0)
-print("acc cavity", repr(cav))
-txt = f"""Cavity info
-frequency         {cav.getFrequency()/1e6} MHz",
-voltage           {cav.getVoltage()/1e6} MV
-harmonic number   {cav.getHarmonicNumber()}
-    """
+print("\nCavity", repr(cav))
+txt = f"""\nCavity info:
+  f [MHz] {1e-6*cav.getFrequency()}",
+  V [MV]  {1e-6*cav.getVoltage()}
+  h       {cav.getHarmonicNumber()}
+"""
 print(txt)
+
+mbb = acc.find("mbb", 0)
+print("{:s}: N = {:d}".
+      format(mbb.name, mbb.getNumberOfIntegrationSteps()))
 
 # Install radiators that radiation is calculated
 rad_del_kicks = instrument_with_radiators(acc, energy=energy)
 
-radiate = False
 calc_config = tslib.ConfigType()
 
 calc_config.radiation = True
 calc_config.emittance = False
 calc_config.Cavity_on = True
 
-print("\n\nradiation ON")
-calc_config.radiation = True
-calc_config.emittance = False
-calc_config.Cavity_on = True
-
-print(
-    "calc_config", calc_config.radiation, calc_config.emittance, calc_config.Cavity_on
-)
-
-debug_prt = False
+print("\ncalc_config:\n [radiation, emittance, Cavity_on] = ",
+      calc_config.radiation, calc_config.emittance, calc_config.Cavity_on)
 
 calc_config.Energy = energy
 

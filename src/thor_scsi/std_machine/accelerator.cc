@@ -54,6 +54,7 @@ ts::Accelerator::_propagate(thor_scsi::core::ConfigType& conf, gtpsa::ss_vect<T>
 
 	    next_elem = static_cast<int>(start);
 	    for(int i=0; next_elem >= 0 && next_elem<nelem && i<std::abs(max_elements); i++)
+#endif
 	    {
 		size_t n = next_elem;
 

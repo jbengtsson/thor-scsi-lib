@@ -117,7 +117,6 @@ def compute_closed_orbit(
         M += x0
         logger.warning(f"{n_iter=},  Start propagation at \n {M.cst()}\n")
         next_element = acc.propagate(conf, M)
-        logger.warning(f"{n_iter=},  End propagation at \n {M.cst()}\n")
 
         if next_element == n_elements:
             # Managed to get around the ring ... good
@@ -144,7 +143,8 @@ def compute_closed_orbit(
             break
 
         logger.warning(
-            "n_iter %3d, dx_abs %7.1e, eps  %7.1e, x0 %s", n_iter + 1, dx_abs, eps, x0
+            "n_iter %3d, dx_abs %7.1e, eps  %7.1e, x0 %s",
+            n_iter + 1, dx_abs, eps, x0
         )
 
     else:
