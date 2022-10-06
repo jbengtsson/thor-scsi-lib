@@ -3,6 +3,7 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/test/tools/output_test_stream.hpp>
 #include <thor_scsi/core/multipoles.h>
+#include <gtpsa/utils_tps.hpp>
 #include <cmath>
 
 /* Second implemntation of .field method available? */
@@ -11,6 +12,9 @@ namespace tsc = thor_scsi::core;
 
 static const double rad2deg = 180.0/M_PI;
 static const tsc::cdbl I(0, 1);
+
+auto desc = std::make_shared<gtpsa::desc>(6, 1);
+const auto t_ref = gtpsa::tpsa(desc, 1);
 
 BOOST_AUTO_TEST_CASE(test01_complex_angle)
 {
@@ -122,6 +126,37 @@ BOOST_AUTO_TEST_CASE(test10_set_harmonic_dipole)
 		BOOST_CHECK_CLOSE(field.imag(), 0, 1e-22);
 	}
 
+	// tpsa ...
+	{
+		auto Bx = t_ref.clone(), By = t_ref.clone();
+		h.field(gtpsa::tpsa(t_ref), gtpsa::tpsa(t_ref), &Bx, &By);
+		BOOST_CHECK_CLOSE(By.cst(), 1, 1e-22);
+		BOOST_CHECK_CLOSE(Bx.cst(), 0, 1e-22);
+	}
+	{
+		auto x = t_ref.clone(), y = t_ref.clone(), Bx = t_ref.clone(), By = t_ref.clone();
+		x  =  1;
+		h.field(x, y, &Bx, &By);
+		BOOST_CHECK_CLOSE(By.cst(), 1, 1e-22);
+		BOOST_CHECK_CLOSE(Bx.cst(), 0, 1e-22);
+	}
+
+	{
+		auto x = t_ref.clone(), y = t_ref.clone(), Bx = t_ref.clone(), By = t_ref.clone();
+		y = 1;
+		h.field(x, y, &Bx, &By);
+		BOOST_CHECK_CLOSE(By.cst(), 1, 1e-22);
+		BOOST_CHECK_CLOSE(Bx.cst(), 0, 1e-22);
+	}
+	{
+		auto x = t_ref.clone(), y = t_ref.clone(), Bx = t_ref.clone(), By = t_ref.clone();
+		y = .2;
+		x = 3;
+		h.field(x, y, &Bx, &By);
+		BOOST_CHECK_CLOSE(By.cst(), 1, 1e-22);
+		BOOST_CHECK_CLOSE(Bx.cst(), 0, 1e-22);
+	}
+
 	h.applyRollAngle(M_PI/2);
 	BOOST_CHECK_CLOSE(h.getMultipole(1).imag(), 1, 1e-15);
 	BOOST_CHECK_CLOSE(h.getMultipole(2).real(), 0, 1e-42);
@@ -169,6 +204,37 @@ BOOST_AUTO_TEST_CASE(test20_set_harmonic_quadrupole)
 		auto field =  h.field(tsc::cdbl(3,.2));
 		BOOST_CHECK_CLOSE(double(field.real()), 3, 1e-22);
 		BOOST_CHECK_CLOSE(double(field.imag()), .2, 1e-22);
+	}
+
+	{
+		auto x = t_ref.clone(), y = t_ref.clone(), Bx = t_ref.clone(), By = t_ref.clone();
+		h.field(x, y, &Bx, &By);
+		BOOST_CHECK_SMALL(double(By.cst()), 1e-22);
+		BOOST_CHECK_SMALL(double(Bx.cst()), 1e-22);
+	}
+	{
+		auto x = t_ref.clone(), y = t_ref.clone(), Bx = t_ref.clone(), By = t_ref.clone();
+		x = 1;
+		h.field(x, y, &Bx, &By);
+		BOOST_CHECK_CLOSE(double(By.cst()), 1., 1e-22);
+		BOOST_CHECK_SMALL(double(Bx.cst()), 1e-22);
+	}
+
+	{
+		auto x = t_ref.clone(), y = t_ref.clone(), Bx = t_ref.clone(), By = t_ref.clone();
+		y = 1;
+		h.field(x, y, &Bx, &By);
+		BOOST_CHECK_SMALL(double(By.cst()), 1e-22);
+		BOOST_CHECK_CLOSE(double(Bx.cst()), 1., 1e-22);
+	}
+	{
+		auto field =  h.field(tsc::cdbl(3,.2));
+		auto x = t_ref.clone(), y = t_ref.clone(), Bx = t_ref.clone(), By = t_ref.clone();
+		x = 3;
+		y = .2;
+		h.field(x, y, &Bx, &By);
+		BOOST_CHECK_CLOSE(double(By.cst()), 3, 1e-22);
+		BOOST_CHECK_CLOSE(double(Bx.cst()), .2, 1e-22);
 	}
 
 	const double angle = M_PI/2;
