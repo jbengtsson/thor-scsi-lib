@@ -10,7 +10,7 @@
 namespace tsc = thor_scsi::core;
 namespace tse = thor_scsi::elements;
 
-auto a_desc = gtpsa::desc(1, 0);
+auto a_desc = std::make_shared<gtpsa::desc>(1, 0);
 auto tpsa_ref = gtpsa::tpsa(a_desc, mad_tpsa_default);
 
 

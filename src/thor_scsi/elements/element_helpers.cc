@@ -101,13 +101,13 @@ namespace thor_scsi::elements{
 	 *     E.g.: one for dipoles and one for anything else...
 	 */
 	template<typename T>
-	void tse::thin_kick(const tsc::ConfigType &conf, const T BxoBrho, const T ByoBrho,
+	void thin_kick(const tsc::ConfigType &conf, const T BxoBrho, const T ByoBrho,
 			    const double L, const double h_bend, const double h_ref,
-			    const gtsa::ss_vect<T> &ps0,  gtpsa::ss_vect<T> &ps)
+			    const gtpsa::ss_vect<T> &ps0,  gtpsa::ss_vect<T> &ps)
 	{
 		int        j;
 		// T          BxoBrho, ByoBrho, ByoBrho1, B[3],
-		T u, p_s;
+		T u(ps0[0]), p_s(ps[0]);
 
 
 		const int debug = false;
@@ -189,9 +189,9 @@ template void tse::drift_propagate(const tsc::ConfigType &conf, const double, gt
 template void tse::drift_propagate(const tsc::ConfigType &conf, const double, gtpsa::ss_vect<gtpsa::tpsa> &);
 
 
-template void tse::thin_kick(const tsc::ConfigType &conf, const double BxoBrho, const double ByoBrho,
+template void tse::thin_kick(const tsc::ConfigType &conf, const double       BxoBrho, const double     ByoBrho,
 			     const double L, const double h_bend, const double h_ref, const gtpsa::ss_vect<double>      &ps0, gtpsa::ss_vect<double>      &ps);
-template void tse::thin_kick(const tsc::ConfigType &conf, const tps BxoBrho, const tps ByoBrho,
+template void tse::thin_kick(const tsc::ConfigType &conf, const tps          BxoBrho, const tps        ByoBrho,
 			     const double L, const double h_bend, const double h_ref, const gtpsa::ss_vect<tps>         &ps0, gtpsa::ss_vect<tps>         &ps);
-template void tse::thin_kick(const tsc::ConfigType &conf, const tps BxoBrho, const tps ByoBrho,
+template void tse::thin_kick(const tsc::ConfigType &conf, const gtpsa::tpsa BxoBrho, const gtpsa::tpsa ByoBrho,
 			     const double L, const double h_bend, const double h_ref, const gtpsa::ss_vect<gtpsa::tpsa> &ps0, gtpsa::ss_vect<gtpsa::tpsa> &ps);

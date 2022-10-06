@@ -344,7 +344,7 @@ void tse::RadiationDelegateKick::radiate(const thor_scsi::core::ConfigType &conf
 	gtpsa::ss_vect<T> dPs = ps - ps_save;
 	THOR_SCSI_LOG(INFO) <<  "Radiation effect on ps\n" << dPs << " \n";
 
-
+#endif
 }
 
 
