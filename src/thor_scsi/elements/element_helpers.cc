@@ -143,7 +143,7 @@ namespace thor_scsi::elements{
 	template<typename T>
 	void thin_kick(const tsc::ConfigType &conf, const T BxoBrho, const T ByoBrho,
 			    const double L, const double h_bend, const double h_ref,
-		       const gtpsa::ss_vect<T> &ps0,  gtpsa::ss_vect<T> &ps)
+			    const gtpsa::ss_vect<T> &ps0,  gtpsa::ss_vect<T> &ps)
 	{
 		int        j;
 		// T          BxoBrho, ByoBrho, ByoBrho1, B[3],
