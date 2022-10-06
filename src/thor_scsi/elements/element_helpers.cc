@@ -86,18 +86,24 @@ namespace thor_scsi::elements{
 	 *
 	 *   h_bend: 1/rho_bend (radius of the the bend, magnetic rigidty of the dipoles)
 	 *   h_ref: $1 / \rho$ for the reference curve / for the comoving frame (curvature of the design or reference orbit)
+	 *
+	 *   ps0 : initial condistins (when start propagation trough the element)
+	 *   ps  : final condistions
+	 *
 	 * Todo:
+	 *     Review kick and radiate code organisation ....
+	 *
 	 *     Split up function in different parts or functions
 	 *     E.g.: one for dipoles and one for anything else...
 	 */
 	template<typename T>
 	void tse::thin_kick(const tsc::ConfigType &conf, const T BxoBrho, const T ByoBrho,
-			    const double L, const double h_bend, const double h_ref, ss_vect<T> &ps)
+			    const double L, const double h_bend, const double h_ref,
+			    const ss_vect<T> &ps0,  ss_vect<T> &ps)
 	{
 		int        j;
 		// T          BxoBrho, ByoBrho, ByoBrho1, B[3],
 		T u, p_s;
-		ss_vect<T> ps0 = ps;
 
 
 		const int debug = false;
@@ -178,6 +184,6 @@ template void tse::drift_pass(const tsc::ConfigType &conf, const double, ss_vect
 template void tse::drift_pass(const tsc::ConfigType &conf, const double, ss_vect<tps> &);
 
 template void tse::thin_kick(const tsc::ConfigType &conf, const double BxoBrho, const double ByoBrho,
-			     const double L, const double h_bend, const double h_ref, ss_vect<double> &ps);
+			     const double L, const double h_bend, const double h_ref, const ss_vect<double> &ps0, ss_vect<double> &ps);
 template void tse::thin_kick(const tsc::ConfigType &conf, const tps BxoBrho, const tps ByoBrho,
-			     const double L, const double h_bend, const double h_ref, ss_vect<tps> &ps);
+			     const double L, const double h_bend, const double h_ref, const ss_vect<tps> &ps0, ss_vect<tps> &ps);

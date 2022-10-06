@@ -24,6 +24,9 @@ from thor_scsi.lib import (
 from thor_scsi.lib import phase_space_index_internal as phase_space_ind
 
 import os
+import numpy as np
+
+import thor_scsi.lib as tslib
 
 import numpy as np
 import scipy as sp

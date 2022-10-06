@@ -232,6 +232,7 @@ radiate(const thor_scsi::core::ConfigType &conf, ss_vect<T> &ps, const double L,
 	// M. Sands "The Physics of Electron Storage Rings" SLAC-121, p. 98.
 	// ddelta/d(ds) = -C_gamma*E_0^3*(1+delta)^2*(B_perp/(Brho))^2/(2*pi)
 	T  p_s0, p_s1, ds, B2_perp = 0e0, B2_par = 0e0;
+	ss_vect<T> ps_save = ps;
 
 	const bool radiation = conf.radiation;
 	const bool compute_diffusion = conf.emittance;
@@ -274,7 +275,10 @@ radiate(const thor_scsi::core::ConfigType &conf, ss_vect<T> &ps, const double L,
 
 	// H = -p_s => ds = H*L.
 	ds = (1e0+cs[x_]*h_ref+(sqr(cs[px_])+sqr(cs[py_]))/2e0)*L;
-	// Compute perpendicular reference curve for comoving frame.
+	THOR_SCSI_LOG(DEBUG) << "'Field contribution' h_ref " << h_ref
+		  << " B (" <<  B[X_] << ", " << B[Y_] << ", " << B[Z_] <<")"
+		  << " cs "  << cs;
+	// compute perpendicular to curvature
 	get_B2(h_ref, B, cs, B2_perp, B2_par);
 
 	//THOR_SCSI_LOG(INFO)
