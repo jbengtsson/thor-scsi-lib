@@ -250,7 +250,18 @@ void tse::RadiationDelegateKick::setEnergy(const double val)
 }
 
 template<typename T>
-static bool check_ps_finite(gtpsa::ss_vect<T>& ps, const double max_val = 1e3)
+static inline double ps_coor_ref_value(T coor);
+
+static inline double ps_coor_ref_value(double coor)
+{
+	return coor;
+}
+static inline double ps_coor_ref_value(tps coor)
+{
+	return coor.cst();
+}
+template<typename T>
+static bool check_ps_finite(gtpsa::ss_vect<T> ps, const double max_val = 1e3)
 {
 	bool check_ps_finite = true;
 	for(int i=0; i < nv_tps; ++i){

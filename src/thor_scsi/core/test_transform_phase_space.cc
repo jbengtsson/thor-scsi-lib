@@ -172,7 +172,11 @@ BOOST_AUTO_TEST_CASE(test40_zero_ps)
 		CHECK_LONGITUDINAL_ZERO(ps);
 	}
 	{
+<<<<<<< HEAD
 		gtpsa::ss_vect<double> ps = ps_ref.clone();
+=======
+		gtpsa::ss_vect<double> ps = ps_ref;
+>>>>>>>  Merging radiate into gtpsa: work in progress
 		tf.setRoll(M_PI);
 		tf.forward(ps);
 		BOOST_CHECK_SMALL(ps[x_],   1e-21);
@@ -226,7 +230,11 @@ BOOST_AUTO_TEST_CASE(test50_roll_half_quater)
 	const gtpsa::ss_vect<double> ps_ref{x,px,y,py,0,0};
 
 	{
+<<<<<<< HEAD
 		gtpsa::ss_vect<double> ps = ps_ref.clone();
+=======
+		gtpsa::ss_vect<double> ps = ps_ref;
+>>>>>>>  Merging radiate into gtpsa: work in progress
 		BOOST_CHECK_CLOSE(ps[x_],         x, 1e-14);
 		BOOST_CHECK_CLOSE(ps[y_],         y, 1e-14);
 		BOOST_CHECK_CLOSE(ps[px_],       px, 1e-14);
