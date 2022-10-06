@@ -5,7 +5,7 @@
 #include <thor_scsi/elements/radiation_delegate.h>
 #include <thor_scsi/elements/bending.h>
 #include <thor_scsi/core/elements_basis.h>
-#include <tps/ss_vect.h>
+//#include <tps/ss_vect.h>
 #include <stdlib.h>
 #include <ostream>
 #include <memory>
@@ -72,8 +72,10 @@ static void compute_transport_matrix(ts::Accelerator& accelerator, const int fir
 
 	bool verbose = vm["verbose"].as<bool>();
 	bool very_verbose = vm["very_verbose"].as<bool>();
-	ss_vect<tps> ps;
-	ps.identity();
+	auto desc = gtpsa::desc(1, 6);
+	auto a_tps = gtpsa::tpsa(desc, mad_tpsa_default);
+	gtpsa::ss_vect<gtpsa::tpsa> ps(a_tps);
+	ps.set_identity();
 
 	tsc::ConfigType calc_config;
 
@@ -105,7 +107,7 @@ static void compute_transport_matrix(ts::Accelerator& accelerator, const int fir
 			if(very_verbose){
 				std::cout << "elem '" << elem->name << "', # counts " << cv.use_count() << std::endl;
 			}
-			elem->pass(calc_config, ps);
+			elem->propagate(calc_config, ps);
 		} else {
 			std::cerr << "Element " << n_elem << "could not be cast to Elemtype"
 				  << " element: " << cv << std::endl;
@@ -147,8 +149,11 @@ static void compute_transport_matrix_prop(ts::Accelerator& accelerator, const in
 	bool verbose = vm["verbose"].as<bool>();
 	bool very_verbose = vm["very_verbose"].as<bool>();
 	bool radiate = vm["radiate"].as<bool>();
-	ss_vect<tps> ps;
-	ps.identity();
+
+	auto desc = gtpsa::desc(1, 6);
+	auto a_tps = gtpsa::tpsa(desc, mad_tpsa_default);
+	gtpsa::ss_vect<gtpsa::tpsa> ps(a_tps);
+	ps.set_identity();
 
 	tsc::ConfigType calc_config;
 
@@ -175,8 +180,8 @@ static void compute_transport_matrix_dbl(ts::Accelerator& accelerator, const int
 {
 
 	bool verbose = vm["verbose"].as<bool>();
-	ss_vect<double> ps;
-	ps.zero();
+	gtpsa::ss_vect<double> ps(0e0);
+	ps.set_zero();
 	ps[x_]  = 1e-3;
 	ps[px_] = 2e-3;
 	ps[y_]  = 3e-3;
@@ -196,7 +201,7 @@ static void compute_transport_matrix_dbl(ts::Accelerator& accelerator, const int
 		}
 		auto elem = std::dynamic_pointer_cast<tsc::ElemType>(cv);
 		if(elem){
-			elem->pass(calc_config, ps);
+			elem->propagate(calc_config, ps);
 		} else {
 			std::cerr << "Element " << n_elem << "could not be cast to Elemtype"
 				  << " element: " << cv << std::endl;
@@ -260,7 +265,8 @@ static void track_n_turns(ts::Accelerator& accelerator)
 		return;
 	}
 
-	ss_vect<double> ps;
+	gtpsa::ss_vect<double> ps(0e0);
+	ps.set_zero();
 	ps[x_]     = vm["x_pos"].as<double>();
 	ps[px_]    = vm["px"].as<double>();
 	ps[y_]     = vm["y_pos"].as<double>();
@@ -285,7 +291,7 @@ static void track_n_turns(ts::Accelerator& accelerator)
 
 		for(auto cv : accelerator){
 			auto& elem = dynamic_cast<tsc::ElemType&>(*cv);
-			elem.pass(calc_config, ps);
+			elem.propagate(calc_config, ps);
 		}
 	}
 	std::cout << "End      ps " << ps << std::endl;

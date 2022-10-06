@@ -146,8 +146,11 @@ namespace thor_scsi::core {
 		template<typename T>
 		inline void _field(const T x, const T y, T *Bx, T * By)  const {
 			int n = this->coeffs.size() -1;
-			T rBy = this->coeffs[n].real(),  rBx = this->coeffs[n].imag(), trBy(0.0), term1, term2;
+			T rBy(x),  rBx(x), trBy(x), term1(x), term2(x);
 
+			rBy = this->coeffs[n].real();
+			rBx = this->coeffs[n].imag();
+			trBy = 0e0;
 			for(int i=n - 2; i >= 0; --i){
 				cdbl_intern tmp = this->coeffs[i];
 #if 0
@@ -193,18 +196,28 @@ namespace thor_scsi::core {
 			*/
 
 		}
-		virtual inline void field(const double x, const double y, double *Bx, double * By)  const override final {
-			_field(x, y, Bx, By);
-		}
-		virtual inline void field(const tps x, const tps y, tps *Bx, tps *By) const override final{
-			// "Need to understand how to interpolate field with tps"
-			_field(x, y, Bx, By);
-		}
-		virtual inline void gradient(const tps x, const tps y, tps *Gx, tps *Gy) const override final{
-			// "Need to understand how to interpolate gradient with tps"
+		virtual inline void field(const double      x, const double      y, double      *Bx, double    * By) const override final { _field(x, y, Bx, By); }
+	    // "Need to understand how to interpolate field with tps"
+		virtual inline void field(const tps         x, const tps         y, tps         *Bx, tps        *By) const override final { _field(x, y, Bx, By); }
+		virtual inline void field(const gtpsa::tpsa x, const gtpsa::tpsa y, gtpsa::tpsa *Bx, gtpsa::tpsa *By) const override final { _field(x, y, Bx, By); }
+
+		virtual inline void gradient(const tps x, const tps    y, tps    *Gx, tps     *Gy) const override final{
+		    // "Need to understand how to interpolate gradient with tps"
 			throw thor_scsi::NotImplemented("Multipoles: gradient in tps not implemented");
 		}
-		virtual inline void gradient(const tps x, const tps y, double *Gx, double *Gy) const override final{
+		virtual inline void gradient(const gtpsa::tpsa x, const gtpsa::tpsa    y, gtpsa::tpsa    *Gx, gtpsa::tpsa     *Gy) const override final{
+		    // "Need to understand how to interpolate gradient with tps"
+			throw thor_scsi::NotImplemented("Multipoles: gradient in tps, gtpsa::tpsa not implemented");
+		}
+		virtual inline void gradient(const tps x, const tps    y, double *Gx, double *Gy) const override final{
+			// "Need to understand how to interpolate gradient with tps"
+		        // throw thor_scsi::NotImplemented("Computing gradient in doubles for coordinates in tps x and tps y not implemented");
+			const cdbl pos(0, 0);
+			const cdbl tmp = this->gradient(pos);
+			*Gy = tmp.real();
+			*Gx = tmp.imag();
+		}
+		virtual inline void gradient(const gtpsa::tpsa x, const gtpsa::tpsa    y, double *Gx, double *Gy) const override final{
 			// "Need to understand how to interpolate gradient with tps"
 		        // throw thor_scsi::NotImplemented("Computing gradient in doubles for coordinates in tps x and tps y not implemented");
 			const cdbl pos(0, 0);

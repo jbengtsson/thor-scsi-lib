@@ -11,6 +11,7 @@ namespace thor_scsi {
 		   Empty space between two "typical accelerator components"
 		 */
 		using thor_scsi::core::ElemType;
+		using thor_scsi::core::ConfigType;
 		class DriftType : public ElemType {
 		public:
 			inline DriftType(const Config &config) : ElemType(config){
@@ -33,14 +34,15 @@ namespace thor_scsi {
 			//}
 			// double GetPB(const int n) { return 0e0; };
 
-			inline void pass(thor_scsi::core::ConfigType &conf, ss_vect<double> &ps) override final
-			{ _pass(conf, ps); };
-			inline void pass(thor_scsi::core::ConfigType &conf, ss_vect<tps> &ps) override final
-			{ _pass(conf, ps); };
+		        // inline void propagate(ConfigType &conf, ss_vect<double>             &ps) override final { _propagate(conf, ps); };
+			// inline void propagate(ConfigType &conf, ss_vect<tps>                &ps) override final { _propagate(conf, ps); };
+			inline virtual void propagate(ConfigType &conf, gtpsa::ss_vect<double>      &ps) override final { _propagate(conf, ps); };
+			inline virtual void propagate(ConfigType &conf, gtpsa::ss_vect<gtpsa::tpsa> &ps) override final { _propagate(conf, ps); };
+			inline virtual void propagate(ConfigType &conf, gtpsa::ss_vect<tps>         &ps) override final { _propagate(conf, ps); };
 
 		private:
-			template<typename T>
-			void _pass(const thor_scsi::core::ConfigType &conf, ss_vect<T> &ps);
+			// template<typename T> void _propagate(const ConfigType &conf, ss_vect<T>        &ps);
+			template<typename T> void _propagate(const ConfigType &conf, gtpsa::ss_vect<T> &ps);
 		};
 	}
 }
