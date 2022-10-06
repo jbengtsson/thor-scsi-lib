@@ -68,7 +68,7 @@ namespace thor_scsi::elements{
 			this->m_has_tps = true;
 		}
 		inline void store(const gtpsa::ss_vect<gtpsa::tpsa> &a_tps)  {
-			this->m_ptpsa = std::make_shared<gtpsa::ss_vect<gtpsa::tpsa>>(gtpsa::ss_vect<gtpsa::tpsa>(a_tps[0]));
+			this->m_ptpsa = std::make_shared<gtpsa::ss_vect<gtpsa::tpsa>>(a_tps[0]);
 			this->m_ptpsa->_copyInPlace(a_tps);
 			this->m_has_tpsa = true;
 		}

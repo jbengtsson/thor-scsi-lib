@@ -72,7 +72,7 @@ static void compute_transport_matrix(ts::Accelerator& accelerator, const int fir
 
 	bool verbose = vm["verbose"].as<bool>();
 	bool very_verbose = vm["very_verbose"].as<bool>();
-	auto desc = gtpsa::desc(1, 6);
+	auto desc = std::make_shared<gtpsa::desc>(1, 6);
 	auto a_tps = gtpsa::tpsa(desc, mad_tpsa_default);
 	gtpsa::ss_vect<gtpsa::tpsa> ps(a_tps);
 	ps.set_identity();
@@ -150,7 +150,7 @@ static void compute_transport_matrix_prop(ts::Accelerator& accelerator, const in
 	bool very_verbose = vm["very_verbose"].as<bool>();
 	bool radiate = vm["radiate"].as<bool>();
 
-	auto desc = gtpsa::desc(1, 6);
+	auto desc = std::make_shared<gtpsa::desc>(1, 6);
 	auto a_tps = gtpsa::tpsa(desc, mad_tpsa_default);
 	gtpsa::ss_vect<gtpsa::tpsa> ps(a_tps);
 	ps.set_identity();

@@ -24,7 +24,7 @@ namespace ts = thor_scsi;
 
 int reg_done = ts::register_elements();
 
-auto a_desc = gtpsa::desc(1, 6);
+auto a_desc = std::make_shared<gtpsa::desc>(1, 6);
 auto tpsa_ref = gtpsa::tpsa(a_desc, mad_tpsa_default);
 
 
