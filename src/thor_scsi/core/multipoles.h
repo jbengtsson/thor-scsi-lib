@@ -9,6 +9,8 @@
 #include <stdexcept>
 #include <thor_scsi/core/field_interpolation.h>
 #include <thor_scsi/core/exceptions.h>
+#include <gtpsa/utils.hpp>
+#include <gtpsa/utils_tps.hpp>
 
 // #define THOR_SCSI_USE_F128 1
 #ifdef THOR_SCSI_USE_F128
@@ -144,13 +146,19 @@ namespace thor_scsi::core {
 		}
 
 		template<typename T>
-		inline void _field(const T x, const T y, T *Bx, T * By)  const {
+		inline void _field(const T& x, const T& y, T *Bx, T * By)  const {
 			int n = this->coeffs.size() -1;
-			T rBy(x),  rBx(x), trBy(x), term1(x), term2(x);
+			// T rBy   = std::move( gtpsa::same_as_instance(x) );
+			// T rBx   = std::move( gtpsa::same_as_instance(y) );
+			// T trBy  = std::move( gtpsa::same_as_instance(y) );
+			// T term1 = std::move( gtpsa::same_as_instance(x) );
+			// T term2 = std::move( gtpsa::same_as_instance(x) );
 
+			T rBy = gtpsa::same_as_instance(x);
+			T rBx = gtpsa::same_as_instance(y);
 			rBy = this->coeffs[n].real();
 			rBx = this->coeffs[n].imag();
-			trBy = 0e0;
+			// trBy = 0e0;
 			for(int i=n - 2; i >= 0; --i){
 				cdbl_intern tmp = this->coeffs[i];
 #if 0
@@ -164,7 +172,9 @@ namespace thor_scsi::core {
 				rBx  = y * rBy + x * rBx + tmp.imag();
 				rBy = std::move(trBy);
 
-				term1 = x; term1 *= rBy; term2 =  y * rBx;
+				term1 = gtpsa::clone(x); term1 *= rBy;
+				term2 =  gtpsa::clone(y);
+				term2 *= rBx;
 				trBy = term1; trBy -= term2; trBy += tmp.real();
 
 				term1 = y; term1 *= rBy; term2 =  x * rBx;
@@ -173,18 +183,23 @@ namespace thor_scsi::core {
 
 #else
 
-				term1 = x; term1 *= rBy; term2 = y; term2 *= rBx;
-				trBy = term1; trBy -= term2; trBy += tmp.real();
 
-				term1 = y; term1 *= rBy; term2 =  x; term2 *= rBx;
-				rBx = term1; rBx += term2; rBx += tmp.imag();
+				T term1 = gtpsa::clone(x); term1 *= rBy;
+				T term2 = gtpsa::clone(y); term2 *= rBx;
+				T trBy = std::move(term1); trBy -= term2; trBy += tmp.real();
+
+				{
+				    T term1 = gtpsa::clone(y); term1 *= rBy;
+				    T term2 = gtpsa::clone(x); term2 *= rBx;
+				    rBx = std::move(term1); rBx += term2; rBx += tmp.imag();
+				}
 				rBy = std::move(trBy);
 #endif
 
 
 			}
-			*Bx = rBx;
-			*By = rBy;
+			*Bx = std::move(rBx);
+			*By = std::move(rBy);
 			/*
 			  MB[HOMmax-Order]
 				ByoBrho = MB[Order+HOMmax]; BxoBrho = MB[HOMmax-Order];
@@ -196,9 +211,9 @@ namespace thor_scsi::core {
 			*/
 
 		}
-		virtual inline void field(const double      x, const double      y, double      *Bx, double    * By) const override final { _field(x, y, Bx, By); }
+		virtual inline void field(const double      x, const double      y, double      *Bx, double      *By) const override final { _field(x, y, Bx, By); }
 	    // "Need to understand how to interpolate field with tps"
-		virtual inline void field(const tps         x, const tps         y, tps         *Bx, tps        *By) const override final { _field(x, y, Bx, By); }
+		virtual inline void field(const tps         x, const tps         y, tps         *Bx, tps         *By) const override final { _field(x, y, Bx, By); }
 		virtual inline void field(const gtpsa::tpsa x, const gtpsa::tpsa y, gtpsa::tpsa *Bx, gtpsa::tpsa *By) const override final { _field(x, y, Bx, By); }
 
 		virtual inline void gradient(const tps x, const tps    y, tps    *Gx, tps     *Gy) const override final{

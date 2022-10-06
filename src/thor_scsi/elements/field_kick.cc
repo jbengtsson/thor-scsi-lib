@@ -275,6 +275,8 @@ inline void tse::FieldKick::FieldKickForthOrder::_localPropagate(tsc::ConfigType
 	if(!parent){
 		throw std::logic_error("parent was nullptr");
 	}
+
+#ifdef SYNCHROTRON_INTEGRALS
 	// computeRadiationIntegralsStart
 #ifdef SYNCHROTRON_INTEGRALS
 	parent->_synchrotronIntegralsInit(conf, ps);
@@ -298,6 +300,7 @@ inline void tse::FieldKick::FieldKickForthOrder::_localPropagate(tsc::ConfigType
 		// call to radiation before thin kick
 		parent->thinKickAndRadiate(conf, t_intp, dkL2, Pirho, h_ref, ps);
 
+#ifdef SYNCHROTRON_INTEGRALS
 		// why this step only here
 		// computeRadiationIntegralsStep
 #ifdef SYNCHROTRON_INTEGRALS
@@ -309,6 +312,7 @@ inline void tse::FieldKick::FieldKickForthOrder::_localPropagate(tsc::ConfigType
 		parent->thinKickAndRadiate(conf, t_intp, dkL1, Pirho, h_ref, ps);
 		drift_propagate(conf, dL1, ps);
 
+#ifdef SYNCHROTRON_INTEGRALS
 		// computeRadiationIntegralsStep
 #ifdef SYNCHROTRON_INTEGRALS
 		parent->_synchrotronIntegralsStep(conf, ps, rad_step + 2);
@@ -426,28 +430,17 @@ void tse::FieldKick::_quadFringe(thor_scsi::core::ConfigType &conf, gtpsa::ss_ve
 }
 
 template<typename T>
-<<<<<<< HEAD
 inline void tse::FieldKick::
 thinKickAndRadiate(const thor_scsi::core::ConfigType &conf,
 		   const thor_scsi::core::Field2DInterpolation& intp,
 		   const double L, const double h_bend, const double h_ref,
 		   gtpsa::ss_vect<T> &ps)
-=======
-inline void tse::FieldKick::thinKickAndRadiate(const thor_scsi::core::ConfigType &conf,
-					   const thor_scsi::core::Field2DInterpolation& intp,
-					   const double L, const double h_bend, const double h_ref,
-					   gtpsa::ss_vect<T> &ps)
->>>>>>> Using mad-ng's gtpsa for truncated power series calculations
 {
 
 	// const auto x = ps[x_];
 	// const auto y = ps[y_];
-<<<<<<< HEAD
         const gtpsa::ss_vect<T> ps0 = ps;
 	T BxoBrho(ps[0]), ByoBrho(ps[0]);
-=======
-    T BxoBrho(ps[0]), ByoBrho(ps[0]);
->>>>>>> Using mad-ng's gtpsa for truncated power series calculations
 
 	//intp.field(ps[x_], ps[y_], &BxoBrho, &ByoBrho);
 	/*
