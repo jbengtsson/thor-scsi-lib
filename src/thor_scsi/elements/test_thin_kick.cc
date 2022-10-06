@@ -415,7 +415,8 @@ BOOST_AUTO_TEST_CASE(test60_higher_orders)
 
 		/* on axis */
 		{
-			gtpsa::ss_vect<double> ps = {0, 0, 0, 0, 0, 0};
+			const gtpsa::ss_vect<double> ps_orig = {0, 0, 0, 0, 0, 0};
+			gtpsa::ss_vect<double> ps = ps_orig.clone();
 			thin_kick(calc_config, muls, length, h_bend, h_ref, ps_orig, ps);
 			BOOST_CHECK_SMALL(ps[x_],     1e-14);
 			BOOST_CHECK_SMALL(ps[px_],    1e-14);
