@@ -4,7 +4,7 @@
 #include <thor_scsi/elements/element_helpers.h>
 #include <thor_scsi/elements/utils.h>
 #include <tps/tps_type.h>
-#include <tps/math_pass.h>
+// #include <tps/math_pass.h>
 
 #include <sstream>
 
@@ -21,17 +21,17 @@ namespace tse = thor_scsi::elements;
 
 namespace thor_scsi::elements {
 	template<typename T>
-	void edge_focus(const tsc::ConfigType &conf, const double irho,
-			const double phi /* in degrees */, const double gap, ss_vect<T> &ps);
+	void edge_focus(const tsc::ConfigType &conf, const double irho, const double phi /* in degrees */,
+			    const double gap, gtpsa::ss_vect<T> &ps);
 
 	template<typename T>
-	void p_rot(const tsc::ConfigType &conf, double phi, ss_vect<T> &ps);
+	void p_rot(const tsc::ConfigType &conf, double phi, gtpsa::ss_vect<T> &ps);
 
 	template<typename T>
-	void bend_fringe(const tsc::ConfigType &conf, const double hb, ss_vect<T> &ps);
+	void bend_fringe(const tsc::ConfigType &conf, const double hb, gtpsa::ss_vect<T> &ps);
 
 	template<typename T>
-	void quad_fringe(const tsc::ConfigType &conf, const double b2, ss_vect<T> &ps);
+	void quad_fringe(const tsc::ConfigType &conf, const double b2, gtpsa::ss_vect<T> &ps);
 
 }
 
@@ -45,8 +45,8 @@ namespace thor_scsi::elements {
  *
  */
 template<typename T>
-void tse::edge_focus(const tsc::ConfigType &conf, const double irho,
-		     const double phi /* in degrees */, const double gap, ss_vect<T> &ps)
+void tse::edge_focus(const tsc::ConfigType &conf, const double irho, const double phi /* in degrees */,
+		    const double gap, gtpsa::ss_vect<T> &ps)
 {
   ps[px_] += irho*tan(degtorad(phi))*ps[x_];
   if (!conf.dip_edge_fudge) {
@@ -75,10 +75,9 @@ void tse::edge_focus(const tsc::ConfigType &conf, const double irho,
  * \endverbatim
  */
 template<typename T>
-void tse::p_rot(const tsc::ConfigType &conf, double phi, ss_vect<T> &ps)
+void tse::p_rot(const tsc::ConfigType &conf, double phi, gtpsa::ss_vect<T> &ps)
 {
-  T  c, s, t, pz, val; // p
-  ss_vect<T> ps1;
+    T  c(ps[0]), s(ps[0]), t(ps[0]), pz(ps[0]), val(ps[0]); // p
 
   c = cos(degtorad(phi));
   s = sin(degtorad(phi));
@@ -93,7 +92,8 @@ void tse::p_rot(const tsc::ConfigType &conf, double phi, ss_vect<T> &ps)
     // px[y_]  += ps1[x_]*ps1[py_]*s/p;
     // px[ct_] += (1e0+ps1[delta_])*ps1[x_]*s/p;
 
-    ps1 = ps; val = 1e0 - ps1[px_]*t/pz;
+      gtpsa::ss_vect<T> ps1 = ps.clone();
+      val = 1e0 - ps1[px_]*t/pz;
     ps[x_]  = ps1[x_]/(c*val);
     ps[px_] = ps1[px_]*c + s*pz;
     ps[y_]  = ps1[y_] + t*ps1[x_]*ps1[py_]/(pz*val);
@@ -114,16 +114,17 @@ void tse::p_rot(const tsc::ConfigType &conf, double phi, ss_vect<T> &ps)
  * \endverbatim
  */
 template<typename T>
-void tse::bend_fringe(const tsc::ConfigType &conf, const double hb, ss_vect<T> &ps)
+void tse::bend_fringe(const tsc::ConfigType &conf, const double hb, gtpsa::ss_vect<T> &ps)
 {
-  T          coeff, u, pz, pz2, pz3;
-  ss_vect<T> ps1;
+    throw std::runtime_error("bend fringe needs to be implemented ");
+#if 0
+  T  u, pz, pz2, pz3;
+  gtpsa::ss_vect<T> ps1 = ps.clone();
 
-  coeff = -hb/2e0;
-  ps1 = ps;
+  const double coeff = -hb/2e0;
   pz = get_p_s(conf, ps);
   pz2 = sqr(pz); pz3 = pz*pz2;
-  u = 1e0 + 4e0*coeff*ps1[px_]*ps1[y_]*ps1[py_]/pz3;
+  auto u = 1e0 + 4e0*coeff*ps1[px_]*ps1[y_]*ps1[py_]/pz3;
   if (u >= 0e0) {
     ps[y_]  = 2e0*ps1[y_]/(1e0+sqrt(u));
     ps[x_]  = ps1[x_] - coeff*sqr(ps[y_])*(pz2+sqr(ps1[px_]))/pz3;
@@ -139,15 +140,17 @@ void tse::bend_fringe(const tsc::ConfigType &conf, const double hb, ss_vect<T> &
     ps[delta_] = NAN; ps[ct_] = NAN;
     throw ts::PhysicsViolation(stream.str());
   }
+#endif
 }
 
 
 template<typename T>
-void tse::quad_fringe(const tsc::ConfigType &conf, const double b2, ss_vect<T> &ps)
+void tse::quad_fringe(const tsc::ConfigType &conf, const double b2, gtpsa::ss_vect<T> &ps)
 {
-  T u, p_s;
+    //T u, p_s;
 
-  u = b2/(12e0*(1e0+ps[delta_])); p_s = u/(1e0+ps[delta_]);
+  T u = b2/(12e0*(1e0+ps[delta_]));
+  T p_s = u/(1e0+ps[delta_]);
   ps[py_] /= 1e0 - 3e0*u*sqr(ps[y_]); ps[y_] -= u*tse::cube(ps[y_]);
   if (conf.Cavity_on) ps[ct_] -= p_s*tse::cube(ps[y_])*ps[py_];
   ps[px_] /= 1e0 + 3e0*u*sqr(ps[x_]);
@@ -227,8 +230,7 @@ splitIntegrationStep(const double dL, double *dL1, double *dL2, double *dkL1, do
  *
  */
 template<typename T>
-inline void tse::FieldKick::FieldKickForthOrder::
-_localPass(tsc::ConfigType &conf, ss_vect<T> &ps)
+inline void tse::FieldKick::FieldKickForthOrder::_localPropagate(tsc::ConfigType &conf, gtpsa::ss_vect<T> &ps)
 {
 
 
@@ -289,10 +291,10 @@ _localPass(tsc::ConfigType &conf, ss_vect<T> &ps)
 		parent->_synchrotronIntegralsStep(conf, ps, rad_step);
 #endif /* SYNCHROTRON_INTEGRALS */
 
-		drift_pass(conf, dL1, ps);
+		drift_propagate(conf, dL1, ps);
 		// call to radiation before thin kick
 		parent->thinKickAndRadiate(conf, t_intp, dkL1, Pirho, h_ref, ps);
-		drift_pass(conf, dL2, ps);
+		drift_propagate(conf, dL2, ps);
 		// call to radiation before thin kick
 		parent->thinKickAndRadiate(conf, t_intp, dkL2, Pirho, h_ref, ps);
 
@@ -302,10 +304,10 @@ _localPass(tsc::ConfigType &conf, ss_vect<T> &ps)
 		parent->_synchrotronIntegralsStep(conf, ps, rad_step + 1);
 #endif /* SYNCHROTRON_INTEGRALS */
 
-		drift_pass(conf, dL2, ps);
+		drift_propagate(conf, dL2, ps);
 		// call to radiation before thin kick
 		parent->thinKickAndRadiate(conf, t_intp, dkL1, Pirho, h_ref, ps);
-		drift_pass(conf, dL1, ps);
+		drift_propagate(conf, dL1, ps);
 
 		// computeRadiationIntegralsStep
 #ifdef SYNCHROTRON_INTEGRALS
@@ -392,7 +394,7 @@ void tse::FieldKick::show(std::ostream& strm, const int level) const
 
 
 template<typename T>
-void tse::FieldKick::_quadFringe(thor_scsi::core::ConfigType &conf, ss_vect<T> &ps)
+void tse::FieldKick::_quadFringe(thor_scsi::core::ConfigType &conf, gtpsa::ss_vect<T> &ps)
 {
 
 	if (!conf.quad_fringe){ return ; }
@@ -426,15 +428,15 @@ void tse::FieldKick::_quadFringe(thor_scsi::core::ConfigType &conf, ss_vect<T> &
 template<typename T>
 inline void tse::FieldKick::
 thinKickAndRadiate(const thor_scsi::core::ConfigType &conf,
-		   const thor_scsi::core::Field2DInterpolation& intp, const double L,
-		   const double h_bend, const double h_ref, ss_vect<T> &ps)
+		   const thor_scsi::core::Field2DInterpolation& intp,
+		   const double L, const double h_bend, const double h_ref,
+		   gtpsa::ss_vect<T> &ps)
 {
 
 	// const auto x = ps[x_];
 	// const auto y = ps[y_];
-	///< todo: use clone instead!
-	const ss_vect<T> ps0 = ps;
- 	T BxoBrho, ByoBrho;
+        const gtpsa::ss_vect<T> ps0 = ps;
+	T BxoBrho(ps[0]), ByoBrho(ps[0]);
 
 	//intp.field(ps[x_], ps[y_], &BxoBrho, &ByoBrho);
 	/*
@@ -449,8 +451,10 @@ thinKickAndRadiate(const thor_scsi::core::ConfigType &conf,
 
 	auto rad = this->getRadiationDelegate();
 	if(rad){
-		THOR_SCSI_LOG(DEBUG) <<  "\nComputing radiation:\n";
-		std::array<T, 3> B = {BxoBrho, ByoBrho + h_bend, 0};
+		THOR_SCSI_LOG(DEBUG) <<  "Delegating to computing radiation" << " \n";
+		T val_z(ps[0]);
+		val_z = 0e0;
+		std::array<T, 3> B = {BxoBrho, ByoBrho + h_bend, val_z};
 		rad->radiate(conf, ps, L, h_ref, B);
 	}
 	tse::thin_kick(conf, BxoBrho, ByoBrho, L, h_bend, h_ref, ps0, ps);
@@ -465,7 +469,7 @@ thinKickAndRadiate(const thor_scsi::core::ConfigType &conf,
  *
  */
 template<typename T>
-inline void tse::FieldKick::_localPassThin(const tsc::ConfigType &conf, ss_vect<T> &ps)
+inline void tse::FieldKick::_localPropagateThin(const tsc::ConfigType &conf, gtpsa::ss_vect<T> &ps)
 {
 	// length has to be zero here
 	/// todo: add a check at least for debug purposes
@@ -480,14 +484,14 @@ inline void tse::FieldKick::_localPassThin(const tsc::ConfigType &conf, ss_vect<
 
 
 template<typename T>
-inline void tse::FieldKick::_localPassBody(tsc::ConfigType &conf, ss_vect<T> &ps)
+inline void tse::FieldKick::_localPropagateBody(tsc::ConfigType &conf, gtpsa::ss_vect<T> &ps)
 {
 	/* define integration step */
 	if (!this->isThick()) {
-		tse::FieldKick::_localPassThin(conf, ps);
+		tse::FieldKick::_localPropagateThin(conf, ps);
 		return;
 	}
-	this->integ4O._localPass(conf, ps);
+	this->integ4O._localPropagate(conf, ps);
 }
 
 /*
@@ -516,14 +520,14 @@ inline void tse::FieldKick::_localPassBody(tsc::ConfigType &conf, ss_vect<T> &ps
  * \endverbatim
  */
 template<typename T>
-void tse::FieldKick::_localPass(tsc::ConfigType &conf, ss_vect<T> &ps)
+void tse::FieldKick::_localPropagate(tsc::ConfigType &conf, gtpsa::ss_vect<T> &ps)
 {
 
 
 	switch (Pmethod) {
 	case Meth_Fourth: break;
 		/*
-		  Pmethod should be test when set ... thus can not pass
+		  Pmethod should be test when set ... thus can not propagate
 		  down here
 		*/
 	default:
@@ -576,7 +580,7 @@ void tse::FieldKick::_localPass(tsc::ConfigType &conf, ss_vect<T> &ps)
 	}
 
 	// Body calculation delegated
-	tse::FieldKick::_localPassBody(conf, ps);
+	tse::FieldKick::_localPropagateBody(conf, ps);
 
 	// Fringe fields.
 	if (!conf.Cart_Bend) {
@@ -590,5 +594,6 @@ void tse::FieldKick::_localPass(tsc::ConfigType &conf, ss_vect<T> &ps)
 }
 
 
-template void tse::FieldKick::_localPass(tsc::ConfigType &conf, ss_vect<double> &ps);
-template void tse::FieldKick::_localPass(tsc::ConfigType &conf, ss_vect<tps> &ps);
+template void tse::FieldKick::_localPropagate(tsc::ConfigType &conf, gtpsa::ss_vect<double>      &ps);
+template void tse::FieldKick::_localPropagate(tsc::ConfigType &conf, gtpsa::ss_vect<gtpsa::tpsa> &ps);
+template void tse::FieldKick::_localPropagate(tsc::ConfigType &conf, gtpsa::ss_vect<tps>         &ps);

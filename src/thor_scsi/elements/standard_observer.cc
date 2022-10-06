@@ -4,7 +4,7 @@ namespace tse = thor_scsi::elements;
 namespace tsc = thor_scsi::core;
 
 template<typename T>
-inline void tse::StandardObserver::_view(std::shared_ptr<const tsc::CellVoid> elem, const ss_vect<T> &ps, const enum tsc::ObservedState state, const int cnt)
+inline void tse::StandardObserver::_view(std::shared_ptr<const tsc::CellVoid> elem, const gtpsa::ss_vect<T> &ps, const enum tsc::ObservedState state, const int cnt)
 {
 	switch(state){
 	case tsc::ObservedState::start:
@@ -22,12 +22,16 @@ inline void tse::StandardObserver::_view(std::shared_ptr<const tsc::CellVoid> el
 	}
 }
 
-void tse::StandardObserver::view(std::shared_ptr<const tsc::CellVoid> elem, const ss_vect<double> &ps, const enum tsc::ObservedState state, const int cnt)
+void tse::StandardObserver::view(std::shared_ptr<const tsc::CellVoid> elem, const gtpsa::ss_vect<double> &ps, const enum tsc::ObservedState state, const int cnt)
 {
 	_view(elem, ps, state, cnt);
 }
 
-void tse::StandardObserver::view(std::shared_ptr<const tsc::CellVoid> elem, const ss_vect<tps> &ps, const enum tsc::ObservedState state, const int cnt)
+void tse::StandardObserver::view(std::shared_ptr<const tsc::CellVoid> elem, const gtpsa::ss_vect<tps> &ps, const enum tsc::ObservedState state, const int cnt)
+{
+	_view(elem, ps, state, cnt);
+}
+void tse::StandardObserver::view(std::shared_ptr<const tsc::CellVoid> elem, const gtpsa::ss_vect<gtpsa::tpsa> &ps, const enum tsc::ObservedState state, const int cnt)
 {
 	_view(elem, ps, state, cnt);
 }

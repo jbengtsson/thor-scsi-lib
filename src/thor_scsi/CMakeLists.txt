@@ -79,11 +79,11 @@ set(thor_scsi_core_FILES
   elements/utils.cc
   elements/element_helpers.cc
   elements/drift.cc
+  elements/cavity.cc
   elements/radiation_delegate.cc
   elements/field_kick.cc
   elements/mpole.cc
   elements/marker.cc
-  elements/cavity.cc
   elements/standard_observer.cc
   elements/standard_aperture.cc
   std_machine/std_machine.cc
@@ -99,6 +99,7 @@ add_library(thor_scsi::core ALIAS thor_scsi_core)
 target_include_directories(thor_scsi_core
     PUBLIC
     "$<BUILD_INTERFACE:${thor_scsi_INCLUDE_DIR}>"
+    "$<BUILD_INTERFACE:${gtpsa_cpp_INCLUDE_DIR}>"
     "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )
 
@@ -127,9 +128,12 @@ add_library(thor_scsi SHARED
   ${thor_scsi_HEADERS}
 )
 
+message(STATUS "gtpsa_cpp_INCLUDEDIR:"  ${gtpsa_cpp_INCLUDE_DIR})
+
 target_include_directories(thor_scsi
     PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../>"
+    "$<BUILD_INTERFACE:${gtpsa_cpp_INCLUDE_DIR}>"
     "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )
 

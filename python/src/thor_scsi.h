@@ -4,7 +4,8 @@
 #include <pybind11/pybind11.h>
 #include <string>
 #include <sstream>
-#include <tps/ss_vect.h>
+#include <gtpsa/ss_vect.h>
+#include <gtpsa/tpsa.hpp>
 #include <tps/tps_type.h>
 
 #ifndef NO_TPSA

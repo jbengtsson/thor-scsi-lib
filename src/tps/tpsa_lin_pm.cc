@@ -108,6 +108,10 @@ tps::tps(const double r, const int i)
     davar_(ltps, r, i);
 }
 
+tps tps::clone(void) const {
+    tps r = *this;
+    return r;
+}
 tps::tps(const tps &x) {
   char name[11];
 

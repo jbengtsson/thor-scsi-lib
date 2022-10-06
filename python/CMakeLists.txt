@@ -18,6 +18,7 @@ target_include_directories(lib
   ${flame_INCLUDE_DIR}
   "$<BUILD_INTERFACE:${thor_scsi_INCLUDE_DIR}>"
   "$<BUILD_INTERFACE:${flame_INCLUDE_DIR}>"
+  "$<BUILD_INTERFACE:${gtpsa_cpp_INCLUDE_DIR}>"
   "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )
 
@@ -28,6 +29,7 @@ target_link_libraries(lib
   thor_scsi
   thor_scsi_core
   tpsa_lin
+  gtpsa
   ${flame_CORE_LIBRARY}
   ${ARMADILLO_LIBRARIES}
   #

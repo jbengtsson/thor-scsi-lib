@@ -26,6 +26,8 @@ class tps {
   // check length (nv_tps)
   tps(const double, const long int []);
   tps(const tps &);
+
+  tps clone(void) const;
   ~tps(void);
 
   void print(const std::string &);

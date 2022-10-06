@@ -37,7 +37,7 @@ ts::Accelerator::Accelerator(const std::vector<std::shared_ptr<thor_scsi::core::
 
 template<typename T>
 int
-ts::Accelerator::_propagate(thor_scsi::core::ConfigType& conf, ss_vect<T> &ps, size_t start, int max_elements, size_t n_turns)// const
+ts::Accelerator::_propagate(thor_scsi::core::ConfigType& conf, gtpsa::ss_vect<T> &ps, size_t start, int max_elements, size_t n_turns)// const
 {
 
 	const int nelem = static_cast<int>(this->size());
@@ -74,7 +74,7 @@ ts::Accelerator::_propagate(thor_scsi::core::ConfigType& conf, ss_vect<T> &ps, s
 		if(observer){
 			observer->view(std::const_pointer_cast<tsc::ElemType>(elem), ps, tsc::ObservedState::start, 0);
 		}
-		elem->pass(conf, ps);
+		elem->propagate(conf, ps);
 		if(observer){
 			observer->view(elem, ps, tsc::ObservedState::end, 0);
 		}
@@ -110,13 +110,18 @@ ts::Accelerator::_propagate(thor_scsi::core::ConfigType& conf, ss_vect<T> &ps, s
 
 
 int
-ts::Accelerator::propagate(thor_scsi::core::ConfigType& conf, ss_vect_dbl &ps, size_t start, int max_elements, size_t n_turns)// const
+ts::Accelerator::propagate(thor_scsi::core::ConfigType& conf, ss_vect_dbl  &ps, size_t start, int max_elements, size_t n_turns)// const
 {
     return _propagate(conf, ps, start, max_elements, n_turns);
 }
 
 int
 ts::Accelerator::propagate(thor_scsi::core::ConfigType& conf, ss_vect_tps  &ps, size_t start, int max_elements, size_t n_turns)// const
+{
+    return _propagate(conf, ps, start, max_elements, n_turns);
+}
+int
+ts::Accelerator::propagate(thor_scsi::core::ConfigType& conf, ss_vect_tpsa &ps, size_t start, int max_elements, size_t n_turns)// const
 {
     return _propagate(conf, ps, start, max_elements, n_turns);
 }
