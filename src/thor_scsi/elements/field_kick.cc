@@ -426,17 +426,28 @@ void tse::FieldKick::_quadFringe(thor_scsi::core::ConfigType &conf, gtpsa::ss_ve
 }
 
 template<typename T>
+<<<<<<< HEAD
 inline void tse::FieldKick::
 thinKickAndRadiate(const thor_scsi::core::ConfigType &conf,
 		   const thor_scsi::core::Field2DInterpolation& intp,
 		   const double L, const double h_bend, const double h_ref,
 		   gtpsa::ss_vect<T> &ps)
+=======
+inline void tse::FieldKick::thinKickAndRadiate(const thor_scsi::core::ConfigType &conf,
+					   const thor_scsi::core::Field2DInterpolation& intp,
+					   const double L, const double h_bend, const double h_ref,
+					   gtpsa::ss_vect<T> &ps)
+>>>>>>> Using mad-ng's gtpsa for truncated power series calculations
 {
 
 	// const auto x = ps[x_];
 	// const auto y = ps[y_];
+<<<<<<< HEAD
         const gtpsa::ss_vect<T> ps0 = ps;
 	T BxoBrho(ps[0]), ByoBrho(ps[0]);
+=======
+    T BxoBrho(ps[0]), ByoBrho(ps[0]);
+>>>>>>> Using mad-ng's gtpsa for truncated power series calculations
 
 	//intp.field(ps[x_], ps[y_], &BxoBrho, &ByoBrho);
 	/*

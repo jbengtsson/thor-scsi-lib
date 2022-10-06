@@ -101,6 +101,7 @@ namespace thor_scsi::elements{
 	 *     E.g.: one for dipoles and one for anything else...
 	 */
 	template<typename T>
+<<<<<<< HEAD
 	void thin_kick(const tsc::ConfigType &conf, const T BxoBrho, const T ByoBrho,
 			    const double L, const double h_bend, const double h_ref,
 			    const gtpsa::ss_vect<T> &ps0,  gtpsa::ss_vect<T> &ps)
@@ -108,6 +109,15 @@ namespace thor_scsi::elements{
 		int        j;
 		// T          BxoBrho, ByoBrho, ByoBrho1, B[3],
 		T u(ps0[0]), p_s(ps[0]);
+=======
+	void tse::thin_kick(const tsc::ConfigType &conf, const T BxoBrho, const T ByoBrho,
+			    const double L, const double h_bend, const double h_ref, gtpsa::ss_vect<T> &ps)
+	{
+		int        j;
+		// T          BxoBrho, ByoBrho, ByoBrho1, B[3],
+		T u(ps[0]), p_s(ps[0]);
+		gtpsa::ss_vect<T> ps0 = ps;
+>>>>>>> Using mad-ng's gtpsa for truncated power series calculations
 
 
 		const int debug = false;
