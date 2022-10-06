@@ -2,17 +2,12 @@
 """
 import thor_scsi.lib as tslib
 from .accelerator import instrument_with_radiators
-from .closed_orbit import compute_closed_orbit
-from . import linalg
-from . import linear_optics as lo
-from .output import mat2txt
-from .phase_advance import compute_nus_for_symplectic_matrix
-from .phase_space_vector import ss_vect_tps2ps_jac, array2ss_vect_tps
 import numpy as np
 from dataclasses import dataclass
 
 import logging
 logger = logging.getLogger("thor-scsi")
+
 
 @dataclass
 class RadiationResult:
@@ -72,39 +67,6 @@ def calculate_radiation(
         f"calc_config radiation { calc_config.radiation} emmittance {calc_config.emittance} Cavity on {calc_config.Cavity_on}"
     )
 
-    # Compute the fixed point ... radation is on
-    r = compute_closed_orbit(acc, calc_config, delta=0e0)
-    print("r.one_turn_map")
-    print(mat2txt(r.one_turn_map))
-    # diagonalise M
-    n = 2 * dof
-    M_tp = np.transpose(r.one_turn_map[:n, :n])
-
-    # Finds eigen values and eigen vectors ... same functionallity as in
-    # find_phase_space_origin / find_phase_space_fix_point
-    w, v = np.linalg.eig(M_tp)
-    print("v")
-    print(mat2txt(v))
-    w, v = linalg.match_eigenvalues_to_plane(M_tp, w, v, n_dof=dof)
-    print("v matched to planes ?")
-    print(mat2txt(v))
-    # print(mat2txt(M_t))
-    eta = np.zeros(6, np.float)
-    A_inv, v1 = linalg.compute_A_inv_prev(dof, eta, v)
-
-    A = np.linalg.inv(A_inv)
-
-    Atmp = np.zeros([7, 7], dtype=np.float)
-    Atmp[:6, :6] = A
-    print("Atmp ")
-    print(mat2txt(Atmp))
-    # Atmp[[2, 3, 4, 5], :] = Atmp[[4, 5, 2, 3], :]
-    print("Atmp resuffled")
-    print(mat2txt(Atmp))
-    Ap = array2ss_vect_tps(Atmp)
-
-    print("Ap before calc")
-    print(Ap)
 
     # Diffusion coefficients
     acc.propagate(calc_config, Ap)

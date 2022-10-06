@@ -162,6 +162,7 @@ public:
 		PYBIND11_OVERRIDE(void, PyField2DInterpolation, gradient_py, t_pos, t_field);
 	}
 #endif
+
 private:
 
 	template<typename T>

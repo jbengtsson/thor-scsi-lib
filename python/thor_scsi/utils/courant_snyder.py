@@ -20,7 +20,7 @@ def compute_dnu(n_dof, A):
     """
     eps = 1e-15
 
-    ct_ = tslib.phase_space_index_internal.ct
+    ct_    = tslib.phase_space_index_internal.ct
     delta_ = tslib.phase_space_index_internal.delta
 
     a = np.zeros(n_dof)
@@ -45,9 +45,12 @@ def compute_A_CS(n_dof, A):
     Todo:
         check if dnu and R should not match in shape
     """
-    assert(n_dof == 2)
+
+    n = 2 * n_dof
+    # assert(n_dof == 2)
     dnu = np.zeros(n_dof)
     # Should that not be n_dof * 2 ?
+    # J.B.: No; number of tunes.
     R = np.identity(6)
 
     nr, nc = R.shape
@@ -77,7 +80,7 @@ def compute_A_CS(n_dof, A):
 
     # print(f"Rotation matrix\n{mat2txt(R)}")
     # Rotate A matrix back
-    Ar = np.dot(A, R)
+    Ar = A @ R
     return Ar, dnu
 
 
