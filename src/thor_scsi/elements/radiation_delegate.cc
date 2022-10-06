@@ -21,12 +21,13 @@ std::string tse::RadiationDelegateKickInterface::repr(void) const
 }
 
 template <typename T>
-inline void tse::RadiationDelegate::computeAndStoreCurlyH(const ss_vect<T> &ps)
+inline void tse::RadiationDelegate::computeAndStoreCurlyH(const gtpsa::ss_vect<T> &ps)
 {
-	this->curly_dH_x = is_tps<T>::get_curly_H(ps);
+    throw std::runtime_error("computeAndStoreCurlyH needs implementation" );
+    // this->curly_dH_x = is_tps<T>::get_curly_H(ps);
 }
 template <typename T>
-inline void tse::RadiationDelegate::_view(const tsc::ElemType& elem, const ss_vect<T> &ps, const enum tsc::ObservedState state, const int cnt)
+inline void tse::RadiationDelegate::_view(const tsc::ElemType& elem, const gtpsa::ss_vect<T> &ps, const enum tsc::ObservedState state, const int cnt)
 {
 	switch(state){
 	case tsc::ObservedState::start:
@@ -45,20 +46,27 @@ inline void tse::RadiationDelegate::_view(const tsc::ElemType& elem, const ss_ve
 }
 
 //template
-//void tse::RadiationDelegate::_view(const tsc::ElemType& elem, const ss_vect<double> &ps, const enum tsc::ObservedState state, const int cnt);
+//void tse::RadiationDelegate::_view(const tsc::ElemType& elem, const gtpsa::ss_vect<double> &ps, const enum tsc::ObservedState state, const int cnt);
 //template
-//void tse::RadiationDelegate::_view(const tsc::ElemType& elem, const ss_vect<tps> &ps, const enum tsc::ObservedState state, const int cnt);
-void tse::RadiationDelegate::view(const tsc::ElemType& elem, const ss_vect<double> &ps, const enum tsc::ObservedState state, const int cnt){
+//void tse::RadiationDelegate::_view(const tsc::ElemType& elem, const gtpsa::ss_vect<tps> &ps, const enum tsc::ObservedState state, const int cnt);
+void tse::RadiationDelegate::view(const tsc::ElemType& elem, const gtpsa::ss_vect<double>      &ps, const enum tsc::ObservedState state, const int cnt)
+{
 	_view(elem, ps, state, cnt);
 }
-void tse::RadiationDelegate::view(const tsc::ElemType& elem, const ss_vect<tps> &ps, const enum tsc::ObservedState state, const int cnt){
+void tse::RadiationDelegate::view(const tsc::ElemType& elem, const gtpsa::ss_vect<tps>         &ps, const enum tsc::ObservedState state, const int cnt)
+{
+	_view(elem, ps, state, cnt);
+}
+void tse::RadiationDelegate::view(const tsc::ElemType& elem, const gtpsa::ss_vect<gtpsa::tpsa> &ps, const enum tsc::ObservedState state, const int cnt)
+{
 	_view(elem, ps, state, cnt);
 }
 
 template<typename T>
-inline void tse::RadiationDelegateKick::synchrotronIntegralsFinish(const FieldKickAPI &kick, const ss_vect<T> &ps)
+inline void tse::RadiationDelegateKick::synchrotronIntegralsFinish(const FieldKickAPI &kick, const gtpsa::ss_vect<T> &ps)
 {
-
+       throw std::runtime_error("synchrotron integral steps need to be implemented ");
+#if 0
 	// Why only when cavities are not on ?
 	// Needs A^-1.
 	const T x = ps[x_], y = ps[y_];
@@ -75,25 +83,32 @@ inline void tse::RadiationDelegateKick::synchrotronIntegralsFinish(const FieldKi
 		PL*Pirho*(sqr(Pirho)+2e0*Gy)
 		/(6e0*PN);
 	this->dI[5] += PL*fabs(tse::cube(Pirho))*curly_dH_x;
-
+#endif
 }
 
 template<typename T>
-inline void tse::RadiationDelegateKick::synchrotronIntegralsStep(const ss_vect<T> &ps)
+inline void tse::RadiationDelegateKick::synchrotronIntegralsStep(const gtpsa::ss_vect<T> &ps)
 {
+    	throw std::runtime_error("synchrotron integral steps need to be implemented ");
+
 	// Needs A^-1.
+#if 0
 	this->curly_dH_x += is_tps<tps>::get_curly_H(ps);
 	this->dI[4] += is_tps<tps>::get_dI_eta(ps);
+#endif
 }
 
 
-inline void tse::RadiationDelegateKick::diffusion(const tps &B2_perp,  const tps &ds, const tps &p_s0,  const ss_vect<tps> &A)
+template<typename T>
+inline void tse::RadiationDelegateKick::diffusion(const T &B2_perp,  const T &ds, const T &p_s0,  const gtpsa::ss_vect<T> &A)
 {
 
 	int          j;
 	double       B_66;
-	ss_vect<tps> A_inv;
+	gtpsa::ss_vect<T> A_inv(A[0]);
 
+	throw std::runtime_error("diffusion needs to be implemented");
+#if 0
 	if (B2_perp > 0e0){
 		// Fix move function to RadiationDelegateKick
 		auto q_fluct = this->q_fluct;
@@ -107,11 +122,12 @@ inline void tse::RadiationDelegateKick::diffusion(const tps &B2_perp,  const tps
 				(sqr(A_inv[j*2][delta_])+sqr(A_inv[j*2+1][delta_]))*B_66/2e0;
 		}
 	}
+#endif
 }
 
 
 template <typename T>
-inline void tse::RadiationDelegateKick::_view(const FieldKickAPI& kick, const ss_vect<T> &ps, const enum tsc::ObservedState state, const int cnt)
+inline void tse::RadiationDelegateKick::_view(const FieldKickAPI& kick, const gtpsa::ss_vect<T> &ps, const enum tsc::ObservedState state, const int cnt)
 {
 	switch(state){
 	case tsc::ObservedState::start:
@@ -170,7 +186,7 @@ void tse::RadiationDelegateKick::show(std::ostream& strm, int level) const
  * @brief Computing |B^2_perp| perpendicular to the arc of circle.
  */
 template<typename T>
-void get_B2(const double h_ref, const std::array<T,3> B, const ss_vect<T> &xp,
+void get_B2(const double h_ref, const std::array<T,3> B, const gtpsa::ss_vect<T> &xp,
 	    T &B2_perp, T &B2_par)
 {
   // compute B_perp^2 and B_par^2
@@ -212,7 +228,7 @@ static inline double ps_coor_ref_value(tps coor)
 	return coor.cst();
 }
 template<typename T>
-static bool check_ps_finite(ss_vect<T> ps, const double max_val = 1e3)
+static bool check_ps_finite(gtpsa::ss_vect<T> ps, const double max_val = 1e3)
 {
 	bool check_ps_finite = true;
 	for(int i=0; i < nv_tps; ++i){
@@ -225,13 +241,17 @@ static bool check_ps_finite(ss_vect<T> ps, const double max_val = 1e3)
 
 
 template<typename T>
-void tse::RadiationDelegateKick::
-radiate(const thor_scsi::core::ConfigType &conf, ss_vect<T> &ps, const double L,
-	const double h_ref, const std::array<T, 3> B)
+void tse::RadiationDelegateKick::radiate(const thor_scsi::core::ConfigType &conf, gtpsa::ss_vect<T> &ps, const double L,
+				     const double h_ref, const std::array<T, 3> B)
 {
+
+       throw std::runtime_error("radiate needs to be implemented  ");
+#if 0
 	// M. Sands "The Physics of Electron Storage Rings" SLAC-121, p. 98.
 	// ddelta/d(ds) = -C_gamma*E_0^3*(1+delta)^2*(B_perp/(Brho))^2/(2*pi)
 	T  p_s0, p_s1, ds, B2_perp = 0e0, B2_par = 0e0;
+	gtpsa::ss_vect<T> cs(ps);
+	gtpsa::ss_vect<T> ps_save = ps.clone();
 
 	const bool radiation = conf.radiation;
 	const bool compute_diffusion = conf.emittance;
@@ -313,39 +333,43 @@ radiate(const thor_scsi::core::ConfigType &conf, ss_vect<T> &ps, const double L,
 
 		throw ts::PhysicsViolation(strm.str());
 	}
-#if 0
+
+
 	THOR_SCSI_LOG(INFO)
 	  << "\nRadiate ->:\n" << this->delegator_name << "\n" << "  ps = "
 	  << ps;
-#else
+
 	THOR_SCSI_LOG(INFO) << "\nRadiate ->:\n" << "\n" << "  ps = " << ps;
-#endif
+
+	gtpsa::ss_vect<T> dPs = ps - ps_save;
+	THOR_SCSI_LOG(INFO) <<  "Radiation effect on ps\n" << dPs << " \n";
+
+
 }
 
 
 
-//template void tse::RadiationDelegate::_view(const FieldKickAPI& kick, const ss_vect<double> &ps, const enum tsc::ObservedState state, const int cnt);
-//template void tse::RadiationDelegate::_view(const FieldKickAPI& kick, const ss_vect<tps> &ps, const enum tsc::ObservedState state, const int cnt);
-void tse::RadiationDelegateKick::
-view(const FieldKickAPI& kick, const ss_vect<double> &ps,
-     const enum ObservedState state, const int cnt)
+//template void tse::RadiationDelegate::_view(const FieldKickAPI& kick, const gtpsa::ss_vect<double> &ps, const enum tsc::ObservedState state, const int cnt);
+//template void tse::RadiationDelegate::_view(const FieldKickAPI& kick, const gtpsa::ss_vect<tps> &ps, const enum tsc::ObservedState state, const int cnt);
+void tse::RadiationDelegateKick::view(const FieldKickAPI& kick, const gtpsa::ss_vect<double> &ps, const enum ObservedState state, const int cnt)
 {
-	std::cout << "Rad Del.view(ss_vect<double>) for element "
-		  << kick.name << "at index" << kick.index << std::endl;
+	std::cout<< "Rad Del.view(gtpsa::ss_vect<double>) for element " << kick.name << "at index" << kick.index << std::endl;
 	_view(kick, ps, state, cnt);
 }
 
-void tse::RadiationDelegateKick::
-view(const FieldKickAPI& kick, const ss_vect<tps> &ps,
-     const enum ObservedState state, const int cnt)
+void tse::RadiationDelegateKick::view(const FieldKickAPI& kick, const gtpsa::ss_vect<tps> &ps, const enum ObservedState state, const int cnt)
 {
-	std::cout<< "Rad Del.view(ss_vect<tps>) for element " << kick.name
-		 << "at index" << kick.index << std::endl;
+	std::cout<< "Rad Del.view(gtpsa::ss_vect<tps>) for element " << kick.name << "at index" << kick.index << std::endl;
 	_view(kick, ps, state, cnt);
 }
-template void tse::RadiationDelegateKick::
-radiate(const thor_scsi::core::ConfigType &conf, ss_vect<double> &ps,
-	const double L, const double h_ref, const std::array<double, 3> B);
-template void tse::RadiationDelegateKick::
-radiate(const thor_scsi::core::ConfigType &conf, ss_vect<tps> &ps,
-	const double L, const double h_ref, const std::array<tps, 3> B);
+void tse::RadiationDelegateKick::view(const FieldKickAPI& kick, const gtpsa::ss_vect<gtpsa::tpsa> &ps, const enum ObservedState state, const int cnt)
+{
+	std::cout<< "Rad Del.view(gtpsa::ss_vect<gtpa::tpsa>) for element " << kick.name << "at index" << kick.index << std::endl;
+	_view(kick, ps, state, cnt);
+}
+template void tse::RadiationDelegateKick::radiate(const thor_scsi::core::ConfigType &conf, gtpsa::ss_vect<double>      &ps, const double L,
+						  const double h_ref, const std::array<double, 3>      B);
+template void tse::RadiationDelegateKick::radiate(const thor_scsi::core::ConfigType &conf, gtpsa::ss_vect<tps>         &ps, const double L,
+						  const double h_ref, const std::array<tps, 3>         B);
+template void tse::RadiationDelegateKick::radiate(const thor_scsi::core::ConfigType &conf, gtpsa::ss_vect<gtpsa::tpsa> &ps, const double L,
+						  const double h_ref, const std::array<gtpsa::tpsa, 3> B);

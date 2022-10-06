@@ -7,7 +7,6 @@
 #include <thor_scsi/core/multipoles.h>
 #include <thor_scsi/elements/sextupole.h>
 #include "check_multipole.h"
-#include <tps/ss_vect.h>
 #include <ostream>
 
 namespace tsc = thor_scsi::core;
@@ -163,12 +162,12 @@ BOOST_AUTO_TEST_CASE(test20_sextupole_thin_eval)
 
 		/* no multipole */
 		for(int i = -1; i <= 1; ++i){
-			ss_vect<double> ps;
 			const double x = i;
+			gtpsa::ss_vect<double> ps(x);
 			ps[x_] = x;
 
 
-			sext.pass(calc_config, ps);
+			sext.propagate(calc_config, ps);
 
 			BOOST_CHECK_CLOSE(ps[x_],     x, 1e-14);
 			BOOST_CHECK_SMALL(ps[y_],        1e-14);
@@ -187,8 +186,8 @@ BOOST_AUTO_TEST_CASE(test20_sextupole_thin_eval)
 		}
 
 		sext.setMainMultipoleStrength(tsc::cdbl(1e0/i, 0e0));
-		ss_vect<double> ps;
-		sext.pass(calc_config, ps);
+		gtpsa::ss_vect<double> ps(0e0);
+		sext.propagate(calc_config, ps);
 
 		BOOST_CHECK_SMALL(ps[x_],     1e-14);
 		BOOST_CHECK_SMALL(ps[y_],     1e-14);
@@ -209,11 +208,11 @@ BOOST_AUTO_TEST_CASE(test20_sextupole_thin_eval)
 				continue;
 			}
 
-			ss_vect<double> ps;
 			const double x = i;
+			gtpsa::ss_vect<double> ps(x);
 			ps[x_] = x;
 
-			sext.pass(calc_config, ps);
+			sext.propagate(calc_config, ps);
 
 			// Todo: check sign!!!!
 			const double xc =  - (x* chroma) * i;
@@ -240,11 +239,11 @@ BOOST_AUTO_TEST_CASE(test20_sextupole_thin_eval)
 				continue;
 			}
 
-			ss_vect<double> ps;
 			const double x = i;
+			gtpsa::ss_vect<double> ps(x);
 			ps[x_] = x;
 
-			sext.pass(calc_config, ps);
+			sext.propagate(calc_config, ps);
 
 			// Todo: check sign!!!!
 			const double yc = x * chroma * i, pspy = ps[py_];
@@ -298,10 +297,10 @@ BOOST_AUTO_TEST_CASE(test20_sextupole_typical_length_eval)
 
 			const double xs = i * (1e-3), l2 = length / 2e0;
 			const double By = -(xs * xs) * (cdl), xe = xs + By * l2;
-			ss_vect<double> ps;
+			gtpsa::ss_vect<double> ps(xs);
 
 			ps[x_] = xs;
-			sext.pass(calc_config, ps);
+			sext.propagate(calc_config, ps);
 
 			BOOST_CHECK_CLOSE(ps[px_],  By, 2);
 			BOOST_CHECK_CLOSE(ps[x_],   xe, 0.5);

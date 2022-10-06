@@ -1,7 +1,9 @@
 #ifndef _THOR_SCSI_CORE_FIELD_INTERPOLATION_H_
 #define _THOR_SCSI_CORE_FIELD_INTERPOLATION_H_ 1
 #include <ostream>
+#include <gtpsa/tpsa.hpp>
 #include <tps/tps_type.h>
+
 namespace thor_scsi::core {
   	/**
 	 * Pure virtual class of multipoles
@@ -30,8 +32,9 @@ namespace thor_scsi::core {
 		 *
 		 * \endverbatim
 		 */
-		virtual inline void field(const double x, const double y, double *Bx, double *By) const = 0;
-		virtual inline void field(const tps x, const tps y, tps *Bx, tps *By) const = 0;
+		virtual inline void field(const double      x, const double      y, double      *Bx, double      *By) const = 0;
+		virtual inline void field(const tps         x, const tps         y, tps         *Bx, tps         *By) const = 0;
+		virtual inline void field(const gtpsa::tpsa x, const gtpsa::tpsa y, gtpsa::tpsa *Bx, gtpsa::tpsa *By) const = 0;
 
 		/**
 		 * @brief interpolate the gradient at the current position
@@ -44,8 +47,10 @@ namespace thor_scsi::core {
 		 * @todo review interface: with tps it could be that Gx is computed but never used
 		 * @todo should Gx and Gy be of type tps or type double
 		 */
-		virtual void gradient(const tps x, const tps y, tps *Gx, tps *Gy) const = 0;
-		virtual void gradient(const tps x, const tps y, double *Gx, double *Gy) const = 0;
+		virtual void gradient(const tps         x, const tps         y, tps         *Gx, tps         *Gy) const = 0;
+		virtual void gradient(const gtpsa::tpsa x, const gtpsa::tpsa y, gtpsa::tpsa *Gx, gtpsa::tpsa *Gy) const = 0;
+		virtual void gradient(const tps         x, const tps         y, double      *Gx, double      *Gy) const = 0;
+		virtual void gradient(const gtpsa::tpsa x, const gtpsa::tpsa y, double      *Gx, double      *Gy) const = 0;
 		virtual void show(std::ostream&, int level) const = 0;
 
 		std::string prettyClassname(void) const;

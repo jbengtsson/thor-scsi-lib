@@ -7,8 +7,10 @@
  */
 #include <vector>
 #include <string>
-#include <tps/ss_vect.h>
+// #include <tps/ss_vect.h>
 #include <tps/tps_type.h>
+#include <gtpsa/ss_vect.h>
+#include <gtpsa/utils.hpp>
 // #include <thor_scsi/core/cells.h>
 #include <thor_scsi/core/internals.h>
 #include <thor_scsi/core/cell_void.h>
@@ -20,6 +22,7 @@
 namespace thor_scsi {
 	namespace core {
 		//< Element virtual base class.
+		using thor_scsi::core::ConfigType;
 		class ElemType : public CellVoid {
 		public:
 			bool
@@ -65,8 +68,11 @@ namespace thor_scsi {
 			 *      make config constant (after config has been reworked)
 			 *      rename to propagate!
 			 */
-			virtual void pass(thor_scsi::core::ConfigType &conf, ss_vect<double> &ps) = 0;
-			virtual void pass(thor_scsi::core::ConfigType &conf, ss_vect<tps> &ps) = 0;
+			// virtual void propagate(thor_scsi::core::ConfigType &conf, ss_vect<double> &ps) = 0;
+			// virtual void propagate(thor_scsi::core::ConfigType &conf, ss_vect<tps> &ps) = 0;
+			virtual void propagate(ConfigType &conf, gtpsa::ss_vect<double>      &ps) = 0;
+			virtual void propagate(ConfigType &conf, gtpsa::ss_vect<gtpsa::tpsa> &ps) = 0;
+			virtual void propagate(ConfigType &conf, gtpsa::ss_vect<tps>         &ps) = 0;
 			/*
 			 * the non linear tps part ... to be made
 			 */
@@ -87,12 +93,12 @@ namespace thor_scsi {
 			 * returns always true if no aperture registered
 			 */
 			template<typename T>
-			inline bool checkAmplitude(const ss_vect<T> &ps){
+			inline bool checkAmplitude(const gtpsa::ss_vect<T> &ps){
 				if(!this->m_aperture){
 					return true;
 				}
-				double x = is_double<T>::cst(ps[x_]);
-				double y = is_double<T>::cst(ps[y_]);
+				double x = gtpsa::cst(ps[x_]);
+				double y = gtpsa::cst(ps[y_]);
 
 				double d = this->m_aperture->isWithin(x, y);
 

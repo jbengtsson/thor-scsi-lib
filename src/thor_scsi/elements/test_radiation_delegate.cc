@@ -10,6 +10,10 @@
 namespace tsc = thor_scsi::core;
 namespace tse = thor_scsi::elements;
 
+auto a_desc = gtpsa::desc(1, 0);
+auto tpsa_ref = gtpsa::tpsa(a_desc, mad_tpsa_default);
+
+
 BOOST_AUTO_TEST_CASE(test10_rad_del_strm)
 {
 	auto rad_del = tse::RadiationDelegate();
@@ -41,9 +45,9 @@ BOOST_AUTO_TEST_CASE(test20_rad_del_ps0)
 
 	auto marker = tse::MarkerType(marker_C);
 	auto rad_del = tse::RadiationDelegate();
-	ss_vect<double> ps;
+	gtpsa::ss_vect<double> ps(0e0);
 
-	ps.zero();
+	ps.set_zero();
 
 	rad_del.view(marker, ps, tsc::ObservedState::start, 0);
 
@@ -64,10 +68,10 @@ BOOST_AUTO_TEST_CASE(test21_rad_del_ps0)
 	std::shared_ptr<tse::RadiationDelegate> rad_del(tmp);
 	marker.setRadiationDelegate(rad_del);
 
-	ss_vect<double> ps;
-	ps.zero();
+	gtpsa::ss_vect<double> ps(0e0);
+	ps.set_zero();
 
-	BOOST_CHECK_THROW(marker.pass(calc_config, ps), std::domain_error);
+	BOOST_CHECK_THROW(marker.propagate(calc_config, ps), std::domain_error);
 
 }
 
@@ -78,7 +82,7 @@ BOOST_AUTO_TEST_CASE(test30_rad_del_tps)
 	marker_C.set<std::string>("name", "marker_test_tps_i");
 
 	auto marker = tse::MarkerType(marker_C);
-	ss_vect<tps> tps;
+	gtpsa::ss_vect<gtpsa::tpsa> tps(tpsa_ref);
 
 	tps.set_identity();
 
@@ -102,7 +106,7 @@ BOOST_AUTO_TEST_CASE(test31_rad_del_tps_identity)
 	std::shared_ptr<tse::RadiationDelegate> rad_del(tmp);
 	marker.setRadiationDelegate(rad_del);
 
-	ss_vect<tps> tps;
+	gtpsa::ss_vect<gtpsa::tpsa> tps(tpsa_ref);
 
 	tps.set_identity();
 
