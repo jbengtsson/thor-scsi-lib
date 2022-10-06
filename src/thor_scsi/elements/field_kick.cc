@@ -422,6 +422,8 @@ inline void tse::FieldKick::thinKickAndRadiate(const thor_scsi::core::ConfigType
 
 	// const auto x = ps[x_];
 	// const auto y = ps[y_];
+	///< todo: use clone instead!
+	const ss_vect<T> ps0 = ps;
  	T BxoBrho, ByoBrho;
 
 	//intp.field(ps[x_], ps[y_], &BxoBrho, &ByoBrho);
@@ -438,7 +440,7 @@ inline void tse::FieldKick::thinKickAndRadiate(const thor_scsi::core::ConfigType
 		std::array<T, 3> B = {BxoBrho, ByoBrho + h_bend, 0};
 		rad->radiate(conf, ps, L, h_ref, B);
 	}
-	tse::thin_kick(conf, BxoBrho, ByoBrho, L, h_bend, h_ref, ps);
+	tse::thin_kick(conf, BxoBrho, ByoBrho, L, h_bend, h_ref, ps0, ps);
 
 }
 
