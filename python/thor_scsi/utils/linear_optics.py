@@ -405,7 +405,8 @@ def compute_twiss_along_lattice(
         coords=[indices, phase_space_coords_names],
     )
     info = accelerator_info(acc)
-    res = info.merge(dict(twiss=twiss_parameters, dispersion=dispersion, tps=tps))
+    res = \
+        info.merge(dict(twiss=twiss_parameters, dispersion=dispersion, tps=tps))
     return res
 
 
