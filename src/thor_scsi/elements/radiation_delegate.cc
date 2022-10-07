@@ -26,7 +26,9 @@ inline void tse::RadiationDelegate::computeAndStoreCurlyH(const ss_vect<T> &ps)
 	this->curly_dH_x = is_tps<T>::get_curly_H(ps);
 }
 template <typename T>
-inline void tse::RadiationDelegate::_view(const tsc::ElemType& elem, const ss_vect<T> &ps, const enum tsc::ObservedState state, const int cnt)
+inline void tse::
+RadiationDelegate::_view(const tsc::ElemType& elem, const ss_vect<T> &ps,
+			 const enum tsc::ObservedState state, const int cnt)
 {
 	switch(state){
 	case tsc::ObservedState::start:
@@ -48,15 +50,20 @@ inline void tse::RadiationDelegate::_view(const tsc::ElemType& elem, const ss_ve
 //void tse::RadiationDelegate::_view(const tsc::ElemType& elem, const ss_vect<double> &ps, const enum tsc::ObservedState state, const int cnt);
 //template
 //void tse::RadiationDelegate::_view(const tsc::ElemType& elem, const ss_vect<tps> &ps, const enum tsc::ObservedState state, const int cnt);
-void tse::RadiationDelegate::view(const tsc::ElemType& elem, const ss_vect<double> &ps, const enum tsc::ObservedState state, const int cnt){
+void tse::RadiationDelegate::
+view(const tsc::ElemType& elem, const ss_vect<double> &ps,
+     const enum tsc::ObservedState state, const int cnt) {
 	_view(elem, ps, state, cnt);
 }
-void tse::RadiationDelegate::view(const tsc::ElemType& elem, const ss_vect<tps> &ps, const enum tsc::ObservedState state, const int cnt){
+void tse::RadiationDelegate::
+view(const tsc::ElemType& elem, const ss_vect<tps> &ps,
+     const enum tsc::ObservedState state, const int cnt) {
 	_view(elem, ps, state, cnt);
 }
 
 template<typename T>
-inline void tse::RadiationDelegateKick::synchrotronIntegralsFinish(const FieldKickAPI &kick, const ss_vect<T> &ps)
+inline void tse::RadiationDelegateKick::
+synchrotronIntegralsFinish(const FieldKickAPI &kick, const ss_vect<T> &ps)
 {
 
 	// Why only when cavities are not on ?
@@ -79,7 +86,8 @@ inline void tse::RadiationDelegateKick::synchrotronIntegralsFinish(const FieldKi
 }
 
 template<typename T>
-inline void tse::RadiationDelegateKick::synchrotronIntegralsStep(const ss_vect<T> &ps)
+inline void tse::RadiationDelegateKick::
+synchrotronIntegralsStep(const ss_vect<T> &ps)
 {
 	// Needs A^-1.
 	this->curly_dH_x += is_tps<tps>::get_curly_H(ps);
@@ -87,7 +95,9 @@ inline void tse::RadiationDelegateKick::synchrotronIntegralsStep(const ss_vect<T
 }
 
 
-inline void tse::RadiationDelegateKick::diffusion(const tps &B2_perp,  const tps &ds, const tps &p_s0,  const ss_vect<tps> &A)
+inline void tse::RadiationDelegateKick::
+diffusion(const tps &B2_perp,  const tps &ds, const tps &p_s0,
+	  const ss_vect<tps> &A)
 {
 
 	int          j;
@@ -111,7 +121,9 @@ inline void tse::RadiationDelegateKick::diffusion(const tps &B2_perp,  const tps
 
 
 template <typename T>
-inline void tse::RadiationDelegateKick::_view(const FieldKickAPI& kick, const ss_vect<T> &ps, const enum tsc::ObservedState state, const int cnt)
+inline void tse::RadiationDelegateKick::
+_view(const FieldKickAPI& kick, const ss_vect<T> &ps,
+      const enum tsc::ObservedState state, const int cnt)
 {
 	switch(state){
 	case tsc::ObservedState::start:
@@ -275,9 +287,9 @@ radiate(const thor_scsi::core::ConfigType &conf, ss_vect<T> &ps, const double L,
 
 	// H = -p_s => ds = H*L.
 	ds = (1e0+cs[x_]*h_ref+(sqr(cs[px_])+sqr(cs[py_]))/2e0)*L;
-	THOR_SCSI_LOG(DEBUG) << "'Field contribution' h_ref " << h_ref
-		  << " B (" <<  B[X_] << ", " << B[Y_] << ", " << B[Z_] <<")"
-		  << " cs "  << cs;
+	THOR_SCSI_LOG(DEBUG)
+	  << "\nField contribution:\n  h_ref " << h_ref << " B (" << B[X_]
+	  << ", " << B[Y_] << ", " << B[Z_] <<")" << " cs "  << cs;
 	// compute perpendicular to curvature
 	get_B2(h_ref, B, cs, B2_perp, B2_par);
 

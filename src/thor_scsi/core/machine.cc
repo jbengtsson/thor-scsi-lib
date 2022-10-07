@@ -300,7 +300,8 @@ struct Logcerr : public tsc::Machine::Logger
 Logcerr Logcerr::singleton;
 }
 
-#if 1
+// J.B. 07-10-22.
+#if 0
 int tsc::Machine::log_detail = THOR_SCSI_DEBUG;
 #else
 int tsc::Machine::log_detail = THOR_SCSI_WARN;

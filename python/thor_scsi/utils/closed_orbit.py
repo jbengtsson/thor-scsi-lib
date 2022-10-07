@@ -5,7 +5,7 @@ import logging
 from dataclasses import dataclass
 import copy
 
-logger = logging.getLogger("thor-scsi-lib")
+logger = logging.getLogger("thor_scsi")
 
 
 @dataclass
@@ -49,7 +49,7 @@ def compute_closed_orbit(
         *
     """
 
-    logger.debug("computing closed orbit")
+    logger.debug(" compute_closed_orbit")
 
     if eps <= 0e0:
         raise AssertionError(f"tolerance {eps} <= 0e0")
@@ -62,7 +62,7 @@ def compute_closed_orbit(
     else:
         n = 4
 
-    logger.debug(f" Cavity on ? {conf.Cavity_on} {n=}")
+    logger.debug(f" Cavity on ? {conf.Cavity_on} {n = }")
 
     if x0 is None:
         assert delta is not None
@@ -82,7 +82,6 @@ def compute_closed_orbit(
         if delta is not None:
             raise AssertionError("if x0 is given delta must be None")
         conf.dPparticle = x0[tslib.phase_space_index_internal.delta]
-    logger.debug("x0 %s", x0)
 
     # create weighting matrix for inverse calculation
     jj = np.zeros(tslib.ss_dim, np.int)
@@ -100,10 +99,7 @@ def compute_closed_orbit(
     closed_orbit = False
     n_elements = len(acc)
     # Newton's method for root finding
-    logger.debug(
-        "start     , dx_abs %7.1e, eps  %7.1e, x0 %s", dx_abs, eps, x0
-    )
-
+    logger.debug(" start, dx_abs %7.1e, eps %7.1e", dx_abs, eps)
 
     for n_iter in range(max_iter):
         if dx_abs < eps:
@@ -113,7 +109,7 @@ def compute_closed_orbit(
         # prepare return map
         M.set_identity()
         M += x0
-        logger.warning(f"{n_iter=},  Start propagation at \n {M.cst()}\n")
+        logger.debug(f" {n_iter = } initial = {M.cst()}")
         next_element = acc.propagate(conf, M)
         # logger.debug(f"{n_iter=},  End propagation at \n {M.cst()}\n {M}")
 
@@ -135,13 +131,14 @@ def compute_closed_orbit(
             # dx_aps = np.sqrt(np.sum(dx[:n] ** 2))
             dx_abs = tslib.xabs(n, dx)
 
-            logger.warning(f"{n_iter=},  End propagation at \n {x0}\n")
+            logger.debug(f" {n_iter = } final   = {x0}")
         else:
             dx_abs = np.nan
             break
 
         logger.debug(
-            "n_iter %3d, dx_abs %7.1e, eps  %7.1e, x0 %s", n_iter + 1, dx_abs, eps, x0
+            " n_iter %3d, dx_abs %7.1e, eps  %7.1e, x0 %s",
+            n_iter + 1, dx_abs, eps, x0
         )
 
     else:
@@ -157,14 +154,14 @@ def compute_closed_orbit(
         M.set_identity()
         M += x0
 
-        logger.debug(f" Fixed point check propagate again start : x0\n{M.cst()}\nMat {M}")
+        logger.debug(f" Fixed point check propagate again start:\n x0 = {M.cst()}\nMat:\n {M}")
         Mref = copy.copy(M)
         acc.propagate(conf, M)
-        logger.debug(f" Fixed point check propagate returned    : x0\n{M.cst()}\nMat {M}")
+        logger.debug(f" Fixed point check propagate returned:\n x0 = {M.cst()}\nMat:\n {M}")
 
     if closed_orbit:
         t_map = map2numpy(M)
-        logger.debug(f"Poincaré Map\n {M}")
+        logger.debug(f" Poincaré Map:\n {M}")
         result = ClosedOrbitResult(
             found_closed_orbit=closed_orbit,
             x0=x0,

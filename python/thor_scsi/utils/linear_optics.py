@@ -418,7 +418,6 @@ def compute_M_diag(
         M: transfer matrix
         dof: degrees of freedom
 
-
     Return:
 
     See xxx reference
@@ -458,7 +457,8 @@ def compute_M_diag(
         # print("\nu_ord:\n"+mat2txt(u_ord))
         print(
             "\nu_ord^-1.M.u_ord:\n"
-            + mat2txt(chop_array(np.linalg.inv(u_ord) @ M[:n, :n] @ u_ord, 1e-15))
+            + mat2txt(chop_array(
+                np.linalg.inv(u_ord) @ M[:n, :n] @ u_ord, 1e-15))
         )
 
     eta = compute_dispersion(M)
@@ -482,12 +482,24 @@ def compute_M_diag(
         print(
             "\nA^T.omega.A:\n"
             + mat2txt(
-                chop_array(A[:n, :n].T @ omega_block_matrix(dof) @ A[:n, :n], 1e-13)
+                chop_array(A[:n, :n].T @ omega_block_matrix(dof) @ A[:n, :n],
+                           1e-13)
             )
         )
 
-    print("\nA_CS:\n" + mat2txt(chop_array(compute_A_CS(dof, A)[0], 1e-10)))
-    print("\nR:\n" + mat2txt(chop_array(A_inv @ M @ A, 1e-10)))
+    R = A_inv @ M @ A
+    nu = np.zeros(3, float)
+    for k in range(3):
+        nu[k] = np.arctan2(R[2*k][2*k+1], R[2*k][2*k])/(2e0*np.pi)
+        if (nu[k] < 0e0) and (k < 2):
+            nu[k] += 1e0
+
+    logger.debug(
+        "\nA_CS:\n" + mat2txt(chop_array(compute_A_CS(dof, A)[0], 1e-10)))
+    logger.debug(
+        "\nR:\n" + mat2txt(chop_array(R, 1e-10)))
+    logger.debug(
+        "\n  nu = [{:.16f}, {:.16f}, {:.16f}]".format(nu[X_], nu[Y_], nu[Z_]))
 
     return A, A_inv
 

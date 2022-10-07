@@ -12,6 +12,7 @@ logger.setLevel("DEBUG")
 
 from thor_scsi.factory import accelerator_from_config
 from thor_scsi.utils.accelerator import instrument_with_radiators
+from thor_scsi.utils.phase_space_vector import ps_jac2ss_vect_tps
 
 from thor_scsi.lib import (
     ConfigType,
@@ -21,6 +22,7 @@ from thor_scsi.lib import (
     RadiationDelegateKick,
     ObservedState
 )
+
 from thor_scsi.lib import phase_space_index_internal as phase_space_ind
 
 import os
@@ -36,7 +38,8 @@ import thor_scsi.lib as tslib
 # from thor_scsi.utils.linalg import match_eigenvalues_to_plane_orig
 from thor_scsi.utils.closed_orbit import compute_closed_orbit
 from thor_scsi.utils.output import vec2txt, mat2txt, chop_array
-from thor_scsi.utils.linear_optics import compute_M_diag, calculate_nu_symp
+from thor_scsi.utils.linear_optics import compute_M_diag, calculate_nu_symp, \
+    acos2
 
 
 X_, Y_, Z_ = [
@@ -53,6 +56,16 @@ x_, px_, y_, py_, ct_, delta_ = [
     tslib.phase_space_index_internal.ct,
     tslib.phase_space_index_internal.delta
 ]
+
+
+def extract_diffusion_coefficient():
+    dD_rad = \
+        np.array([rk.getDiffusionCoefficientsIncrements()
+                  for rk in rad_del_kicks])
+    print("\nextract_diffusion_coefficient:")
+    print(dD_rad)
+    D_rad = np.add.accumulate(dD_rad, axis=0)
+    return D_rad
 
 
 t_dir = os.path.join(os.environ["HOME"], "Nextcloud", "thor_scsi")
@@ -97,7 +110,7 @@ calc_config.radiation = True
 calc_config.emittance = False
 calc_config.Cavity_on = True
 
-print("\ncalc_config:\n [radiation, emittance, Cavity_on] = ",
+print("\ncalc_config: [radiation, emittance, Cavity_on] = ",
       calc_config.radiation, calc_config.emittance, calc_config.Cavity_on)
 
 calc_config.Energy = energy
@@ -109,31 +122,36 @@ else:
 
 ps = tslib.ss_vect_double()
 ps.set_zero()
-ps[x_]     =  0e-3
-ps[y_]     = -0e-3
-ps[delta_] =  0e-6
-print("\nps_0 = ", ps)
-acc.propagate(calc_config, ps, 8, 8)
+ps[x_]     =  1e-10
+ps[y_]     = -1e-10
+ps[delta_] =  1e-10
+print("\nps_0 = ", ps, end="")
+# acc.propagate(calc_config, ps, 8-1, 8)
+acc.propagate(calc_config, ps)
 print("ps_1 = ", ps)
 
-exit()
+#exit()
 
 r = compute_closed_orbit(acc, calc_config, delta=0e0)
 M = r.one_turn_map[:6, :6]
-# print("\nM:\n" + mat2txt(M))
-tune_x, tune_y, tune_long = calculate_nu_symp(3, M)
+print("M:\n" + mat2txt(M))
 
-print(f"\n{tune_x=:.16f} {tune_y=:.16f} {tune_long=:.16f}")
-
-exit()
+#exit()
 
 # r = calculate_radiation(
 #     acc, energy=2.5e9, calc_config=calc_config, install_radiators=True
 # )
 
-compute_M_diag(dof, M)
+A, A_inv = compute_M_diag(dof, M)
 
-# exit()
+calc_config.emittance = True
+
+A_cpy = ps_jac2ss_vect_tps(r.x0, A)
+acc.propagate(calc_config, A_cpy)
+
+extract_diffusion_coefficient()
+
+exit()
 
 
 use_tpsa = True
@@ -191,13 +209,6 @@ tune_x, tune_y, tune_long = calculate_nu_symp(3, M)
 print(f"\n{tune_x=:.16f} {tune_y=:.16f} {tune_long=:.16f}")
 
 exit()
-
-def extract_diffusion_coefficient():
-    dD_rad = np.array([rk.getDiffusionCoefficientsIncrements() for rk in rad_del_kicks])
-    print("Diffusion coefficients\n")
-    print(dD_rad)
-    D_rad = np.add.accumulate(dD_rad, axis=0)
-    return D_rad
 
 
 print(ps_wr)
