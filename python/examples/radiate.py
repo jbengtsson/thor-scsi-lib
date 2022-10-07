@@ -12,6 +12,7 @@ logger.setLevel("DEBUG")
 
 from thor_scsi.factory import accelerator_from_config
 from thor_scsi.utils.accelerator import instrument_with_radiators
+from thor_scsi.utils.courant_snyder import compute_twiss_A
 from thor_scsi.utils.phase_space_vector import ps_jac2ss_vect_tps
 
 from thor_scsi.lib import (
@@ -148,7 +149,6 @@ calc_config.emittance = True
 
 A_cpy = ps_jac2ss_vect_tps(r.x0, A)
 acc.propagate(calc_config, A_cpy)
-
 extract_diffusion_coefficient()
 
 exit()
