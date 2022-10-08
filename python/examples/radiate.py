@@ -13,7 +13,7 @@ logger.setLevel("DEBUG")
 from thor_scsi.factory import accelerator_from_config
 from thor_scsi.utils.accelerator import instrument_with_radiators
 from thor_scsi.utils.courant_snyder import compute_twiss_A
-from thor_scsi.utils.phase_space_vector import ps_jac2ss_vect_tps
+from thor_scsi.utils.phase_space_vector import map2numpy, vec_mat2ss_vect_tps
 
 from thor_scsi.lib import (
     ConfigType,
@@ -59,13 +59,14 @@ x_, px_, y_, py_, ct_, delta_ = [
 ]
 
 
-def extract_diffusion_coefficient():
+def compute_diffusion_coefficients(rad_del_kicks):
     dD_rad = \
         np.array([rk.getDiffusionCoefficientsIncrements()
                   for rk in rad_del_kicks])
-    print("\nextract_diffusion_coefficient:")
-    print(dD_rad)
-    D_rad = np.add.accumulate(dD_rad, axis=0)
+    D_rad = np.sum(dD_rad, axis=0)
+    print("\ncompute_diffusion_coefficients:"
+          " D_rad = {:22.16} {:22.16} {:22.16}".
+          format(D_rad[X_], D_rad[Y_], D_rad[Z_]))
     return D_rad
 
 
@@ -121,23 +122,23 @@ if calc_config.Cavity_on == True:
 else:
     dof = 2
 
-ps = tslib.ss_vect_double()
-ps.set_zero()
-ps[x_]     =  1e-10
-ps[y_]     = -1e-10
-ps[delta_] =  1e-10
-print("\nps_0 = ", ps, end="")
-# acc.propagate(calc_config, ps, 8-1, 8)
-acc.propagate(calc_config, ps)
-print("ps_1 = ", ps)
+if False:
+    ps = tslib.ss_vect_double()
+    ps.set_zero()
+    ps[x_]     =  1e-10
+    ps[y_]     = -1e-10
+    ps[delta_] =  1e-10
+    print("\nps_0 = ", ps, end="")
+    # acc.propagate(calc_config, ps, 8-1, 8)
+    acc.propagate(calc_config, ps)
+    print("ps_1 = ", ps)
 
-#exit()
+    exit()
 
-r = compute_closed_orbit(acc, calc_config, delta=0e0)
+r = compute_closed_orbit(acc, calc_config, delta=0e0, eps=1e-15)
+#print("M:\n" + mat2txt(map2numpy(r.one_turn_map)))
 M = r.one_turn_map[:6, :6]
 print("M:\n" + mat2txt(M))
-
-#exit()
 
 # r = calculate_radiation(
 #     acc, energy=2.5e9, calc_config=calc_config, install_radiators=True
@@ -147,9 +148,14 @@ A, A_inv = compute_M_diag(dof, M)
 
 calc_config.emittance = True
 
-A_cpy = ps_jac2ss_vect_tps(r.x0, A)
+print("\nx0 =", vec2txt(r.x0))
+A_cpy = vec_mat2ss_vect_tps(r.x0, A)
+print("\nA_cpy.cst:\n", A_cpy.cst())
+print("A_cpy:\n" + mat2txt(map2numpy(A_cpy)[:6, :6]))
 acc.propagate(calc_config, A_cpy)
-extract_diffusion_coefficient()
+compute_diffusion_coefficients(rad_del_kicks)
+print("\nA_cpy.cst:\n", A_cpy.cst())
+print("A_cpy:\n" + mat2txt(map2numpy(A_cpy)[:6, :6]))
 
 exit()
 
@@ -221,7 +227,7 @@ print(ps_wr.cst() - ps.cst())
 
 
 exit()
-print(extract_diffusion_coefficient())
+print(compute_diffusion_coefficients())
 use_tpsa = False
 if use_tpsa:
     # Inspect curly_H in
@@ -232,7 +238,8 @@ if use_tpsa:
         txt = f"{name:10s} {idx:4d} curly_H_x {curly_H_x:5f}"
         print(txt)
 
-    I = np.array([a_del.getSynchrotronIntegralsIncrements() for a_del in rad_del_kick])
+    I = np.array([a_del.getSynchrotronIntegralsIncrements() for a_del
+                  in rad_del_kick])
 
     for a_del in rad_del_kick:
         name = a_del.getDelegatorName()

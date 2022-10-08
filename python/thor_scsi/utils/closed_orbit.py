@@ -5,6 +5,8 @@ import logging
 from dataclasses import dataclass
 import copy
 
+from thor_scsi.utils.output import vec2txt, mat2txt
+
 logger = logging.getLogger("thor_scsi")
 
 
@@ -31,7 +33,7 @@ def compute_closed_orbit(
     delta: float = None,
     x0: tslib.ss_vect_double = None,
     max_iter: int = 10,
-    eps: float = 1e-6,
+    eps: float = 1e-10,
 ) -> ClosedOrbitResult:
     """searches for the closed orbit
 
@@ -109,7 +111,7 @@ def compute_closed_orbit(
         # prepare return map
         M.set_identity()
         M += x0
-        logger.debug(f" {n_iter = } initial = {M.cst()}")
+        logger.debug(f" {n_iter = } \ninitial = " + vec2txt(M.cst()))
         next_element = acc.propagate(conf, M)
         # logger.debug(f"{n_iter=},  End propagation at \n {M.cst()}\n {M}")
 
@@ -131,14 +133,14 @@ def compute_closed_orbit(
             # dx_aps = np.sqrt(np.sum(dx[:n] ** 2))
             dx_abs = tslib.xabs(n, dx)
 
-            logger.debug(f" {n_iter = } final   = {x0}")
+            logger.debug(f" {n_iter = } \nfinal   = " + vec2txt(x0))
         else:
             dx_abs = np.nan
             break
 
         logger.debug(
-            " n_iter %3d, dx_abs %7.1e, eps  %7.1e, x0 %s",
-            n_iter + 1, dx_abs, eps, x0
+            " n_iter = {:3d} dx_abs = {:7.1e} eps = {:7.1e}".format(
+                n_iter + 1, dx_abs, eps) + "\nx0      = " + vec2txt(x0)
         )
 
     else:
@@ -153,11 +155,10 @@ def compute_closed_orbit(
         assert dx_abs < eps
         M.set_identity()
         M += x0
-
-        logger.debug(f" Fixed point check propagate again start:\n x0 = {M.cst()}\nMat:\n {M}")
-        Mref = copy.copy(M)
         acc.propagate(conf, M)
-        logger.debug(f" Fixed point check propagate returned:\n x0 = {M.cst()}\nMat:\n {M}")
+        logger.info(
+            "\ncompute_closed_orbit:\nx0 = " + vec2txt(M.cst()) + "\nM:\n"
+            + mat2txt(map2numpy(M)[:6, :6]))
 
     if closed_orbit:
         t_map = map2numpy(M)
@@ -187,10 +188,12 @@ def compute_closed_orbit(
             try:
                 xkm1 = ob.getPhaseSpace()
             except:
-                logger.error(f"Could not retrieve phase space from observer {ob}")
+                logger.error(f"Could not retrieve phase space from observer"
+                             " {ob}")
         logger.error(
             f"compute_closed_orbit: failed to converge after {max_iter:d}"
-            f"  delta = {delta:12.5e}, particle lost at element {next_element:3d}"
+            f"  delta = {delta:12.5e}, particle lost at element"
+            " {next_element:3d}"
             f"  x_0   = {x0}  x_k-1 = {xkm1}"
             f"  x_k   = {M.cst():13.5e}"
         )

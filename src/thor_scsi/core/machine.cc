@@ -301,11 +301,15 @@ Logcerr Logcerr::singleton;
 }
 
 // J.B. 07-10-22.
-#if 0
+#define DBG_LEVEL 1
+#if DBG_LEVEL == 1
+int tsc::Machine::log_detail = THOR_SCSI_INFO;
+#elif DBG_LEVEL == 2
 int tsc::Machine::log_detail = THOR_SCSI_DEBUG;
-#else
+#elif DBG_LEVEL == 3
 int tsc::Machine::log_detail = THOR_SCSI_WARN;
 #endif
+
 std::shared_ptr<tsc::Machine::Logger> tsc::Machine::p_logger(&Logcerr::singleton, Logcerr::noopdtor);
 
 void tsc::Machine::set_logger(const std::shared_ptr<Logger> &p)

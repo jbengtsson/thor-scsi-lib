@@ -495,12 +495,12 @@ def compute_M_diag(
         if (nu[k] < 0e0) and (k < 2):
             nu[k] += 1e0
 
-    logger.debug(
+    logger.info(
         "\nA_CS:\n" + mat2txt(chop_array(compute_A_CS(dof, A)[0], 1e-10)))
-    logger.debug(
+    logger.info(
         "\nR:\n" + mat2txt(chop_array(R, 1e-10)))
-    logger.debug(
-        "\n  nu = [{:.16f}, {:.16f}, {:.16f}]".format(nu[X_], nu[Y_], nu[Z_]))
+    logger.info(
+        "\n  nu = {:18.16f} {:18.16f} {:18.16f}".format(nu[X_], nu[Y_], nu[Z_]))
 
     return A, A_inv
 

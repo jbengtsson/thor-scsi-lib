@@ -63,7 +63,8 @@ def vec2txt(vec: np.ndarray) -> str:
     flag = np.iscomplexobj(a)
     if flag:
         return " ".join([complex2txt(v) for v in a])
-    return " ".join(["{:15.6e}".format(v) for v in a])
+    return " ".join([" {:13.6e}".format(v) for v in a])
+    # return " ".join([" {:23.16e}".format(v) for v in a])
 
 
 def mat2txt(mat: np.ndarray, *, name=None) -> str:

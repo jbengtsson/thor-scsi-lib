@@ -243,6 +243,7 @@ void py_thor_scsi_init_tps(py::module &m)
 	//m.def("lists_to_ss_vect_tps", mattomap_save);
 	m.def("ss_vect_tps_to_mat", &maptomat);
 	m.def("mat_to_ss_vect_tps", &mattomap_check);
+	m.def("vec_mat_to_ss_vect", &vecmattomap);
 	m.attr("ps_dim") = ps_dim;
 	m.attr("ss_dim") = ss_dim;
 
