@@ -140,6 +140,13 @@ r = compute_closed_orbit(acc, calc_config, delta=0e0, eps=1e-15)
 M = r.one_turn_map[:6, :6]
 print("M:\n" + mat2txt(M))
 
+calc_config.dE = 0e0
+ps = r.x0
+acc.propagate(calc_config, ps)
+print("\nE [GeV]  = {:3.1f}".format(1e-9*calc_config.Energy))
+print("U0 [keV] = {:3.1f}".format(1e-3*calc_config.Energy*calc_config.dE))
+exit()
+
 # r = calculate_radiation(
 #     acc, energy=2.5e9, calc_config=calc_config, install_radiators=True
 # )

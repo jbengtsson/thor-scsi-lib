@@ -1,3 +1,4 @@
+#include <thor_scsi/std_machine/std_machine.h>
 #include <thor_scsi/elements/cavity.h>
 #include <thor_scsi/elements/element_helpers.h>
 #include <thor_scsi/elements/constants.h>
@@ -23,33 +24,29 @@ void tse::CavityType::_localPass(tsc::ConfigType &conf, ss_vect<T> &ps)
 
 	drift_pass(conf, L/2e0, ps);
 
-	if(debug){
-		std::cout << "cavity on " << conf.Cavity_on
-			  <<  "   frequency " << this->Pfreq
-			  <<  "   voltage " << this->Pvolt
-			  <<  "radiation on " << conf.radiation
-
-			  << std::endl;
-	}
+	THOR_SCSI_LOG(DEBUG)
+		<< "\n  cavity on    = " << conf.Cavity_on
+		<< "\n  f_RF         = " << this->Pfreq
+		<< "\n  V_RF         = " << this->Pvolt
+		<< "\n  radiation on = " << conf.radiation;
 
 	if (conf.Cavity_on && this->Pvolt != 0e0) {
 		auto energy = conf.Energy;
 		if(!std::isfinite(energy)){
-			throw std::runtime_error("Energy is not NaN and cavity calculation requested");
+			throw std::runtime_error(
+				"Energy is not NaN and cavity calculation requested");
 		}
 		// if(np.finite(energy))
 		const T delta = - this->Pvolt / (energy)
 			*sin(2e0*M_PI*this->Pfreq/c0*ps[ct_]+this->phi);
 
-		if(debug){
-			std::cout << "Cavity computed delta " << delta
-				  << " cavity phase " << this->phi
-				  << " energy "<< conf.Energy
-				  << " speed of light " << c0
-				  << " M_PI" << M_PI
-				  << " ct  " << ps[ct_]
-				  << std::endl;
-		}
+		THOR_SCSI_LOG(DEBUG)
+			<< "\n  delta:\n" << delta
+			<< "\n  phi_RF = " << this->phi
+			<< "\n  E      = " << conf.Energy
+			<< "\n  c_0    = " << c0
+			<< "\n  M_PI   = " << M_PI
+			<< "\n  ct:\n" << ps[ct_];
 
 		ps[delta_] += delta;
 
