@@ -27,12 +27,11 @@ from thor_scsi.lib import (
 from thor_scsi.lib import phase_space_index_internal as phase_space_ind
 
 import os
-import numpy as np
 
 import thor_scsi.lib as tslib
 
 import numpy as np
-import scipy as sp
+from scipy.constants import pi, c
 
 import thor_scsi.lib as tslib
 
@@ -64,9 +63,6 @@ def compute_diffusion_coefficients(rad_del_kicks):
         np.array([rk.getDiffusionCoefficientsIncrements()
                   for rk in rad_del_kicks])
     D_rad = np.sum(dD_rad, axis=0)
-    print("\ncompute_diffusion_coefficients:"
-          " D_rad = {:22.16} {:22.16} {:22.16}".
-          format(D_rad[X_], D_rad[Y_], D_rad[Z_]))
     return D_rad
 
 
@@ -75,8 +71,10 @@ t_dir = os.path.join(os.environ["HOME"], "Nextcloud", "thor_scsi")
 t_file = os.path.join(t_dir, "b3_sf_40Grad_JB.lat")
 
 acc = accelerator_from_config(t_file)
+C = np.sum([elem.getLength() for elem in acc])
+
 print(" ".join([elem.name for elem in acc]))
-print("\nC = ", np.sum([elem.getLength() for elem in acc]))
+print("\nC = ", C)
 
 # b2 = acc.find("b2", 0)
 
@@ -138,31 +136,51 @@ if False:
 r = compute_closed_orbit(acc, calc_config, delta=0e0, eps=1e-15)
 #print("M:\n" + mat2txt(map2numpy(r.one_turn_map)))
 M = r.one_turn_map[:6, :6]
+
 print("M:\n" + mat2txt(M))
 
 calc_config.dE = 0e0
 ps = r.x0
 acc.propagate(calc_config, ps)
-print("\nE [GeV]  = {:3.1f}".format(1e-9*calc_config.Energy))
-print("U0 [keV] = {:3.1f}".format(1e-3*calc_config.Energy*calc_config.dE))
-exit()
+dE = calc_config.dE
+U_0 = calc_config.Energy*dE
 
 # r = calculate_radiation(
 #     acc, energy=2.5e9, calc_config=calc_config, install_radiators=True
 # )
 
-A, A_inv = compute_M_diag(dof, M)
+A, A_inv, alpha_rad = compute_M_diag(dof, M)
 
 calc_config.emittance = True
 
 print("\nx0 =", vec2txt(r.x0))
+
 A_cpy = vec_mat2ss_vect_tps(r.x0, A)
-print("\nA_cpy.cst:\n", A_cpy.cst())
-print("A_cpy:\n" + mat2txt(map2numpy(A_cpy)[:6, :6]))
 acc.propagate(calc_config, A_cpy)
-compute_diffusion_coefficients(rad_del_kicks)
-print("\nA_cpy.cst:\n", A_cpy.cst())
-print("A_cpy:\n" + mat2txt(map2numpy(A_cpy)[:6, :6]))
+
+D_rad = compute_diffusion_coefficients(rad_del_kicks)
+
+J = np.zeros(3)
+tau = np.zeros(3)
+eps = np.zeros(3)
+for k in range(dof):
+    J[k] = 2e0*(1e0+r.x0[delta_])*alpha_rad[k]/dE
+    tau[k] = -C/(c*alpha_rad[k])
+    eps[k] = -D_rad[k]/(2e0*alpha_rad[k])
+
+print("\nE [GeV]     = {:3.1f}".format(1e-9*calc_config.Energy))
+print("U0 [keV]    = {:3.1f}".format(1e-3*U_0))
+print("eps         = {:12.6e} {:12.6e} {:12.6e}".
+      format(eps[X_], eps[Y_], eps[Z_]))
+print("tau [msec]  = {:8.6f} {:8.6f} {:8.6f}".
+      format(1e3*tau[X_], 1e3*tau[Y_], 1e3*tau[Z_]))
+print("J           = {:8.6f} {:8.6f} {:8.6f}".
+      format(J[X_], J[Y_], J[Z_]))
+print("alpha_rad   = {:13.6e} {:13.6e} {:13.6e}".
+        format(alpha_rad[X_], alpha_rad[Y_], alpha_rad[Z_]))
+
+print("D_rad       = {:12.6e} {:12.6e} {:12.6e}".
+      format(D_rad[X_], D_rad[Y_], D_rad[Z_]))
 
 exit()
 

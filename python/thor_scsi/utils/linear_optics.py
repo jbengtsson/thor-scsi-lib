@@ -146,14 +146,16 @@ def compute_A(n_dof, eta, u):
         scl = np.sqrt(np.abs(z))
         sgn_vec = sign(u1[2 * i][2 * i].real)
         [u1[:, 2 * i], u1[:, 2 * i + 1]] = [
-            sgn_vec * (u1[:, 2 * i].real + sgn_im * u1[:, 2 * i].imag * 1j) / scl,
+            sgn_vec * (u1[:, 2 * i].real + sgn_im * u1[:, 2 * i].imag * 1j)
+            / scl,
             sgn_vec
             * (u1[:, 2 * i + 1].real + sgn_im * u1[:, 2 * i + 1].imag * 1j)
             / scl,
         ]
 
     for i in range(n_dof):
-        [A[:n, 2 * i], A[:n, 2 * i + 1]] = [u1[:, 2 * i].real, u1[:, 2 * i].imag]
+        [A[:n, 2 * i], A[:n, 2 * i + 1]] = \
+            [u1[:, 2 * i].real, u1[:, 2 * i].imag]
 
     if n_dof == 2:
         # For coasting beam translate to momentum dependent fix point.
@@ -411,7 +413,7 @@ def compute_twiss_along_lattice(
 
 
 def compute_M_diag(
-    dof: int, M: np.ndarray, debug_prt: bool = False
+        dof: int, M: np.ndarray, debug_prt: bool = False
 ) -> [np.ndarray, np.ndarray]:
     """
 
@@ -490,19 +492,23 @@ def compute_M_diag(
 
     R = A_inv @ M @ A
     nu = np.zeros(3, float)
+    alpha_rad = np.zeros(3, float)
     for k in range(3):
         nu[k] = np.arctan2(R[2*k][2*k+1], R[2*k][2*k])/(2e0*np.pi)
         if (nu[k] < 0e0) and (k < 2):
             nu[k] += 1e0
+        alpha_rad[k] = \
+            np.log(np.sqrt(np.absolute(w_ord[2*k])*np.absolute(w_ord[2*k+1])))
 
     logger.info(
-        "\nA_CS:\n" + mat2txt(chop_array(compute_A_CS(dof, A)[0], 1e-10)))
-    logger.info(
-        "\nR:\n" + mat2txt(chop_array(R, 1e-10)))
-    logger.info(
-        "\n  nu = {:18.16f} {:18.16f} {:18.16f}".format(nu[X_], nu[Y_], nu[Z_]))
+        "\n\nA_CS:\n" + mat2txt(chop_array(compute_A_CS(dof, A)[0], 1e-10))
+        + "\n\nR:\n" + mat2txt(chop_array(R, 1e-10))
+        + "\n\nnu        = {:18.16f} {:18.16f} {:18.16f}\n".
+        format(nu[X_], nu[Y_], nu[Z_])
+        + "alpha_rad = {:13.6e} {:13.6e} {:13.6e}".
+        format(alpha_rad[X_], alpha_rad[Y_], alpha_rad[Z_]))
 
-    return A, A_inv
+    return A, A_inv, alpha_rad
 
 
 __all__ = ["compute_twiss_along_lattice", "jac2twiss", "compute_M_diag"]
