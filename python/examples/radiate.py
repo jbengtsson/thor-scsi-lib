@@ -4,16 +4,17 @@ import logging
 import copy
 import xarray as xr
 
-logging.basicConfig(level="DEBUG")
-logger = logging.getLogger("thor_scsi")
-print("\nlogger:\n", logger)
-logger.setLevel("DEBUG")
+logging.basicConfig(level="WARNING")
+# logger = logging.getLogger("thor_scsi")
+# print("\nlogger:\n", logger)
+# logger.setLevel("WARNING")
 # Levels: DEBUG, INFO, WARNING, ERROR, and CRITICAL.
 
 from thor_scsi.factory import accelerator_from_config
 from thor_scsi.utils.accelerator import instrument_with_radiators
 from thor_scsi.utils.courant_snyder import compute_twiss_A
 from thor_scsi.utils.phase_space_vector import map2numpy, vec_mat2ss_vect_tps
+from thor_scsi.utils.radiate import compute_radiation
 
 from thor_scsi.lib import (
     ConfigType,
@@ -58,29 +59,15 @@ x_, px_, y_, py_, ct_, delta_ = [
 ]
 
 
-def compute_diffusion_coefficients(rad_del_kicks):
-    dD_rad = \
-        np.array([rk.getDiffusionCoefficientsIncrements()
-                  for rk in rad_del_kicks])
-    D_rad = np.sum(dD_rad, axis=0)
-    return D_rad
-
-
 t_dir = os.path.join(os.environ["HOME"], "Nextcloud", "thor_scsi")
 # t_file = os.path.join(t_dir, "b3_tst.lat")
 t_file = os.path.join(t_dir, "b3_sf_40Grad_JB.lat")
 
 acc = accelerator_from_config(t_file)
-C = np.sum([elem.getLength() for elem in acc])
 
 print(" ".join([elem.name for elem in acc]))
-print("\nC = ", C)
 
 # b2 = acc.find("b2", 0)
-
-energy = 2.5e9
-# Just to test diffusion
-# energy = 2.5
 
 # Planes x y z
 # from thor_scsi.lib import spatial_index
@@ -101,25 +88,6 @@ mbb = acc.find("mbb", 0)
 print("{:s}: N = {:d}".
       format(mbb.name, mbb.getNumberOfIntegrationSteps()))
 
-# Install radiators that radiation is calculated
-rad_del_kicks = instrument_with_radiators(acc, energy=energy)
-
-calc_config = tslib.ConfigType()
-
-calc_config.radiation = True
-calc_config.emittance = False
-calc_config.Cavity_on = True
-
-print("\ncalc_config: [radiation, emittance, Cavity_on] = ",
-      calc_config.radiation, calc_config.emittance, calc_config.Cavity_on)
-
-calc_config.Energy = energy
-
-if calc_config.Cavity_on == True:
-    dof = 3
-else:
-    dof = 2
-
 if False:
     ps = tslib.ss_vect_double()
     ps.set_zero()
@@ -133,54 +101,10 @@ if False:
 
     exit()
 
-r = compute_closed_orbit(acc, calc_config, delta=0e0, eps=1e-15)
-#print("M:\n" + mat2txt(map2numpy(r.one_turn_map)))
-M = r.one_turn_map[:6, :6]
 
-print("M:\n" + mat2txt(M))
+calc_config = tslib.ConfigType()
 
-calc_config.dE = 0e0
-ps = r.x0
-acc.propagate(calc_config, ps)
-dE = calc_config.dE
-U_0 = calc_config.Energy*dE
-
-# r = calculate_radiation(
-#     acc, energy=2.5e9, calc_config=calc_config, install_radiators=True
-# )
-
-A, A_inv, alpha_rad = compute_M_diag(dof, M)
-
-calc_config.emittance = True
-
-print("\nx0 =", vec2txt(r.x0))
-
-A_cpy = vec_mat2ss_vect_tps(r.x0, A)
-acc.propagate(calc_config, A_cpy)
-
-D_rad = compute_diffusion_coefficients(rad_del_kicks)
-
-J = np.zeros(3)
-tau = np.zeros(3)
-eps = np.zeros(3)
-for k in range(dof):
-    J[k] = 2e0*(1e0+r.x0[delta_])*alpha_rad[k]/dE
-    tau[k] = -C/(c*alpha_rad[k])
-    eps[k] = -D_rad[k]/(2e0*alpha_rad[k])
-
-print("\nE [GeV]     = {:3.1f}".format(1e-9*calc_config.Energy))
-print("U0 [keV]    = {:3.1f}".format(1e-3*U_0))
-print("eps         = {:12.6e} {:12.6e} {:12.6e}".
-      format(eps[X_], eps[Y_], eps[Z_]))
-print("tau [msec]  = {:8.6f} {:8.6f} {:8.6f}".
-      format(1e3*tau[X_], 1e3*tau[Y_], 1e3*tau[Z_]))
-print("J           = {:8.6f} {:8.6f} {:8.6f}".
-      format(J[X_], J[Y_], J[Z_]))
-print("alpha_rad   = {:13.6e} {:13.6e} {:13.6e}".
-        format(alpha_rad[X_], alpha_rad[Y_], alpha_rad[Z_]))
-
-print("D_rad       = {:12.6e} {:12.6e} {:12.6e}".
-      format(D_rad[X_], D_rad[Y_], D_rad[Z_]))
+compute_radiation(acc, calc_config, 2.5e9, 1e-15)
 
 exit()
 
@@ -241,7 +165,6 @@ print(f"\n{tune_x=:.16f} {tune_y=:.16f} {tune_long=:.16f}")
 
 exit()
 
-
 print(ps_wr)
 acc.propagate(calc_config, ps_wr, 0, 2000)
 print(ps_wr.cst())
@@ -252,6 +175,7 @@ print(ps_wr.cst() - ps.cst())
 
 
 exit()
+
 print(compute_diffusion_coefficients())
 use_tpsa = False
 if use_tpsa:
