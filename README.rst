@@ -192,6 +192,23 @@ provided by GNU C++; thus its dependency on the GNU compiler collections.
 To install
 ----------
 
+-----------
+export DYLD_LIBRARY_PATH=$HOME/git/thor-scsi-lib/local/lib:$DYLD_LIBRARY_PATH
+export PATH=/usr/local/Cellar/bison/3.8.2/bin:$PATH
+
+git clone https://github.com/jbengtsson/thor-scsi-lib.git
+cd thor-scsi-lib
+git submodule init
+git submodule update
+mkdir build
+cd build
+cmake ..
+make -j8
+cmake --install . --prefix ../local
+python3 setup.py build
+pip3.10 install -e .
+-----------
+
 Setup of repository
 ~~~~~~~~~~~~~~~~~~~
 
