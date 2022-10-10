@@ -39,7 +39,8 @@ def f(txt, fmt=None):
     return fmt.format(txt)
 
 
-formatters = {key: functools.partial(f, fmt=fmt) for key, fmt in format_dict.items()}
+formatters = \
+    {key: functools.partial(f, fmt=fmt) for key, fmt in format_dict.items()}
 _default_format = "{:9.5f}"
 
 

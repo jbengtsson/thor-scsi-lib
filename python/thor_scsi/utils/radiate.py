@@ -105,8 +105,10 @@ def compute_radiation(
     #print("M:\n" + mat2txt(map2numpy(r.one_turn_map)))
     M = r.one_turn_map[:6, :6]
 
-    print("M:\n" + mat2txt(M))
-    print("\nx0 =", vec2txt(r.x0))
+    logger.info(
+        "M:\n" + mat2txt(M)
+        + "\nx0 =", vec2txt(r.x0)
+    )
 
     calc_config.dE = 0e0
     ps = r.x0
