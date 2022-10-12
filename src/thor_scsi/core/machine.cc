@@ -300,11 +300,8 @@ struct Logcerr : public tsc::Machine::Logger
 Logcerr Logcerr::singleton;
 }
 
-#if 1
-int tsc::Machine::log_detail = THOR_SCSI_DEBUG;
-#else
-int tsc::Machine::log_detail = THOR_SCSI_WARN;
-#endif
+int tsc::Machine::log_detail = THOR_SCSI_WARN; // THOR_SCSI_DEBUG
+
 std::shared_ptr<tsc::Machine::Logger> tsc::Machine::p_logger(&Logcerr::singleton, Logcerr::noopdtor);
 
 void tsc::Machine::set_logger(const std::shared_ptr<Logger> &p)
