@@ -74,7 +74,7 @@ static void compute_transport_matrix(ts::Accelerator& accelerator, const int fir
 
 	bool verbose = vm["verbose"].as<bool>();
 	bool very_verbose = vm["very_verbose"].as<bool>();
-	auto desc = std::make_shared<gtpsa::desc>(1, 6);
+	auto desc = std::make_shared<gtpsa::desc>(6, 1);
 	auto a_tps = gtpsa::tpsa(desc, mad_tpsa_default);
 	gtpsa::ss_vect<gtpsa::tpsa> ps(a_tps);
 	ps.set_identity();
@@ -212,7 +212,7 @@ static void compute_transport_matrix_prop(ts::Accelerator& accelerator, const in
 	bool radiate = vm["radiate"].as<bool>();
 	int warmup_turns = vm["n-warmup-turns"].as<int>();
 
-	auto desc = std::make_shared<gtpsa::desc>(1, 6);
+	auto desc = std::make_shared<gtpsa::desc>(6, 1);
 	auto a_tps = gtpsa::tpsa(desc, mad_tpsa_default);
 	gtpsa::ss_vect<gtpsa::tpsa> ps(a_tps);
 	ps.set_identity();
@@ -305,7 +305,7 @@ static void compute_transport_matrix_prop(ts::Accelerator& accelerator, const in
 	}
 	std::cout  << "diff\n" << pmap - pmap_orig  << std::endl;
 
-	std::cout << "Computed poincare map (gtsa)" << std::endl;
+	std::cout << "Y Computed poincare map (gtsa)" << std::endl;
 	ps.show(std::cout, 10);
 	std::cout << std::endl;
 
@@ -318,7 +318,7 @@ static void compute_transport_matrix_prop(ts::Accelerator& accelerator, const in
 		auto dtp = dt / n_turns;
 		std::cout << std::fixed
 			  << "gtpsa: "
-			  << "Required time span for " << n_turns << "turns "
+			  << "Required time span for " << n_turns << " turns "
 			  << " dt: " << dt << " us, " << dt / 1000.0 << " ms"
 			  << " per turn " << dtp << " us"
 			  << std::endl;
@@ -326,7 +326,7 @@ static void compute_transport_matrix_prop(ts::Accelerator& accelerator, const in
 		dtp = dt / n_turns;
 		std::cout << std::fixed
 			  << "tps:   "
-			  << "Required time span for " << n_turns << "turns "
+			  << "Required time span for " << n_turns << " turns "
 			  << " dt: " << dt << " us, " << dt / 1000.0 << " ms"
 			  << " per turn " << dtp << " us"
 			  << std::endl;

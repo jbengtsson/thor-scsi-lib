@@ -150,9 +150,9 @@ namespace thor_scsi::core {
 			int n = this->coeffs.size() -1;
 			// T rBy   = std::move( gtpsa::same_as_instance(x) );
 			// T rBx   = std::move( gtpsa::same_as_instance(y) );
-			// T trBy  = std::move( gtpsa::same_as_instance(y) );
-			// T term1 = std::move( gtpsa::same_as_instance(x) );
-			// T term2 = std::move( gtpsa::same_as_instance(x) );
+			T trBy  = std::move( gtpsa::same_as_instance(y) );
+			T term1 = std::move( gtpsa::same_as_instance(x) );
+			T term2 = std::move( gtpsa::same_as_instance(x) );
 
 			T rBy = gtpsa::same_as_instance(x);
 			T rBx = gtpsa::same_as_instance(y);
@@ -165,34 +165,18 @@ namespace thor_scsi::core {
 				T ByoBrho1 = x * ByoBrho - y * BxoBrho + tmp.real();
 				BxoBrho    = y * ByoBrho + x * BxoBrho + tmp.imag();
 				ByoBrho = ByoBrho1;
-#endif
 
-#if 0
+#endif
+#if 1
 				trBy = x * rBy - y * rBx + tmp.real();
 				rBx  = y * rBy + x * rBx + tmp.imag();
 				rBy = std::move(trBy);
-
-				term1 = gtpsa::clone(x); term1 *= rBy;
-				term2 =  gtpsa::clone(y);
-				term2 *= rBx;
+#else
+				term1 = x; term1 *= rBy; term2 = y; term2 *= rBx;
 				trBy = term1; trBy -= term2; trBy += tmp.real();
 
-				term1 = y; term1 *= rBy; term2 =  x * rBx;
+				term1 = y; term1 *= rBy; term2 =  x; term2 *= rBx;
 				rBx = term1; rBx += term2; rBx += tmp.imag();
-				rBy = trBy;
-
-#else
-
-
-				T term1 = gtpsa::clone(x); term1 *= rBy;
-				T term2 = gtpsa::clone(y); term2 *= rBx;
-				T trBy = std::move(term1); trBy -= term2; trBy += tmp.real();
-
-				{
-				    T term1 = gtpsa::clone(y); term1 *= rBy;
-				    T term2 = gtpsa::clone(x); term2 *= rBx;
-				    rBx = std::move(term1); rBx += term2; rBx += tmp.imag();
-				}
 				rBy = std::move(trBy);
 #endif
 

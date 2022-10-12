@@ -96,3 +96,6 @@ install(EXPORT tpsa_linTargets
         NAMESPACE thor_scsi::
 	DESTINATION ${TPSA_CMAKE_LIB_DIR}
 )
+
+
+add_subdirectory(examples)
