@@ -4,7 +4,9 @@
 #include <boost/test/tools/output_test_stream.hpp>
 #include <thor_scsi/core/multipoles.h>
 #include <gtpsa/utils_tps.hpp>
+#include <tps/tps_type.h>
 #include <cmath>
+#include <array>
 
 /* Second implemntation of .field method available? */
 // #define THOR_SCSI_PLANAR_MULTIPOLES_FIELD2
@@ -15,6 +17,19 @@ static const tsc::cdbl I(0, 1);
 
 auto desc = std::make_shared<gtpsa::desc>(6, 1);
 const auto t_ref = gtpsa::tpsa(desc, 1);
+
+auto create_ref_pos(void)
+{
+	auto x_ref =  gtpsa::tpsa(desc, 1);
+	auto y_ref =  gtpsa::tpsa(desc, 1);
+	x_ref.setv(1, {1,0, 0,0, 0,0});
+	y_ref.setv(1, {0,0, 1,0, 0,0});
+
+	std::array<gtpsa::tpsa, 2> pos{x_ref, y_ref};
+	return pos;
+}
+
+auto ref_pos = create_ref_pos();
 
 BOOST_AUTO_TEST_CASE(test01_complex_angle)
 {
@@ -207,10 +222,27 @@ BOOST_AUTO_TEST_CASE(test20_set_harmonic_quadrupole)
 	}
 
 	{
-		auto x = t_ref.clone(), y = t_ref.clone(), Bx = t_ref.clone(), By = t_ref.clone();
+		auto x = ref_pos[0].clone(), y = ref_pos[1].clone(), Bx = t_ref.clone(), By = t_ref.clone();
+		std::cout << "x\n " << x << "\n"
+			  << "y\n " << y << "\n";
 		h.field(x, y, &Bx, &By);
 		BOOST_CHECK_SMALL(double(By.cst()), 1e-22);
 		BOOST_CHECK_SMALL(double(Bx.cst()), 1e-22);
+		std::cout << "Bx\n " << Bx << "\n"
+			  << "By\n " << By << "\n";
+
+	}
+	{
+
+		auto x = tps(0, 0+1);
+		auto y = tps(0, 2+1);
+		tps Bx, By;
+
+		std::cout << "x\n " << x << "\n"
+			  << "y\n " << y << "\n";
+		h.field(x, y, &Bx, &By);
+		std::cout << "Bx\n " << Bx << "\n"
+			  << "By\n " << By << "\n";
 	}
 	{
 		auto x = t_ref.clone(), y = t_ref.clone(), Bx = t_ref.clone(), By = t_ref.clone();

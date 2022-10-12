@@ -432,7 +432,7 @@ BOOST_AUTO_TEST_CASE(test60_higher_orders)
 			const double px_expected = -pow(x, (n-1));
 
 			const gtpsa::ss_vect<double> ps_orig = {x, 0, 0, 0, 0, 0};
-			gtpsa::ss_vect<double> ps = ps.clone();
+			gtpsa::ss_vect<double> ps = ps_orig.clone();
 			thin_kick(calc_config, muls, length, h_bend, h_ref, ps_orig, ps);
 			BOOST_CHECK_CLOSE(ps[x_],     x,           1e-14);
 			BOOST_CHECK_CLOSE(ps[px_],    px_expected, 1e-14);

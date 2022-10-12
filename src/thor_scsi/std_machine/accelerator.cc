@@ -44,15 +44,16 @@ ts::Accelerator::_propagate(thor_scsi::core::ConfigType& conf, gtpsa::ss_vect<T>
 
 	bool retreat = std::signbit(max_elements);
 	int next_elem = static_cast<int>(start);
+	auto trace = this->trace();
+
 
 	for(size_t turn=0; turn<n_turns; ++turn) {
-#if 1
-	    next_elem = static_cast<int>(start-1);
-	    for(int i=start-1; next_elem >= 0 && next_elem<nelem && i<std::abs(max_elements); i++)
-#else
-	    next_elem = 0;
+	    if(trace)
+		(*trace) << "turn " <<  turn << ", processing elements from " <<  start
+			 << " for a maximum of elements " << max_elements << std::endl;
+
+	    next_elem = static_cast<int>(start);
 	    for(int i=0; next_elem >= 0 && next_elem<nelem && i<std::abs(max_elements); i++)
-#endif
 	    {
 		size_t n = next_elem;
 
@@ -100,7 +101,6 @@ ts::Accelerator::_propagate(thor_scsi::core::ConfigType& conf, gtpsa::ss_vect<T>
 				return next_elem;
 			}
 		}
-		auto trace = this->trace();
 		if(trace)
 			(*trace) << "After ["<< n<< "] " << cv->name << " " <<std::endl << ps << std::endl;
 	    }

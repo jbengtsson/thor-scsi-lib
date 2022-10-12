@@ -163,7 +163,7 @@ BOOST_AUTO_TEST_CASE(test20_quadrupole_thin_eval)
 
 		/* no multipole */
 		for(int i = -1; i <= 1; ++i){
-			gtpsa::ss_vect<double> ps{0,0,0,0,0,0};
+			gtpsa::ss_vect<double> ps_ref{0,0,0,0,0,0};
 			const double x = i;
 
 			gtpsa::ss_vect<double> ps{0,0,0,0,0,0};
@@ -179,12 +179,12 @@ BOOST_AUTO_TEST_CASE(test20_quadrupole_thin_eval)
 			BOOST_CHECK_SMALL(ps[delta_],     1e-14);
 
 
-			gtpsa::ss_vect<gtpsa::tpsa> tps(t_ref);
-			tps[x_] = x;
+			gtpsa::ss_vect<gtpsa::tpsa> ss_vect(t_ref);
+			ss_vect[x_] = x;
 
-			quad.propagate(calc_config, ps);
+			quad.propagate(calc_config, ss_vect);
 
-			auto cst = tps.cst();
+			auto cst = ss_vect.cst();
 			BOOST_CHECK_CLOSE(cst[x_],     x, 1e-14);
 			BOOST_CHECK_SMALL(cst[y_],        1e-14);
 			BOOST_CHECK_SMALL(cst[px_],       1e-14);
@@ -213,8 +213,9 @@ BOOST_AUTO_TEST_CASE(test20_quadrupole_thin_eval)
 		BOOST_CHECK_SMALL(ps[ct_],     1e-14);
 		BOOST_CHECK_SMALL(ps[delta_],  1e-14);
 
-		gtpsa::ss_vect<gtpsa::tpsa> tps(t_ref);
-		auto cst = tps.cst();
+		gtpsa::ss_vect<gtpsa::tpsa> ss_vect(t_ref);
+		auto cst = ss_vect.cst();
+		quad.propagate(calc_config, ss_vect);
 		BOOST_CHECK_SMALL(cst[x_],     1e-14);
 		BOOST_CHECK_SMALL(cst[y_],     1e-14);
 		BOOST_CHECK_SMALL(cst[px_],    1e-14);
@@ -241,25 +242,39 @@ BOOST_AUTO_TEST_CASE(test20_quadrupole_thin_eval)
 			quad.propagate(calc_config, ps);
 
 			BOOST_CHECK_CLOSE(ps [px_],  - x* grad, 1e-12);
-			BOOST_CHECK_CLOSE(ps [x_],           x, 1e-14);
-			BOOST_CHECK_SMALL(ps [y_],              1e-14);
-			BOOST_CHECK_SMALL(ps [py_],             1e-14);
-			BOOST_CHECK_SMALL(ps [ct_],             1e-14);
-			BOOST_CHECK_SMALL(ps [delta_],          1e-14);
+			BOOST_CHECK_CLOSE(ps [x_],           x, 1e-12);
+			BOOST_CHECK_SMALL(ps [y_],              1e-12);
+			BOOST_CHECK_SMALL(ps [py_],             1e-12);
+			BOOST_CHECK_SMALL(ps [ct_],             1e-12);
+			BOOST_CHECK_SMALL(ps [delta_],          1e-12);
 
 
-			gtpsa::ss_vect<gtpsa::tpsa> tps(t_ref);
-			tps[x_] = x;
-			BOOST_CHECK_CLOSE(tps[x_].cst(), x, 1e-12);
-			auto cst = tps.cst();
+			gtpsa::ss_vect<gtpsa::tpsa> ss_vect(t_ref);
+			ss_vect.set_identity();
+			ss_vect[x_] = x;
+			BOOST_CHECK_CLOSE(ss_vect[x_].cst(), x, 1e-12);
+
+			quad.propagate(calc_config, ss_vect);
+
+			auto cst = ss_vect.cst();
 
 			BOOST_CHECK_CLOSE(cst[px_],  - x* grad, 1e-12);
-			BOOST_CHECK_CLOSE(cst[x_],           x, 1e-14);
-			BOOST_CHECK_SMALL(cst[y_],              1e-14);
-			BOOST_CHECK_SMALL(cst[py_],             1e-14);
-			BOOST_CHECK_SMALL(cst[ct_],             1e-14);
-			BOOST_CHECK_SMALL(cst[delta_],          1e-14);
+			BOOST_CHECK_CLOSE(cst[x_],           x, 1e-12);
+			BOOST_CHECK_SMALL(cst[y_],              1e-12);
+			BOOST_CHECK_SMALL(cst[py_],             1e-12);
+			BOOST_CHECK_SMALL(cst[ct_],             1e-12);
+			BOOST_CHECK_SMALL(cst[delta_],          1e-12);
 
+			// test that the gradient is found in the first derivative
+			std::vector<num_t> vec(ss_vect.size());
+			// first order
+			ss_vect[py_].getv(1, &vec);
+			BOOST_CHECK_CLOSE(vec[y_],      grad, 1e-12);
+			BOOST_CHECK_SMALL(vec[x_],            1e-12);
+			BOOST_CHECK_SMALL(vec[px_],           1e-12);
+			BOOST_CHECK_CLOSE(vec[py_],      1e0, 1e-12);
+			BOOST_CHECK_SMALL(vec[ct_],           1e-12);
+			BOOST_CHECK_SMALL(vec[delta_],        1e-12);
 		}
 	}
 
@@ -281,23 +296,37 @@ BOOST_AUTO_TEST_CASE(test20_quadrupole_thin_eval)
 			quad.propagate(calc_config, ps);
 
 			BOOST_CHECK_CLOSE(ps [py_], x * grad, 1e-12);
-			BOOST_CHECK_CLOSE(ps [x_],         x, 1e-14);
-			BOOST_CHECK_SMALL(ps [y_],            1e-14);
-			BOOST_CHECK_SMALL(ps [px_],           1e-14);
-			BOOST_CHECK_SMALL(ps [ct_],           1e-14);
-			BOOST_CHECK_SMALL(ps [delta_],        1e-14);
+			BOOST_CHECK_CLOSE(ps [x_],         x, 1e-12);
+			BOOST_CHECK_SMALL(ps [y_],            1e-12);
+			BOOST_CHECK_SMALL(ps [px_],           1e-12);
+			BOOST_CHECK_SMALL(ps [ct_],           1e-12);
+			BOOST_CHECK_SMALL(ps [delta_],        1e-12);
 
 
-			gtpsa::ss_vect<gtpsa::tpsa> tps(t_ref);
-			tps[x_] = x;
-			auto cst = tps.cst();
+			gtpsa::ss_vect<gtpsa::tpsa> ss_vect(t_ref);
+			ss_vect.set_identity();
+			ss_vect[x_] = x;
+
+			quad.propagate(calc_config, ss_vect);
+			auto cst = ss_vect.cst();
 
 			BOOST_CHECK_CLOSE(cst[py_], x * grad, 1e-12);
-			BOOST_CHECK_CLOSE(cst[x_],         x, 1e-14);
-			BOOST_CHECK_SMALL(cst[y_],            1e-14);
-			BOOST_CHECK_SMALL(cst[px_],           1e-14);
-			BOOST_CHECK_SMALL(cst[ct_],           1e-14);
-			BOOST_CHECK_SMALL(cst[delta_],        1e-14);
+			BOOST_CHECK_CLOSE(cst[x_],         x, 1e-12);
+			BOOST_CHECK_SMALL(cst[y_],            1e-12);
+			BOOST_CHECK_SMALL(cst[px_],           1e-12);
+			BOOST_CHECK_SMALL(cst[ct_],           1e-12);
+			BOOST_CHECK_SMALL(cst[delta_],        1e-12);
+
+			// test that the gradient is found in the first derivative
+			std::vector<num_t> vec(ss_vect.size());
+			// first order
+			ss_vect[py_].getv(1, &vec);
+			BOOST_CHECK_CLOSE(vec[x_],      grad, 1e-12);
+			BOOST_CHECK_SMALL(vec[px_],           1e-12);
+			BOOST_CHECK_SMALL(vec[y_],            1e-12);
+			BOOST_CHECK_CLOSE(vec[py_],        1, 1e-12);
+			BOOST_CHECK_SMALL(vec[ct_],           1e-12);
+			BOOST_CHECK_SMALL(vec[delta_],        1e-12);
 		}
 	}
 }
@@ -351,9 +380,11 @@ BOOST_AUTO_TEST_CASE(test20_quadrupole_typical_length_eval)
 			BOOST_CHECK_SMALL(ps[py_],       1e-14);
 			BOOST_CHECK_SMALL(ps[delta_],    1e-14);
 
-			gtpsa::ss_vect<gtpsa::tpsa> tps(t_ref);
-			tps[x_] = xs;
-			auto cst = tps.cst();
+			gtpsa::ss_vect<gtpsa::tpsa> ss_vect(t_ref);
+			ss_vect[x_] = xs;
+			quad.propagate(calc_config, ss_vect);
+
+			auto cst = ss_vect.cst();
 
 			BOOST_CHECK_CLOSE(cst[px_],   By, 2);
 			BOOST_CHECK_CLOSE(cst[x_],    xe, 0.5);
