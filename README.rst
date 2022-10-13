@@ -290,6 +290,6 @@ Contributions
 
   Guidelines & automated regression testing bootstrapped by Pierre Schnizer:
   
-    P.\ Schnizer\, W.\ Khail, J.\ Bengtsson *Small Talk on AT* `IPAC 2022.`_
+    P\. Schnizer, W\. Khail, J\. Bengtsson *Small Talk on AT* `IPAC 2022.`_
     
     .. _`IPAC 2022.`: https://accelconf.web.cern.ch/ipac2022/papers/tupost029.pdf
