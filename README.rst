@@ -12,25 +12,8 @@ provided by GNU C++; thus its dependency on the GNU compiler collections.
 To install
 ----------
 
------------
-export DYLD_LIBRARY_PATH=$HOME/git/thor-scsi-lib/local/lib:$DYLD_LIBRARY_PATH
-export PATH=/usr/local/Cellar/bison/3.8.2/bin:$PATH
-
-git clone https://github.com/jbengtsson/thor-scsi-lib.git
-cd thor-scsi-lib
-git submodule init
-git submodule update
-mkdir build
-cd build
-cmake ..
-make -j8
-cmake --install . --prefix ../local
-python3 setup.py build
-pip3.10 install -e .
------------
-
 Setup of repository
-~~~~~~~~~~~~~~~~~~~
+===================
 
 Dowload the repository and checkout the proper branch. Here it's assumed you
 will use the directoy `git_repos/tracy-3.5` in your home directory for the
@@ -55,7 +38,7 @@ Then select the proper tree by
 
 
 C++ library
-~~~~~~~~~~~
+===========
 
 First create environment variable $TRACY_LIB. This will be the prefix where the
 built library and include files will be installed later on e.g:
@@ -82,7 +65,7 @@ library is located to `LD_LIBRARY_PATH` environment variable).
 
 
 Python interface
-~~~~~~~~~~~~~~~~
+================
 
 The python interface is based on https://github.com/pybind/pybind11. Building this interface
 requires to select the proper directory
