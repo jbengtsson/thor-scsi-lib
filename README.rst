@@ -288,4 +288,8 @@ Contributions
   
     .. _`EPICS Collaboration Meeting 2017.`: https://indico.esss.lu.se/event/889/contributions/7038/attachments/6800/9762/Cython_EpicsTM_Oct2017_Barcelona.pdf
 
-  Guidelines & automated regression testing bootstrapped by Pierre Schnizer.
+  Guidelines & automated regression testing bootstrapped by Pierre Schnizer:
+  
+    P.\ Schnizer\, W.\ Khail, J.\ Bengtsson *Small Talk on AT* `IPAC 2022.`_
+    
+    .. _`IPAC 2022.`: https://accelconf.web.cern.ch/ipac2022/papers/tupost029.pdf
