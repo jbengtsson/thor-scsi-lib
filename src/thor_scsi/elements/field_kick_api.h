@@ -8,7 +8,10 @@ namespace thor_scsi::elements {
 	class FieldKickAPI : public LocalGalileanPRot {
 
 	public:
-		inline FieldKickAPI(const Config &conf) : LocalGalileanPRot(conf) {}
+		inline FieldKickAPI(const Config &conf)
+			: LocalGalileanPRot(conf)
+			, intp(nullptr)
+			{}
 		inline FieldKickAPI(FieldKickAPI&& O)
 			: LocalGalileanPRot(std::move(O)),
 			  intp(std::move(O.intp))

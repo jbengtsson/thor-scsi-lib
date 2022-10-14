@@ -9,9 +9,11 @@ namespace thor_scsi::elements {
 	class RadiationDelegate: public  RadiationDelegateInterface{
 	public:
 		~RadiationDelegate(void){};
-		inline RadiationDelegate(void){
-			this->reset();
-		}
+		inline RadiationDelegate(void)
+			: curly_dH_x(0e0)
+			, delegator_name("")
+			, delegator_index(-1)
+			{ this->reset(); }
 
 		inline void reset(void) {
 			this->curly_dH_x = 0e0;
@@ -42,9 +44,9 @@ namespace thor_scsi::elements {
 		template<typename T>
 		inline void computeAndStoreCurlyH(const gtpsa::ss_vect<T> &ps);
 
-		double curly_dH_x = 0e0;
-		std::string delegator_name = "";
-		int delegator_index = -1;
+		double curly_dH_x;
+		std::string delegator_name;
+		int delegator_index;
 	};
 
 	/**
@@ -54,7 +56,12 @@ namespace thor_scsi::elements {
 	 */
 	class RadiationDelegateKick: public  RadiationDelegateKickInterface{
 	public:
-		RadiationDelegateKick(void){
+		RadiationDelegateKick(void)
+			: curly_dH_x(0e0)
+			, index(0e0)
+			, dI( {0e0, 0e0, 0e0, 0e0, 0e0, 0e0} )
+			, D_rad( {0e0, 0e0, 0e0} )
+			{
 			this->reset();
 		}
 		~RadiationDelegateKick(void){};
@@ -163,8 +170,8 @@ namespace thor_scsi::elements {
 		template<typename T>
 		void diffusion(const T &B2_perp, const T &ds, const T &p_s0,  const gtpsa::ss_vect<T> &A);
 
-		double curly_dH_x = 0e0;
-		int index = -1;
+		double curly_dH_x;
+		int index;
 		std::array<double, 6> dI;           ///< Local contributions to the synchrotron integrals
 		std::array<double, 3> D_rad;        //< Diffusion coefficients (Floquet space).
 		bool compute_diffusion = false;

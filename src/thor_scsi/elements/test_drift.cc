@@ -27,12 +27,12 @@ diff_position_direction(const gtpsa::ss_vect<double>& start, const gtpsa::ss_vec
 
 static void
 test_zero_movement(tse::DriftType& drift, tsc::ConfigType& calc_config,
-		   const gtpsa::ss_vect<double> ps_start,
+		   const gtpsa::ss_vect<double>& ps_start,
 		   const double pos_diff=1e-15,
 		   const double dir_diff=1e-15)
 {
 
-	gtpsa::ss_vect<double> ps = ps_start;
+        gtpsa::ss_vect<double> ps = ps_start.clone();
 	drift.propagate(calc_config, ps);
 
 	double dpos, ddir;
@@ -103,10 +103,10 @@ BOOST_AUTO_TEST_CASE(test02_drift_zero_length)
 
 static void
 test_length_drift(tse::DriftType& drift, tsc::ConfigType& calc_config,
-		  const gtpsa::ss_vect<double> ps_start, const double length = 1.0,
+		  const gtpsa::ss_vect<double>& ps_start, const double length = 1.0,
 		  const double pos_diff=1e-15, const double dir_diff=1e-15)
 {
-	gtpsa::ss_vect<double> ps = ps_start, ps_ref = ps_start;
+	gtpsa::ss_vect<double> ps = ps_start.clone(), ps_ref = ps_start.clone();
 	drift.propagate(calc_config, ps);
 
 	/* just propagate*/
@@ -129,7 +129,7 @@ test_length_drift(tse::DriftType& drift, tsc::ConfigType& calc_config,
 
 static void
 test_unit_length_drift(tse::DriftType& drift, tsc::ConfigType& calc_config,
-		       const gtpsa::ss_vect<double> ps_start,
+		       const gtpsa::ss_vect<double>& ps_start,
 		       const double pos_diff=1e-15, const double dir_diff=1e-15)
 {
 	test_length_drift(drift, calc_config, ps_start, 1.0, pos_diff, dir_diff);

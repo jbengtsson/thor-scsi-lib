@@ -130,7 +130,7 @@ BOOST_AUTO_TEST_CASE(test30_realistic_shift_y)
 	const double x =-2e-3, y= 3e-3, px=-5e4, py=-5e-7;
 	const double val = .5;
 	const gtpsa::ss_vect<double> ps_ref{x,px,y,py,0,0};
-	gtpsa::ss_vect<double> ps = ps_ref;
+	gtpsa::ss_vect<double> ps = ps_ref.clone();
 
 	tf.setDy(val);
 	tf.forward(ps);
@@ -155,7 +155,7 @@ BOOST_AUTO_TEST_CASE(test40_zero_ps)
 
 	const gtpsa::ss_vect<double> ps_ref{0,0,0,0,0,0};
 	{
-		gtpsa::ss_vect<double> ps = ps_ref;
+		gtpsa::ss_vect<double> ps = ps_ref.clone();
 
 		tf.forward(ps);
 		BOOST_CHECK_SMALL(ps[x_],   1e-21);
@@ -172,7 +172,7 @@ BOOST_AUTO_TEST_CASE(test40_zero_ps)
 		CHECK_LONGITUDINAL_ZERO(ps);
 	}
 	{
-		gtpsa::ss_vect<double> ps = ps_ref;
+		gtpsa::ss_vect<double> ps = ps_ref.clone();
 		tf.setRoll(M_PI);
 		tf.forward(ps);
 		BOOST_CHECK_SMALL(ps[x_],   1e-21);
@@ -195,7 +195,7 @@ BOOST_AUTO_TEST_CASE(test41_zero_roll)
 	auto tf = tsc::PhaseSpaceGalilean2DTransform();
 	const double x = 2, y=-3, px=5, py=7;
 	const gtpsa::ss_vect<double> ps_ref{x,px,y,py,0,0};
-	gtpsa::ss_vect<double> ps = ps_ref;
+	gtpsa::ss_vect<double> ps = ps_ref.clone();
 
 	BOOST_CHECK_CLOSE(ps[x_],         x, 1e-14);
 	BOOST_CHECK_CLOSE(ps[y_],         y, 1e-14);
@@ -226,7 +226,7 @@ BOOST_AUTO_TEST_CASE(test50_roll_half_quater)
 	const gtpsa::ss_vect<double> ps_ref{x,px,y,py,0,0};
 
 	{
-		gtpsa::ss_vect<double> ps = ps_ref;
+		gtpsa::ss_vect<double> ps = ps_ref.clone();
 		BOOST_CHECK_CLOSE(ps[x_],         x, 1e-14);
 		BOOST_CHECK_CLOSE(ps[y_],         y, 1e-14);
 		BOOST_CHECK_CLOSE(ps[px_],       px, 1e-14);
@@ -250,7 +250,7 @@ BOOST_AUTO_TEST_CASE(test50_roll_half_quater)
 	}
 
 	{
-		gtpsa::ss_vect<double> ps = ps_ref;
+		gtpsa::ss_vect<double> ps = ps_ref.clone();
 		BOOST_CHECK_CLOSE(ps[x_],         x, 1e-14);
 		BOOST_CHECK_CLOSE(ps[y_],         y, 1e-14);
 		BOOST_CHECK_CLOSE(ps[px_],       px, 1e-14);
@@ -273,7 +273,7 @@ BOOST_AUTO_TEST_CASE(test50_roll_half_quater)
 		CHECK_LONGITUDINAL_ZERO(ps);
 	}
 	{
-		gtpsa::ss_vect<double> ps = ps_ref;
+		gtpsa::ss_vect<double> ps = ps_ref.clone();
 		BOOST_CHECK_CLOSE(ps[x_],         x, 1e-14);
 		BOOST_CHECK_CLOSE(ps[y_],         y, 1e-14);
 		BOOST_CHECK_CLOSE(ps[px_],       px, 1e-14);

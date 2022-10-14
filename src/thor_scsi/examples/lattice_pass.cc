@@ -41,6 +41,7 @@ static void process_cmd_line(int argc, char *argv[])
 		("number,n",               po::value<int>()        ->default_value(-1),         "number of element to inspect")
 		("n-turns",                po::value<int>()        ->default_value(1),         "propagate n turns (set to zero for none)" )
 		("n-warmup-turns",         po::value<int>()        ->default_value(0),         "propagate n turn (if none no timing run will be made)" )
+		("tps",                    po::value<bool>()       ->default_value(0),         "compute transport matrix also with tpsa lin" )
 		("transport-matrix",       po::value<bool>()       ->default_value(false),     "compute transport matrix")
 		("start-element-number,s", po::value<int>()        ->default_value(0),         "first element to use")
 		("end-element-number,e",   po::value<int>()        ->default_value(-1),        "last element to use, (-1) for last element of lattice")
@@ -211,6 +212,7 @@ static void compute_transport_matrix_prop(ts::Accelerator& accelerator, const in
 	bool very_verbose = vm["very-verbose"].as<bool>();
 	bool radiate = vm["radiate"].as<bool>();
 	int warmup_turns = vm["n-warmup-turns"].as<int>();
+	bool do_tps =  vm["tps"].as<bool>();
 
 	auto desc = std::make_shared<gtpsa::desc>(6, 1);
 	auto a_tps = gtpsa::tpsa(desc, mad_tpsa_default);
@@ -280,38 +282,46 @@ static void compute_transport_matrix_prop(ts::Accelerator& accelerator, const in
 	if(warmup_turns){
 		end = clock.now();
 	}
-	for(int i=0; i< warmup_turns; ++i){
-		// gtpsa::ss_vect<gtpsa::tpsa> psw(ps[0]);
-		auto psw = ps_orig.clone();
-		accelerator.propagate(calc_config, psw, first_element, last_element);
-	}
-	if(warmup_turns){
-		start_orig = clock.now();
-	}
 
-	for(int i=0; i< n_turns; ++i){
-		accelerator.propagate(calc_config, ps_orig, first_element, last_element);
-	}
-	if(warmup_turns){
-		end_orig = clock.now();
+	if(do_tps){
+		for(int i=0; i< warmup_turns; ++i){
+			// gtpsa::ss_vect<gtpsa::tpsa> psw(ps[0]);
+			auto psw = ps_orig.clone();
+			accelerator.propagate(calc_config, psw, first_element, last_element);
+		}
+		if(warmup_turns){
+			start_orig = clock.now();
+		}
+
+		for(int i=0; i< n_turns; ++i){
+			accelerator.propagate(calc_config, ps_orig, first_element, last_element);
+		}
+		if(warmup_turns){
+			end_orig = clock.now();
+		}
 	}
 	arma::mat pmap = ps.toMatrix();
 	arma::mat pmap_orig = ps_orig.toMatrix();
 
 	std::cout << "Computed poincare map " << std::endl;
 	if(very_verbose) {
-		std::cout  << "gtpsa::tpsa\n"  << pmap
-			   << "tps        \n"  << pmap_orig;
+		std::cout  << "gtpsa::tpsa\n"  << pmap;
+		if(do_tps){
+			std::cout  << "tps        \n"  << pmap_orig;
+		}
 	}
-	std::cout  << "diff\n" << pmap - pmap_orig  << std::endl;
-
-	std::cout << "Y Computed poincare map (gtsa)" << std::endl;
+	if(do_tps){
+		std::cout  << "diff\n" << pmap - pmap_orig  << std::endl;
+	}
+	std::cout << "Computed poincare map (gtsa)" << std::endl;
 	ps.show(std::cout, 10);
 	std::cout << std::endl;
 
-	std::cout << "                       (tps)" << std::endl;
-	ps_orig.show(std::cout, 10);
-	std::cout << std::endl;
+	if(do_tps){
+		std::cout << "                       (tps)" << std::endl;
+		ps_orig.show(std::cout, 10);
+		std::cout << std::endl;
+	}
 
 	if(warmup_turns){
 		auto dt = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
@@ -322,14 +332,16 @@ static void compute_transport_matrix_prop(ts::Accelerator& accelerator, const in
 			  << " dt: " << dt << " us, " << dt / 1000.0 << " ms"
 			  << " per turn " << dtp << " us"
 			  << std::endl;
-		dt = std::chrono::duration_cast<std::chrono::microseconds>(end_orig - start_orig).count();
-		dtp = dt / n_turns;
-		std::cout << std::fixed
-			  << "tps:   "
-			  << "Required time span for " << n_turns << " turns "
-			  << " dt: " << dt << " us, " << dt / 1000.0 << " ms"
-			  << " per turn " << dtp << " us"
-			  << std::endl;
+		if (do_tps) {
+			dt = std::chrono::duration_cast<std::chrono::microseconds>(end_orig - start_orig).count();
+			dtp = dt / n_turns;
+			std::cout << std::fixed
+				  << "tps:   "
+				  << "Required time span for " << n_turns << " turns "
+				  << " dt: " << dt << " us, " << dt / 1000.0 << " ms"
+				  << " per turn " << dtp << " us"
+				  << std::endl;
+		}
 	}
 }
 

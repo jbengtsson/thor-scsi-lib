@@ -23,17 +23,17 @@ namespace thor_scsi::core {
 	 */
        class Galilean2DTransform {
        public:
-		///< Euclidian Group: dx, dy
-		inline Galilean2DTransform(void){
-			setdS(0.0, 0.0);
+	       ///< Euclidian Group: dx, dy
+	       inline Galilean2DTransform(void){
+		       setdS(0.0, 0.0);
 			setRoll(0.0);
-		}
-		inline Galilean2DTransform(Galilean2DTransform&& O) :
-			m_dS(std::move(O.m_dS)),
-			m_dT(std::move(O.m_dT))
-			{}
+	       }
+	       inline Galilean2DTransform(Galilean2DTransform&& O) :
+		       m_dS(std::move(O.m_dS)),
+		       m_dT(std::move(O.m_dT))
+		       {}
 
-	       ~Galilean2DTransform(){};
+	       virtual ~Galilean2DTransform(){};
 	       Galilean2DTransform& operator= (const Galilean2DTransform& O){
 		       this->m_dS[0] = O.m_dS[0];
 		       this->m_dS[1] = O.m_dS[1];
@@ -89,7 +89,7 @@ namespace thor_scsi::core {
 		std::array<double, 2>
 		m_dS{0e0, 0e0},              ///< Transverse displacement.
 				m_dT{0e0, 0e0};              ///< part of rotation matrix = (cos(dT), sin(dT)).
-	};
+       };
 
 	inline
 	std::ostream& operator<<(std::ostream& strm, const Galilean2DTransform& tf)
@@ -109,19 +109,21 @@ namespace thor_scsi::core {
 	 */
 	class PRotTransform {
 	public:
-		inline PRotTransform(void){
-			this->c0 = 0e0;
-			this->c1 = 0e0;
-			this->s1 = 0e0;
-		}
+	    inline PRotTransform(void)
+		: c0(0e0)
+		, c1(0e0)
+		, s1(0e0)
+		{}
+	    inline PRotTransform(PRotTransform&& O)
+		: c0(O.c0)
+		, c1(O.c1)
+		, s1(O.s1)
+		{}
 
-		inline PRotTransform(PRotTransform&& O){
-			this->c0 = O.c0;
-			this->c1 = O.c1;
-			this->s1 = O.s1;
-		}
+	    virtual ~PRotTransform(void) {}
 
-		inline PRotTransform& operator= (const PRotTransform& O){
+	    inline PRotTransform& operator= (const PRotTransform& O)
+		{
 			this->c0 = O.c0;
 			this->c1 = O.c1;
 			this->s1 = O.s1;
