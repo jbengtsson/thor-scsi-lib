@@ -7,11 +7,12 @@
 namespace tsc = thor_scsi::core;
 
 tsc::TwoDimensionalMultipoles::TwoDimensionalMultipoles(const unsigned int h_max)
+	: m_max_multipole(h_max)
+	, coeffs(h_max, (0.0, 0.0) )
 {
 	if(h_max<=1){
 		throw std::logic_error("max multipole must be at least 1");
 	}
-	this->m_max_multipole = h_max;
 	this->coeffs.resize(h_max);
 	const cdbl_intern zero(0.0, 0.0);
 	for(auto h : this->coeffs){
@@ -26,9 +27,10 @@ tsc::TwoDimensionalMultipoles::TwoDimensionalMultipoles(const tsc::TwoDimensiona
 }
 #endif
 
-tsc::TwoDimensionalMultipoles::TwoDimensionalMultipoles(const tsc::TwoDimensionalMultipoles&& o) : coeffs(std::move(o.coeffs))
+tsc::TwoDimensionalMultipoles::TwoDimensionalMultipoles(const tsc::TwoDimensionalMultipoles&& o)
+	:  m_max_multipole(o.m_max_multipole)
+	 , coeffs(std::move(o.coeffs))
 {
-	this->m_max_multipole = o.m_max_multipole;
 }
 
 tsc::TwoDimensionalMultipoles& tsc::TwoDimensionalMultipoles::operator= (const tsc::TwoDimensionalMultipoles &o)
@@ -45,13 +47,12 @@ tsc::TwoDimensionalMultipoles tsc::TwoDimensionalMultipoles::clone(void) const
 }
 
 tsc::TwoDimensionalMultipoles::TwoDimensionalMultipoles(std::vector<cdbl_intern> const coeffs)
+	: m_max_multipole( coeffs.size() )
+	, coeffs(coeffs)
 {
 	if(coeffs.size()<=1){
 		throw std::logic_error("max multipole must be at least 1");
 	}
-	std::vector<cdbl_intern> n_vec(coeffs.begin(), coeffs.end());
-	this->coeffs = n_vec;
-	this->m_max_multipole = this->coeffs.size();
 }
 
 

@@ -314,6 +314,8 @@ namespace thor_scsi::elements {
 			FieldKickDelegate(void){
 				this->parent = nullptr;
 			}
+			virtual ~FieldKickDelegate() {};
+
 			inline void setNumberOfIntegrationSteps(const int n){
 				this->integration_steps = n;
 				this->computeIntegrationSteps();
@@ -347,7 +349,10 @@ namespace thor_scsi::elements {
 			FieldKick *parent = nullptr;
 
 		private:
-			//FieldKickOrderDelegate();
+			// should be not defined as pointers are available
+			// FieldKickDelegate(const FieldKickDelegate& o) = delete;
+			FieldKickDelegate& operator= (const FieldKickDelegate& o) = delete;
+
 			virtual void computeIntegrationSteps(void) = 0;
 
 		};
@@ -402,7 +407,7 @@ namespace thor_scsi::elements {
 
 			// Consider one set for
 			// an other set for Cartesian Bends
-			double dL1, dL2, dkL1, dkL2;
+			double dL1 = 0e0, dL2 = 0e0, dkL1 = 0e0, dkL2 = 0e0;
 
 		};
 	public:

@@ -14,8 +14,10 @@ namespace thor_scsi::elements {
 	 */
 	class MarkerType : public LocalGalilean {
 	public:
-		inline MarkerType(const Config &config) : LocalGalilean(config){
-		}
+		inline MarkerType(const Config &config)
+		    : LocalGalilean(config)
+		    , rad_del(nullptr)
+		{}
 
 		const char* type_name(void) const override { return "Marker"; };
 
