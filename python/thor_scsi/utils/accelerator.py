@@ -10,7 +10,7 @@ import xarray as xr
 from typing import Sequence
 import logging
 
-logger = logging.getLogger("thor-scsi")
+logger = logging.getLogger("thor_scsi")
 
 
 ## def instrument_sequence_with_standard_radiators(
