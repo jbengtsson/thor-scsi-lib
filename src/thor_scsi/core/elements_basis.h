@@ -33,14 +33,21 @@ namespace thor_scsi {
 			 * "length" is option, and is 0.0 if omitted.
 			 *
 			 */
-			inline ElemType(const Config & config) : CellVoid(config) {
-				const double l = config.get<double>("L", 0.0);
-				this->setLength(l);
-			};
+			inline ElemType(const Config & config)
+				: CellVoid(config)
+				, m_aperture(nullptr)
+				{
+					const double l = config.get<double>("L", 0.0);
+					this->setLength(l);
+				}
 
-			ElemType(ElemType&& o) : CellVoid(std::move(o)), PL(std::move(o.PL)) {
-				// std::cerr << "ElemType move ctor " << this->name <<  std::endl;
-			}
+			ElemType(ElemType&& o)
+				: CellVoid(std::move(o))
+				, PL( std::move(o.PL) )
+				, m_aperture( std::move(o.m_aperture) )
+				{
+					// std::cerr << "ElemType move ctor " << this->name <<  std::endl;
+				}
 
 			virtual inline double getLength(void) const final { return this->PL;};
 			/**

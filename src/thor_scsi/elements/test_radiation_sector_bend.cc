@@ -56,7 +56,7 @@ BOOST_AUTO_TEST_CASE(test01_radiation_delegate)
 
 	try
 	{
-		gtpsa::ss_vect<double> ps = ps_ref;
+	        gtpsa::ss_vect<double> ps = ps_ref.clone();
 		bend.propagate(calc_config, ps);
 		std::cout << ps;
 

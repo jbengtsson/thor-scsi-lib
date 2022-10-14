@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE(test01_wrong_thin_kick_L0)
 	const tsc::TwoDimensionalMultipoles muls;
 
 	{
-		gtpsa::ss_vect<double> ps = ps_orig;
+		gtpsa::ss_vect<double> ps = ps_orig.clone();
 		thin_kick(calc_config, muls, length, h_bend, h_ref, ps_orig, ps);
 		test_ps_small(ps);
 
@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE(test01_wrong_thin_kick_L0)
 
 	for(int i=1; i <= 4; ++i)
 	{
-		gtpsa::ss_vect<double> ps = ps_orig;
+		gtpsa::ss_vect<double> ps = ps_orig.clone();
 		tsc::TwoDimensionalMultipoles muls2 = muls.clone();
 		muls2.setMultipole(i, tsc::cdbl(1.0, 0.0));
 
@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE(test01_wrong_thin_kick_L0)
 	{
 		// Leave an extra instance here ... in case an extra test is
 		// required
-		gtpsa::ss_vect<double> ps = ps_orig;
+		gtpsa::ss_vect<double> ps = ps_orig.clone();
 		tsc::TwoDimensionalMultipoles muls2 = muls.clone();
 		muls2.setMultipole(5, tsc::cdbl(1.0, 0.0));
 
@@ -91,7 +91,7 @@ BOOST_AUTO_TEST_CASE(test02_wrong_thin_kick_L0_ps_off)
 	const tsc::TwoDimensionalMultipoles muls;
 
 	{
-		gtpsa::ss_vect<double> ps = ps_orig;
+		gtpsa::ss_vect<double> ps = ps_orig.clone();
 		thin_kick(calc_config, muls, length, h_bend, h_ref, ps_orig, ps);
 
 		BOOST_CHECK_CLOSE(ps[x_],     x, 1e-14);
@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE(test02_wrong_thin_kick_L0_ps_off)
 
 	for(int i=1; i <= 4; ++i)
 	{
-		gtpsa::ss_vect<double> ps = ps_orig;
+		gtpsa::ss_vect<double> ps = ps_orig.clone();
 		tsc::TwoDimensionalMultipoles muls2 = muls.clone();
 		muls2.setMultipole(i, tsc::cdbl(1.0, 0.0));
 
@@ -132,7 +132,7 @@ BOOST_AUTO_TEST_CASE(test03_wrong_thin_kick_L0_ps_off)
 	const tsc::TwoDimensionalMultipoles muls;
 
 	{
-		gtpsa::ss_vect<double> ps = ps_orig;
+		gtpsa::ss_vect<double> ps = ps_orig.clone();
 		thin_kick(calc_config, muls, length, h_bend, h_ref, ps_orig, ps);
 
 		BOOST_CHECK_CLOSE(ps[x_],     x,     1e-14);
@@ -145,7 +145,7 @@ BOOST_AUTO_TEST_CASE(test03_wrong_thin_kick_L0_ps_off)
 
 	for(int i=1; i <= 4; ++i)
 	{
-		gtpsa::ss_vect<double> ps = ps_orig;
+		gtpsa::ss_vect<double> ps = ps_orig.clone();
 		tsc::TwoDimensionalMultipoles muls2 = muls.clone();
 		muls2.setMultipole(i, tsc::cdbl(1.0, 0.0));
 
@@ -172,7 +172,7 @@ BOOST_AUTO_TEST_CASE(test10_thin_kick_L1_no_field)
 	const tsc::TwoDimensionalMultipoles muls;
 
 	{
-		gtpsa::ss_vect<double> ps = ps_orig;
+		gtpsa::ss_vect<double> ps = ps_orig.clone();
 		thin_kick(calc_config, muls, length, h_bend, h_ref, ps_orig, ps);
 		test_ps_small(ps);
 
@@ -180,7 +180,7 @@ BOOST_AUTO_TEST_CASE(test10_thin_kick_L1_no_field)
 
 	for(int i=1; i <= 4; ++i)
 	{
-		gtpsa::ss_vect<double> ps = ps_orig;
+		gtpsa::ss_vect<double> ps = ps_orig.clone();
 		tsc::TwoDimensionalMultipoles muls2 = muls.clone();
 
 		thin_kick(calc_config, muls2, length / (double(i)), h_bend, h_ref, ps_orig, ps);
@@ -201,7 +201,7 @@ BOOST_AUTO_TEST_CASE(test11_thin_kick_L1_no_ps_off)
 
 	for(int i=1; i <= 4; ++i)
 	{
-		gtpsa::ss_vect<double> ps = ps_orig;
+		gtpsa::ss_vect<double> ps = ps_orig.clone();
 		tsc::TwoDimensionalMultipoles muls2 = muls.clone();
 
 		thin_kick(calc_config, muls2, length * i, h_bend, h_ref, ps_orig, ps);
@@ -230,7 +230,7 @@ BOOST_AUTO_TEST_CASE(test20_thin_kick_L1_dipole)
 
 	const gtpsa::ss_vect<double> ps_orig = {0, 0, 0, 0, 0, 0};
 	{
-		gtpsa::ss_vect<double> ps = ps_orig;
+		gtpsa::ss_vect<double> ps = ps_orig.clone();
 
 		thin_kick(calc_config, muls, length, h_bend, h_ref, ps_orig, ps);
 
@@ -273,7 +273,7 @@ BOOST_AUTO_TEST_CASE(test51_sector_bend_delta)
 	BOOST_CHECK_CLOSE(ps_orig[delta_],  delta, 1e-14);
 
 	{
-		gtpsa::ss_vect<double> ps = ps_orig;
+		gtpsa::ss_vect<double> ps = ps_orig.clone();
 		// std::cerr << "ps in " << ps << ", ps orig " << ps_orig << " delta " << delta << std::endl;
 		thin_kick(calc_config,  muls, length, h_bend, h_ref, ps_orig, ps);
 
@@ -309,7 +309,7 @@ BOOST_AUTO_TEST_CASE(test52_sector_bend_delta_pars)
 		{
 			const double length = 355e0/113e0 /(double(i));
 
-			gtpsa::ss_vect<double> ps = ps_orig;
+			gtpsa::ss_vect<double> ps = ps_orig.clone();
 
 			double irho, px_expected;
 			compute_irho_px(phi, length, delta, &irho, &px_expected);
@@ -346,7 +346,7 @@ BOOST_AUTO_TEST_CASE(test52_sector_bend_delta_pars)
 
 			const gtpsa::ss_vect<double> ps_orig = {0, 0, 0, 0, delta, 0};
 			BOOST_CHECK_CLOSE(ps_orig[delta_],  delta, 1e-14);
-			gtpsa::ss_vect<double> ps = ps_orig;
+			gtpsa::ss_vect<double> ps = ps_orig.clone();
 
 			double irho, px_expected;
 			compute_irho_px(phi, length, delta, &irho, &px_expected);
@@ -383,7 +383,7 @@ BOOST_AUTO_TEST_CASE(test52_sector_bend_delta_pars)
 			compute_irho_px(phi, length, delta, &irho, &px_expected);
 			const double h_bend = irho, h_ref = irho;
 
-			gtpsa::ss_vect<double> ps = ps_orig;
+			gtpsa::ss_vect<double> ps = ps_orig.clone();
 
 			thin_kick(calc_config,  muls, length, h_bend, h_ref, ps_orig, ps);
 

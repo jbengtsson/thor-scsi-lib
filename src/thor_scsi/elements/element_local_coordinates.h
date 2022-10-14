@@ -79,7 +79,10 @@ namespace thor_scsi::elements {
 	class LocalGalilean : public LocalCoordinates {
 
 	public:
-		inline LocalGalilean(const Config &config) : LocalCoordinates(config) {}
+		inline LocalGalilean(const Config &config)
+			: LocalCoordinates(config)
+			, transform()
+			{}
 		virtual ~LocalGalilean(){}
 		inline LocalGalilean(LocalGalilean&& o) :
 			LocalCoordinates(std::move(o)),
@@ -122,12 +125,17 @@ namespace thor_scsi::elements {
 	class LocalGalileanPRot  : public LocalCoordinates {
 
 	public:
-		inline LocalGalileanPRot(const Config &config) : LocalCoordinates(config) {}
+		inline LocalGalileanPRot(const Config &config)
+			: LocalCoordinates(config)
+			, transform()
+			{}
+
 		virtual ~LocalGalileanPRot(){}
-		inline LocalGalileanPRot(LocalGalileanPRot&& o) :
-			LocalCoordinates(std::move(o))
+		inline LocalGalileanPRot(LocalGalileanPRot&& o)
+			: LocalCoordinates(std::move(o) )
+			, transform(std::move(o.transform))
 			{
-				this->transform = o.transform;
+				// this->transform = o.transform;
 				//transform(std::move(o.transform));
 			}
 

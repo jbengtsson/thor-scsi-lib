@@ -144,57 +144,52 @@ namespace thor_scsi::core {
 			cdbl tmp(By, Bx);
 			return tmp;
 		}
-
+#if 1
 		template<typename T>
 		inline void _field(const T& x, const T& y, T *Bx, T * By)  const {
 			int n = this->coeffs.size() -1;
-			// T rBy   = std::move( gtpsa::same_as_instance(x) );
-			// T rBx   = std::move( gtpsa::same_as_instance(y) );
-			T trBy  = std::move( gtpsa::same_as_instance(y) );
-			T term1 = std::move( gtpsa::same_as_instance(x) );
-			T term2 = std::move( gtpsa::same_as_instance(x) );
+			T rBy = gtpsa::same_as_instance(x);
+			T rBx = gtpsa::same_as_instance(y);
+			rBy = this->coeffs[n].real();
+			rBx = this->coeffs[n].imag();
+			for(int i=n - 2; i >= 0; --i){
+				cdbl_intern tmp = this->coeffs[i];
+				T trBy = x * rBy - y * rBx + tmp.real();
+				rBx    = y * rBy + x * rBx + tmp.imag();
+				rBy = std::move(trBy);
+			}
+			*Bx = std::move(rBx);
+			*By = std::move(rBy);
+		}
+#else
+		template<typename T>
+		inline void _field(const T& x, const T& y, T *Bx, T * By)  const {
+			int n = this->coeffs.size() -1;
 
 			T rBy = gtpsa::same_as_instance(x);
 			T rBx = gtpsa::same_as_instance(y);
+			T trBy = gtpsa::same_as_instance(rBy);
+			T term1 = gtpsa::same_as_instance(x);
+			T term2 = gtpsa::same_as_instance(y);
 			rBy = this->coeffs[n].real();
 			rBx = this->coeffs[n].imag();
 			// trBy = 0e0;
 			for(int i=n - 2; i >= 0; --i){
 				cdbl_intern tmp = this->coeffs[i];
-#if 0
-				T ByoBrho1 = x * ByoBrho - y * BxoBrho + tmp.real();
-				BxoBrho    = y * ByoBrho + x * BxoBrho + tmp.imag();
-				ByoBrho = ByoBrho1;
-
-#endif
-#if 1
-				trBy = x * rBy - y * rBx + tmp.real();
-				rBx  = y * rBy + x * rBx + tmp.imag();
-				rBy = std::move(trBy);
-#else
-				term1 = x; term1 *= rBy; term2 = y; term2 *= rBx;
+				term1 = gtpsa::clone(x); term1 *= rBy;
+				term2 = gtpsa::clone(y); term2 *= rBx;
 				trBy = term1; trBy -= term2; trBy += tmp.real();
 
-				term1 = y; term1 *= rBy; term2 =  x; term2 *= rBx;
+				term1 = gtpsa::clone(y); term1 *= rBy;
+				term2 = gtpsa::clone(x); term2 *= rBx;
 				rBx = term1; rBx += term2; rBx += tmp.imag();
-				rBy = std::move(trBy);
-#endif
-
-
+				rBy = trBy;
+				// rBy = trBy;
 			}
 			*Bx = std::move(rBx);
 			*By = std::move(rBy);
-			/*
-			  MB[HOMmax-Order]
-				ByoBrho = MB[Order+HOMmax]; BxoBrho = MB[HOMmax-Order];
-    for (j = Order-1; j >= 1; j--) {
-      ByoBrho1 = x0[x_]*ByoBrho - x0[y_]*BxoBrho + MB[j+HOMmax];
-      BxoBrho  = x0[y_]*ByoBrho + x0[x_]*BxoBrho + MB[HOMmax-j];
-      ByoBrho  = ByoBrho1;
-    }
-			*/
-
 		}
+#endif
 		virtual inline void field(const double      x, const double      y, double      *Bx, double      *By) const override final { _field(x, y, Bx, By); }
 	    // "Need to understand how to interpolate field with tps"
 		virtual inline void field(const tps         x, const tps         y, tps         *Bx, tps         *By) const override final { _field(x, y, Bx, By); }

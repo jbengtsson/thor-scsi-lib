@@ -83,9 +83,9 @@ namespace thor_scsi::elements{
 
 		gtpsa::ss_vect<double> m_ps = {0, 0, 0, 0, 0, 0};
 		gtpsa::ss_vect<tps> m_tps = {tps(), tps(), tps(), tps(), tps(), tps()};
-		std::shared_ptr<gtpsa::ss_vect<gtpsa::tpsa>> m_ptpsa;
+		std::shared_ptr<gtpsa::ss_vect<gtpsa::tpsa>> m_ptpsa = nullptr;
 		bool m_has_ps = false, m_has_tps = false, m_has_tpsa = false;
-		std::string m_observed_name;
+		std::string m_observed_name = "";
 		int m_observed_index=-1;
 	};
 

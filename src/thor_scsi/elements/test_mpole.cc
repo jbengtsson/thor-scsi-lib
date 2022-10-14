@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE(test10_mpole_kick_zero)
 
 	const gtpsa::ss_vect<double> ps_orig = {0, 0, 0, 0, 0, 0};
 	{
-		gtpsa::ss_vect<double> ps = ps_orig;
+		gtpsa::ss_vect<double> ps = ps_orig.clone();
 		mpole.propagate(calc_config, ps);
 
 		BOOST_CHECK_SMALL(ps[x_],     1e-14);
@@ -95,7 +95,7 @@ BOOST_AUTO_TEST_CASE(test11_mpole_kick_longitudinal_one)
 	// is this correct for a thin kick
 	const gtpsa::ss_vect<double> ps_orig = {0, 0, 0, 0, 0, 0};
 	{
-		gtpsa::ss_vect<double> ps = ps_orig;
+		gtpsa::ss_vect<double> ps = ps_orig.clone();
 		mpole.propagate(calc_config, ps);
 
 		BOOST_CHECK_SMALL(ps[x_],     1e-14);
@@ -109,7 +109,7 @@ BOOST_AUTO_TEST_CASE(test11_mpole_kick_longitudinal_one)
 	}
 
 	{
-		gtpsa::ss_vect<double> ps = ps_orig;
+		gtpsa::ss_vect<double> ps = ps_orig.clone();
 		mpole.asThick(true);
 		mpole.propagate(calc_config, ps);
 
@@ -149,7 +149,7 @@ BOOST_AUTO_TEST_CASE(test12_orbit_trim_horizontal)
 
 	const gtpsa::ss_vect<double> ps_orig = {0, 0, 0, 0, 0, 0};
 	{
-		gtpsa::ss_vect<double> ps = ps_orig;
+		gtpsa::ss_vect<double> ps = ps_orig.clone();
 		mpole.propagate(calc_config, ps);
 
 		/* Length 0 -> harmonics turn integral ? */
@@ -192,7 +192,7 @@ BOOST_AUTO_TEST_CASE(test13_orbit_trim_vertical)
 
 	const gtpsa::ss_vect<double> ps_orig = {0, 0, 0, 0, 0, 0};
 	{
-		gtpsa::ss_vect<double> ps = ps_orig;
+		gtpsa::ss_vect<double> ps = ps_orig.clone();
 		mpole.propagate(calc_config, ps);
 
 		/* Length 0 -> harmonics turn integral ? */
@@ -402,7 +402,7 @@ BOOST_AUTO_TEST_CASE(test21_mpole_kick_dipole_component_thick_kick_polar_ideal)
 	std::cerr << "M pole "; mpole.show(std::cerr, 4); std::cerr<<std::endl;
 	const gtpsa::ss_vect<double> ps_orig = {0, 0, 0, 0, 0, 0};
 	{
-		gtpsa::ss_vect<double> ps = ps_orig;
+		gtpsa::ss_vect<double> ps = ps_orig.clone();
 		mpole.propagate(calc_config, ps);
 
 		std::cerr << "ps out " << ps << std::endl;
@@ -462,7 +462,7 @@ BOOST_AUTO_TEST_CASE(test21_mpole_kick_dipole_component_thick_kick_off_momentum)
 	gtpsa::ss_vect<double> ps_orig = {0, 0, 0, 0, 0, 0};
 	ps_orig[delta_] = delta;
 	{
-		gtpsa::ss_vect<double> ps = ps_orig;
+		gtpsa::ss_vect<double> ps = ps_orig.clone();
 		mpole.propagate(calc_config, ps);
 
 		/* Length 0 -> harmonics turn integral ? */

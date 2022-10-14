@@ -100,7 +100,7 @@ namespace thor_scsi::core {
 		*/
 		template<typename T>
 		inline void backwardRotation(T& ps){
-			T ps1 = ps;
+		        T ps1 = ps.clone();
 			auto& R = this->m_dT;
 			ps[x_]  = R[X_] * ps1[x_]  - R[Y_] * ps1[y_];
 			ps[px_] = R[X_] * ps1[px_] - R[Y_] * ps1[py_];
