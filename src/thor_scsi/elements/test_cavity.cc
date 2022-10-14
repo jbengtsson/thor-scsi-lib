@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE(test20_cavity)
 
 
 	{
-		gtpsa::ss_vect<double> ps = ps_orig;
+	        gtpsa::ss_vect<double> ps = ps_orig.clone();
 		cavity.propagate(calc_config, ps);
 
 		BOOST_CHECK_CLOSE(ps[ct_],    ct, 1e-14);
