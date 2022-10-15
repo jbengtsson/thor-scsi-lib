@@ -2,6 +2,7 @@
 #include <thor_scsi/elements/radiation_delegate.h>
 #include <thor_scsi/elements/element_helpers.h>
 #include <thor_scsi/elements/utils.h>
+#include <iomanip>
 
 namespace ts = thor_scsi;
 namespace tsc = thor_scsi::core;

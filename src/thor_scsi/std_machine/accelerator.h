@@ -38,21 +38,23 @@ namespace thor_scsi {
 		 * @param ps state of calculation
 		 * @param start The index of the first Element the state will pass through
 		 * @param max The maximum number of elements through which the state will be passed
+		 * @param tracy compatible indexing: start to refer to first element with 1 instead of zero
 		 * @returns last element passed (check config type for lost plane)
 		 * @throws std::exception sub-classes for various errors.
 		 *         If an exception is thrown then the state of S is undefined.
 		 *
+		 * @warning  tracy compatible indexing will be removed soon as it is not consistent with global indexing
 		 * @todo proper interface design!
 		 */
 		template <typename T>
-		int _propagate(thor_scsi::core::ConfigType& conf, ss_vect<T>& ps, size_t start, int max, size_t n_turns);
+		int _propagate(thor_scsi::core::ConfigType& conf, ss_vect<T>& ps, size_t start, int max, size_t n_turns, bool tracy_compatible_indexing);
 
 		int propagate(thor_scsi::core::ConfigType&, ss_vect_tps &ps,
 			      size_t start=0,
-			      int max_elements=std::numeric_limits<int>::max(), size_t n_turns=1);
+			      int max_elements=std::numeric_limits<int>::max(), size_t n_turns=1, bool tracy_compatible_indexing = false);
 		int propagate(thor_scsi::core::ConfigType&, ss_vect_dbl &ps,
 			       size_t start=0,
-			      int max_elements=std::numeric_limits<int>::max(), size_t n_turns=1);
+			      int max_elements=std::numeric_limits<int>::max(), size_t n_turns=1, bool tracy_compatible_indexing = false);
 
 	};
   }

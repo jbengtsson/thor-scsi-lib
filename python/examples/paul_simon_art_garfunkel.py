@@ -97,6 +97,7 @@ print(f"""\nCavity info:
 """, end="")
 # Set RF phase for negative alpha_c.
 cav.setPhase(180e0)
+cav.setPhase(np.pi)
 print("  phi     {:} (set to)".format(cav.getPhase()))
 
 dof = 2
@@ -104,7 +105,7 @@ dof = 2
 E = 2.0e9
 
 M = map2numpy(compute_map(acc, calc_config))[:6, :6]
-print("\nM:\n", mat2txt(M))
+print("\nM:\n" + mat2txt(M))
 A, A_inv, _ = compute_M_diag(dof, M)
 
 ds = compute_twiss_along_lattice(acc, calc_config, A)
