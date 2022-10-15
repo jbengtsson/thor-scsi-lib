@@ -2,6 +2,7 @@
 #include <thor_scsi/elements/standard_aperture.h>
 #include <thor_scsi/elements/elements_enums.h>
 #include <thor_scsi/core/exceptions.h>
+#include <sstream>
 
 namespace ts = thor_scsi;
 namespace tsc = thor_scsi::core;
@@ -42,25 +43,31 @@ template<typename T>
 int
 ts::Accelerator::
 _propagate(thor_scsi::core::ConfigType& conf, ss_vect<T> &ps, size_t start,
-	   int max_elements, size_t n_turns)// const
+	   int max_elements, size_t n_turns, bool tracy_compatible_indexing)// const
 {
 
   const int nelem = static_cast<int>(this->size());
+  const bool retreat = std::signbit(max_elements);
 
-  bool retreat = std::signbit(max_elements);
-  int next_elem = static_cast<int>(start);
+  /* I guess Tobin would complain about this extra complexity */
+  int start_elem = static_cast<int>(start);
+  int next_elem = start_elem;
+
+  if(tracy_compatible_indexing){
+      if(start_elem>0) {
+	  // take the one off
+	  start_elem -= 1;
+      } else {
+	  std:: stringstream strm;
+	  strm << "Requested tracy compatible indexing, but start element "
+	       << start_elem << "was smaller or equal to zero";
+	  throw std::runtime_error(strm.str());
+      }
+  }
 
   for(size_t turn=0; turn<n_turns; ++turn) {
-// J.B. 07-10-22.
-#if 0
-    next_elem = 0;
-    for(int i=0; next_elem >= 0 && next_elem<nelem
-	  && i<std::abs(max_elements); i++)
-#else
-    next_elem = start;
     for(int i=start; next_elem >= 0 && next_elem<nelem
 	  && i<std::abs(max_elements); i++)
-#endif
       {
 	size_t n = next_elem;
 
@@ -125,15 +132,15 @@ _propagate(thor_scsi::core::ConfigType& conf, ss_vect<T> &ps, size_t start,
 int
 ts::Accelerator::
 propagate(thor_scsi::core::ConfigType& conf, ss_vect_dbl &ps, size_t start,
-	  int max_elements, size_t n_turns)// const
+	  int max_elements, size_t n_turns, bool tracy_compatible_indexing)// const
 {
-  return _propagate(conf, ps, start, max_elements, n_turns);
+    return _propagate(conf, ps, start, max_elements, n_turns, tracy_compatible_indexing);
 }
 
 int
 ts::Accelerator::
 propagate(thor_scsi::core::ConfigType& conf, ss_vect_tps  &ps, size_t start,
-	  int max_elements, size_t n_turns)// const
+	  int max_elements, size_t n_turns, bool tracy_compatible_indexing)// const
 {
-  return _propagate(conf, ps, start, max_elements, n_turns);
+    return _propagate(conf, ps, start, max_elements, n_turns, tracy_compatible_indexing);
 }

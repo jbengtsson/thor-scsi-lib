@@ -49,9 +49,12 @@ class AirCoilMagneticField(tslib.Field2DInterpolation):
 
         Internally calculating in the complex plane
         """
-        z = x + y * 1j
+        pos = np.asarray(pos)
+        pos0 = np.array([self.positions.real, self.positions.imag])
+        dpos = pos[:, np.newaxis] - pos0
 
-        dz = z - self.positions
+        # Compute distance to different points
+        dpos * dpos
         r = np.absolute(dz)
         phi = np.angle(dz)
         Bphi = self.precomp * 1 / r
