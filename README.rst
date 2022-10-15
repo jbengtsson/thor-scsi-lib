@@ -1,3 +1,116 @@
+Requirements
+------------
+* (GNU compatible) C/C++ compiler
+* GNU autoconf/automake environment and libtool.
+* GNU Scientific Library (GSL): https://www.gnu.org/software/gsl.
+* Armadillo (for linear algebra): http://arma.sourceforge.net.
+* Python https://www.python.org/ for the python interface
+
+The library uses the range checking inmplementation of e.g. `std::vector` as
+provided by GNU C++; thus its dependency on the GNU compiler collections.
+
+To install
+----------
+
+Setup of repository
+===================
+
+Dowload the repository and checkout the proper branch. Here it's assumed you
+will use the directoy `git_repos/tracy-3.5` in your home directory for the
+tracy code tree.
+
+For this use the following commands to create the directoy `git_repos`
+and to clone the tree into the tracy-3.5 directory.
+
+.. code:: shell
+
+   mkdir git_repos
+   cd git_repos
+   git clone git@github.com:jbengtsson/Thor_scsi.git
+   cd Thor_scsi
+
+Then select the proper tree by
+
+.. code:: shell
+
+   git checkout Thor_scsi
+
+
+
+C++ library
+===========
+
+First create environment variable $TRACY_LIB. This will be the prefix where the
+built library and include files will be installed later on e.g:
+
+.. code:: shell
+
+   export TRACY_LIB=$HOME/git_repos/Thor_scsi
+
+
+To build the library use:
+
+.. code:: shell
+
+   cd Thor_scsi
+   (g)libtoolize
+   ./bootstrap
+   ./configure --prefix=$Thor_scsi_LIB
+   make
+   make install
+
+Please note: using the dynamic library in non standard location will require
+proper set up of the environment later on (e.g. adding the directory where the
+library is located to `LD_LIBRARY_PATH` environment variable).
+
+
+Python interface
+================
+
+The python interface is based on https://github.com/pybind/pybind11. Building this interface
+requires to select the proper directory
+
+.. code:: shell
+
+  cd git_repos
+  cd Thor_scsi/python
+
+Install proper dependencies
+
+.. code:: shell
+
+    pip3 install -r requirements.txt
+
+
+And build the extension e.g.
+
+.. code:: shell
+
+    python3 setup.py build
+    python3 setup.py install
+
+For further details of the build system see https://pypi.org/project/setuptools/
+
+
+To run the regression tests
+---------------------------
+
+All regression tests can be run using
+
+.. code:: shell
+
+    pip3 install nose
+    python3 setup.py nosetests
+
+To run the demo/test program
+----------------------------
+
+
+.. code:: shell
+
+    python3 examples/tst.py
+
+
 Thor
 ====
 
@@ -175,117 +288,15 @@ Contributions
   
     .. _`EPICS Collaboration Meeting 2017.`: https://indico.esss.lu.se/event/889/contributions/7038/attachments/6800/9762/Cython_EpicsTM_Oct2017_Barcelona.pdf
 
-  Guidelines & automated regression testing bootstrapped by Pierre Schnizer.
+  Guidelines & automated regression testing bootstrapped by Pierre Schnizer:
+  
+    P\. Schnizer, W\. Khail, J\. Bengtsson *Small Talk on AT* `IPAC 2022.`_
+    
+    .. _`IPAC 2022.`: https://accelconf.web.cern.ch/ipac2022/papers/tupost029.pdf
 
 
-Requirements
-------------
-* (GNU compatible) C/C++ compiler
-* GNU autoconf/automake environment and libtool.
-* GNU Scientific Library (GSL): https://www.gnu.org/software/gsl.
-* Armadillo (for linear algebra): http://arma.sourceforge.net.
-* Python https://www.python.org/ for the python interface
+* Beam Dynamics Model:
 
-The library uses the range checking inmplementation of e.g. `std::vector` as
-provided by GNU C++; thus its dependency on the GNU compiler collections.
-
-To install
-----------
-
-Setup of repository
-~~~~~~~~~~~~~~~~~~~
-
-Dowload the repository and checkout the proper branch. Here it's assumed you
-will use the directoy `git_repos/tracy-3.5` in your home directory for the
-tracy code tree.
-
-For this use the following commands to create the directoy `git_repos`
-and to clone the tree into the tracy-3.5 directory.
-
-.. code:: shell
-
-   mkdir git_repos
-   cd git_repos
-   git clone git@github.com:jbengtsson/Thor_scsi.git
-   cd Thor_scsi
-
-Then select the proper tree by
-
-.. code:: shell
-
-   git checkout Thor_scsi
-
-
-
-C++ library
-~~~~~~~~~~~
-
-First create environment variable $TRACY_LIB. This will be the prefix where the
-built library and include files will be installed later on e.g:
-
-.. code:: shell
-
-   export TRACY_LIB=$HOME/git_repos/Thor_scsi
-
-
-To build the library use:
-
-.. code:: shell
-
-   cd Thor_scsi
-   (g)libtoolize
-   ./bootstrap
-   ./configure --prefix=$Thor_scsi_LIB
-   make
-   make install
-
-Please note: using the dynamic library in non standard location will require
-proper set up of the environment later on (e.g. adding the directory where the
-library is located to `LD_LIBRARY_PATH` environment variable).
-
-
-Python interface
-~~~~~~~~~~~~~~~~
-
-The python interface is based on https://github.com/pybind/pybind11. Building this interface
-requires to select the proper directory
-
-.. code:: shell
-
-  cd git_repos
-  cd Thor_scsi/python
-
-Install proper dependencies
-
-.. code:: shell
-
-    pip3 install -r requirements.txt
-
-
-And build the extension e.g.
-
-.. code:: shell
-
-    python3 setup.py build
-    python3 setup.py install
-
-For further details of the build system see https://pypi.org/project/setuptools/
-
-
-To run the regression tests
----------------------------
-
-All regression tests can be run using
-
-.. code:: shell
-
-    pip3 install nose
-    python3 setup.py nosetests
-
-To run the demo/test program
-----------------------------
-
-
-.. code:: shell
-
-    python3 examples/tst.py
+    J\. Bengtsson, W\. Rogers, T\. Nicholls *A CAD Tool for Linear Optics Design: A Controls Engineer's Geometric Approach to Hill's Equation* `10.48550/arXiv.2109.15066 (2021).`_
+    
+    .. _`10.48550/arXiv.2109.15066 (2021).`: http://dx.doi.org/10.48550/arXiv.2109.15066
