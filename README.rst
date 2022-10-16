@@ -308,7 +308,9 @@ Contributions
 
     .. _`ICALEPCS 2005.`: https://accelconf.web.cern.ch/ica05/proceed-ings/pdf/P1_018.pdf
 
-* Besides, the internal *numerical engine* was manually translated to C and re-used for:
+* Besides, a subset of the internal *numerical engine* was manually translated to C and re-used for:
+
+(But missing/avoiding the Truncated Power Series Algebra approach for the computation of the corresponding global lattice properties; e.g., linear optics functions, radiation effects, etc.)
 
     A\. Terebilo *Accelerator Toolbox for MATLAB* `SLAC-PUB-8732 (2001).`_
   
