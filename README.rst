@@ -310,7 +310,7 @@ Contributions
 
 * Besides, a subset of the internal *numerical engine* was manually translated to C and re-used for:
 
-(But missing/avoiding the Truncated Power Series Algebra approach for the computation of the corresponding global lattice properties; e.g., linear optics functions, radiation effects, etc.)
+(But missing/avoiding the *Truncated Power Series Algebra approach* (TPSA) for the computation of the corresponding global lattice properties; e.g., linear optics functions, radiation effects, etc.)
 
     A\. Terebilo *Accelerator Toolbox for MATLAB* `SLAC-PUB-8732 (2001).`_
   
