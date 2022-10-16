@@ -27,7 +27,7 @@ Requirements
 Installation
 ------------
 
-For installation instructions see [install](install.rst)
+For installation instructions see _`install.rst`
 
 
 To run the demo/test program
