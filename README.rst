@@ -296,6 +296,8 @@ for the *Pascal-S compiler/interpreter* by N. Wirth:
   N\. Wirth *PASCAL-S: A Subset and its Implementation* `Institut für Informatik, ETH, Zürich (1975).`_
 
   .. _`Institut für Informatik, ETH, Zürich (1975).`: http://pascal.hansotten.com/uploads/pascals/PASCAL-S%20A%20subset%20and%20its%20Implementation%20012.pdf
+  
+  *Pascal-P6* https://sourceforge.net/projects/pascal-p6.
 
 In other words, since 1992 our *toolkit* – althout it based on one model: the *Hamiltonian for a charged particle
 in an external electromagnetic field* & a *symplectic intrator* for *magnetic multipoles* & *insertion devices*
