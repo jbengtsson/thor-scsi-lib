@@ -139,9 +139,9 @@ References
     
     .. _`IPAC 2021 MOPAB047.`: http://dx.doi.org/10.18429/JACoW-IPAC2021-MOPAB047
     
-    J\. Bengtsson, M\. Davidsaver *An Accelerator Physics - Software Engineering Collaboration* `EPICS 2016.`_
+    J\. Bengtsson, M\. Davidsaver *An Accelerator Physics - Software Engineering Collaboration* `EPICS Collaboration Meeting EPICS 2016.`_
     
-    .. _`EPICS 2016.`: https://indico.esss.lu.se/event/507/contributions/3830
+    .. _`EPICS Collaboration Meeting EPICS 2016.`: https://indico.esss.lu.se/event/507/contributions/3830
 
 * Beam Dynamics Model:
 
