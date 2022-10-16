@@ -280,7 +280,7 @@ Contributions
   
     .. _`SLAC-PUB-8732 (2001).`: http://www-public.slac.stanford.edu/sciDoc/docMeta.aspx?slacPubNumber=SLAC-PUB-8732
 
-* Python interface::
+* Python interface:
 
   Initial demo/prototype & guidelines by Jan Chrin, PSI, 2017:
   
@@ -294,6 +294,21 @@ Contributions
     
     .. _`IPAC 2022.`: https://accelconf.web.cern.ch/ipac2022/papers/tupost029.pdf
 
+* Use Cases:
+
+    J\. Bengtsson, T\. Nicholls, W\. Rogers *A CAD Tool for Linear Optics Design: A Use Case Approach* `IPAC 2021.`_
+    
+    .. _`IPAC 2021.`: http://dx.doi.org/10.18429/JACoW-IPAC2021-MOPAB047
+    
+    J\. Bengtsson, M\. Davidsaver *An Accelerator Physics - Software Engineering Collaboration* `EPICS 2016.`_
+    
+    .. _`EPICS 2016.`: https://indico.esss.lu.se/event/507/contributions/3830
+
+* Model Server:
+
+    P\. Schnizer, J\. Bengtsson, T\. Birke, L\. Ramirez *Online Model Developments for BESSY II and MLS* `IPAC 2021.`_
+    
+    .. _`IPAC 2021.`: http://dx.doi.org/10.18429/JACoW-IPAC2021-WEPAB317
 
 * Beam Dynamics Model:
 
