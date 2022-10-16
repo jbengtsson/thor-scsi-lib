@@ -1,3 +1,29 @@
+# Art - Philosophy - Science: Ancient Greece
+#
+# D. Knuth 𝑇ℎ𝑒 𝐴𝑟𝑡 𝑜𝑓 𝐶𝑜𝑚𝑝𝑢𝑡𝑒𝑟 𝑃𝑟𝑜𝑔𝑟𝑎𝑚𝑚𝑖𝑛𝑔
+#
+# 𝐼 𝑡ℎ𝑜𝑢𝑔ℎ𝑡 𝑡ℎ𝑎𝑡 𝐼 𝑤𝑎𝑠 𝑎 𝑝𝑒𝑟𝑓𝑒𝑐𝑡𝑖𝑜𝑛𝑖𝑠𝑡 𝑢𝑛𝑡𝑖𝑙 𝐼 𝑚𝑒𝑡 𝐾𝑛𝑢𝑡ℎ.
+# F.C. Graham
+# https://mathweb.ucsd.edu/~fan/paint/math.html
+#
+# M. Frangouli 𝐻𝑒𝑟𝑒'𝑠 𝑡𝑜 𝑡ℎ𝑒 𝐻𝑒𝑟𝑜𝑒𝑠
+# https://youtu.be/RHOj622NMwo
+#
+# Vangelis 𝐶ℎ𝑎𝑟𝑖𝑜𝑡𝑠 𝑜𝑓 𝐹𝑖𝑟𝑒
+# https://youtu.be/CSav51fVlKU
+# https://youtu.be/CwzjlmBLfrQ
+#
+# Statue 𝑆𝑝𝑖𝑟𝑖𝑡 𝑜𝑓 𝑡ℎ𝑒 𝑀𝑎𝑟𝑎𝑡ℎ𝑜𝑛, Hopkinton, MA & sister town Marathon, Greece.
+#
+# Kathrine Switzer Boston Marathon, 1968.
+# https://kathrineswitzer.com/1967-boston-marathon-the-real-story
+#
+# Stylianos Kyriakides Boston Marathon, 1946.
+#
+# Simon & Gargunkel 𝑇ℎ𝑒 𝐵𝑜𝑥𝑒𝑟
+# https://youtu.be/l3LFML_pxlY 
+
+
 import logging
 logging.basicConfig(level="WARNING")
 # Levels: DEBUG, INFO, WARNING, ERROR, and CRITICAL.
@@ -66,19 +92,34 @@ def set_db_2L_fam(acc, fam_name, db_2L):
     set_db_2_fam(acc, q.name, db_2L/L)
 
 
-def compute_dnu_db_2(acc, calc_config, fam_name, db_2L):
+def compute_dnu_db_2L(acc, calc_config, fam_name, db_2L):
     dof = 2
     set_db_2L_fam(acc, fam_name, db_2L)
     M = map2numpy(compute_map(acc, calc_config))[:6, :6]
     nup = compute_nu_symp(dof, M)
-    set_db_2L_fam(acc, fam_name, -db_2L)
+    set_db_2L_fam(acc, fam_name, -2e0*db_2L)
     M = map2numpy(compute_map(acc, calc_config))[:6, :6]
     num = compute_nu_symp(dof, M)
     dnu_db_2 = (nup-num)/(2e0*db_2L)
-    print("  {:5s} nu = {:7.5f} {:7.5f}".
-          format(fam_name, dnu_db_2[X_], dnu_db_2[Y_]))
+    set_db_2L_fam(acc, fam_name, db_2L)
     return dnu_db_2
 
+
+def tweak_nu(fam_names, dnu_x, dnu_y):
+    n = len(fam_names)
+    dnu = np.array([dnu_x, dnu_y])
+    dnu_db_2L = np.zeros((2, n), dtype='float')
+    for k in range(n):
+        dnu_db_2L[:, k] = \
+            compute_dnu_db_2L(acc, calc_config, fam_names[k],   1e-4)
+    print("\ndnu_db_2L:\n", mat2txt(dnu_db_2L))
+    u, s, v_t = np.linalg.svd(dnu_db_2L, full_matrices=False)
+    dnu_db_2L_inv = (v_t.T @ np.diag(s**-1) @ u.T)
+    db_2L = dnu_db_2L_inv @ dnu
+    print("\ndb_2L = ", vec2txt(db_2L))
+    for k in range(n):
+        set_db_2L_fam(acc, fam_names[k], db_2L[k])
+ 
 
 t_dir = os.path.join(os.environ["HOME"], "Nextcloud", "thor_scsi")
 t_file = os.path.join(t_dir, "alsu-7ba-20180503c.lat")
@@ -93,19 +134,21 @@ print(f"""\nCavity info:
   f [MHz] {1e-6*cav.getFrequency()}
   V [MV]  {1e-6*cav.getVoltage()}
   h       {cav.getHarmonicNumber()}
-  phi     {cav.getPhase()}   (initial)
+  phi     {cav.getPhase()}
 """, end="")
-# Set RF phase for negative alpha_c.
-cav.setPhase(180e0)
-cav.setPhase(np.pi)
-print("  phi     {:} (set to)".format(cav.getPhase()))
 
 dof = 2
 
 E = 2.0e9
+calc_config.radiation = False
+calc_config.Cavity_on = False
+
 
 M = map2numpy(compute_map(acc, calc_config))[:6, :6]
+nu = compute_nu_symp(dof, M)
 print("\nM:\n" + mat2txt(M))
+print("\nnu = [{:7.5f}, {:7.5f}]".format(nu[X_], nu[Y_]))
+
 A, A_inv, _ = compute_M_diag(dof, M)
 
 ds = compute_twiss_along_lattice(acc, calc_config, A)
@@ -122,18 +165,13 @@ if not True:
 
 compute_radiation(acc, calc_config, E, 1e-15)
 
+calc_config.radiation = False
+calc_config.Cavity_on = False
 
-# Tweak the tune by using: [q1, q2, q3, q4, mb3h, qfh, mqfh].
-dnu_db_2 = compute_dnu_db_2(acc, calc_config, "q1",   1e-4)
-print(dnu_db_2)
-np.append(dnu_db_2, compute_dnu_db_2(acc, calc_config, "q2",   1e-4))
-print(dnu_db_2)
-compute_dnu_db_2(acc, calc_config, "q3",   1e-4)
-compute_dnu_db_2(acc, calc_config, "q4",   1e-4)
-compute_dnu_db_2(acc, calc_config, "mb3h", 1e-4)
-compute_dnu_db_2(acc, calc_config, "qfh",  1e-4)
-compute_dnu_db_2(acc, calc_config, "mqfh", 1e-4)
-
-# SVD
-
-# Tweak the tune.
+# Tweak the tune using all the quadrupole families.
+b_2 = ['q1', 'q2', 'q3', 'q4', 'mb3h', 'qfh', 'mqfh']
+tweak_nu(b_2, 0.005, -0.005)
+M = map2numpy(compute_map(acc, calc_config))[:6, :6]
+nu = compute_nu_symp(dof, M)
+print("\nM:\n" + mat2txt(M))
+print("\nnu = [{:7.5f}, {:7.5f}]".format(nu[X_], nu[Y_]))
