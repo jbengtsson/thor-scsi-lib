@@ -32,15 +32,18 @@ Packages to be installed on Ubuntu 22 LTS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Install packages that could be missing for the c++ library
-::
+
+.. code:: shell
 
   sudo apt-get install bison flex cmake g++ gfortran libarmadillo-dev libboost-all-dev
 
 
 The following packages could be missing for the python wrapper
 
-::
+.. code:: shell
+
    sudo apt-get install pybind11-dev python3-xarray
+
 
 Please note: currently the python wrapper is built together with the c++ library.
 
@@ -49,7 +52,7 @@ Checking out repository
 
 First clone the repository using
 
-::
+.. code:: shell
 
    git clone https://github.com/jbengtsson/thor-scsi-lib.git
 
@@ -57,12 +60,14 @@ First clone the repository using
 change to the directory (persumably) `thor-scsi-lib`. If that was
 successful please check currently out the tree `radiate` with
 
-::
+.. code:: shell
+
    git checkout radiate
 
 
 Then initialise submodules using the following commands
-::
+
+.. code:: shell
 
    git submodule init
    git submodule update
@@ -75,21 +80,21 @@ Getting ready to build
 
 create a directory "build"
 
-::
+.. code:: shell
 
    mkdir build
 
 
 then change to this directory
 
-::
+.. code:: shell
 
   cd build
 
 
 then in this directory execute
 
-::
+.. code:: shell
 
   cmake ..
 
@@ -100,23 +105,24 @@ case the cmake command fails, please remove at least the
 
 When cmake worked, trigger the build. In case you use `make` type
 
-::
+.. code:: shell
 
   make
 
 
 The build can be verified executing the tests using
 
-::
+.. code:: shell
 
    make test
 
 
 If build was successful use
 
-::
+.. code:: shell
 
   cmake --install . --prefix=/path/to/install/to
+
 
 with `/path/to/install/to` the absolute path of the directory you
 would like to install to.
@@ -144,7 +150,7 @@ Change into the repositories `python` directory. Edit the
 to. As soon that has been done, you should be able to use e.g.
 
 
-::
+.. code:: shell
 
    python setup.py build
 
@@ -152,7 +158,7 @@ to. As soon that has been done, you should be able to use e.g.
 to build the module and
 
 
-::
+.. code:: shell
    python setup.py install
 
 
@@ -161,7 +167,7 @@ to install the module.
 
 Alternatively you could use `pip` e.g.
 
-::
+.. code:: shell
 
    pip install .
 
@@ -203,7 +209,7 @@ If your version pybind 11 is rejected by cmake:
 
 1. install it using pip
 
-   ::
+   .. code:: shell
 
       pip3 install pybind11
 
@@ -215,7 +221,7 @@ If your version pybind 11 is rejected by cmake:
 2. help cmake find the installation. E.g. for a local installation
    on ubuntu (focal) it is typically found at
 
-   ::
+   .. code:: shell
 
       ls -d  $HOME/.local/lib/python3.8/site-packages/pybind11
 
@@ -224,7 +230,7 @@ If your version pybind 11 is rejected by cmake:
    the environment variable pybind11_DIR to the correct directory
       e.g.
 
-   ::
+   .. code:: shell
 
        export pybind11_DIR=$HOME/.local/lib/python3.8/site-packages/pybind11
 
@@ -237,7 +243,7 @@ THe standard `bison` tool installed on mac os is not modern enough.
 In our experience bison distributed with `brew` can be used. To
 check if correct brew is installed in your shell run
 
-::
+.. code:: shell
 
     bison --config
 
@@ -253,7 +259,7 @@ brew on your mac. Then follow `brew`  instruction to install
 bison binary to the PATH variable (e.g. if you are using bash)
 
 
-::
+.. code:: shell
 
     export PATH=/path/to/bison:$PATH
 
@@ -272,7 +278,7 @@ Linux
 ~~~~~
 One solution can be to define the directory in LD_LIBRARY_PATH e.g.:
 
-::
+.. code:: shell
 
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/path/to/install/to/lib/
 
@@ -282,7 +288,7 @@ MAC OS
 One solution can be to define the directory in LD_LIBRARY_PATH e.g.:
 
 
-::
+.. code:: shell
 
     export DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH:/path/to/install/to/lib/
 
