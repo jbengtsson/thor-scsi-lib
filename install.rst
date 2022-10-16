@@ -1,4 +1,4 @@
-.. _install-instructions:
+.. _install.rst:
 
 Installing thor-scsi-lib
 ========================

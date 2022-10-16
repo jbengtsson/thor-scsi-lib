@@ -27,7 +27,7 @@ Requirements
 Installation
 ------------
 
-For installation see :ref:`install-instructions`:
+For installation see :ref:`install.rst`:
 
 
 To run the demo/test program
