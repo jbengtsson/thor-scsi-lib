@@ -240,7 +240,7 @@ Hence, the code was also benchmarked & calibrated as part of the ALS commissioni
 
   .. _`EPAC 1994.`: https://accelconf.web.cern.ch/e94/PDF/EPAC1994_1021.PDF
 
-Malika Meddahi was a postdoc at ALS who did her thesis at CERN (for which she received the *Prix Daniel Guinier* in France that year):
+Malika Meddahi was a postdoc at ALS who did her thesis at SPS, CERN (for which she received the *Prix Daniel Guinier* in France that year):
 
   *Effets faisceau-faisceau dans le collisionneur protons-antiprotons du SPS* `CERN-SL-91-30-BI (1991)`_
 
@@ -310,8 +310,8 @@ Contributions
 
 * Besides, a subset of the internal *numerical engine* was manually translated to C and re-used for:
 
-(But missing/avoiding the *Truncated Power Series Algebra approach* (TPSA) for the computation of the corresponding global lattice properties; e.g., linear optics functions, radiation effects, etc.)
-
     A\. Terebilo *Accelerator Toolbox for MATLAB* `SLAC-PUB-8732 (2001).`_
   
     .. _`SLAC-PUB-8732 (2001).`: http://www-public.slac.stanford.edu/sciDoc/docMeta.aspx?slacPubNumber=SLAC-PUB-8732
+
+but missing/avoiding the *Truncated Power Series Algebra approach* (TPSA) for the computation of the corresponding global lattice properties; e.g., linear optics functions, radiation effects, etc.
