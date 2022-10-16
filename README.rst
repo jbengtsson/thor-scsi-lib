@@ -1,3 +1,6 @@
+Thor-SCSI – Self-Consistent Symplectic Integrator for Charged Particle Beam Dynamics
+------------------------------------------------------------------------------------
+
 Requirements
 ------------
 * (GNU compatible) C/C++ compiler
@@ -160,15 +163,12 @@ Thor
 
 Author: Johan Bengtsson
 
-Self-Consistent Symplectic Integrator for Charged Particle Beam Dynamics
-------------------------------------------------------------------------
-
 Having implemented *DA-Pascal* in the early 1990s, see ref. below, based on a *recursive* approach
 – i.e., *automatable* by an *universal Turing machine* (any modern *digital computer*) –
 for *nonlinear beam dynamics analysis* by utilizing *Lie series* on a *beam line object*;
 *automated* to arbitrary order by  *Truncated Power Serias Algegra* (TPSA). In particular, implemented
 as a *Pascal module/software library* by extending the *standard procedures & functions* for
-N. Wirth's *Pascal-S compiler/interpreter*. Hence, in 1992, rather than participating in a "talkshop"
+N. Wirth's *Pascal-S compiler/interpreter*. Hence, in 1994, rather than participating in a "talkshop"
 for the *CLASSIC collaboration*, we instead prototyped & implemented a C++ *beam line class* based on
 a *polymorphic number object with reference counting*. For which the latter mechism provides for
 *garbage collection*; since it is not provided by C++, vs. e.g. *Lisp* & *Smalltalk*.
@@ -284,10 +284,18 @@ the code was named *Tracy-2*, i.e., inspired by the demo/prototype *Tracy*:
 for *linear optics design*; i.e., for a *bare lattice* with *mid-plane symmetry*. Hence, the one thing we found useful & adopted
 was the implementation of the prototype model/code as an extension of the *standard procedures & functions*
 for the *Pascal-S compiler/interpreter* by N. Wirth:
+  
+  M\. Rees, D\. Robson *Practical Compiling with Pascal-S* `(Addison-Wesley, 1988).`_
+  
+  .. _`(Addison-Wesley, 1988).`: https://books.google.com/books?id=hLomAAAAMAAJ
+  
+  S\. Pemberton, M\. Daniels *The P4 Compiler and Interpreter* `(1982).`_
+  
+  .. _`(1982).`: https://homepages.cwi.nl/~steven/pascal/book/pascalimplementation.html
 
-  N\. Wirth *PASCAL-S: A Subset and its Implementation* `Institut für Informatik (1975).`_
+  N\. Wirth *PASCAL-S: A Subset and its Implementation* `Institut für Informatik, ETH, Zürich (1975).`_
 
-  .. _`Institut für Informatik (1975).`: http://pascal.hansotten.com/uploads/pascals/PASCAL-S%20A%20subset%20and%20its%20Implementation%20012.pdf
+  .. _`Institut für Informatik, ETH, Zürich (1975).`: http://pascal.hansotten.com/uploads/pascals/PASCAL-S%20A%20subset%20and%20its%20Implementation%20012.pdf
 
 In other words, since 1992 our *toolkit* – althout it based on one model: the *Hamiltonian for a charged particle
 in an external electromagnetic field* & a *symplectic intrator* for *magnetic multipoles* & *insertion devices*
