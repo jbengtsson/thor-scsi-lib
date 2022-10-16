@@ -1,8 +1,11 @@
-===============================================================
+thor-scsi-lib: Self-Consistent Symplectic Integrator for Charged Particle Beam Dynamics
+=======================================================================================
 
-`thor-scsi-lib` strives to reimplement the phyiscs model of `tracy` in modern C++ next to a python interface.
+`thor-scsi-lib` strives to reimplement the phyiscs model of `tracy` in modern C++. Furthermore it provides
+a python interface.
+
 `thor-scsi-lib` and `tracy` are self consistent symplectic integrators.
-`tracy` was for desiging different synchrotron light sources (e.g. MAX~IV, nSLS-II) or as online model
+`tracy` was used for desiging different synchrotron light sources (e.g. MAX~IV, SLS) or as core physics engine for online models
 for many different light sources (e.g. NSLS-II, SLS).
 
 The pyhsics model is described in
@@ -13,6 +16,8 @@ The pyhsics model is described in
 
     .. _`10.48550/arXiv.2109.15066 (2021).`: http://dx.doi.org/10.48550/arXiv.2109.15066
 
+
+A historical overview is given below.
 
 Requirements
 ------------
