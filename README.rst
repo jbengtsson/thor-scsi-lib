@@ -1,5 +1,23 @@
-Thor-SCSI – Self-Consistent Symplectic Integrator for Charged Particle Beam Dynamics
-------------------------------------------------------------------------------------
+thor-scsi-lib: Self-Consistent Symplectic Integrator for Charged Particle Beam Dynamics
+=======================================================================================
+
+`thor-scsi-lib` strives to reimplement the phyiscs model of `tracy` in modern C++. Furthermore it provides
+a python interface.
+
+`thor-scsi-lib` and `tracy` are self consistent symplectic integrators.
+`tracy` was used for desiging different synchrotron light sources (e.g. MAX~IV, SLS) or as core physics engine for online models
+for many different light sources (e.g. NSLS-II, SLS).
+
+The pyhsics model is described in
+
+* Beam Dynamics Model:
+
+    J\. Bengtsson, W\. Rogers, T\. Nicholls *A CAD Tool for Linear Optics Design: A Controls Engineer's Geometric Approach to Hill's Equation* `10.48550/arXiv.2109.15066 (2021).`_
+
+    .. _`10.48550/arXiv.2109.15066 (2021).`: http://dx.doi.org/10.48550/arXiv.2109.15066
+
+
+A historical overview is given below.
 
 Requirements
 ------------
@@ -9,93 +27,14 @@ Requirements
 * Armadillo (for linear algebra): http://arma.sourceforge.net.
 * Python https://www.python.org/ for the python interface
 
-The library uses the range checking inmplementation of e.g. `std::vector` as provided by GNU C++; thus its dependency on the GNU compiler collections.
 
-To install
-----------
+Installation
+------------
 
-Setup of repository
-===================
+For installation instructions see `install.rst`_
 
-Dowload the repository and checkout the proper branch. Here it's assumed you will use the directoy `git_repos/tracy-3.5` in your home directory for the tracy code tree.
+.. _`install.rst` : install.rst
 
-For this use the following commands to create the directoy `git_repos` and to clone the tree into the tracy-3.5 directory.
-
-.. code:: shell
-
-   mkdir git_repos
-   cd git_repos
-   git clone git@github.com:jbengtsson/Thor_scsi.git
-   cd Thor_scsi
-
-Then select the proper tree by
-
-.. code:: shell
-
-   git checkout Thor_scsi
-
-
-
-C++ library
-===========
-
-First create environment variable $TRACY_LIB. This will be the prefix where the built library and include files will be installed later on e.g:
-
-.. code:: shell
-
-   export TRACY_LIB=$HOME/git_repos/Thor_scsi
-
-
-To build the library use:
-
-.. code:: shell
-
-   cd Thor_scsi
-   (g)libtoolize
-   ./bootstrap
-   ./configure --prefix=$Thor_scsi_LIB
-   make
-   make install
-
-Please note: using the dynamic library in non standard location will require proper set up of the environment later on (e.g. adding the directory where the library is located to `LD_LIBRARY_PATH` environment variable).
-
-
-Python interface
-================
-
-The python interface is based on https://github.com/pybind/pybind11. Building this interface requires to select the proper directory
-
-.. code:: shell
-
-  cd git_repos
-  cd Thor_scsi/python
-
-Install proper dependencies
-
-.. code:: shell
-
-    pip3 install -r requirements.txt
-
-
-And build the extension e.g.
-
-.. code:: shell
-
-    python3 setup.py build
-    python3 setup.py install
-
-For further details of the build system see https://pypi.org/project/setuptools/
-
-
-To run the regression tests
----------------------------
-
-All regression tests can be run using
-
-.. code:: shell
-
-    pip3 install nose
-    python3 setup.py nosetests
 
 To run the demo/test program
 ----------------------------
@@ -112,41 +51,41 @@ References
 * Python interface:
 
   Guidelines & automated regression testing bootstrapped by Pierre Schnizer:
-  
+
     P\. Schnizer, W\. Khail, J\. Bengtsson *Small Talk on AT* `IPAC 2022 TUPOST029.`_
-    
+
     .. _`IPAC 2022 TUPOST029.`: http://dx.doi.org/10.18429/JACoW-IPAC2022-TUPOST029
 
   Initial demo/prototype & guidelines by Jan Chrin, PSI, 2017:
-  
+
     J\. Chrin *Channel Access from Cython (and other Cython use cases)* `EPICS Collaboration Meeting 2017.`_
-  
+
     .. _`EPICS Collaboration Meeting 2017.`: https://indico.esss.lu.se/event/889/contributions/7038/attachments/6800/9762/Cython_EpicsTM_Oct2017_Barcelona.pdf#page=32
 
 * Model Server:
 
     P\. Schnizer, J\. Bengtsson, T\. Birke, L\. Ramirez *Online Model Developments for BESSY II and MLS* `IPAC 2021 WEPAB317.`_
-    
+
     .. _`IPAC 2021 WEPAB317.`: http://dx.doi.org/10.18429/JACoW-IPAC2021-WEPAB317
 
 * Use Cases:
 
     J\. Bengtsson, T\. Nicholls, W\. Rogers *A CAD Tool for Linear Optics Design: A Use Case Approach* `IPAC 2021 MOPAB047.`_
-    
+
     .. _`IPAC 2021 MOPAB047.`: http://dx.doi.org/10.18429/JACoW-IPAC2021-MOPAB047
-    
+
     J\. Bengtsson, M\. Davidsaver *An Accelerator Physics - Software Engineering Collaboration* `EPICS Collaboration Meeting EPICS 2016.`_
-    
+
     .. _`EPICS Collaboration Meeting EPICS 2016.`: https://indico.esss.lu.se/event/507/contributions/3830
 
 * Beam Dynamics Model:
 
     J\. Bengtsson, W\. Rogers, T\. Nicholls *A CAD Tool for Linear Optics Design: A Controls Engineer's Geometric Approach to Hill's Equation* `10.48550/arXiv.2109.15066 (2021).`_
-    
+
     .. _`10.48550/arXiv.2109.15066 (2021).`: http://dx.doi.org/10.48550/arXiv.2109.15066
-    
+
     J\. Bengtsson, D\. Briggs, G\. Portmann *A Linear Control Theory Analysis of Transverse Coherent Bunch Instabilities Feedback Systems (The Control Theory Approach to Hill's Equation)* `CBP Tech Note-026, PEP-II AP Note 28-93 (1993).`_
-    
+
     .. _`CBP Tech Note-026, PEP-II AP Note 28-93 (1993).`: https://escholarship.org/uc/item/64s937sf
 
 
@@ -183,7 +122,7 @@ To quote Forest in:
   Obviously this exists independently of the existence of single particle propagators associated to EL and/or
   ELP. It is a remarkable mathematical feature that these propagators, under certain conditions, inherit the
   transformational properties of the chart. Of course PTC is set up to take advantage of this.*
- 
+
   ...
 
   *TRACYII was based on the belief that a dumb user interface should be built on the foundation of a smart
@@ -195,7 +134,7 @@ To quote Forest in:
   *In the case of TRACYII, this was realized by separating the lattice input file (dumb user) from the
   command input file (smart user). This idea, originally from Nishimura, was turned into an uncompromising
   product by Bengtsson. In PTC the same can be achieved by stripping all the core routines from any dumb
-  user idiosyncracies. One example common to TRACYII and PTC is the absence of quadrupoles in the core.* 
+  user idiosyncracies. One example common to TRACYII and PTC is the absence of quadrupoles in the core.*
 
   ...
 
@@ -217,7 +156,7 @@ To quote Forest in:
   this object: the fibre bundle. PTC simply creates a restricted fibre bundle on the computer, one which is
   relevant to particle accelerators. This structure is incompatible with standard Courant-Snyder theory and
   other similar constructs like Sand’s integrals.*
- 
+
   ...
 
   *Besides the two individuals whose names appear on this paper and Aimin Xiao who collaborated on the very
@@ -261,19 +200,19 @@ Remark: Although the entire *beam dynamics model* had to be replaced & the model
   .. image:: images/H_2.png
 
 for *linear optics design*; i.e., for a *bare lattice* with *mid-plane symmetry*. Hence, the one thing we did find useful – for a realistic on-line model, having already implemented one as a sci fellow for LEAR, CERN, in the late 1980s – and adopted for the ALS on-line model was the implementation of the beam dynamics model as an extension of the *standard procedures & functions* for the *Pascal-S compiler/interpreter* by N. Wirth; architected as a Pascal software library/module:
-  
+
   M\. Rees, D\. Robson *Practical Compiling with Pascal-S* `(Addison-Wesley, 1988).`_
-  
+
   .. _`(Addison-Wesley, 1988).`: https://books.google.com/books?id=hLomAAAAMAAJ
-  
+
   S\. Pemberton, M\. Daniels *The P4 Compiler and Interpreter* `(1982).`_
-  
+
   .. _`(1982).`: https://homepages.cwi.nl/~steven/pascal/book/pascalimplementation.html
 
   N\. Wirth *PASCAL-S: A Subset and its Implementation* `Institut für Informatik, ETH, Zürich (1975).`_
 
   .. _`Institut für Informatik, ETH, Zürich (1975).`: http://pascal.hansotten.com/uploads/pascals/PASCAL-S%20A%20subset%20and%20its%20Implementation%20012.pdf
-  
+
   *Pascal-P6* https://sourceforge.net/projects/pascal-p6.
 
 In other words, since 1994 our *toolkit* – althout it based on one model: the *Hamiltonian for a charged particle in an external electromagnetic field* & a *symplectic intrator* for *magnetic multipoles* & *insertion devices* for ditto – it was implemented as two different codes: Tracy-2 & Thor. Hence, eventually, these were consolidated by using C++ *templates* for the *polymorphich number object* and *beam line class*; aka Tracy-2,3.
@@ -311,7 +250,26 @@ Contributions
 * Besides, a subset of the internal *numerical engine* was manually translated to C and re-used for:
 
     A\. Terebilo *Accelerator Toolbox for MATLAB* `SLAC-PUB-8732 (2001).`_
-  
+
     .. _`SLAC-PUB-8732 (2001).`: http://www-public.slac.stanford.edu/sciDoc/docMeta.aspx?slacPubNumber=SLAC-PUB-8732
 
-but missing/ignoring/avoiding the *Truncated Power Series Algebra approach* (TPSA) for the computation of the corresponding global lattice properties; e.g., linear optics functions, radiation effects, etc. I.e., a prehistoric approach (1980s).
+* Python interface::
+
+  Initial demo/prototype & guidelines by Jan Chrin, PSI, 2017:
+
+    J\. Chrin *Channel Access from Cython (and other Cython use cases)* `EPICS Collaboration Meeting 2017.`_
+
+    .. _`EPICS Collaboration Meeting 2017.`: https://indico.esss.lu.se/event/889/contributions/7038/attachments/6800/9762/Cython_EpicsTM_Oct2017_Barcelona.pdf
+
+  Guidelines & automated regression testing bootstrapped by Pierre Schnizer:
+
+    P\. Schnizer, W\. Khail, J\. Bengtsson *Small Talk on AT* `IPAC 2022.`_
+
+    .. _`IPAC 2022.`: https://accelconf.web.cern.ch/ipac2022/papers/tupost029.pdf
+
+
+* Beam Dynamics Model:
+
+    J\. Bengtsson, W\. Rogers, T\. Nicholls *A CAD Tool for Linear Optics Design: A Controls Engineer's Geometric Approach to Hill's Equation* `10.48550/arXiv.2109.15066 (2021).`_
+
+    .. _`10.48550/arXiv.2109.15066 (2021).`: http://dx.doi.org/10.48550/arXiv.2109.15066
