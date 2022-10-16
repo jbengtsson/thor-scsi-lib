@@ -1,5 +1,8 @@
 # Art - Philosophy - Science: Ancient Greece
 #
+# 𝐿𝑖𝑏𝑟𝑎𝑟𝑦 𝑜𝑓 𝐴𝑙𝑒𝑥𝑎𝑛𝑑𝑟𝑖𝑎
+# https://www.bbc.co.uk/programmes/b00j0q53
+#
 # D. Knuth 𝑇ℎ𝑒 𝐴𝑟𝑡 𝑜𝑓 𝐶𝑜𝑚𝑝𝑢𝑡𝑒𝑟 𝑃𝑟𝑜𝑔𝑟𝑎𝑚𝑚𝑖𝑛𝑔
 #
 # 𝐼 𝑡ℎ𝑜𝑢𝑔ℎ𝑡 𝑡ℎ𝑎𝑡 𝐼 𝑤𝑎𝑠 𝑎 𝑝𝑒𝑟𝑓𝑒𝑐𝑡𝑖𝑜𝑛𝑖𝑠𝑡 𝑢𝑛𝑡𝑖𝑙 𝐼 𝑚𝑒𝑡 𝐾𝑛𝑢𝑡ℎ.
@@ -12,6 +15,12 @@
 # Vangelis 𝐶ℎ𝑎𝑟𝑖𝑜𝑡𝑠 𝑜𝑓 𝐹𝑖𝑟𝑒
 # https://youtu.be/CSav51fVlKU
 # https://youtu.be/CwzjlmBLfrQ
+#
+# 𝑇ℎ𝑒 𝑅𝑒𝑎𝑙 𝐶ℎ𝑎𝑟𝑖𝑜𝑡𝑠 𝑜𝑓 𝐹𝑖𝑟𝑒
+# https://youtu.be/zox9Q_Ljtiw?t=771
+# https://youtu.be/K6QSsOwnHUQ
+# https://youtu.be/aY2eNtg6X2k
+# https://youtu.be/Ilceqb9YxFc
 #
 # Statue 𝑆𝑝𝑖𝑟𝑖𝑡 𝑜𝑓 𝑡ℎ𝑒 𝑀𝑎𝑟𝑎𝑡ℎ𝑜𝑛, Hopkinton, MA & sister town Marathon, Greece.
 #
