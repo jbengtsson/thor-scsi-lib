@@ -260,7 +260,7 @@ Remark: Although the entire *beam dynamics model* had to be replaced & the model
 
   .. image:: images/H_2.png
 
-for *linear optics design*; i.e., for a *bare lattice* with *mid-plane symmetry*. Hence, the one thing we did find useful – for a realistic on-line model, having already implemented one as a sci fellow at CERN in the late 1980s – and adopted for the ALS on-line model was the implementation of the beam dynamics model as an extension of the *standard procedures & functions* for the *Pascal-S compiler/interpreter* by N. Wirth; architected as a Pascal software library/module:
+for *linear optics design*; i.e., for a *bare lattice* with *mid-plane symmetry*. Hence, the one thing we did find useful – for a realistic on-line model, having already implemented one as a sci fellow for LEAR, CERN, in the late 1980s – and adopted for the ALS on-line model was the implementation of the beam dynamics model as an extension of the *standard procedures & functions* for the *Pascal-S compiler/interpreter* by N. Wirth; architected as a Pascal software library/module:
   
   M\. Rees, D\. Robson *Practical Compiling with Pascal-S* `(Addison-Wesley, 1988).`_
   
