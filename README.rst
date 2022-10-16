@@ -1,3 +1,20 @@
+thor-scsi-lib: symplectic integrator beam dynamics as a library
+===============================================================
+
+`thor-scsi-lib` strives to reimplement the phyiscs model of `tracy` in modern C++ next to a python interface.
+`thor-scsi-lib` and `tracy` are self consistent symplectic integrators.
+`tracy` was for desiging different synchrotron light sources (e.g. MAX~IV, nSLS-II) or as online model
+for many different light sources (e.g. NSLS-II, SLS).
+
+The pyhsics model is described in
+
+* Beam Dynamics Model:
+
+    J\. Bengtsson, W\. Rogers, T\. Nicholls *A CAD Tool for Linear Optics Design: A Controls Engineer's Geometric Approach to Hill's Equation* `10.48550/arXiv.2109.15066 (2021).`_
+
+    .. _`10.48550/arXiv.2109.15066 (2021).`: http://dx.doi.org/10.48550/arXiv.2109.15066
+
+
 Requirements
 ------------
 * (GNU compatible) C/C++ compiler
@@ -6,101 +23,12 @@ Requirements
 * Armadillo (for linear algebra): http://arma.sourceforge.net.
 * Python https://www.python.org/ for the python interface
 
-The library uses the range checking inmplementation of e.g. `std::vector` as
-provided by GNU C++; thus its dependency on the GNU compiler collections.
 
-To install
-----------
+Installation
+------------
 
-Setup of repository
-===================
+For installation see :ref:`install-instructions`:
 
-Dowload the repository and checkout the proper branch. Here it's assumed you
-will use the directoy `git_repos/tracy-3.5` in your home directory for the
-tracy code tree.
-
-For this use the following commands to create the directoy `git_repos`
-and to clone the tree into the tracy-3.5 directory.
-
-.. code:: shell
-
-   mkdir git_repos
-   cd git_repos
-   git clone git@github.com:jbengtsson/Thor_scsi.git
-   cd Thor_scsi
-
-Then select the proper tree by
-
-.. code:: shell
-
-   git checkout Thor_scsi
-
-
-
-C++ library
-===========
-
-First create environment variable $TRACY_LIB. This will be the prefix where the
-built library and include files will be installed later on e.g:
-
-.. code:: shell
-
-   export TRACY_LIB=$HOME/git_repos/Thor_scsi
-
-
-To build the library use:
-
-.. code:: shell
-
-   cd Thor_scsi
-   (g)libtoolize
-   ./bootstrap
-   ./configure --prefix=$Thor_scsi_LIB
-   make
-   make install
-
-Please note: using the dynamic library in non standard location will require
-proper set up of the environment later on (e.g. adding the directory where the
-library is located to `LD_LIBRARY_PATH` environment variable).
-
-
-Python interface
-================
-
-The python interface is based on https://github.com/pybind/pybind11. Building this interface
-requires to select the proper directory
-
-.. code:: shell
-
-  cd git_repos
-  cd Thor_scsi/python
-
-Install proper dependencies
-
-.. code:: shell
-
-    pip3 install -r requirements.txt
-
-
-And build the extension e.g.
-
-.. code:: shell
-
-    python3 setup.py build
-    python3 setup.py install
-
-For further details of the build system see https://pypi.org/project/setuptools/
-
-
-To run the regression tests
----------------------------
-
-All regression tests can be run using
-
-.. code:: shell
-
-    pip3 install nose
-    python3 setup.py nosetests
 
 To run the demo/test program
 ----------------------------
@@ -155,7 +83,7 @@ To quote Forest in:
   Obviously this exists independently of the existence of single particle propagators associated to EL and/or
   ELP. It is a remarkable mathematical feature that these propagators, under certain conditions, inherit the
   transformational properties of the chart. Of course PTC is set up to take advantage of this.*
- 
+
   ...
 
   *TRACYII was based on the belief that a dumb user interface should be built on the foundation of a smart
@@ -167,7 +95,7 @@ To quote Forest in:
   *In the case of TRACYII, this was realized by separating the lattice input file (dumb user) from the
   command input file (smart user). This idea, originally from Nishimura, was turned into an uncompromising
   product by Bengtsson. In PTC the same can be achieved by stripping all the core routines from any dumb
-  user idiosyncracies. One example common to TRACYII and PTC is the absence of quadrupoles in the core.* 
+  user idiosyncracies. One example common to TRACYII and PTC is the absence of quadrupoles in the core.*
 
   ...
 
@@ -189,7 +117,7 @@ To quote Forest in:
   this object: the fibre bundle. PTC simply creates a restricted fibre bundle on the computer, one which is
   relevant to particle accelerators. This structure is incompatible with standard Courant-Snyder theory and
   other similar constructs like Sand’s integrals.*
- 
+
   ...
 
   *Besides the two individuals whose names appear on this paper and Aimin Xiao who collaborated on the very
@@ -277,26 +205,26 @@ Contributions
 * Besides, the internal *numerical engine* was manually translated to C and re-used for:
 
     A\. Terebilo *Accelerator Toolbox for MATLAB* `SLAC-PUB-8732 (2001).`_
-  
+
     .. _`SLAC-PUB-8732 (2001).`: http://www-public.slac.stanford.edu/sciDoc/docMeta.aspx?slacPubNumber=SLAC-PUB-8732
 
 * Python interface::
 
   Initial demo/prototype & guidelines by Jan Chrin, PSI, 2017:
-  
+
     J\. Chrin *Channel Access from Cython (and other Cython use cases)* `EPICS Collaboration Meeting 2017.`_
-  
+
     .. _`EPICS Collaboration Meeting 2017.`: https://indico.esss.lu.se/event/889/contributions/7038/attachments/6800/9762/Cython_EpicsTM_Oct2017_Barcelona.pdf
 
   Guidelines & automated regression testing bootstrapped by Pierre Schnizer:
-  
+
     P\. Schnizer, W\. Khail, J\. Bengtsson *Small Talk on AT* `IPAC 2022.`_
-    
+
     .. _`IPAC 2022.`: https://accelconf.web.cern.ch/ipac2022/papers/tupost029.pdf
 
 
 * Beam Dynamics Model:
 
     J\. Bengtsson, W\. Rogers, T\. Nicholls *A CAD Tool for Linear Optics Design: A Controls Engineer's Geometric Approach to Hill's Equation* `10.48550/arXiv.2109.15066 (2021).`_
-    
+
     .. _`10.48550/arXiv.2109.15066 (2021).`: http://dx.doi.org/10.48550/arXiv.2109.15066
