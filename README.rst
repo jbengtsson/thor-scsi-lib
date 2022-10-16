@@ -1,4 +1,3 @@
-thor-scsi-lib: symplectic integrator beam dynamics as a library
 ===============================================================
 
 `thor-scsi-lib` strives to reimplement the phyiscs model of `tracy` in modern C++ next to a python interface.
@@ -39,23 +38,56 @@ To run the demo/test program
     python3 examples/tst.py
 
 
+References
+==========
+
+* Python interface:
+
+  Guidelines & automated regression testing bootstrapped by Pierre Schnizer:
+
+    P\. Schnizer, W\. Khail, J\. Bengtsson *Small Talk on AT* `IPAC 2022 TUPOST029.`_
+
+    .. _`IPAC 2022 TUPOST029.`: http://dx.doi.org/10.18429/JACoW-IPAC2022-TUPOST029
+
+  Initial demo/prototype & guidelines by Jan Chrin, PSI, 2017:
+
+    J\. Chrin *Channel Access from Cython (and other Cython use cases)* `EPICS Collaboration Meeting 2017.`_
+
+    .. _`EPICS Collaboration Meeting 2017.`: https://indico.esss.lu.se/event/889/contributions/7038/attachments/6800/9762/Cython_EpicsTM_Oct2017_Barcelona.pdf#page=32
+
+* Model Server:
+
+    P\. Schnizer, J\. Bengtsson, T\. Birke, L\. Ramirez *Online Model Developments for BESSY II and MLS* `IPAC 2021 WEPAB317.`_
+
+    .. _`IPAC 2021 WEPAB317.`: http://dx.doi.org/10.18429/JACoW-IPAC2021-WEPAB317
+
+* Use Cases:
+
+    J\. Bengtsson, T\. Nicholls, W\. Rogers *A CAD Tool for Linear Optics Design: A Use Case Approach* `IPAC 2021 MOPAB047.`_
+
+    .. _`IPAC 2021 MOPAB047.`: http://dx.doi.org/10.18429/JACoW-IPAC2021-MOPAB047
+
+    J\. Bengtsson, M\. Davidsaver *An Accelerator Physics - Software Engineering Collaboration* `EPICS Collaboration Meeting EPICS 2016.`_
+
+    .. _`EPICS Collaboration Meeting EPICS 2016.`: https://indico.esss.lu.se/event/507/contributions/3830
+
+* Beam Dynamics Model:
+
+    J\. Bengtsson, W\. Rogers, T\. Nicholls *A CAD Tool for Linear Optics Design: A Controls Engineer's Geometric Approach to Hill's Equation* `10.48550/arXiv.2109.15066 (2021).`_
+
+    .. _`10.48550/arXiv.2109.15066 (2021).`: http://dx.doi.org/10.48550/arXiv.2109.15066
+
+    J\. Bengtsson, D\. Briggs, G\. Portmann *A Linear Control Theory Analysis of Transverse Coherent Bunch Instabilities Feedback Systems (The Control Theory Approach to Hill's Equation)* `CBP Tech Note-026, PEP-II AP Note 28-93 (1993).`_
+
+    .. _`CBP Tech Note-026, PEP-II AP Note 28-93 (1993).`: https://escholarship.org/uc/item/64s937sf
+
+
 Thor
 ====
 
 Author: Johan Bengtsson
 
-Self-Consistent Symplectic Integrator for Charged Particle Beam Dynamics
-------------------------------------------------------------------------
-
-Having implemented *DA-Pascal* in the early 1990s, see ref. below, based on a *recursive* approach
-– i.e., *automatable* by an *universal Turing machine* (any modern *digital computer*) –
-for *nonlinear beam dynamics analysis* by utilizing *Lie series* on a *beam line object*;
-*automated* to arbitrary order by  *Truncated Power Serias Algegra* (TPSA). In particular, implemented
-as a *Pascal module/software library* by extending the *standard procedures & functions* for
-N. Wirth's *Pascal-S compiler/interpreter*. Hence, in 1992, rather than participating in a "talkshop"
-for the *CLASSIC collaboration*, we instead prototyped & implemented a C++ *beam line class* based on
-a *polymorphic number object with reference counting*. For which the latter mechism provides for
-*garbage collection*; since it is not provided by C++, vs. e.g. *Lisp* & *Smalltalk*.
+Having implemented *DA-Pascal* in the early 1990s, see ref. below, based on a *recursive* approach – i.e., *automatable* by an *universal Turing machine* (any modern *digital computer*) – for *nonlinear beam dynamics analysis* by utilizing *Lie series* on a *beam line object*; *automated* to arbitrary order by  *Truncated Power Serias Algegra* (TPSA). In particular, implemented as a *Pascal module/software library* by extending the *standard procedures & functions* for N. Wirth's *Pascal-S compiler/interpreter*. Hence, in 1994, rather than participating in a "talkshop" for the *CLASSIC collaboration*, we instead prototyped & implemented a C++ *beam line class* based on a *polymorphic number object with reference counting*. For which the latter mechism provides for *garbage collection*; since it is not provided by C++, vs. e.g. *Lisp* & *Smalltalk*.
 
 To quote Forest in:
 
@@ -132,11 +164,7 @@ extended to support *operator overloading*.
 Tracy-2
 =======
 
-The symplectic integrator for realistic modeling of magnetic lattices for ring-based synchrotrons was initially
-implemented as a *Pascal module/beam dynamics software library*, by the author 1990, as an *on-line model* to
-guide the ALS commissioning. In particular, care was taken for the software architecture & resulting records/modules
-– akin to *objects* although not explicitly supported by the grammar – to reflect the structure of the mathematical
-objects describing the underlying *beam dynamics model*.
+The symplectic integrator for realistic modeling of magnetic lattices for ring-based synchrotrons was initially implemented as a *Pascal module/beam dynamics software library*, by the author 1990, as an *on-line model* to guide the ALS commissioning. In particular, care was taken for the software architecture & resulting records/modules – akin to *objects* although not explicitly supported by the artificial language grammar – to reflect the structure of the mathematical objects describing the underlying *beam dynamics model*.
 
 Hence, the code was also benchmarked & calibrated as part of the ALS commissioning:
 
@@ -144,12 +172,17 @@ Hence, the code was also benchmarked & calibrated as part of the ALS commissioni
 
   .. _`EPAC 1994.`: https://accelconf.web.cern.ch/e94/PDF/EPAC1994_1021.PDF
 
-The resulting C code, see below, has now been re-factored by introducing a C++ *beam line class*;
-i.e., to recover the transparency & simplicity of the original *beam dynamics model*.
+Malika Meddahi was a postdoc at ALS who did her thesis at SPS, CERN (for which she received the *Prix Daniel Guinier* in France that year):
 
-Nota Bene: Although the *beam dynamics model* had to be replaced & the model/code re-architectured & structured
-– for a reusable approach – as a *Pascal beam dynamics libary* (standard practise in software engineering),
-the code was named *Tracy-2*, i.e., inspired by the demo/prototype *Tracy*:
+  *Effets faisceau-faisceau dans le collisionneur protons-antiprotons du SPS* `CERN-SL-91-30-BI (1991)`_
+
+  .. _`CERN-SL-91-30-BI (1991)`: http://cds.cern.ch/record/223301)
+
+The resulting C code, see below, has now been re-factored by introducing a C++ *beam line class*; i.e., to recover the transparency & simplicity of the original *beam dynamics model*.
+
+Remark: Although the entire *beam dynamics model* had to be replaced & the model/code/"approach" re-architectured & structured – for a reusable approach – as a *Pascal beam dynamics libary* (standard practise in software engineering), the code was named *Tracy-2*, i.e., inspired by the, somewhat archaic demo/prototype/concept *Tracy*:
+
+(E.g. by not having figured out how to pass records as function/procedure variables – vs. scalars only – for the beam dynamics library, the API was rather poor/sloppy; i.e., not scalable/ill suitable to cope with complexity)
 
   H\. Nishimura "*TRACY, A Tool for Accelerator Design and Analysis*" `EPAC 1988.`_
 
@@ -159,18 +192,24 @@ the code was named *Tracy-2*, i.e., inspired by the demo/prototype *Tracy*:
 
   .. image:: images/H_2.png
 
-for *linear optics design*; i.e., for a *bare lattice* with *mid-plane symmetry*. Hence, the one thing we found useful & adopted
-was the implementation of the prototype model/code as an extension of the *standard procedures & functions*
-for the *Pascal-S compiler/interpreter* by N. Wirth:
+for *linear optics design*; i.e., for a *bare lattice* with *mid-plane symmetry*. Hence, the one thing we did find useful – for a realistic on-line model, having already implemented one as a sci fellow for LEAR, CERN, in the late 1980s – and adopted for the ALS on-line model was the implementation of the beam dynamics model as an extension of the *standard procedures & functions* for the *Pascal-S compiler/interpreter* by N. Wirth; architected as a Pascal software library/module:
 
-  N\. Wirth *PASCAL-S: A Subset and its Implementation* `Institut für Informatik (1975).`_
+  M\. Rees, D\. Robson *Practical Compiling with Pascal-S* `(Addison-Wesley, 1988).`_
 
-  .. _`Institut für Informatik (1975).`: http://pascal.hansotten.com/uploads/pascals/PASCAL-S%20A%20subset%20and%20its%20Implementation%20012.pdf
+  .. _`(Addison-Wesley, 1988).`: https://books.google.com/books?id=hLomAAAAMAAJ
 
-In other words, since 1992 our *toolkit* – althout it based on one model: the *Hamiltonian for a charged particle
-in an external electromagnetic field* & a *symplectic intrator* for *magnetic multipoles* & *insertion devices*
-for ditto – it was implemented as two different codes: Tracy-2 & Thor. Hence, eventually, these were consolidated by using C++ *templates* for
-the *polymorphich number object* and *beam line class*; aka Tracy-2,3.
+  S\. Pemberton, M\. Daniels *The P4 Compiler and Interpreter* `(1982).`_
+
+  .. _`(1982).`: https://homepages.cwi.nl/~steven/pascal/book/pascalimplementation.html
+
+  N\. Wirth *PASCAL-S: A Subset and its Implementation* `Institut für Informatik, ETH, Zürich (1975).`_
+
+  .. _`Institut für Informatik, ETH, Zürich (1975).`: http://pascal.hansotten.com/uploads/pascals/PASCAL-S%20A%20subset%20and%20its%20Implementation%20012.pdf
+
+  *Pascal-P6* https://sourceforge.net/projects/pascal-p6.
+
+In other words, since 1994 our *toolkit* – althout it based on one model: the *Hamiltonian for a charged particle in an external electromagnetic field* & a *symplectic intrator* for *magnetic multipoles* & *insertion devices* for ditto – it was implemented as two different codes: Tracy-2 & Thor. Hence, eventually, these were consolidated by using C++ *templates* for the *polymorphich number object* and *beam line class*; aka Tracy-2,3.
+but missing/ignoring/avoiding the *Truncated Power Series Algebra approach* (TPSA) for the computation of the corresponding global lattice properties; e.g., linear optics functions, radiation effects, etc. I.e., a prehistoric approach (1980s).
 
 Contributions
 -------------
@@ -188,9 +227,9 @@ Contributions
 
     .. _`SLS Tech Note SLS-TME-TA-1999-0002 (1999).`: http://ados.web.psi.ch/slsnotes/tmeta9902.pdf
 
-    M\. Böge, J. Chrin *A CORBA Based Client-Server Model for Beam Dynamics Applications* `ICALEPS 1999.`_
+    M\. Böge, J. Chrin *A CORBA Based Client-Server Model for Beam Dynamics Applications* `ICALEPCS 1999.`_
 
-    .. _`ICALEPS 1999.`: https://accelconf.web.cern.ch/ica99/papers/mc1p61.pdf
+    .. _`ICALEPCS 1999.`: https://accelconf.web.cern.ch/ica99/papers/mc1p61.pdf
 
   with `p2c.`_
 
@@ -202,7 +241,7 @@ Contributions
 
     .. _`ICALEPCS 2005.`: https://accelconf.web.cern.ch/ica05/proceed-ings/pdf/P1_018.pdf
 
-* Besides, the internal *numerical engine* was manually translated to C and re-used for:
+* Besides, a subset of the internal *numerical engine* was manually translated to C and re-used for:
 
     A\. Terebilo *Accelerator Toolbox for MATLAB* `SLAC-PUB-8732 (2001).`_
 
