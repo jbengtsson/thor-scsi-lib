@@ -26,7 +26,9 @@ Requirements
 Installation
 ------------
 
-For installation instructions see _`install.rst`
+For installation instructions see `install.rst`_
+
+.. _`install.rst` : install.rst
 
 
 To run the demo/test program
@@ -209,7 +211,6 @@ for *linear optics design*; i.e., for a *bare lattice* with *mid-plane symmetry*
   *Pascal-P6* https://sourceforge.net/projects/pascal-p6.
 
 In other words, since 1994 our *toolkit* – althout it based on one model: the *Hamiltonian for a charged particle in an external electromagnetic field* & a *symplectic intrator* for *magnetic multipoles* & *insertion devices* for ditto – it was implemented as two different codes: Tracy-2 & Thor. Hence, eventually, these were consolidated by using C++ *templates* for the *polymorphich number object* and *beam line class*; aka Tracy-2,3.
-but missing/ignoring/avoiding the *Truncated Power Series Algebra approach* (TPSA) for the computation of the corresponding global lattice properties; e.g., linear optics functions, radiation effects, etc. I.e., a prehistoric approach (1980s).
 
 Contributions
 -------------
