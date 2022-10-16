@@ -260,6 +260,12 @@ Hence, the code was also benchmarked & calibrated as part of the ALS commissioni
 
   .. _`EPAC 1994.`: https://accelconf.web.cern.ch/e94/PDF/EPAC1994_1021.PDF
 
+Malika Meddahi was a postdoc at ALS who did her thesis at CERN (for which she received the *Prix Daniel Guinier* in France that year):
+
+  *Effets faisceau-faisceau dans le collisionneur protons-antiprotons du SPS* `CERN-SL-91-30-BI (1991)`_
+
+  .. _`CERN-SL-91-30-BI (1991)`: http://cds.cern.ch/record/223301)
+
 The resulting C code, see below, has now been re-factored by introducing a C++ *beam line class*;
 i.e., to recover the transparency & simplicity of the original *beam dynamics model*.
 
