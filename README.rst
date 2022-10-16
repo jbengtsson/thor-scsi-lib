@@ -111,6 +111,46 @@ To run the demo/test program
     python3 examples/tst.py
 
 
+References
+==========
+
+* Python interface:
+
+  Guidelines & automated regression testing bootstrapped by Pierre Schnizer:
+  
+    P\. Schnizer, W\. Khail, J\. Bengtsson *Small Talk on AT* `IPAC 2022 TUPOST029.`_
+    
+    .. _`IPAC 2022 TUPOST029.`: http://dx.doi.org/10.18429/JACoW-IPAC2022-TUPOST029
+
+  Initial demo/prototype & guidelines by Jan Chrin, PSI, 2017:
+  
+    J\. Chrin *Channel Access from Cython (and other Cython use cases)* `EPICS Collaboration Meeting 2017.`_
+  
+    .. _`EPICS Collaboration Meeting 2017.`: https://indico.esss.lu.se/event/889/contributions/7038/attachments/6800/9762/Cython_EpicsTM_Oct2017_Barcelona.pdf#page=32
+
+* Model Server:
+
+    P\. Schnizer, J\. Bengtsson, T\. Birke, L\. Ramirez *Online Model Developments for BESSY II and MLS* `IPAC 2021 WEPAB317.`_
+    
+    .. _`IPAC 2021 WEPAB317.`: http://dx.doi.org/10.18429/JACoW-IPAC2021-WEPAB317
+
+* Use Cases:
+
+    J\. Bengtsson, T\. Nicholls, W\. Rogers *A CAD Tool for Linear Optics Design: A Use Case Approach* `IPAC 2021 MOPAB047.`_
+    
+    .. _`IPAC 2021 MOPAB047.`: http://dx.doi.org/10.18429/JACoW-IPAC2021-MOPAB047
+    
+    J\. Bengtsson, M\. Davidsaver *An Accelerator Physics - Software Engineering Collaboration* `EPICS Collaboration Meeting EPICS 2016.`_
+    
+    .. _`EPICS Collaboration Meeting EPICS 2016.`: https://indico.esss.lu.se/event/507/contributions/3830
+
+* Beam Dynamics Model:
+
+    J\. Bengtsson, W\. Rogers, T\. Nicholls *A CAD Tool for Linear Optics Design: A Controls Engineer's Geometric Approach to Hill's Equation* `10.48550/arXiv.2109.15066 (2021).`_
+    
+    .. _`10.48550/arXiv.2109.15066 (2021).`: http://dx.doi.org/10.48550/arXiv.2109.15066
+
+
 Thor
 ====
 
@@ -279,23 +319,3 @@ Contributions
     A\. Terebilo *Accelerator Toolbox for MATLAB* `SLAC-PUB-8732 (2001).`_
   
     .. _`SLAC-PUB-8732 (2001).`: http://www-public.slac.stanford.edu/sciDoc/docMeta.aspx?slacPubNumber=SLAC-PUB-8732
-
-* Python interface::
-
-  Initial demo/prototype & guidelines by Jan Chrin, PSI, 2017:
-  
-    J\. Chrin *Channel Access from Cython (and other Cython use cases)* `EPICS Collaboration Meeting 2017.`_
-  
-    .. _`EPICS Collaboration Meeting 2017.`: https://indico.esss.lu.se/event/889/contributions/7038/attachments/6800/9762/Cython_EpicsTM_Oct2017_Barcelona.pdf
-
-  Guidelines & automated regression testing bootstrapped by Pierre Schnizer:
-  
-    P\. Schnizer, W\. Khail, J\. Bengtsson *Small Talk on AT* `IPAC 2022.`_
-    
-    .. _`IPAC 2022.`: https://accelconf.web.cern.ch/ipac2022/papers/tupost029.pdf
-
-* Beam Dynamics Model:
-
-    J\. Bengtsson, W\. Rogers, T\. Nicholls *A CAD Tool for Linear Optics Design: A Controls Engineer's Geometric Approach to Hill's Equation* `10.48550/arXiv.2109.15066 (2021).`_
-    
-    .. _`10.48550/arXiv.2109.15066 (2021).`: http://dx.doi.org/10.48550/arXiv.2109.15066
