@@ -238,7 +238,7 @@ extended to support *operator overloading*.
 Tracy-2
 =======
 
-The symplectic integrator for realistic modeling of magnetic lattices for ring-based synchrotrons was initially implemented as a *Pascal module/beam dynamics software library*, by the author 1990, as an *on-line model* to guide the ALS commissioning. In particular, care was taken for the software architecture & resulting records/modules – akin to *objects* although not explicitly supported by the artificial language grammar – to reflect the structure of the mathematical objects describing the underlying *beam dynamics model*.
+The symplectic integrator for realistic modeling of magnetic lattices for ring-based synchrotrons was initially implemented as a *Pascal module/beam dynamics software library*, by the author 1990, as an *on-line model* to guide the ALS commissioning. In particular, care was taken for the software architecture & resulting records/modules – akin to *objects* although not explicitly supported by the artificial language grammar – to reflect the *structure of the mathematical objects* describing the underlying *beam dynamics model*.
 
 Hence, the code was also benchmarked & calibrated as part of the ALS commissioning:
 
@@ -272,7 +272,7 @@ E.g. by not having figured out how to pass records (structures in C) as function
   
   .. _`J. Math. Phys. 31 (1990).`: http://dx.doi.org/10.1063/1.528795%7D
 
-Hence, the one thing we did find useful for a realistic on-line model – having already implemented an on-line model as a sci fellow for LEAR, CERN, in the late 1980s and before that having worked as a teaching assistent at the dept. of Software Engineering, Lund Inst. of Tech. while pursuing a MsSci EE – and adopted for the ALS on-line model. Was the implementation of the beam dynamics model as an extension of the *standard procedures & functions* for the *Pascal-S compiler/interpreter* by N. Wirth (implemented/coded in it's native grammar); architected as a Pascal software library/module:
+Hence, the one thing we did find useful for a realistic on-line model – having already implemented an on-line model as a sci fellow for LEAR, CERN, in the late 1980s and before that having worked as a teaching assistent at the dept. of Software Engineering, Lund Inst. of Tech. while pursuing a MsSci EE – and adopted for the ALS on-line model. Was the implementation of the beam dynamics model as an *extension of the standard procedures & functions* for the *Pascal-S compiler/interpreter* by N. Wirth (implemented/coded in it's native grammar); architected as a Pascal software library/module:
   
   M\. Rees, D\. Robson *Practical Compiling with Pascal-S* `(Addison-Wesley, 1988).`_
   
