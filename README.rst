@@ -250,25 +250,23 @@ The resulting C code, see below, has now been re-factored by introducing a C++ *
 
 Remark: Although the entire *beam dynamics model* had to be replaced & the model/code/"approach" re-architectured & structured – for a reusable approach – as a *Pascal beam dynamics libary* (standard practise in software engineering), the code was named *Tracy-2*, i.e., inspired by the, somewhat archaic demo/prototype/concept *Tracy*:
 
-(E.g. by not having figured out how to pass records as function/procedure variables – vs. scalars only – for the beam dynamics library, the API was rather poor/sloppy; i.e., not scalable/ill suitable to cope with complexity)
-
   H\. Nishimura "*TRACY, A Tool for Accelerator Design and Analysis*" `EPAC 1988.`_
 
   .. _`EPAC 1988.`: https://accelconf.web.cern.ch/e88/PDF/EPAC1988_0803.PDF
 
-  for which the *beam dynamics model* was based on the *linearized quadratic Hamiltonian*:
+for which the *beam dynamics model* was based on the *linearized quadratic Hamiltonian*:
 
   .. image:: images/H_2.png
 
-for *linear optics design*; i.e., for a *bare lattice* with *mid-plane symmetry*.
+for *linear optics design*. I.e., for a *bare lattice* with *mid-plane symmetry*.
 
-E.g. by not having figured out how to pass records as function/procedure variables – vs. scalars only – for the beam dynamics library, the API was rather poor/sloppy; i.e., not scalable/ill suited to cope with the complexity of a realistic model. As expressed by Forest in the title of:
+E.g. by not having figured out how to pass records (structures in C) as function/procedure variables – vs. scalars only – for the beam dynamics library. The API was quite poor/sloppy. I.e., not scalable/ill suited to cope with the complexity of a realistic model. As expressed by Forest in the title of:
 
   E\. Forest *A Hamiltonian-Free Description of Single Particle Dynamics for Hopelessly Complex Periodic Systems* `J. Math. Phys. 31 (1990).`_
   
   .. _`J. Math. Phys. 31 (1990).`: http://dx.doi.org/10.1063/1.528795%7D
 
-Hence, the one thing we did find useful for a realistic on-line model – having already implemented one as a sci fellow for LEAR, CERN, in the late 1980s and before that having worked as a teaching assistent at the dept. Software Engineering, Lund Inst. of Tech. while pursuing a MsSci EE – and, hence, adopted for the ALS on-line model. Was the implementation of the beam dynamics model as an extension of the *standard procedures & functions* for the *Pascal-S compiler/interpreter* by N. Wirth; architected as a Pascal software library/module:
+Hence, the one thing we did find useful for a realistic on-line model – having already implemented an on-line model as a sci fellow for LEAR, CERN, in the late 1980s and before that having worked as a teaching assistent at the dept. of Software Engineering, Lund Inst. of Tech. while pursuing a MsSci EE – and adopted for the ALS on-line model. Was the implementation of the beam dynamics model as an extension of the *standard procedures & functions* for the *Pascal-S compiler/interpreter* by N. Wirth (implemented/coded in it's native grammar); architected as a Pascal software library/module:
   
   M\. Rees, D\. Robson *Practical Compiling with Pascal-S* `(Addison-Wesley, 1988).`_
   
