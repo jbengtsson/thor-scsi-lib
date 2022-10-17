@@ -288,13 +288,13 @@ Hence, the one thing we did find useful for a realistic on-line model – having
   
   *Pascal-P6* https://sourceforge.net/projects/pascal-p6.
 
-In other words, since 1994 our *toolkit* – althout it based on one model: the *Hamiltonian for a charged particle in an external electromagnetic field* & a *symplectic intrator* for *magnetic multipoles* & *insertion devices* for ditto:
+In other words, since 1994 our *toolkit* – althout it based on one model – the *Hamiltonian for a charged particle in an external electromagnetic field* & a *symplectic intrator* for *magnetic multipoles* & *insertion devices* for ditto:
 
   J\. Bengtsson *The Sextupole Scheme for the Swiss Light Source (SLS): An Analytic Approach* `SLS 9/97 (1997).`_
   
   .. _`SLS 9/97 (1997).`: https://ados.web.psi.ch/slsnotes/sls0997.pdf
 
-It was implemented as two different codes: Tracy-2 & Thor. Hence, eventually, these were consolidated by using C++ *templates* for the *polymorphich number object* and *beam line class*; aka Tracy-2,3.
+It was implemented as two different codes: *Tracy-2 & Thor*. Hence, eventually, these were consolidated by using C++ *templates* for the *polymorphich number object* and *beam line class*; aka Tracy-2,3.
 
 Contributions
 -------------
