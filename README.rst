@@ -266,7 +266,7 @@ E.g. by not having figured out how to pass records as function/procedure variabl
 
   E\. Forest *A Hamiltonian-Free Description of Single Particle Dynamics for Hopelessly Complex Periodic Systems* `J. Math. Phys. 31 (1990).`_
   
-  .. _`J. Math. Phys. 31 (1990)`: http://dx.doi.org/10.1063/1.528795%7D
+  .. _`J. Math. Phys. 31 (1990).`: http://dx.doi.org/10.1063/1.528795%7D
 
 Hence, the one thing we did find useful for a realistic on-line model – having already implemented one as a sci fellow for LEAR, CERN, in the late 1980s and before that having worked as a teaching assistent at the dept. Software Engineering, Lund Inst. of Tech. while pursuing a MsSci EE – and, hence, adopted for the ALS on-line model. Was the implementation of the beam dynamics model as an extension of the *standard procedures & functions* for the *Pascal-S compiler/interpreter* by N. Wirth; architected as a Pascal software library/module:
   
