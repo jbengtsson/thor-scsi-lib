@@ -266,7 +266,7 @@ for which the *beam dynamics model* was based on the *linearized quadratic Hamil
 
 for *linear optics design*. I.e., for a *bare lattice* with *mid-plane symmetry*.
 
-E.g. by not having figured out how to pass records (structures in C) as function/procedure variables – vs. scalars only – for the beam dynamics library. The API was quite poor/sloppy. I.e., not scalable/ill suited to cope with the complexity of a realistic model. As expressed by Forest in the title of:
+E.g. by not having figured out/mastered how to pass records (structures in C) as function/procedure variables – vs. scalars only – for the Pascal-S compiler/interpreter to the beam dynamics library. The API was rather poor/sloppy. I.e., not scalable and thus ill suited to cope with the complexity of a realistic model. As expressed by Forest in the title of:
 
   E\. Forest *A Hamiltonian-Free Description of Single Particle Dynamics for Hopelessly Complex Periodic Systems* `J. Math. Phys. 31 (1990).`_
   
