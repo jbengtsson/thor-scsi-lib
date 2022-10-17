@@ -264,7 +264,8 @@ public:
 			       // const thor_scsi::core::Field2DInterpolation& intp,
 			       const T BxoBrho, const T ByoBrho,
 			       const double L,
-			       const double h_bend, const double h_ref, ss_vect<T> &ps);
+			       const double h_bend, const double h_ref,
+			       const ss_vect<T> &ps0, ss_vect<T> &ps);
 
 }// namespace thor_scsi::elements
 #endif /*  _THOR_SCSI_CORE_ELEMENTS_HELPERS_H_  */

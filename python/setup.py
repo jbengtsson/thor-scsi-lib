@@ -6,6 +6,7 @@
 
 import logging
 import os
+import sys
 from setuptools import setup
 from distutils.file_util import copy_file
 
@@ -33,11 +34,12 @@ d = gsl_conf.gsl_config()
 prefix = os.path.abspath(os.path.join(os.path.dirname(__name__), os.pardir, os.pardir))
 prefix = os.path.abspath(os.path.join(os.environ["HOME"], ".local"))
 prefix = os.path.abspath(os.path.join(os.path.dirname(__name__), os.pardir, "local"))
+# prefix = os.path.abspath(os.path.join(os.environ["HOME"], ".local"))
 
 boost_prefix="/usr/include"
 if sys.platform == "darwin":
     boost_prefix=os.path.join("/", "usr", "local", "include")
-    
+
 from pybind11.setup_helpers import ParallelCompile
 
 # Optional multithreaded build
@@ -57,7 +59,7 @@ ext_modules = [
     Pybind11Extension(
         "flame",
         ["src/flame.cc"],
-        include_dirs=[d["gsl_include"]] + [os.path.join(prefix, "include")] + [boost_prefix],
+        include_dirs=[d["gsl_include"]] + [os.path.join(prefix, "include"), boost_prefix],
         library_dirs=([os.path.join(prefix, "lib")]),
         libraries=["flame", "flame_core"],
     ),
@@ -73,7 +75,7 @@ ext_modules = [
                 "src/accelerator.cc",
             ]
         ),
-        include_dirs=[d["gsl_include"]] + [os.path.join(prefix, "include")] + [boost_prefix],
+        include_dirs=[d["gsl_include"]] + [os.path.join(prefix, "include"), boost_prefix],
         # define_macros=[("_GLIBCXX_DEBUG", 1), ("_GLIBCXX_DEBUG_PEDANTIC", 1)],
         library_dirs=(
             [os.path.join(prefix, "lib")]

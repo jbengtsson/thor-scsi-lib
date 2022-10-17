@@ -21,6 +21,7 @@
 #include <tps/tps_type.h>
 #include <tps/tpsa_lin.h>
 #include <iostream>
+#include <iomanip>
 #include <exception>
 
 // #include <stdlib.h>
@@ -255,8 +256,37 @@ ss_vect<tps> mattomap(const arma::mat &mat)
 
   for (int j = 0; j < nv_tps; j++) {
     for (int k = 0; k < nv_tps; k++)
-      put_m_ij(map, j+1, k+1, mat(j, k));
-    if (j < nv_tps) put_m_ij(map, j+1, 0, mat(j, tps_n-1));
+	put_m_ij(map, j+1, k+1, mat(j, k));
+  }
+  return map;
+}
+
+
+ss_vect<tps> vecmattomap(const arma::mat &mat)
+{
+  int          n_rows;
+  ss_vect<tps> map;
+
+  bool prt_debug = false;
+
+  n_rows = mat.n_rows;
+  if (prt_debug) {
+    std::cout << std::scientific << std::setprecision(5)
+	      << "\nvecmattomap:\nn_rows = " << n_rows<< "\nmat:\n"
+	      << std::setw(13) << mat << "\n";
+  }
+  for (int j = 0; j < n_rows; j++) {
+    for (int k = 0; k < nv_tps; k++)
+      if (j < nv_tps)
+	put_m_ij(map, j+1, k+1, mat(j, k));
+      else
+	put_m_ij(map, k+1, 0, mat(j, k));
+  }
+  if (prt_debug) {
+    std::cout << std::scientific << std::setprecision(5)
+	      << "map.cst:\n" << std::setw(13) << map.cst() << "\n"
+	      << std::scientific << std::setprecision(5)
+	      << "map:\n" << std::setw(13) << map << "\n";
   }
   return map;
 }

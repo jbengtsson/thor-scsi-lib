@@ -21,8 +21,8 @@ namespace tse = thor_scsi::elements;
 
 namespace thor_scsi::elements {
 	template<typename T>
-	void edge_focus(const tsc::ConfigType &conf, const double irho, const double phi /* in degrees */,
-			    const double gap, ss_vect<T> &ps);
+	void edge_focus(const tsc::ConfigType &conf, const double irho,
+			const double phi /* in degrees */, const double gap, ss_vect<T> &ps);
 
 	template<typename T>
 	void p_rot(const tsc::ConfigType &conf, double phi, ss_vect<T> &ps);
@@ -45,8 +45,8 @@ namespace thor_scsi::elements {
  *
  */
 template<typename T>
-void tse::edge_focus(const tsc::ConfigType &conf, const double irho, const double phi /* in degrees */,
-		    const double gap, ss_vect<T> &ps)
+void tse::edge_focus(const tsc::ConfigType &conf, const double irho,
+		     const double phi /* in degrees */, const double gap, ss_vect<T> &ps)
 {
   ps[px_] += irho*tan(degtorad(phi))*ps[x_];
   if (!conf.dip_edge_fudge) {
@@ -189,8 +189,9 @@ void tse::FieldKick::FieldKickForthOrder::computeIntegrationSteps(void)
 	this->splitIntegrationStep(dL, &this->dL1, &this->dL2, &this->dkL1, &this->dkL2);
 }
 
-void tse::FieldKick::FieldKickForthOrder::splitIntegrationStep(const double dL, double *dL1, double *dL2,
-						    double *dkL1, double *dkL2) const
+void tse::FieldKick::FieldKickForthOrder::
+splitIntegrationStep(const double dL, double *dL1, double *dL2, double *dkL1, double *dkL2)
+  const
 {
 	const int n_steps = this->getNumberOfIntegrationSteps();
 
@@ -226,13 +227,16 @@ void tse::FieldKick::FieldKickForthOrder::splitIntegrationStep(const double dL, 
  *
  */
 template<typename T>
-inline void tse::FieldKick::FieldKickForthOrder::_localPass(tsc::ConfigType &conf, ss_vect<T> &ps)
+inline void tse::FieldKick::FieldKickForthOrder::
+_localPass(tsc::ConfigType &conf, ss_vect<T> &ps)
 {
 
 
 	double dL = 0.0, h_ref = 0.0;
 	auto PN = this->integration_steps;
 	const double length = parent->getLength(), Pirho = parent->getCurvature();
+
+	THOR_SCSI_LOG(DEBUG) << "\n  name = " << parent->name << " N = " << PN << "\n";
 
 	if (!conf.Cart_Bend) {
 		// Polar coordinates.
@@ -260,7 +264,8 @@ inline void tse::FieldKick::FieldKickForthOrder::_localPass(tsc::ConfigType &con
 	// std::cout.flush();
 
 	auto intp_shared_ptr = this->getFieldInterpolator();
-	// std::cout << "intp_shared_ptr  " << intp_shared_ptr << " count " << intp_shared_ptr.use_count() << std::endl;
+	// std::cout << "intp_shared_ptr  " << intp_shared_ptr << " count "
+	// 	  << intp_shared_ptr.use_count() << std::endl;
 
 	auto& t_intp = *(intp_shared_ptr.get());
 	auto* parent = this->parent;
@@ -269,13 +274,20 @@ inline void tse::FieldKick::FieldKickForthOrder::_localPass(tsc::ConfigType &con
 		throw std::logic_error("parent was nullptr");
 	}
 	// computeRadiationIntegralsStart
+#ifdef SYNCHROTRON_INTEGRALS
 	parent->_synchrotronIntegralsInit(conf, ps);
+#endif /* SYNCHROTRON_INTEGRALS */
 
 	/* 4th order integration steps  */
 	for (int seg = 1; seg <= PN; seg++) {
 		const int rad_step = (seg - 1) * 4;
 		// computeRadiationIntegralsStep
+		THOR_SCSI_LOG(DEBUG) << "\n  seg = " << seg << "\n";
+
+
+#ifdef SYNCHROTRON_INTEGRALS
 		parent->_synchrotronIntegralsStep(conf, ps, rad_step);
+#endif /* SYNCHROTRON_INTEGRALS */
 
 		drift_pass(conf, dL1, ps);
 		// call to radiation before thin kick
@@ -286,7 +298,9 @@ inline void tse::FieldKick::FieldKickForthOrder::_localPass(tsc::ConfigType &con
 
 		// why this step only here
 		// computeRadiationIntegralsStep
+#ifdef SYNCHROTRON_INTEGRALS
 		parent->_synchrotronIntegralsStep(conf, ps, rad_step + 1);
+#endif /* SYNCHROTRON_INTEGRALS */
 
 		drift_pass(conf, dL2, ps);
 		// call to radiation before thin kick
@@ -294,9 +308,13 @@ inline void tse::FieldKick::FieldKickForthOrder::_localPass(tsc::ConfigType &con
 		drift_pass(conf, dL1, ps);
 
 		// computeRadiationIntegralsStep
+#ifdef SYNCHROTRON_INTEGRALS
 		parent->_synchrotronIntegralsStep(conf, ps, rad_step + 2);
+#endif /* SYNCHROTRON_INTEGRALS */
 	}
+#ifdef SYNCHROTRON_INTEGRALS
 	parent->_synchrotronIntegralsFinish(conf, ps);
+#endif /* SYNCHROTRON_INTEGRALS */
 }
 
 
@@ -352,7 +370,8 @@ void tse::FieldKick::show(std::ostream& strm, const int level) const
 		     << " entrance " << this->getEntranceAngle()
 		     << " exit " << this->getExitAngle();
 		strm << " curvature " << this->getCurvature()
-		     << " has curvature " << std::boolalpha << this->assumingCurvedTrajectory();
+		     << " has curvature " << std::boolalpha
+		     << this->assumingCurvedTrajectory();
 		if(!this->intp){
 			strm << " NO interpolater set!";
 		} else {
@@ -380,7 +399,8 @@ void tse::FieldKick::_quadFringe(thor_scsi::core::ConfigType &conf, ss_vect<T> &
 
 	std::cerr << __FILE__ << "::" << __FUNCTION__ << "@" << __LINE__
 		  << "Code not yet tested " << std::endl;
-	throw thor_scsi::NotImplemented("Quadrupole fringe implemented but code not yet tested");
+	throw thor_scsi::NotImplemented("Quadrupole fringe implemented but code not yet" \
+					" tested");
 
 	auto muls = std::dynamic_pointer_cast<tsc::TwoDimensionalMultipoles>(this->getFieldInterpolator());
 	if(!muls){
@@ -404,14 +424,16 @@ void tse::FieldKick::_quadFringe(thor_scsi::core::ConfigType &conf, ss_vect<T> &
 }
 
 template<typename T>
-inline void tse::FieldKick::thinKickAndRadiate(const thor_scsi::core::ConfigType &conf,
-					   const thor_scsi::core::Field2DInterpolation& intp,
-					   const double L, const double h_bend, const double h_ref,
-					   ss_vect<T> &ps)
+inline void tse::FieldKick::
+thinKickAndRadiate(const thor_scsi::core::ConfigType &conf,
+		   const thor_scsi::core::Field2DInterpolation& intp, const double L,
+		   const double h_bend, const double h_ref, ss_vect<T> &ps)
 {
 
 	// const auto x = ps[x_];
 	// const auto y = ps[y_];
+	///< todo: use clone instead!
+	const ss_vect<T> ps0 = ps;
  	T BxoBrho, ByoBrho;
 
 	//intp.field(ps[x_], ps[y_], &BxoBrho, &ByoBrho);
@@ -420,16 +442,20 @@ inline void tse::FieldKick::thinKickAndRadiate(const thor_scsi::core::ConfigType
 		throw std::logic_error("Interpolation object not set!");
 	}
 	*/
+
+	THOR_SCSI_LOG(DEBUG) << "\n  thinKickAndRadiate ->: ps = " << ps << "\n";
+
 	intp.field(ps[x_], ps[y_], &BxoBrho, &ByoBrho);
 
 	auto rad = this->getRadiationDelegate();
 	if(rad){
-		THOR_SCSI_LOG(DEBUG) <<  "Delegating to computing radiation" << " \n";
+		THOR_SCSI_LOG(DEBUG) <<  "\nComputing radiation:\n";
 		std::array<T, 3> B = {BxoBrho, ByoBrho + h_bend, 0};
 		rad->radiate(conf, ps, L, h_ref, B);
 	}
-	tse::thin_kick(conf, BxoBrho, ByoBrho, L, h_bend, h_ref, ps);
+	tse::thin_kick(conf, BxoBrho, ByoBrho, L, h_bend, h_ref, ps0, ps);
 
+	THOR_SCSI_LOG(DEBUG) << "\n<- thinKickAndRadiate: ps = " << ps << "\n";
 }
 
 /**
@@ -510,7 +536,9 @@ void tse::FieldKick::_localPass(tsc::ConfigType &conf, ss_vect<T> &ps)
 
 	}
 
+#ifdef SYNCHROTRON_INTEGRALS
 	this->_synchrotronIntegralsInit(conf, ps);
+#endif /* SYNCHROTRON_INTEGRALS */
 
 	// Set start
 

@@ -136,54 +136,68 @@ class PyRadDelKick: public tse::RadiationDelegateKick {
 class PyField2DInterpolation: public tsc::Field2DInterpolation{
 public:
 	using tsc::Field2DInterpolation::Field2DInterpolation;
+
 #if 0
-	void field_py(const py::array<double, 2> pos, std::array<double, 2> field) const {
+	void field_py(const std::array<double, 2> pos, std::array<double, 2> field) const {
 		PYBIND11_OVERRIDE_PURE(void, PyField2DInterpolationIntermediate, field_py, pos, field);
 	}
-	virtual void field_py(const py::array_t<double> &t_pos, py::array_t<double> &t_field) const {
+#endif
+	// clang now accepting this code
+	// needs to be tested if it still works as expected (data can be returned)
+	// originally made for non linear kicker
+	// this way it does not work ....
+	virtual void field_py    (const py::array_t<double>  &t_pos, py::array_t<double> &t_field) const {
 		PYBIND11_OVERRIDE(void, PyField2DInterpolation, field_py, t_pos, t_field);
 	}
-	virtual void field_py(const py::array_t<tps> &t_pos, py::array_t<tps> &t_field) const {
-		PYBIND11_OVERRIDE(void, PyField2DInterpolation, field_py, t_pos, t_field);
+	virtual void field_py    (const std::array<tps    , 2>  &t_pos, std::array<tps   , 2> &t_field) const {
+		PYBIND11_OVERRIDE(void, PyField2DInterpolation, field_py   , t_pos, t_field);
 	}
-	virtual void gradient_py(const std::array<double, 2> &t_pos, std::array<double, 2> &t_field) const {
+#if 0
+	virtual void gradient_py (const std::array<double&, 2> &t_pos, std::array<double& , 2> &t_field) const {
 		PYBIND11_OVERRIDE(void, PyField2DInterpolation, gradient_py, t_pos, t_field);
 	}
-	virtual void gradient_py(const std::array<tps, 2> &t_pos, std::array<tps, 2> &t_field) const {
+	virtual void gradient_py (const std::array<tps&   , 2>  &t_pos, std::array<tps&   , 2> &t_field) const {
 		PYBIND11_OVERRIDE(void, PyField2DInterpolation, gradient_py, t_pos, t_field);
 	}
-	virtual void gradient_py(const std::array<tps, 2> &t_pos, std::array<double, 2> &t_field) const {
+	virtual void gradient_py (const std::array<tps&   , 2>  &t_pos, std::array<double&, 2> &t_field) const {
 		PYBIND11_OVERRIDE(void, PyField2DInterpolation, gradient_py, t_pos, t_field);
 	}
 #endif
 
 private:
-	template<typename T>
-	inline void _field(const T x, const T y, T *Bx, T *By) const {
-		auto pos = py::array_t<T>({2}), t_field = py::array_t<T>({2});
-		T *pos_p = static_cast<T *>(pos.request().ptr),
-			*field_p = static_cast<T *>(t_field.request().ptr);
-		pos_p[0] = x;
-		pos_p[1] = y;
-#if 0
-		this->field_py(pos, t_field);
-#endif
-		*Bx = field_p[0];
-		*By = field_p[1];
 
-		std::cerr << "By " << *By <<  ",  Bx" <<  *Bx << std::endl;
-	}
 	template<typename T>
 	inline void _gradient(const T x, const T y, T *Bx, T *By) const {
+		throw std::runtime_error("Not implemented");
 	}
 
 public:
 	void field(const double x, const double y, double *Bx, double *By) const override {
-		this->_field(x, y, Bx, By);
+		auto pos = py::array_t<double>{2};
+		auto t_field = py::array_t<double>{2};
+		double *pos_p = static_cast<double *>(pos.request().ptr),
+			*field_p = static_cast<double *>(t_field.request().ptr);
+		pos_p[0] = x;
+		pos_p[1] = y;
+		this->field_py(pos, t_field);
+		*Bx = field_p[0];
+		*By = field_p[1];
+
+		/*
+		std::cerr << "x " << x << ", y "
+			  << ", By " << *By <<  ",  Bx " <<  *Bx
+			  << std::endl;
+		*/
 	}
+
 	void field(const tps x, const tps y, tps *Bx, tps *By) const override {
 		//this->_field(x, y, Bx, By);
-		throw std::runtime_error("field with tps to python not implemented");
+		std::array<tps, 2> pos = {x, y};
+		std::array<tps, 2> t_field;
+		this->field_py(pos, t_field);
+		*Bx = t_field[0];
+		*By = t_field[1];
+
 	}
 	void gradient(const double x, const double y, double *Gx, double *Gy) const  override{
 		PYBIND11_OVERRIDE_PURE(void, tsc::Field2DInterpolation, gradient, x, y, Gx, Gy);
