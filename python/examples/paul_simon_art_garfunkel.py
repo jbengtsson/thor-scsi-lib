@@ -72,10 +72,10 @@ def plt_twiss(ds):
     gr1.plot(ds.s, ds.twiss.sel(plane="y", par="beta"), label=r"$\beta_y$")
     gr1.legend()
 
-    gr2.set_xlabel("s [m]")
-    gr2.set_ylabel(r"$\eta_x [m]")
+    # gr2.set_xlabel("s [m]")
+    # gr2.set_ylabel(r"$\eta_x [m]")
     # gr2.plot(ds.s, ds.twiss.sel(plane="x", par="eta"), label=r"$\eta_x$")
-    gr2.legend()
+    # gr2.legend()
 
     plt.show()
 
@@ -103,14 +103,14 @@ def set_db_2L_fam(acc, fam_name, db_2L):
 
 def compute_dnu_db_2L(acc, calc_config, fam_name, db_2L):
     dof = 2
-    set_db_2L_fam(acc, fam_name, db_2L)
-    M = map2numpy(compute_map(acc, calc_config))[:6, :6]
-    nup = compute_nu_symp(dof, M)
-    set_db_2L_fam(acc, fam_name, -2e0*db_2L)
-    M = map2numpy(compute_map(acc, calc_config))[:6, :6]
-    num = compute_nu_symp(dof, M)
-    dnu_db_2 = (nup-num)/(2e0*db_2L)
-    set_db_2L_fam(acc, fam_name, db_2L)
+    nu = np.zeros([2, dof])
+    for k in range(-1, 2, 2):
+        set_db_2L_fam(acc, fam_name, k*db_2L)
+        M = map2numpy(compute_map(acc, calc_config))[:6, :6]
+        set_db_2L_fam(acc, fam_name, -k*db_2L)
+        nu[(k+1)//2] = compute_nu_symp(dof, M)
+
+    dnu_db_2 = (nu[1]-nu[0])/(2e0*db_2L)
     return dnu_db_2
 
 
@@ -138,6 +138,8 @@ acc = accelerator_from_config(t_file)
 calc_config = tslib.ConfigType()
 
 cav = acc.find("cav", 0)
+cav.setHarmonicNumber(327)
+cav.setPhase(180.0)
 print("\nCavity", repr(cav))
 print(f"""\nCavity info:
   f [MHz] {1e-6*cav.getFrequency()}
@@ -179,7 +181,7 @@ calc_config.Cavity_on = False
 
 # Tweak the tune using all the quadrupole families.
 b_2 = ['q1', 'q2', 'q3', 'q4', 'mb3h', 'qfh', 'mqfh']
-tweak_nu(b_2, 0.005, -0.005)
+tweak_nu(b_2, 0.00501, -0.00670)
 M = map2numpy(compute_map(acc, calc_config))[:6, :6]
 nu = compute_nu_symp(dof, M)
 print("\nM:\n" + mat2txt(M))
