@@ -290,7 +290,7 @@ Hence, the one thing we did find useful for a realistic on-line model – having
 
 In other words, since 1994 our *toolkit* – althout it based on one model: the *Hamiltonian for a charged particle in an external electromagnetic field* & a *symplectic intrator* for *magnetic multipoles* & *insertion devices* for ditto:
 
-  J. Bengtsson *The Sextupole Scheme for the Swiss Light Source (SLS): An Analytic Approach* `SLS 9/97 (1997).`_
+  J\. Bengtsson *The Sextupole Scheme for the Swiss Light Source (SLS): An Analytic Approach* `SLS 9/97 (1997).`_
   
   .. _`SLS 9/97 (1997).`: https://ados.web.psi.ch/slsnotes/sls0997.pdf
 
