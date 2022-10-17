@@ -253,7 +253,7 @@ Contributions
 
     .. _`SLAC-PUB-8732 (2001).`: http://www-public.slac.stanford.edu/sciDoc/docMeta.aspx?slacPubNumber=SLAC-PUB-8732
     
-but missing/ignoring/avoiding the Truncated Power Series Algebra approach (TPSA) for the computation of the corresponding global lattice properties; e.g., linear optics functions, radiation effects, etc. I.e., a prehistoric approach (1980s).
+but missing/ignoring/avoiding the *Truncated Power Series Algebra approach* (TPSA) for the computation of the corresponding global lattice properties; e.g., linear optics functions, radiation effects, etc. I.e., a prehistoric approach (1980s).
 
 * Python interface::
 
