@@ -51,7 +51,6 @@ References
 * Python interface:
 
   Guidelines & automated regression testing bootstrapped by Pierre Schnizer:
-<<<<<<< HEAD
 
     P\. Schnizer, W\. Khail, J\. Bengtsson *Small Talk on AT* `IPAC 2022 TUPOST029.`_
 
@@ -61,63 +60,32 @@ References
 
     J\. Chrin *Channel Access from Cython (and other Cython use cases)* `EPICS Collaboration Meeting 2017.`_
 
-=======
-
-    P\. Schnizer, W\. Khail, J\. Bengtsson *Small Talk on AT* `IPAC 2022 TUPOST029.`_
-
-    .. _`IPAC 2022 TUPOST029.`: http://dx.doi.org/10.18429/JACoW-IPAC2022-TUPOST029
-
-  Initial demo/prototype & guidelines by Jan Chrin, PSI, 2017:
-
-    J\. Chrin *Channel Access from Cython (and other Cython use cases)* `EPICS Collaboration Meeting 2017.`_
-
->>>>>>> radiate
     .. _`EPICS Collaboration Meeting 2017.`: https://indico.esss.lu.se/event/889/contributions/7038/attachments/6800/9762/Cython_EpicsTM_Oct2017_Barcelona.pdf#page=32
 
 * Model Server:
 
     P\. Schnizer, J\. Bengtsson, T\. Birke, L\. Ramirez *Online Model Developments for BESSY II and MLS* `IPAC 2021 WEPAB317.`_
-<<<<<<< HEAD
 
-=======
-
->>>>>>> radiate
     .. _`IPAC 2021 WEPAB317.`: http://dx.doi.org/10.18429/JACoW-IPAC2021-WEPAB317
 
 * Use Cases:
 
     J\. Bengtsson, T\. Nicholls, W\. Rogers *A CAD Tool for Linear Optics Design: A Use Case Approach* `IPAC 2021 MOPAB047.`_
-<<<<<<< HEAD
 
     .. _`IPAC 2021 MOPAB047.`: http://dx.doi.org/10.18429/JACoW-IPAC2021-MOPAB047
 
     J\. Bengtsson, M\. Davidsaver *An Accelerator Physics - Software Engineering Collaboration* `EPICS Collaboration Meeting EPICS 2016.`_
 
-=======
-
-    .. _`IPAC 2021 MOPAB047.`: http://dx.doi.org/10.18429/JACoW-IPAC2021-MOPAB047
-
-    J\. Bengtsson, M\. Davidsaver *An Accelerator Physics - Software Engineering Collaboration* `EPICS Collaboration Meeting EPICS 2016.`_
-
->>>>>>> radiate
     .. _`EPICS Collaboration Meeting EPICS 2016.`: https://indico.esss.lu.se/event/507/contributions/3830
 
 * Beam Dynamics Model:
 
     J\. Bengtsson, W\. Rogers, T\. Nicholls *A CAD Tool for Linear Optics Design: A Controls Engineer's Geometric Approach to Hill's Equation* `10.48550/arXiv.2109.15066 (2021).`_
-<<<<<<< HEAD
 
     .. _`10.48550/arXiv.2109.15066 (2021).`: http://dx.doi.org/10.48550/arXiv.2109.15066
 
     J\. Bengtsson, D\. Briggs, G\. Portmann *A Linear Control Theory Analysis of Transverse Coherent Bunch Instabilities Feedback Systems (The Control Theory Approach to Hill's Equation)* `CBP Tech Note-026, PEP-II AP Note 28-93 (1993).`_
 
-=======
-
-    .. _`10.48550/arXiv.2109.15066 (2021).`: http://dx.doi.org/10.48550/arXiv.2109.15066
-
-    J\. Bengtsson, D\. Briggs, G\. Portmann *A Linear Control Theory Analysis of Transverse Coherent Bunch Instabilities Feedback Systems (The Control Theory Approach to Hill's Equation)* `CBP Tech Note-026, PEP-II AP Note 28-93 (1993).`_
-
->>>>>>> radiate
     .. _`CBP Tech Note-026, PEP-II AP Note 28-93 (1993).`: https://escholarship.org/uc/item/64s937sf
 
 
@@ -126,7 +94,6 @@ Thor
 
 Author: Johan Bengtsson
 
-<<<<<<< HEAD
 Having implemented *DA-Pascal* in the early 1990s, see ref. below, based on a *recursive* approach – i.e., *automatable* by an *universal Turing machine* (any modern *digital computer*) – for *nonlinear beam dynamics analysis* by utilizing *Lie series* on a *beam line object*; *automated* to arbitrary order by  *Truncated Power Serias Algegra* (TPSA). In particular, implemented as a *Pascal module/software library* by extending the *standard procedures & functions* for N. Wirth's *Pascal-S compiler/interpreter*. Hence, in 1994, rather than participating in a "talkshop" for the *CLASSIC collaboration*, e.g.:
 
   C\. Iselin *Experience with the Classic Library in MAD Version 9* `ICAP 1998.`_
@@ -134,9 +101,6 @@ Having implemented *DA-Pascal* in the early 1990s, see ref. below, based on a *r
   .. _`ICAP 1998.`: https://www.slac.stanford.edu/xorg/icap98/papers/F-Tu02.pdf
 
 We instead prototyped & implemented a C++ *beam line class* based on a *polymorphic number object with reference counting*. For which the latter mechanism provides for *garbage collection*; since it is not provided by C++, vs. e.g. *Lisp* & *Smalltalk*.
-=======
-Having implemented *DA-Pascal* in the early 1990s, see ref. below, based on a *recursive* approach – i.e., *automatable* by an *universal Turing machine* (any modern *digital computer*) – for *nonlinear beam dynamics analysis* by utilizing *Lie series* on a *beam line object*; *automated* to arbitrary order by  *Truncated Power Serias Algegra* (TPSA). In particular, implemented as a *Pascal module/software library* by extending the *standard procedures & functions* for N. Wirth's *Pascal-S compiler/interpreter*. Hence, in 1994, rather than participating in a "talkshop" for the *CLASSIC collaboration*, we instead prototyped & implemented a C++ *beam line class* based on a *polymorphic number object with reference counting*. For which the latter mechism provides for *garbage collection*; since it is not provided by C++, vs. e.g. *Lisp* & *Smalltalk*.
->>>>>>> radiate
 
 To quote Forest in:
 
@@ -213,11 +177,7 @@ extended to support *operator overloading*.
 Tracy-2
 =======
 
-<<<<<<< HEAD
 The symplectic integrator for realistic modeling of magnetic lattices for ring-based synchrotrons was initially implemented as a *Pascal module/beam dynamics software library*, by the author 1990, as an *on-line model* to guide the ALS commissioning. In particular, care was taken for the software architecture & resulting records/modules – akin to *objects* although not explicitly supported by the artificial language grammar – to reflect the *structure of the mathematical objects* describing the underlying *beam dynamics model*.
-=======
-The symplectic integrator for realistic modeling of magnetic lattices for ring-based synchrotrons was initially implemented as a *Pascal module/beam dynamics software library*, by the author 1990, as an *on-line model* to guide the ALS commissioning. In particular, care was taken for the software architecture & resulting records/modules – akin to *objects* although not explicitly supported by the artificial language grammar – to reflect the structure of the mathematical objects describing the underlying *beam dynamics model*.
->>>>>>> radiate
 
 Hence, the code was also benchmarked & calibrated as part of the ALS commissioning:
 
@@ -225,24 +185,13 @@ Hence, the code was also benchmarked & calibrated as part of the ALS commissioni
 
   .. _`EPAC 1994.`: https://accelconf.web.cern.ch/e94/PDF/EPAC1994_1021.PDF
 
-<<<<<<< HEAD
 Malika Meddahi was a postdoc at ALS who did her thesis at CERN (for which she received the *Prix Daniel Guinier* in France that year):
-=======
-Malika Meddahi was a postdoc at ALS who did her thesis at SPS, CERN (for which she received the *Prix Daniel Guinier* in France that year):
->>>>>>> radiate
 
   *Effets faisceau-faisceau dans le collisionneur protons-antiprotons du SPS* `CERN-SL-91-30-BI (1991)`_
 
   .. _`CERN-SL-91-30-BI (1991)`: http://cds.cern.ch/record/223301)
 
 The resulting C code, see below, has now been re-factored by introducing a C++ *beam line class*; i.e., to recover the transparency & simplicity of the original *beam dynamics model*.
-<<<<<<< HEAD
-=======
-
-Remark: Although the entire *beam dynamics model* had to be replaced & the model/code/"approach" re-architectured & structured – for a reusable approach – as a *Pascal beam dynamics libary* (standard practise in software engineering), the code was named *Tracy-2*, i.e., inspired by the, somewhat archaic demo/prototype/concept *Tracy*:
-
-(E.g. by not having figured out how to pass records as function/procedure variables – vs. scalars only – for the beam dynamics library, the API was rather poor/sloppy; i.e., not scalable/ill suitable to cope with complexity)
->>>>>>> radiate
 
 Remark: Although the entire *beam dynamics model* had to be replaced & the model/code/"approach" re-architectured & structured – for a reusable approach – as a *Pascal beam dynamics libary* (standard practise in software engineering), the code was named *Tracy-2*, i.e., inspired by the, somewhat archaic demo/prototype/concept *Tracy*:
 
@@ -254,7 +203,6 @@ for which the *beam dynamics model* was based on the *linearized quadratic Hamil
 
   .. image:: images/H_2.png
 
-<<<<<<< HEAD
 for *linear optics design*. I.e., for a *bare lattice* with *mid-plane symmetry*.
 
 E.g. by not having figured out/mastered how to pass records (structures in C) as function/procedure variables – vs. scalars only – for the Pascal-S compiler/interpreter to the beam dynamics library. The API was rather poor/sloppy. I.e., not scalable and thus ill suited to cope with the complexity of a realistic model. As expressed by Forest in the title of:
@@ -271,22 +219,11 @@ Hence, the one thing we did find useful for a realistic on-line model – having
 
   S\. Pemberton, M\. Daniels *The P4 Compiler and Interpreter* `(1982).`_
 
-=======
-for *linear optics design*; i.e., for a *bare lattice* with *mid-plane symmetry*. Hence, the one thing we did find useful – for a realistic on-line model, having already implemented one as a sci fellow for LEAR, CERN, in the late 1980s – and adopted for the ALS on-line model was the implementation of the beam dynamics model as an extension of the *standard procedures & functions* for the *Pascal-S compiler/interpreter* by N. Wirth; architected as a Pascal software library/module:
-
-  M\. Rees, D\. Robson *Practical Compiling with Pascal-S* `(Addison-Wesley, 1988).`_
-
-  .. _`(Addison-Wesley, 1988).`: https://books.google.com/books?id=hLomAAAAMAAJ
-
-  S\. Pemberton, M\. Daniels *The P4 Compiler and Interpreter* `(1982).`_
-
->>>>>>> radiate
   .. _`(1982).`: https://homepages.cwi.nl/~steven/pascal/book/pascalimplementation.html
 
   N\. Wirth *PASCAL-S: A Subset and its Implementation* `Institut für Informatik, ETH, Zürich (1975).`_
 
   .. _`Institut für Informatik, ETH, Zürich (1975).`: http://pascal.hansotten.com/uploads/pascals/PASCAL-S%20A%20subset%20and%20its%20Implementation%20012.pdf
-<<<<<<< HEAD
 
   *Pascal-P6* https://sourceforge.net/projects/pascal-p6.
 
@@ -297,12 +234,6 @@ In other words, since 1994 our *toolkit* – althout it based on one model – t
   .. _`SLS 9/97 (1997).`: https://ados.web.psi.ch/slsnotes/sls0997.pdf
 
 It was implemented as two different codes: *Tracy-2 & Thor*. Hence, eventually, these were consolidated by using C++ *templates* for the *polymorphich number object* and *beam line class*; aka Tracy-2,3.
-=======
-
-  *Pascal-P6* https://sourceforge.net/projects/pascal-p6.
-
-In other words, since 1994 our *toolkit* – althout it based on one model: the *Hamiltonian for a charged particle in an external electromagnetic field* & a *symplectic intrator* for *magnetic multipoles* & *insertion devices* for ditto – it was implemented as two different codes: Tracy-2 & Thor. Hence, eventually, these were consolidated by using C++ *templates* for the *polymorphich number object* and *beam line class*; aka Tracy-2,3.
->>>>>>> radiate
 
 Contributions
 -------------
@@ -339,29 +270,3 @@ Contributions
     A\. Terebilo *Accelerator Toolbox for MATLAB* `SLAC-PUB-8732 (2001).`_
 
     .. _`SLAC-PUB-8732 (2001).`: http://www-public.slac.stanford.edu/sciDoc/docMeta.aspx?slacPubNumber=SLAC-PUB-8732
-<<<<<<< HEAD
-=======
-
-but missing/ignoring/avoiding the *Truncated Power Series Algebra approach* (TPSA) for the computation of the corresponding global lattice properties; e.g., linear optics functions, radiation effects, etc. I.e., a prehistoric approach (1980s).
-
-* Python interface::
-
-  Initial demo/prototype & guidelines by Jan Chrin, PSI, 2017:
-
-    J\. Chrin *Channel Access from Cython (and other Cython use cases)* `EPICS Collaboration Meeting 2017.`_
-
-    .. _`EPICS Collaboration Meeting 2017.`: https://indico.esss.lu.se/event/889/contributions/7038/attachments/6800/9762/Cython_EpicsTM_Oct2017_Barcelona.pdf
-
-  Guidelines & automated regression testing bootstrapped by Pierre Schnizer:
-
-    P\. Schnizer, W\. Khail, J\. Bengtsson *Small Talk on AT* `IPAC 2022.`_
-
-    .. _`IPAC 2022.`: https://accelconf.web.cern.ch/ipac2022/papers/tupost029.pdf
-
-
-* Beam Dynamics Model:
-
-    J\. Bengtsson, W\. Rogers, T\. Nicholls *A CAD Tool for Linear Optics Design: A Controls Engineer's Geometric Approach to Hill's Equation* `10.48550/arXiv.2109.15066 (2021).`_
-
-    .. _`10.48550/arXiv.2109.15066 (2021).`: http://dx.doi.org/10.48550/arXiv.2109.15066
->>>>>>> radiate
