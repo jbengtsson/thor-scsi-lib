@@ -24,14 +24,31 @@ namespace thor_scsi {
 
 	class Accelerator : public thor_scsi::core::Machine {
 	public:
+
 		/**
-		 * @brief inititsialse accelerator with a configuration file
+		 * @brief initalise accelerator with a configuration file
+		 *
+		 * @param conf configuration for the accelerator (aka parsed lattise file)
+		 * @param add_marker_at_start add a marker at the start of the lattice
+		 *
+		 * @warning consider if the marker is not better added manually to the lattice
+		 *          file
 		 */
-		Accelerator(const Config &conf);
+		Accelerator(const Config &conf, bool add_marker_at_start=false);
+
 		/**
 		 * @brief inititsialse accelerator with a list of elements
+		 *
+		 * @param elements list of elements
+		 * @param add_marker_at_start add a marker at the start of the lattice
+		 *
+		 * @warning consider if the marker is not better added manually to the lattice
+		 *          file
+		 * @param conf
 		 */
-	        Accelerator(const std::vector<std::shared_ptr<thor_scsi::core::ElemType>>& elements);
+	        Accelerator(const std::vector<std::shared_ptr<thor_scsi::core::ElemType>>& elements,
+			    bool add_marker_at_start=false);
+
 		/** @brief pass the given state through the machine
 		 *
 		 * @param conf Configuration of calculation
@@ -39,23 +56,36 @@ namespace thor_scsi {
 		 * @param start The index of the first Element the state will pass through
 		 * @param max The maximum number of elements through which the state will be passed
 		 * @param tracy compatible indexing: start to refer to first element with 1 instead of zero
+		 * @param add_marker_at_start add a marker at the start of the lattice
+		 *
 		 * @returns last element passed (check config type for lost plane)
+		 *
 		 * @throws std::exception sub-classes for various errors.
 		 *         If an exception is thrown then the state of S is undefined.
 		 *
 		 * @warning  tracy compatible indexing will be removed soon as it is not consistent with global indexing
+		 *           consider if the marker is not better added manually to the lattice
+		 *           file
+		 *
 		 * @todo proper interface design!
 		 */
-		template <typename T>
-		int _propagate(thor_scsi::core::ConfigType& conf, ss_vect<T>& ps, size_t start, int max, size_t n_turns, bool tracy_compatible_indexing);
-
 		int propagate(thor_scsi::core::ConfigType&, ss_vect_tps &ps,
 			      size_t start=0,
 			      int max_elements=std::numeric_limits<int>::max(), size_t n_turns=1, bool tracy_compatible_indexing = false);
 		int propagate(thor_scsi::core::ConfigType&, ss_vect_dbl &ps,
 			       size_t start=0,
 			      int max_elements=std::numeric_limits<int>::max(), size_t n_turns=1, bool tracy_compatible_indexing = false);
-
+	private:
+		/**
+		 * @brief add a marker at the beginning of the lattice if the lattice does not start with one
+		 *
+		 * @warning rather than using this feature consider adding it manually to the lattice file.
+		 *          this here is plagued to add more and more in evolved processing lines
+		 */
+		void addMarkerAtStartIfRequired(void);
+		void addMarkerAtStart(void);
+		template <typename T>
+		int _propagate(thor_scsi::core::ConfigType& conf, ss_vect<T>& ps, size_t start, int max, size_t n_turns, bool tracy_compatible_indexing);
 	};
   }
 #endif // _THOR_SCSI_STD_MACHINE_ACCELERATOR_
