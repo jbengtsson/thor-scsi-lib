@@ -2,6 +2,7 @@
 #include <thor_scsi/elements/radiation_delegate.h>
 #include <thor_scsi/elements/element_helpers.h>
 #include <thor_scsi/elements/utils.h>
+#include <iomanip>
 
 namespace ts = thor_scsi;
 namespace tsc = thor_scsi::core;
@@ -9,165 +10,184 @@ namespace tse = thor_scsi::elements;
 
 std::string tse::RadiationDelegateInterface::repr(void) const
 {
-	std::stringstream strm;
-	strm << *this;
-	return strm.str();
+  std::stringstream strm;
+  strm << *this;
+  return strm.str();
 }
 std::string tse::RadiationDelegateKickInterface::repr(void) const
 {
-	std::stringstream strm;
-	strm << *this;
-	return strm.str();
+  std::stringstream strm;
+  strm << *this;
+  return strm.str();
 }
 
 template <typename T>
 inline void tse::RadiationDelegate::computeAndStoreCurlyH(const ss_vect<T> &ps)
 {
-	this->curly_dH_x = is_tps<T>::get_curly_H(ps);
+  this->curly_dH_x = is_tps<T>::get_curly_H(ps);
 }
 template <typename T>
-inline void tse::RadiationDelegate::_view(const tsc::ElemType& elem, const ss_vect<T> &ps, const enum tsc::ObservedState state, const int cnt)
+inline void tse::
+RadiationDelegate::_view(const tsc::ElemType& elem, const ss_vect<T> &ps,
+			 const enum tsc::ObservedState state, const int cnt)
 {
-	switch(state){
-	case tsc::ObservedState::start:
-		this->reset();
-		this->delegator_name = elem.name;
-		this->delegator_index = elem.index;
-		return;
-		break;
-	case tsc::ObservedState::end:
-		this->computeAndStoreCurlyH(ps);
-		return;
-		break;
-	default:
-		return;
-	}
+  switch(state){
+  case tsc::ObservedState::start:
+    this->reset();
+    this->delegator_name = elem.name;
+    this->delegator_index = elem.index;
+    return;
+    break;
+  case tsc::ObservedState::end:
+    this->computeAndStoreCurlyH(ps);
+    return;
+    break;
+  default:
+    return;
+  }
 }
 
 //template
 //void tse::RadiationDelegate::_view(const tsc::ElemType& elem, const ss_vect<double> &ps, const enum tsc::ObservedState state, const int cnt);
 //template
 //void tse::RadiationDelegate::_view(const tsc::ElemType& elem, const ss_vect<tps> &ps, const enum tsc::ObservedState state, const int cnt);
-void tse::RadiationDelegate::view(const tsc::ElemType& elem, const ss_vect<double> &ps, const enum tsc::ObservedState state, const int cnt){
-	_view(elem, ps, state, cnt);
+void tse::RadiationDelegate::
+view(const tsc::ElemType& elem, const ss_vect<double> &ps,
+     const enum tsc::ObservedState state, const int cnt) {
+  _view(elem, ps, state, cnt);
 }
-void tse::RadiationDelegate::view(const tsc::ElemType& elem, const ss_vect<tps> &ps, const enum tsc::ObservedState state, const int cnt){
-	_view(elem, ps, state, cnt);
-}
-
-template<typename T>
-inline void tse::RadiationDelegateKick::synchrotronIntegralsFinish(const FieldKickAPI &kick, const ss_vect<T> &ps)
-{
-
-	// Why only when cavities are not on ?
-	// Needs A^-1.
-	const T x = ps[x_], y = ps[y_];
-	double Gx = NAN, Gy = NAN;
-	kick.getFieldInterpolator()->gradient(x, y, &Gx, &Gy);
-	const double PL = kick.getLength();
-	const double Pirho = kick.getCurvature();
-	const auto PN = kick.getNumberOfIntegrationSteps();
-	this->curly_dH_x /= 6e0*PN;
-	this->dI[1] += PL*is_tps<tps>::get_dI_eta(ps)*Pirho;
-	this->dI[2] += PL*sqr(Pirho);
-	this->dI[3] += PL*fabs(tse::cube(Pirho));
-	this->dI[4] *=
-		PL*Pirho*(sqr(Pirho)+2e0*Gy)
-		/(6e0*PN);
-	this->dI[5] += PL*fabs(tse::cube(Pirho))*curly_dH_x;
-
+void tse::RadiationDelegate::
+view(const tsc::ElemType& elem, const ss_vect<tps> &ps,
+     const enum tsc::ObservedState state, const int cnt) {
+  _view(elem, ps, state, cnt);
 }
 
 template<typename T>
-inline void tse::RadiationDelegateKick::synchrotronIntegralsStep(const ss_vect<T> &ps)
+inline void tse::RadiationDelegateKick::
+synchrotronIntegralsFinish(const FieldKickAPI &kick, const ss_vect<T> &ps)
 {
-	// Needs A^-1.
-	this->curly_dH_x += is_tps<tps>::get_curly_H(ps);
-	this->dI[4] += is_tps<tps>::get_dI_eta(ps);
+
+  // Why only when cavities are not on ?
+  // Needs A^-1.
+  const T x = ps[x_], y = ps[y_];
+  double Gx = NAN, Gy = NAN;
+  kick.getFieldInterpolator()->gradient(x, y, &Gx, &Gy);
+  const double PL = kick.getLength();
+  const double Pirho = kick.getCurvature();
+  const auto PN = kick.getNumberOfIntegrationSteps();
+  this->curly_dH_x /= 6e0*PN;
+  this->dI[1] += PL*is_tps<tps>::get_dI_eta(ps)*Pirho;
+  this->dI[2] += PL*sqr(Pirho);
+  this->dI[3] += PL*fabs(tse::cube(Pirho));
+  this->dI[4] *=
+    PL*Pirho*(sqr(Pirho)+2e0*Gy)
+    /(6e0*PN);
+  this->dI[5] += PL*fabs(tse::cube(Pirho))*curly_dH_x;
+
+}
+
+template<typename T>
+inline void tse::RadiationDelegateKick::
+synchrotronIntegralsStep(const ss_vect<T> &ps)
+{
+  // Needs A^-1.
+  this->curly_dH_x += is_tps<tps>::get_curly_H(ps);
+  this->dI[4] += is_tps<tps>::get_dI_eta(ps);
 }
 
 
-inline void tse::RadiationDelegateKick::diffusion(const tps &B2_perp,  const tps &ds, const tps &p_s0,  const ss_vect<tps> &A)
+inline void tse::RadiationDelegateKick::
+diffusion(const tps &B2_perp,  const tps &ds, const tps &p_s0,
+	  const ss_vect<tps> &A)
 {
 
-	int          j;
-	double       B_66;
-	ss_vect<tps> A_inv;
+  int          j;
+  double       B_66, dD[3];
+  ss_vect<tps> A_inv;
 
-	if (B2_perp > 0e0){
-		// Fix move function to RadiationDelegateKick
-		auto q_fluct = this->q_fluct;
+  if (B2_perp > 0e0){
+    // Fix move function to RadiationDelegateKick
+    auto q_fluct = this->q_fluct;
 
-		B_66 = (q_fluct*pow(B2_perp.cst(), 1.5)*pow(p_s0, 4)*ds).cst();
-		A_inv = Inv(A);
-		// D_11 = D_22 = curly_H_x,y * B_66 / 2,
-		// curly_H_x,y = eta_Fl^2 + etap_Fl^2
-		for (j = 0; j < 3; j++){
-			this->D_rad[j] +=
-				(sqr(A_inv[j*2][delta_])+sqr(A_inv[j*2+1][delta_]))*B_66/2e0;
-		}
-	}
+    B_66 = (q_fluct*pow(B2_perp.cst(), 1.5)*pow(p_s0, 4)*ds).cst();
+    THOR_SCSI_LOG(DEBUG)
+      << std::scientific << std::setprecision(5)
+      << "\ndiffusion:\n  B_66 = " << B_66;
+    A_inv = Inv(A);
+    // D_11 = D_22 = curly_H_x,y * B_66 / 2,
+    // curly_H_x,y = eta_Fl^2 + etap_Fl^2
+    for (j = 0; j < 3; ++j){
+      dD[j] = (sqr(A_inv[j*2][delta_])+sqr(A_inv[j*2+1][delta_]))*B_66/2e0;
+      this->D_rad[j] += dD[j];
+    }
+    THOR_SCSI_LOG(DEBUG)
+      << std::scientific << std::setprecision(5)
+      << "\n  dD =" << std::setw(13) << dD[X_] << std::setw(13) << dD[Y_]
+      << std::setw(13) << dD[Z_];
+  }
 }
 
 
 template <typename T>
-inline void tse::RadiationDelegateKick::_view(const FieldKickAPI& kick, const ss_vect<T> &ps, const enum tsc::ObservedState state, const int cnt)
+inline void tse::RadiationDelegateKick::
+_view(const FieldKickAPI& kick, const ss_vect<T> &ps,
+      const enum tsc::ObservedState state, const int cnt)
 {
-	switch(state){
-	case tsc::ObservedState::start:
-		this->reset();
-		this->delegator_name = kick.name;
-		this->delegator_index = kick.index;
-		return;
-		break;
-	case tsc::ObservedState::event:
-		this->synchrotronIntegralsStep(ps);
-		return;
-		break;
-	case tsc::ObservedState::end:
-		this->synchrotronIntegralsFinish(kick, ps);
-		return;
-		break;
-	default:
-		return;
-	}
+  switch(state){
+  case tsc::ObservedState::start:
+    this->reset();
+    this->delegator_name = kick.name;
+    this->delegator_index = kick.index;
+    return;
+    break;
+  case tsc::ObservedState::event:
+    this->synchrotronIntegralsStep(ps);
+    return;
+    break;
+  case tsc::ObservedState::end:
+    this->synchrotronIntegralsFinish(kick, ps);
+    return;
+    break;
+  default:
+    return;
+  }
 }
 void tse::RadiationDelegate::show(std::ostream& strm, int level) const{
-	strm << "RadiationDelegate for "
-	     << this->delegator_name << "["<< this->delegator_index << "]"
-	     <<" curly_dH_x " << this->curly_dH_x;
+  strm << "RadiationDelegate for "
+       << this->delegator_name << "["<< this->delegator_index << "]"
+       <<" curly_dH_x " << this->curly_dH_x;
 }
 
 void tse::RadiationDelegateKick::show(std::ostream& strm, int level) const
 {
-	strm << "RadiationDelegateKick for "
-	     << this->delegator_name << "["<< this->delegator_index << "]"
-	     << ":, energy " << this->getEnergy()
-	     << " curly_dH_x " << this->curly_dH_x;
-	strm << " synchotron integrals = [";
-	int cnt = 0;
-	for(auto dIe : this->dI){
-		if(cnt){
-			strm << ", ";
-		}
-		strm << dIe;
-		++cnt;
-	}
-	strm << "]";
-	strm << " diffusion = [";
-	cnt = 0;
-	for(auto c : this->D_rad){
-		if(cnt){
-			strm << ", ";
-		}
-		strm << c;
-		++cnt;
-	}
-	strm << "]";
+  strm << "RadiationDelegateKick for "
+       << this->delegator_name << "["<< this->delegator_index << "]"
+       << ":, energy " << this->getEnergy()
+       << " curly_dH_x " << this->curly_dH_x;
+  strm << " synchotron integrals = [";
+  int cnt = 0;
+  for(auto dIe : this->dI){
+    if(cnt){
+      strm << ", ";
+    }
+    strm << dIe;
+    ++cnt;
+  }
+  strm << "]";
+  strm << " diffusion = [";
+  cnt = 0;
+  for(auto c : this->D_rad){
+    if(cnt){
+      strm << ", ";
+    }
+    strm << c;
+    ++cnt;
+  }
+  strm << "]";
 }
 
 /**
- * @brief computing the square of the B field perpendicular to the arc of circle
+ * @brief Computing |B^2_perp| perpendicular to the arc of circle.
  */
 template<typename T>
 void get_B2(const double h_ref, const std::array<T,3> B, const ss_vect<T> &xp,
@@ -179,27 +199,24 @@ void get_B2(const double h_ref, const std::array<T,3> B, const ss_vect<T> &xp,
   xn = 1e0/sqrt(sqr(1e0+xp[x_]*h_ref)+sqr(xp[px_])+sqr(xp[py_]));
   e[X_] = xp[px_]*xn; e[Y_] = xp[py_]*xn; e[Z_] = (1e0+xp[x_]*h_ref)*xn;
 
-  THOR_SCSI_LOG(DEBUG) << "'Field contribution' h_ref " << h_ref
-		       << " B (" <<  B[X_] << ", " << B[Y_] << ", " << B[Z_] <<")"
-		       << "  unit vectors in the plane 'e' (" <<  e[X_] << ", " << e[Y_] << ", " << e[Z_] <<")"
-		       << " normal to the arc of circle ' xn'" << xn;
-
-
   // left-handed coordinate system
   B2_perp =
     sqr(B[Y_]*e[Z_]-B[Z_]*e[Y_]) + sqr(B[X_]*e[Y_]-B[Y_]*e[X_])
     + sqr(B[Z_]*e[X_]-B[X_]*e[Z_]);
 
-  THOR_SCSI_LOG(DEBUG) << "Square of the magnetic field prependicular to the arc of circle 'B2_perp'"
-		       << B2_perp;
-//  B2_par = sqr(B[X_]*e[X_]+B[Y_]*e[Y_]+B[Z_]*e[Z_]);
+  THOR_SCSI_LOG(DEBUG)
+    << "\nB2_perp = " << B2_perp;
+  //  B2_par = sqr(B[X_]*e[X_]+B[Y_]*e[Y_]+B[Z_]*e[Z_]);
 }
 
 void tse::RadiationDelegateKick::setEnergy(const double val)
 {
-	this->energy =val;
-	this->q_fluct = C_q*C_gamma/(M_PI*sqr(1e-9*m_e))*pow(this->energy, 5e0);
+  // energy in eV
+  this->energy = val;
 
+  // the equation below is for GeV
+  auto energy_GeV = this->energy / 1e9;
+  this->q_fluct = C_q*C_gamma/(M_PI*sqr(m_e))*pow(this->energy, 5e0);
 }
 
 template<typename T>
@@ -207,124 +224,150 @@ static inline double ps_coor_ref_value(T coor);
 
 static inline double ps_coor_ref_value(double coor)
 {
-	return coor;
+  return coor;
 }
 static inline double ps_coor_ref_value(tps coor)
 {
-	return coor.cst();
+  return coor.cst();
 }
 template<typename T>
 static bool check_ps_finite(ss_vect<T> ps, const double max_val = 1e3)
 {
-	bool check_ps_finite = true;
-	for(int i=0; i < nv_tps; ++i){
-		double ref_val = ps_coor_ref_value(ps[i]);
-		check_ps_finite &= std::isfinite(ref_val);
-		check_ps_finite &= (std::abs(ref_val) < max_val);
-	}
-	return check_ps_finite;
+  bool check_ps_finite = true;
+  for(int i=0; i < nv_tps; ++i){
+    double ref_val = ps_coor_ref_value(ps[i]);
+    check_ps_finite &= std::isfinite(ref_val);
+    check_ps_finite &= (std::abs(ref_val) < max_val);
+  }
+  return check_ps_finite;
 }
 
 
 template<typename T>
-void tse::RadiationDelegateKick::radiate(const thor_scsi::core::ConfigType &conf, ss_vect<T> &ps, const double L,
-				     const double h_ref, const std::array<T, 3> B)
+void tse::RadiationDelegateKick::
+radiate(const thor_scsi::core::ConfigType &conf, ss_vect<T> &ps, const double L,
+	const double h_ref, const std::array<T, 3> B)
 {
-	// M. Sands "The Physics of Electron Storage Rings" SLAC-121, p. 98.
-	// ddelta/d(ds) = -C_gamma*E_0^3*(1+delta)^2*(B_perp/(Brho))^2/(2*pi)
-	T  p_s0, p_s1, ds, B2_perp = 0e0, B2_par = 0e0;
-	ss_vect<T> cs;
-	ss_vect<T> ps_save = ps;
+  // M. Sands "The Physics of Electron Storage Rings" SLAC-121, p. 98.
+  // ddelta/d(ds) = -C_gamma*E_0^3*(1+delta)^2*(B_perp/(Brho))^2/(2*pi)
+  T  p_s0, p_s1, ds, B2_perp = 0e0, B2_par = 0e0;
+  ss_vect<T> ps_save = ps;
 
-	THOR_SCSI_LOG(INFO) << "Radiate called for "<<  this->delegator_name << "\n";
-	THOR_SCSI_LOG(INFO) <<  "ps\n" <<  ps;
+  const bool radiation = conf.radiation;
+  const bool compute_diffusion = conf.emittance;
+  if(!radiation){
+    return;
+  }
+#if 0
+  THOR_SCSI_LOG(DEBUG)
+    << "\nRadiate ->:\n" << this->delegator_name << "\n" << "  ps = "
+    << ps;
+#else
+  THOR_SCSI_LOG(DEBUG) << "\nRadiate ->:\n" << "\n" << "  ps = " << ps;
+#endif
 
-	if(!check_ps_finite(ps)){
-		std::stringstream strm;
-		strm <<  "ps unbound "; ps.show(strm, 10, false);
-		std::cerr << strm.str() << std::endl;
-		THOR_SCSI_LOG(ERROR) <<  "Check radiaton" << strm.str() << " \n";
-		throw ts::PhysicsViolation(strm.str());
-	}
+  if(!check_ps_finite(ps)){
+    std::stringstream strm;
+    strm <<  "ps unbound "; ps.show(strm, 10, false);
+    std::cerr << strm.str() << std::endl;
+    THOR_SCSI_LOG(ERROR) <<  "Check radiaton" << strm.str()
+			 << " \n";
+    throw ts::PhysicsViolation(strm.str());
+  }
 
-	// Large ring: x' and y' unchanged.
-	p_s0 = get_p_s(conf, ps); cs = ps; cs[px_] /= p_s0; cs[py_] /= p_s0;
+  // longitudinal component
+  p_s0 = get_p_s(conf, ps);
+  ss_vect<T> cs = ps; //.clone()
+  // Large ring: x' and y' unchanged.
+  cs[px_] /= p_s0;
+  cs[py_] /= p_s0;
 
-	if(!check_ps_finite(cs)){
-		std::stringstream strm;
-		strm << "ps unbound "; ps.show(strm, 10, false);
-		std::cerr << strm.str() << std::endl;
-		THOR_SCSI_LOG(ERROR) <<  "Check radiaton" << strm.str() << " \n";
+  if(!check_ps_finite(cs)){
+    std::stringstream strm;
+    strm << "ps unbound "; ps.show(strm, 10, false);
+    std::cerr << strm.str() << std::endl;
+    THOR_SCSI_LOG(ERROR)
+      <<  "Check radiaton" << strm.str() << " \n";
 
-		throw ts::PhysicsViolation(strm.str());
-	}
+    throw ts::PhysicsViolation(strm.str());
+  }
 
-	// H = -p_s => ds = H*L.
-	ds = (1e0+cs[x_]*h_ref+(sqr(cs[px_])+sqr(cs[py_]))/2e0)*L;
-	THOR_SCSI_LOG(DEBUG) << "'Field contribution' h_ref " << h_ref
-		  << " B (" <<  B[X_] << ", " << B[Y_] << ", " << B[Z_] <<")"
-		  << " cs "  << cs;
-	get_B2(h_ref, B, cs, B2_perp, B2_par);
+  // H = -p_s => ds = H*L.
+  ds = (1e0+cs[x_]*h_ref+(sqr(cs[px_])+sqr(cs[py_]))/2e0)*L;
+  THOR_SCSI_LOG(DEBUG)
+    << "\nField contribution:\n  h_ref " << h_ref << " B (" << B[X_]
+    << ", " << B[Y_] << ", " << B[Z_] <<")" << " cs "  << cs;
+  // compute perpendicular to curvature
+  get_B2(h_ref, B, cs, B2_perp, B2_par);
 
-	//THOR_SCSI_LOG(INFO)
-	// Test on legacy code
-	// Should be 1 at the end ...
-	const double energy_scale = 1e0;
-	const double cl_rad = C_gamma * cube(this->energy * energy_scale) / (2e0 * M_PI);
+  //THOR_SCSI_LOG(INFO)
+  // Test on legacy code
+  // Should be 1 at the end ...
+  const double energy_scale = 1e0;
+  const double cl_rad =
+    C_gamma * cube(this->energy * energy_scale) / (2e0 * M_PI);
 
-	const bool radiation = true;
-	if (radiation) {
-		THOR_SCSI_LOG(INFO) <<  "Actually doing radiaton computing"  << " \n";
-		THOR_SCSI_LOG(INFO) << "cl_rad " << cl_rad <<"\n";
-		THOR_SCSI_LOG(INFO) << "B2 perpendicular\n\t" << B2_perp <<"\n";
-		THOR_SCSI_LOG(INFO) << "element length " << L <<"\n";
-		THOR_SCSI_LOG(INFO) << "energy " << this->getEnergy() <<"\n";
+  if (radiation) {
+    ps[delta_] -= cl_rad*sqr(p_s0)*B2_perp*ds;
+    p_s1 = get_p_s(conf, ps);
+    ps[px_] = cs[px_]*p_s1;
+    ps[py_] = cs[py_]*p_s1;
+  }
+  if(!check_ps_finite(cs)){
+    std::stringstream strm;
+    strm << "ps unbound "; ps.show(strm, 10, false);
+    std::cerr << strm.str() << std::endl;
+    THOR_SCSI_LOG(ERROR) <<  "Check radiaton" << strm.str()
+			 << " \n";
 
-		ps[delta_] -= cl_rad*sqr(p_s0)*B2_perp*ds;
-		p_s1 = get_p_s(conf, ps); ps[px_] = cs[px_]*p_s1; ps[py_] = cs[py_]*p_s1;
-	}
-	if(!check_ps_finite(cs)){
-		std::stringstream strm;
-		strm << "ps unbound "; ps.show(strm, 10, false);
-		std::cerr << strm.str() << std::endl;
-		THOR_SCSI_LOG(ERROR) <<  "Check radiaton" << strm.str() << " \n";
+    throw ts::PhysicsViolation(strm.str());
+  }
 
-		throw ts::PhysicsViolation(strm.str());
-	}
+  if (compute_diffusion){
+    this->diffusion(B2_perp, ds, p_s0, cs);
+  }
 
-	if (this->compute_diffusion){
-		this->diffusion(B2_perp, ds, p_s0, cs);
-	}
+  if(!check_ps_finite(cs)){
+    std::stringstream strm;
+    strm << "ps unbound "; ps.show(strm, 10, false);
+    std::cerr << strm.str() << std::endl;
+    THOR_SCSI_LOG(ERROR) <<  "Check radiaton" << strm.str() << " \n";
 
-	if(!check_ps_finite(cs)){
-		std::stringstream strm;
-		strm << "ps unbound "; ps.show(strm, 10, false);
-		std::cerr << strm.str() << std::endl;
-		THOR_SCSI_LOG(ERROR) <<  "Check radiaton" << strm.str() << " \n";
-
-		throw ts::PhysicsViolation(strm.str());
-	}
-	ss_vect<T> dPs = ps - ps_save;
-	THOR_SCSI_LOG(INFO) <<  "Radiation effect on ps\n" << dPs << " \n";
-
+    throw ts::PhysicsViolation(strm.str());
+  }
+#if 0
+  THOR_SCSI_LOG(DEBUG)
+    << "\nRadiate ->:\n" << this->delegator_name << "\n" << "  ps = "
+    << ps;
+#else
+  THOR_SCSI_LOG(DEBUG) << "\nRadiate ->:\n" << "\n" << "  ps = " << ps;
+#endif
 }
 
 
 
 //template void tse::RadiationDelegate::_view(const FieldKickAPI& kick, const ss_vect<double> &ps, const enum tsc::ObservedState state, const int cnt);
 //template void tse::RadiationDelegate::_view(const FieldKickAPI& kick, const ss_vect<tps> &ps, const enum tsc::ObservedState state, const int cnt);
-void tse::RadiationDelegateKick::view(const FieldKickAPI& kick, const ss_vect<double> &ps, const enum ObservedState state, const int cnt)
+void tse::RadiationDelegateKick::
+view(const FieldKickAPI& kick, const ss_vect<double> &ps,
+     const enum ObservedState state, const int cnt)
 {
-	std::cout<< "Rad Del.view(ss_vect<double>) for element " << kick.name << "at index" << kick.index << std::endl;
-	_view(kick, ps, state, cnt);
+  std::cout << "Rad Del.view(ss_vect<double>) for element "
+	    << kick.name << "at index" << kick.index << std::endl;
+  _view(kick, ps, state, cnt);
 }
 
-void tse::RadiationDelegateKick::view(const FieldKickAPI& kick, const ss_vect<tps> &ps, const enum ObservedState state, const int cnt)
+void tse::RadiationDelegateKick::
+view(const FieldKickAPI& kick, const ss_vect<tps> &ps,
+     const enum ObservedState state, const int cnt)
 {
-	std::cout<< "Rad Del.view(ss_vect<tps>) for element " << kick.name << "at index" << kick.index << std::endl;
-	_view(kick, ps, state, cnt);
+  std::cout<< "Rad Del.view(ss_vect<tps>) for element " << kick.name
+	   << "at index" << kick.index << std::endl;
+  _view(kick, ps, state, cnt);
 }
-template void tse::RadiationDelegateKick::radiate(const thor_scsi::core::ConfigType &conf, ss_vect<double> &ps, const double L,
-				     const double h_ref, const std::array<double, 3> B);
-template void tse::RadiationDelegateKick::radiate(const thor_scsi::core::ConfigType &conf, ss_vect<tps> &ps, const double L,
-				     const double h_ref, const std::array<tps, 3> B);
+template void tse::RadiationDelegateKick::
+radiate(const thor_scsi::core::ConfigType &conf, ss_vect<double> &ps,
+	const double L, const double h_ref, const std::array<double, 3> B);
+template void tse::RadiationDelegateKick::
+radiate(const thor_scsi::core::ConfigType &conf, ss_vect<tps> &ps,
+	const double L, const double h_ref, const std::array<tps, 3> B);

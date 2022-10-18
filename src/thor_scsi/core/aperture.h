@@ -22,6 +22,7 @@ namespace thor_scsi::core {
 		 * Rationale: support optimisations that want to get the beam
 		 * close to a boundary. For centre, optimisation use the center
 		 */
+		virtual ~TwoDimensionalAperture(void) {};
 		virtual double isWithin(const double x, const double y) const = 0;
 		virtual void show(std::ostream&, int level) const;
 

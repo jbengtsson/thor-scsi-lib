@@ -8,6 +8,7 @@
 namespace thor_scsi::elements {
 	class RadiationDelegate: public  RadiationDelegateInterface{
 	public:
+		~RadiationDelegate(void){};
 		inline RadiationDelegate(void){
 			this->reset();
 		}
@@ -23,7 +24,7 @@ namespace thor_scsi::elements {
 		 * Used for computing curly_dHx
 		 */
 		virtual void view(const ElemType& kick, const ss_vect<double> &ps, const enum ObservedState state, const int cnt) override;
-		virtual void view(const ElemType& kick, const ss_vect<tps> &ps, const enum ObservedState state, const int cnt) override;
+		virtual void view(const ElemType& kick, const ss_vect<tps>    &ps, const enum ObservedState state, const int cnt) override;
 
 		virtual void show(std::ostream& strm, int level) const override final;
 
@@ -50,6 +51,7 @@ namespace thor_scsi::elements {
 		RadiationDelegateKick(void){
 			this->reset();
 		}
+		~RadiationDelegateKick(void){};
 
 		/*
 		 * @brief: reset parameters for radiation
@@ -85,7 +87,7 @@ namespace thor_scsi::elements {
 		 * Used for computing synchrotron integrals
 		 */
 		virtual void view(const FieldKickAPI& kick, const ss_vect<double> &ps, const enum ObservedState state, const int cnt) override;
-		virtual void view(const FieldKickAPI& kick, const ss_vect<tps> &ps, const enum ObservedState state, const int cnt) override;
+		virtual void view(const FieldKickAPI& kick, const ss_vect<tps>    &ps, const enum ObservedState state, const int cnt) override;
 
 		virtual void show(std::ostream& strm, int level) const override final;
 		//virtual void view(const ElemType& kick, const ss_vect<double> &ps, const enum ObservedState state, const int cnt) override final;
@@ -152,7 +154,7 @@ namespace thor_scsi::elements {
 
 		double curly_dH_x = 0e0;
 		int index = -1;
-		std::array<double, 5> dI;           ///< Local contributions to the synchrotron integrals
+		std::array<double, 6> dI;           ///< Local contributions to the synchrotron integrals
 		std::array<double, 3> D_rad;        //< Diffusion coefficients (Floquet space).
 		bool compute_diffusion = false;
 		double energy = NAN;

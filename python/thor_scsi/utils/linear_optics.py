@@ -5,17 +5,182 @@ from .phase_space_vector import ss_vect_tps2ps_jac, array2ss_vect_tps
 from .courant_snyder import compute_A_CS
 from .extract_info import accelerator_info
 from .accelerator import instrument_with_standard_observers
-from .phase_space_vector import map2numpy
-from .linalg import compute_A_inv_with_dispersion, match_eigenvalues_to_plane_orig
-from .output import mat2txt
+from .phase_space_vector import omega_block_matrix, map2numpy
+from .output import mat2txt, vec2txt, cmplx2txt, chop_array, chop_mat
 
 import xarray as xr
 import numpy as np
-import copy
+import copy as _copy
 import logging
 
 
 logger = logging.getLogger("thor_scsi")
+
+
+X_, Y_, Z_ = [
+    tslib.spatial_index.X,
+    tslib.spatial_index.Y,
+    tslib.spatial_index.Z
+]
+
+[x_, px_, y_, py_, ct_, delta_] = [
+    tslib.phase_space_index_internal.x,
+    tslib.phase_space_index_internal.px,
+    tslib.phase_space_index_internal.y,
+    tslib.phase_space_index_internal.py,
+    tslib.phase_space_index_internal.ct,
+    tslib.phase_space_index_internal.delta
+]
+
+
+def compute_map(
+    acc: tslib.Accelerator, calc_config: tslib.ConfigType
+) -> tslib.ss_vect_tps:
+    """Propagate an identity map through the accelerator
+    """
+    t_map = tslib.ss_vect_tps()
+    t_map.set_identity()
+    # acc.propagate(calc_config, t_map, 0, len(acc))
+    acc.propagate(calc_config, t_map)
+    return t_map
+
+
+def acos2(sin, cos):
+    # Compute the phase advance from the Poincaré map:
+    #   Tr{M} = 2 cos(2 pi nu)
+    # i.e., assuming mid-plane symmetry.
+    # The sin part is used to determine the quadrant.
+    mu = np.arccos(cos)
+    if sin < 0e0:
+        mu = 2e0 * np.pi - mu
+    return mu
+
+
+def compute_nu(M):
+    tr = M.trace()
+    # Check if stable.
+    if tr < 2e0:
+        compute_nu(tr / 2e0, M[0][1]) / (2e0 * np.pi)
+        return nu
+    else:
+        print("\ncompute_nu: unstable\n")
+        return float("nan")
+
+
+def compute_nus(n_dof, M):
+    nus = np.zeros(n_dof, float)
+    for k in range(n_dof):
+        nus[k] = \
+            compute_nu(M[2 * k : 2 * k + 2, 2 * k : 2 * k + 2]) \
+            / (2e0 * np.pi)
+        if n_dof == 3:
+            nus[2] = 1e0 - nus[2]
+    return nus
+
+
+def compute_nu_symp(n_dof, M):
+    """Calculate normalised phase advance from a symplectic periodic matrix.
+    """
+    n = 2 * n_dof
+    I = np.identity(4)
+    tr = np.zeros(n_dof, float)
+    for k in range(n_dof):
+        tr[k] = np.trace(M[2 * k : 2 * k + 2, 2 * k : 2 * k + 2])
+    M4b4 = M[0:4, 0:4]
+    p1  = np.linalg.det(M4b4 - I)
+    pm1 = np.linalg.det(M4b4 + I)
+    po2, q = (p1 - pm1) / 16e0, (p1 + pm1) / 8e0 - 1e0
+    if tr[X_] > tr[Y_]:
+        sgn = 1
+    else:
+        sgn = -1
+
+    radix = sgn * np.sqrt(po2 ** 2 - q)
+    x, y = -po2 + radix, -po2 - radix
+    nu = []
+    nu.extend([
+        acos2(M[0][1], x) / (2e0 * np.pi),
+        acos2(M[2][3], y) / (2e0 * np.pi)
+    ])
+    if n_dof == 3:
+        nu.append(1e0 - acos2(M[4][5], tr[Z_] / 2e0) / (2e0 * np.pi))
+    return np.array(nu)
+
+
+def find_closest_nu(nu, w):
+    min = 1e30
+    for k in range(w.size):
+        nu_k = acos2(w[k].imag, w[k].real) / (2e0 * np.pi)
+        diff = np.abs(nu_k - nu)
+        if diff < min:
+            [ind, min] = [k, diff]
+    return ind
+
+
+def sort_eigen_vec(dof, nu, w):
+    """
+    Args:
+        nu : eigenvalues / computed tunes
+        dof: degrees of freedom
+        w :  complex eigen values (from eigen vector computation
+             procedure)
+
+    Todo:
+        Check that vectors are long enough ...
+    """
+    order = np.zeros(2 * dof, int)
+    for k in range(dof):
+        order[2 * k] = find_closest_nu(nu[k], w)
+        order[2 * k + 1] = find_closest_nu(1e0 - nu[k], w)
+    return order
+
+
+def compute_A(n_dof, eta, u):
+    """
+
+    Original version thanks to Johan
+
+    Todo:
+       what's is special about this inverse
+    """
+    sign = np.sign
+
+    n = 2 * n_dof
+
+    u1 = _copy.copy(u)
+    A = np.identity(6)
+    S = omega_block_matrix(n_dof)
+
+    # Normalise eigenvectors: A^T.omega.A = omega.
+    for i in range(n_dof):
+        z = u1[:, 2 * i].real @ S @ u1[:, 2 * i].imag
+        sgn_im = sign(z)
+        scl = np.sqrt(np.abs(z))
+        sgn_vec = sign(u1[2 * i][2 * i].real)
+        [u1[:, 2 * i], u1[:, 2 * i + 1]] = [
+            sgn_vec * (u1[:, 2 * i].real + sgn_im * u1[:, 2 * i].imag * 1j)
+            / scl,
+            sgn_vec
+            * (u1[:, 2 * i + 1].real + sgn_im * u1[:, 2 * i + 1].imag * 1j)
+            / scl,
+        ]
+
+    for i in range(n_dof):
+        [A[:n, 2 * i], A[:n, 2 * i + 1]] = \
+            [u1[:, 2 * i].real, u1[:, 2 * i].imag]
+
+    if n_dof == 2:
+        # For coasting beam translate to momentum dependent fix point.
+
+        B = np.identity(6)
+        B[x_, delta_], B[px_, delta_] = eta[x_], eta[px_]
+        B[ct_, x_], B[ct_, px_] = eta[px_], -eta[x_]
+
+        A = B @ A
+
+    A_inv = np.linalg.inv(A)
+
+    return A, A_inv, u1
 
 
 def compute_dispersion(M: np.ndarray) -> np.ndarray:
@@ -29,7 +194,99 @@ def compute_dispersion(M: np.ndarray) -> np.ndarray:
     id_mat = np.identity(n)
     D = M[:n, tslib.phase_space_index_internal.delta]
 
-    return np.dot(np.linalg.inv(id_mat - M[:n, :n]), D)
+    return np.linalg.inv(id_mat - M[:n, :n]) @ D
+
+
+def compute_M_diag(
+        dof: int, M: np.ndarray
+) -> [np.ndarray, np.ndarray, np.ndarray]:
+    """
+
+    Args:
+        M: transfer matrix
+        dof: degrees of freedom
+
+    Return:
+
+    See xxx reference
+    """
+    n = 2 * dof
+
+    nu_symp = compute_nu_symp(dof, M)
+    # Diagonalise M.
+    [w, u] = np.linalg.eig(M[:n, :n])
+
+    # nu_eig = acos2(w.imag, w.real) / (2e0 * np.pi)
+    nu_eig = np.zeros(n)
+    for k in range(n):
+        nu_eig[k] = acos2(w[k].imag, w[k].real) / (2e0 * np.pi)
+
+    logger.debug("\nu:\n" + mat2txt(u)
+                 + "\nnu_symp:\n" + vec2txt(nu_symp)
+                 + "\nnu_eig:\n" + vec2txt(nu_eig)
+                 + "\nlambda:\n" + vec2txt(w))
+
+    order = sort_eigen_vec(dof, nu_symp, w)
+
+    w_ord = np.zeros(n, complex)
+    u_ord = np.zeros((n, n), complex)
+    nu_eig_ord = np.zeros(n, float)
+    for k in range(n):
+        w_ord[k] = w[order[k]]
+        u_ord[:, k] = u[:, order[k]]
+        nu_eig_ord[k] = acos2(w_ord[k].imag, w_ord[k].real) / (2e0 * np.pi)
+
+    logger.debug(
+        "\norder:\n" + vec2txt(order)
+        + "\nnu_eig_ord:\n" + vec2txt(nu_eig_ord)
+        + "\nlambda_ord:\n" + vec2txt(w_ord)
+        + "\nu_ord^-1.M.u_ord:\n"
+        + mat2txt(chop_array(
+            np.linalg.inv(u_ord) @ M[:n, :n] @ u_ord, 1e-15))
+    )
+
+    eta = compute_dispersion(M)
+
+    logger.debug("\neta:\n" + vec2txt(eta))
+
+    [A, A_inv, u1] = compute_A(dof, eta, u_ord)
+
+    logger.debug(
+        "\nu1:\n" + mat2txt(u1)
+        + "\nu1^-1.M.u1:\n"
+        + mat2txt(chop_array(np.linalg.inv(u1) @ M[:n, :n] @ u1, 1e-13))
+        + "\nu1^T.omega.u1:\n"
+        + mat2txt(chop_array(u1.T @ omega_block_matrix(dof) @ u1, 1e-13))
+        + "\nA:\n" + mat2txt(chop_mat(A_inv, 1e-13))
+        + "\nA^T.omega.A:\n"
+        + mat2txt(
+            chop_array(A[:n, :n].T @ omega_block_matrix(dof) @ A[:n, :n],
+                       1e-13))
+        )
+
+    R = A_inv @ M @ A
+    nu = np.zeros(3, float)
+    alpha_rad = np.zeros(3, float)
+    for k in range(dof):
+        nu[k] = np.arctan2(R[2*k][2*k+1], R[2*k][2*k])/(2e0*np.pi)
+        if (nu[k] < 0e0) and (k < 2):
+            nu[k] += 1e0
+        if dof == 3:
+            alpha_rad[k] = \
+                np.log(np.sqrt(np.absolute(w_ord[2*k])
+                               *np.absolute(w_ord[2*k+1])))
+
+    logger.info(
+        "\n\nA_CS:\n" + mat2txt(chop_array(compute_A_CS(dof, A)[0], 1e-10))
+        + "\n\nR:\n" + mat2txt(chop_array(R, 1e-10))
+        + "\n\nnu        = {:18.16f} {:18.16f} {:18.16f}".
+        format(nu[X_], nu[Y_], nu[Z_]))
+    if dof == 3:
+        logger.info(
+            "alpha_rad = {:13.6e} {:13.6e} {:13.6e}".
+            format(alpha_rad[X_], alpha_rad[Y_], alpha_rad[Z_]))
+
+    return A, A_inv, alpha_rad
 
 
 #: scale arctan2 (a12/a11) to Floquet coordinates (correct?)
@@ -98,7 +355,7 @@ def transform_matrix_extract_twiss(A: np.ndarray) -> (np.ndarray, np.ndarray):
 
 
 def tps2twiss(tps: tslib.ss_vect_tps) -> (np.ndarray, np.ndarray):
-    """Extract twiss information from turncated power series
+    """Extract twiss information from truncated power series
 
     Warning:
         It is thue users responsibility to ensure that the matrix
@@ -125,7 +382,7 @@ def find_phase_space_origin(M: np.ndarray) -> np.ndarray:
 
 
     Todo:
-        Revisit naming:
+        Revisit naming: fix point instead of origin
         Add reference to Johan's Tech Note
 
     """
@@ -155,20 +412,11 @@ def find_phase_space_origin(M: np.ndarray) -> np.ndarray:
     return A
 
 
-def compute_map(
-    acc: tslib.Accelerator, calc_config: tslib.ConfigType
-) -> tslib.ss_vect_tps:
-    """Propagate an identity map through the accelerator
-    """
-    t_map = tslib.ss_vect_tps()
-    t_map.set_identity()
-    # acc.propagate(calc_config, t_map, 0, len(acc))
-    acc.propagate(calc_config, t_map)
-    return t_map
-
-
 def propagate_and_find_phase_space_orgin(acc, calc_config):
     """propagate once around ring. use this map to find phase space origin
+
+    Todo:
+         Rename phase space origin fix point
     """
     t_map = compute_map(acc, calc_config)
     M = map2numpy(t_map)
@@ -183,8 +431,8 @@ def propagate_and_find_phase_space_orgin(acc, calc_config):
 
 def compute_twiss_along_lattice(
     acc: tslib.Accelerator,
-    calc_config: tslib.ConfigType = None,
-    A: tslib.ss_vect_tps = None,
+    calc_config: tslib.ConfigType,
+    A: tslib.ss_vect_tps
 ) -> xr.Dataset:
     """
 
@@ -201,27 +449,25 @@ def compute_twiss_along_lattice(
         xarrays. But what then to use?)
 
     """
-    if not calc_config:
-        calc_config = tslib.ConfigType()
-
-    if A is None:
-        A = propagate_and_find_phase_space_orgin(acc, calc_config)
 
     # Not really required ... but used for convienience
     instrument_with_standard_observers(acc)
 
     # Propagate through the accelerator
+    A_mat = np.zeros((7, 7))
+    A_mat[:6, :6] = A
+    A_map = array2ss_vect_tps(A_mat)
     for k in range(len(acc)):
-        acc.propagate(calc_config, A, k, k + 1)
-        # Extract the first order term from the map representation of A
+        acc.propagate(calc_config, A_map, k, k + 1)
+        # Extract the first order term from the map representation of A_map
         # thus called Aj as it is similar to the Jacobian
-        _, Aj = ss_vect_tps2ps_jac(A)
+        _, Aj = ss_vect_tps2ps_jac(A_map)
         # A will be rotated ... so rotate it back so that the
         # next step starts at a Courant Snyder form
         rjac, _ = compute_A_CS(2, Aj)
         Atmp = np.zeros([7, 7], dtype=np.float)
         Atmp[:6, :6] = rjac
-        A = array2ss_vect_tps(Atmp)
+        A_map = array2ss_vect_tps(Atmp)
 
     indices = [elem.index for elem in acc]
     tps_tmp = [_extract_tps(elem) for elem in acc]
@@ -251,8 +497,9 @@ def compute_twiss_along_lattice(
         coords=[indices, phase_space_coords_names],
     )
     info = accelerator_info(acc)
-    res = info.merge(dict(twiss=twiss_parameters, dispersion=dispersion, tps=tps))
+    res = \
+        info.merge(dict(twiss=twiss_parameters, dispersion=dispersion, tps=tps))
     return res
 
 
-__all__ = ["compute_twiss_along_lattice", "jac2twiss"]
+__all__ = ["compute_twiss_along_lattice", "jac2twiss", "compute_M_diag"]

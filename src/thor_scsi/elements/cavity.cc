@@ -1,3 +1,4 @@
+#include <thor_scsi/std_machine/std_machine.h>
 #include <thor_scsi/elements/cavity.h>
 #include <thor_scsi/elements/element_helpers.h>
 #include <thor_scsi/elements/constants.h>
@@ -11,6 +12,8 @@ tse::CavityType::CavityType(const Config &config) :  LocalGalilean(config)
 {
 	this->setFrequency(config.get<double>("Frequency"));
 	this->setVoltage(config.get<double>("Voltage"));
+	this->setHarmonicNumber(config.get<double>("HarmonicNumber"));
+	this->setPhase(config.get<double>("Phase", 0e0));
 }
 
 template<typename T>
@@ -22,24 +25,35 @@ void tse::CavityType::_localPass(tsc::ConfigType &conf, ss_vect<T> &ps)
 
 	drift_pass(conf, L/2e0, ps);
 
-	if(debug){
-		std::cout << "cavity on " << conf.Cavity_on << std::endl;
-		std::cout << "   voltage " << this->Pvolt << std::endl;
-	}
+	THOR_SCSI_LOG(DEBUG)
+		<< "\n  cavity on    = " << conf.Cavity_on
+		<< "\n  f_RF         = " << this->Pfreq
+		<< "\n  V_RF         = " << this->Pvolt
+		<< "\n  radiation on = " << conf.radiation;
 
 	if (conf.Cavity_on && this->Pvolt != 0e0) {
-		const T delta = - this->Pvolt / (conf.Energy)
+		auto energy = conf.Energy;
+		if(!std::isfinite(energy)){
+			throw std::runtime_error(
+				"Energy is not NaN and cavity calculation requested");
+		}
+		// if(np.finite(energy))
+		const T delta = - this->Pvolt / (energy)
 			*sin(2e0*M_PI*this->Pfreq/c0*ps[ct_]+this->phi);
 
-		if(debug){
-			std::cout << "Cavity computed delta " << delta << std::endl;
-		}
+		THOR_SCSI_LOG(DEBUG)
+			<< "\n  delta:\n" << delta
+			<< "\n  phi_RF = " << this->phi
+			<< "\n  E      = " << conf.Energy
+			<< "\n  c_0    = " << c0
+			<< "\n  M_PI   = " << M_PI
+			<< "\n  ct:\n" << ps[ct_];
 
 		ps[delta_] += delta;
 
-#ifdef THOR_SCSI_USE_RADIATION
+//#ifdef THOR_SCSI_USE_RADIATION
 		if (conf.radiation) conf.dE -= is_double<T>::cst(delta);
-#endif
+//#endif
 		if (conf.pathlength) ps[ct_] -= this->Ph/this->Pfreq*c0;
 	}
 	drift_pass(conf, L/2e0, ps);
