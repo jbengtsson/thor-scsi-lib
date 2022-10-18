@@ -30,7 +30,7 @@
 # Stylianos Kyriakides Boston Marathon, 1946.
 #
 # Simon & Gargunkel 𝑇ℎ𝑒 𝐵𝑜𝑥𝑒𝑟
-# https://youtu.be/l3LFML_pxlY 
+# https://youtu.be/l3LFML_pxlY
 
 
 import logging
@@ -128,13 +128,15 @@ def tweak_nu(fam_names, dnu_x, dnu_y):
     print("\ndb_2L = ", vec2txt(db_2L))
     for k in range(n):
         set_db_2L_fam(acc, fam_names[k], db_2L[k])
- 
+
 
 t_dir = os.path.join(os.environ["HOME"], "Nextcloud", "thor_scsi")
 t_file = os.path.join(t_dir, "alsu-7ba-20180503c.lat")
 # t_file = os.path.join(t_dir, "b3_sf_40Grad_JB.lat")
 
-acc = accelerator_from_config(t_file)
+acc = accelerator_from_config(t_file, add_marker_at_start=True)
+assert(type(acc[0]) == tslib.Marker)
+
 calc_config = tslib.ConfigType()
 
 cav = acc.find("cav", 0)

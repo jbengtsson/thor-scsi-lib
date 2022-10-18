@@ -1,6 +1,7 @@
 #include <thor_scsi/std_machine/accelerator.h>
 #include <thor_scsi/elements/standard_aperture.h>
 #include <thor_scsi/elements/elements_enums.h>
+#include <thor_scsi/elements/marker.h>
 #include <thor_scsi/core/exceptions.h>
 #include <sstream>
 
@@ -16,28 +17,67 @@ vec_elem_type_to_cell_void
   tsc::p_elements_t cells;
   cells.reserve(elements.size());
   /* order needs to be preserved */
-  for(size_t i=0; i < elements.size(); ++i){
-    cells.push_back(std::dynamic_pointer_cast<tsc::CellVoid>(elements[i]));
-  }
+  std::transform(elements.begin(), elements.end(), std::back_inserter(cells),
+		 [](std::shared_ptr<thor_scsi::core::ElemType> elem)
+		     { return std::dynamic_pointer_cast<tsc::CellVoid>(elem) ; }
+      );
   return cells;
 
 }
-ts::Accelerator::Accelerator(const Config & conf)
+
+ts::Accelerator::Accelerator(const Config & conf, bool marker_at_start)
   :tsc::Machine(conf)
-{}
-
-ts::Accelerator::
-Accelerator
-(const std::vector<std::shared_ptr<thor_scsi::core::ElemType>>& elements)
-  :tsc::Machine(vec_elem_type_to_cell_void(elements))
 {
+    if(marker_at_start){
+	this->addMarkerAtStartIfRequired();
+    }
 
-#if 0
-  // Waiting that machine is reogranised ...
-  this->updateElementList(cells);
-#endif
 }
 
+ts::Accelerator::Accelerator
+(const std::vector<std::shared_ptr<thor_scsi::core::ElemType>>& elements, bool marker_at_start)
+  :tsc::Machine(vec_elem_type_to_cell_void(elements))
+{
+    if(marker_at_start){
+	this->addMarkerAtStartIfRequired();
+    }
+}
+
+void ts::Accelerator::addMarkerAtStart(void)
+{
+    Config C;
+    C.setAny("name", "Start");
+    C.setAny("Length", 0e0);
+
+    /* perhaps declare this>elements it protected ? */
+    tsc::p_elements_t elements;
+    elements.reserve(this->size() + 1);
+    elements.insert(elements.begin(), std::make_shared<tse::MarkerType>(C));
+    elements.insert(std::next(elements.begin(), 1), this->begin(), this->end());
+    this->updateElementList(elements);
+}
+
+void ts::Accelerator::addMarkerAtStartIfRequired(void)
+{
+    auto cv = this->at(0);
+    auto elem = std::dynamic_pointer_cast<tsc::ElemType>(cv);
+    auto marker =  std::dynamic_pointer_cast<tse::MarkerType>(elem);
+
+    if( (marker) && (elem->getLength() == 0e0) ){
+	THOR_SCSI_LOG(INFO) << "Not inserting a 'Marker' at the beginning as already one is there.\n";
+	return;
+    }
+
+    if( (!marker) && (elem->getLength() == 0e0) ) {
+	THOR_SCSI_LOG(WARNING) << "Inserting a 'Marker' at the beginning even if"
+			       << " first element is of length zero. \n";
+	this->addMarkerAtStart();
+	return;
+    }
+    THOR_SCSI_LOG(WARNING) << "Inserting a 'Marker' at the beginning as requested:"
+			   << " first element is neither 'Marker' nor of zero length. \n";
+    this->addMarkerAtStart();
+}
 
 template<typename T>
 int
