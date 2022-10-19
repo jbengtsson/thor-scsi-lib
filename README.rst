@@ -211,7 +211,7 @@ E.g. by not having figured out/mastered how to pass records (structures in C) as
 
   .. _`J. Math. Phys. 31 (1990).`: http://dx.doi.org/10.1063/1.528795%7D
 
-Hence, the one thing we did find useful for a realistic on-line model – having already implemented an on-line model as a sci fellow for LEAR, CERN, in the late 1980s and before that having worked as a teaching assistent at the dept. of Software Engineering, Lund Inst. of Tech. while pursuing a MsSci EE – and adopted for the ALS on-line model. Was the implementation of the beam dynamics model as an *extension of the standard procedures & functions* for the *Pascal-S compiler/interpreter* by N. Wirth (implemented/coded in it's native grammar); architected as a Pascal software library/module:
+Hence, the one thing we did find useful for a realistic on-line model – having already implemented an on-line model as a sci fellow for LEAR, CERN, in the late 1980s and before that having worked as a teaching assistent at the *dept. of Software Engineering, Lund Inst. of Tech, Sweden* (next to *MAX Lab*). while pursuing a MsSci EE – and adopted for the ALS on-line model. Was the implementation of the beam dynamics model as an *extension of the standard procedures & functions* for the *Pascal-S compiler/interpreter* by N. Wirth (implemented/coded in it's native grammar); architected as a Pascal software library/module:
 
   M\. Rees, D\. Robson *Practical Compiling with Pascal-S* `(Addison-Wesley, 1988).`_
 
