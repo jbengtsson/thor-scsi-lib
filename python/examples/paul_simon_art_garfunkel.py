@@ -57,23 +57,34 @@ from thor_scsi.utils.output import mat2txt, vec2txt
 from thor_scsi.utils.twiss_output import twiss_ds_to_df, df_to_tsv
 
 
-X_, Y_, Z_ = [tslib.spatial_index.X, tslib.spatial_index.Y, tslib.spatial_index.Z]
+X_, Y_, Z_ = \
+    [tslib.spatial_index.X, tslib.spatial_index.Y, tslib.spatial_index.Z]
 
 
 def plt_twiss(ds):
-    fig, (gr1, gr2) = plt.subplots(2)
+    fig, (gr_1, gr_2) = plt.subplots(2)
 
-    gr1.set_xlabel("s [m]")
-    gr1.set_ylabel(r"$\beta_x, \beta_y$ [m]")
-    gr1.plot(ds.s, ds.twiss.sel(plane="x", par="beta"), label=r"$\beta_x$")
-    gr1.plot(ds.s, ds.twiss.sel(plane="y", par="beta"), label=r"$\beta_y$")
-    gr1.legend()
+    gr_1.set_title("Linear Optics")
+    gr_1.set_xlabel("s [m]")
+    gr_1.set_ylabel("[m]")
+    gr_1.plot(ds.s, ds.twiss.sel(plane="x", par="beta"), label=r"$\beta_x$")
+    gr_1.plot(ds.s, ds.twiss.sel(plane="y", par="beta"), label=r"$\beta_y$")
+    gr_1.legend()
 
-    # gr2.set_xlabel("s [m]")
-    # gr2.set_ylabel(r"$\eta_x [m]")
-    # gr2.plot(ds.s, ds.twiss.sel(plane="x", par="eta"), label=r"$\eta_x$")
-    # gr2.legend()
+    gr_2.set_xlabel("s [m]")
+    gr_2.set_ylabel("[m]")
+    gr_2.plot(ds.s, ds.dispersion.sel(phase_coordinate="x"), label=r"$\eta_x$")
 
+    plt.show()
+
+
+def plt_curly_H(ds):
+    fig, gr = plt.subplots(1)
+    gr.set_title("curly_H")
+    gr.set_xlabel(r"$\eta_x$ [m]")
+    gr.set_ylabel(r"$\eta_x'$ [rad]")
+    gr.plot(ds.dispersion.sel(phase_coordinate="x"),
+            ds.dispersion.sel(phase_coordinate="px"))
     plt.show()
 
 
@@ -82,7 +93,8 @@ def prt_fam(acc, fam_name):
     for q in acc.elementsWithName(fam_name):
         print(
             "  {:4s} {:3d} {:6.3f} {:4.2f}".format(
-                q.name, q.index, q.getMultipoles().getMultipole(2).real, q.getLength()
+                q.name, q.index, q.getMultipoles().getMultipole(2).real,
+                q.getLength()
             )
         )
 
@@ -118,7 +130,8 @@ def tweak_nu(fam_names, dnu_x, dnu_y):
     dnu = np.array([dnu_x, dnu_y])
     dnu_db_2L = np.zeros((2, n), dtype="float")
     for k in range(n):
-        dnu_db_2L[:, k] = compute_dnu_db_2L(acc, calc_config, fam_names[k], 1e-4)
+        dnu_db_2L[:, k] = \
+            compute_dnu_db_2L(acc, calc_config, fam_names[k], 1e-4)
     print("\ndnu_db_2L:\n", mat2txt(dnu_db_2L))
     u, s, v_t = np.linalg.svd(dnu_db_2L, full_matrices=False)
     dnu_db_2L_inv = v_t.T @ np.diag(s ** -1) @ u.T
@@ -174,8 +187,9 @@ with open("twiss.tsf", "wt") as fp:
     fp.write(df_to_tsv(df))
 df.to_json("twiss.json")
 
-if not True:
+if True:
     plt_twiss(ds)
+    plt_curly_H(ds)
 
 compute_radiation(acc, calc_config, E, 1e-15)
 
@@ -189,25 +203,3 @@ M = map2numpy(compute_map(acc, calc_config))[:6, :6]
 nu = compute_nu_symp(dof, M)
 print("\nM:\n" + mat2txt(M))
 print("\nnu = [{:7.5f}, {:7.5f}]".format(nu[X_], nu[Y_]))
-
-fig, axes = plt.subplots(2, 1, sharex=True)
-ax_eta_x, ax_eta_px = axes
-ds.dispersion.sel(phase_coordinate="x").plot(ax=ax_eta_x)
-ds.dispersion.sel(phase_coordinate="px").plot(ax=ax_eta_px)
-ax_eta_x.set_xlabel("s [m]")
-ax_eta_px.set_xlabel("s [m]")
-ax_eta_x.set_ylabel(r"$\eta_x$")
-ax_eta_px.set_ylabel(r"$\eta_{x'}$")
-
-fig, ax = plt.subplots(1, 1, sharex=True)
-ax.plot(
-    ds.dispersion.sel(phase_coordinate="x"),
-    ds.dispersion.sel(phase_coordinate="px"),
-    marker=".",
-    linestyle="--",
-    linewidth=0.25,
-)
-ax.set_xlabel(r"$\eta_x$")
-ax.set_ylabel(r"$\eta_x'$")
-
-plt.show()
