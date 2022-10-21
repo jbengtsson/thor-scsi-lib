@@ -1,12 +1,11 @@
 thor-scsi-lib: Self-Consistent Symplectic Integrator for Charged Particle Beam Dynamics
 =======================================================================================
 
-`thor-scsi-lib` strives to reimplement the phyiscs model of `tracy` in modern C++. Furthermore it provides
+`Thor-scsi-lib` strives to reimplement the physics model of `Tracy-2` in modern C++. Furthermore it provides
 a python interface.
 
-`thor-scsi-lib` and `tracy` are self consistent symplectic integrators.
-`tracy` was used for desiging different synchrotron light sources (e.g. MAX~IV[20XX],... SLS[19XX]) or as core physics engine for online models
-for many different light sources (e.g. NSLS-II, ... SLS).
+`Thor-scsi-lib` and `Tracy-2` are self consistent symplectic integrators.
+`Tracy-2` was initially provided as an on-line model to guide the commissioning of ALS in the early 1990s. Thus, its beam dynamics model was "automatically" validated; i.e., stood tall. As a side effect, it came in handy for the PEP-II conceptual design at SLAC. When it was realised that the IR regions for ditto could not be modelled with MAD6 – because it could not handle torsion – when the vertical bends were included. Similarly, it was also used for the conceptual design of: SLS, SOLEIL, ALBA, NSLS-II, MAX IV, SLS 2.0, and DIAMOND-II. And subsequently as on-line models for: SLS, DIAMOND, and NSLS-II. Besides, it's also the core physics engine for Accelerator Toolbox.
 
 The pyhsics model is described in
 
