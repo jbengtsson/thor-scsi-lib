@@ -27,11 +27,14 @@ class PyElemType: public tsc::ElemType {
 public:
 	using tsc::ElemType::ElemType;
 
-	void pass(thor_scsi::core::ConfigType & conf, ss_vect<double>& ps) override {
-		PYBIND11_OVERRIDE_PURE(void, tsc::ElemType, pass, conf, ps);
+	void propagate(thor_scsi::core::ConfigType & conf, gtpsa::ss_vect<double>& ps) override {
+		PYBIND11_OVERRIDE_PURE(void, tsc::ElemType, propagate, conf, ps);
 	}
-	void pass(thor_scsi::core::ConfigType & conf, ss_vect<tps>& ps) override {
-		PYBIND11_OVERRIDE_PURE(void, tsc::ElemType, pass, conf, ps);
+	void propagate(thor_scsi::core::ConfigType & conf, gtpsa::ss_vect<tps>& ps) override {
+		PYBIND11_OVERRIDE_PURE(void, tsc::ElemType, propagate, conf, ps);
+	}
+	void propagate(thor_scsi::core::ConfigType & conf, gtpsa::ss_vect<gtpsa::tpsa>& ps) override {
+		PYBIND11_OVERRIDE_PURE(void, tsc::ElemType, propagate, conf, ps);
 	}
 	const char * type_name(void) const override {
 		PYBIND11_OVERRIDE_PURE(
@@ -47,10 +50,13 @@ class PyObserver: public tsc::Observer {
 public:
 	using tsc::Observer::Observer;
 
-	void view(std::shared_ptr<const tsc::CellVoid> elem, const ss_vect<double> &ps, const enum tsc::ObservedState os, const int cnt) override {
+	void view(std::shared_ptr<const tsc::CellVoid> elem, const gtpsa::ss_vect<double> &ps, const enum tsc::ObservedState os, const int cnt) override {
 		PYBIND11_OVERRIDE_PURE(void, tsc::Observer, view, elem, ps, os, cnt);
 	}
-	void view(std::shared_ptr<const tsc::CellVoid> elem, const ss_vect<tps> &ps, const enum tsc::ObservedState os, const int cnt) override {
+	void view(std::shared_ptr<const tsc::CellVoid> elem, const gtpsa::ss_vect<tps> &ps, const enum tsc::ObservedState os, const int cnt) override {
+		PYBIND11_OVERRIDE_PURE(void, tsc::Observer, view, elem, ps, os, cnt);
+	}
+	void view(std::shared_ptr<const tsc::CellVoid> elem, const gtpsa::ss_vect<gtpsa::tpsa> &ps, const enum tsc::ObservedState os, const int cnt) override {
 		PYBIND11_OVERRIDE_PURE(void, tsc::Observer, view, elem, ps, os, cnt);
 	}
 
@@ -94,20 +100,26 @@ class PyClassicalMagnet: public tse::ClassicalMagnet {
 
 class PyRadDelInt: public tse::RadiationDelegateInterface {
 	using tse::RadiationDelegateInterface::RadiationDelegateInterface;
-	void view(const tse::ElemType& elem, const ss_vect<double> &ps, const enum tsc::ObservedState os, const int cnt) override {
+	void view(const tse::ElemType& elem, const gtpsa::ss_vect<double> &ps, const enum tsc::ObservedState os, const int cnt) override {
 		PYBIND11_OVERRIDE_PURE(void, tse::RadiationDelegateInterface, view, elem, ps, os, cnt);
 	}
-	void view(const tse::ElemType& elem, const ss_vect<tps> &ps, const enum tsc::ObservedState os, const int cnt) override {
+	void view(const tse::ElemType& elem, const gtpsa::ss_vect<tps> &ps, const enum tsc::ObservedState os, const int cnt) override {
+		PYBIND11_OVERRIDE_PURE(void, tse::RadiationDelegateInterface, view, elem, ps, os, cnt);
+	}
+	void view(const tse::ElemType& elem, const gtpsa::ss_vect<gtpsa::tpsa> &ps, const enum tsc::ObservedState os, const int cnt) override {
 		PYBIND11_OVERRIDE_PURE(void, tse::RadiationDelegateInterface, view, elem, ps, os, cnt);
 	}
 };
 
 class PyRadDel: public tse::RadiationDelegate {
 	using tse::RadiationDelegate::RadiationDelegate;
-	void view(const tse::ElemType& elem, const ss_vect<double> &ps, const enum tsc::ObservedState os, const int cnt) override {
+	void view(const tse::ElemType& elem, const gtpsa::ss_vect<double> &ps, const enum tsc::ObservedState os, const int cnt) override {
 		PYBIND11_OVERRIDE(void, tse::RadiationDelegate, view, elem, ps, os, cnt);
 	}
-	void view(const tse::ElemType& elem, const ss_vect<tps> &ps, const enum tsc::ObservedState os, const int cnt) override {
+	void view(const tse::ElemType& elem, const gtpsa::ss_vect<tps> &ps, const enum tsc::ObservedState os, const int cnt) override {
+		PYBIND11_OVERRIDE(void, tse::RadiationDelegate, view, elem, ps, os, cnt);
+	}
+	void view(const tse::ElemType& elem, const gtpsa::ss_vect<gtpsa::tpsa> &ps, const enum tsc::ObservedState os, const int cnt) override {
 		PYBIND11_OVERRIDE(void, tse::RadiationDelegate, view, elem, ps, os, cnt);
 	}
 };
@@ -115,20 +127,26 @@ class PyRadDel: public tse::RadiationDelegate {
 
 class PyRadDelKickInt: public tse::RadiationDelegateKickInterface {
 	using tse::RadiationDelegateKickInterface::RadiationDelegateKickInterface;
-	void view(const tse::FieldKickAPI& elem, const ss_vect<double> &ps, const enum tsc::ObservedState os, const int cnt) override {
+	void view(const tse::FieldKickAPI& elem, const gtpsa::ss_vect<double> &ps, const enum tsc::ObservedState os, const int cnt) override {
 		PYBIND11_OVERRIDE_PURE(void, tse::RadiationDelegateKickInterface, view, elem, ps, os, cnt);
 	}
-	void view(const tse::FieldKickAPI& elem, const ss_vect<tps> &ps, const enum tsc::ObservedState os, const int cnt) override {
+	void view(const tse::FieldKickAPI& elem, const gtpsa::ss_vect<tps> &ps, const enum tsc::ObservedState os, const int cnt) override {
+		PYBIND11_OVERRIDE_PURE(void, tse::RadiationDelegateKickInterface, view, elem, ps, os, cnt);
+	}
+	void view(const tse::FieldKickAPI& elem, const gtpsa::ss_vect<gtpsa::tpsa> &ps, const enum tsc::ObservedState os, const int cnt) override {
 		PYBIND11_OVERRIDE_PURE(void, tse::RadiationDelegateKickInterface, view, elem, ps, os, cnt);
 	}
 };
 
 class PyRadDelKick: public tse::RadiationDelegateKick {
 	using tse::RadiationDelegateKick::RadiationDelegateKick;
-	void view(const tse::FieldKickAPI& elem, const ss_vect<double> &ps, const enum tsc::ObservedState os, const int cnt) override {
+	void view(const tse::FieldKickAPI& elem, const gtpsa::ss_vect<double> &ps, const enum tsc::ObservedState os, const int cnt) override {
 		PYBIND11_OVERRIDE(void, tse::RadiationDelegateKick, view, elem, ps, os, cnt);
 	}
-	void view(const tse::FieldKickAPI& elem, const ss_vect<tps> &ps, const enum tsc::ObservedState os, const int cnt) override {
+	void view(const tse::FieldKickAPI& elem, const gtpsa::ss_vect<tps> &ps, const enum tsc::ObservedState os, const int cnt) override {
+		PYBIND11_OVERRIDE(void, tse::RadiationDelegateKick, view, elem, ps, os, cnt);
+	}
+	void view(const tse::FieldKickAPI& elem, const gtpsa::ss_vect<gtpsa::tpsa> &ps, const enum tsc::ObservedState os, const int cnt) override {
 		PYBIND11_OVERRIDE(void, tse::RadiationDelegateKick, view, elem, ps, os, cnt);
 	}
 };
@@ -197,6 +215,15 @@ public:
 		//*By = t_field[1];
 
 	}
+	void field(const gtpsa::tpsa x, const gtpsa::tpsa y, gtpsa::tpsa *Bx, gtpsa::tpsa *By) const override {
+		//this->_field(x, y, Bx, By);
+		std::array<gtpsa::tpsa, 2> pos = {x, y};
+		std::array<gtpsa::tpsa*, 2> t_field = {Bx, By};
+		// this->field_py(pos, t_field);
+		//*Bx = t_field[0];
+		//*By = t_field[1];
+
+	}
 	void gradient(const double x, const double y, double *Gx, double *Gy) const  override{
 		PYBIND11_OVERRIDE_PURE(void, tsc::Field2DInterpolation, gradient, x, y, Gx, Gy);
 	}
@@ -204,6 +231,12 @@ public:
 		PYBIND11_OVERRIDE_PURE(void, tsc::Field2DInterpolation, gradient, x, y, Gx, Gy);
 	}
 	void gradient(const tps x, const tps y, double *Gx, double *Gy) const  override{
+		PYBIND11_OVERRIDE_PURE(void, tsc::Field2DInterpolation, gradient, x, y, Gx, Gy);
+	}
+	void gradient(const gtpsa::tpsa x, const gtpsa::tpsa y, gtpsa::tpsa *Gx, gtpsa::tpsa *Gy) const   override {
+		PYBIND11_OVERRIDE_PURE(void, tsc::Field2DInterpolation, gradient, x, y, Gx, Gy);
+	}
+	void gradient(const gtpsa::tpsa x, const gtpsa::tpsa y, double *Gx, double *Gy) const  override{
 		PYBIND11_OVERRIDE_PURE(void, tsc::Field2DInterpolation, gradient, x, y, Gx, Gy);
 	}
 
@@ -305,8 +338,8 @@ void py_thor_scsi_init_elements(py::module &m)
 		.def("setObserver",    &tse::ElemType::set_observer)
 		.def("getAperture",    &tse::ElemType::getAperture)
 		.def("setAperture",    &tse::ElemType::setAperture)
-		.def("propagate", py::overload_cast<tsc::ConfigType&, ss_vect<double>&>(&tse::ElemType::pass), pass_d_doc)
-		.def("propagate", py::overload_cast<tsc::ConfigType&, ss_vect<tps>&>(&tse::ElemType::pass),    pass_tps_doc)
+		.def("propagate", py::overload_cast<tsc::ConfigType&, gtpsa::ss_vect<double>&>(&tse::ElemType::propagate), pass_d_doc)
+		.def("propagate", py::overload_cast<tsc::ConfigType&, gtpsa::ss_vect<tps>&>(&tse::ElemType::propagate),    pass_tps_doc)
 		.def(py::init<const Config &>());
 
 
@@ -324,9 +357,9 @@ void py_thor_scsi_init_elements(py::module &m)
 		.def("getDelegatorName",  &tse::RadiationDelegate::getDelegatorName)
 		.def("getDelegatorIndex", &tse::RadiationDelegate::getDelegatorIndex)
 		.def("view",
-		     py::overload_cast<const tse::ElemType&, const ss_vect<double> &, const enum tsc::ObservedState, const int>(&tse::RadiationDelegate::view))
+		     py::overload_cast<const tse::ElemType&, const gtpsa::ss_vect<double> &, const enum tsc::ObservedState, const int>(&tse::RadiationDelegate::view))
 		.def("view",
-		     py::overload_cast<const tse::ElemType&, const ss_vect<double> &, const enum tsc::ObservedState, const int>(&tse::RadiationDelegate::view))
+		     py::overload_cast<const tse::ElemType&, const gtpsa::ss_vect<double> &, const enum tsc::ObservedState, const int>(&tse::RadiationDelegate::view))
 		.def(py::init<>());
 
 	py::class_<tse::RadiationDelegateKickInterface, PyRadDelKickInt, std::shared_ptr<tse::RadiationDelegateKickInterface>> rad_del_kick_int(m, "RadiationDelegateKickInterface");
@@ -347,9 +380,9 @@ void py_thor_scsi_init_elements(py::module &m)
 		.def("setEnergy",                          &tse::RadiationDelegateKick::setEnergy)
 		.def("getEnergy",                          &tse::RadiationDelegateKick::getEnergy)
 		.def("view",
-		     py::overload_cast<const tse::FieldKickAPI&, const ss_vect<double> &, const enum tsc::ObservedState, const int>(&tse::RadiationDelegateKick::view))
+		     py::overload_cast<const tse::FieldKickAPI&, const gtpsa::ss_vect<double> &, const enum tsc::ObservedState, const int>(&tse::RadiationDelegateKick::view))
 		.def("view",
-		     py::overload_cast<const tse::FieldKickAPI&, const ss_vect<double> &, const enum tsc::ObservedState, const int>(&tse::RadiationDelegateKick::view))
+		     py::overload_cast<const tse::FieldKickAPI&, const gtpsa::ss_vect<double> &, const enum tsc::ObservedState, const int>(&tse::RadiationDelegateKick::view))
 		.def("__repr__",                           &tse::RadiationDelegateKick::repr)
 		.def(py::init<>());
 
@@ -548,8 +581,8 @@ void py_thor_scsi_init_elements(py::module &m)
 		.def("getMainMultipoleStrengthComponent", &tse::ClassicalMagnet::getMainMultipoleStrengthComponent)
 		.def("setMainMultipoleStrength", py::overload_cast<const double>(&tse::ClassicalMagnet::setMainMultipoleStrength))
 		.def("setMainMultipoleStrength", py::overload_cast<const tsc::cdbl>(&tse::ClassicalMagnet::setMainMultipoleStrength))
-		.def("propagate", py::overload_cast<tsc::ConfigType&, ss_vect<double>&>(&tse::ClassicalMagnet::pass), pass_d_doc)
-		.def("propagate", py::overload_cast<tsc::ConfigType&, ss_vect<tps>&>   (&tse::ClassicalMagnet::pass),    pass_tps_doc)
+		.def("propagate", py::overload_cast<tsc::ConfigType&, gtpsa::ss_vect<double>&>(&tse::ClassicalMagnet::propagate), pass_d_doc)
+		.def("propagate", py::overload_cast<tsc::ConfigType&, gtpsa::ss_vect<tps>&>   (&tse::ClassicalMagnet::propagate),    pass_tps_doc)
 		.def(py::init<const Config &>());
 
 	py::class_<tse::QuadrupoleType, std::shared_ptr<tse::QuadrupoleType>>(m, "Quadrupole", cm)

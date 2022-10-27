@@ -34,7 +34,7 @@ d = gsl_conf.gsl_config()
 prefix = os.path.abspath(os.path.join(os.path.dirname(__name__), os.pardir, os.pardir))
 prefix = os.path.abspath(os.path.join(os.environ["HOME"], ".local"))
 prefix = os.path.abspath(os.path.join(os.path.dirname(__name__), os.pardir, "local"))
-# prefix = os.path.abspath(os.path.join(os.environ["HOME"], ".local"))
+prefix = os.path.abspath(os.path.join(os.environ["HOME"], ".local"))
 
 boost_prefix="/usr/include"
 if sys.platform == "darwin":
@@ -82,7 +82,7 @@ ext_modules = [
             # ["../../engine/lib"]
             + [d["gsl_lib_dir"]]
         ),
-        libraries=["thor_scsi", "thor_scsi_core", "tpsa_lin", "flame", "flame_core"]
+        libraries=["thor_scsi_gtpsa", "thor_scsi_core_gtpsa", "gtpsa", "tpsa_lin", "flame", "flame_core"]
         + d["gsl_libs"],
     ),
 ]

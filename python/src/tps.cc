@@ -3,8 +3,7 @@
 #include <pybind11/stl.h>
 #include <pybind11/operators.h>
 
-#include <gtpsa/ss_vect.h>
-#include <gtpsa/tpsa.hpp>
+#include <tps/ss_vect.h>
 #include <tps/tps_type.h>
 #include <tps/tpsa_lin.h>
 #include <tps/enums.h>
@@ -201,7 +200,6 @@ void py_thor_scsi_init_tps(py::module &m)
 
 	auto ss_vect_double = declare_ss_vect<double>      (m, "ss_vect_double");
 	auto ss_vect_tps    = declare_ss_vect<tps>         (m, "ss_vect_tps"   );
-	auto ss_vect_tpsa   = declare_ss_vect<gtpsa::tpsa> (m, "ss_vect_tpsa"  );
 	ss_vect_tps.def(py::self * ss_vect<double>());
 
 	// m.def("partialInverse", &PInv, "partial inverse depending on the numbers of freedoms");
