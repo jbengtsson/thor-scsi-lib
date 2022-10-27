@@ -214,7 +214,7 @@ static void compute_transport_matrix_prop(ts::Accelerator& accelerator, const in
 	int warmup_turns = vm["n-warmup-turns"].as<int>();
 	bool do_tps =  vm["tps"].as<bool>();
 
-	auto desc = std::make_shared<gtpsa::desc>(6, 1);
+	auto desc = std::make_shared<gtpsa::desc>(6, 2);
 	auto a_tps = gtpsa::tpsa(desc, mad_tpsa_default);
 	gtpsa::ss_vect<gtpsa::tpsa> ps(a_tps);
 	ps.set_identity();

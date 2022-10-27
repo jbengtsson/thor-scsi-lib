@@ -13,8 +13,9 @@ namespace tse = thor_scsi::elements;
 tse::CavityType::CavityType(const Config &config) :  LocalGalilean(config)
 {
 	this->setFrequency(config.get<double>("Frequency"));
+	this->setPhase(config.get<double>("Phase", 0e0));
 	this->setVoltage(config.get<double>("Voltage"));
-	this->setHarmonicNumber(config.get<double>("harnum"));
+	this->setHarmonicNumber(config.get<double>("HarmonicNumber"));
 }
 
 
