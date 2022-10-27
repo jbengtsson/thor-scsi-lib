@@ -149,14 +149,15 @@ namespace thor_scsi::core {
 		inline void _field(const T& x, const T& y, T *Bx, T * By)  const {
 			int n = this->coeffs.size() -1;
 			T rBy = gtpsa::same_as_instance(x);
+			T trBy = gtpsa::same_as_instance(x);
 			T rBx = gtpsa::same_as_instance(y);
 			rBy = this->coeffs[n].real();
 			rBx = this->coeffs[n].imag();
 			for(int i=n - 2; i >= 0; --i){
 				cdbl_intern tmp = this->coeffs[i];
-				T trBy = x * rBy - y * rBx + tmp.real();
-				rBx    = y * rBy + x * rBx + tmp.imag();
-				rBy = std::move(trBy);
+				trBy = x * rBy - y * rBx + tmp.real();
+				rBx     = y * rBy + x * rBx + tmp.imag();
+				rBy     = std::move(trBy);
 			}
 			*Bx = std::move(rBx);
 			*By = std::move(rBy);

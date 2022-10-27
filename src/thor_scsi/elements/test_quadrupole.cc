@@ -237,7 +237,8 @@ BOOST_AUTO_TEST_CASE(test20_quadrupole_thin_eval)
 			}
 
 			const double x = i;
-			gtpsa::ss_vect<double> ps({x, 0e0, 0e0, 0e0, 0e0, 0e0});
+			std::vector<double> vec2 {x, 0e0, 0e0, 0e0, 0e0, 0e0};
+			gtpsa::ss_vect<double> ps(vec2);
 
 			quad.propagate(calc_config, ps);
 
@@ -291,7 +292,8 @@ BOOST_AUTO_TEST_CASE(test20_quadrupole_thin_eval)
 			}
 
 			const double x = i;
-			gtpsa::ss_vect<double> ps({x, 0e0, 0e0, 0e0, 0e0, 0e0});
+			std::vector<double> vec2 {x, 0e0, 0e0, 0e0, 0e0, 0e0};
+			gtpsa::ss_vect<double> ps(vec2);
 
 			quad.propagate(calc_config, ps);
 
