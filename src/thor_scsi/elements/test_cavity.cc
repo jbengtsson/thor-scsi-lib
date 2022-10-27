@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE(test21_cavity_delta)
 	C.set<std::string>("name", "test");
 	C.set<double>("Frequency", frequency);
 	C.set<double>("Voltage", voltage);
-	C.set<double>("harnum", 538);
+	C.set<double>("HarmonicNumber", 538);
 
 	tsc::ConfigType calc_config;
 	tse::CavityType cavity(C);

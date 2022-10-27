@@ -3,8 +3,7 @@
 #include <pybind11/stl.h>
 #include <pybind11/operators.h>
 
-#include <gtpsa/ss_vect.h>
-#include <gtpsa/tpsa.hpp>
+#include <tps/ss_vect.h>
 #include <tps/tps_type.h>
 #include <tps/tpsa_lin.h>
 #include <tps/enums.h>

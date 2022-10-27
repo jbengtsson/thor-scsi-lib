@@ -177,9 +177,9 @@ namespace thor_scsi::core {
 			rBx = this->coeffs[n].imag();
 			for(int i=n - 2; i >= 0; --i){
 				cdbl_intern tmp = this->coeffs[i];
-				T trBy = x * rBy - y * rBx + tmp.real();
-				rBx    = y * rBy + x * rBx + tmp.imag();
-				rBy = std::move(trBy);
+				trBy = x * rBy - y * rBx + tmp.real();
+				rBx     = y * rBy + x * rBx + tmp.imag();
+				rBy     = std::move(trBy);
 			}
 			*Bx = std::move(rBx);
 			*By = std::move(rBy);

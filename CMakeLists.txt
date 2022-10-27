@@ -69,4 +69,4 @@ add_subdirectory(TPSA)
 # C++ implementation part
 add_subdirectory(src)
 # python wrapper
-# add_subdirectory(python)
+add_subdirectory(python)
