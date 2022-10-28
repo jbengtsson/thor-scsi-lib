@@ -250,18 +250,7 @@ void tse::RadiationDelegateKick::setEnergy(const double val)
 }
 
 template<typename T>
-static inline double ps_coor_ref_value(T coor);
-
-static inline double ps_coor_ref_value(double coor)
-{
-	return coor;
-}
-static inline double ps_coor_ref_value(tps coor)
-{
-	return coor.cst();
-}
-template<typename T>
-static bool check_ps_finite(gtpsa::ss_vect<T> ps, const double max_val = 1e3)
+static bool check_ps_finite(gtpsa::ss_vect<T>& ps, const double max_val = 1e3)
 {
 	bool check_ps_finite = true;
 	for(int i=0; i < nv_tps; ++i){
@@ -283,7 +272,6 @@ void tse::RadiationDelegateKick::radiate(const thor_scsi::core::ConfigType &conf
 #else
 	// M. Sands "The Physics of Electron Storage Rings" SLAC-121, p. 98.
 	// ddelta/d(ds) = -C_gamma*E_0^3*(1+delta)^2*(B_perp/(Brho))^2/(2*pi)
-	T  p_s0, p_s1, ds, B2_perp = 0e0, B2_par = 0e0;
 
         T B2_perp = gtpsa::same_as_instance(B[0]);
         T B2_par = gtpsa::same_as_instance(B[2]);
