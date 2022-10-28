@@ -22,9 +22,9 @@ auto tpsa_ref = gtpsa::tpsa(a_desc, gtpsa::init::default_);
 /**
  * code originally from tracy / thor_scsi on hold
  */
-arma::mat get_sbend_mat(const double length, const double b2,
-			const double phi,
-			const double delta)
+static arma::mat get_sbend_mat(const double length, const double b2,
+			       const double phi,
+			       const double delta)
 {
 
 	arma::mat mat = arma::mat(6, 6);
@@ -171,37 +171,37 @@ symplectic_result_check_zeros_elements(T mat)
 
 }
 
-#if 0
+
 static void
-symplectic_result_check_non_zeros_elements(gtpsa::ss_vect<gtpsa::tpsa> ps, arma::mat mat)
+symplectic_result_check_non_zeros_elements(gtpsa::ss_vect<gtpsa::tpsa> ps_arg, arma::mat mat)
 {
 	//arma::inplace_trans(mat);
 	const double eps = 1e-6;
 
-	BOOST_CHECK_CLOSE((ps[x_][x_]),         (mat.at(x_, x_)),         eps);
+	arma::mat ps = ps_arg.jacobian();
+	BOOST_CHECK_CLOSE( ps.at(  x_    , x_     ), mat.at(  x_    , x_     ), eps);
 
-	BOOST_CHECK_CLOSE((ps[x_][px_]),        (mat.at(x_, px_)),        eps);
-	BOOST_CHECK_CLOSE((ps[x_][delta_]),     (mat.at(x_, delta_)),     eps);
+	BOOST_CHECK_CLOSE( ps.at(  x_    , px_    ), mat.at(  x_    , px_    ), eps);
+	BOOST_CHECK_CLOSE( ps.at(  x_    , delta_ ), mat.at(  x_    , delta_ ), eps);
 
-	BOOST_CHECK_CLOSE((ps[px_][x_]),        (mat.at(px_, x_)),        eps);
-	BOOST_CHECK_CLOSE((ps[px_][px_]),       (mat.at(px_, px_)),       eps);
-	BOOST_CHECK_CLOSE((ps[px_][delta_]),    (mat.at(px_, delta_)),    eps);
+	BOOST_CHECK_CLOSE( ps.at( px_    , x_     ), mat.at( px_    , x_     ), eps);
+	BOOST_CHECK_CLOSE( ps.at( px_    , px_    ), mat.at( px_    , px_    ), eps);
+	BOOST_CHECK_CLOSE( ps.at( px_    , delta_ ), mat.at( px_    , delta_ ), eps);
 
-	BOOST_CHECK_CLOSE((ps[y_][y_]),         (mat.at(y_, y_)),         eps);
-	BOOST_CHECK_CLOSE((ps[y_][py_]),        (mat.at(y_, py_)),        eps);
+	BOOST_CHECK_CLOSE( ps.at(  y_    , y_     ), mat.at(  y_    , y_     ), eps);
+	BOOST_CHECK_CLOSE( ps.at(  y_    , py_    ), mat.at(  y_    , py_    ), eps);
 
-	BOOST_CHECK_CLOSE((ps[py_][y_]),        (mat.at(py_, y_)),        eps);
-	BOOST_CHECK_CLOSE((ps[py_][py_]),       (mat.at(py_, py_)),       eps);
+	BOOST_CHECK_CLOSE( ps.at( py_    , y_     ), mat.at( py_    , y_     ), eps);
+	BOOST_CHECK_CLOSE( ps.at( py_    , py_    ), mat.at( py_    , py_    ), eps);
 
-	BOOST_CHECK_CLOSE((ps[ct_][x_]),        (mat.at(ct_, x_)),        eps);
-	BOOST_CHECK_CLOSE((ps[ct_][px_]),       (mat.at(ct_, px_)),       eps);
-	BOOST_CHECK_CLOSE((ps[ct_][delta_]),    (mat.at(ct_, delta_)),    eps);
-	BOOST_CHECK_CLOSE((ps[ct_][ct_]),       (mat.at(ct_, ct_)),       eps);
+	BOOST_CHECK_CLOSE( ps.at( ct_    , x_     ), mat.at( ct_    , x_     ), eps);
+	BOOST_CHECK_CLOSE( ps.at( ct_    , px_    ), mat.at( ct_    , px_    ), eps);
+	BOOST_CHECK_CLOSE( ps.at( ct_    , delta_ ), mat.at( ct_    , delta_ ), eps);
+	BOOST_CHECK_CLOSE( ps.at( ct_    , ct_    ), mat.at( ct_    , ct_    ), eps);
 
-	BOOST_CHECK_CLOSE((ps[delta_][delta_]), (mat.at(delta_, delta_)), eps);
+	BOOST_CHECK_CLOSE( ps.at( delta_ , delta_ ), mat.at( delta_ , delta_ ), eps);
 
 }
-#endif
 
 static arma::mat
 compute_omega_matrix(void)
@@ -369,6 +369,19 @@ static void extract_ps_jac(arma::mat mat, arma::mat *ps, arma::mat *jac)
 
 }
 
+template<typename T>
+static void to_ps_jac(gtpsa::ss_vect<T>& ssv, arma::mat *ps, arma::mat *jac)
+{
+    *ps = ssv.cst();
+    *jac = ssv.jacobian();
+}
+
+static void to_ps_jac(gtpsa::ss_vect<tps>& ssv, arma::mat *ps, arma::mat *jac)
+{
+    throw std::runtime_error("Not implemented");
+    // extract_ps_jac(maptomat(ssv), ps, jac);
+}
+
 BOOST_AUTO_TEST_CASE(test21_sector_tps_symplectic)
 {
 	tsc::ConfigType calc_config;
@@ -392,13 +405,14 @@ BOOST_AUTO_TEST_CASE(test21_sector_tps_symplectic)
 	const gtpsa::ss_vect<gtpsa::tpsa> ps_ref = ps.clone();
 	bend.propagate(calc_config, ps);
 
-#warning "Symplectic check disabled"
-#if 0
 	arma::mat ps2, jac;
+
+	to_ps_jac(ps, &ps2, &jac);
+	check_symplectisism(jac);
+#if 0
 	extract_ps_jac(maptomat(ps), &ps2, &jac);
 
 	// jac.print("checking jacobian ");
-	check_symplectisism(jac);
 #endif
 
 }
