@@ -78,8 +78,9 @@ namespace thor_scsi::elements {
  * \endverbatim
  *
  */
+template<typename T>
 void get_twoJ(const int n_DOF, const gtpsa::ss_vect<double> &ps,
-	      const gtpsa::ss_vect<tps> &A, double twoJ[]);
+	      const gtpsa::ss_vect<T> &A, double twoJ[]);
 
 /**
  *
@@ -116,6 +117,30 @@ inline T get_p_s(const thor_scsi::core::ConfigType &conf, const gtpsa::ss_vect<T
 }
 
 
+	template<typename T>
+	double get_curly_H(const gtpsa::ss_vect<T>      &A);
+	double get_curly_H(const gtpsa::ss_vect<tps>    &A);
+	double get_curly_H(const gtpsa::ss_vect<double> &A);
+
+
+	//template<>
+	template<typename T>
+	static inline double get_dI_eta(const gtpsa::ss_vect<T> &A){
+#warning "optimise dI eta"
+		arma::mat jac = A.jacobian();
+		return jac(x_, delta_);
+	}
+
+	static inline double get_dI_eta(const gtpsa::ss_vect<tps> &A){
+		return A[x_][delta_];
+	}
+
+	static inline double get_dI_eta(const gtpsa::ss_vect<double> &A){
+		std::cout << "get_dI_eta: operation not defined for double" << std::endl;
+		throw std::domain_error("get_dI_eta: operation not defined for tps");
+		return 0e0;
+	}
+
 // partial template-class specialization
 // primary version
 template<typename T>
@@ -141,12 +166,6 @@ public:
 	/**
 	 * @brief Compute (linear) dispersion action
 	 */
-	static inline double get_curly_H(const gtpsa::ss_vect<double> &x){
-		std::cout << "get_curly_H: operation not defined for double" << std::endl;
-		throw std::domain_error("get_curly_H: operation not defined for double");
-		return 0e0;
-	}
-
 	/**
 	 * @brief Synchrotron integral
 	 *
@@ -179,24 +198,6 @@ public:
 	*/
 
 	static inline tps set_prm(const int k) { return tps(0e0, k); }
-
-	static inline double get_curly_H(const gtpsa::ss_vect<tps> &A){
-		int             j;
-		double          curly_H[2], unused=0e0;
-		gtpsa::ss_vect<double> eta(unused);
-
-		eta.set_zero();
-		for (j = 0; j < 4; j++)
-			eta[j] = A[j][delta_];
-
-		get_twoJ(2, eta, A, curly_H);
-
-		return curly_H[X_];
-	}
-
-	static inline double get_dI_eta(const gtpsa::ss_vect<tps> &A){
-		return A[x_][delta_];
-	}
 
 	/*
 	 *  dN<u^2>/E^2 =

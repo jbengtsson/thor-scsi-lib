@@ -2,6 +2,8 @@
 #include <thor_scsi/elements/radiation_delegate.h>
 #include <thor_scsi/elements/element_helpers.h>
 #include <thor_scsi/elements/utils.h>
+#include <gtpsa/utils_tps.hpp>
+
 
 namespace ts = thor_scsi;
 namespace tsc = thor_scsi::core;
@@ -23,9 +25,10 @@ std::string tse::RadiationDelegateKickInterface::repr(void) const
 template <typename T>
 inline void tse::RadiationDelegate::computeAndStoreCurlyH(const gtpsa::ss_vect<T> &ps)
 {
-    throw std::runtime_error("computeAndStoreCurlyH needs implementation" );
-    // this->curly_dH_x = is_tps<T>::get_curly_H(ps);
+	//throw std::runtime_error("computeAndStoreCurlyH needs implementation" );
+	this->curly_dH_x = get_curly_H(ps);
 }
+
 template <typename T>
 inline void tse::RadiationDelegate::_view(const tsc::ElemType& elem, const gtpsa::ss_vect<T> &ps, const enum tsc::ObservedState state, const int cnt)
 {
@@ -51,21 +54,12 @@ inline void tse::RadiationDelegate::_view(const tsc::ElemType& elem, const gtpsa
 //void tse::RadiationDelegate::_view(const tsc::ElemType& elem, const gtpsa::ss_vect<tps> &ps, const enum tsc::ObservedState state, const int cnt);
 void tse::RadiationDelegate::view(const tsc::ElemType& elem, const gtpsa::ss_vect<double>      &ps, const enum tsc::ObservedState state, const int cnt)
 {
-<<<<<<< HEAD
 	_view(elem, ps, state, cnt);
 }
 void tse::RadiationDelegate::view(const tsc::ElemType& elem, const gtpsa::ss_vect<tps>         &ps, const enum tsc::ObservedState state, const int cnt)
 {
 	_view(elem, ps, state, cnt);
 }
-=======
-	_view(elem, ps, state, cnt);
-}
-void tse::RadiationDelegate::view(const tsc::ElemType& elem, const gtpsa::ss_vect<tps>         &ps, const enum tsc::ObservedState state, const int cnt)
-{
-	_view(elem, ps, state, cnt);
-}
->>>>>>> Using mad-ng's gtpsa for truncated power series calculations
 void tse::RadiationDelegate::view(const tsc::ElemType& elem, const gtpsa::ss_vect<gtpsa::tpsa> &ps, const enum tsc::ObservedState state, const int cnt)
 {
 	_view(elem, ps, state, cnt);
@@ -98,37 +92,58 @@ inline void tse::RadiationDelegateKick::synchrotronIntegralsFinish(const FieldKi
 template<typename T>
 inline void tse::RadiationDelegateKick::synchrotronIntegralsStep(const gtpsa::ss_vect<T> &ps)
 {
+
+#if 0
     	throw std::runtime_error("synchrotron integral steps need to be implemented ");
+#else
 
 	// Needs A^-1.
-#if 0
-	this->curly_dH_x += is_tps<tps>::get_curly_H(ps);
-	this->dI[4] += is_tps<tps>::get_dI_eta(ps);
+	this->curly_dH_x += get_curly_H<T>(ps);
+	this->dI[4] += get_dI_eta(ps);
 #endif
 }
 
+/**
+ * @brief make gtpsa::pow accessible in a polymorphic fashion
+ */
+static inline auto
+pow(gtpsa::tpsa& arg, double exponent)
+{
+	return gtpsa::pow(arg, exponent);
+}
+/**
+ * @brief make gtpsa::pow accessible in a polymorphic fashion
+ */
+static inline auto
+pow(gtpsa::tpsa& arg, int power)
+{
+	return gtpsa::pow(arg, power);
+}
 
 template<typename T>
 inline void tse::RadiationDelegateKick::diffusion(const T &B2_perp,  const T &ds, const T &p_s0,  const gtpsa::ss_vect<T> &A)
 {
 
-	int          j;
-	double       B_66;
-	gtpsa::ss_vect<T> A_inv(A[0]);
 
-	throw std::runtime_error("diffusion needs to be implemented");
+	// gtpsa::ss_vect<T> A_inv(A[0]);
+
 #if 0
+	throw std::runtime_error("diffusion needs to be implemented");
+#else
 	if (B2_perp > 0e0){
 		// Fix move function to RadiationDelegateKick
 		auto q_fluct = this->q_fluct;
 
-		B_66 = (q_fluct*pow(B2_perp.cst(), 1.5)*pow(p_s0, 4)*ds).cst();
-		A_inv = Inv(A);
+		auto t = q_fluct*pow(gtpsa::cst(B2_perp), 1.5)*pow(p_s0, 4)*ds;
+		auto tmp = gtpsa::cst(t);
+		double B_66 = tmp;
+		arma::mat A_inv = arma::inv(A.jacobian());
+		// A_inv = Inv(A);
 		// D_11 = D_22 = curly_H_x,y * B_66 / 2,
 		// curly_H_x,y = eta_Fl^2 + etap_Fl^2
-		for (j = 0; j < 3; ++j){
+		for (int j = 0; j < 3; ++j){
 			this->D_rad[j] +=
-				(sqr(A_inv[j*2][delta_])+sqr(A_inv[j*2+1][delta_]))*B_66/2e0;
+			    (sqr(A_inv(j*2, delta_))+sqr(A_inv(j*2+1, delta_)))*B_66/2e0;
 		}
 	}
 #endif
@@ -199,10 +214,10 @@ void get_B2(const double h_ref, const std::array<T,3> B, const gtpsa::ss_vect<T>
 	    T &B2_perp, T &B2_par)
 {
   // compute B_perp^2 and B_par^2
-  T xn, e[3];
+  //T e[3];
 
-  xn = 1e0/sqrt(sqr(1e0+xp[x_]*h_ref)+sqr(xp[px_])+sqr(xp[py_]));
-  e[X_] = xp[px_]*xn; e[Y_] = xp[py_]*xn; e[Z_] = (1e0+xp[x_]*h_ref)*xn;
+  T xn = 1e0/sqrt(sqr(1e0+xp[x_]*h_ref)+sqr(xp[px_])+sqr(xp[py_]));
+  std::array<T, 3> e = {xp[px_]*xn, xp[py_]*xn, (1e0+xp[x_]*h_ref)*xn};
 
   // left-handed coordinate system
   B2_perp =
@@ -226,22 +241,11 @@ void tse::RadiationDelegateKick::setEnergy(const double val)
 }
 
 template<typename T>
-static inline double ps_coor_ref_value(T coor);
-
-static inline double ps_coor_ref_value(double coor)
-{
-	return coor;
-}
-static inline double ps_coor_ref_value(tps coor)
-{
-	return coor.cst();
-}
-template<typename T>
-static bool check_ps_finite(gtpsa::ss_vect<T> ps, const double max_val = 1e3)
+static bool check_ps_finite(gtpsa::ss_vect<T>& ps, const double max_val = 1e3)
 {
 	bool check_ps_finite = true;
 	for(int i=0; i < nv_tps; ++i){
-		double ref_val = ps_coor_ref_value(ps[i]);
+		double ref_val = gtpsa::cst(ps[i]);
 		check_ps_finite &= std::isfinite(ref_val);
 		check_ps_finite &= (std::abs(ref_val) < max_val);
 	}
@@ -254,12 +258,20 @@ void tse::RadiationDelegateKick::radiate(const thor_scsi::core::ConfigType &conf
 				     const double h_ref, const std::array<T, 3> B)
 {
 
-       throw std::runtime_error("radiate needs to be implemented  ");
 #if 0
+       throw std::runtime_error("radiate needs to be implemented  ");
+#else
 	// M. Sands "The Physics of Electron Storage Rings" SLAC-121, p. 98.
 	// ddelta/d(ds) = -C_gamma*E_0^3*(1+delta)^2*(B_perp/(Brho))^2/(2*pi)
-	T  p_s0, p_s1, ds, B2_perp = 0e0, B2_par = 0e0;
-	gtpsa::ss_vect<T> cs(ps);
+
+        T B2_perp = gtpsa::same_as_instance(B[0]);
+        T B2_par = gtpsa::same_as_instance(B[2]);
+
+	// I think init sets the fields to zero ... but better to zero them for sure
+	B2_perp = 0e0;
+	B2_par = 0e0;
+
+	gtpsa::ss_vect<T> cs = ps.clone();
 	gtpsa::ss_vect<T> ps_save = ps.clone();
 
 	const bool radiation = conf.radiation;
@@ -272,7 +284,7 @@ void tse::RadiationDelegateKick::radiate(const thor_scsi::core::ConfigType &conf
 	  << "\nRadiate ->:\n" << this->delegator_name << "\n" << "  ps = "
 	  << ps;
 #else
-	THOR_SCSI_LOG(INFO) << "\nRadiate ->:\n" << "\n" << "  ps = " << ps;
+	THOR_SCSI_LOG(INFO) << "\nRadiate ->:\n" << "\n" << "  ps = " << ps.clone();
 #endif
 
 	if(!check_ps_finite(ps)){
@@ -285,8 +297,8 @@ void tse::RadiationDelegateKick::radiate(const thor_scsi::core::ConfigType &conf
 	}
 
 	// longitudinal component
-	p_s0 = get_p_s(conf, ps);
-	ss_vect<T> cs = ps; //.clone()
+	T p_s0 = get_p_s(conf, ps);
+	cs = ps.clone(); //.clone()
 	// Large ring: x' and y' unchanged.
 	cs[px_] /= p_s0;
 	cs[py_] /= p_s0;
@@ -302,8 +314,11 @@ void tse::RadiationDelegateKick::radiate(const thor_scsi::core::ConfigType &conf
 	}
 
 	// H = -p_s => ds = H*L.
-	ds = (1e0+cs[x_]*h_ref+(sqr(cs[px_])+sqr(cs[py_]))/2e0)*L;
-	// Compute perpendicular reference curve for comoving frame.
+	T ds = (1e0+cs[x_]*h_ref+(sqr(cs[px_])+sqr(cs[py_]))/2e0)*L;
+	THOR_SCSI_LOG(DEBUG) << "'Field contribution' h_ref " << h_ref
+		  << " B (" <<  B[X_] << ", " << B[Y_] << ", " << B[Z_] <<")"
+			     << " cs "  << cs.clone();
+	// compute perpendicular to curvature
 	get_B2(h_ref, B, cs, B2_perp, B2_par);
 
 	//THOR_SCSI_LOG(INFO)
@@ -315,7 +330,7 @@ void tse::RadiationDelegateKick::radiate(const thor_scsi::core::ConfigType &conf
 
 	if (radiation) {
 		ps[delta_] -= cl_rad*sqr(p_s0)*B2_perp*ds;
-		p_s1 = get_p_s(conf, ps);
+		T p_s1 = get_p_s(conf, ps);
 		ps[px_] = cs[px_]*p_s1;
 		ps[py_] = cs[py_]*p_s1;
 	}
@@ -346,12 +361,12 @@ void tse::RadiationDelegateKick::radiate(const thor_scsi::core::ConfigType &conf
 
 	THOR_SCSI_LOG(INFO)
 	  << "\nRadiate ->:\n" << this->delegator_name << "\n" << "  ps = "
-	  << ps;
+	  << ps.clone();
 
-	THOR_SCSI_LOG(INFO) << "\nRadiate ->:\n" << "\n" << "  ps = " << ps;
+	THOR_SCSI_LOG(INFO) << "\nRadiate ->:\n" << "\n" << "  ps = " << ps.clone();
 
 	gtpsa::ss_vect<T> dPs = ps - ps_save;
-	THOR_SCSI_LOG(INFO) <<  "Radiation effect on ps\n" << dPs << " \n";
+	THOR_SCSI_LOG(INFO) <<  "Radiation effect on ps\n" << dPs.clone() << " \n";
 
 #endif
 }
