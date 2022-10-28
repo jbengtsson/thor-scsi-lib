@@ -92,6 +92,8 @@ set(thor_scsi_core_FILES
   elements/standard_aperture.cc
   std_machine/std_machine.cc
   std_machine/accelerator.cc
+  # to be removed as soon as tps is removed ...
+  ss_vect_tps.cc
 )
 
 add_library(thor_scsi_core SHARED
@@ -111,6 +113,8 @@ target_include_directories(thor_scsi_core
 target_link_libraries(thor_scsi_core
   # Todo: need to learn how to instruct cmake that this
   # dependency will be exported properly
+  gtpsa-c++
+  gtpsa
   tpsa_lin
   flame::core
   # ${flame_CORE_LIBRARY}
@@ -155,6 +159,7 @@ target_link_libraries(test_transform_phase_space
   thor_scsi
   thor_scsi_core
   tpsa_lin
+  gtpsa-c++
   gtpsa
   # PRIVATE Boost::boost
   #  quadmath
