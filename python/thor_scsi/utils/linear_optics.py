@@ -1,6 +1,7 @@
 """Functionallity for computing linear optics
 """
 import thor_scsi.lib as tslib
+import gtpsa
 from .phase_space_vector import ss_vect_tps2ps_jac, array2ss_vect_tps
 from .courant_snyder import compute_A_CS
 from .extract_info import accelerator_info
@@ -259,7 +260,7 @@ def tps2twiss(tps: tslib.ss_vect_tps) -> (np.ndarray, np.ndarray):
     return transform_matrix_extract_twiss(Aj)
 
 
-def find_phase_space_origin(M: np.ndarray) -> np.ndarray:
+def find_phase_space_fixed_point(M: np.ndarray) -> np.ndarray:
     """Transform to energy dependent fix point
 
     * Diagonalise M = A R A^(-1)
@@ -313,6 +314,8 @@ def compute_map(
     """
     t_map = tslib.ss_vect_tps()
     t_map.set_identity()
+    desc = gtpsa.desc(6, 4)
+    t_map = gtpsa.ss_vect_tpsa(desc, 1)
     # acc.propagate(calc_config, t_map, 0, len(acc))
     acc.propagate(calc_config, t_map)
     return t_map
@@ -322,12 +325,12 @@ def propagate_and_find_phase_space_orgin(acc, calc_config):
     """propagate once around ring. use this map to find phase space origin
 
     Todo:
-         Rename phase space origin fix point
+         Rename phase space origin fixed point
     """
     t_map = compute_map(acc, calc_config)
     M = map2numpy(t_map)
 
-    Aj = find_phase_space_origin(M)
+    Aj = find_phase_space_fixed_point(M)
     Atmp = np.zeros([7, 7], dtype=np.float)
     Atmp[:6, :6] = Aj
     A = array2ss_vect_tps(Atmp)
