@@ -7,4 +7,3 @@ import logging
 import functools
 
 logger = logging.getLogger("thor_scsi")
-

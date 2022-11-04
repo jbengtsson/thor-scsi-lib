@@ -23,11 +23,37 @@ from thor_scsi.lib import (
 )
 from thor_scsi.lib import phase_space_index_internal as phase_space_ind
 
-logging.basicConfig(level="DEBUG")
-from thor_scsi.factory import accelerator_from_config
-from thor_scsi.utils.accelerator import instrument_with_radiators
-from thor_scsi.utils.radiate import calculate_radiation
 import os
+import numpy as np
+
+import thor_scsi.lib as tslib
+
+import numpy as np
+import scipy as sp
+
+import thor_scsi.lib as tslib
+
+# from thor_scsi.utils.linalg import match_eigenvalues_to_plane_orig
+from thor_scsi.utils.closed_orbit import compute_closed_orbit
+from thor_scsi.utils.output import vec2txt, mat2txt, chop_array
+from thor_scsi.utils.linear_optics import compute_M_diag, calculate_nu_symp
+
+
+X_, Y_, Z_ = [
+    tslib.spatial_index.X,
+    tslib.spatial_index.Y,
+    tslib.spatial_index.Z
+]
+
+x_, px_, y_, py_, ct_, delta_ = [
+    tslib.phase_space_index_internal.x,
+    tslib.phase_space_index_internal.px,
+    tslib.phase_space_index_internal.y,
+    tslib.phase_space_index_internal.py,
+    tslib.phase_space_index_internal.ct,
+    tslib.phase_space_index_internal.delta
+]
+
 
 import numpy as np
 import scipy as sp

@@ -100,7 +100,7 @@ def compute_closed_orbit(
     closed_orbit = False
     n_elements = len(acc)
     # Newton's method for root finding
-    logger.warning(
+    logger.debug(
         "start     , dx_abs %7.1e, eps  %7.1e, x0 %s", dx_abs, eps, x0
     )
 
@@ -115,6 +115,7 @@ def compute_closed_orbit(
         M += x0
         logger.warning(f"{n_iter=},  Start propagation at \n {M.cst()}\n")
         next_element = acc.propagate(conf, M)
+        # logger.debug(f"{n_iter=},  End propagation at \n {M.cst()}\n {M}")
 
         if next_element == n_elements:
             # Managed to get around the ring ... good

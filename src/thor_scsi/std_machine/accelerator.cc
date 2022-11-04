@@ -124,5 +124,4 @@ int
 ts::Accelerator::propagate(thor_scsi::core::ConfigType& conf, ss_vect_tpsa &ps, size_t start, int max_elements, size_t n_turns)// const
 {
     return _propagate(conf, ps, start, max_elements, n_turns);
-
 }
