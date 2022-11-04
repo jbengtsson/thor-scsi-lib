@@ -313,7 +313,7 @@ static void compute_transport_matrix_prop(ts::Accelerator& accelerator, const in
 	if(do_tps){
 		std::cout  << "diff\n" << pmap - pmap_orig  << std::endl;
 	}
-	std::cout << "Y Computed poincare map (gtsa)" << std::endl;
+	std::cout << "Computed poincare map (gtsa)" << std::endl;
 	ps.show(std::cout, 10);
 	std::cout << std::endl;
 
@@ -328,14 +328,6 @@ static void compute_transport_matrix_prop(ts::Accelerator& accelerator, const in
 		auto dtp = dt / n_turns;
 		std::cout << std::fixed
 			  << "gtpsa: "
-			  << "Required time span for " << n_turns << " turns "
-			  << " dt: " << dt << " us, " << dt / 1000.0 << " ms"
-			  << " per turn " << dtp << " us"
-			  << std::endl;
-		dt = std::chrono::duration_cast<std::chrono::microseconds>(end_orig - start_orig).count();
-		dtp = dt / n_turns;
-		std::cout << std::fixed
-			  << "tps:   "
 			  << "Required time span for " << n_turns << " turns "
 			  << " dt: " << dt << " us, " << dt / 1000.0 << " ms"
 			  << " per turn " << dtp << " us"

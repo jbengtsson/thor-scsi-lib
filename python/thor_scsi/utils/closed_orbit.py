@@ -86,10 +86,8 @@ def compute_closed_orbit(
 
     # create weighting matrix for inverse calculation
     jj = np.zeros(tslib.ss_dim, np.int)
-    jj[:n] = 1  # select active phase space coordinates
 
     # jj[:n] = 1  # select active phase space coordinates
-
     for k in range(tslib.ss_dim):
         jj[k] = 1 if k < n else 0
 
@@ -102,7 +100,7 @@ def compute_closed_orbit(
     closed_orbit = False
     n_elements = len(acc)
     # Newton's method for root finding
-    logger.warning(
+    logger.debug(
         "start     , dx_abs %7.1e, eps  %7.1e, x0 %s", dx_abs, eps, x0
     )
 
@@ -117,6 +115,7 @@ def compute_closed_orbit(
         M += x0
         logger.warning(f"{n_iter=},  Start propagation at \n {M.cst()}\n")
         next_element = acc.propagate(conf, M)
+        # logger.debug(f"{n_iter=},  End propagation at \n {M.cst()}\n {M}")
 
         if next_element == n_elements:
             # Managed to get around the ring ... good
@@ -135,7 +134,6 @@ def compute_closed_orbit(
             x0 += dx0.cst()
             # dx_aps = np.sqrt(np.sum(dx[:n] ** 2))
             dx_abs = tslib.xabs(n, dx)
-
 
             logger.warning(f"{n_iter=},  End propagation at \n {x0}\n")
         else:

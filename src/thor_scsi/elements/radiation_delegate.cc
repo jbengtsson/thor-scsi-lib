@@ -219,15 +219,6 @@ void get_B2(const double h_ref, const std::array<T,3> B, const gtpsa::ss_vect<T>
   T xn = 1e0/sqrt(sqr(1e0+xp[x_]*h_ref)+sqr(xp[px_])+sqr(xp[py_]));
   std::array<T, 3> e = {xp[px_]*xn, xp[py_]*xn, (1e0+xp[x_]*h_ref)*xn};
 
-  THOR_SCSI_LOG(DEBUG)
-    << "\nField contribution:\n  h_ref = " << h_ref
-    << "\n  B     = (" <<  B[X_] << ", " << B[Y_] << ", "
-    << B[Z_] << ")"
-    << "\n  e^    = (" <<  e[X_] << ", " << e[Y_] << ", " << e[Z_] <<")"
-    << "\n  x_n   = " << xn;
-
-
-
   // left-handed coordinate system
   B2_perp =
     sqr(B[Y_]*e[Z_]-B[Z_]*e[Y_]) + sqr(B[X_]*e[Y_]-B[Y_]*e[X_])
@@ -324,11 +315,18 @@ void tse::RadiationDelegateKick::radiate(const thor_scsi::core::ConfigType &conf
 
 	// H = -p_s => ds = H*L.
 	T ds = (1e0+cs[x_]*h_ref+(sqr(cs[px_])+sqr(cs[py_]))/2e0)*L;
+<<<<<<< HEAD
 	THOR_SCSI_LOG(DEBUG)
 	  << "\nField contribution:\n  h_ref = " << h_ref
 	  << "\n  B     = (" <<  B[X_] << ", " << B[Y_] << ", " << B[Z_] << ")"
 	  << "\n  cs    = " <<  cs;
 	// Compute perpendicular reference curve for comoving frame.
+=======
+	THOR_SCSI_LOG(DEBUG) << "'Field contribution' h_ref " << h_ref
+		  << " B (" <<  B[X_] << ", " << B[Y_] << ", " << B[Z_] <<")"
+			     << " cs "  << cs.clone();
+	// compute perpendicular to curvature
+>>>>>>> 3350716092312c309eb7180e5b881a70739b65bb
 	get_B2(h_ref, B, cs, B2_perp, B2_par);
 
 	//THOR_SCSI_LOG(INFO)

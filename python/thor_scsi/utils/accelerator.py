@@ -9,8 +9,6 @@ import numpy as np
 import xarray as xr
 from typing import Sequence
 import logging
-<<<<<<< HEAD
-
 logger = logging.getLogger("thor-scsi")
 
 
@@ -180,8 +178,6 @@ def instrument_with_radiators(
         # a_del.view(elem, ps_zero, tslib.ObservedState.start, 0)
 
     return rad_del_kick  # , rad_del
-=======
->>>>>>> radiate: simplified example
 
 logger = logging.getLogger("thor-scsi")
 
