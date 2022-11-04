@@ -100,7 +100,11 @@ tps::tps(const double r, const int i)
   char name[11];
 
   if (!ini_tps) TPSA_Ini();
-  seq_tps++; sprintf(name, "tps-%-5hu", seq_tps);
+  seq_tps++;
+#if NO_TPSA == 1
+#else
+  sprintf(name, "tps-%-5hu", seq_tps);
+#endif
   daall_(ltps, 1, name, no_tps, nv_tps);
   if (i == 0)
     dacon_(ltps, r);

@@ -76,6 +76,8 @@ def ps_intern_to_std(a: np.ndarray, copy: bool = True) -> np.ndarray:
 
 
 def map2numpy(t_map):
+    """convert a tps based map to a numpy array
+    """
     mat = tslib.ss_vect_tps_to_mat(t_map)
     mat = np.array(mat)
     return mat
