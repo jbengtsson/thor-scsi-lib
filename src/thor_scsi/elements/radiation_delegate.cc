@@ -315,18 +315,11 @@ void tse::RadiationDelegateKick::radiate(const thor_scsi::core::ConfigType &conf
 
 	// H = -p_s => ds = H*L.
 	T ds = (1e0+cs[x_]*h_ref+(sqr(cs[px_])+sqr(cs[py_]))/2e0)*L;
-<<<<<<< HEAD
 	THOR_SCSI_LOG(DEBUG)
 	  << "\nField contribution:\n  h_ref = " << h_ref
 	  << "\n  B     = (" <<  B[X_] << ", " << B[Y_] << ", " << B[Z_] << ")"
-	  << "\n  cs    = " <<  cs;
+	  << "\n  cs    = " <<  cs.clone();
 	// Compute perpendicular reference curve for comoving frame.
-=======
-	THOR_SCSI_LOG(DEBUG) << "'Field contribution' h_ref " << h_ref
-		  << " B (" <<  B[X_] << ", " << B[Y_] << ", " << B[Z_] <<")"
-			     << " cs "  << cs.clone();
-	// compute perpendicular to curvature
->>>>>>> 3350716092312c309eb7180e5b881a70739b65bb
 	get_B2(h_ref, B, cs, B2_perp, B2_par);
 
 	//THOR_SCSI_LOG(INFO)

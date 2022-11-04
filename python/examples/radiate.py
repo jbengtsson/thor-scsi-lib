@@ -4,14 +4,17 @@ import logging
 import copy
 import xarray as xr
 
-logging.basicConfig(level="DEBUG")
-logger = logging.getLogger("thor_scsi")
-print("\nlogger:\n", logger)
-logger.setLevel("DEBUG")
+logging.basicConfig(level="WARNING")
+# logger = logging.getLogger("thor_scsi")
+# print("\nlogger:\n", logger)
+# logger.setLevel("WARNING")
 # Levels: DEBUG, INFO, WARNING, ERROR, and CRITICAL.
 
 from thor_scsi.factory import accelerator_from_config
 from thor_scsi.utils.accelerator import instrument_with_radiators
+from thor_scsi.utils.courant_snyder import compute_twiss_A
+from thor_scsi.utils.phase_space_vector import map2numpy, vec_mat2ss_vect_tps
+from thor_scsi.utils.radiate import compute_radiation
 
 from thor_scsi.lib import (
     ConfigType,
@@ -21,110 +24,23 @@ from thor_scsi.lib import (
     RadiationDelegateKick,
     ObservedState
 )
+
 from thor_scsi.lib import phase_space_index_internal as phase_space_ind
 
-import xarray as xr
-
-logging.basicConfig(level="DEBUG")
-from thor_scsi.factory import accelerator_from_config
-from thor_scsi.utils.accelerator import instrument_with_radiators
-from thor_scsi.utils.radiate import calculate_radiation
-
 import os
-import numpy as np
 
 import thor_scsi.lib as tslib
 
 import numpy as np
-import scipy as sp
-
-import thor_scsi.lib as tslib
-
-# from thor_scsi.utils.linalg import match_eigenvalues_to_plane_orig
-from thor_scsi.utils.closed_orbit import compute_closed_orbit
-from thor_scsi.utils.output import vec2txt, mat2txt, chop_array
-from thor_scsi.utils.linear_optics import compute_M_diag, calculate_nu_symp
-
-
-X_, Y_, Z_ = [
-    tslib.spatial_index.X,
-    tslib.spatial_index.Y,
-    tslib.spatial_index.Z
-]
-
-x_, px_, y_, py_, ct_, delta_ = [
-    tslib.phase_space_index_internal.x,
-    tslib.phase_space_index_internal.px,
-    tslib.phase_space_index_internal.y,
-    tslib.phase_space_index_internal.py,
-    tslib.phase_space_index_internal.ct,
-    tslib.phase_space_index_internal.delta
-]
-
-
-import numpy as np
-import scipy as sp
+from scipy.constants import pi, c
 
 import thor_scsi.lib as tslib
 
 # from thor_scsi.utils.linalg import match_eigenvalues_to_plane_orig
 from thor_scsi.utils.closed_orbit import compute_closed_orbit
 from thor_scsi.utils.output import vec2txt, mat2txt, chop_array
-from thor_scsi.utils.linear_optics import compute_M_diag, calculate_nu_symp
-
-
-X_, Y_, Z_ = [
-    tslib.spatial_index.X,
-    tslib.spatial_index.Y,
-    tslib.spatial_index.Z
-]
-
-x_, px_, y_, py_, ct_, delta_ = [
-    tslib.phase_space_index_internal.x,
-    tslib.phase_space_index_internal.px,
-    tslib.phase_space_index_internal.y,
-    tslib.phase_space_index_internal.py,
-    tslib.phase_space_index_internal.ct,
-    tslib.phase_space_index_internal.delta
-]
-
-
-import numpy as np
-import scipy as sp
-
-import numpy as np
-import scipy as sp
-
-import thor_scsi.lib as tslib
-
-# from thor_scsi.utils.linalg import match_eigenvalues_to_plane_orig
-from thor_scsi.utils.closed_orbit import compute_closed_orbit
-from thor_scsi.utils.output import vec2txt, mat2txt, chop_array
-from thor_scsi.utils.linear_optics import compute_M_diag, calculate_nu_symp
-
-
-X_, Y_, Z_ = [
-    tslib.spatial_index.X,
-    tslib.spatial_index.Y,
-    tslib.spatial_index.Z
-]
-
-x_, px_, y_, py_, ct_, delta_ = [
-    tslib.phase_space_index_internal.x,
-    tslib.phase_space_index_internal.px,
-    tslib.phase_space_index_internal.y,
-    tslib.phase_space_index_internal.py,
-    tslib.phase_space_index_internal.ct,
-    tslib.phase_space_index_internal.delta
-]
-
-
-import thor_scsi.lib as tslib
-
-# from thor_scsi.utils.linalg import match_eigenvalues_to_plane_orig
-from thor_scsi.utils.closed_orbit import compute_closed_orbit
-from thor_scsi.utils.output import vec2txt, mat2txt, chop_array
-from thor_scsi.utils.linear_optics import compute_M_diag, calculate_nu_symp
+from thor_scsi.utils.linear_optics import compute_M_diag, calculate_nu_symp, \
+    acos2
 
 
 X_, Y_, Z_ = [
@@ -148,14 +64,10 @@ t_dir = os.path.join(os.environ["HOME"], "Nextcloud", "thor_scsi")
 t_file = os.path.join(t_dir, "b3_sf_40Grad_JB.lat")
 
 acc = accelerator_from_config(t_file)
+
 print(" ".join([elem.name for elem in acc]))
-print("\nC = ", np.sum([elem.getLength() for elem in acc]))
 
 # b2 = acc.find("b2", 0)
-
-energy = 2.5e9
-# Just to test diffusion
-# energy = 2.5
 
 # Planes x y z
 # from thor_scsi.lib import spatial_index
@@ -176,128 +88,25 @@ mbb = acc.find("mbb", 0)
 print("{:s}: N = {:d}".
       format(mbb.name, mbb.getNumberOfIntegrationSteps()))
 
-# Install radiators that radiation is calculated
-rad_del_kicks = instrument_with_radiators(acc, energy=energy)
+if False:
+    ps = tslib.ss_vect_double()
+    ps.set_zero()
+    ps[x_]     =  1e-10
+    ps[y_]     = -1e-10
+    ps[delta_] =  1e-10
+    print("\nps_0 = ", ps, end="")
+    # acc.propagate(calc_config, ps, 8-1, 8)
+    acc.propagate(calc_config, ps)
+    print("ps_1 = ", ps)
+
+    exit()
+
 
 calc_config = tslib.ConfigType()
 
-calc_config.radiation = True
-calc_config.emittance = False
-calc_config.Cavity_on = True
-
-print("\ncalc_config:\n [radiation, emittance, Cavity_on] = ",
-      calc_config.radiation, calc_config.emittance, calc_config.Cavity_on)
-
-calc_config.Energy = energy
-
-if calc_config.Cavity_on == True:
-    dof = 3
-else:
-    dof = 2
-
-ps = tslib.ss_vect_double()
-ps.set_zero()
-ps[x_]     =  0e-3
-ps[y_]     = -0e-3
-ps[delta_] =  0e-6
-print("\nps_0 = ", ps)
-acc.propagate(calc_config, ps, 8, 8)
-print("ps_1 = ", ps)
+compute_radiation(acc, calc_config, 2.5e9, 1e-15)
 
 exit()
-
-r = compute_closed_orbit(acc, calc_config, delta=0e0)
-M = r.one_turn_map[:6, :6]
-# print("\nM:\n" + mat2txt(M))
-tune_x, tune_y, tune_long = calculate_nu_symp(3, M)
-
-print(f"\n{tune_x=:.16f} {tune_y=:.16f} {tune_long=:.16f}")
-
-exit()
-
-# r = calculate_radiation(
-#     acc, energy=2.5e9, calc_config=calc_config, install_radiators=True
-# )
-
-compute_M_diag(dof, M)
-
-# exit()
-
-=======
-
-# cav.setVoltage(cav.getVoltage() * 1./2.)
-# cav.setVoltage(0)
-cav = acc.find("cav", 0)
-print("acc cavity", repr(cav))
-txt=\
-    f"""Cavity info
-frequency         {cav.getFrequency()/1e6} MHz",
-voltage           {cav.getVoltage()/1e6} MV
-harmonic number   {cav.getHarmonicNumber()}
-    """
-print(txt)
-
-# cav.setVoltage(cav.getVoltage() * 1./2.)
-# cav.setVoltage(0)
-print("\nCavity", repr(cav))
-txt = f"""\nCavity info:
-  f [MHz] {1e-6*cav.getFrequency()}",
-  V [MV]  {1e-6*cav.getVoltage()}
-  h       {cav.getHarmonicNumber()}
-"""
-print(txt)
-
-mbb = acc.find("mbb", 0)
-print("{:s}: N = {:d}".
-      format(mbb.name, mbb.getNumberOfIntegrationSteps()))
-
-# Install radiators that radiation is calculated
-rad_del_kicks = instrument_with_radiators(acc, energy=energy)
-
-calc_config = tslib.ConfigType()
-
-calc_config.radiation = True
-calc_config.emittance = False
-calc_config.Cavity_on = True
-
-print("\ncalc_config:\n [radiation, emittance, Cavity_on] = ",
-      calc_config.radiation, calc_config.emittance, calc_config.Cavity_on)
-
-calc_config.Energy = energy
-
-if calc_config.Cavity_on == True:
-    dof = 3
-else:
-    dof = 2
-
-ps = tslib.ss_vect_double()
-ps.set_zero()
-ps[x_]     =  0e-3
-ps[y_]     = -0e-3
-ps[delta_] =  0e-6
-print("\nps_0 = ", ps)
-acc.propagate(calc_config, ps, 8, 8)
-print("ps_1 = ", ps)
-
-exit()
-
-r = compute_closed_orbit(acc, calc_config, delta=0e0)
-M = r.one_turn_map[:6, :6]
-# print("\nM:\n" + mat2txt(M))
-tune_x, tune_y, tune_long = calculate_nu_symp(3, M)
-
-print(f"\n{tune_x=:.16f} {tune_y=:.16f} {tune_long=:.16f}")
-
-exit()
-
-# r = calculate_radiation(
-#     acc, energy=2.5e9, calc_config=calc_config, install_radiators=True
-# )
-
-compute_M_diag(dof, M)
-
-# exit()
->>>>>>> 3350716092312c309eb7180e5b881a70739b65bb
 
 
 use_tpsa = True
@@ -325,28 +134,6 @@ else:
 
 
 
-# First step:
-#
-# use closed orbit
-# 1. calculate fix point and Poincarè Map M with damped system (i.e. radiation
-#    on and cavity on (without dispersion in a second case)
-# 2. diagonalise M = A $\Gamma$ A$^{-1}$
-# 3. eigenvalues:
-#        - complex part: tunes,
-#        - real part: damping times  (refer equation)
-#    use eigen values of symplectic matrix to identify the planes
-# 4. propagate A, thin kick will create diffusion coeffs (don't forget to zero
-#    them before calculation starts (sum it up afterwards
-
-
-
-
-# print("Poincaré map calulation .... ")
-# print("radiation OFF")
-# print("start point")
-# ps_start = copy.copy(ps)
-# print(ps)
-# print(ps.cst())
 
 # print("Poincaré map calulation .... ")
 # print("radiation OFF")
@@ -378,14 +165,6 @@ print(f"\n{tune_x=:.16f} {tune_y=:.16f} {tune_long=:.16f}")
 
 exit()
 
-def extract_diffusion_coefficient():
-    dD_rad = np.array([rk.getDiffusionCoefficientsIncrements() for rk in rad_del_kicks])
-    print("Diffusion coefficients\n")
-    print(dD_rad)
-    D_rad = np.add.accumulate(dD_rad, axis=0)
-    return D_rad
-
-
 print(ps_wr)
 acc.propagate(calc_config, ps_wr, 0, 2000)
 print(ps_wr.cst())
@@ -396,7 +175,8 @@ print(ps_wr.cst() - ps.cst())
 
 
 exit()
-print(extract_diffusion_coefficient())
+
+print(compute_diffusion_coefficients())
 use_tpsa = False
 if use_tpsa:
     # Inspect curly_H in
@@ -407,7 +187,8 @@ if use_tpsa:
         txt = f"{name:10s} {idx:4d} curly_H_x {curly_H_x:5f}"
         print(txt)
 
-    I = np.array([a_del.getSynchrotronIntegralsIncrements() for a_del in rad_del_kick])
+    I = np.array([a_del.getSynchrotronIntegralsIncrements() for a_del
+                  in rad_del_kick])
 
     for a_del in rad_del_kick:
         name = a_del.getDelegatorName()

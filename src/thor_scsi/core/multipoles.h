@@ -154,10 +154,8 @@ namespace thor_scsi::core {
 			rBx = this->coeffs[n].imag();
 			for(int i=n - 2; i >= 0; --i){
 			        cdbl_intern tmp = this->coeffs[i];
-
 				auto trBy = x * rBy - y * rBx + tmp.real();
 				rBx       = y * rBy + x * rBx + tmp.imag();
-
 				rBy  = std::move(trBy);
 			}
 			*Bx = std::move(rBx);
@@ -178,36 +176,8 @@ namespace thor_scsi::core {
 			for(int i=n - 2; i >= 0; --i){
 				cdbl_intern tmp = this->coeffs[i];
 				trBy = x * rBy - y * rBx + tmp.real();
-				rBx     = y * rBy + x * rBx + tmp.imag();
-				rBy     = std::move(trBy);
-			}
-			*Bx = std::move(rBx);
-			*By = std::move(rBy);
-		}
-#else
-		template<typename T>
-		inline void _field(const T& x, const T& y, T *Bx, T * By)  const {
-			int n = this->coeffs.size() -1;
-
-			T rBy = gtpsa::same_as_instance(x);
-			T rBx = gtpsa::same_as_instance(y);
-			T trBy = gtpsa::same_as_instance(rBy);
-			T term1 = gtpsa::same_as_instance(x);
-			T term2 = gtpsa::same_as_instance(y);
-			rBy = this->coeffs[n].real();
-			rBx = this->coeffs[n].imag();
-			// trBy = 0e0;
-			for(int i=n - 2; i >= 0; --i){
-				cdbl_intern tmp = this->coeffs[i];
-				term1 = gtpsa::clone(x); term1 *= rBy;
-				term2 = gtpsa::clone(y); term2 *= rBx;
-				trBy = term1; trBy -= term2; trBy += tmp.real();
-
-				term1 = gtpsa::clone(y); term1 *= rBy;
-				term2 = gtpsa::clone(x); term2 *= rBx;
-				rBx = term1; rBx += term2; rBx += tmp.imag();
-				rBy = trBy;
-				// rBy = trBy;
+				rBx  = y * rBy + x * rBx + tmp.imag();
+				rBy  = std::move(trBy);
 			}
 			*Bx = std::move(rBx);
 			*By = std::move(rBy);
