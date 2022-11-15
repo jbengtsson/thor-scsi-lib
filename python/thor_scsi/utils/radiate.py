@@ -8,7 +8,6 @@ from dataclasses import dataclass
 
 from thor_scsi.utils.closed_orbit import compute_closed_orbit
 from thor_scsi.utils.linear_optics import compute_M_diag
-from thor_scsi.utils.phase_space_vector import vec_mat2ss_vect_tps
 from thor_scsi.utils.output import mat2txt, vec2txt
 
 import logging
