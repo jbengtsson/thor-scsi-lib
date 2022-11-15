@@ -1,6 +1,6 @@
 """
 """
-
+import gtpsa
 from thor_scsi.factory import accelerator_from_config
 from thor_scsi.utils.extract_info import accelerator_info
 import thor_scsi.lib as tslib
@@ -21,18 +21,18 @@ t_file = os.path.join(os.path.dirname(__file__), "lattices", "tme.lat")
 acc = accelerator_from_config(t_file)
 for elem in acc:
     print(elem)
-exit()
+
 calc_config = tslib.ConfigType()
 ass = instrument_with_standard_observers(acc)
 
 # Add a little distortion to the lattice..
 elem = acc.find("QF", 0)
-muls = elem.getMultipoles()
-muls.setMultipole(1, 1e-3 - 1e-3j)
+muls = elem.get_multipoles()
+muls.set_multipole(1, 1e-3 - 1e-3j)
 
 
 # Start the calculation ... with the start
-ps = tslib.ss_vect_double()
+ps = gtpsa.ss_vect_double(0e0)
 ps.set_zero()
 if True:
     # Closed orbit for the TME lattice with
@@ -60,7 +60,7 @@ print("End vector should quite match start vector")
 
 # Following code should be matched to
 # :func:`extract_orbit_from_accelerator_with_standard_observers`
-ps_tmp = [elem.getObserver().getPhaseSpace() for elem in acc]
+ps_tmp = [elem.get_observer().get_phase_space() for elem in acc]
 phase_space_coords_names = ["x", "px", "y", "py", "delta", "ct"]
 indices = [elem.index for elem in acc]
 ps_xr = xr.DataArray(

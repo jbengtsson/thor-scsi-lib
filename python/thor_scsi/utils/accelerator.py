@@ -228,8 +228,8 @@ def instrument_with_radiators(
 
     rad_del_kick = [tslib.RadiationDelegateKick() for elem in elems]
     for a_del, elem in zip(rad_del_kick, elems):
-        elem.setRadiationDelegate(a_del)
-        a_del.setEnergy(energy)
+        elem.set_radiation_delegate(a_del)
+        a_del.set_energy(energy)
         # Just use that that the marker knows who is calling him
         # a_del.view(elem, ps_zero, tslib.ObservedState.start, 0)
 
@@ -248,7 +248,7 @@ def instrument_with_standard_observers(
     observers = [tslib.StandardObserver() for elem in acc]
     # Register them to the elments
     for ob, elem in zip(observers, acc):
-        elem.setObserver(ob)
+        elem.set_observer(ob)
     return observers
 
 
@@ -266,7 +266,7 @@ def extract_orbit_from_standard_observers(
     ob_sub = observers[has_observer]
 
     # check that all have seen data
-    with_observer = np.array([ob.hasTruncatedPowerSeries() for ob in ob_sub])
+    with_observer = np.array([ob.has_truncated_power_series_a() for ob in ob_sub])
     lf = np.sum(with_observer)
     lo = len(ob_sub)
     if lf != lo:
@@ -275,7 +275,7 @@ def extract_orbit_from_standard_observers(
     indices = np.arange(len(with_observer))
     indices = indices[with_observer == True]
     phase_space_coords_names = ["x", "px", "y", "py", "ct", "delta"]
-    tps_tmp = [ob.getTruncatedPowerSeries() for ob in ob_sub]
+    tps_tmp = [ob.get_truncated_power_series_a() for ob in ob_sub]
     tps = xr.DataArray(
         data=tps_tmp,
         name="tps",
@@ -299,7 +299,7 @@ def extract_orbit_from_accelerator_with_standard_observers(
     """
     """
 
-    observers = [elem.getObserver() for elem in acc]
+    observers = [elem.get_observer() for elem in acc]
     info = accelerator_info(acc)
     return extract_orbit_from_standard_observers(observers, info)
 

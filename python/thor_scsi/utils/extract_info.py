@@ -8,7 +8,7 @@ import numpy as np
 def compute_path_length(acc: Accelerator) -> np.ndarray:
     """Add up the length of the individual elements of the accelerator
     """
-    ds = [elem.getLength() for elem in acc]
+    ds = [elem.get_length() for elem in acc]
     return np.add.accumulate(ds)
 
 

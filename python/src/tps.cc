@@ -203,7 +203,8 @@ void py_thor_scsi_init_tps(py::module &m)
 	ss_vect_tps.def(py::self * ss_vect<double>());
 
 	// m.def("partialInverse", &PInv, "partial inverse depending on the numbers of freedoms");
-	m.def("partialInverse", py::overload_cast<const ss_vect<tps>&, const tpsa_index&>(&PInv), "partial inverse depending on the numbers of freedoms");
+	m.def("partialInverse",  py::overload_cast<const ss_vect<tps>&, const tpsa_index&>(&PInv), "partial inverse depending on the numbers of freedoms");
+	m.def("select_subpart", &select_subpart, "support experiment to understand the code");
 	m.def("inverse", &Inv, "full inverse");
 	m.def("xabs", [](int n, ss_vect<double>&x) -> double {
 			      if (n > ss_dim){

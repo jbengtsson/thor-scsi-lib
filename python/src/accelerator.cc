@@ -32,11 +32,11 @@ void py_thor_scsi_init_accelerator(py::module &m)
 		.def("find",                 &ts::Accelerator::find)
 		// unique_ptr not working ... check for memory management ...
 		// should now be fixed with shared_ptrs
-		.def("elementsWithName",     &ts::Accelerator::elementsWithName)
+		.def("elements_with_name",     &ts::Accelerator::elementsWithName)
 		// unique_ptr not working ... check for memory management ...
-		.def("elementsWithNameType", &ts::Accelerator::elementsWithNameType)
-		.def("setLogger",            &ts::Accelerator::set_logger)
-		.def("setTrace",             &ts::Accelerator::set_trace, "register the stream to log to")
+		.def("elements_with_name_type", &ts::Accelerator::elementsWithNameType)
+		.def("set_logger",            &ts::Accelerator::set_logger)
+		.def("set_trace",             &ts::Accelerator::set_trace, "register the stream to log to")
 		//.def("__copy__",             &ts::Accelerator::clone, "make a copy of the accelerator")
 		.def("__len__",              &ts::Accelerator::size)
 		.def("__getitem__", py::overload_cast<size_t>(&ts::Accelerator::at))

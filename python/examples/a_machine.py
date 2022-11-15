@@ -1,15 +1,11 @@
 """Reading a lattice file
 """
 
-from thor_scsi.pyflame import GLPSParser
-import thor_scsi
 from thor_scsi.lib import (
-    Accelerator,
     ConfigType,
-    ss_vect_tps,
-    ss_vect_double,
-    ss_vect_tps_to_mat,
 )
+from thor_scsi.factory import accelerator_from_config
+import gtpsa
 import numpy as np
 import os.path
 
@@ -18,16 +14,7 @@ t_dir = os.path.join(os.environ["HOME"], "Nextcloud", "thor_scsi")
 t_file = os.path.join(t_dir, "b3_tst.lat")
 
 print(f"Reading lattice file {t_file}")
-# I had issues reading the lattice file directly thus I preseent
-# the string stream to the parser
-with open(t_file) as fp:
-    text = fp.read()
-
-# Create parser, and create configuration
-C = GLPSParser().parse_byte(text, t_dir)
-
-# The machine creates it then based on the configuration
-m = Accelerator(C)
+m = accelerator_from_config(t_file)
 
 print(f"An accelerator with {len(m):d} elements")
 i = 42
@@ -44,9 +31,9 @@ print(repr(elem))
 print(dir(elem))
 
 # Access to the multipoles
-muls = elem.getMultipoles()
-gradient = muls.getMultipole(2)
-coeffs = muls.getCoefficients()
+muls = elem.get_multipoles()
+gradient = muls.get_multipole(2)
+coeffs = muls.get_coefficients()
 txt = f"""------------------------------------------------------------------
 Investigating an element: should be implemented by a visitor
 Element
@@ -55,15 +42,15 @@ Element
      type             {type(elem)}
 
 Geometry:
-    length            {elem.getLength(): 8.4f}
-    curvature         {elem.getCurvature(): 8.4f}
+    length            {elem.get_length(): 8.4f}
+    curvature         {elem.get_curvature(): 8.4f}
 
-    curved trajctory  {elem.assumingCurvedTrajectory():}
+    curved trajctory  {elem.assuming_curved_trajectory():}
 
 Magnetic field:
     main multipole
-         number       {elem.getMainMultipoleNumber():2d}
-         strength     {elem.getMainMultipoleStrength(): 8.4f}
+         number       {elem.get_main_multipole_number():2d}
+         strength     {elem.get_main_multipole_strength(): 8.4f}
 
     multipoles
          number       {len(coeffs)}
@@ -73,15 +60,15 @@ Magnetic field:
 
 Angles:                                        even internally managed
                                                in degrees ?
-    bending:          {elem.getBendingAngle(): 8.4f}
-    entrance:         {elem.getEntranceAngle(): 8.4f}
-    exit:             {elem.getExitAngle(): 8.4f}
+    bending:          {elem.get_bending_angle(): 8.4f}
+    entrance:         {elem.get_entrance_angle(): 8.4f}
+    exit:             {elem.get_exit_angle(): 8.4f}
 
 
 Propagation
-   Thick Lens:        {elem.isThick()}
-   Integration method {elem.getIntegrationMethod()}
-   Integration steps  {elem.getNumberOfIntegrationSteps()}
+   Thick Lens:        {elem.is_thick()}
+   Integration method {elem.get_integration_method()}
+   Integration steps  {elem.get_number_of_integration_steps()}
    for thick lenses
 
 ------------------------------------------------------------------
@@ -94,14 +81,15 @@ print(txt)
 calc_config = ConfigType()
 # create a phase space. It depends on the chosen type which
 # 'kind' of calculation will be executed.
-ps = ss_vect_tps()
+desc = gtpsa.desc(6,2)
+ps = gtpsa.ss_vect_tpsa(desc, 1)
 ps.set_identity()
 
 print(ps)
 m.propagate(calc_config, ps, 0, 2000)
 print(ps)
 
-res = ss_vect_tps_to_mat(ps)
+res = np.array(ps.jacobian())
 np.set_printoptions(precision=4)
 print(res)
 
@@ -110,13 +98,13 @@ print(separator)
 # Access to some type
 type_name = "Quadrupole"
 print(f"All elements of type name '{type_name}' ")
-for elem in m.elementsWithNameType(type_name):
+for elem in m.elements_with_name_type(type_name):
     print(elem)
 print(separator)
 
 elem_name = "chv"
 print(separator)
 print(f"All elements with name {elem_name} ")
-for elem in m.elementsWithName(elem_name):
+for elem in m.elements_with_name(elem_name):
     print(repr(elem))
 print(separator)
