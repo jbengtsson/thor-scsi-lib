@@ -27,6 +27,7 @@ template<typename T> class ss_vect {
 // Let's the compiler synthetize the copy constructor
 //  ss_vect(const T &a) { }
 //  ss_vect(const ss_vect<T> &a) { }
+    ss_vect(const ss_vect<T> &o) = default;
 #if 0
   // Let's make a copy ctor
   inline ss_vect(const ss_vect<T> &o): ss(o.ss) {}
