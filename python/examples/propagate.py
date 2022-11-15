@@ -1,6 +1,10 @@
 import thor_scsi.lib as tslib
+import gtpsa
 from thor_scsi.factory import accelerator_from_config
-from thor_scsi.utils.accelerator import instrument_with_standard_observers
+from thor_scsi.utils.accelerator import (
+    instrument_with_standard_observers,
+    instrument_with_radiators,
+)
 import time
 import os
 
@@ -23,15 +27,16 @@ calc_config.Energy = energy
 
 rad_del = instrument_with_radiators(acc, energy=energy)
 if False:
-    ps = tslib.ss_vect_double()
+    ps = gtpsa.ss_vect_double()
     ps.set_zero()
 else:
-    ps = tslib.ss_vect_tps()
+    desc = gtpsa.desc(6, 2)
+    ps = gtpsa.ss_vect_tpsa(desc, 1)
     ps.set_identity()
 
 print(ps.cst())
 print(ps)
-acc.propagate(conf, ps)
+acc.propagate(calc_config, ps)
 print(ps.cst())
 print(ps)
 

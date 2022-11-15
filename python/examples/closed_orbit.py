@@ -80,8 +80,8 @@ line_y, = ax_y.plot(
 
 # elem = acc.find("uq1", 0)
 elem = acc.find("QF", 0)
-muls = elem.getMultipoles()
-muls.setMultipole(1, 1e-3 - 1e-3j)
+muls = elem.get_multipoles()
+muls.set_multipole(1, 1e-3 - 1e-3j)
 observers_perturbated = instrument_with_standard_observers(acc)
 # Observers will then flag if new data has arrived.
 # Not strictly necessary here as a new set or observers was
