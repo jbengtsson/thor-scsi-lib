@@ -216,6 +216,7 @@ inline ss_vect<T>::ss_vect(const ss_vect<U> &a)
 
 
 double xabs(long n, ss_vect<double> &x);
+ss_vect<tps> select_subpart(const ss_vect<tps> &x, const std::array<long int, 6> jj);
 ss_vect<tps> PInv(const ss_vect<tps> &x, const long int jj[ss_dim]);
 ss_vect<tps> PInv(const ss_vect<tps> &x, const tpsa_index &idx);
 ss_vect<tps> Inv(const ss_vect<tps> &);

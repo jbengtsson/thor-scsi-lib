@@ -390,6 +390,30 @@ ss_vect<tps> PInv(const ss_vect<tps> &x, const tpsa_index &idx)
   return PInv(x, jj);
 }
 
+ss_vect<tps> select_subpart(const ss_vect<tps> &x, const std::array<long int, 6> jj)
+{
+  int          j, k;
+  ss_vect<tps> Id, y, z;
+
+  if (jj.size() < nv_tps) {
+      std::stringstream strm;
+      strm << "nv_tps = " << nv_tps
+	   << " select indices jj " << jj.size()
+	   << "; not sufficient";
+      throw std::runtime_error(strm.str());
+  }
+  Id.identity(); y.zero();
+
+  for (j = 0; j < nv_tps; j++)
+    if (jj[j] != 0) {
+      for (k = 0; k < nv_tps; k++)
+	y[j] += jj[k]*x[j][k]*Id[k];
+    } else {
+      y[j] = Id[j];
+    }
+  return y;
+}
+
 ss_vect<tps> PInv(const ss_vect<tps> &x, const long int jj[])
 {
   int          j, k;
