@@ -273,7 +273,7 @@ check_symplectisism_submats(const arma::mat mat)
 {
 
 	const double eps = 1e-12;
-	arma::mat om(2,2);
+	arma::mat om(2,2, arma::fill::zeros);
 	om(0, 1) =  1;
 	om(1, 0) = -1;
 
@@ -285,7 +285,7 @@ check_symplectisism_submats(const arma::mat mat)
 	double y_py_check = arma::accu(arma::abs(y_py - om));
 	BOOST_CHECK_SMALL(y_py_check, eps);
 
-	arma::mat om_d(2,2);
+	arma::mat om_d(2,2, arma::fill::zeros);
 	om_d(0, 1) =  -1;
 	om_d(1, 0) =   1;
 
