@@ -19,11 +19,13 @@ acc = accelerator_from_config(t_file)
 energy = 2.5e9
 
 calc_config = tslib.ConfigType()
-calc_config.radiation = True
-# is this used anywhere?
-calc_config.emittance = False
-calc_config.Cavity_on = True
 calc_config.Energy = energy
+
+if False:
+    calc_config.radiation = True
+    # is this used anywhere?
+    calc_config.emittance = False
+    calc_config.Cavity_on = True
 
 rad_del = instrument_with_radiators(acc, energy=energy)
 if False:
@@ -39,6 +41,7 @@ print(ps)
 acc.propagate(calc_config, ps)
 print(ps.cst())
 print(ps)
+print(ps.jacobian())
 
 # Need to keep reference here: otherwise pybind11 will
 # remove them ... I assume
