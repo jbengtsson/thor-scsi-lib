@@ -1,29 +1,38 @@
 """Read lattice file and calculate radiation
 """
+import logging
+import matplotlib.pyplot as plt
+
+logging.basicConfig(level=logging.DEBUG)
+
 from thor_scsi.factory import accelerator_from_config
 from thor_scsi.utils.twiss_output import twiss_ds_to_df, df_to_tsv
 from thor_scsi.utils.linear_optics import compute_twiss_along_lattice
 import thor_scsi.lib as tslib
-import matplotlib.pyplot as plt
+import gtpsa
 
 import os
+
+desc = gtpsa.desc(6, 1)
 
 t_dir = os.path.join(os.environ["HOME"], "Nextcloud", "thor_scsi")
 t_file = os.path.join(t_dir, "b3_tst.lat")
 
-t_file = os.path.join("lattices", "tme.lat")
 # t_file = os.path.join("lattices", "tme_rb.lat")
+# t_file = os.path.join("lattices", "tme.lat")
 acc = accelerator_from_config(t_file)
 calc_config = tslib.ConfigType()
 
-ds = compute_twiss_along_lattice(acc, calc_config)
+ds = compute_twiss_along_lattice(acc, calc_config, desc=desc)
 df = twiss_ds_to_df(ds)
 # print(df)
+# exit()
 
 with open("twiss.tsf", "wt") as fp:
     fp.write(df_to_tsv(df))
 df.to_json("twiss.json")
 
+logging.basicConfig(level=logging.WARNING)
 fig, ax = plt.subplots(1, 1, sharex=True)
 ax.set_xlabel("s [m]")
 ax.set_ylabel(r"$\beta_x, \beta_y$ [m]")
