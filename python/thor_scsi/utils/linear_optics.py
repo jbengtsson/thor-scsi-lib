@@ -117,19 +117,19 @@ def find_closest_nu(nu, w):
     return ind
 
 
-def sort_eigen_vec(dof, nu, w):
+def sort_eigen_vec(n_dof, nu, w):
     """
     Args:
-        nu : eigenvalues / computed tunes
-        dof: degrees of freedom
-        w :  complex eigen values (from eigen vector computation
-             procedure)
+        nu:    eigenvalues / computed tunes
+        n_dof: degrees of freedom
+        w:     complex eigen values (from eigen vector computation
+               procedure)
 
     Todo:
         Check that vectors are long enough ...
     """
-    order = np.zeros(2 * dof, int)
-    for k in range(dof):
+    order = np.zeros(2 * n_dof, int)
+    for k in range(n_dof):
         order[2 * k] = find_closest_nu(nu[k], w)
         order[2 * k + 1] = find_closest_nu(1e0 - nu[k], w)
     return order
@@ -195,21 +195,21 @@ def compute_dispersion(M: np.ndarray) -> np.ndarray:
     return np.linalg.inv(id_mat - M[:n, :n]) @ D
 
 
-def compute_M_diag(dof: int, M: np.ndarray) -> [np.ndarray, np.ndarray, np.ndarray]:
+def compute_M_diag(n_dof: int, M: np.ndarray) -> [np.ndarray, np.ndarray, np.ndarray]:
     """
 
     Args:
-        M: transfer matrix
-        dof: degrees of freedom
+        M:     transfer matrix
+        n_dof: degrees of freedom
 
     Return:
 
     See xxx reference
     """
-    n = 2 * dof
+    n = 2 * n_dof
 
-    nu_symp = compute_nu_symp(dof, M)
-    logger.warning("computed symplectic? tunes: %s", nu_symp)
+    nu_symp = compute_nu_symp(n_dof, M)
+    logger.warning("computed tunes (for symplectic matrix): %s", nu_symp)
 
     # Diagonalise M.
     [w, u] = np.linalg.eig(M[:n, :n])
@@ -230,7 +230,7 @@ def compute_M_diag(dof: int, M: np.ndarray) -> [np.ndarray, np.ndarray, np.ndarr
         + vec2txt(w)
     )
 
-    order = sort_eigen_vec(dof, nu_symp, w)
+    order = sort_eigen_vec(n_dof, nu_symp, w)
 
     w_ord = np.zeros(n, complex)
     u_ord = np.zeros((n, n), complex)
@@ -255,7 +255,7 @@ def compute_M_diag(dof: int, M: np.ndarray) -> [np.ndarray, np.ndarray, np.ndarr
 
     logger.debug("\neta:\n" + vec2txt(eta))
 
-    [A, A_inv, u1] = compute_A(dof, eta, u_ord)
+    [A, A_inv, u1] = compute_A(n_dof, eta, u_ord)
 
     logger.debug(
         "\nu1:\n"
@@ -263,27 +263,27 @@ def compute_M_diag(dof: int, M: np.ndarray) -> [np.ndarray, np.ndarray, np.ndarr
         + "\nu1^-1.M.u1:\n"
         + mat2txt(chop_array(np.linalg.inv(u1) @ M[:n, :n] @ u1, 1e-13))
         + "\nu1^T.omega.u1:\n"
-        + mat2txt(chop_array(u1.T @ omega_block_matrix(dof) @ u1, 1e-13))
+        + mat2txt(chop_array(u1.T @ omega_block_matrix(n_dof) @ u1, 1e-13))
         + "\nA:\n"
         + mat2txt(chop_array(A_inv, 1e-13))
         + "\nA^T.omega.A:\n"
-        + mat2txt(chop_array(A[:n, :n].T @ omega_block_matrix(dof) @ A[:n, :n], 1e-13))
+        + mat2txt(chop_array(A[:n, :n].T @ omega_block_matrix(n_dof) @ A[:n, :n], 1e-13))
     )
 
     R = A_inv @ M @ A
 
     nu = np.zeros(3, float)
     alpha_rad = np.zeros(3, float)
-    for k in range(dof):
+    for k in range(n_dof):
         nu[k] = np.arctan2(R[2 * k][2 * k + 1], R[2 * k][2 * k]) / (2e0 * np.pi)
         if (nu[k] < 0e0) and (k < 2):
             nu[k] += 1e0
-        if dof == 3:
+        if n_dof == 3:
             alpha_rad[k] = np.log(
                 np.sqrt(np.absolute(w_ord[2 * k]) * np.absolute(w_ord[2 * k + 1]))
             )
 
-    A_CS, dnu_cs = compute_A_CS(dof, A)
+    A_CS, dnu_cs = compute_A_CS(n_dof, A)
     logger.info(
         "\n\nA_CS:\n"
         + mat2txt(chop_array(A_CS, 1e-10))
@@ -292,7 +292,7 @@ def compute_M_diag(dof: int, M: np.ndarray) -> [np.ndarray, np.ndarray, np.ndarr
         + "\n\nnu        = {:18.16f} {:18.16f} {:18.16f}".format(nu[X_], nu[Y_], nu[Z_])
     )
     logger.info(f"dnu_cs  {dnu_cs}")
-    if dof == 3:
+    if n_dof == 3:
         logger.info(
             "alpha_rad = {:13.6e} {:13.6e} {:13.6e}".format(
                 alpha_rad[X_], alpha_rad[Y_], alpha_rad[Z_]
@@ -379,7 +379,7 @@ def tps2twiss(tpsa: gtpsa.ss_vect_tpsa) -> (np.ndarray, np.ndarray):
     return r
 
 
-def find_phase_space_fixed_point(M: np.ndarray) -> np.ndarray:
+def find_phase_space_fixed_point(n_dof: int, M: np.ndarray) -> np.ndarray:
     """Transform to energy dependent fix point
 
     * Diagonalise M = A R A^(-1)
@@ -400,38 +400,25 @@ def find_phase_space_fixed_point(M: np.ndarray) -> np.ndarray:
 
     """
 
-    n_dof = 2
     n = 2 * n_dof
 
     # M_tp = M[:n, :n]
     # M_tp = np.transpose(M[:n, :n])
 
     A, A_inv, alpha_rad = compute_M_diag(n_dof, M)
-    Acs, nus = compute_A_CS(2, A)
-    logger.warning("compute A Cs yielded fractional tunes: %s", nus)
+    Acs, dnu = compute_A_CS(2, A)
+    # J.B. 18-11-22:
+    # Dnu = [0, 0] for A in Courant & Snyder form.
+    # logger.warning("compute A Cs yielded fractional tunes: %s", nus)
     return Acs
 
-    # Finds eigen values and eigen vectors
-    w, v = np.linalg.eig(M_tp)
 
-    # Sort eigen values to match the trace of the plane
-    # print(f"before sort w:{mat2txt(w)}  ")
-    # print(f"before sort v:{mat2txt(v)}  ")
-    w, v = match_eigenvalues_to_plane_orig(M_tp, w, v, n_dof=n_dof)
-    # wabs = np.absolute(w)
-    # print(f"sort  wabs   {mat2txt(wabs)}")
-    # print(f"after sort w:{mat2txt(w)}  ")
-    # print(f"after sort v:{mat2txt(v)}  ")
-
-    eta = compute_dispersion(M)
-    A_inv, v1 = compute_A_inv_with_dispersion(v, eta, n_dof=n_dof)
-    A = np.linalg.inv(A_inv)
-    A, _ = compute_A_CS(2, A)
-
-    return A
-
-
-def propagate_and_find_phase_fixed_point(acc : tslib.Accelerator, calc_config : tslib.ConfigType, *, desc: gtpsa.desc):
+def propagate_and_find_phase_fixed_point(
+        n_dof: int,
+        acc: tslib.Accelerator,
+        calc_config: tslib.ConfigType,
+        *,
+        desc: gtpsa.desc):
     """propagate once around ring. use this map to find phase space origin
 
     Todo:
@@ -440,7 +427,7 @@ def propagate_and_find_phase_fixed_point(acc : tslib.Accelerator, calc_config : 
     t_map = compute_map(acc, calc_config, desc=desc)
     M = np.array(t_map.jacobian())
 
-    A = find_phase_space_fixed_point(M)
+    A = find_phase_space_fixed_point(n_dof, M)
     Atest = gtpsa.ss_vect_tpsa(desc, 1)
     Atest.set_zero()
     Atest.set_jacobian(A)
@@ -449,6 +436,7 @@ def propagate_and_find_phase_fixed_point(acc : tslib.Accelerator, calc_config : 
 
 
 def compute_twiss_along_lattice(
+    n_dof: int,
     acc: tslib.Accelerator,
     calc_config: tslib.ConfigType = None,
     *,
@@ -474,7 +462,8 @@ def compute_twiss_along_lattice(
         calc_config = tslib.ConfigType()
 
     if A is None:
-        A = propagate_and_find_phase_fixed_point(acc, calc_config, desc=desc)
+        A = propagate_and_find_phase_fixed_point(n_dof, acc, calc_config, desc=desc)
+        print("\ncompute_twiss_along_lattice A:\n", mat2txt(A))
 
     # Not really required ... but used for convenience
     instrument_with_standard_observers(acc)
@@ -483,10 +472,12 @@ def compute_twiss_along_lattice(
     A_map = gtpsa.ss_vect_tpsa(desc, 1)
     A_map.set_zero()
     A_map.set_jacobian(A)
-    A_map.set_identity()
-    for k in range(len(acc)):
-        acc.propagate(calc_config, A_map, k, k + 1)
-        continue
+    print("\ncompute_twiss_along_lattice A:\n", A_map)
+    # J.B. 18-11-22:
+    # A_map.set_identity()
+    for k in range(0, len(acc)):
+        # acc.propagate(calc_config, A_map, k, k)
+        acc.propagate(calc_config, A_map, 0, k)
         # Extract the first order term from the map representation of A_map
         # thus called Aj as it is similar to the Jacobian
         Aj = A_map.jacobian()
@@ -494,7 +485,9 @@ def compute_twiss_along_lattice(
         # next step starts at a Courant Snyder form
         rjac, dnu_cs = compute_A_CS(2, Aj)
         A_map.set_zero()
-        A_map.set_jacobian(rjac)
+        # A_map.set_jacobian(rjac)
+        A_map.set_jacobian(A)
+    print("\ncompute_twiss_along_lattice A:\n", A_map)
 
     indices = [elem.index for elem in acc]
     tps_tmp = [_extract_tps(elem) for elem in acc]

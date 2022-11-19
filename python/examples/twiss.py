@@ -3,7 +3,7 @@
 import logging
 import matplotlib.pyplot as plt
 
-logging.basicConfig(level=logging.DEBUG)
+#logging.basicConfig(level=logging.DEBUG)
 
 from thor_scsi.factory import accelerator_from_config
 from thor_scsi.utils.twiss_output import twiss_ds_to_df, df_to_tsv
@@ -23,7 +23,16 @@ t_file = os.path.join(t_dir, "b3_tst.lat")
 acc = accelerator_from_config(t_file)
 calc_config = tslib.ConfigType()
 
-ds = compute_twiss_along_lattice(acc, calc_config, desc=desc)
+if True:
+    n_dof = 2
+    calc_config.radiation = False
+    calc_config.Cavity_on = False
+else:
+    n_dof = 3
+    calc_config.radiation = True
+    calc_config.Cavity_on = True
+
+ds = compute_twiss_along_lattice(n_dof, acc, calc_config, desc=desc)
 df = twiss_ds_to_df(ds)
 # print(df)
 # exit()
