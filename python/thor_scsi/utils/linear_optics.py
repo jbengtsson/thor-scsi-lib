@@ -479,29 +479,15 @@ def compute_twiss_along_lattice(
     A_map.set_zero()
     A_map.set_jacobian(A)
     logger.debug("\ncompute_twiss_along_lattice A:\n", A_map)
-    # J.B. 18-11-22:
-    # A_map.set_identity()
-    if True:
-        acc.propagate(calc_config, A_map)
-    else:
-        for k in range(len(acc)):
-            # Use the last a map that was propagate
-            #A_map = A_map_now
-            # propagate one element a head
-            acc.propagate(calc_config, A_map, k, 1)
 
-            # A_map_now = A_map.copy()
-            continue
-            # Extract the first order term from the map representation of A_map
-            # thus called Aj as it is similar to the Jacobian
-            Aj = A_map.jacobian()
-            # A will be rotated ... so rotate it back so that the
-            # next step starts at a Courant Snyder form
-            rjac, dnu_cs = compute_A_CS(2, Aj)
-            A_map.set_zero()
-            # A_map.set_jacobian(rjac)
-            A_map.set_jacobian(A)
-        logger.debug("\ncompute_twiss_along_lattice A:\n%s", A_map)
+    for k in range(len(acc)):
+        acc.propagate(calc_config, A_map, k, 1)
+        # Zero the phase advance so that the fraction tune change is not exceeding two pi
+        Aj = A_map.jacobian()
+        rjac, _ = compute_A_CS(2, Aj)
+        A_map.set_jacobian(rjac)
+
+    logger.debug("\ncompute_twiss_along_lattice A:\n%s", A_map)
 
     indices = [elem.index for elem in acc]
     tps_tmp = [_extract_tps(elem) for elem in acc]
