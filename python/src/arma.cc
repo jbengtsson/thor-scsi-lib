@@ -20,6 +20,59 @@ if (!col.compute(mat.n_cols, &col_start, &col_stop, &col_step, &col_slicelength)
 std::cerr << "Row access start " << row_start << " step " << row_step << " length " << row_slicelength << std::endl;
 std::cerr << "Col access start " << col_start << " step " << col_step << " length " << col_slicelength << std::endl;
 #endif
+
+static py::buffer_info from_arma_mat(arma::mat &mat)
+{
+	size_t n_cols = static_cast<size_t>(mat.n_cols);
+	py::buffer_info r;
+	r.ptr = mat.memptr();         /* Pointer to buffer */
+	r.itemsize = sizeof(double); /* Size of one scalar */
+	r.format = py::format_descriptor<double>::format(); /* Python struct-style format descriptor */
+	r.ndim = 2;
+	r.shape = { static_cast<py::ssize_t>(mat.n_rows),
+		    static_cast<py::ssize_t>(mat.n_cols)
+	};/* Number of dimensions */
+	r.strides = {
+		/* Strides (in bytes) for each index */
+		static_cast<py::ssize_t>(sizeof(double)),
+		static_cast<py::ssize_t>(sizeof(double) * n_cols)};
+	return r;
+}
+
+
+static arma::mat from_np_array(py::array_t<double, py::array::c_style|py::array::forcecast> buffer)
+{
+	/* Request a buffer descriptor from Python */
+	py::buffer_info info = buffer.request();
+
+	/* Some sanity checks ... */
+	if (info.format != py::format_descriptor<double>::format())
+		throw std::runtime_error("Incompatible format: expected a double array!");
+
+	if (info.ndim != 2){
+		std::stringstream strm;
+		strm << "Incompatible buffer: expected 2 but got "
+		     << info.ndim << "dimensions!";
+		throw std::runtime_error(strm.str());
+	}
+
+	bool need_transpose = false;
+	if(info.strides[0] != sizeof(double)){
+		need_transpose = true;
+	}
+	/*
+	  std::cerr << "Strides [" << info.strides[0] << ", " << info.strides[1] << "]"
+	  << ": need_transpose " << std::boolalpha << need_transpose << std::endl;
+	*/
+	auto mat = arma::mat(static_cast<const double *>(info.ptr),
+			     info.shape[0], info.shape[1]);
+	if(need_transpose){
+		arma::inplace_trans(mat);
+	}
+	return mat;
+}
+
+
 void py_thor_scsi_init_arma(py::module &m)
 {
 	//arma::mat;
@@ -44,52 +97,10 @@ void py_thor_scsi_init_arma(py::module &m)
 		.def("swap_rows", &arma::mat::swap_rows, "swap row1, row2")
 		.def("swap_cols", &arma::mat::swap_cols, "swap col1, col2")
 		//.def("__str__", &PyArma::pstr)
-		.def_buffer([](arma::mat &mat) -> py::buffer_info {
-				    size_t n_cols = static_cast<size_t>(mat.n_cols);
-				    py::buffer_info r;
-				    r.ptr = mat.memptr();         /* Pointer to buffer */
-				    r.itemsize = sizeof(double); /* Size of one scalar */
-				    r.format = py::format_descriptor<double>::format(); /* Python struct-style format descriptor */
-				    r.ndim = 2;
-				    r.shape = { static_cast<py::ssize_t>(mat.n_rows),
-						static_cast<py::ssize_t>(mat.n_cols)
-				    };/* Number of dimensions */
-				    r.strides = {
-					    /* Strides (in bytes) for each index */
-					    static_cast<py::ssize_t>(sizeof(double)),
-					    static_cast<py::ssize_t>(sizeof(double) * n_cols)};
-				    return r;
-			    })
+		.def_buffer(from_arma_mat )
 		//.def(py::init([](py::buffer b) {
 		.def(py::init([](py::array_t<double, py::array::c_style|py::array::forcecast> b) {
-				      /* Request a buffer descriptor from Python */
-				      py::buffer_info info = b.request();
-
-				      /* Some sanity checks ... */
-				      if (info.format != py::format_descriptor<double>::format())
-					      throw std::runtime_error("Incompatible format: expected a double array!");
-
-				      if (info.ndim != 2){
-					      std::stringstream strm;
-					      strm << "Incompatible buffer: expected 2 but got "
-						   << info.ndim << "dimensions!";
-					      throw std::runtime_error(strm.str());
-				      }
-
-				      bool need_transpose = false;
-				      if(info.strides[0] != sizeof(double)){
-					      need_transpose = true;
-				      }
-				      /*
-					std::cerr << "Strides [" << info.strides[0] << ", " << info.strides[1] << "]"
-					<< ": need_transpose " << std::boolalpha << need_transpose << std::endl;
-				      */
-				      auto mat = arma::mat(static_cast<const double *>(info.ptr),
-							   info.shape[0], info.shape[1]);
-				      if(need_transpose){
-					      arma::inplace_trans(mat);
-				      }
-				      return mat;
+				      return from_np_array(b);
 			      }));
 }
 /*
