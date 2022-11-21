@@ -1,7 +1,8 @@
 """Functionality for computing linear optics
 """
+
 import thor_scsi.lib as tslib
-from .phase_space_vector import ss_vect_tps2ps_jac, array2ss_vect_tps
+# ffrom .phase_space_vector import ss_vect_tps2ps_jac, array2ss_vect_tps
 from .courant_snyder import compute_A_CS
 from .extract_info import accelerator_info
 from .accelerator import instrument_with_standard_observers
@@ -477,22 +478,30 @@ def compute_twiss_along_lattice(
     A_map = gtpsa.ss_vect_tpsa(desc, 1)
     A_map.set_zero()
     A_map.set_jacobian(A)
-    print("\ncompute_twiss_along_lattice A:\n", A_map)
+    logger.debug("\ncompute_twiss_along_lattice A:\n", A_map)
     # J.B. 18-11-22:
     # A_map.set_identity()
-    for k in range(0, len(acc)):
-        # acc.propagate(calc_config, A_map, k, k)
-        acc.propagate(calc_config, A_map, 0, k+1)
-        # Extract the first order term from the map representation of A_map
-        # thus called Aj as it is similar to the Jacobian
-        Aj = A_map.jacobian()
-        # A will be rotated ... so rotate it back so that the
-        # next step starts at a Courant Snyder form
-        rjac, dnu_cs = compute_A_CS(2, Aj)
-        A_map.set_zero()
-        # A_map.set_jacobian(rjac)
-        A_map.set_jacobian(A)
-    print("\ncompute_twiss_along_lattice A:\n", A_map)
+    if True:
+        acc.propagate(calc_config, A_map)
+    else:
+        for k in range(len(acc)):
+            # Use the last a map that was propagate
+            #A_map = A_map_now
+            # propagate one element a head
+            acc.propagate(calc_config, A_map, k, 1)
+
+            # A_map_now = A_map.copy()
+            continue
+            # Extract the first order term from the map representation of A_map
+            # thus called Aj as it is similar to the Jacobian
+            Aj = A_map.jacobian()
+            # A will be rotated ... so rotate it back so that the
+            # next step starts at a Courant Snyder form
+            rjac, dnu_cs = compute_A_CS(2, Aj)
+            A_map.set_zero()
+            # A_map.set_jacobian(rjac)
+            A_map.set_jacobian(A)
+        logger.debug("\ncompute_twiss_along_lattice A:\n%s", A_map)
 
     indices = [elem.index for elem in acc]
     tps_tmp = [_extract_tps(elem) for elem in acc]
