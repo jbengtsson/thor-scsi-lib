@@ -14,6 +14,17 @@ namespace py = pybind11;
 static const size_t n_turns=1;
 static const int imax = std::numeric_limits<int>::max();
 
+enum MachineLogLevel {
+	error = THOR_SCSI_ERROR,
+	warn = THOR_SCSI_WARN,
+// compatible with python
+	warning = THOR_SCSI_WARNING,
+	info = THOR_SCSI_INFO,
+	debug = THOR_SCSI_DEBUG,
+// Super verbose logging, a la the rf cavity element,
+	fine = THOR_SCSI_FINE
+};
+
 void py_thor_scsi_init_accelerator(py::module &m)
 {
 
@@ -26,6 +37,14 @@ void py_thor_scsi_init_accelerator(py::module &m)
 
 	const char prop_doc[] = "propagate phase space through elements";
 
+    py::enum_<MachineLogLevel>(m, "accelerator_log_level")
+	    .value("error",   MachineLogLevel::error)
+	    .value("warn",    MachineLogLevel::warn)
+	    .value("warning", MachineLogLevel::warning)
+	    .value("info",    MachineLogLevel::info)
+	    .value("debug",   MachineLogLevel::debug)
+	    .value("fine",    MachineLogLevel::fine);
+
 
 
 	py::class_<ts::Accelerator, std::shared_ptr<ts::Accelerator>>(m, "Accelerator")
@@ -36,7 +55,20 @@ void py_thor_scsi_init_accelerator(py::module &m)
 		// unique_ptr not working ... check for memory management ...
 		.def("elements_with_name_type", &ts::Accelerator::elementsWithNameType)
 		.def("set_logger",            &ts::Accelerator::set_logger)
-		.def("set_trace",             &ts::Accelerator::set_trace, "register the stream to log to")
+		.def("set_log_level",          [](ts::Accelerator& acc, int level){
+						       acc.set_log_level(level);
+					       }, "set the log level, have a look to the accelerator log level enum")
+#if 0
+		.def("set_trace",             [](ts::Accelerator& acc, const bool flag){
+						      // Not used as
+						      py::scoped_ostream_redirect stream(
+							      std::cout,                               // std::ostream&
+							      py::module_::import("sys").attr("stdout") // Python output
+							      );
+						      acc.set_trace(std::cout);
+					      },  "activate trace output to std oute"
+			)
+#endif
 		//.def("__copy__",             &ts::Accelerator::clone, "make a copy of the accelerator")
 		.def("__len__",              &ts::Accelerator::size)
 		.def("__getitem__", py::overload_cast<size_t>(&ts::Accelerator::at))

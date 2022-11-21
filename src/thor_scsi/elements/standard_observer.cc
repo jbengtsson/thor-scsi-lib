@@ -44,7 +44,8 @@ void tse::StandardObserver::show(std::ostream& strm, const int level) const
 	     << "\", observed_index=" << this->m_observed_index
 	     << ", has_ps=" << this->m_has_ps <<", ps=";
 	this->m_ps.show(strm, 4, false);
-		strm << ", has_tps=" << this->m_has_tps <<", tps=";
+		strm << ", has_tps=" << this->m_has_tps
+		     << ", has_tpsa=" << this->m_has_tpsa;
 	this->m_tps.show(strm, 4, false);
 	strm << ")";
 }

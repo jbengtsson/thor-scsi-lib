@@ -345,7 +345,12 @@ def _extract_tps(elem: tslib.Observer) -> tslib.ss_vect_tps:
     """Extract tps data from the elments' observer
     """
     ob = elem.get_observer()
-    assert ob.has_truncated_power_series_a()
+    if not ob.has_truncated_power_series_a():
+        msg = f"Observer {ob} has no  TPSA"
+        logger.error(msg)
+        raise AssertionError(msg)
+    else:
+        logger.debug("Data available for eleeent index %5d name %s", ob.get_observed_index(), ob.get_observed_name())
     return ob.get_truncated_power_series_a()
 
 
@@ -466,7 +471,7 @@ def compute_twiss_along_lattice(
         print("\ncompute_twiss_along_lattice A:\n", mat2txt(A))
 
     # Not really required ... but used for convenience
-    instrument_with_standard_observers(acc)
+    observers = instrument_with_standard_observers(acc)
 
     # Propagate through the accelerator
     A_map = gtpsa.ss_vect_tpsa(desc, 1)
@@ -477,7 +482,7 @@ def compute_twiss_along_lattice(
     # A_map.set_identity()
     for k in range(0, len(acc)):
         # acc.propagate(calc_config, A_map, k, k)
-        acc.propagate(calc_config, A_map, 0, k)
+        acc.propagate(calc_config, A_map, 0, k+1)
         # Extract the first order term from the map representation of A_map
         # thus called Aj as it is similar to the Jacobian
         Aj = A_map.jacobian()
