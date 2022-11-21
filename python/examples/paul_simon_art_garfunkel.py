@@ -58,6 +58,7 @@ from thor_scsi.utils.phase_space_vector import map2numpy
 from thor_scsi.utils.output import mat2txt, vec2txt
 from thor_scsi.utils.twiss_output import twiss_ds_to_df, df_to_tsv
 
+plt.ion()
 
 X_, Y_, Z_ = [
     tslib.spatial_index.X,
@@ -65,22 +66,30 @@ X_, Y_, Z_ = [
     tslib.spatial_index.Z
 ]
 
-
 def plt_twiss(ds):
-    fig, (gr1, gr2) = plt.subplots(2)
+    fig, (gr_1, gr_2) = plt.subplots(2)
 
-    gr1.set_xlabel("s [m]")
-    gr1.set_ylabel(r"$\beta_x, \beta_y$ [m]")
-    gr1.plot(ds.s, ds.twiss.sel(plane="x", par="beta"), label=r"$\beta_x$")
-    gr1.plot(ds.s, ds.twiss.sel(plane="y", par="beta"), label=r"$\beta_y$")
-    gr1.legend()
+    gr_1.set_title("Linear Optics")
+    gr_1.set_xlabel("s [m]")
+    gr_1.set_ylabel(r"$\beta_{x,y}$ [m]")
+    gr_1.plot(ds.s, ds.twiss.sel(plane="x", par="beta"), label=r"$\beta_x$")
+    gr_1.plot(ds.s, ds.twiss.sel(plane="y", par="beta"), label=r"$\beta_y$")
+    gr_1.legend()
 
-    # gr2.set_xlabel("s [m]")
-    # gr2.set_ylabel(r"$\eta_x [m]")
-    # gr2.plot(ds.s, ds.twiss.sel(plane="x", par="eta"), label=r"$\eta_x$")
-    # gr2.legend()
+    gr_2.set_xlabel("s [m]")
+    gr_2.set_ylabel(r"$\eta_x$ [m]")
+    gr_2.plot(ds.s, ds.dispersion.sel(phase_coordinate="x"), label=r"$\eta_x$")
+    fig.tight_layout()
 
-    plt.show()
+
+def plt_curly_H(ds):
+    fig, gr = plt.subplots(1)
+    gr.set_title("curly_H")
+    gr.set_xlabel(r"$\eta_x$ [m]")
+    gr.set_ylabel(r"$\eta_x'$ [rad]")
+    gr.plot(ds.dispersion.sel(phase_coordinate="x"),
+            ds.dispersion.sel(phase_coordinate="px"))
+    fig.tight_layout()
 
 
 def prt_fam(acc, fam_name):
@@ -149,7 +158,7 @@ print("\nCavity", repr(cav))
 print(f"""\nCavity info:
   f [MHz] {1e-6*cav.get_frequency()}
   V [MV]  {1e-6*cav.get_voltage()}
-  h       {cav.get_Harmonic_number()}
+  h       {cav.get_harmonic_number()}
   phi     {cav.get_phase()}
 """, end="")
 
@@ -181,8 +190,10 @@ with open("twiss.tsf", "wt") as fp:
     fp.write(df_to_tsv(df))
 df.to_json("twiss.json")
 
-if not True:
+if True:
     plt_twiss(ds)
+    plt_curly_H(ds)
+
 
 compute_radiation(acc, calc_config, E, 1e-15, desc=desc)
 
@@ -197,3 +208,7 @@ M = a_map.jacobian()
 nu = compute_nu_symp(dof, M)
 print("\nM:\n" + mat2txt(M))
 print("\nnu = [{:7.5f}, {:7.5f}]".format(nu[X_], nu[Y_]))
+
+plt.ioff()
+plt.show()
+nu
