@@ -34,6 +34,9 @@
 
 
 import logging
+
+import gtpsa
+
 logging.basicConfig(level="WARNING")
 # Levels: DEBUG, INFO, WARNING, ERROR, and CRITICAL.
 
@@ -89,15 +92,15 @@ def prt_fam(acc, fam_name):
 
 
 def set_db_2_fam(acc, fam_name, db_2):
-    for q in acc.elementsWithName(fam_name):
-        b_2 = q.getMultipoles().getMultipole(2).real
+    for q in acc.elements_with_name(fam_name):
+        b_2 = q.get_multipoles().get_multipole(2).real
         index = q.index
-        q.getMultipoles().setMultipole(2, b_2+db_2)
+        q.get_multipoles().set_multipole(2, b_2+db_2)
 
 
 def set_db_2L_fam(acc, fam_name, db_2L):
     q = acc.find(fam_name, 0)
-    L = q.getLength()
+    L = q.get_length()
     set_db_2_fam(acc, q.name, db_2L/L)
 
 
@@ -106,7 +109,9 @@ def compute_dnu_db_2L(acc, calc_config, fam_name, db_2L):
     nu = np.zeros([2, dof])
     for k in range(-1, 2, 2):
         set_db_2L_fam(acc, fam_name, k*db_2L)
-        M = map2numpy(compute_map(acc, calc_config))[:6, :6]
+        #M = map2numpy(compute_map(acc, calc_config))[:6, :6]
+        a_map = compute_map(acc, calc_config, desc=desc)
+        M = a_map.jacobian()
         set_db_2L_fam(acc, fam_name, -k*db_2L)
         nu[(k+1)//2] = compute_nu_symp(dof, M)
 
@@ -138,14 +143,14 @@ acc = accelerator_from_config(t_file)
 calc_config = tslib.ConfigType()
 
 cav = acc.find("cav", 0)
-cav.setHarmonicNumber(327)
-cav.setPhase(180.0)
+cav.set_harmonic_number(327)
+cav.set_phase(180.0)
 print("\nCavity", repr(cav))
 print(f"""\nCavity info:
-  f [MHz] {1e-6*cav.getFrequency()}
-  V [MV]  {1e-6*cav.getVoltage()}
-  h       {cav.getHarmonicNumber()}
-  phi     {cav.getPhase()}
+  f [MHz] {1e-6*cav.get_frequency()}
+  V [MV]  {1e-6*cav.get_voltage()}
+  h       {cav.get_Harmonic_number()}
+  phi     {cav.get_phase()}
 """, end="")
 
 dof = 2
@@ -155,14 +160,19 @@ calc_config.radiation = False
 calc_config.Cavity_on = False
 
 
-M = map2numpy(compute_map(acc, calc_config))[:6, :6]
-nu = compute_nu_symp(dof, M)
-print("\nM:\n" + mat2txt(M))
+desc = gtpsa.desc(6, 2)
+M = compute_map(acc, calc_config, desc=desc)
+jac = M.jacobian()
+nu = compute_nu_symp(dof, jac)
+print("\nM:\n" + mat2txt(jac))
 print("\nnu = [{:7.5f}, {:7.5f}]".format(nu[X_], nu[Y_]))
 
-A, A_inv, _ = compute_M_diag(dof, M)
+A, A_inv, _ = compute_M_diag(dof, jac)
 
-ds = compute_twiss_along_lattice(acc, calc_config, A)
+ds = compute_twiss_along_lattice(2, acc, calc_config,
+                                 # A
+                                 desc = desc
+                                 )
 df = twiss_ds_to_df(ds)
 # print("\nTwiss - ds:\n", ds)
 # print("\nTwiss - df:\n", df)
@@ -174,7 +184,7 @@ df.to_json("twiss.json")
 if not True:
     plt_twiss(ds)
 
-compute_radiation(acc, calc_config, E, 1e-15)
+compute_radiation(acc, calc_config, E, 1e-15, desc=desc)
 
 calc_config.radiation = False
 calc_config.Cavity_on = False
@@ -182,7 +192,8 @@ calc_config.Cavity_on = False
 # Tweak the tune using all the quadrupole families.
 b_2 = ['q1', 'q2', 'q3', 'q4', 'mb3h', 'qfh', 'mqfh']
 tweak_nu(b_2, 0.00501, -0.00670)
-M = map2numpy(compute_map(acc, calc_config))[:6, :6]
+a_map = compute_map(acc, calc_config, desc=desc)
+M = a_map.jacobian()
 nu = compute_nu_symp(dof, M)
 print("\nM:\n" + mat2txt(M))
 print("\nnu = [{:7.5f}, {:7.5f}]".format(nu[X_], nu[Y_]))

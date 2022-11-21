@@ -1,6 +1,8 @@
 """
 """
 import thor_scsi.lib as tslib
+
+import gtpsa
 from .accelerator import instrument_with_radiators
 import numpy as np
 from scipy.constants import c
@@ -40,12 +42,12 @@ class RadiationResult:
 
 
 def compute_circ(acc):
-    return np.sum([elem.getLength() for elem in acc])
+    return np.sum([elem.get_length() for elem in acc])
 
 
 def compute_diffusion_coefficients(rad_del_kicks):
     dD_rad = \
-        np.array([rk.getDiffusionCoefficientsIncrements()
+        np.array([rk.get_diffusion_coefficients_increments()
                   for rk in rad_del_kicks])
     D_rad = np.sum(dD_rad, axis=0)
     return D_rad
@@ -87,7 +89,8 @@ def compute_radiation(
     acc: tslib.Accelerator,
     calc_config: tslib.ConfigType,
     E,
-    eps
+    eps,
+    *, desc
 ):
 
     dof = 3
@@ -118,7 +121,10 @@ def compute_radiation(
 
     calc_config.emittance = True
 
-    A_cpy = vec_mat2ss_vect_tps(r.x0, A)
+    #A_cpy = vec_mat2ss_vect_tps(r.x0, A)
+    A_cpy  = gtpsa.ss_vect_tpsa(desc, 1)
+    A_cpy += r.x0
+    A_cpy.set_jacobian(A)
     acc.propagate(calc_config, A_cpy)
 
     D_rad = compute_diffusion_coefficients(rad_del_kicks)
