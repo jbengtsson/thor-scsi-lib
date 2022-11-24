@@ -8,7 +8,7 @@ from dataclasses import dataclass
 import copy
 import gtpsa
 
-logger = logging.getLogger("thor-scsi-lib")
+logger = logging.getLogger("thor_scsi")
 
 
 @dataclass
@@ -158,11 +158,8 @@ def compute_closed_orbit(
             break
 
         # prepare return map
-        logger.error(f"{n_iter} M {M}")
         M.set_identity()
-        logger.error(f"{n_iter} M {M}")
         M += x0
-        logger.error(f"{n_iter} M {M}")
         logger.warning(f"{n_iter=},  Start propagation at \n {M.cst()}\n")
         next_element = acc.propagate(conf, M)
         # logger.debug(f"{n_iter=},  End propagation at \n {M.cst()}\n {M}")

@@ -2,7 +2,7 @@
 """
 
 import thor_scsi.lib as tslib
-# ffrom .phase_space_vector import ss_vect_tps2ps_jac, array2ss_vect_tps
+# from .phase_space_vector import ss_vect_tps2ps_jac, array2ss_vect_tps
 from .courant_snyder import compute_A_CS
 from .extract_info import accelerator_info
 from .accelerator import instrument_with_standard_observers

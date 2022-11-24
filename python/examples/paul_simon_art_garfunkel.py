@@ -35,10 +35,10 @@
 
 import logging
 
-import gtpsa
-
-logging.basicConfig(level="WARNING")
+logging.basicConfig(level="ERROR")
 # Levels: DEBUG, INFO, WARNING, ERROR, and CRITICAL.
+
+import gtpsa
 
 import os
 import numpy as np
