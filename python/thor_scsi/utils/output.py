@@ -1,6 +1,17 @@
 """Support for formatting np.ndarray's in a Tracy compatible fashion
 """
+
+import io
+from contextlib import redirect_stdout
+
 import numpy as np
+
+
+def prt2str(input):
+    with io.StringIO() as buf, redirect_stdout(buf):
+        print(input)
+        output = buf.getvalue()
+    return output
 
 
 def sign(x: float) -> int:

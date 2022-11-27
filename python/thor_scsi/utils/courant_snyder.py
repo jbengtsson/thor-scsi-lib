@@ -47,10 +47,7 @@ def compute_A_CS(n_dof, A):
     """
 
     n = 2 * n_dof
-    # assert(n_dof == 2)
     dnu = np.zeros(n_dof)
-    # Should that not be n_dof * 2 ?
-    # J.B.: No; number of tunes.
     R = np.identity(6)
 
     nr, nc = R.shape

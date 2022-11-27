@@ -29,14 +29,13 @@
 #
 # Stylianos Kyriakides Boston Marathon, 1946.
 #
-# Simon & Gargunkel 𝑇ℎ𝑒 𝐵𝑜𝑥𝑒𝑟
+# Simon & Garfunkel 𝑇ℎ𝑒 𝐵𝑜𝑥𝑒𝑟
 # https://youtu.be/l3LFML_pxlY 
 
 
 import logging
-
-logging.basicConfig(level="ERROR")
 # Levels: DEBUG, INFO, WARNING, ERROR, and CRITICAL.
+logging.basicConfig(level="ERROR")
 
 import gtpsa
 
@@ -58,6 +57,7 @@ from thor_scsi.utils.phase_space_vector import map2numpy
 from thor_scsi.utils.output import mat2txt, vec2txt
 from thor_scsi.utils.twiss_output import twiss_ds_to_df, df_to_tsv
 
+# Turn on interactive mode (default is off).
 plt.ion()
 
 X_, Y_, Z_ = [

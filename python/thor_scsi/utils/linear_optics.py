@@ -7,7 +7,8 @@ from .courant_snyder import compute_A_CS
 from .extract_info import accelerator_info
 from .accelerator import instrument_with_standard_observers
 from .phase_space_vector import omega_block_matrix, map2numpy
-from .output import mat2txt, vec2txt, complex2txt as cplx2txt, chop_array
+from .output import prt2str, mat2txt, vec2txt, \
+    complex2txt as cplx2txt, chop_array
 
 import gtpsa
 
@@ -210,7 +211,7 @@ def compute_M_diag(n_dof: int, M: np.ndarray) -> [np.ndarray, np.ndarray, np.nda
     n = 2 * n_dof
 
     nu_symp = compute_nu_symp(n_dof, M)
-    logger.warning("computed tunes (for symplectic matrix): %s", nu_symp)
+    logger.debug("computed tunes (for symplectic matrix): %s", nu_symp)
 
     # Diagonalise M.
     [w, u] = np.linalg.eig(M[:n, :n])
@@ -220,7 +221,7 @@ def compute_M_diag(n_dof: int, M: np.ndarray) -> [np.ndarray, np.ndarray, np.nda
     for k in range(n):
         nu_eig[k] = acos2(w[k].imag, w[k].real) / (2e0 * np.pi)
 
-    logger.warning(
+    logger.debug(
         "\nu:\n"
         + mat2txt(u)
         + "\nnu_symp:\n"
@@ -285,16 +286,16 @@ def compute_M_diag(n_dof: int, M: np.ndarray) -> [np.ndarray, np.ndarray, np.nda
             )
 
     A_CS, dnu_cs = compute_A_CS(n_dof, A)
-    logger.info(
+    logger.debug(
         "\n\nA_CS:\n"
         + mat2txt(chop_array(A_CS, 1e-10))
         + "\n\nR:\n"
         + mat2txt(chop_array(R, 1e-10))
         + "\n\nnu        = {:18.16f} {:18.16f} {:18.16f}".format(nu[X_], nu[Y_], nu[Z_])
     )
-    logger.info(f"dnu_cs  {dnu_cs}")
+    logger.debug(f"dnu_cs  {dnu_cs}")
     if n_dof == 3:
-        logger.info(
+        logger.debug(
             "alpha_rad = {:13.6e} {:13.6e} {:13.6e}".format(
                 alpha_rad[X_], alpha_rad[Y_], alpha_rad[Z_]
             )
@@ -385,7 +386,7 @@ def tps2twiss(tpsa: gtpsa.ss_vect_tpsa) -> (np.ndarray, np.ndarray):
     return r
 
 
-def find_phase_space_fixed_point(n_dof: int, M: np.ndarray) -> np.ndarray:
+def find_fixed_point(n_dof: int, M: np.ndarray) -> np.ndarray:
     """Transform to energy dependent fix point
 
     * Diagonalise M = A R A^(-1)
@@ -412,14 +413,11 @@ def find_phase_space_fixed_point(n_dof: int, M: np.ndarray) -> np.ndarray:
     # M_tp = np.transpose(M[:n, :n])
 
     A, A_inv, alpha_rad = compute_M_diag(n_dof, M)
-    Acs, dnu = compute_A_CS(2, A)
-    # J.B. 18-11-22:
-    # Dnu = [0, 0] for A in Courant & Snyder form.
-    # logger.warning("compute A Cs yielded fractional tunes: %s", nus)
+    Acs, _ = compute_A_CS(2, A)
     return Acs
 
 
-def propagate_and_find_phase_fixed_point(
+def propagate_and_find_fixed_point(
         n_dof: int,
         acc: tslib.Accelerator,
         calc_config: tslib.ConfigType,
@@ -432,13 +430,14 @@ def propagate_and_find_phase_fixed_point(
     """
     t_map = compute_map(acc, calc_config, desc=desc)
     M = np.array(t_map.jacobian())
-
-    A = find_phase_space_fixed_point(n_dof, M)
+    logger.info("\npropagate_and_find_fixed_point\nM:\n" + mat2txt(M))
+ 
+    A = find_fixed_point(n_dof, M)
     Atest = gtpsa.ss_vect_tpsa(desc, 1)
     Atest.set_zero()
     Atest.set_jacobian(A)
     acc.propagate(calc_config, Atest)
-    return A
+    return M, A
 
 
 def compute_twiss_along_lattice(
@@ -468,8 +467,8 @@ def compute_twiss_along_lattice(
         calc_config = tslib.ConfigType()
 
     if A is None:
-        A = propagate_and_find_phase_fixed_point(n_dof, acc, calc_config, desc=desc)
-        print("\ncompute_twiss_along_lattice A:\n", mat2txt(A))
+        _, A = propagate_and_find_fixed_point(n_dof, acc, calc_config, desc=desc)
+    logger.info("\ncompute_twiss_along_lattice\nA:\n" + mat2txt(A))
 
     # Not really required ... but used for convenience
     observers = instrument_with_standard_observers(acc)
@@ -478,7 +477,7 @@ def compute_twiss_along_lattice(
     A_map = gtpsa.ss_vect_tpsa(desc, 1)
     A_map.set_zero()
     A_map.set_jacobian(A)
-    logger.debug("\ncompute_twiss_along_lattice A:\n", A_map)
+    logger.debug("\ncompute_twiss_along_lattice\nA:\n" + prt2str(A_map))
 
     for k in range(len(acc)):
         acc.propagate(calc_config, A_map, k, 1)
@@ -487,7 +486,7 @@ def compute_twiss_along_lattice(
         rjac, _ = compute_A_CS(2, Aj)
         A_map.set_jacobian(rjac)
 
-    logger.debug("\ncompute_twiss_along_lattice A:\n%s", A_map)
+    logger.debug("\ncompute_twiss_along_lattice A:\n%s" + prt2str(A_map))
 
     indices = [elem.index for elem in acc]
     tps_tmp = [_extract_tps(elem) for elem in acc]
@@ -521,4 +520,4 @@ def compute_twiss_along_lattice(
     return res
 
 
-__all__ = ["compute_twiss_along_lattice", "jac2twiss", "compute_M_diag"]
+__all__ = ["propagate_and_find_fixed_point", "compute_twiss_along_lattice", "jac2twiss", "compute_M_diag"]

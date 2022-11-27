@@ -160,9 +160,9 @@ def compute_closed_orbit(
         # prepare return map
         M.set_identity()
         M += x0
-        logger.warning(f"{n_iter=},  Start propagation at \n {M.cst()}\n")
+        logger.debug(f"{n_iter=},  Start propagation at \n {M.cst()}\n")
         next_element = acc.propagate(conf, M)
-        # logger.debug(f"{n_iter=},  End propagation at \n {M.cst()}\n {M}")
+        logger.debug(f"{n_iter=},  End propagation at \n {M.cst()}\n {M}")
 
         if next_element == n_elements:
             # Managed to get around the ring ... good
