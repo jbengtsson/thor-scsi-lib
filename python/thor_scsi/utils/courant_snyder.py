@@ -2,8 +2,54 @@ from .. import lib as tslib
 from .output import mat2txt
 
 import numpy as np
+import logging
+
+
+logger = logging.getLogger("thor_scsi")
 
 sign = np.sign
+
+
+# Configuration space coordinates.
+X_, Y_, Z_ = [
+    tslib.spatial_index.X,
+    tslib.spatial_index.Y,
+    tslib.spatial_index.Z
+]
+# Phase-space coordinates.
+[x_, px_, y_, py_, ct_, delta_] = [
+    tslib.phase_space_index_internal.x,
+    tslib.phase_space_index_internal.px,
+    tslib.phase_space_index_internal.y,
+    tslib.phase_space_index_internal.py,
+    tslib.phase_space_index_internal.ct,
+    tslib.phase_space_index_internal.delta,
+]
+
+
+def compute_A(eta, alpha, beta):
+    # Compute A - i.e., which diagonalises the Poincaré map:
+    #   M = A * R * A^-1
+    # from the Twiss parameters.
+
+    A = np.identity(6)
+    for k in range(2):
+        A[2*k, 2*k] = np.sqrt(beta[k])
+        A[2*k+1, 2*k] = -alpha[k]/np.sqrt(beta[k])
+        A[2*k+1, 2*k+1] = 1e0/np.sqrt(beta[k])
+    A[ct_, ct_] = 1e0
+    A[delta_, delta_] =1e0
+
+    B = np.identity(6)
+    B[x_, delta_] = eta[x_]
+    B[px_, delta_] = eta[px_]
+    B[ct_, x_] = eta[px_]
+    B[ct_, px_] = -eta[x_]
+ 
+    A = B @ A
+
+    logger.info("\ncompute_A\nA:\n" + mat2txt(A))
+    return A
 
 
 def compute_dnu(n_dof, A):
@@ -164,3 +210,5 @@ def compute_twiss_M(M):
             nu[k] += 1e0
 
     return [eta, alpha, beta, nu, stable]
+
+__all__ = ["compute_A", "compute_dnu", "compute_A_CS", "compute_twiss_A", "compute_twiss_A_A_tp", "compute_dispersion", "compute_twiss_M"]

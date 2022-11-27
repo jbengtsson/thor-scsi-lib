@@ -141,6 +141,8 @@ def compute_A(n_dof, eta, u):
     """
 
     Original version thanks to Johan
+    Diagonalize the Poincaré map:
+      M = B * A * R * A^-1 * B^-1
 
     Todo:
        what's is special about this inverse
