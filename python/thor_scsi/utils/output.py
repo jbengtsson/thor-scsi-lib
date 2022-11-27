@@ -9,7 +9,7 @@ import numpy as np
 
 def prt2txt(input):
     with io.StringIO() as buf, redirect_stdout(buf):
-        print(input)
+        print(input, end='')
         output = buf.getvalue()
     return output
 

@@ -20,11 +20,11 @@ import gtpsa
 
 import thor_scsi.lib as tslib
 from thor_scsi.factory import accelerator_from_config
-from thor_scsi.utils.phase_space_vector import map2numpy
-from thor_scsi.utils.courant_snyder import compute_A_CS, compute_A
 from thor_scsi.utils.twiss_output import twiss_ds_to_df, df_to_tsv
 from thor_scsi.utils.linear_optics import propagate_and_find_fixed_point, \
     compute_twiss_along_lattice, compute_dispersion
+from thor_scsi.utils.courant_snyder import compute_A_CS, compute_A, compute_twiss_A
+from thor_scsi.utils.phase_space_vector import map2numpy
 from thor_scsi.utils.output import prt2txt, mat2txt, vec2txt
 
 # Descriptor for Truncated Power Series Algebra variables.
@@ -83,6 +83,27 @@ def propagate_Twiss_half_cell(loc, A, acc, model_state):
     logger.info("\npropagate_Twiss_half_cell\nA:\n" + prt2txt(A0))
 
 
+def prt_Twiss(eta, alpha, beta):
+    print(f"  eta   = [{eta[X_]:9.3e}, {eta[Y_]:9.3e}]")
+    print(f"  alpha = [{alpha[X_]:9.3e}, {alpha[Y_]:9.3e}]")
+    print(f"  beta  = [{beta[X_]:5.3f}, {beta[Y_]:5.3f}]")
+
+
+def match_straight(loc, data):
+    eta = [data.dispersion.values[loc, 4], data.dispersion.values[loc, 2]]
+    alpha = [data.twiss.values[loc, X_, 0], data.twiss.values[loc, Y_, 0]]
+    beta = [data.twiss.values[loc, X_, 1], data.twiss.values[loc, Y_, 1]]
+    prt_Twiss(eta, alpha, beta)
+
+    A = gtpsa.ss_vect_tpsa(desc, 1)
+    A.set_zero()
+    A.set_jacobian(compute_A(eta, alpha, beta))
+    propagate_Twiss_half_cell(loc, A, acc, model_state)
+
+    eta, alpha, beta, _ = compute_twiss_A(A.jacobian())
+    prt_Twiss(eta, alpha, beta)
+
+
 t_dir = os.path.join(os.environ["HOME"], "Nextcloud", "thor_scsi")
 t_file = os.path.join(t_dir, "b3_tst.lat")
 
@@ -98,6 +119,9 @@ model_state.Cavity_on = False
 
 M, A = propagate_and_find_fixed_point(n_dof, acc, model_state, desc=desc)
 print("\mM:\n", mat2txt(M))
+eta, alpha, beta, _ = compute_twiss_A(A)
+prt_Twiss(eta, alpha, beta)
+
 # Compute Twiss parameters along lattice.
 data = compute_periodic_solution(acc, model_state, A)
 
@@ -109,15 +133,5 @@ plt_Twiss(data)
 # Get dispersion & Twiss parameters at lattice midpoint.
 loc = acc.find("b_t", 1).index
 print(f"\nlattice midpoint: {loc:1d} {acc[loc].name:s}")
-# loc = 0
-eta = [data.dispersion.values[loc, 4], data.dispersion.values[loc, 2]]
-alpha = [data.twiss.values[loc, X_, 0], data.twiss.values[loc, Y_, 0]]
-beta = [data.twiss.values[loc, X_, 1], data.twiss.values[loc, Y_, 1]]
-print(f"  eta   = [{eta[X_]:9.3e}, {eta[Y_]:9.3e}]")
-print(f"  alpha = [{alpha[X_]:9.3e}, {alpha[Y_]:9.3e}]")
-print(f"  beta  = [{beta[X_]:5.3f}, {beta[Y_]:5.3f}]")
 
-A = gtpsa.ss_vect_tpsa(desc, 1)
-A.set_zero()
-A.set_jacobian(compute_A(eta, alpha, beta))
-propagate_Twiss_half_cell(loc, A, acc, model_state)
+match_straight(loc, data)
