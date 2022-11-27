@@ -7,7 +7,7 @@ from .courant_snyder import compute_A_CS
 from .extract_info import accelerator_info
 from .accelerator import instrument_with_standard_observers
 from .phase_space_vector import omega_block_matrix, map2numpy
-from .output import prt2str, mat2txt, vec2txt, \
+from .output import prt2txt, mat2txt, vec2txt, \
     complex2txt as cplx2txt, chop_array
 
 import gtpsa
@@ -175,6 +175,7 @@ def compute_A(n_dof, eta, u):
         B = np.identity(6)
         B[x_, delta_], B[px_, delta_] = eta[x_], eta[px_]
         B[ct_, x_], B[ct_, px_] = eta[px_], -eta[x_]
+        logger.info("\ncompute_A\nB:\n" + mat2txt(B))
 
         A = B @ A
 
@@ -477,7 +478,7 @@ def compute_twiss_along_lattice(
     A_map = gtpsa.ss_vect_tpsa(desc, 1)
     A_map.set_zero()
     A_map.set_jacobian(A)
-    logger.debug("\ncompute_twiss_along_lattice\nA:\n" + prt2str(A_map))
+    logger.debug("\ncompute_twiss_along_lattice\nA:\n" + prt2txt(A_map))
 
     for k in range(len(acc)):
         acc.propagate(calc_config, A_map, k, 1)
@@ -486,7 +487,7 @@ def compute_twiss_along_lattice(
         rjac, _ = compute_A_CS(2, Aj)
         A_map.set_jacobian(rjac)
 
-    logger.debug("\ncompute_twiss_along_lattice A:\n%s" + prt2str(A_map))
+    logger.debug("\ncompute_twiss_along_lattice A:\n%s" + prt2txt(A_map))
 
     indices = [elem.index for elem in acc]
     tps_tmp = [_extract_tps(elem) for elem in acc]
