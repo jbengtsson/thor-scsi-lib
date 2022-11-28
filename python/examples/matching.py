@@ -96,6 +96,11 @@ def set_L_fam(lat, fam_name, L):
         q.set_length(L)
 
 
+# Global variables.
+n_iter    = 0
+chi_2_min = 1e30
+
+
 def match_straight(lat, loc, prm_list, bounds, Twiss0, Twiss1, Twiss1_design,
                    weight):
 
@@ -110,6 +115,10 @@ def match_straight(lat, loc, prm_list, bounds, Twiss0, Twiss1, Twiss1_design,
         return prms
 
     def f_match(prms):
+        global n_iter
+        global chi_2_min
+
+        n_iter += 1
         for k in range(3):
             if prm_list[k][1] == 'b_2':
                 set_b_2_fam(lat, prm_list[k][0], prms[k])
@@ -120,12 +129,16 @@ def match_straight(lat, loc, prm_list, bounds, Twiss0, Twiss1, Twiss1_design,
         A1 = copy.copy(A0)
         lat.propagate(model_state, A1, loc, len(lat)-loc)
         Twiss_k = compute_Twiss_A(A1.jacobian())[0:3]
-        prt_Twiss("\nTwiss_k:\n", Twiss_k)
 
         chi_2 = 0e0
         for k in range(len(Twiss_k)):
             chi_2 += weight[k]*np.sum((Twiss_k[k]-Twiss1_design[k])**2)
-        print(f"\nchi_2 = {chi_2:9.3e}\n  prms =" + vec2txt(prms))
+
+        if chi_2 < chi_2_min:
+            chi_2_min = chi_2
+            print(f"\n{n_iter:4d} chi_2 = {chi_2:9.3e}\n  prms ="
+                  + vec2txt(prms))
+            prt_Twiss("\nTwiss_k:\n", Twiss_k)
 
         return chi_2
 
