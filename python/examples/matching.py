@@ -50,7 +50,10 @@ X_, Y_, Z_ = [
 ]
 
 
-def plt_Twiss(ds):
+def plt_Twiss(ds, file_name):
+    # Turn interactive mode off.
+    plt.ioff()
+
     fig, (gr_1, gr_2) = plt.subplots(2)
 
     gr_1.set_title("Linear Optics")
@@ -64,18 +67,24 @@ def plt_Twiss(ds):
     gr_2.set_ylabel(r"$\eta_x$ [m]")
     gr_2.plot(ds.s, ds.dispersion.sel(phase_coordinate="x"), label=r"$\eta_x$")
     fig.tight_layout()
+    plt.savefig(file_name)
 
-    
-def compute_periodic_solution(lat, model_state, A):
-    # Compute the periodic solution for the super period.
+
+def compute_periodic_solution(lat, model_state):
+    # Compute the periodic solution for a super period.
     # Degrees of freedom - RF cavity is off; i.e., coasting beam.
     n_dof = 2
     model_state.radiation = False
     model_state.Cavity_on = False
 
+    M, A = propagate_and_find_fixed_point(n_dof, lat, model_state, desc=desc)
+    print("\nM:\n", mat2txt(M))
+    Twiss = compute_Twiss_A(A)
+    prt_Twiss("\nTwiss:\n", Twiss)
+
     ds = compute_Twiss_along_lattice(n_dof, lat, model_state, A=A, desc=desc)
 
-    return ds
+    return M, A, ds
 
 
 def prt_Twiss(str, Twiss):
@@ -86,14 +95,26 @@ def prt_Twiss(str, Twiss):
     print(f"  beta  = [{beta[X_]:5.3f}, {beta[Y_]:5.3f}]")
 
 
+def get_b_2_elem(lat, fam_name, n_kid):
+    quadrupole = 2
+    mp = lat.find(fam_name, n_kid)
+    return mp.get_multipoles().get_multipole(quadrupole).real
+
+
 def set_b_2_fam(lat, fam_name, b_2):
-    for q in lat.elements_with_name(fam_name):
-        q.get_multipoles().set_multipole(2, b_2)
+    quadrupole = 2
+    for mp in lat.elements_with_name(fam_name):
+        mp.get_multipoles().set_multipole(quadrupole, b_2)
+
+
+def get_L_elem(lat, fam_name, n_kid):
+    elem = lat.find(fam_name, n_kid)
+    return elem.get_length()
 
 
 def set_L_fam(lat, fam_name, L):
-    for q in lat.elements_with_name(fam_name):
-        q.set_length(L)
+    for elem in lat.elements_with_name(fam_name):
+        elem.set_length(L)
 
 
 # Global variables.
@@ -101,51 +122,86 @@ n_iter    = 0
 chi_2_min = 1e30
 
 
+def get_prm(lat, prm_list):
+    # Dictionary of parameter types and corresponding get functions.
+    how_to_get_prm = {
+        'b_2' : get_b_2_elem,
+        'L'   : get_L_elem
+        }
+    
+    prms = []
+    for k in range(len(prm_list)):
+        prms.append(how_to_get_prm[prm_list[k][1]](lat, prm_list[k][0], 0))
+    return prms
+
+
+def set_prm(lat, prm_list, prms):
+    # Dictionary of parameter types and corresponding set functions.
+    how_to_set_prm = {
+        'b_2' : set_b_2_fam,
+        'L'   : set_L_fam
+        }
+    
+    for k in range(len(prm_list)):
+        how_to_set_prm[prm_list[k][1]](lat, prm_list[k][0], prms[k])
+
+
+def compute_chi_2(lat, model_state, A0, chi_2_min, prms):
+    # Local copy.
+    A1 = copy.copy(A0)
+    lat.propagate(model_state, A1, loc, len(lat)-loc)
+    Twiss_k = compute_Twiss_A(A1.jacobian())[0:3]
+
+    chi_2 = 0e0
+    for k in range(len(Twiss_k)):
+        chi_2 += weight[k]*np.sum((Twiss_k[k]-Twiss1_design[k])**2)
+
+    if chi_2 < chi_2_min:
+        chi_2_min = chi_2
+        print(f"\n{n_iter:4d} chi_2 = {chi_2:9.3e}\n  prms  ="
+              + vec2txt(prms))
+        prt_Twiss("\n", Twiss_k)
+    return chi_2, chi_2_min
+
+
 def match_straight(lat, loc, prm_list, bounds, Twiss0, Twiss1, Twiss1_design,
                    weight):
-
-    def get_prm(prm_list):
-        prms = []
-        for k in range(len(prm_list)):
-            q = lat.find(prm_list[k][0], 0)
-            if prm_list[k][1] == 'b_2':
-                prms.append(q.get_multipoles().get_multipole(2).real)
-            elif prm_list[k][1] == 'L':
-                prms.append(q.get_length())
-        return prms
 
     def f_match(prms):
         global n_iter
         global chi_2_min
 
         n_iter += 1
-        for k in range(3):
-            if prm_list[k][1] == 'b_2':
-                set_b_2_fam(lat, prm_list[k][0], prms[k])
-            else:
-                set_L_fam(lat, prm_list[k][0], prms[k])
-
-        # Local copy.
-        A1 = copy.copy(A0)
-        lat.propagate(model_state, A1, loc, len(lat)-loc)
-        Twiss_k = compute_Twiss_A(A1.jacobian())[0:3]
-
-        chi_2 = 0e0
-        for k in range(len(Twiss_k)):
-            chi_2 += weight[k]*np.sum((Twiss_k[k]-Twiss1_design[k])**2)
-
-        if chi_2 < chi_2_min:
-            chi_2_min = chi_2
-            print(f"\n{n_iter:4d} chi_2 = {chi_2:9.3e}\n  prms ="
-                  + vec2txt(prms))
-            prt_Twiss("\nTwiss_k:\n", Twiss_k)
+        set_prm(lat, prm_list, prms)
+        chi_2, chi_2_min = compute_chi_2(lat, model_state, A0, chi_2_min, prms)
 
         return chi_2
 
+    def prt_result(f_match, prms0, minimum):
+        global n_iter
+        global chi_2_min
+
+        # Compute new Twiss parameters along lattice.
+        M, A, data = compute_periodic_solution(lat, model_state)
+        plt_Twiss(data, 'after.png')
+
+        print("\nInitial parameter values:")
+        n_iter = 0
+        chi_2_min = 1e30
+        f_match(prms0)
+        print("\nFinal parameter values:")
+        n_iter = 0
+        chi_2_min = 1e30
+        f_match(minimum["x"])
+        print("\n Minimum:\n", minimum)
+
+
+    global n_iter
+    global chi_2_min
 
     max_iter = 100
-    f_tol    = 1e-3
-    x_tol    = 1e-3
+    f_tol    = 1e-4
+    x_tol    = 1e-4
 
     print("\nloc = ", loc)
     prt_Twiss("\nTwiss parameters at centre of super period:\n", Twiss0)
@@ -159,7 +215,7 @@ def match_straight(lat, loc, prm_list, bounds, Twiss0, Twiss1, Twiss1_design,
     A0.set_jacobian(compute_A(Twiss0))
 
     # Initialise parameters.
-    prms1 = prms0 = get_prm(prm_list)
+    prms1 = prms0 = get_prm(lat, prm_list)
     print("\nprms = ", prms1)
 
     # Methods:
@@ -170,11 +226,7 @@ def match_straight(lat, loc, prm_list, bounds, Twiss0, Twiss1, Twiss1_design,
             f_match, prms1, method="Powell", bounds=bounds,
             options={'xtol':x_tol, 'ftol':f_tol, 'maxiter':max_iter})
 
-    print("\nInitial parameter values: ")
-    f_match(prms0)
-    print("\nFinal parameter values: ")
-    f_match(minimum["x"])
-    print("\n Minimum:\n", minimum)
+    prt_result(f_match, prms0, minimum)
 
 
 def get_Twiss(loc):
@@ -205,18 +257,9 @@ n_dof = 2
 model_state.radiation = False
 model_state.Cavity_on = False
 
-M, A = propagate_and_find_fixed_point(n_dof, lat, model_state, desc=desc)
-print("\mM:\n", mat2txt(M))
-Twiss = compute_Twiss_A(A)
-prt_Twiss("\nTwiss:\n", Twiss)
-
 # Compute Twiss parameters along lattice.
-data = compute_periodic_solution(lat, model_state, A)
-
-# Turn interactive mode off.
-plt.ioff()
-plt_Twiss(data)
-# plt.show()
+M, A, data = compute_periodic_solution(lat, model_state)
+plt_Twiss(data, 'before.png')
 
 # Get dispersion & Twiss parameters at centre of super period.
 loc = lat.find("b_t", 1).index
@@ -247,3 +290,5 @@ bounds = [(-b_2_max, 0.0), (0.0, b_2_max), (-b_2_max, 0.0),
 
 match_straight(lat, loc, prm_list, bounds, Twiss0, Twiss1, Twiss1_design,
                weight)
+
+print("\nPlots saved as: before.png & after.png")
