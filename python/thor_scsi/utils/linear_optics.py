@@ -443,7 +443,7 @@ def propagate_and_find_fixed_point(
     return M, A
 
 
-def compute_twiss_along_lattice(
+def compute_Twiss_along_lattice(
     n_dof: int,
     acc: tslib.Accelerator,
     calc_config: tslib.ConfigType = None,
@@ -471,7 +471,7 @@ def compute_twiss_along_lattice(
 
     if A is None:
         _, A = propagate_and_find_fixed_point(n_dof, acc, calc_config, desc=desc)
-    logger.info("\ncompute_twiss_along_lattice\nA:\n" + mat2txt(A))
+    logger.info("\ncompute_Twiss_along_lattice\nA:\n" + mat2txt(A))
 
     # Not really required ... but used for convenience
     observers = instrument_with_standard_observers(acc)
@@ -480,7 +480,7 @@ def compute_twiss_along_lattice(
     A_map = gtpsa.ss_vect_tpsa(desc, 1)
     A_map.set_zero()
     A_map.set_jacobian(A)
-    logger.debug("\ncompute_twiss_along_lattice\nA:\n" + prt2txt(A_map))
+    logger.debug("\ncompute_Twiss_along_lattice\nA:\n" + prt2txt(A_map))
 
     for k in range(len(acc)):
         acc.propagate(calc_config, A_map, k, 1)
@@ -489,7 +489,7 @@ def compute_twiss_along_lattice(
         rjac, _ = compute_A_CS(2, Aj)
         A_map.set_jacobian(rjac)
 
-    logger.debug("\ncompute_twiss_along_lattice A:\n%s" + prt2txt(A_map))
+    logger.debug("\ncompute_Twiss_along_lattice A:\n%s" + prt2txt(A_map))
 
     indices = [elem.index for elem in acc]
     tps_tmp = [_extract_tps(elem) for elem in acc]
@@ -523,4 +523,4 @@ def compute_twiss_along_lattice(
     return res
 
 
-__all__ = ["propagate_and_find_fixed_point", "compute_twiss_along_lattice", "jac2twiss", "compute_M_diag"]
+__all__ = ["propagate_and_find_fixed_point", "compute_Twiss_along_lattice", "jac2twiss", "compute_M_diag"]

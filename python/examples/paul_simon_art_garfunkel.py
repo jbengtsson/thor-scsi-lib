@@ -103,7 +103,6 @@ def prt_fam(acc, fam_name):
 def set_db_2_fam(acc, fam_name, db_2):
     for q in acc.elements_with_name(fam_name):
         b_2 = q.get_multipoles().get_multipole(2).real
-        index = q.index
         q.get_multipoles().set_multipole(2, b_2+db_2)
 
 

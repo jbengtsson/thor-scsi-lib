@@ -27,11 +27,13 @@ X_, Y_, Z_ = [
 ]
 
 
-def compute_A(eta, alpha, beta):
+def compute_A(twiss):
     # Compute A - i.e., which diagonalises the Poincaré map:
     #   M = A * R * A^-1
-    # from the Twiss parameters.
+    # from the Twiss parameters [x, y]):
+    #    twiss = [eta[], alpha[], beta[]].
 
+    eta, alpha, beta = twiss[0], twiss[1], twiss[2]
     A = np.identity(6)
     for k in range(2):
         A[2*k, 2*k] = np.sqrt(beta[k])
@@ -48,7 +50,7 @@ def compute_A(eta, alpha, beta):
  
     A = B @ A
 
-    logger.info("\ncompute_A\nA:\n" + mat2txt(A))
+    # logger.info("\ncompute_A\nA:\n" + mat2txt(A))
     return A
 
 
@@ -127,7 +129,7 @@ def compute_A_CS(n_dof, A):
     return Ar, dnu
 
 
-def compute_twiss_A(A):
+def compute_Twiss_A(A):
     """
     """
     n_dof = 2
@@ -145,14 +147,14 @@ def compute_twiss_A(A):
         beta[k] = A[k2][k2] ** 2 + A[k2][k2 + 1] ** 2
     dnu = compute_dnu(n_dof, A)
 
-    return eta, alpha, beta, dnu
+    return np.array(eta), np.array(alpha), np.array(beta), np.array(dnu)
 
 
-def compute_twiss_A_A_tp(A):
+def compute_Twiss_A_A_tp(A):
     """
 
     Todo:
-      difference ti compute_twiss_A?
+      difference ti compute_Twiss_A?
     """
     n_dof = 2
     n = 2 * n_dof
@@ -162,7 +164,7 @@ def compute_twiss_A_A_tp(A):
     delta_ = tslib.phase_space_index_internal.delta
     A_A_tp = np.dot(A[0:n, 0:n], np.transpose(A[0:n, 0:n]))
 
-    return compute_twiss_A(A)
+    return compute_Twiss_A(A)
 
     for k in range(n_dof):
         k2 = 2 * k
@@ -188,7 +190,7 @@ def compute_dispersion(M):
     return np.dot(np.linalg.inv(I - M[:n, :n]), D)
 
 
-def compute_twiss_M(M):
+def compute_Twiss_M(M):
     n_dof = 2
 
     alpha, beta, nu = np.zeros(n_dof), np.zeros(n_dof), np.zeros(n_dof)
@@ -200,7 +202,7 @@ def compute_twiss_M(M):
         k2 = 2 * k
         cos = M[k2 : k2 + 2, k2 : k2 + 2].trace() / 2e0
         if abs(cos) >= 1e0:
-            print("\ncompute_twiss_M: {:5.3f}\n".format(cos))
+            print("\ncompute_Twiss_M: {:5.3f}\n".format(cos))
             stable[k] = False
         sin = np.sqrt(1e0 - cos ** 2) * sign(M[k2][k2 + 1])
         alpha[k] = (M[k2][k2] - M[k2 + 1][k2 + 1]) / (2e0 * sin)
@@ -211,4 +213,4 @@ def compute_twiss_M(M):
 
     return [eta, alpha, beta, nu, stable]
 
-__all__ = ["compute_A", "compute_dnu", "compute_A_CS", "compute_twiss_A", "compute_twiss_A_A_tp", "compute_dispersion", "compute_twiss_M"]
+__all__ = ["compute_A", "compute_dnu", "compute_A_CS", "compute_Twiss_A", "compute_Twiss_A_A_tp", "compute_dispersion", "compute_Twiss_M"]
