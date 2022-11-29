@@ -37,6 +37,7 @@ def compute_map(
     acc: tslib.Accelerator,
     calc_config: tslib.ConfigType,
     *,
+    delta: float = 0e0,
     t_map: gtpsa.ss_vect_tpsa = None,
     desc: gtpsa.desc = None,
 ) -> gtpsa.ss_vect_tpsa:
@@ -47,7 +48,7 @@ def compute_map(
         t_map = gtpsa.ss_vect_tpsa(desc, 1)
         t_map.set_identity()
 
-    # acc.propagate(calc_config, t_map, 0, len(acc))
+    t_map[delta_] += delta
     acc.propagate(calc_config, t_map)
     return t_map
 
@@ -181,9 +182,7 @@ def compute_A(n_dof, eta, u):
 
         A = B @ A
 
-    A_inv = np.linalg.inv(A)
-
-    return A, A_inv, u1
+    return A, u1
 
 
 def compute_dispersion(M: np.ndarray) -> np.ndarray:
@@ -260,7 +259,8 @@ def compute_M_diag(n_dof: int, M: np.ndarray) -> [np.ndarray, np.ndarray, np.nda
 
     logger.debug("\neta:\n" + vec2txt(eta))
 
-    [A, A_inv, u1] = compute_A(n_dof, eta, u_ord)
+    [A, u1] = compute_A(n_dof, eta, u_ord)
+    A, _ = compute_A_CS(2, A)
 
     logger.debug(
         "\nu1:\n"
@@ -270,12 +270,12 @@ def compute_M_diag(n_dof: int, M: np.ndarray) -> [np.ndarray, np.ndarray, np.nda
         + "\nu1^T.omega.u1:\n"
         + mat2txt(chop_array(u1.T @ omega_block_matrix(n_dof) @ u1, 1e-13))
         + "\nA:\n"
-        + mat2txt(chop_array(A_inv, 1e-13))
+        + mat2txt(chop_array(A, 1e-13))
         + "\nA^T.omega.A:\n"
         + mat2txt(chop_array(A[:n, :n].T @ omega_block_matrix(n_dof) @ A[:n, :n], 1e-13))
     )
 
-    R = A_inv @ M @ A
+    R = np.linalg.inv(A) @ M @ A
 
     nu = np.zeros(3, float)
     alpha_rad = np.zeros(3, float)
@@ -304,7 +304,7 @@ def compute_M_diag(n_dof: int, M: np.ndarray) -> [np.ndarray, np.ndarray, np.nda
             )
         )
 
-    return A, A_inv, alpha_rad
+    return A, alpha_rad
 
 
 #: scale arctan2 (a12/a11) to Floquet coordinates (correct?)
@@ -389,38 +389,7 @@ def tps2twiss(tpsa: gtpsa.ss_vect_tpsa) -> (np.ndarray, np.ndarray):
     return r
 
 
-def find_fixed_point(n_dof: int, M: np.ndarray) -> np.ndarray:
-    """Transform to energy dependent fix point
-
-    * Diagonalise M = A R A^(-1)
-
-    This gives:
-    * Transform to the energy dependent fixed point
-    * Diagonalising in [x, px, y, py]
-
-       R : Block diagonal
-       :math:`A^(-1)` : From phase space ellipse to Floquet space circle
-
-    * Transform from energy dependent fix point math::`\eta` math::`\delta` to
-      origin of phase space
-
-
-    Todo:
-        Add reference to Johan's Tech Note
-
-    """
-
-    n = 2 * n_dof
-
-    # M_tp = M[:n, :n]
-    # M_tp = np.transpose(M[:n, :n])
-
-    A, A_inv, alpha_rad = compute_M_diag(n_dof, M)
-    Acs, _ = compute_A_CS(2, A)
-    return Acs
-
-
-def propagate_and_find_fixed_point(
+def compute_map_and_diag(
         n_dof: int,
         acc: tslib.Accelerator,
         calc_config: tslib.ConfigType,
@@ -433,9 +402,9 @@ def propagate_and_find_fixed_point(
     """
     t_map = compute_map(acc, calc_config, desc=desc)
     M = np.array(t_map.jacobian())
-    logger.info("\npropagate_and_find_fixed_point\nM:\n" + mat2txt(M))
+    logger.info("\ncompute_map_and_diag\nM:\n" + mat2txt(M))
  
-    A = find_fixed_point(n_dof, M)
+    A, alpha_rad = compute_M_diag(n_dof, M)
     Atest = gtpsa.ss_vect_tpsa(desc, 1)
     Atest.set_zero()
     Atest.set_jacobian(A)
@@ -470,7 +439,7 @@ def compute_Twiss_along_lattice(
         calc_config = tslib.ConfigType()
 
     if A is None:
-        _, A = propagate_and_find_fixed_point(n_dof, acc, calc_config, desc=desc)
+        _, A = compute_map_and_diag(n_dof, acc, calc_config, desc=desc)
     logger.info("\ncompute_Twiss_along_lattice\nA:\n" + mat2txt(A))
 
     # Not really required ... but used for convenience
@@ -523,4 +492,4 @@ def compute_Twiss_along_lattice(
     return res
 
 
-__all__ = ["propagate_and_find_fixed_point", "compute_Twiss_along_lattice", "jac2twiss", "compute_M_diag"]
+__all__ = ["compute_map", "compute_nu_symp", "compute_map_and_diag", "compute_Twiss_along_lattice", "jac2twiss", "compute_M_diag"]
