@@ -158,12 +158,12 @@ def compute_closed_orbit(
             break
 
         # prepare return map
-        logger.error(f"{n_iter} M {M}")
+        # logger.debug(f"{n_iter} M {M}")
         M.set_identity()
-        logger.error(f"{n_iter} M {M}")
+        # logger.debug(f"{n_iter} M {M}")
         M += x0
-        logger.error(f"{n_iter} M {M}")
-        logger.warning(f"{n_iter=},  Start propagation at \n {M.cst()}\n")
+        # logger.debug(f"{n_iter} M {M}")
+        logger.debug(f"{n_iter=},  Start propagation at \n {M.cst()}\n")
         next_element = acc.propagate(conf, M)
         # logger.debug(f"{n_iter=},  End propagation at \n {M.cst()}\n {M}")
 
@@ -193,12 +193,12 @@ def compute_closed_orbit(
             dx_abs = np.sqrt(np.sum(dx.cst_as_array()[:n] ** 2))
             # dx_abs = tslib.xabs(n, dx)
 
-            logger.warning(f"{n_iter=},  End propagation at \n {x0}\n")
+            logger.debug(f"{n_iter=},  End propagation at \n {x0}\n")
         else:
             dx_abs = np.nan
             break
 
-        logger.warning(
+        logger.info(
             "n_iter %3d, dx_abs %7.1e, eps  %7.1e, x0 %s", n_iter + 1, dx_abs, eps, x0
         )
 

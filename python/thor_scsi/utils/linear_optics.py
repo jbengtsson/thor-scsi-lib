@@ -210,7 +210,7 @@ def compute_M_diag(n_dof: int, M: np.ndarray) -> [np.ndarray, np.ndarray, np.nda
     n = 2 * n_dof
 
     nu_symp = compute_nu_symp(n_dof, M)
-    logger.warning("computed tunes (for symplectic matrix): %s", nu_symp)
+    logger.info("computed tunes (for symplectic matrix): %s", nu_symp)
 
     # Diagonalise M.
     [w, u] = np.linalg.eig(M[:n, :n])
@@ -220,7 +220,7 @@ def compute_M_diag(n_dof: int, M: np.ndarray) -> [np.ndarray, np.ndarray, np.nda
     for k in range(n):
         nu_eig[k] = acos2(w[k].imag, w[k].real) / (2e0 * np.pi)
 
-    logger.warning(
+    logger.info(
         "\nu:\n"
         + mat2txt(u)
         + "\nnu_symp:\n"
@@ -469,7 +469,7 @@ def compute_twiss_along_lattice(
 
     if A is None:
         A = propagate_and_find_phase_fixed_point(n_dof, acc, calc_config, desc=desc)
-        print("\ncompute_twiss_along_lattice A:\n", mat2txt(A))
+        logger.debug("\ncompute_twiss_along_lattice A:\n%s", mat2txt(A))
 
     # Not really required ... but used for convenience
     observers = instrument_with_standard_observers(acc)
@@ -478,7 +478,7 @@ def compute_twiss_along_lattice(
     A_map = gtpsa.ss_vect_tpsa(desc, 1)
     A_map.set_zero()
     A_map.set_jacobian(A)
-    logger.debug("\ncompute_twiss_along_lattice A:\n", A_map)
+    logger.debug("\ncompute_twiss_along_lattice A:\n%s", A_map)
 
     for k in range(len(acc)):
         acc.propagate(calc_config, A_map, k, 1)
