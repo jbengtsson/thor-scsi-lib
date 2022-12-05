@@ -1,4 +1,5 @@
-"""Straight section matching for a super period with a triplet.
+"""Use Case:
+     Super period straight section matching with a triplet.
    Constraints:
     [alpha_x,y, beta_x,y, eta_x, eta'_x] at the centre of the straigth.
    Parameters:
@@ -133,6 +134,10 @@ def get_b_n_elem(lat, fam_name, kid_num, n):
     mp = lat.find(fam_name, kid_num)
     return mp.get_multipoles().get_multipole(n).real
 
+def set_b_n_elem(lat, fam_name, kid_num, n, b_n):
+    for mp in lat.elements_with_name(fam_name):
+        mp.get_multipoles().set_multipole(n, b_n)
+
 def set_b_n_fam(lat, fam_name, n, b_n):
     for mp in lat.elements_with_name(fam_name):
         mp.get_multipoles().set_multipole(n, b_n)
@@ -254,7 +259,7 @@ def match_straight(lat, loc, prm_list, bounds, Twiss0, Twiss1, Twiss1_design,
 
     A0 = gtpsa.ss_vect_tpsa(desc, 1)
     A0.set_zero()
-    A0.set_jacobian(compute_A(Twiss0))
+    A0.set_jacobian(compute_A(*Twiss0))
 
     # Initialise parameters.
     prms1 = prms0 = get_prm(lat, prm_list)
@@ -348,9 +353,9 @@ bounds = [
     (-b_2_max, 0.0),
     (0.0,      b_2_max),
     (-b_2_max, 0.0),
-    (L_min,    0.2),
+    (L_min,    0.25),
     (L_min,    0.3),
-    (L_min,    0.35)
+    (L_min,    0.25)
 ]
 
 # Zero sextopoles.

@@ -27,13 +27,29 @@ X_, Y_, Z_ = [
 ]
 
 
-def compute_A(twiss):
-    # Compute A - i.e., which diagonalises the Poincaré map:
-    #   M = A * R * A^-1
-    # from the Twiss parameters [x, y]):
-    #    twiss = [eta[], alpha[], beta[]].
+def compute_A(
+        eta: np.ndarray, alpha: np.ndarray, beta: np.ndarray) -> np.ndarray:
+    r"""Compute twiss diagonalisation
 
-    eta, alpha, beta = twiss[0], twiss[1], twiss[2]
+    thus A - i.e., which diagonalises the Poincaré map:
+
+    Args:
+        eta:     dispersion
+        alpha:  :math:`- 1/2 \beta'`
+        beta:    beta function
+    
+    .. math::
+         M = A \cdot R \cdot A^{-1}
+    
+    from the Twiss parameters for each transversal plane x, y:
+    #    twiss = [eta[], alpha[], beta[]].
+    
+    """
+    eta   = np.asarray(eta)
+    alpha = np.asarray(alpha)
+    beta  = np.asarray(beta)
+    
+    # eta, alpha, beta = twiss
     A = np.identity(6)
     for k in range(2):
         A[2*k, 2*k] = np.sqrt(beta[k])
@@ -213,4 +229,5 @@ def compute_Twiss_M(M):
 
     return [eta, alpha, beta, nu, stable]
 
-__all__ = ["compute_A", "compute_dnu", "compute_A_CS", "compute_Twiss_A", "compute_Twiss_A_A_tp", "compute_dispersion", "compute_Twiss_M"]
+__all__ = ["compute_A", "compute_dnu", "compute_A_CS", "compute_Twiss_A",
+           "compute_Twiss_A_A_tp", "compute_dispersion", "compute_Twiss_M"]
