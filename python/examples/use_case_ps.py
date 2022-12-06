@@ -52,6 +52,75 @@ X_, Y_, Z_ = [
 [quadrupole, sextupole] = [2, 3]
 
 
+b_3_s1 = [
+    's1mt1rl', 's1mt1rr', 's1md2rl', 's1md2rr', 's1mt2rl', 's1mt2rr',
+    's1md3rl', 's1md3rr', 's1mt3rl', 's1mt3rr', 's1md4rl', 's1md4rr',
+    's1mt4rl', 's1mt4rr', 's1md5rl', 's1md5rr', 's1mt5rl', 's1mt5rr',
+    's1md6rl', 's1md6rr', 's1mt6rl', 's1mt6rr', 's1md7rl', 's1md7rr',
+    's1mt7rl', 's1mt7rr', 's1md8rl', 's1md8rr', 's1mt8rl', 's1mt8rr',
+    's1md1rl', 's1md1rr'
+    ]
+
+b_3_s2 = [
+    's2m2d1rl', 's2m2d1rr', 's2m1t1rl', 's2m1t1rr', 's2m2t1rl', 's2m2t1rr',
+    's2m1d2rl', 's2m1d2rr', 's2m2d2rl', 's2m2d2rr', 's2m1t2rl', 's2m1t2rr',
+    's2m2t2rl', 's2m2t2rr', 's2m1d3rl', 's2m1d3rr', 's2m2d3rl', 's2m2d3rr',
+    's2m1t3rl', 's2m1t3rr', 's2m2t3rl', 's2m2t3rr', 's2m1d4rl', 's2m1d4rr',
+    's2m2d4rl', 's2m2d4rr', 's2m1t4rl', 's2m1t4rr', 's2m2t4rl', 's2m2t4rr',
+    's2m1d5rl', 's2m1d5rr', 's2m2d5rl', 's2m2d5rr', 's2m1t5rl', 's2m1t5rr',
+    's2m2t5rl', 's2m2t5rr', 's2m1d6rl', 's2m1d6rr', 's2m2d6rl', 's2m2d6rr',
+    's2m1t6rl', 's2m1t6rr', 's2m2t6rl', 's2m2t6rr', 's2m1d7rl', 's2m1d7rr',
+    's2m2d7rl', 's2m2d7rr', 's2m1t7rl', 's2m1t7rr', 's2m2t7rl', 's2m2t7rr',
+    's2m1d8rl', 's2m1d8rr', 's2m2d8rl', 's2m2d8rr', 's2m1t8rl', 's2m1t8rr',
+    's2m2t8rl', 's2m2t8rr', 's2m1d1rl', 's2m1d1rr'
+]
+
+b_3_s3_1 = [
+    's3m1d2rl', 's3m1d2rr', 's3m2d2rl', 's3m2d2rr', 's3m1d3rl', 's3m1d3rr',
+    's3m2d3rl', 's3m2d3rr', 's3m1d4rl', 's3m1d4rr', 's3m2d4rl', 's3m2d4rr',
+    's3m1d5rl', 's3m1d5rr', 's3m2d5rl', 's3m2d5rr', 's3m1d6rl', 's3m1d6rr',
+    's3m2d6rl', 's3m2d6rr', 's3m1d7rl', 's3m1d7rr', 's3m2d7rl', 's3m2d7rr',
+    's3m1d8rl', 's3m1d8rr', 's3m2d8rl', 's3m2d8rr'
+]
+
+b_3_s3_2 = [
+    's3m2d1rl', 's3m2d1rr', 's3m1d1rl', 's3m1d1rr'
+]
+
+b_3_s3_3 = [
+    's3m1t1rl', 's3m1t1rr', 's3m2t1rl', 's3m2t1rr', 's3m1t2rl', 's3m1t2rr',
+    's3m2t2rl', 's3m2t2rr', 's3m1t3rl', 's3m1t3rr', 's3m2t3rl', 's3m2t3rr',
+    's3m1t4rl', 's3m1t4rr', 's3m2t4rl', 's3m2t4rr', 's3m1t5rl', 's3m1t5rr',
+    's3m2t5rl', 's3m2t5rr', 's3m1t6rl', 's3m1t6rr', 's3m2t6rl', 's3m2t6rr',
+    's3m1t7rl', 's3m1t7rr', 's3m2t7rl', 's3m2t7rr', 's3m1t8rl', 's3m1t8rr',
+    's3m2t8rl', 's3m2t8rr'
+]
+
+b_3_s4_1 = [
+    's4m1d2rl', 's4m1d2rr', 's4m2d2rl', 's4m2d2rr', 's4m1d3rl', 's4m1d3rr',
+    's4m2d3rl', 's4m2d3rr', 's4m1d4rl', 's4m1d4rr', 's4m2d4rl', 's4m2d4rr',
+    's4m1d5rl', 's4m1d5rr', 's4m2d5rl', 's4m2d5rr', 's4m1d6rl', 's4m1d6rr',
+    's4m2d6rl', 's4m2d6rr', 's4m1d7rl', 's4m1d7rr', 's4m2d7rl', 's4m2d7rr',
+    's4m1d8rl', 's4m1d8rr', 's4m2d8rl', 's4m2d8rr'
+]
+
+b_3_s4_2 = [
+    's4m2d1rl', 's4m2d1rr', 's4m1d1rl', 's4m1d1rr'
+]
+
+b_3_s4_3 = [
+    's4m1t1rl', 's4m1t1rr', 's4m2t1rl', 's4m2t1rr', 's4m1t2rl', 's4m1t2rr',
+    's4m2t2rl', 's4m2t2rr', 's4m1t3rl', 's4m1t3rr', 's4m2t3rl', 's4m2t3rr',
+    's4m1t4rl', 's4m1t4rr', 's4m2t4rl', 's4m2t4rr', 's4m1t5rl', 's4m1t5rr',
+    's4m2t5rl', 's4m2t5rr', 's4m1t7rl', 's4m1t7rr', 's4m2t7rl', 's4m2t7rr',
+    's4m1t8rl', 's4m1t8rr', 's4m2t8rl', 's4m2t8rr'
+]
+
+b_3_s4_4 = [
+    's4m1t6rl', 's4m1t6rr', 's4m2t6rl', 's4m2t6rr'
+]
+
+
 def plt_Twiss(ds, file_name, title):
     # Turn interactive mode off.
     plt.ioff()
@@ -68,6 +137,25 @@ def plt_Twiss(ds, file_name, title):
     gr_2.set_xlabel('s [m]')
     gr_2.set_ylabel(r'$\eta_x$ [m]')
     gr_2.plot(ds.s, ds.dispersion.sel(phase_coordinate='x'), label=r'$\eta_x$')
+    fig.tight_layout()
+    plt.savefig(file_name)
+
+
+def plt_nu_vs_delta(delta, nu, file_name, title):
+    # Turn interactive mode off.
+    plt.ioff()
+
+    fig, ax_1 = plt.subplots()
+
+    ax_1.set_title(title)
+    ax_1.set_xlabel(r'$\delta$ [%]')
+    ax_1.set_ylabel(r'$\nu_x$ [m]')
+    ax_1.plot(1e2*delta, nu[:, X_], 'b-', label=r'$\nu_x$')
+    ax_1.legend(loc='upper left')
+    ax_2 = ax_1.twinx()
+    ax_2.set_ylabel(r'$\nu_y$ [m]')
+    ax_2.plot(1e2*delta, nu[:, Y_], 'r-', label=r'$\nu_y$')
+    ax_2.legend(loc='upper right')
     fig.tight_layout()
     plt.savefig(file_name)
 
@@ -165,6 +253,21 @@ def prt_Twiss(str, Twiss):
     print(f'  beta   = [{beta[X_]:5.3f}, {beta[Y_]:5.3f}]')
 
 
+def compute_dnu_ddelta(lat, n, delta_max):
+    n_dof = 2
+    delta = np.zeros(2*n+1, dtype='float')
+    nu = np.zeros((2*n+1, 2), dtype='float')
+    for k in range(-n, n+1):
+        delta[k+n] = k*delta_max/n
+        map = compute_map(lat, model_state, delta=delta[k+n], desc=desc)
+        M = np.array(map.jacobian())
+        if check_if_stable_two_dim(M):
+            nu[k+n] = compute_nu_symp(n_dof, M)
+        else:
+            nu[k+n] = np.array([np.nan, np.nan])
+    return delta, nu
+
+
 t_dir = os.path.join(os.environ['HOME'], 'git', 'dt4acc', 'lattices')
 t_file = os.path.join(t_dir, 'b2_stduser_beamports_blm_tracy_corr.lat')
 
@@ -184,5 +287,7 @@ b_n_zero(lat, sextupole)
 # Compute Twiss parameters along lattice.
 M, A, data = compute_periodic_solution(lat, model_state)
 
-plt_Twiss(data, 'bessy-ii.png', 'BESSY-II - Linear Optics')
+plt_Twiss(data, 'bessy-ii_1.png', 'BESSY-II - Linear Optics')
 
+delta, nu = compute_dnu_ddelta(lat, 5, 0.1e-2)
+plt_nu_vs_delta(delta, nu, 'bessy-ii_2.png', 'BESSY-II - Tune vs. Delta')
