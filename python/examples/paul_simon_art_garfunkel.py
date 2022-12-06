@@ -29,16 +29,15 @@
 #
 # Stylianos Kyriakides Boston Marathon, 1946.
 #
-# Simon & Gargunkel 𝑇ℎ𝑒 𝐵𝑜𝑥𝑒𝑟
+# Simon & Garfunkel 𝑇ℎ𝑒 𝐵𝑜𝑥𝑒𝑟
 # https://youtu.be/l3LFML_pxlY 
 
 
 import logging
+# Levels: DEBUG, INFO, WARNING, ERROR, and CRITICAL.
+logging.basicConfig(level="ERROR")
 
 import gtpsa
-
-logging.basicConfig(level="WARNING")
-# Levels: DEBUG, INFO, WARNING, ERROR, and CRITICAL.
 
 import os
 import numpy as np
@@ -58,6 +57,7 @@ from thor_scsi.utils.phase_space_vector import map2numpy
 from thor_scsi.utils.output import mat2txt, vec2txt
 from thor_scsi.utils.twiss_output import twiss_ds_to_df, df_to_tsv
 
+# Turn on interactive mode (default is off).
 plt.ion()
 
 X_, Y_, Z_ = [
@@ -103,7 +103,6 @@ def prt_fam(acc, fam_name):
 def set_db_2_fam(acc, fam_name, db_2):
     for q in acc.elements_with_name(fam_name):
         b_2 = q.get_multipoles().get_multipole(2).real
-        index = q.index
         q.get_multipoles().set_multipole(2, b_2+db_2)
 
 
