@@ -1,4 +1,5 @@
-"""Straight section matching for a super period with a triplet.
+"""Use Case:
+     Super period straight section matching with a triplet.
    Constraints:
     [alpha_x,y, beta_x,y, eta_x, eta'_x] at the centre of the straigth.
    Parameters:
@@ -63,8 +64,10 @@ def plt_Twiss(ds, file_name, title):
     gr_1.set_title(title)
     gr_1.set_xlabel('s [m]')
     gr_1.set_ylabel(r'$\beta_{x,y}$ [m]')
-    gr_1.plot(ds.s, ds.twiss.sel(plane='x', par='beta'), label=r'$\beta_x$')
-    gr_1.plot(ds.s, ds.twiss.sel(plane='y', par='beta'), label=r'$\beta_y$')
+    gr_1.plot(ds.s, ds.twiss.sel(plane='x', par='beta'), 'b-',
+              label=r'$\beta_x$')
+    gr_1.plot(ds.s, ds.twiss.sel(plane='y', par='beta'), 'r-',
+              label=r'$\beta_y$')
     gr_1.legend()
 
     gr_2.set_xlabel('s [m]')
@@ -133,6 +136,10 @@ def get_b_n_elem(lat, fam_name, kid_num, n):
     mp = lat.find(fam_name, kid_num)
     return mp.get_multipoles().get_multipole(n).real
 
+def set_b_n_elem(lat, fam_name, kid_num, n, b_n):
+    mp = lat.find(fam_name, kid_num)
+    mp.get_multipoles().set_multipole(n, b_n)
+
 def set_b_n_fam(lat, fam_name, n, b_n):
     for mp in lat.elements_with_name(fam_name):
         mp.get_multipoles().set_multipole(n, b_n)
@@ -186,23 +193,25 @@ def compute_chi_2(lat, model_state, A0, chi_2_min, prms):
     # Local copy.
     A1 = copy.copy(A0)
     lat.propagate(model_state, A1, loc, len(lat)-loc)
-    Twiss_k = compute_Twiss_A(A1.jacobian())[0:3]
-    ksi_1 = compute_chromaticity(lat, model_state, 1e-6)
 
     chi_2 = 0e0
+    Twiss_k = compute_Twiss_A(A1.jacobian())[0:3]
     for k in range(3):
         chi_2 += weight[k]*np.sum((Twiss_k[k]-Twiss1_design[k])**2)
 
-    dchi_2 = weight[3]*np.sum(ksi_1**2)
-    chi_2 += dchi_2
+    if weight[3] != 0e0:
+        ksi_1 = compute_chromaticity(lat, model_state, 1e-6)
+        dchi_2 = weight[3]*np.sum(ksi_1**2)
+        chi_2 += dchi_2
 
     if chi_2 < chi_2_min:
         chi_2_min = chi_2
         print(f'\n{n_iter:4d} chi_2 = {chi_2:9.3e}\n\n  prms   ='
               + vec2txt(prms))
         prt_Twiss('\n', Twiss_k)
-        print(f'\n  ksi_1  = [{ksi_1[X_]:5.3f}, {ksi_1[Y_]:5.3f}]')
-        print(f'  dchi_2 = {dchi_2:9.3e}')
+        if weight[3] != 0e0:
+            print(f'\n  ksi_1  = [{ksi_1[X_]:5.3f}, {ksi_1[Y_]:5.3f}]')
+            print(f'  dchi_2 = {dchi_2:9.3e}')
     return chi_2, chi_2_min
 
 
@@ -254,7 +263,7 @@ def match_straight(lat, loc, prm_list, bounds, Twiss0, Twiss1, Twiss1_design,
 
     A0 = gtpsa.ss_vect_tpsa(desc, 1)
     A0.set_zero()
-    A0.set_jacobian(compute_A(Twiss0))
+    A0.set_jacobian(compute_A(*Twiss0))
 
     # Initialise parameters.
     prms1 = prms0 = get_prm(lat, prm_list)
@@ -327,7 +336,7 @@ weight = np.array([
     1e0,   # Eta.
     1e3,   # Alpha.
     1e0,   # Beta.
-    1e-4   # ksi_1.
+    0*1e-4   # ksi_1.
 ])
 
 # Triplet parameter family names & type.
@@ -348,9 +357,9 @@ bounds = [
     (-b_2_max, 0.0),
     (0.0,      b_2_max),
     (-b_2_max, 0.0),
-    (L_min,    0.2),
+    (L_min,    0.25),
     (L_min,    0.3),
-    (L_min,    0.35)
+    (L_min,    0.25)
 ]
 
 # Zero sextopoles.
@@ -363,4 +372,6 @@ print(f'\nksi = [{ksi_1[X_]:5.3f}, {ksi_1[Y_]:5.3f}]')
 match_straight(lat, loc, prm_list, bounds, Twiss0, Twiss1, Twiss1_design,
                weight)
 
+if not False:
+    plt.show()
 print('\nPlots saved as: before.png & after.png')

@@ -68,8 +68,10 @@ def compute_nu(M):
     tr = M.trace()
     # Check if stable.
     if tr < 2e0:
-        compute_nu(tr / 2e0, M[0][1]) / (2e0 * np.pi)
-        return nu
+        sin2 = M[0][1]*M[1][0]
+        sgn = np.sign(sin2)
+        sin = np.sqrt(np.fabs(sin2))
+        return acos2(sgn*sin, tr / 2e0) / (2e0 * np.pi)
     else:
         print("\ncompute_nu: unstable\n")
         return float("nan")
@@ -78,7 +80,7 @@ def compute_nu(M):
 def compute_nus(n_dof, M):
     nus = np.zeros(n_dof, float)
     for k in range(n_dof):
-        nus[k] = compute_nu(M[2 * k : 2 * k + 2, 2 * k : 2 * k + 2]) / (2e0 * np.pi)
+        nus[k] = compute_nu(M[2 * k : 2 * k + 2, 2 * k : 2 * k + 2])
         if n_dof == 3:
             nus[2] = 1e0 - nus[2]
     return nus
