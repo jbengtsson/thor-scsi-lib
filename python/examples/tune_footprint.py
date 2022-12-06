@@ -52,6 +52,7 @@ X_, Y_, Z_ = [
 [quadrupole, sextupole] = [2, 3]
 
 
+# BESSY-II Sextupole Families.
 b_3_s1 = [
     's1mt1rl', 's1mt1rr', 's1md2rl', 's1md2rr', 's1mt2rl', 's1mt2rr',
     's1md3rl', 's1md3rr', 's1mt3rl', 's1mt3rr', 's1md4rl', 's1md4rr',
@@ -59,7 +60,7 @@ b_3_s1 = [
     's1md6rl', 's1md6rr', 's1mt6rl', 's1mt6rr', 's1md7rl', 's1md7rr',
     's1mt7rl', 's1mt7rr', 's1md8rl', 's1md8rr', 's1mt8rl', 's1mt8rr',
     's1md1rl', 's1md1rr'
-    ]
+]
 
 b_3_s2 = [
     's2m2d1rl', 's2m2d1rr', 's2m1t1rl', 's2m1t1rr', 's2m2t1rl', 's2m2t1rr',
@@ -130,8 +131,10 @@ def plt_Twiss(ds, file_name, title):
     gr_1.set_title(title)
     gr_1.set_xlabel('s [m]')
     gr_1.set_ylabel(r'$\beta_{x,y}$ [m]')
-    gr_1.plot(ds.s, ds.twiss.sel(plane='x', par='beta'), label=r'$\beta_x$')
-    gr_1.plot(ds.s, ds.twiss.sel(plane='y', par='beta'), label=r'$\beta_y$')
+    gr_1.plot(ds.s, ds.twiss.sel(plane='x', par='beta'), 'b-',
+              label=r'$\beta_x$')
+    gr_1.plot(ds.s, ds.twiss.sel(plane='y', par='beta'), 'r-',
+              label=r'$\beta_y$')
     gr_1.legend()
 
     gr_2.set_xlabel('s [m]')
@@ -290,4 +293,8 @@ M, A, data = compute_periodic_solution(lat, model_state)
 plt_Twiss(data, 'bessy-ii_1.png', 'BESSY-II - Linear Optics')
 
 delta, nu = compute_dnu_ddelta(lat, 5, 0.1e-2)
-plt_nu_vs_delta(delta, nu, 'bessy-ii_2.png', 'BESSY-II - Tune vs. Delta')
+
+plt_nu_vs_delta(delta, nu,
+                'bessy-ii_2.png', 'BESSY-II - $\\nu_{x,y} ( \delta )$')
+if not False:
+    plt.show()
