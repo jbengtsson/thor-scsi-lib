@@ -121,7 +121,7 @@ If build was successful use
 
 .. code:: shell
 
-  cmake --install . --prefix=/path/to/install/to
+  cmake --install . --prefix /path/to/install/to
 
 
 with `/path/to/install/to` the absolute path of the directory you
