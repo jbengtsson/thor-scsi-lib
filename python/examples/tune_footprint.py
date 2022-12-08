@@ -199,24 +199,24 @@ def check_if_stable_two_dim(M):
 
 def compute_chromaticity(lat, model_state, eps):
     # If not stable return a large value.
-    ksi_1_max = 1e30
+    xi_1_max = 1e30
 
     map = compute_map(lat, model_state, delta=-eps, desc=desc)
     M = np.array(map.jacobian())
     if check_if_stable_two_dim(M):
         nu_m = compute_nu_symp(n_dof, M)
     else:
-        nu_m = np.array([ksi_1_max, ksi_1_max])
+        nu_m = np.array([xi_1_max, xi_1_max])
 
     map = compute_map(lat, model_state, delta=eps, desc=desc)
     M = np.array(map.jacobian())
     if check_if_stable_two_dim(M):
         nu_p = compute_nu_symp(n_dof, M)
     else:
-        nu_p = np.array([ksi_1_max, ksi_1_max])
+        nu_p = np.array([xi_1_max, xi_1_max])
 
-    ksi = (nu_p-nu_m)/(2e0*eps)
-    return ksi
+    xi = (nu_p-nu_m)/(2e0*eps)
+    return xi
 
 
 def compute_periodic_solution(lat, model_state):
@@ -228,11 +228,11 @@ def compute_periodic_solution(lat, model_state):
 
     M, A = compute_map_and_diag(n_dof, lat, model_state, desc=desc)
     nus = compute_nus(n_dof, M)
-    ksi_1 = compute_chromaticity(lat, model_state, 1e-6)
+    xi_1 = compute_chromaticity(lat, model_state, 1e-6)
     Twiss = compute_Twiss_A(A)
 
     print('\nM:\n', mat2txt(M))
-    prt_tune_chrom(n_dof, nus, ksi_1)
+    prt_tune_chrom(n_dof, nus, xi_1)
     prt_Twiss('\nTwiss:\n', Twiss)
 
     ds = compute_Twiss_along_lattice(n_dof, lat, model_state, A=A, desc=desc)
@@ -240,10 +240,10 @@ def compute_periodic_solution(lat, model_state):
     return M, A, ds
 
 
-def prt_tune_chrom(n_dof, nus, ksi):
+def prt_tune_chrom(n_dof, nus, xi):
     if n_dof == 2:
         print(f'\nnu  = [{nus[X_]:7.5f}, {nus[Y_]:7.5f}]')
-        print(f'ksi = [{ksi[X_]:7.5f}, {ksi[Y_]:7.5f}]')
+        print(f'xi = [{xi[X_]:7.5f}, {xi[Y_]:7.5f}]')
     else:
         print(f'\nnu = [{nus[X_]:7.5f}, {nus[Y_]:7.5f}, {nus[Z_]:7.5f}]')
 
