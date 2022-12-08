@@ -285,14 +285,15 @@ model_state.radiation = False
 model_state.Cavity_on = False
 
 # Zero sextupoles.
-b_n_zero(lat, sextupole)
+if False:
+    b_n_zero(lat, sextupole)
 
 # Compute Twiss parameters along lattice.
 M, A, data = compute_periodic_solution(lat, model_state)
 
 plt_Twiss(data, 'bessy-ii_1.png', 'BESSY-II - Linear Optics')
 
-delta, nu = compute_dnu_ddelta(lat, 5, 0.1e-2)
+delta, nu = compute_dnu_ddelta(lat, 5, 1e-2)
 
 plt_nu_vs_delta(delta, nu,
                 'bessy-ii_2.png', 'BESSY-II - $\\nu_{x,y} ( \delta )$')
