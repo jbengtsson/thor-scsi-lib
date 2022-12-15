@@ -81,36 +81,35 @@ void ts::Accelerator::addMarkerAtStartIfRequired(void)
 
 template<typename T>
 int
-	ts::Accelerator::_propagate(thor_scsi::core::ConfigType& conf, gtpsa::ss_vect<T> &ps, size_t start, int max_elements, size_t n_turns,  bool tracy_compatible_indexing)// const
+ts::Accelerator::_propagate(thor_scsi::core::ConfigType& conf, gtpsa::ss_vect<T> &ps, size_t start_elem, int max_elements, size_t n_turns,  bool tracy_compatible_indexing)// const
 {
 
-  /* I guess Tobin would complain about this extra complexity */
-  int nelem = static_cast<int>(this->size());
-  bool retreat = std::signbit(max_elements);
-
-  if(tracy_compatible_indexing){
-      if(start_elem>0) {
-	  // take the one off
-	  start_elem -= 1;
-      } else {
-	  std:: stringstream strm;
-	  strm << "Requested tracy compatible indexing, but start element "
-	       << start_elem << "was smaller or equal to zero";
-	  throw std::runtime_error(strm.str());
-      }
-  }
-
+	/* I guess Tobin would complain about this extra complexity */
+	int nelem = static_cast<int>(this->size());
 	bool retreat = std::signbit(max_elements);
-	int next_elem = static_cast<int>(start);
+
+	if(tracy_compatible_indexing){
+		if(start_elem>0) {
+			// take the one off
+			start_elem -= 1;
+		} else {
+			std:: stringstream strm;
+			strm << "Requested tracy compatible indexing, but start element "
+			     << start_elem << "was smaller or equal to zero";
+			throw std::runtime_error(strm.str());
+		}
+	}
+
+	int next_elem = static_cast<int>(start_elem);
 	auto trace = this->trace();
 
 
 	for(size_t turn=0; turn<n_turns; ++turn) {
 	    if(trace)
-		(*trace) << "turn " <<  turn << ", processing elements from " <<  start
+		(*trace) << "turn " <<  turn << ", processing elements from " <<  start_elem
 			 << " for a maximum of elements " << max_elements << std::endl;
 
-	    next_elem = static_cast<int>(start);
+	    next_elem = static_cast<int>(start_elem);
 	    for(int i=0; next_elem >= 0 && next_elem<nelem && i<std::abs(max_elements); i++)
 	    {
 		size_t n = next_elem;
@@ -183,7 +182,7 @@ propagate(thor_scsi::core::ConfigType& conf, ss_vect_tps  &ps, size_t start,
 }
 int
 ts::Accelerator::propagate(thor_scsi::core::ConfigType& conf, ss_vect_tpsa &ps, size_t start, int max_elements, size_t n_turns,
-			   , bool tracy_compatible_indexing)// const
+			   bool tracy_compatible_indexing)// const
 {
-    return _propagate(conf, ps, start, max_elements, n_turns);
+    return _propagate(conf, ps, start, max_elements, n_turns, tracy_compatible_indexing);
 }
