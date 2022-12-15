@@ -184,7 +184,9 @@ def compute_A(n_dof, eta, u):
 
         A = B @ A
 
-    return A, u1
+    A_inv = np.linalg.inv(A)
+
+    return A, A_inv, u1
 
 
 def compute_dispersion(M: np.ndarray) -> np.ndarray:
@@ -261,7 +263,7 @@ def compute_M_diag(n_dof: int, M: np.ndarray) -> [np.ndarray, np.ndarray, np.nda
 
     logger.debug("\neta:\n" + vec2txt(eta))
 
-    [A, u1] = compute_A(n_dof, eta, u_ord)
+    [A, A_inv, u1] = compute_A(n_dof, eta, u_ord)
     A, _ = compute_A_CS(2, A)
 
     logger.debug(
