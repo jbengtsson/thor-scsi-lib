@@ -7,8 +7,7 @@ from .courant_snyder import compute_A_CS
 from .extract_info import accelerator_info
 from .accelerator import instrument_with_standard_observers
 from .phase_space_vector import omega_block_matrix, map2numpy
-from .output import prt2txt, mat2txt, vec2txt, \
-    complex2txt as cplx2txt, chop_array
+from .output import prt2txt, mat2txt, vec2txt, chop_array
 
 import gtpsa
 
