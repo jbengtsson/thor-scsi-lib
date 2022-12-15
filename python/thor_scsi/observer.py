@@ -2,9 +2,10 @@
 
 See :class:`Observer`
 '''
-from .lib import (ObservedState, Observer as _AbstractObserver,
-                  ss_vect_tps_to_mat)
+from .lib import ObservedState, Observer as _AbstractObserver
+import gtpsa
 import numpy as np
+
 
 class Observer(_AbstractObserver):
     '''Observer example
@@ -17,8 +18,8 @@ class Observer(_AbstractObserver):
         _AbstractObserver.__init__(self)
         self.name = None
         self.index = None
-        self.res = None
-        self.raw = None
+        self.ps = None
+        self.jac = None
 
     def __repr__(self):
         cls_name = self.__class__.__name__
@@ -26,10 +27,10 @@ class Observer(_AbstractObserver):
         return txt
 
     def reset(self):
-        self.raw = None
-        self.res = None
+        self.ps = None
+        self.jac = None
 
-    def view(self, element, ps, observed_state, cnt):
+    def view(self, element, ps: gtpsa.ss_vect_tpsa, observed_state, cnt):
         '''Current view of state at element
 
         Args:
@@ -53,7 +54,7 @@ class Observer(_AbstractObserver):
 
         elif observed_state == ObservedState.end:
             # Memory management to be reviewed ...
-            self.raw = ss_vect_tps_to_mat(ps);
-            self.res = np.array(self.raw)
+            self.ps = ps.cst();
+            self.jac = np.array(ps.jacobian())
 
         # Other observed states are not recognised

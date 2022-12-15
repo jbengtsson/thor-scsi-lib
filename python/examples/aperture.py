@@ -1,8 +1,9 @@
 """Simple aperture check
 """
-
-from thor_scsi.flame import GLPSParser
-from thor_scsi.lib import Accelerator, RectangularAperture, ss_vect_double, ConfigType
+from thor_scsi.pyflame import GLPSParser, Config
+from thor_scsi.lib import Accelerator, RectangularAperture, ConfigType
+from thor_scsi.factory import accelerator_from_config
+import gtpsa
 
 mini_lat = """
 Nquad = 12;
@@ -16,11 +17,11 @@ ap = RectangularAperture(width, height)
 
 acc = Accelerator(GLPSParser().parse_byte(mini_lat, None))
 elem = acc.find("q4m2d1r", 0)
-elem.setAperture(ap)
+elem.set_aperture(ap)
 
 print(f"Using aperture {ap} for element {elem}")
 
-ps = ss_vect_double()
+ps = gtpsa.ss_vect_double(0e0)
 ps.set_zero()
 
 calc_config = ConfigType()

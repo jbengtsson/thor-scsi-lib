@@ -2,7 +2,7 @@
 """
 from thor_scsi.pyflame import Config
 from thor_scsi.lib import Mpole, ConfigType
-from thor_scsi.lib import ss_vect_double
+from gtpsa import ss_vect_double
 
 C = Config()
 C.setAny("L", 2)
@@ -12,12 +12,14 @@ mpole = Mpole(C)
 
 print(mpole)
 print(repr(mpole))
-mpole.getFieldInterpolator().setMultipole(6, 4.2e-4)
+mpole.get_field_interpolator().setMultipole(6, 4.2e-4)
 
 # Will fail now: need to implement that the coefficients array can be resized
 # quad.getMultipoles().setMultipole(10, 3.552e-4)
 
-ps = ss_vect_double()
+# The argument passed to the state space vector is required for
+# compatability with gtpsa demanding a description object
+ps = ss_vect_double(0.0)
 ps.set_zero()
 ps[0] = 1e-3
 ps[2] = -1e-3

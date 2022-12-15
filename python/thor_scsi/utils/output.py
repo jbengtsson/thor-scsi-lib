@@ -1,6 +1,17 @@
 """Support for formatting np.ndarray's in a Tracy compatible fashion
 """
+
+import io
+from contextlib import redirect_stdout
+
 import numpy as np
+
+
+def prt2txt(input):
+    with io.StringIO() as buf, redirect_stdout(buf):
+        print(input, end='')
+        output = buf.getvalue()
+    return output
 
 
 def sign(x: float) -> int:
@@ -77,4 +88,4 @@ def mat2txt(mat: np.ndarray, *, name=None) -> str:
     return txt
 
 
-__all__ = ["vec2txt", "mat2txt", "cmplx2txt"]
+__all__ = ["prt2txt", "vec2txt", "mat2txt", "complex2txt"]

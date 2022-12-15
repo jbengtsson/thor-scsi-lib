@@ -3,7 +3,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include <thor_scsi/elements/drift.h>
-#include <tps/ss_vect.h>
+#include <gtpsa/ss_vect.h>
 #include <cmath>
 
 namespace tsc = thor_scsi::core;
@@ -15,10 +15,10 @@ enum {
 };
 
 static void
-diff_position_direction(const ss_vect<double>& start, const ss_vect<double>& end,
+diff_position_direction(const gtpsa::ss_vect<double>& start, const gtpsa::ss_vect<double>& end,
 			double *dpos, double *ddir)
 {
-	const ss_vect<double> d = end - start;
+	const gtpsa::ss_vect<double> d = end - start;
 
 	*dpos = sqrt(sqr(d[xi]) + sqr(d[yi]) + sqr(d[zi]));
 	*ddir = sqrt(sqr(d[pxi]) + sqr(d[pyi]) + sqr(d[pzi]));
@@ -27,13 +27,13 @@ diff_position_direction(const ss_vect<double>& start, const ss_vect<double>& end
 
 static void
 test_zero_movement(tse::DriftType& drift, tsc::ConfigType& calc_config,
-		   const ss_vect<double> ps_start,
+		   const gtpsa::ss_vect<double>& ps_start,
 		   const double pos_diff=1e-15,
 		   const double dir_diff=1e-15)
 {
 
-	ss_vect<double> ps = ps_start;
-	drift.pass(calc_config, ps);
+        gtpsa::ss_vect<double> ps = ps_start.clone();
+	drift.propagate(calc_config, ps);
 
 	double dpos, ddir;
 	diff_position_direction(ps_start, ps, &dpos, &ddir);
@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE(test01_drift_print)
 	tse::DriftType drift(C);
 
 	BOOST_CHECK_CLOSE(drift.getLength(), 0.0, 1e-15);
-	ss_vect<double> ps = {0, 0, 0, 0, 0, 0};
+	gtpsa::ss_vect<double> ps = {0, 0, 0, 0, 0, 0};
 
 	// just check show works
 	std::cout << "state: ";
@@ -71,43 +71,43 @@ BOOST_AUTO_TEST_CASE(test02_drift_zero_length)
 	  tsc::ConfigType calc_config;
 
 	  {
-		  const ss_vect<double> ps_orig = {0, 0, 0, 0, 0, 0};
+		  const gtpsa::ss_vect<double> ps_orig = {0, 0, 0, 0, 0, 0};
 		  test_zero_movement(drift, calc_config, ps_orig);
 	  }
 
 	  {
-		  const ss_vect<double> ps_orig = {0, 0, 254, 0, 0, 0};
+		  const gtpsa::ss_vect<double> ps_orig = {0, 0, 254, 0, 0, 0};
 		  test_zero_movement(drift, calc_config, ps_orig);
 	  }
 	  {
-		  const ss_vect<double> ps_orig = {0, 0, 254, 0, 0, 1};
+		  const gtpsa::ss_vect<double> ps_orig = {0, 0, 254, 0, 0, 1};
 		  test_zero_movement(drift, calc_config, ps_orig, 1e-300, 1e-300);
 	  }
 	  {
-		  const ss_vect<double> ps_orig = {1e-3,   1e-3,  254,  1e-3,  1e-3, 1};
+		  const gtpsa::ss_vect<double> ps_orig = {1e-3,   1e-3,  254,  1e-3,  1e-3, 1};
 		  test_zero_movement(drift, calc_config, ps_orig, 1e-300, 1e-300);
 	  }
 	  {
-		  const ss_vect<double> ps_orig = {-1e-3, -1e-3,  254,  1e-3,  1e-3, 1};
+		  const gtpsa::ss_vect<double> ps_orig = {-1e-3, -1e-3,  254,  1e-3,  1e-3, 1};
 		  test_zero_movement(drift, calc_config, ps_orig, 1e-300, 1e-300);
 	  }
 	  {
-		  const ss_vect<double> ps_orig = {1e-3,   1e-3,  254, -1e-3, -1e-3, 1};
+		  const gtpsa::ss_vect<double> ps_orig = {1e-3,   1e-3,  254, -1e-3, -1e-3, 1};
 		  test_zero_movement(drift, calc_config, ps_orig, 1e-300, 1e-300);
 	  }
 	  {
-		  const ss_vect<double> ps_orig = {-1e-3, -1e-3,  254, -1e-3, -1e-3, 1};
+		  const gtpsa::ss_vect<double> ps_orig = {-1e-3, -1e-3,  254, -1e-3, -1e-3, 1};
 		  test_zero_movement(drift, calc_config, ps_orig, 1e-300, 1e-300);
 	  }
 }
 
 static void
 test_length_drift(tse::DriftType& drift, tsc::ConfigType& calc_config,
-		  const ss_vect<double> ps_start, const double length = 1.0,
+		  const gtpsa::ss_vect<double>& ps_start, const double length = 1.0,
 		  const double pos_diff=1e-15, const double dir_diff=1e-15)
 {
-	ss_vect<double> ps = ps_start, ps_ref = ps_start;
-	drift.pass(calc_config, ps);
+	gtpsa::ss_vect<double> ps = ps_start.clone(), ps_ref = ps_start.clone();
+	drift.propagate(calc_config, ps);
 
 	/* just propagate*/
 	const double
@@ -129,7 +129,7 @@ test_length_drift(tse::DriftType& drift, tsc::ConfigType& calc_config,
 
 static void
 test_unit_length_drift(tse::DriftType& drift, tsc::ConfigType& calc_config,
-		       const ss_vect<double> ps_start,
+		       const gtpsa::ss_vect<double>& ps_start,
 		       const double pos_diff=1e-15, const double dir_diff=1e-15)
 {
 	test_length_drift(drift, calc_config, ps_start, 1.0, pos_diff, dir_diff);
@@ -148,32 +148,32 @@ BOOST_AUTO_TEST_CASE(test03_drift_one_length_test)
 	  BOOST_CHECK_CLOSE(drift.getLength(), 1, 1e-6);
 
 	  {
-		  const ss_vect<double> ps_orig = {0, 0, 0, 0, 0, 0};
+		  const gtpsa::ss_vect<double> ps_orig = {0, 0, 0, 0, 0, 0};
 		  test_unit_length_drift(drift, calc_config, ps_orig);
 	  }
 
 	  {
-		  const ss_vect<double> ps_orig = {0, 0, 254, 0, 0, 0};
+		  const gtpsa::ss_vect<double> ps_orig = {0, 0, 254, 0, 0, 0};
 		  test_unit_length_drift(drift, calc_config, ps_orig);
 	  }
 	  {
-		  const ss_vect<double> ps_orig = {0, 0, 254, 0, 0, 1};
+		  const gtpsa::ss_vect<double> ps_orig = {0, 0, 254, 0, 0, 1};
 		  test_unit_length_drift(drift, calc_config, ps_orig, 1e-300, 1e-300);
 	  }
 	  {
-		  const ss_vect<double> ps_orig = {1e-3,   1e-3,  254,  1e-3,  1e-3, 1};
+		  const gtpsa::ss_vect<double> ps_orig = {1e-3,   1e-3,  254,  1e-3,  1e-3, 1};
 		  test_unit_length_drift(drift, calc_config, ps_orig, 1e-300, 1e-300);
 	  }
 	  {
-		  const ss_vect<double> ps_orig = {-1e-3, -1e-3,  254,  1e-3,  1e-3, 1};
+		  const gtpsa::ss_vect<double> ps_orig = {-1e-3, -1e-3,  254,  1e-3,  1e-3, 1};
 		  test_unit_length_drift(drift, calc_config, ps_orig, 1e-300, 1e-300);
 	  }
 	  {
-		  const ss_vect<double> ps_orig = {1e-3,   1e-3,  254, -1e-3, -1e-3, 1};
+		  const gtpsa::ss_vect<double> ps_orig = {1e-3,   1e-3,  254, -1e-3, -1e-3, 1};
 		  test_unit_length_drift(drift, calc_config, ps_orig, 1e-300, 1e-300);
 	  }
 	  {
-		  const ss_vect<double> ps_orig = {-1e-3, -1e-3,  254, -1e-3, -1e-3, 1};
+		  const gtpsa::ss_vect<double> ps_orig = {-1e-3, -1e-3,  254, -1e-3, -1e-3, 1};
 		  test_unit_length_drift(drift, calc_config, ps_orig, 1e-300, 1e-300);
 	  }
 }
@@ -197,15 +197,15 @@ BOOST_AUTO_TEST_CASE(test04_drift_short_quad_length_test)
 	  BOOST_CHECK_CLOSE(drift.getLength(), length, 1e-15);
 
 	  {
-		  const ss_vect<double> ps_orig = {0, 0, 0, 0, 0, 0};
+		  const gtpsa::ss_vect<double> ps_orig = {0, 0, 0, 0, 0, 0};
 		  test_length_drift(drift, calc_config, ps_orig, length);
 	  }
 	  {
-		  const ss_vect<double> ps_orig = {-1e-3, -1e-3,  254,  1e-3,  1e-3, 1};
+		  const gtpsa::ss_vect<double> ps_orig = {-1e-3, -1e-3,  254,  1e-3,  1e-3, 1};
 		  test_length_drift(drift, calc_config, ps_orig, length, 1e-11, 1e-300);
 	  }
 	  {
-		  const ss_vect<double> ps_orig = {-1e-3,   1e-3,  254, -1e-3,  1e-3, 1};
+		  const gtpsa::ss_vect<double> ps_orig = {-1e-3,   1e-3,  254, -1e-3,  1e-3, 1};
 		  test_length_drift(drift, calc_config, ps_orig, length, 1e-10, 1e-300);
 	  }
 }
@@ -228,15 +228,15 @@ BOOST_AUTO_TEST_CASE(test05_drift_long_quad_length_test)
 	  BOOST_CHECK_CLOSE(drift.getLength(), length, 1e-15);
 
 	  {
-		  const ss_vect<double> ps_orig = {0, 0, 0, 0, 0, 0};
+		  const gtpsa::ss_vect<double> ps_orig = {0, 0, 0, 0, 0, 0};
 		  test_length_drift(drift, calc_config, ps_orig, length);
 	  }
 	  {
-		  const ss_vect<double> ps_orig = {-1e-3, -1e-3,  254,  1e-3,  1e-3, 1};
+		  const gtpsa::ss_vect<double> ps_orig = {-1e-3, -1e-3,  254,  1e-3,  1e-3, 1};
 		  test_length_drift(drift, calc_config, ps_orig, length, 1e-19, 1e-300);
 	  }
 	  {
-		  const ss_vect<double> ps_orig = {-1e-3,   1e-3,  254, -1e-3,  1e-3, 1};
+		  const gtpsa::ss_vect<double> ps_orig = {-1e-3,   1e-3,  254, -1e-3,  1e-3, 1};
 		  test_length_drift(drift, calc_config, ps_orig, length, 1e-18, 1e-300);
 	  }
 }

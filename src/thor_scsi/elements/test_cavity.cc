@@ -55,13 +55,13 @@ BOOST_AUTO_TEST_CASE(test20_cavity)
 	BOOST_CHECK_CLOSE(cavity.getVoltage(),   voltage,   1e-12);
 	BOOST_CHECK_CLOSE(cavity.getFrequency(), frequency, 1e-12);
 
-	const ss_vect<double> ps_orig = {0, 0, 0, 0, 0, ct};
+	const gtpsa::ss_vect<double> ps_orig = {0, 0, 0, 0, 0, ct};
 	BOOST_CHECK_CLOSE(ps_orig[ct_],   ct,   1e-12);
 
 
 	{
-		ss_vect<double> ps = ps_orig;
-		cavity.pass(calc_config, ps);
+	        gtpsa::ss_vect<double> ps = ps_orig.clone();
+		cavity.propagate(calc_config, ps);
 
 		BOOST_CHECK_CLOSE(ps[ct_],    ct, 1e-14);
 		BOOST_CHECK_CLOSE(ps[delta_], delta, 1e-14);
@@ -96,13 +96,13 @@ BOOST_AUTO_TEST_CASE(test21_cavity_delta)
 	BOOST_CHECK_CLOSE(cavity.getVoltage(),   voltage,   1e-12);
 	BOOST_CHECK_CLOSE(cavity.getFrequency(), frequency, 1e-12);
 
-	const ss_vect<double> ps_orig = {0, 0, 0, 0, 0, ct};
+	const gtpsa::ss_vect<double> ps_orig = {0, 0, 0, 0, 0, ct};
 	BOOST_CHECK_CLOSE(ps_orig[ct_],   ct,   1e-12);
 
 
 	{
-		ss_vect<double> ps = ps_orig;
-		cavity.pass(calc_config, ps);
+		gtpsa::ss_vect<double> ps = ps_orig.clone();
+		cavity.propagate(calc_config, ps);
 
 		BOOST_CHECK_CLOSE(ps[ct_],    ct, 1e-14);
 		BOOST_CHECK_CLOSE(ps[delta_], delta, 1e-14);

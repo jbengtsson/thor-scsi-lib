@@ -2,6 +2,10 @@ include(../../cmake/gpp_warnings.cmake)
 
 add_subdirectory(core)
 
+# add_compile_definitions(
+#   GTSPA_ONLY_OPTIMISED_OPS
+#  )
+
 if(FLAME_INTERNAL)
     set(flame_INCLUDE_DIR "${flame_SOURCE_DIR}/src/")
     message(STATUS "Using internal flame from subdirectory flame include dir ${flame_INCLUDE_DIR}")
@@ -79,15 +83,17 @@ set(thor_scsi_core_FILES
   elements/utils.cc
   elements/element_helpers.cc
   elements/drift.cc
+  elements/cavity.cc
   elements/radiation_delegate.cc
   elements/field_kick.cc
   elements/mpole.cc
   elements/marker.cc
-  elements/cavity.cc
   elements/standard_observer.cc
   elements/standard_aperture.cc
   std_machine/std_machine.cc
   std_machine/accelerator.cc
+  # to be removed as soon as tps is removed ...
+  ss_vect_tps.cc
 )
 
 add_library(thor_scsi_core SHARED
@@ -99,6 +105,7 @@ add_library(thor_scsi::core ALIAS thor_scsi_core)
 target_include_directories(thor_scsi_core
     PUBLIC
     "$<BUILD_INTERFACE:${thor_scsi_INCLUDE_DIR}>"
+    "$<BUILD_INTERFACE:${gtpsa_cpp_INCLUDE_DIR}>"
     "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )
 
@@ -106,6 +113,8 @@ target_include_directories(thor_scsi_core
 target_link_libraries(thor_scsi_core
   # Todo: need to learn how to instruct cmake that this
   # dependency will be exported properly
+  gtpsa-c++
+  gtpsa
   tpsa_lin
   flame::core
   # ${flame_CORE_LIBRARY}
@@ -115,6 +124,7 @@ target_link_libraries(thor_scsi_core
 set_target_properties(thor_scsi_core
   PROPERTIES
     SOVERSION 0
+    LIBRARY_OUTPUT_NAME thor_scsi_core_gtpsa
 )
 
 
@@ -127,12 +137,20 @@ add_library(thor_scsi SHARED
   ${thor_scsi_HEADERS}
 )
 
+message(STATUS "gtpsa_cpp_INCLUDEDIR:"  ${gtpsa_cpp_INCLUDE_DIR})
+
 target_include_directories(thor_scsi
     PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../>"
+    "$<BUILD_INTERFACE:${gtpsa_cpp_INCLUDE_DIR}>"
     "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )
 
+set_target_properties(thor_scsi
+  PROPERTIES
+    SOVERSION 0
+    LIBRARY_OUTPUT_NAME thor_scsi_gtpsa
+)
 
 add_executable(test_transform_phase_space
   core/test_transform_phase_space.cc
@@ -141,6 +159,8 @@ target_link_libraries(test_transform_phase_space
   thor_scsi
   thor_scsi_core
   tpsa_lin
+  gtpsa-c++
+  gtpsa
   # PRIVATE Boost::boost
   #  quadmath
     ${Boost_PRG_EXEC_MONITOR_LIBRARY}

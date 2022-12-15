@@ -2,28 +2,32 @@
 #include <thor_scsi/elements/cavity.h>
 #include <thor_scsi/elements/element_helpers.h>
 #include <thor_scsi/elements/constants.h>
+#include <gtpsa/utils.hpp>
+
 #include <cmath>
 #include <ostream>
 
 namespace tsc = thor_scsi::core;
 namespace tse = thor_scsi::elements;
 
+
 tse::CavityType::CavityType(const Config &config) :  LocalGalilean(config)
 {
 	this->setFrequency(config.get<double>("Frequency"));
+	this->setPhase(config.get<double>("Phase", 0e0));
 	this->setVoltage(config.get<double>("Voltage"));
 	this->setHarmonicNumber(config.get<double>("HarmonicNumber"));
-	this->setPhase(config.get<double>("Phase", 0e0));
 }
 
+
 template<typename T>
-void tse::CavityType::_localPass(tsc::ConfigType &conf, ss_vect<T> &ps)
+void tse::CavityType::_localPropagate(tsc::ConfigType &conf, gtpsa::ss_vect<T> &ps)
 {
 
 	const double L = this->PL, c0 = speed_of_light;
 	const bool debug = false;
 
-	drift_pass(conf, L/2e0, ps);
+	drift_propagate(conf, L/2e0, ps);
 
 	THOR_SCSI_LOG(DEBUG)
 		<< "\n  cavity on    = " << conf.Cavity_on
@@ -51,16 +55,19 @@ void tse::CavityType::_localPass(tsc::ConfigType &conf, ss_vect<T> &ps)
 
 		ps[delta_] += delta;
 
-//#ifdef THOR_SCSI_USE_RADIATION
-		if (conf.radiation) conf.dE -= is_double<T>::cst(delta);
-//#endif
+#ifdef THOR_SCSI_USE_RADIATION
+		if (conf.radiation) conf.dE -= gtpsa::cst(delta);
+#endif
 		if (conf.pathlength) ps[ct_] -= this->Ph/this->Pfreq*c0;
 	}
-	drift_pass(conf, L/2e0, ps);
+	drift_propagate(conf, L/2e0, ps);
 }
 
-template void tse::CavityType::_localPass(tsc::ConfigType &conf, ss_vect<double> &ps);
-template void tse::CavityType::_localPass(tsc::ConfigType &conf, ss_vect<tps> &ps);
+// template void tse::CavityType::_localPropagate(tsc::ConfigType &conf, ss_vect<double>             &ps);
+// template void tse::CavityType::_localPropagate(tsc::ConfigType &conf, ss_vect<tps>                &ps);
+template void tse::CavityType::_localPropagate(tsc::ConfigType &conf, gtpsa::ss_vect<double>      &ps);
+template void tse::CavityType::_localPropagate(tsc::ConfigType &conf, gtpsa::ss_vect<tps>         &ps);
+template void tse::CavityType::_localPropagate(tsc::ConfigType &conf, gtpsa::ss_vect<gtpsa::tpsa> &ps);
 
 /*
  * Local Variables:

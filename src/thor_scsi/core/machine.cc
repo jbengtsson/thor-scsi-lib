@@ -300,15 +300,7 @@ struct Logcerr : public tsc::Machine::Logger
 Logcerr Logcerr::singleton;
 }
 
-// J.B. 07-10-22.
-#define DBG_LEVEL 1
-#if DBG_LEVEL == 1
-int tsc::Machine::log_detail = THOR_SCSI_INFO;
-#elif DBG_LEVEL == 2
-int tsc::Machine::log_detail = THOR_SCSI_DEBUG;
-#elif DBG_LEVEL == 3
-int tsc::Machine::log_detail = THOR_SCSI_WARN;
-#endif
+int tsc::Machine::log_detail = THOR_SCSI_WARN; // THOR_SCSI_DEBUG
 
 std::shared_ptr<tsc::Machine::Logger> tsc::Machine::p_logger(&Logcerr::singleton, Logcerr::noopdtor);
 

@@ -2,7 +2,7 @@
 #define BOOST_TEST_DYN_LINK
 #include <boost/test/unit_test.hpp>
 #include <thor_scsi/core/transform_phase_space.h>
-#include <tps/ss_vect.h>
+#include <gtpsa/ss_vect.h>
 #include <cmath>
 
 namespace tsc = thor_scsi::core;
@@ -18,9 +18,11 @@ BOOST_AUTO_TEST_CASE(test00_init_api)
 BOOST_AUTO_TEST_CASE(test10_init_zero_ps)
 {
 	auto tf = tsc::PhaseSpaceGalilean2DTransform();
-	const ss_vect<double> ps_ref{0,0,0,0,0,0};
-	ss_vect<double> ps = ps_ref;
-
+	double unused=0e0;
+	gtpsa::ss_vect<double> ps(unused);
+	ps.set_zero();
+	// made code crash if assigning to variable with same name!
+	const gtpsa::ss_vect<double> ps_ref = ps.clone();
 
 	tf.forward(ps);
 	BOOST_CHECK_SMALL(ps[x_], 1e-21);
@@ -42,8 +44,8 @@ BOOST_AUTO_TEST_CASE(test10_init_zero_ps)
 BOOST_AUTO_TEST_CASE(test20_init_shift_x)
 {
 	auto tf = tsc::PhaseSpaceGalilean2DTransform();
-	const ss_vect<double> ps_ref{0,0,0,0,0,0};
-	ss_vect<double> ps = ps_ref;
+	const gtpsa::ss_vect<double> ps_ref{0,0,0,0,0,0};
+	gtpsa::ss_vect<double> ps = ps_ref.clone();
 	const double val = 1;
 
 	tf.setDx(val);
@@ -66,8 +68,8 @@ BOOST_AUTO_TEST_CASE(test20_init_shift_x)
 BOOST_AUTO_TEST_CASE(test21_init_shift_y)
 {
 	auto tf = tsc::PhaseSpaceGalilean2DTransform();
-	const ss_vect<double> ps_ref{0,0,0,0,0,0};
-	ss_vect<double> ps = ps_ref;
+	const gtpsa::ss_vect<double> ps_ref{0,0,0,0,0,0};
+	gtpsa::ss_vect<double> ps = ps_ref.clone();
 	const double val = 1;
 
 	tf.setDy(val);
@@ -94,8 +96,8 @@ BOOST_AUTO_TEST_CASE(test30_realistic_shift_x)
 
 	const double x = 2e-3, y=-3e-3, px=-5e-4, py=-5e-7;
 	const double val = .5;
-	const ss_vect<double> ps_ref{x,px,y,py,0,0};
-	ss_vect<double> ps = ps_ref;
+	const gtpsa::ss_vect<double> ps_ref{x,px,y,py,0,0};
+	gtpsa::ss_vect<double> ps = ps_ref.clone();
 
 	BOOST_CHECK_CLOSE(ps[x_],         x, 1e-14);
 	BOOST_CHECK_CLOSE(ps[y_],         y, 1e-14);
@@ -127,8 +129,8 @@ BOOST_AUTO_TEST_CASE(test30_realistic_shift_y)
 
 	const double x =-2e-3, y= 3e-3, px=-5e4, py=-5e-7;
 	const double val = .5;
-	const ss_vect<double> ps_ref{x,px,y,py,0,0};
-	ss_vect<double> ps = ps_ref;
+	const gtpsa::ss_vect<double> ps_ref{x,px,y,py,0,0};
+	gtpsa::ss_vect<double> ps = ps_ref.clone();
 
 	tf.setDy(val);
 	tf.forward(ps);
@@ -151,9 +153,9 @@ BOOST_AUTO_TEST_CASE(test40_zero_ps)
 {
 	auto tf = tsc::PhaseSpaceGalilean2DTransform();
 
-	const ss_vect<double> ps_ref{0,0,0,0,0,0};
+	const gtpsa::ss_vect<double> ps_ref{0,0,0,0,0,0};
 	{
-		ss_vect<double> ps = ps_ref;
+		gtpsa::ss_vect<double> ps = ps_ref.clone();
 
 		tf.forward(ps);
 		BOOST_CHECK_SMALL(ps[x_],   1e-21);
@@ -170,7 +172,7 @@ BOOST_AUTO_TEST_CASE(test40_zero_ps)
 		CHECK_LONGITUDINAL_ZERO(ps);
 	}
 	{
-		ss_vect<double> ps = ps_ref;
+		gtpsa::ss_vect<double> ps = ps_ref.clone();
 		tf.setRoll(M_PI);
 		tf.forward(ps);
 		BOOST_CHECK_SMALL(ps[x_],   1e-21);
@@ -192,8 +194,8 @@ BOOST_AUTO_TEST_CASE(test41_zero_roll)
 {
 	auto tf = tsc::PhaseSpaceGalilean2DTransform();
 	const double x = 2, y=-3, px=5, py=7;
-	const ss_vect<double> ps_ref{x,px,y,py,0,0};
-	ss_vect<double> ps = ps_ref;
+	const gtpsa::ss_vect<double> ps_ref{x,px,y,py,0,0};
+	gtpsa::ss_vect<double> ps = ps_ref.clone();
 
 	BOOST_CHECK_CLOSE(ps[x_],         x, 1e-14);
 	BOOST_CHECK_CLOSE(ps[y_],         y, 1e-14);
@@ -221,10 +223,10 @@ BOOST_AUTO_TEST_CASE(test50_roll_half_quater)
 {
 	auto tf = tsc::PhaseSpaceGalilean2DTransform();
 	const double x = 2, y=-3, px=5, py=7;
-	const ss_vect<double> ps_ref{x,px,y,py,0,0};
+	const gtpsa::ss_vect<double> ps_ref{x,px,y,py,0,0};
 
 	{
-		ss_vect<double> ps = ps_ref;
+		gtpsa::ss_vect<double> ps = ps_ref.clone();
 		BOOST_CHECK_CLOSE(ps[x_],         x, 1e-14);
 		BOOST_CHECK_CLOSE(ps[y_],         y, 1e-14);
 		BOOST_CHECK_CLOSE(ps[px_],       px, 1e-14);
@@ -248,7 +250,7 @@ BOOST_AUTO_TEST_CASE(test50_roll_half_quater)
 	}
 
 	{
-		ss_vect<double> ps = ps_ref;
+		gtpsa::ss_vect<double> ps = ps_ref.clone();
 		BOOST_CHECK_CLOSE(ps[x_],         x, 1e-14);
 		BOOST_CHECK_CLOSE(ps[y_],         y, 1e-14);
 		BOOST_CHECK_CLOSE(ps[px_],       px, 1e-14);
@@ -271,7 +273,7 @@ BOOST_AUTO_TEST_CASE(test50_roll_half_quater)
 		CHECK_LONGITUDINAL_ZERO(ps);
 	}
 	{
-		ss_vect<double> ps = ps_ref;
+		gtpsa::ss_vect<double> ps = ps_ref.clone();
 		BOOST_CHECK_CLOSE(ps[x_],         x, 1e-14);
 		BOOST_CHECK_CLOSE(ps[y_],         y, 1e-14);
 		BOOST_CHECK_CLOSE(ps[px_],       px, 1e-14);

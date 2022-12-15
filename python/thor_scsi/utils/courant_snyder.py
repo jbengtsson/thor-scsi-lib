@@ -2,8 +2,72 @@ from .. import lib as tslib
 from .output import mat2txt
 
 import numpy as np
+import logging
+
+
+logger = logging.getLogger("thor_scsi")
 
 sign = np.sign
+
+
+# Configuration space coordinates.
+X_, Y_, Z_ = [
+    tslib.spatial_index.X,
+    tslib.spatial_index.Y,
+    tslib.spatial_index.Z
+]
+# Phase-space coordinates.
+[x_, px_, y_, py_, ct_, delta_] = [
+    tslib.phase_space_index_internal.x,
+    tslib.phase_space_index_internal.px,
+    tslib.phase_space_index_internal.y,
+    tslib.phase_space_index_internal.py,
+    tslib.phase_space_index_internal.ct,
+    tslib.phase_space_index_internal.delta,
+]
+
+
+def compute_A(
+        eta: np.ndarray, alpha: np.ndarray, beta: np.ndarray) -> np.ndarray:
+    r"""Compute twiss diagonalisation
+
+    thus A - i.e., which diagonalises the Poincaré map:
+
+    Args:
+        eta:     dispersion
+        alpha:  :math:`- 1/2 \beta'`
+        beta:    beta function
+    
+    .. math::
+         M = A \cdot R \cdot A^{-1}
+    
+    from the Twiss parameters for each transversal plane x, y:
+    #    twiss = [eta[], alpha[], beta[]].
+    
+    """
+    eta   = np.asarray(eta)
+    alpha = np.asarray(alpha)
+    beta  = np.asarray(beta)
+    
+    # eta, alpha, beta = twiss
+    A = np.identity(6)
+    for k in range(2):
+        A[2*k, 2*k] = np.sqrt(beta[k])
+        A[2*k+1, 2*k] = -alpha[k]/np.sqrt(beta[k])
+        A[2*k+1, 2*k+1] = 1e0/np.sqrt(beta[k])
+    A[ct_, ct_] = 1e0
+    A[delta_, delta_] =1e0
+
+    B = np.identity(6)
+    B[x_, delta_] = eta[x_]
+    B[px_, delta_] = eta[px_]
+    B[ct_, x_] = eta[px_]
+    B[ct_, px_] = -eta[x_]
+ 
+    A = B @ A
+
+    # logger.info("\ncompute_A\nA:\n" + mat2txt(A))
+    return A
 
 
 def compute_dnu(n_dof, A):
@@ -47,10 +111,7 @@ def compute_A_CS(n_dof, A):
     """
 
     n = 2 * n_dof
-    # assert(n_dof == 2)
     dnu = np.zeros(n_dof)
-    # Should that not be n_dof * 2 ?
-    # J.B.: No; number of tunes.
     R = np.identity(6)
 
     nr, nc = R.shape
@@ -84,7 +145,7 @@ def compute_A_CS(n_dof, A):
     return Ar, dnu
 
 
-def compute_twiss_A(A):
+def compute_Twiss_A(A):
     """
     """
     n_dof = 2
@@ -103,14 +164,14 @@ def compute_twiss_A(A):
         beta[k] = A[k2][k2] ** 2 + A[k2][k2 + 1] ** 2
     dnu = compute_dnu(n_dof, A)
 
-    return eta, alpha, beta, dnu
+    return np.array(eta), np.array(alpha), np.array(beta), np.array(dnu)
 
 
-def compute_twiss_A_A_tp(A):
+def compute_Twiss_A_A_tp(A):
     """
 
     Todo:
-      difference ti compute_twiss_A?
+      difference ti compute_Twiss_A?
     """
     n_dof = 2
     n = 2 * n_dof
@@ -120,7 +181,7 @@ def compute_twiss_A_A_tp(A):
     delta_ = tslib.phase_space_index_internal.delta
     A_A_tp = np.dot(A[0:n, 0:n], np.transpose(A[0:n, 0:n]))
 
-    return compute_twiss_A(A)
+    return compute_Twiss_A(A)
 
     for k in range(n_dof):
         k2 = 2 * k
@@ -146,7 +207,7 @@ def compute_dispersion(M):
     return np.dot(np.linalg.inv(I - M[:n, :n]), D)
 
 
-def compute_twiss_M(M):
+def compute_Twiss_M(M):
     n_dof = 2
 
     alpha, beta, nu = np.zeros(n_dof), np.zeros(n_dof), np.zeros(n_dof)
@@ -158,7 +219,7 @@ def compute_twiss_M(M):
         k2 = 2 * k
         cos = M[k2 : k2 + 2, k2 : k2 + 2].trace() / 2e0
         if abs(cos) >= 1e0:
-            print("\ncompute_twiss_M: {:5.3f}\n".format(cos))
+            print("\ncompute_Twiss_M: {:5.3f}\n".format(cos))
             stable[k] = False
         sin = np.sqrt(1e0 - cos ** 2) * sign(M[k2][k2 + 1])
         alpha[k] = (M[k2][k2] - M[k2 + 1][k2 + 1]) / (2e0 * sin)
@@ -168,3 +229,6 @@ def compute_twiss_M(M):
             nu[k] += 1e0
 
     return [eta, alpha, beta, nu, stable]
+
+__all__ = ["compute_A", "compute_dnu", "compute_A_CS", "compute_Twiss_A",
+           "compute_Twiss_A_A_tp", "compute_dispersion", "compute_Twiss_M"]

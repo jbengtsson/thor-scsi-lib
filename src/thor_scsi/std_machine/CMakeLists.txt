@@ -9,6 +9,7 @@ target_link_libraries(test_accelerator
   thor_scsi
   thor_scsi_core
   tpsa_lin
+  gtpsa
   # PRIVATE Boost::boost
   #  quadmath
     ${Boost_PRG_EXEC_MONITOR_LIBRARY}
@@ -28,6 +29,7 @@ target_link_libraries(test_accelerator_config
   thor_scsi
   thor_scsi_core
   tpsa_lin
+  gtpsa
   # PRIVATE Boost::boost
   #  quadmath
     ${Boost_PRG_EXEC_MONITOR_LIBRARY}

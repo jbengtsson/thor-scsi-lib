@@ -1,6 +1,10 @@
 import thor_scsi.lib as tslib
+import gtpsa
 from thor_scsi.factory import accelerator_from_config
-from thor_scsi.utils.accelerator import instrument_with_standard_observers
+from thor_scsi.utils.accelerator import (
+    instrument_with_standard_observers,
+    instrument_with_radiators,
+)
 import time
 import os
 
@@ -15,25 +19,29 @@ acc = accelerator_from_config(t_file)
 energy = 2.5e9
 
 calc_config = tslib.ConfigType()
-calc_config.radiation = True
-# is this used anywhere?
-calc_config.emittance = False
-calc_config.Cavity_on = True
 calc_config.Energy = energy
+
+if False:
+    calc_config.radiation = True
+    # is this used anywhere?
+    calc_config.emittance = False
+    calc_config.Cavity_on = True
 
 rad_del = instrument_with_radiators(acc, energy=energy)
 if False:
-    ps = tslib.ss_vect_double()
+    ps = gtpsa.ss_vect_double()
     ps.set_zero()
 else:
-    ps = tslib.ss_vect_tps()
+    desc = gtpsa.desc(6, 2)
+    ps = gtpsa.ss_vect_tpsa(desc, 1)
     ps.set_identity()
 
 print(ps.cst())
 print(ps)
-acc.propagate(conf, ps)
+acc.propagate(calc_config, ps)
 print(ps.cst())
 print(ps)
+print(ps.jacobian())
 
 # Need to keep reference here: otherwise pybind11 will
 # remove them ... I assume

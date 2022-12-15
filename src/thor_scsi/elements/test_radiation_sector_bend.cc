@@ -7,7 +7,6 @@
 #include <thor_scsi/elements/radiation_delegate.h>
 #include <thor_scsi/std_machine/accelerator.h>
 #include <thor_scsi/std_machine/std_machine.h>
-#include <tps/ss_vect.h>
 #include <tps/enums.h>
 
 namespace ts = thor_scsi;
@@ -51,15 +50,14 @@ BOOST_AUTO_TEST_CASE(test01_radiation_delegate)
 	bend.setRadiationDelegate(p_del);
 
 
-
-
-	ss_vect<double> ps_ref;
+	const double unused = 0e0;
+	gtpsa::ss_vect<double> ps_ref(unused);
 	ps_ref.set_zero();
 
 	try
 	{
-		ss_vect<double> ps = ps_ref;
-		bend.pass(calc_config, ps);
+	        gtpsa::ss_vect<double> ps = ps_ref.clone();
+		bend.propagate(calc_config, ps);
 		std::cout << ps;
 
 	}catch(std::exception& e){

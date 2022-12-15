@@ -7,7 +7,6 @@
 #include <thor_scsi/core/multipoles.h>
 #include <thor_scsi/elements/bending.h>
 #include "check_multipole.h"
-#include <tps/ss_vect.h>
 #include <tps/enums.h>
 #include <ostream>
 #include <armadillo>
@@ -16,12 +15,16 @@
 namespace tsc = thor_scsi::core;
 namespace tse = thor_scsi::elements;
 
+
+auto a_desc = std::make_shared<gtpsa::desc>(6, 1);
+auto tpsa_ref = gtpsa::tpsa(a_desc, gtpsa::init::default_);
+
 /**
  * code originally from tracy / thor_scsi on hold
  */
-arma::mat get_sbend_mat(const double length, const double b2,
-			const double phi,
-			const double delta)
+static arma::mat get_sbend_mat(const double length, const double b2,
+			       const double phi,
+			       const double delta)
 {
 
 	arma::mat mat = arma::mat(6, 6);
@@ -168,36 +171,37 @@ symplectic_result_check_zeros_elements(T mat)
 
 }
 
+
 static void
-symplectic_result_check_non_zeros_elements(ss_vect<tps> ps, arma::mat mat)
+symplectic_result_check_non_zeros_elements(gtpsa::ss_vect<gtpsa::tpsa> ps_arg, arma::mat mat)
 {
 	//arma::inplace_trans(mat);
 	const double eps = 1e-6;
 
-	BOOST_CHECK_CLOSE((ps[x_][x_]),         (mat.at(x_, x_)),         eps);
+	arma::mat ps = ps_arg.jacobian();
+	BOOST_CHECK_CLOSE( ps.at(  x_    , x_     ), mat.at(  x_    , x_     ), eps);
 
-	BOOST_CHECK_CLOSE((ps[x_][px_]),        (mat.at(x_, px_)),        eps);
-	BOOST_CHECK_CLOSE((ps[x_][delta_]),     (mat.at(x_, delta_)),     eps);
+	BOOST_CHECK_CLOSE( ps.at(  x_    , px_    ), mat.at(  x_    , px_    ), eps);
+	BOOST_CHECK_CLOSE( ps.at(  x_    , delta_ ), mat.at(  x_    , delta_ ), eps);
 
-	BOOST_CHECK_CLOSE((ps[px_][x_]),        (mat.at(px_, x_)),        eps);
-	BOOST_CHECK_CLOSE((ps[px_][px_]),       (mat.at(px_, px_)),       eps);
-	BOOST_CHECK_CLOSE((ps[px_][delta_]),    (mat.at(px_, delta_)),    eps);
+	BOOST_CHECK_CLOSE( ps.at( px_    , x_     ), mat.at( px_    , x_     ), eps);
+	BOOST_CHECK_CLOSE( ps.at( px_    , px_    ), mat.at( px_    , px_    ), eps);
+	BOOST_CHECK_CLOSE( ps.at( px_    , delta_ ), mat.at( px_    , delta_ ), eps);
 
-	BOOST_CHECK_CLOSE((ps[y_][y_]),         (mat.at(y_, y_)),         eps);
-	BOOST_CHECK_CLOSE((ps[y_][py_]),        (mat.at(y_, py_)),        eps);
+	BOOST_CHECK_CLOSE( ps.at(  y_    , y_     ), mat.at(  y_    , y_     ), eps);
+	BOOST_CHECK_CLOSE( ps.at(  y_    , py_    ), mat.at(  y_    , py_    ), eps);
 
-	BOOST_CHECK_CLOSE((ps[py_][y_]),        (mat.at(py_, y_)),        eps);
-	BOOST_CHECK_CLOSE((ps[py_][py_]),       (mat.at(py_, py_)),       eps);
+	BOOST_CHECK_CLOSE( ps.at( py_    , y_     ), mat.at( py_    , y_     ), eps);
+	BOOST_CHECK_CLOSE( ps.at( py_    , py_    ), mat.at( py_    , py_    ), eps);
 
-	BOOST_CHECK_CLOSE((ps[ct_][x_]),        (mat.at(ct_, x_)),        eps);
-	BOOST_CHECK_CLOSE((ps[ct_][px_]),       (mat.at(ct_, px_)),       eps);
-	BOOST_CHECK_CLOSE((ps[ct_][delta_]),    (mat.at(ct_, delta_)),    eps);
-	BOOST_CHECK_CLOSE((ps[ct_][ct_]),       (mat.at(ct_, ct_)),       eps);
+	BOOST_CHECK_CLOSE( ps.at( ct_    , x_     ), mat.at( ct_    , x_     ), eps);
+	BOOST_CHECK_CLOSE( ps.at( ct_    , px_    ), mat.at( ct_    , px_    ), eps);
+	BOOST_CHECK_CLOSE( ps.at( ct_    , delta_ ), mat.at( ct_    , delta_ ), eps);
+	BOOST_CHECK_CLOSE( ps.at( ct_    , ct_    ), mat.at( ct_    , ct_    ), eps);
 
-	BOOST_CHECK_CLOSE((ps[delta_][delta_]), (mat.at(delta_, delta_)), eps);
+	BOOST_CHECK_CLOSE( ps.at( delta_ , delta_ ), mat.at( delta_ , delta_ ), eps);
 
 }
-
 
 static arma::mat
 compute_omega_matrix(void)
@@ -269,7 +273,7 @@ check_symplectisism_submats(const arma::mat mat)
 {
 
 	const double eps = 1e-12;
-	arma::mat om(2,2);
+	arma::mat om(2,2, arma::fill::zeros);
 	om(0, 1) =  1;
 	om(1, 0) = -1;
 
@@ -281,7 +285,7 @@ check_symplectisism_submats(const arma::mat mat)
 	double y_py_check = arma::accu(arma::abs(y_py - om));
 	BOOST_CHECK_SMALL(y_py_check, eps);
 
-	arma::mat om_d(2,2);
+	arma::mat om_d(2,2, arma::fill::zeros);
 	om_d(0, 1) =  -1;
 	om_d(1, 0) =   1;
 
@@ -365,6 +369,19 @@ static void extract_ps_jac(arma::mat mat, arma::mat *ps, arma::mat *jac)
 
 }
 
+template<typename T>
+static void to_ps_jac(gtpsa::ss_vect<T>& ssv, arma::mat *ps, arma::mat *jac)
+{
+    *ps = ssv.cst();
+    *jac = ssv.jacobian();
+}
+
+static void to_ps_jac(gtpsa::ss_vect<tps>& ssv, arma::mat *ps, arma::mat *jac)
+{
+    throw std::runtime_error("Not implemented");
+    // extract_ps_jac(maptomat(ssv), ps, jac);
+}
+
 BOOST_AUTO_TEST_CASE(test21_sector_tps_symplectic)
 {
 	tsc::ConfigType calc_config;
@@ -382,17 +399,21 @@ BOOST_AUTO_TEST_CASE(test21_sector_tps_symplectic)
 	// std::cout << C << std::endl;
 	// bend.show(std::cout, 4); std::cout << std::endl;
 
-	ss_vect<tps> ps_orig;
-	ps_orig.identity();
+	gtpsa::ss_vect<gtpsa::tpsa> ps(tpsa_ref);
+	ps.set_identity();
 
-	ss_vect<tps> ps = ps_orig;
-	bend.pass(calc_config, ps);
+	const gtpsa::ss_vect<gtpsa::tpsa> ps_ref = ps.clone();
+	bend.propagate(calc_config, ps);
 
 	arma::mat ps2, jac;
+
+	to_ps_jac(ps, &ps2, &jac);
+	check_symplectisism(jac);
+#if 0
 	extract_ps_jac(maptomat(ps), &ps2, &jac);
 
 	// jac.print("checking jacobian ");
-	check_symplectisism(jac);
+#endif
 
 }
 

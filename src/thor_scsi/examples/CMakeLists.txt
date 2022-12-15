@@ -9,6 +9,7 @@ target_link_libraries(lattice_pass
   thor_scsi
   thor_scsi_core
   tpsa_lin
+  gtpsa
   Boost::program_options
   #  quadmath
 )

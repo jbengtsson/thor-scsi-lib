@@ -9,8 +9,7 @@ import numpy as np
 import xarray as xr
 from typing import Sequence
 import logging
-
-logger = logging.getLogger("thor_scsi")
+logger = logging.getLogger("thor-scsi")
 
 
 ## def instrument_sequence_with_standard_radiators(
@@ -66,6 +65,176 @@ def instrument_with_radiators(
 
     return rad_del_kick  # , rad_del
 
+logger = logging.getLogger("thor-scsi")
+
+
+## def instrument_sequence_with_standard_radiators(
+##     elems: Sequence[tslib.ElemType]
+## ) -> Sequence[tslib.RadiationDelegate]:
+##     """Instrument a sequence of elements with radiation delegates
+##     """
+##     ps_zero = tslib.ss_vect_double()
+##     rad_del = [tslib.RadiationDelegate() for elem in elems]
+##     for a_del, elem in zip(rad_del, elems):
+##         elem.setRadiationDelegate(a_del)
+##         # Just use that that the marker knows who is calling him
+##         a_del.view(elem, ps_zero, tslib.ObservedState.start, 0)
+##     return rad_del
+
+
+def instrument_with_radiators(
+    acc: tslib.Accelerator, *, energy
+) -> Sequence[tslib.RadiationDelegate]:
+    """Instrument all resonable elements with a radiation delegate
+
+    Todo:
+        review if a radation delegate should be registered to any
+        element unless it refuses to accept one
+    """
+
+    # I think anything derived from a mpole can tak an radiation delegate
+    ps_zero = tslib.ss_vect_double()
+
+    ## Untested code below
+    ## for type_name in ["Marker"]:
+    ##     elems = [elem for elem in acc.elementsWithNameType(type_name)]
+    ##
+    ## # Markers and similar devices solely store the data ...
+    ## rad_del = [tslib.RadiationDelegate() for elem in elems]
+    ## for a_del, elem in zip(rad_del, elems):
+    ##     elem.setRadiationDelegate(a_del)
+    ##     # Just use that that the marker knows who is calling him
+    ##     a_del.view(elem, ps_zero, tslib.ObservedState.start, 0)
+
+    elems = [elem for elem in acc if isinstance(elem, (tslib.Mpole,))]
+    logger.info(
+        "Radiators added to following elements:'{}'".format(
+            ", ".join([e.name for e in elems])
+        )
+    )
+
+    rad_del_kick = [tslib.RadiationDelegateKick() for elem in elems]
+    for a_del, elem in zip(rad_del_kick, elems):
+        elem.setRadiationDelegate(a_del)
+        a_del.setEnergy(energy)
+        # Just use that that the marker knows who is calling him
+        # a_del.view(elem, ps_zero, tslib.ObservedState.start, 0)
+
+    return rad_del_kick  # , rad_del
+
+logger = logging.getLogger("thor-scsi")
+
+
+## def instrument_sequence_with_standard_radiators(
+##     elems: Sequence[tslib.ElemType]
+## ) -> Sequence[tslib.RadiationDelegate]:
+##     """Instrument a sequence of elements with radiation delegates
+##     """
+##     ps_zero = tslib.ss_vect_double()
+##     rad_del = [tslib.RadiationDelegate() for elem in elems]
+##     for a_del, elem in zip(rad_del, elems):
+##         elem.setRadiationDelegate(a_del)
+##         # Just use that that the marker knows who is calling him
+##         a_del.view(elem, ps_zero, tslib.ObservedState.start, 0)
+##     return rad_del
+
+
+def instrument_with_radiators(
+    acc: tslib.Accelerator, *, energy
+) -> Sequence[tslib.RadiationDelegate]:
+    """Instrument all resonable elements with a radiation delegate
+
+    Todo:
+        review if a radation delegate should be registered to any
+        element unless it refuses to accept one
+    """
+
+    # I think anything derived from a mpole can tak an radiation delegate
+    ps_zero = tslib.ss_vect_double()
+
+    ## Untested code below
+    ## for type_name in ["Marker"]:
+    ##     elems = [elem for elem in acc.elementsWithNameType(type_name)]
+    ##
+    ## # Markers and similar devices solely store the data ...
+    ## rad_del = [tslib.RadiationDelegate() for elem in elems]
+    ## for a_del, elem in zip(rad_del, elems):
+    ##     elem.setRadiationDelegate(a_del)
+    ##     # Just use that that the marker knows who is calling him
+    ##     a_del.view(elem, ps_zero, tslib.ObservedState.start, 0)
+
+    elems = [elem for elem in acc if isinstance(elem, (tslib.Mpole,))]
+    logger.info(
+        "Radiators added to following elements:'{}'".format(
+            ", ".join([e.name for e in elems])
+        )
+    )
+
+    rad_del_kick = [tslib.RadiationDelegateKick() for elem in elems]
+    for a_del, elem in zip(rad_del_kick, elems):
+        elem.setRadiationDelegate(a_del)
+        a_del.setEnergy(energy)
+        # Just use that that the marker knows who is calling him
+        # a_del.view(elem, ps_zero, tslib.ObservedState.start, 0)
+
+    return rad_del_kick  # , rad_del
+
+logger = logging.getLogger("thor-scsi")
+
+
+## def instrument_sequence_with_standard_radiators(
+##     elems: Sequence[tslib.ElemType]
+## ) -> Sequence[tslib.RadiationDelegate]:
+##     """Instrument a sequence of elements with radiation delegates
+##     """
+##     ps_zero = tslib.ss_vect_double()
+##     rad_del = [tslib.RadiationDelegate() for elem in elems]
+##     for a_del, elem in zip(rad_del, elems):
+##         elem.setRadiationDelegate(a_del)
+##         # Just use that that the marker knows who is calling him
+##         a_del.view(elem, ps_zero, tslib.ObservedState.start, 0)
+##     return rad_del
+
+
+def instrument_with_radiators(
+    acc: tslib.Accelerator, *, energy
+) -> Sequence[tslib.RadiationDelegate]:
+    """Instrument all resonable elements with a radiation delegate
+
+    Todo:
+        review if a radation delegate should be registered to any
+        element unless it refuses to accept one
+    """
+
+    # I think anything derived from a mpole can tak an radiation delegate
+    ps_zero = tslib.ss_vect_double()
+
+    ## Untested code below
+    ## for type_name in ["Marker"]:
+    ##     elems = [elem for elem in acc.elementsWithNameType(type_name)]
+    ##
+    ## # Markers and similar devices solely store the data ...
+    ## rad_del = [tslib.RadiationDelegate() for elem in elems]
+    ## for a_del, elem in zip(rad_del, elems):
+    ##     elem.setRadiationDelegate(a_del)
+    ##     # Just use that that the marker knows who is calling him
+    ##     a_del.view(elem, ps_zero, tslib.ObservedState.start, 0)
+
+    elems = [elem for elem in acc if isinstance(elem, (tslib.Mpole,))]
+    logger.info(
+        "\nRadiators added to:\n({})".
+        format(", ".join([e.name for e in elems]))
+    )
+
+    rad_del_kick = [tslib.RadiationDelegateKick() for elem in elems]
+    for a_del, elem in zip(rad_del_kick, elems):
+        elem.set_radiation_delegate(a_del)
+        a_del.set_energy(energy)
+        # Just use that that the marker knows who is calling him
+        # a_del.view(elem, ps_zero, tslib.ObservedState.start, 0)
+
+    return rad_del_kick  # , rad_del
+
 
 def instrument_with_standard_observers(
     acc: tslib.Accelerator
@@ -79,7 +248,7 @@ def instrument_with_standard_observers(
     observers = [tslib.StandardObserver() for elem in acc]
     # Register them to the elments
     for ob, elem in zip(observers, acc):
-        elem.setObserver(ob)
+        elem.set_observer(ob)
     return observers
 
 
@@ -97,7 +266,7 @@ def extract_orbit_from_standard_observers(
     ob_sub = observers[has_observer]
 
     # check that all have seen data
-    with_observer = np.array([ob.hasTruncatedPowerSeries() for ob in ob_sub])
+    with_observer = np.array([ob.has_truncated_power_series_a() for ob in ob_sub])
     lf = np.sum(with_observer)
     lo = len(ob_sub)
     if lf != lo:
@@ -106,7 +275,7 @@ def extract_orbit_from_standard_observers(
     indices = np.arange(len(with_observer))
     indices = indices[with_observer == True]
     phase_space_coords_names = ["x", "px", "y", "py", "ct", "delta"]
-    tps_tmp = [ob.getTruncatedPowerSeries() for ob in ob_sub]
+    tps_tmp = [ob.get_truncated_power_series_a() for ob in ob_sub]
     tps = xr.DataArray(
         data=tps_tmp,
         name="tps",
@@ -130,7 +299,7 @@ def extract_orbit_from_accelerator_with_standard_observers(
     """
     """
 
-    observers = [elem.getObserver() for elem in acc]
+    observers = [elem.get_observer() for elem in acc]
     info = accelerator_info(acc)
     return extract_orbit_from_standard_observers(observers, info)
 

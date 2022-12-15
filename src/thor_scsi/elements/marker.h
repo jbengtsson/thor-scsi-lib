@@ -14,8 +14,10 @@ namespace thor_scsi::elements {
 	 */
 	class MarkerType : public LocalGalilean {
 	public:
-		inline MarkerType(const Config &config) : LocalGalilean(config){
-		}
+		inline MarkerType(const Config &config)
+		    : LocalGalilean(config)
+		    , rad_del(nullptr)
+		{}
 
 		const char* type_name(void) const override { return "Marker"; };
 
@@ -26,14 +28,13 @@ namespace thor_scsi::elements {
 			return this->rad_del;
 		}
 
-		virtual void localPass(thor_scsi::core::ConfigType &conf, ss_vect<double> &ps) override final
-		{ _localPass(conf, ps);}
-		virtual void localPass(thor_scsi::core::ConfigType &conf, ss_vect<tps> &ps) override final
-		{ _localPass(conf, ps);}
+	    virtual void localPropagate(thor_scsi::core::ConfigType &conf, gtpsa::ss_vect<double>      &ps) override final { _localPropagate(conf, ps);}
+	    virtual void localPropagate(thor_scsi::core::ConfigType &conf, gtpsa::ss_vect<tps>         &ps) override final { _localPropagate(conf, ps);}
+	    virtual void localPropagate(thor_scsi::core::ConfigType &conf, gtpsa::ss_vect<gtpsa::tpsa> &ps) override final { _localPropagate(conf, ps);}
 
 	private:
 		template<typename T>
-		inline void _localPass(const thor_scsi::core::ConfigType &conf, ss_vect<T> &ps){
+		inline void _localPropagate(const thor_scsi::core::ConfigType &conf, gtpsa::ss_vect<T> &ps){
 			if (conf.emittance && !conf.Cavity_on && this->rad_del){
 				rad_del->view(*this, ps, thor_scsi::core::ObservedState::end, 0);
 				// // Needs A^-1.

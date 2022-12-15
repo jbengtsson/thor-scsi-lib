@@ -70,7 +70,7 @@ def plot_field_circle(fignum=None):
     pphi = phi / np.pi * 180.0
 
     z = a * np.cos(phi) + 1j * b * np.sin(phi)
-    pos = np.zeros([len(z), 2], dtype=np.float)
+    pos = np.zeros([len(z), 2], dtype=float)
     pos[:, 0] = z.real
     pos[:, 1] = z.imag
 
@@ -88,7 +88,7 @@ def plot_field_circle(fignum=None):
     fig, axes = plt.subplots(1, 2, num=fignum2, figsize=[8/2, 6/2], sharex=True, sharey=True)
     ax_x, ax_y = axes
 
-    B = np.zeros([len(z), 2], dtype=np.float)
+    B = np.zeros([len(z), 2], dtype=float)
 
     [nlkf.field_py(tp, tB) for tp, tB in zip(pos, B)]
     B = B * 1e3

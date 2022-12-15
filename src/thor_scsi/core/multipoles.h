@@ -9,6 +9,8 @@
 #include <stdexcept>
 #include <thor_scsi/core/field_interpolation.h>
 #include <thor_scsi/core/exceptions.h>
+#include <gtpsa/utils.hpp>
+#include <gtpsa/utils_tps.hpp>
 
 // #define THOR_SCSI_USE_F128 1
 #ifdef THOR_SCSI_USE_F128
@@ -142,69 +144,67 @@ namespace thor_scsi::core {
 			cdbl tmp(By, Bx);
 			return tmp;
 		}
-
+#if 1
 		template<typename T>
-		inline void _field(const T x, const T y, T *Bx, T * By)  const {
+		inline void _field(const T& x, const T& y, T *Bx, T * By)  const {
 			int n = this->coeffs.size() -1;
-			T rBy = this->coeffs[n].real(),  rBx = this->coeffs[n].imag(), trBy(0.0), term1, term2;
+			T rBy  = gtpsa::same_as_instance(x);
+			T rBx  = gtpsa::same_as_instance(y);
+			rBy = this->coeffs[n].real();
+			rBx = this->coeffs[n].imag();
+			for(int i=n - 2; i >= 0; --i){
+			        cdbl_intern tmp = this->coeffs[i];
+				auto trBy = x * rBy - y * rBx + tmp.real();
+				rBx       = y * rBy + x * rBx + tmp.imag();
+				rBy  = std::move(trBy);
+			}
+			*Bx = std::move(rBx);
+			*By = std::move(rBy);
+		}
+#else
+		template<typename T>
+		inline void _field(const T& x, const T& y, T *Bx, T * By)  const {
+			int n = this->coeffs.size() -1;
+			// T rBy   = std::move( gtpsa::same_as_instance(x) );
+			// T rBx   = std::move( gtpsa::same_as_instance(y) );
+			T trBy  = std::move( gtpsa::same_as_instance(y) );
+			T term1 = std::move( gtpsa::same_as_instance(x) );
+			T term2 = std::move( gtpsa::same_as_instance(x) );
 
+			rBy = this->coeffs[n].real();
+			rBx = this->coeffs[n].imag();
 			for(int i=n - 2; i >= 0; --i){
 				cdbl_intern tmp = this->coeffs[i];
-#if 0
-				T ByoBrho1 = x * ByoBrho - y * BxoBrho + tmp.real();
-				BxoBrho    = y * ByoBrho + x * BxoBrho + tmp.imag();
-				ByoBrho = ByoBrho1;
-#endif
-
-#if 0
 				trBy = x * rBy - y * rBx + tmp.real();
 				rBx  = y * rBy + x * rBx + tmp.imag();
-				rBy = std::move(trBy);
-
-				term1 = x; term1 *= rBy; term2 =  y * rBx;
-				trBy = term1; trBy -= term2; trBy += tmp.real();
-
-				term1 = y; term1 *= rBy; term2 =  x * rBx;
-				rBx = term1; rBx += term2; rBx += tmp.imag();
-				rBy = trBy;
-
-#else
-
-				term1 = x; term1 *= rBy; term2 = y; term2 *= rBx;
-				trBy = term1; trBy -= term2; trBy += tmp.real();
-
-				term1 = y; term1 *= rBy; term2 =  x; term2 *= rBx;
-				rBx = term1; rBx += term2; rBx += tmp.imag();
-				rBy = std::move(trBy);
-#endif
-
-
+				rBy  = std::move(trBy);
 			}
-			*Bx = rBx;
-			*By = rBy;
-			/*
-			  MB[HOMmax-Order]
-				ByoBrho = MB[Order+HOMmax]; BxoBrho = MB[HOMmax-Order];
-    for (j = Order-1; j >= 1; j--) {
-      ByoBrho1 = x0[x_]*ByoBrho - x0[y_]*BxoBrho + MB[j+HOMmax];
-      BxoBrho  = x0[y_]*ByoBrho + x0[x_]*BxoBrho + MB[HOMmax-j];
-      ByoBrho  = ByoBrho1;
-    }
-			*/
+			*Bx = std::move(rBx);
+			*By = std::move(rBy);
+		}
+#endif
+		virtual inline void field(const double      x, const double      y, double      *Bx, double      *By) const override final { _field(x, y, Bx, By); }
+	    // "Need to understand how to interpolate field with tps"
+		virtual inline void field(const tps         x, const tps         y, tps         *Bx, tps         *By) const override final { _field(x, y, Bx, By); }
+		virtual inline void field(const gtpsa::tpsa x, const gtpsa::tpsa y, gtpsa::tpsa *Bx, gtpsa::tpsa *By) const override final { _field(x, y, Bx, By); }
 
-		}
-		virtual inline void field(const double x, const double y, double *Bx, double * By)  const override final {
-			_field(x, y, Bx, By);
-		}
-		virtual inline void field(const tps x, const tps y, tps *Bx, tps *By) const override final{
-			// "Need to understand how to interpolate field with tps"
-			_field(x, y, Bx, By);
-		}
-		virtual inline void gradient(const tps x, const tps y, tps *Gx, tps *Gy) const override final{
-			// "Need to understand how to interpolate gradient with tps"
+		virtual inline void gradient(const tps x, const tps    y, tps    *Gx, tps     *Gy) const override final{
+		    // "Need to understand how to interpolate gradient with tps"
 			throw thor_scsi::NotImplemented("Multipoles: gradient in tps not implemented");
 		}
-		virtual inline void gradient(const tps x, const tps y, double *Gx, double *Gy) const override final{
+		virtual inline void gradient(const gtpsa::tpsa x, const gtpsa::tpsa    y, gtpsa::tpsa    *Gx, gtpsa::tpsa     *Gy) const override final{
+		    // "Need to understand how to interpolate gradient with tps"
+			throw thor_scsi::NotImplemented("Multipoles: gradient in tps, gtpsa::tpsa not implemented");
+		}
+		virtual inline void gradient(const tps x, const tps    y, double *Gx, double *Gy) const override final{
+			// "Need to understand how to interpolate gradient with tps"
+		        // throw thor_scsi::NotImplemented("Computing gradient in doubles for coordinates in tps x and tps y not implemented");
+			const cdbl pos(0, 0);
+			const cdbl tmp = this->gradient(pos);
+			*Gy = tmp.real();
+			*Gx = tmp.imag();
+		}
+		virtual inline void gradient(const gtpsa::tpsa x, const gtpsa::tpsa    y, double *Gx, double *Gy) const override final{
 			// "Need to understand how to interpolate gradient with tps"
 		        // throw thor_scsi::NotImplemented("Computing gradient in doubles for coordinates in tps x and tps y not implemented");
 			const cdbl pos(0, 0);

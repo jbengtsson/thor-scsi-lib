@@ -100,7 +100,11 @@ tps::tps(const double r, const int i)
   char name[11];
 
   if (!ini_tps) TPSA_Ini();
-  seq_tps++; sprintf(name, "tps-%-5hu", seq_tps);
+  seq_tps++;
+#if NO_TPSA == 1
+#else
+  sprintf(name, "tps-%-5hu", seq_tps);
+#endif
   daall_(ltps, 1, name, no_tps, nv_tps);
   if (i == 0)
     dacon_(ltps, r);
@@ -108,6 +112,10 @@ tps::tps(const double r, const int i)
     davar_(ltps, r, i);
 }
 
+tps tps::clone(void) const {
+    tps r = *this;
+    return r;
+}
 tps::tps(const tps &x) {
   char name[11];
 
@@ -380,6 +388,30 @@ ss_vect<tps> PInv(const ss_vect<tps> &x, const tpsa_index &idx)
     jj[i] = idx[i];
   }
   return PInv(x, jj);
+}
+
+ss_vect<tps> select_subpart(const ss_vect<tps> &x, const std::array<long int, 6> jj)
+{
+  int          j, k;
+  ss_vect<tps> Id, y, z;
+
+  if (jj.size() < nv_tps) {
+      std::stringstream strm;
+      strm << "nv_tps = " << nv_tps
+	   << " select indices jj " << jj.size()
+	   << "; not sufficient";
+      throw std::runtime_error(strm.str());
+  }
+  Id.identity(); y.zero();
+
+  for (j = 0; j < nv_tps; j++)
+    if (jj[j] != 0) {
+      for (k = 0; k < nv_tps; k++)
+	y[j] += jj[k]*x[j][k]*Id[k];
+    } else {
+      y[j] = Id[j];
+    }
+  return y;
 }
 
 ss_vect<tps> PInv(const ss_vect<tps> &x, const long int jj[])

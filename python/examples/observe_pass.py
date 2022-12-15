@@ -2,7 +2,8 @@
 '''
 from collections import OrderedDict
 from thor_scsi.factory import accelerator_from_config
-from thor_scsi.lib import ConfigType, ss_vect_tps, ss_vect_double
+from thor_scsi.lib import ConfigType
+import gtpsa
 from thor_scsi.observer import Observer
 import numpy as np
 import os.path
@@ -20,10 +21,11 @@ calc_config = ConfigType()
 # to python. In this case the propagate does not work
 observers = [Observer() for elem in acc]
 for elem, ob in zip(acc, observers):
-    elem.setObserver(ob)
+    elem.set_observer(ob)
 
 # Start the calculation
-ps = ss_vect_tps()
+desc = gtpsa.desc(6, 2)
+ps = gtpsa.ss_vect_tpsa(desc, 1)
 ps.set_identity()
 print(ps)
 acc.propagate(calc_config, ps, 0, 100)
@@ -33,8 +35,8 @@ print(ps)
 np.set_printoptions(precision=2)
 for cnt, ob in enumerate(observers[:3]):
     print(f'Observed {ob.index:3d}: {ob.name:20s}')
-    print(ob.raw)
-    for r in ob.res:
+    print(ob.ps)
+    for r in ob.jac:
         txt = '\t'.join(["{:10.6e}".format(x) for x in r])
         print(txt)
 

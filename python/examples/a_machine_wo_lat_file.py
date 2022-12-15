@@ -6,8 +6,8 @@ from thor_scsi.lib import Bending, Cavity, Drift, Marker, Quadrupole
 # Transcript of TME lattice
 Energy = 3e9
 h_rf = 1320
-c0=2.99892458e8
-C=10.1586800
+c0 = 2.99892458e8
+C = 10.1586800
 Brho = Energy / c0
 
 config = Config()
@@ -15,10 +15,10 @@ config.setAny("name", "Start")
 start = Marker(config)
 
 config = Config()
-config.setAny("Harnum", h_rf)
+config.setAny("HarmonicNumber", h_rf)
 config.setAny("name", "CAV")
-config.setAny("Frequency", c0/C*h_rf)
-config.setAny("Voltage", 5e6/2)
+config.setAny("Frequency", c0 / C * h_rf)
+config.setAny("Voltage", 5e6 / 2)
 
 cav = Cavity(config)
 

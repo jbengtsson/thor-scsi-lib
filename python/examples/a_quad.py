@@ -2,6 +2,7 @@
 """
 from thor_scsi.pyflame import Config
 from thor_scsi.lib import Quadrupole, ConfigType
+import gtpsa
 
 C = Config()
 C.setAny("L", 2)
@@ -18,12 +19,9 @@ quad.getMultipoles().setMultipole(6, 4.2e-4)
 # quad.getMultipoles().setMultipole(10, 3.552e-4)
 print(repr(quad))
 print(dir(quad))
-import thor_scsi.lib
-print(dir(thor_scsi.lib))
-# print(dir
-from thor_scsi.lib import ss_vect_tps
 
-ps = ss_vect_tps()
+desc = gtpsa.desc(6, 2)
+ps = gtpsa.ss_vect_tpsa(desc, 1)
 ps.set_identity()
 calc_config = ConfigType()
 quad.propagate(calc_config, ps)

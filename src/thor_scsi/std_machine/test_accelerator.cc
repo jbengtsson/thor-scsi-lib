@@ -24,6 +24,9 @@ namespace ts = thor_scsi;
 
 int reg_done = ts::register_elements();
 
+auto a_desc = std::make_shared<gtpsa::desc>(1, 6);
+auto tpsa_ref = gtpsa::tpsa(a_desc, mad_tpsa_default);
+
 
 BOOST_AUTO_TEST_CASE(test10_drift)
 {
@@ -230,7 +233,7 @@ BOOST_AUTO_TEST_CASE(test80_standard_observer)
 
 	}
 
-	ss_vect<tps> ps;
+	gtpsa::ss_vect<gtpsa::tpsa> ps(tpsa_ref);
 	ps.set_identity();
 	auto calc_config = tsc::ConfigType();
 
@@ -251,7 +254,7 @@ BOOST_AUTO_TEST_CASE(test80_standard_observer)
 	BOOST_CHECK(std_ob);
 	BOOST_CHECK(std_ob->getObservedIndex() == 0);
 	BOOST_CHECK(std_ob->getObservedName() == "q4m2d1r");
-	BOOST_CHECK(std_ob->hasTruncatedPowerSeries());
+	BOOST_CHECK(std_ob->hasTruncatedPowerSeriesA());
 	BOOST_CHECK(!std_ob->hasPhaseSpace());
 
 }
@@ -443,14 +446,14 @@ BOOST_AUTO_TEST_CASE(test120_rectangular_aperture)
 
 	// check phase spaces vectors double ...
 	{
-		ss_vect<double> ps;
+		gtpsa::ss_vect<double> ps(0e0);
 		ps.set_zero();
 
 		bool not_lost = elem->checkAmplitude(ps);
 		BOOST_CHECK( not_lost);
 	}
 	{
-		ss_vect<double> ps;
+		gtpsa::ss_vect<double> ps(0e0);
 		ps.set_zero();
 		// Slightly out is out
 		ps[x_] = width + 1e-3;
@@ -460,7 +463,7 @@ BOOST_AUTO_TEST_CASE(test120_rectangular_aperture)
 	}
 
 	{
-		ss_vect<tps> ps;
+		gtpsa::ss_vect<gtpsa::tpsa> ps(tpsa_ref);
 		ps.set_identity();
 		ps[x_] = width + 1e-3;
 		bool not_lost = elem->checkAmplitude(ps);
@@ -470,7 +473,7 @@ BOOST_AUTO_TEST_CASE(test120_rectangular_aperture)
 	// check that propagate will identify it
 	{
 		auto calc_config = tsc::ConfigType();
-		ss_vect<double> ps;
+		gtpsa::ss_vect<double> ps(0e0);
 		ps.set_zero();
 		ps[x_] = width / 2.0;
 
@@ -481,7 +484,7 @@ BOOST_AUTO_TEST_CASE(test120_rectangular_aperture)
 	// check that propagate will identify it
 	{
 		auto calc_config = tsc::ConfigType();
-		ss_vect<double> ps;
+		gtpsa::ss_vect<double> ps(0e0);
 		ps.set_zero();
 		ps[x_] = width + 1e-3;
 

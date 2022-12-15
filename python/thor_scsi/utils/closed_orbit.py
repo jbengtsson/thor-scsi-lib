@@ -1,18 +1,18 @@
+from typing import List
+
 import thor_scsi.lib as tslib
 from .phase_space_vector import map2numpy
 import numpy as np
 import logging
 from dataclasses import dataclass
 import copy
-
-from thor_scsi.utils.output import vec2txt, mat2txt
+import gtpsa
 
 logger = logging.getLogger("thor_scsi")
 
 
 @dataclass
 class ClosedOrbitResult:
-
     #: was a closed orbit found?
     found_closed_orbit: bool
 
@@ -26,14 +26,58 @@ class ClosedOrbitResult:
     last_element: int
 
 
+def select_subpart(mat, selected_dimensions: List[bool]) -> np.ndarray:
+    """select the subpart of the matrix to invert
+
+    Args:
+        mat:
+        selected_dimensions:
+
+    Returns:
+        matrix to invert
+
+    Does not change the dimension of the matrix. The
+    sub parts not used are identical to the identity matrix
+    """
+    # mat = np.asarray(mat)
+    n_rows, n_cols = mat.shape
+    assert (n_rows == n_cols)
+
+    # Create a mask of the dimensions selected
+    sel = np.array(selected_dimensions, np.bool)
+    mask = sel[:, np.newaxis] * sel[np.newaxis, :]
+
+    # Identity matrix as default
+    rmat = np.eye(n_rows)
+    rmat[mask] = mat[mask]
+    return rmat
+
+
+def partial_inverse(mat, selected_dimensions: List[bool]):
+    """partial inverse of the local derivatives
+
+    Args:
+        mat:                  jacobian
+        selected_dimensions:  boolean vector selecting
+                              dimension of phase space
+
+    Returns:
+        inverted matrix
+    """
+    sel_mat = select_subpart(mat, selected_dimensions)
+    pinv = np.linalg.inv(sel_mat)
+    return pinv
+
+
 def compute_closed_orbit(
-    acc: tslib.Accelerator,
-    conf: tslib.ConfigType,
-    *,
-    delta: float = None,
-    x0: tslib.ss_vect_double = None,
-    max_iter: int = 10,
-    eps: float = 1e-10,
+        acc: tslib.Accelerator,
+        conf: tslib.ConfigType,
+        *,
+        delta: float = None,
+        x0: tslib.ss_vect_double = None,
+        max_iter: int = 10,
+        eps: float = 1e-6,
+        desc: gtpsa.desc = None,
 ) -> ClosedOrbitResult:
     """searches for the closed orbit
 
@@ -64,12 +108,15 @@ def compute_closed_orbit(
     else:
         n = 4
 
-    logger.debug(f" Cavity on ? {conf.Cavity_on} {n = }")
+    if desc is None:
+        desc = gtpsa.desc(6, 1)
+
+    logger.debug(f" Cavity on ? {conf.Cavity_on} {n=}")
 
     if x0 is None:
         assert delta is not None
         conf.dPparticle = delta
-        x0 = tslib.ss_vect_double()
+        x0 = gtpsa.ss_vect_double(0e0)
         if n == 4:
             x0.set_zero()
             x0[tslib.phase_space_index_internal.delta] = delta
@@ -86,22 +133,23 @@ def compute_closed_orbit(
         conf.dPparticle = x0[tslib.phase_space_index_internal.delta]
 
     # create weighting matrix for inverse calculation
-    jj = np.zeros(tslib.ss_dim, np.int)
+    jj = np.zeros(tslib.ss_dim, np.bool)
 
-    # jj[:n] = 1  # select active phase space coordinates
-    for k in range(tslib.ss_dim):
-        jj[k] = 1 if k < n else 0
+    jj[:n] = True  # select active phase space coordinates
+    # for k in range(tslib.ss_dim):
+    #    jj[k] = True if k < n else False
 
-    I = tslib.ss_vect_tps()
+    t_order = 1
+    I = gtpsa.ss_vect_tpsa(desc, t_order)
     I.set_identity()
-    M = tslib.ss_vect_tps()
+    M = gtpsa.ss_vect_tpsa(desc, t_order)
 
     dx_abs = 1e30
 
     closed_orbit = False
     n_elements = len(acc)
     # Newton's method for root finding
-    logger.debug(" start, dx_abs %7.1e, eps %7.1e", dx_abs, eps)
+    logger.debug("start     , dx_abs %7.1e, eps  %7.1e, x0 %s", dx_abs, eps, x0)
 
     for n_iter in range(max_iter):
         if dx_abs < eps:
@@ -111,36 +159,43 @@ def compute_closed_orbit(
         # prepare return map
         M.set_identity()
         M += x0
-        logger.debug(f" {n_iter = } \ninitial = " + vec2txt(M.cst()))
+        logger.debug(f"{n_iter=},  Start propagation at \n {M.cst()}\n")
         next_element = acc.propagate(conf, M)
-        # logger.debug(f"{n_iter=},  End propagation at \n {M.cst()}\n {M}")
+        logger.debug(f"{n_iter=},  End propagation at \n {M.cst()}\n {M}")
 
         if next_element == n_elements:
             # Managed to get around the ring ... good
             # Compute difference of last point to first point
             x1 = M.cst()
+            # currently required experimenting with the API
+            # cst returning an array as it typically facilitates
+            # further processing
+            # x1 = gtpsa.ss_vect_double(x1)
             dx = x0 - x1
 
             # gradient search
             tmp = M - I - x1
             # jj is used to flag if longitudinal calculations are r
             # required i.e. the cavity is on
-            gradient = tslib.partialInverse(tmp, jj)
-            dx0 = gradient * dx
+            t_jac = tmp.jacobian()
+            gradient = partial_inverse(t_jac, jj)
+            # Now using numpy arrays here ... thus matrix multiplication
+            dx0 = gradient @ dx
 
             # Next start point following line search ?
-            x0 += dx0.cst()
-            # dx_aps = np.sqrt(np.sum(dx[:n] ** 2))
-            dx_abs = tslib.xabs(n, dx)
+            # if the right side is not a tpsa vector x0 seems to be
+            # converted to an array
+            x0 += gtpsa.ss_vect_double(dx0)
+            dx_abs = np.sqrt(np.sum(dx.cst_as_array()[:n] ** 2))
+            # dx_abs = tslib.xabs(n, dx)
 
-            logger.debug(f" {n_iter = } \nfinal   = " + vec2txt(x0))
+            logger.debug(f"{n_iter=},  End propagation at \n {x0}\n")
         else:
             dx_abs = np.nan
             break
 
-        logger.debug(
-            " n_iter = {:3d} dx_abs = {:7.1e} eps = {:7.1e}".format(
-                n_iter + 1, dx_abs, eps) + "\nx0      = " + vec2txt(x0)
+        logger.info(
+            "n_iter %3d, dx_abs %7.1e, eps  %7.1e, x0 %s", n_iter + 1, dx_abs, eps, x0
         )
 
     else:
@@ -155,14 +210,19 @@ def compute_closed_orbit(
         assert dx_abs < eps
         M.set_identity()
         M += x0
+
+        logger.debug(
+            f" Fixed point check propagate again start : x0\n{M.cst()}\nMat {M}"
+        )
+        Mref = copy.copy(M)
         acc.propagate(conf, M)
-        logger.info(
-            "\ncompute_closed_orbit:\nx0 = " + vec2txt(M.cst()) + "\nM:\n"
-            + mat2txt(map2numpy(M)[:6, :6]))
+        logger.debug(
+            f" Fixed point check propagate returned    : x0\n{M.cst()}\nMat {M}"
+        )
 
     if closed_orbit:
-        t_map = map2numpy(M)
-        logger.debug(f" Poincaré Map:\n {M}")
+        t_map = M.jacobian()
+        logger.debug(f"Poincaré Map\n {M}")
         result = ClosedOrbitResult(
             found_closed_orbit=closed_orbit,
             x0=x0,
