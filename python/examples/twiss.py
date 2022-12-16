@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 
 from thor_scsi.factory import accelerator_from_config
 from thor_scsi.utils.twiss_output import twiss_ds_to_df, df_to_tsv
-from thor_scsi.utils.linear_optics import compute_twiss_along_lattice
+from thor_scsi.utils.linear_optics import compute_Twiss_along_lattice
 import thor_scsi.lib as tslib
 import gtpsa
 
@@ -35,7 +35,7 @@ else:
     calc_config.radiation = True
     calc_config.Cavity_on = True
 
-ds = compute_twiss_along_lattice(n_dof, acc, calc_config, desc=desc)
+ds = compute_Twiss_along_lattice(n_dof, acc, calc_config, desc=desc)
 df = twiss_ds_to_df(ds)
 # print(df)
 # exit()

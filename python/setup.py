@@ -34,7 +34,7 @@ d = gsl_conf.gsl_config()
 prefix = os.path.abspath(os.path.join(os.path.dirname(__name__), os.pardir, os.pardir))
 prefix = os.path.abspath(os.path.join(os.environ["HOME"], ".local"))
 prefix = os.path.abspath(os.path.join(os.path.dirname(__name__), os.pardir, "local"))
-prefix = os.path.abspath(os.path.join(os.environ["HOME"], ".local"))
+#prefix = os.path.abspath(os.path.join(os.environ["HOME"], ".local"))
 
 boost_prefix="/usr/include"
 if sys.platform == "darwin":
@@ -75,6 +75,8 @@ ext_modules = [
                 "src/accelerator.cc",
             ]
         ),
+        # Required for MacBook llvm C++ compiler.
+        define_macros=[("GTPSA_DEFINE_BOOL",1)],
         include_dirs=[d["gsl_include"]] + [os.path.join(prefix, "include"), boost_prefix],
         # define_macros=[("_GLIBCXX_DEBUG", 1), ("_GLIBCXX_DEBUG_PEDANTIC", 1)],
         library_dirs=(

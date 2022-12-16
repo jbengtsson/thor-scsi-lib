@@ -50,7 +50,7 @@ from thor_scsi.utils.linear_optics import (
     compute_map,
     compute_nu_symp,
     compute_M_diag,
-    compute_twiss_along_lattice
+    compute_Twiss_along_lattice
 )
 from thor_scsi.utils.radiate import compute_radiation
 from thor_scsi.utils.phase_space_vector import map2numpy
@@ -177,7 +177,7 @@ print("\nnu = [{:7.5f}, {:7.5f}]".format(nu[X_], nu[Y_]))
 
 A, A_inv, _ = compute_M_diag(dof, jac)
 
-ds = compute_twiss_along_lattice(2, acc, calc_config,
+ds = compute_Twiss_along_lattice(2, acc, calc_config,
                                  # A
                                  desc = desc
                                  )

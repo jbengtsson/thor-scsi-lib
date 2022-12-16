@@ -312,7 +312,7 @@ def compute_M_diag(n_dof: int, M: np.ndarray) -> [np.ndarray, np.ndarray, np.nda
             )
         )
 
-    return A, alpha_rad
+    return A, A_inv, alpha_rad
 
 
 #: scale arctan2 (a12/a11) to Floquet coordinates (correct?)
@@ -412,7 +412,7 @@ def compute_map_and_diag(
     M = np.array(t_map.jacobian())
     logger.info("\ncompute_map_and_diag\nM:\n" + mat2txt(M))
 
-    A, alpha_rad = compute_M_diag(n_dof, M)
+    A, A_inv, alpha_rad = compute_M_diag(n_dof, M)
     Atest = gtpsa.ss_vect_tpsa(desc, 1)
     Atest.set_zero()
     Atest.set_jacobian(A)
