@@ -63,6 +63,10 @@ Then initialise submodules using the following command
 
    git submodule update --init --recursive
 
+*NB*: this command currently will pull a subrepository (`cmake4epics`).
+This repository currently does not support (llvm/clang). Thus build on
+MAC currently fails. A fix is currently worked on.
+
 
 
 Getting ready to build
@@ -92,7 +96,8 @@ then in this directory execute
 This will create the build file. Typically this is a make file. In
 case the cmake command fails, please remove at least the
 `CMakeCache.txt` file in the build directory. If this steps fails,
-find some hints how to solve them in section "Helping CMAKE find subcomponents"
+find some hints how to solve them in section
+"Helping CMAKE find subcomponents" :ref:`cmake-find-subcomponents`.
 
 
 When cmake worked, trigger the build. In case you use `make` type
@@ -120,17 +125,17 @@ with `/path/to/install/to` the absolute path of the directory you
 would like to install to.
 
 **NB**: The libaries implementing the python interface will be
-        currently installed in the source tree into directory
-        `python/thor_scsi` and src/gtpsa/python.
-        Have a look below for details
-        of loading dynamic objects from non standard directories
-        if you want to use these. The python wrapper and module
-	can be installed using `setup.py` too
+currently installed in the source tree into directory
+`python/thor_scsi` and src/gtpsa/python.
+Have a look below for details
+of loading dynamic objects from non standard directories
+if you want to use these. The python wrapper and module
+can be installed using `setup.py` too.
 
 
 
 Installing python module thor_scsi and gtpsa
-------------------------
+--------------------------------------------
 
 Currently the python wrapper is automatically built when the c++ library is built.
 Additionally a `setup.py` script is provided that can be used to use the standard
@@ -183,6 +188,7 @@ Alternatively you could use `pip` e.g.
 to install the package.
 
 
+.. _cmake-find-subcomponents:
 
 Helping CMAKE find subcomponents
 --------------------------------
