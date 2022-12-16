@@ -42,10 +42,8 @@ The following packages could be missing for the python wrapper
 
 .. code:: shell
 
-   sudo apt-get install pybind11-dev python3-xarray
+   sudo apt-get install bison flex cmake g++ gfortran libarmadillo-dev libboost-all-dev pybind11-dev python3-xarray pybind11-dev python3-xarray
 
-
-Please note: currently the python wrapper is built together with the c++ library.
 
 Checking out repository
 -----------------------
@@ -57,21 +55,13 @@ First clone the repository using
    git clone https://github.com/jbengtsson/thor-scsi-lib.git
 
 
-change to the directory (persumably) `thor-scsi-lib`. If that was
-successful please check currently out the tree `radiate` with
+change to the directory (persumably) `thor-scsi-lib`.
+
+Then initialise submodules using the following command
 
 .. code:: shell
 
-   git checkout radiate
-
-
-Then initialise submodules using the following commands
-
-.. code:: shell
-
-   git submodule init
-   git submodule update
-
+   git submodule update --init --recursive
 
 
 
@@ -101,7 +91,9 @@ then in this directory execute
 
 This will create the build file. Typically this is a make file. In
 case the cmake command fails, please remove at least the
-`CMakeCache.txt` file in the build directory.
+`CMakeCache.txt` file in the build directory. If this steps fails,
+find some hints how to solve them in section "Helping CMAKE find subcomponents"
+
 
 When cmake worked, trigger the build. In case you use `make` type
 
@@ -121,7 +113,7 @@ If build was successful use
 
 .. code:: shell
 
-  cmake --install . --prefix=/path/to/install/to
+  cmake --install . --prefix /path/to/install/to
 
 
 with `/path/to/install/to` the absolute path of the directory you
@@ -129,13 +121,15 @@ would like to install to.
 
 **NB**: The libaries implementing the python interface will be
         currently installed in the source tree into directory
-        `python/thor_scsi`. Have a look below for details
+        `python/thor_scsi` and src/gtpsa/python.
+        Have a look below for details
         of loading dynamic objects from non standard directories
         if you want to use these. The python wrapper and module
 	can be installed using `setup.py` too
 
 
-Installing python module
+
+Installing python module thor_scsi and gtpsa
 ------------------------
 
 Currently the python wrapper is automatically built when the c++ library is built.
@@ -144,6 +138,21 @@ python install procedure.
 
 Before you can use this script, you need to build the c++ library and install it
  to some path (called `/path/to/install/to` above).
+
+Directories with python modules
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Two python modules are provided
+
+* gtpsa: directory src/gtpsa/python
+* thor_scsi: directory python/
+
+Recommandation is to first build gtpsa and then thor scsi.
+The description below refers to both of them. Both directories are 
+refered to as `python` directory below.
+
+Installation instruction for one of the packages
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Change into the repositories `python` directory. Edit the
 `setup.py` file and define the variable `prefix` to contain the path you installed
@@ -173,9 +182,6 @@ Alternatively you could use `pip` e.g.
 
 to install the package.
 
-**NB**: The c++ library is wrapped as part of the `thor_scsi` python module. If your
-favourite python interpreter is not found, consder defining the `Python3_EXECUTABLE`
-so that it contains the path to your executable
 
 
 Helping CMAKE find subcomponents
