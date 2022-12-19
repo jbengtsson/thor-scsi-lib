@@ -33,7 +33,7 @@ d = gsl_conf.gsl_config()
 # here there are some examples
 prefix = os.path.abspath(os.path.join(os.path.dirname(__name__), os.pardir, os.pardir))
 prefix = os.path.abspath(os.path.join(os.environ["HOME"], ".local"))
-prefix = os.path.abspath(os.path.join(os.path.dirname(__name__), os.pardir, "local"))
+# prefix = os.path.abspath(os.path.join(os.path.dirname(__name__), os.pardir, "local"))
 #prefix = os.path.abspath(os.path.join(os.environ["HOME"], ".local"))
 
 boost_prefix="/usr/include"
@@ -57,7 +57,7 @@ ext_modules = [
     #    include_dirs=['.'],
     # ),
     Pybind11Extension(
-        "flame",
+        "pyflame",
         ["src/flame.cc"],
         include_dirs=[d["gsl_include"]] + [os.path.join(prefix, "include"), boost_prefix],
         library_dirs=([os.path.join(prefix, "lib")]),
