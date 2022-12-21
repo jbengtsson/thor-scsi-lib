@@ -40,9 +40,10 @@ find_package(PythonInterp 3)
 
 enable_testing()
 
-set(FLAME_INTERNAL TRUE)
+add_subdirectory(flame)
+
+set(FLAME_INTERNAL False)
 if(FLAME_INTERNAL)
-    add_subdirectory(flame)
 else()
     # yes ... depends on flame ...
     find_package(flame  REQUIRED COMPONENTS core)
@@ -59,10 +60,10 @@ set(gtpsa_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/gtpsa/)
 set(gtpsa_cpp_INCLUDE_DIR ${gtpsa_DIR}/c++)
 set(mad_ng_SRC_DIR ${gtpsa_DIR}/mad-ng/src/)
 
-include_directories(
-  ${mad_ng_SRC_DIR}/libgtpsa/
-  ${mad_ng_SRC_DIR}
-  )
+# include_directories(
+#  ${mad_ng_SRC_DIR}/libgtpsa/
+#  ${mad_ng_SRC_DIR}
+#  )
 
 # Fortran implementation part
 add_subdirectory(TPSA)
