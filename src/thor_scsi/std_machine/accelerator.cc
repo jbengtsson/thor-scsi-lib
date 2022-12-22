@@ -167,8 +167,9 @@ ts::Accelerator::_propagate(thor_scsi::core::ConfigType& conf, gtpsa::ss_vect<T>
 
 
 int
-ts::Accelerator::propagate(thor_scsi::core::ConfigType& conf, ss_vect_dbl  &ps, size_t start, int max_elements, size_t n_turns,
-			   bool tracy_compatible_indexing)// const
+ts::Accelerator::
+propagate(thor_scsi::core::ConfigType& conf, ss_vect_dbl  &ps, size_t start,
+	  int max_elements, size_t n_turns, bool tracy_compatible_indexing)// const
 {
     return _propagate(conf, ps, start, max_elements, n_turns, tracy_compatible_indexing);
 }
@@ -181,13 +182,9 @@ propagate(thor_scsi::core::ConfigType& conf, ss_vect_tps  &ps, size_t start,
     return _propagate(conf, ps, start, max_elements, n_turns, tracy_compatible_indexing);
 }
 int
-ts::Accelerator::propagate(thor_scsi::core::ConfigType& conf, ss_vect_tpsa &ps, size_t start, int max_elements, size_t n_turns,
-			   bool tracy_compatible_indexing)// const
+ts::Accelerator::
+propagate(thor_scsi::core::ConfigType& conf, ss_vect_tpsa &ps, size_t start,
+	  int max_elements, size_t n_turns,  bool tracy_compatible_indexing)// const
 {
     return _propagate(conf, ps, start, max_elements, n_turns, tracy_compatible_indexing);
-}
-int
-ts::Accelerator::propagate(thor_scsi::core::ConfigType& conf, ss_vect_tpsa &ps, size_t start, int max_elements, size_t n_turns)// const
-{
-    return _propagate(conf, ps, start, max_elements, n_turns);
 }
