@@ -13,7 +13,7 @@ quad = Quadrupole(C)
 
 print(quad)
 print(repr(quad))
-quad.getMultipoles().setMultipole(6, 4.2e-4)
+quad.get_multipoles().set_multipole(6, 4.2e-4)
 
 # Will fail now: need to implement that the coefficients array can be resized
 # quad.getMultipoles().setMultipole(10, 3.552e-4)

@@ -12,7 +12,7 @@ mpole = Mpole(C)
 
 print(mpole)
 print(repr(mpole))
-mpole.get_field_interpolator().setMultipole(6, 4.2e-4)
+mpole.get_field_interpolator().set_multipole(6, 4.2e-4)
 
 # Will fail now: need to implement that the coefficients array can be resized
 # quad.getMultipoles().setMultipole(10, 3.552e-4)

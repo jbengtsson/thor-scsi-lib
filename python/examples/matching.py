@@ -152,7 +152,7 @@ def set_L_fam(lat, fam_name, L):
     for elem in lat.elements_with_name(fam_name):
         elem.set_length(L)
 
-        
+
 def get_b_2_elem(lat, fam_name, kid_num):
     return get_b_n_elem(lat, fam_name, kid_num, quadrupole)
 
@@ -171,7 +171,7 @@ def get_prm(lat, prm_list):
         'b_2' : get_b_2_elem,
         'L'   : get_L_elem
     }
-    
+
     prms = []
     for k in range(len(prm_list)):
         prms.append(how_to_get_prm[prm_list[k][1]](lat, prm_list[k][0], 0))
@@ -184,7 +184,7 @@ def set_prm(lat, prm_list, prms):
         'b_2' : set_b_2_fam,
         'L'   : set_L_fam
     }
-    
+
     for k in range(len(prm_list)):
         how_to_set_prm[prm_list[k][1]](lat, prm_list[k][0], prms[k])
 

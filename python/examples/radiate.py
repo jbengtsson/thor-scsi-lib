@@ -8,7 +8,7 @@ logging.basicConfig(level="WARNING")
 
 from thor_scsi.factory import accelerator_from_config
 from thor_scsi.utils.accelerator import instrument_with_radiators
-from thor_scsi.utils.courant_snyder import compute_twiss_A
+from thor_scsi.utils.courant_snyder import compute_Twiss_A
 from thor_scsi.utils.radiate import compute_radiation
 
 from thor_scsi.lib import (
@@ -34,9 +34,12 @@ import thor_scsi.lib as tslib
 # from thor_scsi.utils.linalg import match_eigenvalues_to_plane_orig
 from thor_scsi.utils.closed_orbit import compute_closed_orbit
 from thor_scsi.utils.output import vec2txt, mat2txt, chop_array
-from thor_scsi.utils.linear_optics import compute_M_diag, calculate_nu_symp, \
+from thor_scsi.utils.linear_optics import compute_M_diag, compute_nu_symp, \
     acos2
 
+import gtpsa
+
+desc = gtpsa.desc(6, 2)
 
 X_, Y_, Z_ = [
     tslib.spatial_index.X,
@@ -73,15 +76,15 @@ cav = acc.find("cav", 0)
 # cav.setVoltage(0)
 print("\nCavity", repr(cav))
 txt = f"""\nCavity info:
-  f [MHz] {1e-6*cav.getFrequency()}",
-  V [MV]  {1e-6*cav.getVoltage()}
-  h       {cav.getHarmonicNumber()}
+  f [MHz] {1e-6*cav.get_frequency()}",
+  V [MV]  {1e-6*cav.get_voltage()}
+  h       {cav.get_harmonic_number()}
 """
 print(txt)
 
 mbb = acc.find("mbb", 0)
 print("{:s}: N = {:d}".
-      format(mbb.name, mbb.getNumberOfIntegrationSteps()))
+      format(mbb.name, mbb.get_number_of_integration_steps()))
 
 if False:
     ps = tslib.ss_vect_double()
@@ -99,7 +102,7 @@ if False:
 
 calc_config = tslib.ConfigType()
 
-compute_radiation(acc, calc_config, 2.5e9, 1e-15)
+compute_radiation(acc, calc_config, 2.5e9, 1e-15, desc=desc)
 
 exit()
 
@@ -155,7 +158,7 @@ M = r.one_turn_map[:6, :6]
 
 # print("\nM:\n" + mat2txt(M))
 print("\n\nFixed point:\n", vec2txt(r.x0))
-tune_x, tune_y, tune_long = calculate_nu_symp(3, M)
+tune_x, tune_y, tune_long = compute_nu_symp(3, M)
 print(f"\n{tune_x=:.16f} {tune_y=:.16f} {tune_long=:.16f}")
 
 exit()
