@@ -1,13 +1,9 @@
 """Read lattice file and calculate radiation
 """
-
-
 import logging
 #logging.basicConfig(level=logging.DEBUG)
-
-desc = gtpsa.desc(6, 1)
-
 import matplotlib.pyplot as plt
+import os.path
 
 from thor_scsi.factory import accelerator_from_config
 from thor_scsi.utils.twiss_output import twiss_ds_to_df, df_to_tsv
