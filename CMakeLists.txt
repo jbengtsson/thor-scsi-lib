@@ -42,7 +42,7 @@ find_package(PythonInterp 3)
 
 enable_testing()
 
-set(FLAME_INTERNAL TRUE)
+set(FLAME_INTERNAL True)
 if(FLAME_INTERNAL)
     add_subdirectory(flame)
 else()

@@ -455,7 +455,7 @@ thinKickAndRadiate(const thor_scsi::core::ConfigType &conf,
 	auto rad = this->getRadiationDelegate();
 	if(rad){
 		THOR_SCSI_LOG(DEBUG) <<  "Delegating to computing radiation" << " \n";
-#warning "radiation: check val_z"
+#warning "radiation: check how to instantiate val_z for tpsa?"
 		T val_z(ps[0]);
 		val_z = 0e0;
 		std::array<T, 3> B = {BxoBrho, ByoBrho + h_bend, val_z};

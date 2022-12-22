@@ -133,7 +133,7 @@ def main():
     C.setAny("N", 1)
 
     nlk = tslib.FieldKick(C)
-    nlk.setFieldInterpolator(nlkf)
+    nlk.set_field_interpolator(nlkf)
 
     config = tslib.ConfigType()
 

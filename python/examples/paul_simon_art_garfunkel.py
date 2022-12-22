@@ -30,7 +30,7 @@
 # Stylianos Kyriakides Boston Marathon, 1946.
 #
 # Simon & Garfunkel 𝑇ℎ𝑒 𝐵𝑜𝑥𝑒𝑟
-# https://youtu.be/l3LFML_pxlY 
+# https://youtu.be/l3LFML_pxlY
 
 
 import logging
@@ -141,7 +141,7 @@ def tweak_nu(fam_names, dnu_x, dnu_y):
     print("\ndb_2L = ", vec2txt(db_2L))
     for k in range(n):
         set_db_2L_fam(acc, fam_names[k], db_2L[k])
- 
+
 
 t_dir = os.path.join(os.environ["HOME"], "Nextcloud", "thor_scsi")
 t_file = os.path.join(t_dir, "alsu-7ba-20180503c.lat")

@@ -443,7 +443,7 @@ def compute_Twiss_along_lattice(
         xarrays. But what then to use?)
 
     """
-    if not calc_config:
+    if calc_config is None:
         calc_config = tslib.ConfigType()
 
     if A is None:
