@@ -1,6 +1,11 @@
-Installing thor_scsi
-====================
+.. _install.rst:
 
+Installing thor-scsi-lib
+========================
+
+`thor-scsi-lib` consists of a c++ library and python wrapper to it. Here
+it is first described how to build the library and then how to build the
+python wrapper.
 
 Dependencies
 ------------
@@ -21,33 +26,47 @@ Dependencies
 
    - flex and bison
 
+- modern python3
 
 Packages to be installed on Ubuntu 22 LTS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Install packages that could be missing
-::
+Install packages that could be missing for the c++ library
 
-  sudo apt-get install bison flex cmake g++ gfortran libarmadillo-dev libboost-all-dev pybind11-dev python3-xarray
+.. code:: shell
 
+  sudo apt-get install bison flex cmake g++ gfortran libarmadillo-dev libboost-all-dev
+
+
+The following packages could be missing for the python wrapper
+
+.. code:: shell
+
+   sudo apt-get install bison flex cmake g++ gfortran libarmadillo-dev libboost-all-dev pybind11-dev python3-xarray pybind11-dev python3-xarray
 
 
 Checking out repository
 -----------------------
 
+First clone the repository using
 
-::
+.. code:: shell
 
    git clone https://github.com/jbengtsson/thor-scsi-lib.git
 
 
-change to the directory (persumably) `thor-scsi-lib`. If that was
-successful please run
+change to the directory (persumably) `thor-scsi-lib`.
 
-::
+Then initialise submodules using the following command
 
-   git submodule init
-   git submodule update
+.. code:: shell
+
+   git submodule update --init --recursive
+
+*NB*: this command currently will pull a subrepository (`cmake4epics`).
+This repository currently does not support (llvm/clang). Thus build on
+MAC currently fails. A fix is currently worked on.
+
 
 
 Getting ready to build
@@ -55,53 +74,126 @@ Getting ready to build
 
 create a directory "build"
 
-::
+.. code:: shell
 
    mkdir build
 
 
 then change to this directory
 
-::
+.. code:: shell
 
   cd build
 
 
 then in this directory execute
 
-
-::
+.. code:: shell
 
   cmake ..
 
 
 This will create the build file. Typically this is a make file. In
 case the cmake command fails, please remove at least the
-`CMakeCache.txt` file in the build directory.
+`CMakeCache.txt` file in the build directory. If this steps fails,
+find some hints how to solve them in section
+"Helping CMAKE find subcomponents" :ref:`cmake-find-subcomponents`.
 
-When cmake worked, trigger the build. In case you use make type
 
-::
+When cmake worked, trigger the build. In case you use `make` type
+
+.. code:: shell
 
   make
 
+
+The build can be verified executing the tests using
+
+.. code:: shell
+
+   make test
+
+
 If build was successful use
 
-::
+.. code:: shell
 
-  cmake --install . --prefix=/path/to/install/to
+  cmake --install . --prefix /path/to/install/to
+
 
 with `/path/to/install/to` the absolute path of the directory you
 would like to install to.
 
 **NB**: The libaries implementing the python interface will be
-        currently installed in the source tree into directory
-        `python/thor_scsi`. Have a look below for details
-        of loading dynamic objects from non standard directories
+currently installed in the source tree into directory
+`python/thor_scsi` and src/gtpsa/python.
+Have a look below for details
+of loading dynamic objects from non standard directories
+if you want to use these. The python wrapper and module
+can be installed using `setup.py` too.
 
+
+
+Installing python module thor_scsi and gtpsa
+--------------------------------------------
+
+Currently the python wrapper is automatically built when the c++ library is built.
+Additionally a `setup.py` script is provided that can be used to use the standard
+python install procedure.
+
+Before you can use this script, you need to build the c++ library and install it
+ to some path (called `/path/to/install/to` above).
+
+Directories with python modules
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Two python modules are provided
+
+* gtpsa: directory src/gtpsa/python
+* thor_scsi: directory python/
+
+Recommandation is to first build gtpsa and then thor scsi.
+The description below refers to both of them. Both directories are 
+refered to as `python` directory below.
+
+Installation instruction for one of the packages
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Change into the repositories `python` directory. Edit the
+`setup.py` file and define the variable `prefix` to contain the path you installed
+to. As soon that has been done, you should be able to use e.g.
+
+
+.. code:: shell
+
+   python setup.py build
+
+
+to build the module and
+
+
+.. code:: shell
+   python setup.py install
+
+
+to install the module.
+
+
+Alternatively you could use `pip` e.g.
+
+.. code:: shell
+
+   pip install .
+
+to install the package.
+
+
+.. _cmake-find-subcomponents:
 
 Helping CMAKE find subcomponents
 --------------------------------
+
+Here some information if cmake above fails.
 
 Cmake checks that the version of required subcomponents is
 sufficient. If it reports that one of the components is not
@@ -129,7 +221,7 @@ If your version pybind 11 is rejected by cmake:
 
 1. install it using pip
 
-   ::
+   .. code:: shell
 
       pip3 install pybind11
 
@@ -141,15 +233,16 @@ If your version pybind 11 is rejected by cmake:
 2. help cmake find the installation. E.g. for a local installation
    on ubuntu (focal) it is typically found at
 
-   ::
+   .. code:: shell
 
       ls -d  $HOME/.local/lib/python3.8/site-packages/pybind11
 
 
    If still an too old version of pybind11 is found, please set
    the environment variable pybind11_DIR to the correct directory
+      e.g.
 
-   ::
+   .. code:: shell
 
        export pybind11_DIR=$HOME/.local/lib/python3.8/site-packages/pybind11
 
@@ -162,7 +255,7 @@ THe standard `bison` tool installed on mac os is not modern enough.
 In our experience bison distributed with `brew` can be used. To
 check if correct brew is installed in your shell run
 
-::
+.. code:: shell
 
     bison --config
 
@@ -178,7 +271,7 @@ brew on your mac. Then follow `brew`  instruction to install
 bison binary to the PATH variable (e.g. if you are using bash)
 
 
-::
+.. code:: shell
 
     export PATH=/path/to/bison:$PATH
 
@@ -197,12 +290,9 @@ Linux
 ~~~~~
 One solution can be to define the directory in LD_LIBRARY_PATH e.g.:
 
-::
+.. code:: shell
 
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/path/to/install/to/lib/
-
-
-
 
 
 MAC OS
@@ -210,10 +300,9 @@ MAC OS
 One solution can be to define the directory in LD_LIBRARY_PATH e.g.:
 
 
-::
+.. code:: shell
 
     export DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH:/path/to/install/to/lib/
-
 
 
 

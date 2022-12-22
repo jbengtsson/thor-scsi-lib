@@ -5,7 +5,7 @@ Energy = 3.0;
 
 dP = 1e-8; CODeps = 1e-14;
 
-Meth = 4; Nbend = 10; Nquad = 1;
+Meth = 4; Nbend = 4; Nquad = 4;
 
 pi = 4.0*arctan(1.0);
 

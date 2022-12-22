@@ -12,13 +12,11 @@ void py_flame_init(py::module_ &m)
 	py::class_<Config>(m, "Config")
 		.def("getAny", &Config::getAny)
 		.def("setAny", &Config::setAny)
-		.def("__repr__", &Config::repr)
-        .def("__iter__",
-             [](const Config &conf) {
-                     return py::make_iterator(conf.begin(), conf.end());},
-                 py::keep_alive<0, 1>())
+	        .def("__repr__", &Config::repr)
+		.def("__iter__", [](const Config &conf) {
+			return py::make_iterator(conf.begin(), conf.end());},
+			py::keep_alive<0, 1>())
 		.def(py::init<>());
-		// .def("get", &Config::get)
 
 	//GLPSParser parse;
 

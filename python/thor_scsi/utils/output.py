@@ -37,23 +37,23 @@ def chop_array(arr: np.ndarray, eps: float, *, copy: bool = True) -> np.ndarray:
     return narr
 
 
-##   def chop_vec(vec, eps):
-##       return chop_array(vec, eps)
-##
-##
-##   def chop_mat(mat, eps):
-##       return chop_array(mat, eps)
-##
-##
-##   def chop_cmplx_vec(vec, eps, *, copy=True):
-##       return chop_array(vec, eps, copy=copy)
-##
-##
-##   def chop_cmplx_mat(mat, eps, *, copy=True):
-##       return chop_array(mat, eps, copy=copy)
-##
+def chop_vec(vec, eps):
+    return chop_array(vec, eps)
 
-def complex2txt(val: complex) -> str:
+
+def chop_mat(mat, eps):
+    return chop_array(mat, eps)
+
+
+def chop_cmplx_vec(vec, eps, *, copy=True):
+    return chop_array(vec, eps, copy=copy)
+
+
+def chop_cmplx_mat(mat, eps, *, copy=True):
+    return chop_array(mat, eps, copy=copy)
+
+
+def cmplx2txt(val: complex) -> str:
     """Convert a complex number to text
 
     Todo:
@@ -64,7 +64,7 @@ def complex2txt(val: complex) -> str:
     else:
         sign_str = "+"
 
-    return f"{val.real:12.3e} {sign_str} {np.abs(val.imag):9.3e}i"
+    return f"{val.real:13.6e} {sign_str} {np.abs(val.imag):9.3e}i"
 
 
 def vec2txt(vec: np.ndarray) -> str:
@@ -73,8 +73,9 @@ def vec2txt(vec: np.ndarray) -> str:
     a = np.atleast_1d(vec)
     flag = np.iscomplexobj(a)
     if flag:
-        return " ".join([complex2txt(v) for v in a])
-    return " ".join(["{:15.6e}".format(v) for v in a])
+        return " ".join([cmplx2txt(v) for v in a])
+    return " ".join([" {:13.6e}".format(v) for v in a])
+    # return " ".join([" {:23.16e}".format(v) for v in a])
 
 
 def mat2txt(mat: np.ndarray, *, name=None) -> str:

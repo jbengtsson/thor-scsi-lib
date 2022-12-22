@@ -65,6 +65,9 @@ def acos2(sin, cos):
 
 
 def compute_nu(M):
+    """
+
+    """
     tr = M.trace()
     # Check if stable.
     if tr < 2e0:
@@ -165,14 +168,16 @@ def compute_A(n_dof, eta, u):
         scl = np.sqrt(np.abs(z))
         sgn_vec = sign(u1[2 * i][2 * i].real)
         [u1[:, 2 * i], u1[:, 2 * i + 1]] = [
-            sgn_vec * (u1[:, 2 * i].real + sgn_im * u1[:, 2 * i].imag * 1j) / scl,
+            sgn_vec * (u1[:, 2 * i].real + sgn_im * u1[:, 2 * i].imag * 1j)
+            / scl,
             sgn_vec
             * (u1[:, 2 * i + 1].real + sgn_im * u1[:, 2 * i + 1].imag * 1j)
             / scl,
         ]
 
     for i in range(n_dof):
-        [A[:n, 2 * i], A[:n, 2 * i + 1]] = [u1[:, 2 * i].real, u1[:, 2 * i].imag]
+        [A[:n, 2 * i], A[:n, 2 * i + 1]] = \
+            [u1[:, 2 * i].real, u1[:, 2 * i].imag]
 
     if n_dof == 2:
         # For coasting beam translate to momentum dependent fix point.
@@ -279,7 +284,7 @@ def compute_M_diag(n_dof: int, M: np.ndarray) -> [np.ndarray, np.ndarray, np.nda
         + mat2txt(chop_array(A[:n, :n].T @ omega_block_matrix(n_dof) @ A[:n, :n], 1e-13))
     )
 
-    R = np.linalg.inv(A) @ M @ A
+    R = A_inv @ M @ A
 
     nu = np.zeros(3, float)
     alpha_rad = np.zeros(3, float)
@@ -308,7 +313,7 @@ def compute_M_diag(n_dof: int, M: np.ndarray) -> [np.ndarray, np.ndarray, np.nda
             )
         )
 
-    return A, alpha_rad
+    return A, A_inv, alpha_rad
 
 
 #: scale arctan2 (a12/a11) to Floquet coordinates (correct?)
@@ -408,7 +413,7 @@ def compute_map_and_diag(
     M = np.array(t_map.jacobian())
     logger.info("\ncompute_map_and_diag\nM:\n" + mat2txt(M))
 
-    A, alpha_rad = compute_M_diag(n_dof, M)
+    A, A_inv, alpha_rad = compute_M_diag(n_dof, M)
     Atest = gtpsa.ss_vect_tpsa(desc, 1)
     Atest.set_zero()
     Atest.set_jacobian(A)
@@ -492,7 +497,8 @@ def compute_Twiss_along_lattice(
         coords=[indices, phase_space_coords_names],
     )
     info = accelerator_info(acc)
-    res = info.merge(dict(twiss=twiss_parameters, dispersion=dispersion, tps=tps))
+    res = \
+        info.merge(dict(twiss=twiss_parameters, dispersion=dispersion, tps=tps))
     return res
 
 

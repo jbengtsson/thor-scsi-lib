@@ -95,7 +95,7 @@ def compute_closed_orbit(
         *
     """
 
-    logger.debug("computing closed orbit")
+    logger.debug(" compute_closed_orbit")
 
     if eps <= 0e0:
         raise AssertionError(f"tolerance {eps} <= 0e0")
@@ -131,7 +131,6 @@ def compute_closed_orbit(
         if delta is not None:
             raise AssertionError("if x0 is given delta must be None")
         conf.dPparticle = x0[tslib.phase_space_index_internal.delta]
-    logger.debug("x0 %s", x0)
 
     # create weighting matrix for inverse calculation
     jj = np.zeros(tslib.ss_dim, np.bool)
@@ -249,10 +248,12 @@ def compute_closed_orbit(
             try:
                 xkm1 = ob.getPhaseSpace()
             except:
-                logger.error(f"Could not retrieve phase space from observer {ob}")
+                logger.error(f"Could not retrieve phase space from observer"
+                             " {ob}")
         logger.error(
             f"compute_closed_orbit: failed to converge after {max_iter:d}"
-            f"  delta = {delta:12.5e}, particle lost at element {next_element:3d}"
+            f"  delta = {delta:12.5e}, particle lost at element"
+            " {next_element:3d}"
             f"  x_0   = {x0}  x_k-1 = {xkm1}"
             f"  x_k   = {M.cst():13.5e}"
         )

@@ -19,7 +19,7 @@ def plot_field():
         positions=np.array([-ref_pos.conjugate(), -ref_pos]),
         currents=np.array([t_current, -t_current]),
     )
-    print(nlkf, left, right)
+
     x = np.linspace(-30e-3, 30e-3, num=300)
     pos = np.zeros([len(x), 2], dtype=np.float)
     pos[:, 0] = x
@@ -135,26 +135,34 @@ def main():
     nlk = tslib.FieldKick(C)
     nlk.setFieldInterpolator(nlkf)
 
-    print(repr(nlk))
-    ps = tslib.ss_vect_double()
-    ps.set_zero()
     config = tslib.ConfigType()
-    print("propagate center")
-    nlk.propagate(config, ps)
-    print("pos", ps)
 
-    ps = tslib.ss_vect_double()
-    ps.set_zero()
+    use_double = False
+    print(repr(nlk))
+
+    for x_off in (0, 10e-3):
+        if use_double:
+            ps = tslib.ss_vect_double()
+            ps.set_zero()
+        else:
+            ps = tslib.ss_vect_tps()
+            ps.set_identity()
+
+
+        ps[0] = x_off
+        print(f"propagate offset x={x_off}\n", ps)
+        nlk.propagate(config, ps)
+        print("pos\n", ps)
+
     x_off = 10.0e-3
-    ps[0] = x_off
     config = tslib.ConfigType()
-    print("propagate offset x={x_off}")
     nlk.propagate(config, ps)
-    print("pos", ps)
+    print("pos\n", ps)
 
 
 if __name__ == "__main__":
     # plot_field()
-    plot_field_circle()
+    # plot_field_circle()
     # plt.show()
-    # main()
+    # print(tslib)
+    main()

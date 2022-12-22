@@ -80,7 +80,7 @@ BOOST_AUTO_TEST_CASE(test30_cavity)
 {
 
 	const std::string cavity_txt(
-		"cavh1t8r: Cavity, Frequency = 500e6, Voltage = 0.5e6, harnum=538;\n"
+		"cavh1t8r: Cavity, Frequency = 500e6, Voltage = 0.5e6, HarmonicNumber=538;\n"
 		"mini_cell : LINE = (cavh1t8r);\n"
 		);
 
@@ -495,6 +495,67 @@ BOOST_AUTO_TEST_CASE(test120_rectangular_aperture)
 
 }
 
+
+BOOST_AUTO_TEST_CASE(test130_add_marker_start)
+{
+	const std::string txt(
+		"Nquad = 12;"
+		"q4m2d1r: Quadrupole, L = 0.5, K = 1.4, N = Nquad, Method = 4;"
+		"mini_cell : LINE = (q4m2d1r);\n"
+		);
+
+	GLPSParser parse;
+	Config *C = parse.parse_byte(txt);
+
+	boost::test_tools::output_test_stream output;
+	auto logger = std::make_shared<Log2Stream>(Log2Stream(&output));
+
+	auto machine = ts::Accelerator(*C, true);
+	auto cv = machine.at(0);
+
+	auto marker = std::dynamic_pointer_cast<tse::MarkerType>(cv);
+	BOOST_CHECK( (marker) );
+	BOOST_CHECK( (marker->name == "Start") );
+
+	auto cv2 = machine.at(1);
+	BOOST_CHECK( (cv2->name == "q4m2d1r") );
+	auto mpole = std::dynamic_pointer_cast<tse::MpoleType>(cv2);
+	BOOST_CHECK( (mpole) );
+	auto quad = std::dynamic_pointer_cast<tse::QuadrupoleType>(cv2);
+	BOOST_CHECK( (quad) );
+
+
+}
+
+BOOST_AUTO_TEST_CASE(test131_no_marker_add_start_required)
+{
+	const std::string txt(
+		"Nquad = 12;"
+		"start_different_name: Marker;"
+		"q4m2d1r: Quadrupole, L = 0.5, K = 1.4, N = Nquad, Method = 4;"
+		"mini_cell : LINE = (start_different_name, q4m2d1r);\n"
+		);
+
+	GLPSParser parse;
+	Config *C = parse.parse_byte(txt);
+
+	boost::test_tools::output_test_stream output;
+	auto logger = std::make_shared<Log2Stream>(Log2Stream(&output));
+
+	auto machine = ts::Accelerator(*C, true);
+	auto cv = machine.at(0);
+
+	auto marker = std::dynamic_pointer_cast<tse::MarkerType>(cv);
+	BOOST_CHECK((marker) );
+	BOOST_CHECK((marker->name == "start_different_name") );
+
+	auto cv2 = machine.at(1);
+	BOOST_CHECK( (cv2->name == "q4m2d1r") );
+	auto mpole = std::dynamic_pointer_cast<tse::MpoleType>(cv2);
+	BOOST_CHECK( (mpole) );
+	auto quad = std::dynamic_pointer_cast<tse::QuadrupoleType>(cv2);
+	BOOST_CHECK( (quad) );
+}
 /*
  * Local Variables:
  * mode: c++

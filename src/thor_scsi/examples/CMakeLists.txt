@@ -13,3 +13,17 @@ target_link_libraries(lattice_pass
   Boost::program_options
   #  quadmath
 )
+
+add_executable(build_accelerator build_accelerator.cc)
+
+target_include_directories(build_accelerator
+    PUBLIC
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../>"
+    "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
+)
+target_link_libraries(build_accelerator
+  thor_scsi
+  thor_scsi_core
+  tpsa_lin
+  #  quadmath
+)

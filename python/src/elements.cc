@@ -154,6 +154,7 @@ class PyRadDelKick: public tse::RadiationDelegateKick {
 class PyField2DInterpolation: public tsc::Field2DInterpolation{
 public:
 	using tsc::Field2DInterpolation::Field2DInterpolation;
+
 #if 0
 	void field_py(const std::array<double, 2> pos, std::array<double, 2> field) const {
 		PYBIND11_OVERRIDE_PURE(void, PyField2DInterpolationIntermediate, field_py, pos, field);
@@ -166,7 +167,7 @@ public:
 	virtual void field_py    (const py::array_t<double>  &t_pos, py::array_t<double> &t_field) const {
 		PYBIND11_OVERRIDE(void, PyField2DInterpolation, field_py, t_pos, t_field);
 	}
-	virtual void field_py    (const std::array<tps*   , 2>  &t_pos, std::array<tps*   , 2> &t_field) const {
+	virtual void field_py    (const std::array<tps    , 2>  &t_pos, std::array<tps   , 2> &t_field) const {
 		PYBIND11_OVERRIDE(void, PyField2DInterpolation, field_py   , t_pos, t_field);
 	}
 #if 0
@@ -189,13 +190,13 @@ private:
 
 public:
 	void field(const double x, const double y, double *Bx, double *By) const override {
-		auto pos = py::array_t<double>({2});
-		auto t_field = py::array_t<double>({2});
+		auto pos = py::array_t<double>{2};
+		auto t_field = py::array_t<double>{2};
 		double *pos_p = static_cast<double *>(pos.request().ptr),
 			*field_p = static_cast<double *>(t_field.request().ptr);
 		pos_p[0] = x;
 		pos_p[1] = y;
-		// this->field_py(pos, t_field);
+		this->field_py(pos, t_field);
 		*Bx = field_p[0];
 		*By = field_p[1];
 
@@ -209,7 +210,16 @@ public:
 	void field(const tps x, const tps y, tps *Bx, tps *By) const override {
 		//this->_field(x, y, Bx, By);
 		std::array<tps, 2> pos = {x, y};
-		std::array<tps*, 2> t_field = {Bx, By};
+		std::array<tps, 2> t_field;
+		this->field_py(pos, t_field);
+		*Bx = t_field[0];
+		*By = t_field[1];
+
+	}
+	void field(const gtpsa::tpsa x, const gtpsa::tpsa y, gtpsa::tpsa *Bx, gtpsa::tpsa *By) const override {
+		//this->_field(x, y, Bx, By);
+		std::array<gtpsa::tpsa, 2> pos = {x, y};
+		std::array<gtpsa::tpsa*, 2> t_field = {Bx, By};
 		// this->field_py(pos, t_field);
 		//*Bx = t_field[0];
 		//*By = t_field[1];

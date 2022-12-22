@@ -159,7 +159,8 @@ def compute_Twiss_A(A):
         k2 = 2 * k
         eta[k2] = A[k2][delta_]
         eta[k2 + 1] = A[k2 + 1][delta_]
-        alpha[k] = -(A[k2][k2] * A[k2 + 1][k2] + A[k2][k2 + 1] * A[k2 + 1][k2 + 1])
+        alpha[k] = \
+            -(A[k2][k2] * A[k2 + 1][k2] + A[k2][k2 + 1] * A[k2 + 1][k2 + 1])
         beta[k] = A[k2][k2] ** 2 + A[k2][k2 + 1] ** 2
     dnu = compute_dnu(n_dof, A)
 

@@ -2,6 +2,9 @@
 """
 import thor_scsi.lib as tslib
 import numpy as np
+import logging
+
+logger = logging.getLogger("thor-scsi")
 
 mu0 = 4 * np.pi * 1e-7
 
@@ -20,6 +23,7 @@ class AirCoilMagneticField(tslib.Field2DInterpolation):
     .. math::
        \\frac{I \\mu_0}{2 \\pi}
     """
+
     def __init__(self, *, positions, currents):
         """
 
@@ -45,11 +49,12 @@ class AirCoilMagneticField(tslib.Field2DInterpolation):
 
         Internally calculating in the complex plane
         """
-        x = float(pos[0])
-        y = float(pos[1])
-        z = x + y * 1j
+        pos = np.asarray(pos)
+        pos0 = np.array([self.positions.real, self.positions.imag])
+        dpos = pos[:, np.newaxis] - pos0
 
-        dz = z - self.positions
+        # Compute distance to different points
+        dpos * dpos
         r = np.absolute(dz)
         phi = np.angle(dz)
         Bphi = self.precomp * 1 / r
@@ -57,8 +62,12 @@ class AirCoilMagneticField(tslib.Field2DInterpolation):
         # Bphi 90 degree to radius vector
         B = Bphi * np.exp((phi + np.pi / 2) * 1j)
         B = B.sum()
+
         field[0] = B.imag
         field[1] = B.real
+        logger.debug(
+            "%s: pos %s -> field %s <- %s", self.__class__.__name__, pos, field, B
+        )
 
     def gradient_py(self, pos, gradient):
         raise NotImplementedError("gradient not (yet) implemented")

@@ -46,6 +46,35 @@ void py_thor_scsi_init_accelerator(py::module &m)
 	    .value("fine",    MachineLogLevel::fine);
 
 
+	const char acc_init_conf_doc[] = \
+"initalise accelerator with a configuration file\n\
+\n\
+Args:\n\
+   conf: configuration for the accelerator (aka parsed lattise file)\n\
+   add_marker_at_start: add a marker at the start of the lattice\n\
+\n\
+Warning:\n\
+  consider if the marker is not better added manually to the lattice\n\
+  file\n";
+    py::enum_<MachineLogLevel>(m, "accelerator_log_level")
+	    .value("error",   MachineLogLevel::error)
+	    .value("warn",    MachineLogLevel::warn)
+	    .value("warning", MachineLogLevel::warning)
+	    .value("info",    MachineLogLevel::info)
+	    .value("debug",   MachineLogLevel::debug)
+	    .value("fine",    MachineLogLevel::fine);
+
+
+	const char acc_init_list_doc[] = \
+"initalise accelerator with a list of elements\n\
+\n\
+Args:\n\
+   elements:            list of elements\n\
+   add_marker_at_start: add a marker at the start of the lattice\n\
+\n\
+Warning:\n\
+  consider if the marker is not better added manually to the lattice\n\
+  file";
 
 	py::class_<ts::Accelerator, std::shared_ptr<ts::Accelerator>>(m, "Accelerator")
 		.def("find",                 &ts::Accelerator::find)
@@ -72,14 +101,19 @@ void py_thor_scsi_init_accelerator(py::module &m)
 		//.def("__copy__",             &ts::Accelerator::clone, "make a copy of the accelerator")
 		.def("__len__",              &ts::Accelerator::size)
 		.def("__getitem__", py::overload_cast<size_t>(&ts::Accelerator::at))
-		.def("propagate", py::overload_cast<tsc::ConfigType&, ts::ss_vect_dbl&, size_t, int, size_t>(&ts::Accelerator::propagate), prop_doc,
-		     py::arg("calc_config"), py::arg("ps"), py::arg("start") = 0, py::arg("max_elements") = imax, py::arg("n_turns") = n_turns)
-		.def("propagate", py::overload_cast<tsc::ConfigType&, ts::ss_vect_tps&, size_t, int, size_t>(&ts::Accelerator::propagate), prop_doc,
-		     py::arg("calc_config"), py::arg("ps"), py::arg("start") = 0, py::arg("max_elements") = imax, py::arg("n_turns") = n_turns)
-		.def("propagate", py::overload_cast<tsc::ConfigType&, ts::ss_vect_tpsa&, size_t, int, size_t>(&ts::Accelerator::propagate), prop_doc,
-		     py::arg("calc_config"), py::arg("ps"), py::arg("start") = 0, py::arg("max_elements") = imax, py::arg("n_turns") = n_turns)
-		.def(py::init<const Config &>())
-		.def(py::init<const std::vector<std::shared_ptr<thor_scsi::core::ElemType>>&>())
+		.def("propagate", py::overload_cast<tsc::ConfigType&, ts::ss_vect_dbl&, size_t, int, size_t, bool>(&ts::Accelerator::propagate), prop_doc,
+		     py::arg("calc_config"), py::arg("ps"), py::arg("start") = 0, py::arg("max_elements") = imax, py::arg("n_turns") = n_turns,
+		     py::arg("tracy_compatible") = false)
+		.def("propagate", py::overload_cast<tsc::ConfigType&, ts::ss_vect_tps&, size_t, int, size_t, bool>(&ts::Accelerator::propagate), prop_doc,
+		     py::arg("calc_config"), py::arg("ps"), py::arg("start") = 0, py::arg("max_elements") = imax, py::arg("n_turns") = n_turns,
+		     py::arg("tracy_compatible") = false)
+		.def("propagate", py::overload_cast<tsc::ConfigType&, ts::ss_vect_tpsa&, size_t, int, size_t, bool>(&ts::Accelerator::propagate), prop_doc,
+		     py::arg("calc_config"), py::arg("ps"), py::arg("start") = 0, py::arg("max_elements") = imax, py::arg("n_turns") = n_turns,
+		     py::arg("tracy_compatible") = false)
+		.def(py::init<const Config &, bool>(), acc_init_list_doc,
+		     py::arg("config object"), py::arg("add_marker_at_start") = false)
+		.def(py::init<const std::vector<std::shared_ptr<thor_scsi::core::ElemType>>&, bool>(), acc_init_list_doc,
+		     py::arg("elements"), py::arg("add_marker_at_start") = false)
 		;
 
 

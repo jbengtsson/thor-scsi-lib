@@ -30,13 +30,15 @@ def parse_config_file(file_name: str, t_dir=None) -> Config:
     return C
 
 
-def accelerator_from_config(filename: str) -> Accelerator:
-    '''Create an accelerator object from configuration file
+def accelerator_from_config(
+    filename: str, add_marker_at_start: bool = False
+) -> Accelerator:
+    """Create an accelerator object from configuration file
 
     Reads configuration and returns accelerator object
-    '''
+    """
     C = parse_config_file(filename)
-    acc = Accelerator(C)
+    acc = Accelerator(C, add_marker_at_start=add_marker_at_start)
     return acc
 
 

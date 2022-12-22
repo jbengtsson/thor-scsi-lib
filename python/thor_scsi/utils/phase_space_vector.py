@@ -116,18 +116,21 @@ def ss_vect_tps2ps_jac(
 
 
 def array2ss_vect_tps(a_mat: np.ndarray) -> tslib.ss_vect_tps:
-    mat = tslib.Matrix(a_mat)
-    t_map = tslib.mat_to_ss_vect_tps(mat)
+    t_map = tslib.ss_vect_tps()
+    n = a_mat[0].size
+    if n != 7:
+        print("array2ss_vect_tps: matrix size != 7", n)
+        exit()
+    t_map = tslib.mat_to_ss_vect_tps(tslib.Matrix(a_mat))
     return t_map
 
 
-def ps_jac2ss_vect_tps(ps: np.ndarray, jac: np.ndarray) -> tslib.ss_vect_tps:
+def vec_mat2ss_vect_tps(vec: np.ndarray, mat: np.ndarray) -> tslib.ss_vect_tps:
     """
     """
     tmp = np.zeros([7, 7], np.float)
-    tmp[:6, :6] = jac
-    tmp[6, :6] = ps
-    return array2ss_vect_tps(tmp)
+    [tmp[6, :6], tmp[:6, :6]] = [vec, mat]
+    return tslib.vec_mat_to_ss_vect(tslib.Matrix(tmp))
 
 
 __all__ = [
@@ -135,7 +138,7 @@ __all__ = [
     "jac_intern_to_std",
     "omega_block_matrix",
     "ps_intern_to_std",
-    "ps_jac2ss_vect_tps",
+    "vec_mat2ss_vect_tps",
     "ss_vect_tps2ps_jac",
     "map2numpy",
 ]
