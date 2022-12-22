@@ -225,15 +225,6 @@ public:
 		//*By = t_field[1];
 
 	}
-	void field(const gtpsa::tpsa x, const gtpsa::tpsa y, gtpsa::tpsa *Bx, gtpsa::tpsa *By) const override {
-		//this->_field(x, y, Bx, By);
-		std::array<gtpsa::tpsa, 2> pos = {x, y};
-		std::array<gtpsa::tpsa*, 2> t_field = {Bx, By};
-		// this->field_py(pos, t_field);
-		//*Bx = t_field[0];
-		//*By = t_field[1];
-
-	}
 	void gradient(const double x, const double y, double *Gx, double *Gy) const  override{
 		PYBIND11_OVERRIDE_PURE(void, tsc::Field2DInterpolation, gradient, x, y, Gx, Gy);
 	}
