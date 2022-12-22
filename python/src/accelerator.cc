@@ -56,14 +56,6 @@ Args:\n\
 Warning:\n\
   consider if the marker is not better added manually to the lattice\n\
   file\n";
-    py::enum_<MachineLogLevel>(m, "accelerator_log_level")
-	    .value("error",   MachineLogLevel::error)
-	    .value("warn",    MachineLogLevel::warn)
-	    .value("warning", MachineLogLevel::warning)
-	    .value("info",    MachineLogLevel::info)
-	    .value("debug",   MachineLogLevel::debug)
-	    .value("fine",    MachineLogLevel::fine);
-
 
 	const char acc_init_list_doc[] = \
 "initalise accelerator with a list of elements\n\

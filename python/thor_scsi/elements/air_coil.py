@@ -55,6 +55,7 @@ class AirCoilMagneticField(tslib.Field2DInterpolation):
 
         # Compute distance to different points
         dpos * dpos
+        dz = dpos
         r = np.absolute(dz)
         phi = np.angle(dz)
         Bphi = self.precomp * 1 / r
