@@ -64,7 +64,7 @@ set(mad_ng_SRC_DIR ${gtpsa_DIR}/mad-ng/src/)
 include_directories(
   ${mad_ng_SRC_DIR}/libgtpsa/
   ${mad_ng_SRC_DIR}
- )
+  )
 
 # Fortran implementation part
 add_subdirectory(TPSA)
