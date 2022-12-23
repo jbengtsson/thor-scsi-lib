@@ -68,7 +68,6 @@ ext_modules = [
         sorted(
             [
                 "src/thor_scsi.cc",
-                "src/arma.cc",
                 "src/tps.cc",
                 "src/config_type.cc",
                 "src/elements.cc",
