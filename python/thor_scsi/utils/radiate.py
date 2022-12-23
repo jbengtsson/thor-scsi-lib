@@ -5,7 +5,7 @@ import thor_scsi.lib as tslib
 import gtpsa
 from .accelerator import instrument_with_radiators
 import numpy as np
-from scipy.constants import c
+from scipy.constants import c as c0
 from dataclasses import dataclass
 
 from thor_scsi.utils.closed_orbit import compute_closed_orbit
@@ -65,7 +65,7 @@ def compute_rad_prop(acc, calc_config, x0, dE, alpha_rad, D_rad):
     U_0 = calc_config.Energy*dE
     for k in range(dof):
         J[k] = 2e0*(1e0+x0[delta_])*alpha_rad[k]/dE
-        tau[k] = -C/(c*alpha_rad[k])
+        tau[k] = -C/(c0*alpha_rad[k])
         eps[k] = -D_rad[k]/(2e0*alpha_rad[k])
 
     if prt_deb:
