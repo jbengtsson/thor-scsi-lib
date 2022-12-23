@@ -4,7 +4,7 @@ find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
 cmake_policy(SET CMP0063 NEW)
 add_library(lib MODULE
   src/thor_scsi.cc
-  src/arma.cc
+  # src/arma.cc
   src/tps.cc
   src/config_type.cc
   src/elements.cc
