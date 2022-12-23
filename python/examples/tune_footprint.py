@@ -17,6 +17,8 @@ import math
 import numpy as np
 import matplotlib.pyplot as plt
 
+from scipy.constants import c as c0
+
 import gtpsa
 
 import thor_scsi.lib as tslib
@@ -144,20 +146,39 @@ def plt_Twiss(ds, file_name, title):
     plt.savefig(file_name)
 
 
-def plt_nu_vs_delta(delta, nu, file_name, title):
+def compute_eng_units(f0, f_RF, alpha_c, delta, nu):
+    """Convert from physics to engineering units.
+    """
+    f_beta = np.zeros((len(delta), 2), dtype='float')
+    df_RF = -alpha_c*f_RF*delta
+    for k in range(2):
+        f_beta[:, k] = nu[:, k]*f0
+    return df_RF, f_beta
+
+
+def plt_nu_vs_delta(delta, nu, file_name, title, phys_units):
     # Turn interactive mode off.
     plt.ioff()
 
     fig, ax_1 = plt.subplots()
 
     ax_1.set_title(title)
-    ax_1.set_xlabel(r'$\delta$ [%]')
-    ax_1.set_ylabel(r'$\nu_x$ [m]')
-    ax_1.plot(1e2*delta, nu[:, X_], 'b-', label=r'$\nu_x$')
+    if phys_units:
+        ax_1.set_xlabel(r'$\delta$ [%]')
+        ax_1.set_ylabel(r'$\nu_x$ [m]')
+        ax_1.plot(1e2*delta, nu[:, X_], 'b-', label=r'$\nu_x$')
+    else:
+        ax_1.set_xlabel(r'$\Delta \rm f_{RF}$ [kHz]')
+        ax_1.set_ylabel(r'$\Delta \rm f_{\beta,x}$ [kHz]')
+        ax_1.plot(1e-3*delta, 1e-3*nu[:, X_], 'b-', label=r'$\nu_x$')
     ax_1.legend(loc='upper left')
     ax_2 = ax_1.twinx()
-    ax_2.set_ylabel(r'$\nu_y$ [m]')
-    ax_2.plot(1e2*delta, nu[:, Y_], 'r-', label=r'$\nu_y$')
+    if phys_units:
+        ax_2.set_ylabel(r'$\nu_y$ [m]')
+        ax_2.plot(1e2*delta, nu[:, Y_], 'r-', label=r'$\nu_y$')
+    else:
+        ax_2.set_ylabel(r'$\Delta \rm f_{\beta,x}$ [kHz]')
+        ax_2.plot(1e-3*delta, 1e-3*nu[:, Y_], 'r-', label=r'$\nu_y$')
     ax_2.legend(loc='upper right')
     fig.tight_layout()
     plt.savefig(file_name)
@@ -293,9 +314,21 @@ M, A, data = compute_periodic_solution(lat, model_state)
 
 plt_Twiss(data, 'bessy-ii_1.png', 'BESSY-II - Linear Optics')
 
-delta, nu = compute_dnu_ddelta(lat, 5, 2.5e-2)
+delta, nu = compute_dnu_ddelta(lat, 10, 5e-2)
 
-plt_nu_vs_delta(delta, nu,
-                'bessy-ii_2.png', 'BESSY-II - $\\nu_{x,y} ( \delta )$')
+phys_units = not True
+if phys_units:
+    plt_nu_vs_delta(
+        delta, nu, 'bessy-ii_2.png', 'BESSY-II - $\\nu_{x,y} ( \delta )$', True)
+else:
+    circ = 240.0
+    f_RF = 499.6366302e6
+    alpha_c = 7.038e-4
+    f0 = c0/circ
+    df_RF, f_beta = compute_eng_units(f0, f_RF, alpha_c, delta, nu)
+
+    plt_nu_vs_delta(
+        df_RF, f_beta, 'bessy-ii_2.png', 'BESSY-II - $\\nu_{x,y} ( \delta )$',
+        not True)
 if not False:
     plt.show()
