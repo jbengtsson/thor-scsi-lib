@@ -66,43 +66,33 @@ def ind_2(j, k):
     return ind
 
 
-def compute_nu_ksi(M):
-    """Compute tune & linear chromaticity from the Poincaré map.
+def compute_nu_xi(M):
+    """Compute tune & linear chromaticity from the trace of the Poincaré
+       map:
+         Trace{M} = 2 * cos( 2 * pi * ( nu + xi * delta ) )
     """
-    nu   = np.zeros(2)
-    ksi  = np.zeros(2)
-    m_11 = gtpsa.tpsa(desc, tpsa_order)
-    m_22 = gtpsa.tpsa(desc, tpsa_order)
-    tr   = gtpsa.tpsa(desc, tpsa_order)
-
+    nu  = np.zeros(2)
+    xi = np.zeros(2)
     for k in range(2):
-        m_11.set(ind_0(), 0e0, M[2*k].get(ind_1(2*k)))
-        m_11.set(ind_1(delta_), 0e0, M[2*k].get(ind_2(2*k, delta_)))
-        m_22.set(ind_0(), 0e0, M[2*k+1].get(ind_1(2*k+1)))
-        m_22.set(ind_1(delta_), 0e0, M[2*k+1].get(ind_2(2*k+1, delta_)))
-
-        tr = m_11 + m_22
-        print('\ntr:\n', tr)
-
-        if True:
-            nu[k] = np.arccos(tr.get(ind_0())/2e0)/(2e0*np.pi)
-            if M.jacobian()[2*k][2*k+1] < 0e0:
-                nu[k] = 1e0 - nu[k]
-            ksi[k] = \
-                -tr.get(ind_1(delta_))/(4e0*np.pi*np.sin(2e0*np.pi*nu[k]))
-        else:
-            nu = acos(tr/2e0)/(2e0*np.pi)
-            print('\nnu:\n', nu)
-
-    return nu, ksi
+        tr = gtpsa.tpsa(desc, tpsa_order)
+        tr.set(ind_0(), 1e0, M[2*k].get(ind_1(2*k)))
+        tr.set(ind_1(delta_), 1e0, M[2*k].get(ind_2(2*k, delta_)))
+        tr.set(ind_0(), 1e0, M[2*k+1].get(ind_1(2*k+1)))
+        tr.set(ind_1(delta_), 1e0, M[2*k+1].get(ind_2(2*k+1, delta_)))
+        nu_tpsa = gtpsa.acos(tr/2e0)/(2e0*np.pi)
+        if M.jacobian()[2*k][2*k+1] < 0e0:
+            nu_tpsa = 1e0 - nu_tpsa
+        nu[k] = nu_tpsa.get(ind_0())
+        xi[k] = nu_tpsa.get(ind_1(delta_))
+    return nu, xi
 
 
-def prt_nu_ksi(M):
-    print('\nM:\n', mat2txt(M.jacobian()[0:2, 0:2]))
-    nu, ksi = compute_nu_ksi(M)
-    print('\n  nu  = [{:7.5f}, {:7.5f}]'.format(nu[X_], nu[Y_]))
-    print('  ksi = [{:7.5}, {:7.5}]'.format(ksi[X_], ksi[Y_]))
-    return ksi
+def prt_nu_xi(M):
+    print('\nM:\n', mat2txt(M.jacobian()))
+    nu, xi = compute_nu_xi(M)
+    print('\n  nu = [{:7.5f}, {:7.5f}]'.format(nu[X_], nu[Y_]))
+    print('  xi = [{:7.5}, {:7.5}]'.format(xi[X_], xi[Y_]))
+    return xi
 
 
 t_dir = os.path.join(os.environ['HOME'], 'git', 'dt4acc', 'lattices')
@@ -121,7 +111,7 @@ M = gtpsa.ss_vect_tpsa(desc, tpsa_order)
 M.set_identity()
 lat.propagate(model_state, M)
 
-prt_nu_ksi(M)
+prt_nu_xi(M)
 
 exit()
 
