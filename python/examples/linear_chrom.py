@@ -67,6 +67,8 @@ def ind_2(j, k):
 
 
 def compute_nu_ksi(M):
+    """Compute tune & linear chromaticity from the Poincaré map.
+    """
     nu   = np.zeros(2)
     ksi  = np.zeros(2)
     m_11 = gtpsa.tpsa(desc, tpsa_order)
