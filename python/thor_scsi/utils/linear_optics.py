@@ -169,9 +169,9 @@ def compute_nu_xi(desc, tpsa_order, M):
     """Compute tune & linear chromaticity from trace of Poincaré map:
           nu + xi * delta = arccos( Trace{M} / 2 ) / ( 2 * pi )
     """
-    nu = np.zeros(2)
-    xi = np.zeros(2)
+    nu, xi = [np.zeros(2), np.zeros(2)]
     if check_if_stable_2D(M.jacobian()):
+        stable = True
         for k in range(2):
             tr = gtpsa.tpsa(desc, tpsa_order)
             # m_11 + delta * m_16.
@@ -182,11 +182,10 @@ def compute_nu_xi(desc, tpsa_order, M):
             tr.set(ind_1(delta_), 1e0, M[2*k+1].get(ind_2(2*k+1, delta_)))
             # tr = m_11 + m_22.
             nu_tpsa = acos2_tpsa(M.jacobian()[2*k][2*k+1], tr/2e0)/(2e0*np.pi)
-            nu[k] = nu_tpsa.get(ind_0())
-            xi[k] = nu_tpsa.get(ind_1(delta_))
-        return True, nu, xi
+            nu[k], xi[k] = [nu_tpsa.get(ind_0()), nu_tpsa.get(ind_1(delta_))]
     else:
-        return False, nu, xi
+        stable = False
+    return stable, nu, xi
 
 
 def find_closest_nu(nu, w):
