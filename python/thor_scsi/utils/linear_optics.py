@@ -180,6 +180,7 @@ def compute_nu_xi(desc, tpsa_order, M):
             # m_22 + delta * m_26.
             tr.set(ind_0(), 1e0, M[2*k+1].get(ind_1(2*k+1)))
             tr.set(ind_1(delta_), 1e0, M[2*k+1].get(ind_2(2*k+1, delta_)))
+            # tr = m_11 + m_22.
             nu_tpsa = acos2_tpsa(M.jacobian()[2*k][2*k+1], tr/2e0)/(2e0*np.pi)
             nu[k] = nu_tpsa.get(ind_0())
             xi[k] = nu_tpsa.get(ind_1(delta_))
