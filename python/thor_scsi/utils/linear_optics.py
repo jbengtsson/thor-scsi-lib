@@ -170,8 +170,8 @@ def compute_nu_xi(desc, tpsa_order, M):
           nu + xi * delta = arccos( Trace{M} / 2 ) / ( 2 * pi )
     """
     nu, xi = [np.zeros(2), np.zeros(2)]
-    if check_if_stable_2D(M.jacobian()):
-        stable = True
+    stable = check_if_stable_2D(M.jacobian())
+    if stable:
         for k in range(2):
             tr = gtpsa.tpsa(desc, tpsa_order)
             # m_11 + delta * m_16.
@@ -183,8 +183,6 @@ def compute_nu_xi(desc, tpsa_order, M):
             # tr = m_11 + m_22.
             nu_tpsa = acos2_tpsa(M.jacobian()[2*k][2*k+1], tr/2e0)/(2e0*np.pi)
             nu[k], xi[k] = [nu_tpsa.get(ind_0()), nu_tpsa.get(ind_1(delta_))]
-    else:
-        stable = False
     return stable, nu, xi
 
 
