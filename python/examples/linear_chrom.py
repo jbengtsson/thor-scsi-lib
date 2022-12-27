@@ -36,12 +36,14 @@ X_, Y_, Z_ = [
 
 
 def b_n_zero(lat, n):
+    """Zero all the n-multipoles in the lattice.
+    """
     for k in range(len(lat)):
-        if n == 2:
+        if n == quadrupole:
             if type(lat[k]) == tslib.Quadrupole:
                 lat[k].get_multipoles().set_multipole(quadrupole, 0e0)
                 print(lat[k].name)
-        elif n == 3:
+        elif n == sextupole:
             if type(lat[k]) == tslib.Sextupole:
                 lat[k].get_multipoles().set_multipole(sextupole, 0e0)
         else:
@@ -49,17 +51,22 @@ def b_n_zero(lat, n):
 
 
 def ind_0():
-    ind = (np.array([0, 0, 0, 0, 0, 0]))
-    return ind
+    """Index for constant TPSA term.
+    """
+    return np.array([0, 0, 0, 0, 0, 0])
 
 
 def ind_1(k):
+    """Index for linear TPSA term.
+    """
     ind = (np.array([0, 0, 0, 0, 0, 0]))
     ind[k] = 1
     return ind
 
 
 def ind_2(j, k):
+    """Index for quadratic TPSA term.
+    """
     ind = (np.array([0, 0, 0, 0, 0, 0]))
     ind[j] = 1
     ind[k] = 1
@@ -67,16 +74,18 @@ def ind_2(j, k):
 
 
 def compute_nu_xi(M):
-    """Compute tune & linear chromaticity from the trace of the Poincaré
+    """Compute the tune & linear chromaticity from the trace of the Poincaré
        map:
-         Trace{M} = 2 * cos( 2 * pi * ( nu + xi * delta ) )
+          nu + xi * delta = arccos( Trace{M} / 2 ) / = ( 2 * pi )
     """
     nu  = np.zeros(2)
     xi = np.zeros(2)
     for k in range(2):
         tr = gtpsa.tpsa(desc, tpsa_order)
+        # m_11 + delta * m_16.
         tr.set(ind_0(), 1e0, M[2*k].get(ind_1(2*k)))
         tr.set(ind_1(delta_), 1e0, M[2*k].get(ind_2(2*k, delta_)))
+        # m_22 + delta * m_26.
         tr.set(ind_0(), 1e0, M[2*k+1].get(ind_1(2*k+1)))
         tr.set(ind_1(delta_), 1e0, M[2*k+1].get(ind_2(2*k+1, delta_)))
         nu_tpsa = gtpsa.acos(tr/2e0)/(2e0*np.pi)
@@ -88,11 +97,11 @@ def compute_nu_xi(M):
 
 
 def prt_nu_xi(M):
-    print('\nM:\n', mat2txt(M.jacobian()))
     nu, xi = compute_nu_xi(M)
+    print('\nM:\n', mat2txt(M.jacobian()))
     print('\n  nu = [{:7.5f}, {:7.5f}]'.format(nu[X_], nu[Y_]))
     print('  xi = [{:7.5}, {:7.5}]'.format(xi[X_], xi[Y_]))
-    return xi
+    return nu, xi
 
 
 t_dir = os.path.join(os.environ['HOME'], 'git', 'dt4acc', 'lattices')
