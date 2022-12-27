@@ -24,16 +24,18 @@ import gtpsa
 import thor_scsi.lib as tslib
 from thor_scsi.factory import accelerator_from_config
 from thor_scsi.utils.twiss_output import twiss_ds_to_df, df_to_tsv
-from thor_scsi.utils.linear_optics import compute_map, compute_nu_symp, \
-    compute_map_and_diag, compute_Twiss_along_lattice, compute_dispersion, \
-    compute_nus
+from thor_scsi.utils.linear_optics import compute_map, compute_nus, \
+    compute_nu_symp, check_if_stable_2D, compute_nu_xi, compute_map_and_diag, \
+    compute_Twiss_along_lattice, compute_dispersion
 from thor_scsi.utils.courant_snyder import compute_A_CS, compute_A, \
     compute_Twiss_A
 from thor_scsi.utils.phase_space_vector import map2numpy
 from thor_scsi.utils.output import prt2txt, mat2txt, vec2txt
 
+tpsa_order = 2
+
 # Descriptor for Truncated Power Series Algebra variables.
-desc = gtpsa.desc(6, 1)
+desc = gtpsa.desc(6, tpsa_order)
 
 # Configuration space coordinates.
 X_, Y_, Z_ = [
@@ -210,36 +212,6 @@ def b_n_zero(lat, n):
             print(f'\nb_3_zero: undef. multipole order {n:1d}')
 
 
-def check_if_stable_one_dim(dim, M):
-    # Dim is [0, 1].
-    return math.fabs(M[2*dim:2*dim+2, 2*dim:2*dim+2].trace()) < 2e0
-
-def check_if_stable_two_dim(M):
- return check_if_stable_one_dim(0, M) and check_if_stable_one_dim(1, M)
-
-
-def compute_chromaticity(lat, model_state, eps):
-    # If not stable return a large value.
-    xi_1_max = 1e30
-
-    map = compute_map(lat, model_state, delta=-eps, desc=desc)
-    M = np.array(map.jacobian())
-    if check_if_stable_two_dim(M):
-        nu_m = compute_nu_symp(n_dof, M)
-    else:
-        nu_m = np.array([xi_1_max, xi_1_max])
-
-    map = compute_map(lat, model_state, delta=eps, desc=desc)
-    M = np.array(map.jacobian())
-    if check_if_stable_two_dim(M):
-        nu_p = compute_nu_symp(n_dof, M)
-    else:
-        nu_p = np.array([xi_1_max, xi_1_max])
-
-    xi = (nu_p-nu_m)/(2e0*eps)
-    return xi
-
-
 def compute_periodic_solution(lat, model_state):
     # Compute the periodic solution for a super period.
     # Degrees of freedom - RF cavity is off; i.e., coasting beam.
@@ -247,13 +219,15 @@ def compute_periodic_solution(lat, model_state):
     model_state.radiation = False
     model_state.Cavity_on = False
 
-    M, A = compute_map_and_diag(n_dof, lat, model_state, desc=desc)
-    nus = compute_nus(n_dof, M)
-    xi_1 = compute_chromaticity(lat, model_state, 1e-6)
+    M, A = \
+        compute_map_and_diag(n_dof, lat, model_state, desc=desc,
+                             tpsa_order=tpsa_order)
+
+    stable, nu, xi = compute_nu_xi(desc, tpsa_order, M)
     Twiss = compute_Twiss_A(A)
 
-    print('\nM:\n', mat2txt(M))
-    prt_tune_chrom(n_dof, nus, xi_1)
+    print('\nM:\n', mat2txt(M.jacobian()))
+    prt_tune_chrom(n_dof, nu, xi)
     prt_Twiss('\nTwiss:\n', Twiss)
 
     ds = compute_Twiss_along_lattice(n_dof, lat, model_state, A=A, desc=desc)
@@ -261,12 +235,12 @@ def compute_periodic_solution(lat, model_state):
     return M, A, ds
 
 
-def prt_tune_chrom(n_dof, nus, xi):
+def prt_tune_chrom(n_dof, nu, xi):
     if n_dof == 2:
-        print(f'\nnu  = [{nus[X_]:7.5f}, {nus[Y_]:7.5f}]')
+        print(f'\nnu = [{nu[X_]:7.5f}, {nu[Y_]:7.5f}]')
         print(f'xi = [{xi[X_]:7.5f}, {xi[Y_]:7.5f}]')
     else:
-        print(f'\nnu = [{nus[X_]:7.5f}, {nus[Y_]:7.5f}, {nus[Z_]:7.5f}]')
+        print(f'\nnu = [{nu[X_]:7.5f}, {nu[Y_]:7.5f}, {nu[Z_]:7.5f}]')
 
 
 def prt_Twiss(str, Twiss):
@@ -285,7 +259,7 @@ def compute_dnu_ddelta(lat, n, delta_max):
         delta[k+n] = k*delta_max/n
         map = compute_map(lat, model_state, delta=delta[k+n], desc=desc)
         M = np.array(map.jacobian())
-        if check_if_stable_two_dim(M):
+        if check_if_stable_2D(M):
             nu[k+n] = compute_nu_symp(n_dof, M)
         else:
             nu[k+n] = np.array([np.nan, np.nan])

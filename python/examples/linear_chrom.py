@@ -8,6 +8,7 @@ from thor_scsi.factory import accelerator_from_config
 import thor_scsi.lib as tslib
 from thor_scsi.factory import accelerator_from_config
 
+from thor_scsi.utils.linear_optics import compute_map, compute_nu_xi
 from thor_scsi.utils.phase_space_vector import ss_vect_tps2ps_jac
 from thor_scsi.utils.output import mat2txt
 
@@ -50,54 +51,8 @@ def b_n_zero(lat, n):
             print(f'\nb_3_zero: undef. multipole order {n:1d}')
 
 
-def ind_0():
-    """Index for constant TPSA term.
-    """
-    return np.array([0, 0, 0, 0, 0, 0])
-
-
-def ind_1(k):
-    """Index for linear TPSA term.
-    """
-    ind = (np.array([0, 0, 0, 0, 0, 0]))
-    ind[k] = 1
-    return ind
-
-
-def ind_2(j, k):
-    """Index for quadratic TPSA term.
-    """
-    ind = (np.array([0, 0, 0, 0, 0, 0]))
-    ind[j] = 1
-    ind[k] = 1
-    return ind
-
-
-def compute_nu_xi(M):
-    """Compute the tune & linear chromaticity from the trace of the Poincaré
-       map:
-          nu + xi * delta = arccos( Trace{M} / 2 ) / ( 2 * pi )
-    """
-    nu = np.zeros(2)
-    xi = np.zeros(2)
-    for k in range(2):
-        tr = gtpsa.tpsa(desc, tpsa_order)
-        # m_11 + delta * m_16.
-        tr.set(ind_0(), 1e0, M[2*k].get(ind_1(2*k)))
-        tr.set(ind_1(delta_), 1e0, M[2*k].get(ind_2(2*k, delta_)))
-        # m_22 + delta * m_26.
-        tr.set(ind_0(), 1e0, M[2*k+1].get(ind_1(2*k+1)))
-        tr.set(ind_1(delta_), 1e0, M[2*k+1].get(ind_2(2*k+1, delta_)))
-        nu_tpsa = gtpsa.acos(tr/2e0)/(2e0*np.pi)
-        if M.jacobian()[2*k][2*k+1] < 0e0:
-            nu_tpsa = 1e0 - nu_tpsa
-        nu[k] = nu_tpsa.get(ind_0())
-        xi[k] = nu_tpsa.get(ind_1(delta_))
-    return nu, xi
-
-
-def prt_nu_xi(M):
-    nu, xi = compute_nu_xi(M)
+def prt_nu_xi(desc, tpsa_order, M):
+    stable, nu, xi = compute_nu_xi(desc, tpsa_order, M)
     print('\nM:\n', mat2txt(M.jacobian()))
     print('\n  nu = [{:7.5f}, {:7.5f}]'.format(nu[X_], nu[Y_]))
     print('  xi = [{:7.5}, {:7.5}]'.format(xi[X_], xi[Y_]))
@@ -116,11 +71,8 @@ model_state = tslib.ConfigType()
 if not False:
     b_n_zero(lat, sextupole)
 
-M = gtpsa.ss_vect_tpsa(desc, tpsa_order)
-M.set_identity()
-lat.propagate(model_state, M)
-
-prt_nu_xi(M)
+M = compute_map(lat, model_state, desc=desc, tpsa_order=tpsa_order)
+prt_nu_xi(desc, tpsa_order, M)
 
 exit()
 

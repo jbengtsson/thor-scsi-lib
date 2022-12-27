@@ -26,15 +26,18 @@ import gtpsa
 import thor_scsi.lib as tslib
 from thor_scsi.factory import accelerator_from_config
 from thor_scsi.utils.twiss_output import twiss_ds_to_df, df_to_tsv
-from thor_scsi.utils.linear_optics import compute_map, compute_nu_symp, \
-    compute_map_and_diag, compute_Twiss_along_lattice, compute_dispersion
+from thor_scsi.utils.linear_optics import compute_map, compute_nu_xi, \
+    compute_nu_symp, compute_map_and_diag, compute_Twiss_along_lattice, \
+    compute_dispersion
 from thor_scsi.utils.courant_snyder import compute_A_CS, compute_A, \
     compute_Twiss_A
 from thor_scsi.utils.phase_space_vector import map2numpy
 from thor_scsi.utils.output import prt2txt, mat2txt, vec2txt
 
+tpsa_order = 2
+
 # Descriptor for Truncated Power Series Algebra variables.
-desc = gtpsa.desc(6, 1)
+desc = gtpsa.desc(6, tpsa_order)
 
 # Configuration space coordinates.
 X_, Y_, Z_ = [
@@ -77,36 +80,6 @@ def plt_Twiss(ds, file_name, title):
     plt.savefig(file_name)
 
 
-def check_if_stable_one_dim(dim, M):
-    # Dim is [0, 1].
-    return math.fabs(M[2*dim:2*dim+2, 2*dim:2*dim+2].trace()) < 2e0
-
-def check_if_stable_two_dim(M):
- return check_if_stable_one_dim(0, M) and check_if_stable_one_dim(1, M)
-
-
-def compute_chromaticity(lat, model_state, eps):
-    # If not stable return a large value.
-    ksi_1_max = 1e30
-
-    map = compute_map(lat, model_state, delta=-eps, desc=desc)
-    M = np.array(map.jacobian())
-    if check_if_stable_two_dim(M):
-        nu_m = compute_nu_symp(n_dof, M)
-    else:
-        nu_m = np.array([ksi_1_max, ksi_1_max])
-
-    map = compute_map(lat, model_state, delta=eps, desc=desc)
-    M = np.array(map.jacobian())
-    if check_if_stable_two_dim(M):
-        nu_p = compute_nu_symp(n_dof, M)
-    else:
-        nu_p = np.array([ksi_1_max, ksi_1_max])
-
-    ksi = (nu_p-nu_m)/(2e0*eps)
-    return ksi
-
-
 def compute_periodic_solution(lat, model_state):
     # Compute the periodic solution for a super period.
     # Degrees of freedom - RF cavity is off; i.e., coasting beam.
@@ -115,7 +88,7 @@ def compute_periodic_solution(lat, model_state):
     model_state.Cavity_on = False
 
     M, A = compute_map_and_diag(n_dof, lat, model_state, desc=desc)
-    print('\nM:\n', mat2txt(M))
+    print('\nM:\n', mat2txt(M.jacobian()))
     Twiss = compute_Twiss_A(A)
     prt_Twiss('\nTwiss:\n', Twiss)
 
@@ -200,8 +173,12 @@ def compute_chi_2(lat, model_state, A0, chi_2_min, prms):
         chi_2 += weight[k]*np.sum((Twiss_k[k]-Twiss1_design[k])**2)
 
     if weight[3] != 0e0:
-        ksi_1 = compute_chromaticity(lat, model_state, 1e-6)
-        dchi_2 = weight[3]*np.sum(ksi_1**2)
+        M = compute_map(lat, model_state, desc=desc, tpsa_order=tpsa_order)
+        stable, _, xi = compute_nu_xi(desc, tpsa_order, M)
+        if stable:
+            dchi_2 = weight[3]*np.sum(xi**2)
+        else:
+            dchi_2 = 1e30
         chi_2 += dchi_2
 
     if chi_2 < chi_2_min:
@@ -210,7 +187,7 @@ def compute_chi_2(lat, model_state, A0, chi_2_min, prms):
               + vec2txt(prms))
         prt_Twiss('\n', Twiss_k)
         if weight[3] != 0e0:
-            print(f'\n  ksi_1  = [{ksi_1[X_]:5.3f}, {ksi_1[Y_]:5.3f}]')
+            print(f'\n  xi     = [{xi[X_]:5.3f}, {xi[Y_]:5.3f}]')
             print(f'  dchi_2 = {dchi_2:9.3e}')
     return chi_2, chi_2_min
 
@@ -319,9 +296,10 @@ print(f'\nCentre of super period: {loc:1d} {lat[loc].name:s}')
 Twiss0 = get_Twiss(loc)
 
 # Compute linear chromaticity.
-ksi_1 = compute_chromaticity(lat, model_state, 1e-6)
-print(ksi_1)
-print(f'\nksi = [{ksi_1[X_]:5.3f}, {ksi_1[Y_]:5.3f}]')
+M = compute_map(lat, model_state, desc=desc, tpsa_order=tpsa_order)
+stable, nu, xi = compute_nu_xi(desc, tpsa_order, M)
+print('\n  nu = [{:7.5f}, {:7.5f}]'.format(nu[X_], nu[Y_]))
+print('  xi = [{:7.5}, {:7.5}]'.format(xi[X_], xi[Y_]))
 
 # Twiss parameters at centre of straight.
 Twiss1 = get_Twiss(len(lat)-1)
@@ -329,14 +307,14 @@ Twiss1 = get_Twiss(len(lat)-1)
 # Desired Twiss parameters at centre of straight.
 eta   = np.array([0e0, 0e0, 0e0, 0e0])
 alpha = np.array([0e0, 0e0])
-beta  = np.array([3.0, 3.0])
+beta  = np.array([2.5, 2.5])
 Twiss1_design = eta, alpha, beta
 
 weight = np.array([
     1e0,   # Eta.
     1e3,   # Alpha.
     1e0,   # Beta.
-    0*1e-4   # ksi_1.
+    1e-5   # xi.
 ])
 
 # Triplet parameter family names & type.
@@ -366,8 +344,10 @@ bounds = [
 # Compute linear chromaticity.
 set_b_n_fam(lat, 'sf_h', sextupole, 0e0)
 set_b_n_fam(lat, 'sd_h', sextupole, 0e0)
-ksi_1 = compute_chromaticity(lat, model_state, 1e-6)
-print(f'\nksi = [{ksi_1[X_]:5.3f}, {ksi_1[Y_]:5.3f}]')
+M = compute_map(lat, model_state, desc=desc, tpsa_order=tpsa_order)
+stable, nu, xi = compute_nu_xi(desc, tpsa_order, M)
+print('\n  nu = [{:7.5f}, {:7.5f}]'.format(nu[X_], nu[Y_]))
+print('  xi = [{:7.5}, {:7.5}]'.format(xi[X_], xi[Y_]))
 
 match_straight(lat, loc, prm_list, bounds, Twiss0, Twiss1, Twiss1_design,
                weight)

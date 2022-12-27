@@ -11,6 +11,7 @@ from .output import prt2txt, mat2txt, vec2txt, chop_array
 
 import gtpsa
 
+import math
 import xarray as xr
 import numpy as np
 import copy as _copy
@@ -20,7 +21,11 @@ import logging
 logger = logging.getLogger("thor_scsi")
 
 
-X_, Y_, Z_ = [tslib.spatial_index.X, tslib.spatial_index.Y, tslib.spatial_index.Z]
+X_, Y_, Z_ = [
+    tslib.spatial_index.X,
+    tslib.spatial_index.Y,
+    tslib.spatial_index.Z
+]
 
 [x_, px_, y_, py_, ct_, delta_] = [
     tslib.phase_space_index_internal.x,
@@ -39,12 +44,13 @@ def compute_map(
     delta: float = 0e0,
     t_map: gtpsa.ss_vect_tpsa = None,
     desc: gtpsa.desc = None,
+    tpsa_order: int = 1
 ) -> gtpsa.ss_vect_tpsa:
     """Propagate an identity map through the accelerator
     """
     if t_map is None:
         assert desc is not None
-        t_map = gtpsa.ss_vect_tpsa(desc, 1)
+        t_map = gtpsa.ss_vect_tpsa(desc, tpsa_order)
         t_map.set_identity()
 
     t_map[delta_] += delta
@@ -53,14 +59,13 @@ def compute_map(
 
 
 def acos2(sin, cos):
-    # Compute the phase advance from the Poincaré map:
-    #   Tr{M} = 2 cos(2 pi nu)
-    # i.e., assuming mid-plane symmetry.
-    # The sin part is used to determine the quadrant.
-    mu = np.arccos(cos)
+    """arcos(phi): 0 - 2 * pi.
+       The sin part is used to determine the quadrant.
+    """
+    phi = np.arccos(cos)
     if sin < 0e0:
-        mu = 2e0 * np.pi - mu
-    return mu
+        phi = 2e0 * np.pi - phi
+    return phi
 
 
 def compute_nu(M):
@@ -108,10 +113,79 @@ def compute_nu_symp(n_dof, M):
     radix = sgn * np.sqrt(po2 ** 2 - q)
     x, y = -po2 + radix, -po2 - radix
     nu = []
-    nu.extend([acos2(M[0][1], x) / (2e0 * np.pi), acos2(M[2][3], y) / (2e0 * np.pi)])
+    nu.extend([acos2(M[0][1], x) / (2e0 * np.pi), acos2(M[2][3], y)
+               / (2e0 * np.pi)])
     if n_dof == 3:
         nu.append(1e0 - acos2(M[4][5], tr[Z_] / 2e0) / (2e0 * np.pi))
     return np.array(nu)
+
+
+def check_if_stable_1D(dim, M):
+    # Dim is [X_, Y_] = [0, 1].
+    return math.fabs(M[2*dim:2*dim+2, 2*dim:2*dim+2].trace()) < 2e0
+
+
+def check_if_stable_2D(M):
+    return check_if_stable_1D(0, M) and check_if_stable_1D(1, M)
+
+
+def ind_0():
+    """Index for constant TPSA term.
+    """
+    dof = 3
+    return np.zeros(2*dof, int)
+
+
+def ind_1(k):
+    """Index for linear TPSA term.
+    """
+    dof = 3
+    ind = np.zeros(2*dof, int)
+    ind[k] = 1
+    return ind
+
+
+def ind_2(j, k):
+    """Index for quadratic TPSA term.
+    """
+    dof = 3
+    ind = np.zeros(2*dof, int)
+    ind[j] = 1
+    ind[k] = 1
+    return ind
+
+
+def acos2_tpsa(sin, cos):
+    """arcos(phi): 0 - 2 * pi.
+       The sin part is used to determine the quadrant.
+    """
+    phi = gtpsa.acos(cos)
+    if sin < 0e0:
+        phi = 2e0 * np.pi - phi
+    return phi
+
+
+def compute_nu_xi(desc, tpsa_order, M):
+    """Compute tune & linear chromaticity from trace of Poincaré map:
+          nu + xi * delta = arccos( Trace{M} / 2 ) / ( 2 * pi )
+    """
+    nu = np.zeros(2)
+    xi = np.zeros(2)
+    if check_if_stable_2D(M.jacobian()):
+        for k in range(2):
+            tr = gtpsa.tpsa(desc, tpsa_order)
+            # m_11 + delta * m_16.
+            tr.set(ind_0(), 1e0, M[2*k].get(ind_1(2*k)))
+            tr.set(ind_1(delta_), 1e0, M[2*k].get(ind_2(2*k, delta_)))
+            # m_22 + delta * m_26.
+            tr.set(ind_0(), 1e0, M[2*k+1].get(ind_1(2*k+1)))
+            tr.set(ind_1(delta_), 1e0, M[2*k+1].get(ind_2(2*k+1, delta_)))
+            nu_tpsa = acos2_tpsa(M.jacobian()[2*k][2*k+1], tr/2e0)/(2e0*np.pi)
+            nu[k] = nu_tpsa.get(ind_0())
+            xi[k] = nu_tpsa.get(ind_1(delta_))
+        return True, nu, xi
+    else:
+        return False, nu, xi
 
 
 def find_closest_nu(nu, w):
@@ -207,7 +281,8 @@ def compute_dispersion(M: np.ndarray) -> np.ndarray:
     return np.linalg.inv(id_mat - M[:n, :n]) @ D
 
 
-def compute_M_diag(n_dof: int, M: np.ndarray) -> [np.ndarray, np.ndarray, np.ndarray]:
+def compute_M_diag(
+        n_dof: int, M: np.ndarray) -> [np.ndarray, np.ndarray, np.ndarray]:
     """
 
     Args:
@@ -280,7 +355,8 @@ def compute_M_diag(n_dof: int, M: np.ndarray) -> [np.ndarray, np.ndarray, np.nda
         + "\nA:\n"
         + mat2txt(chop_array(A, 1e-13))
         + "\nA^T.omega.A:\n"
-        + mat2txt(chop_array(A[:n, :n].T @ omega_block_matrix(n_dof) @ A[:n, :n], 1e-13))
+        + mat2txt(chop_array(A[:n, :n].T @ omega_block_matrix(n_dof)
+                             @ A[:n, :n], 1e-13))
     )
 
     R = A_inv @ M @ A
@@ -292,9 +368,9 @@ def compute_M_diag(n_dof: int, M: np.ndarray) -> [np.ndarray, np.ndarray, np.nda
         if (nu[k] < 0e0) and (k < 2):
             nu[k] += 1e0
         if n_dof == 3:
-            alpha_rad[k] = np.log(
-                np.sqrt(np.absolute(w_ord[2 * k]) * np.absolute(w_ord[2 * k + 1]))
-            )
+            alpha_rad[k] = \
+                np.log(np.sqrt(np.absolute(w_ord[2 * k])
+                               * np.absolute(w_ord[2 * k + 1])))
 
     A_CS, dnu_cs = compute_A_CS(n_dof, A)
     logger.debug(
@@ -302,7 +378,8 @@ def compute_M_diag(n_dof: int, M: np.ndarray) -> [np.ndarray, np.ndarray, np.nda
         + mat2txt(chop_array(A_CS, 1e-10))
         + "\n\nR:\n"
         + mat2txt(chop_array(R, 1e-10))
-        + "\n\nnu        = {:18.16f} {:18.16f} {:18.16f}".format(nu[X_], nu[Y_], nu[Z_])
+        + "\n\nnu        = {:18.16f} {:18.16f} {:18.16f}".
+        format(nu[X_], nu[Y_], nu[Z_])
     )
     logger.debug(f"dnu_cs  {dnu_cs}")
     if n_dof == 3:
@@ -363,7 +440,8 @@ def _extract_tps(elem: tslib.Observer) -> tslib.ss_vect_tps:
         logger.error(msg)
         raise AssertionError(msg)
     else:
-        logger.debug("Data available for eleeent index %5d name %s", ob.get_observed_index(), ob.get_observed_name())
+        logger.debug("Data available for eleeent index %5d name %s",
+                     ob.get_observed_index(), ob.get_observed_name())
     return ob.get_truncated_power_series_a()
 
 
@@ -402,13 +480,14 @@ def compute_map_and_diag(
         acc: tslib.Accelerator,
         calc_config: tslib.ConfigType,
         *,
-        desc: gtpsa.desc):
+        desc: gtpsa.desc,
+        tpsa_order: int = 1):
     """propagate once around ring. use this map to find phase space origin
 
     Todo:
          Rename phase space origin fix point
     """
-    t_map = compute_map(acc, calc_config, desc=desc)
+    t_map = compute_map(acc, calc_config, desc=desc, tpsa_order=tpsa_order)
     M = np.array(t_map.jacobian())
     logger.info("\ncompute_map_and_diag\nM:\n" + mat2txt(M))
 
@@ -417,7 +496,7 @@ def compute_map_and_diag(
     Atest.set_zero()
     Atest.set_jacobian(A)
     acc.propagate(calc_config, Atest)
-    return M, A
+    return t_map, A
 
 
 def compute_Twiss_along_lattice(
@@ -427,6 +506,7 @@ def compute_Twiss_along_lattice(
     *,
     A: gtpsa.ss_vect_tpsa = None,
     desc: gtpsa.desc = None,
+    tpsa_order: int = 1
 ) -> xr.Dataset:
     """
 
@@ -447,7 +527,9 @@ def compute_Twiss_along_lattice(
         calc_config = tslib.ConfigType()
 
     if A is None:
-        _, A = compute_map_and_diag(n_dof, acc, calc_config, desc=desc)
+        _, A = \
+            compute_map_and_diag(n_dof, acc, calc_config, desc=desc,
+                                 tpsa_order=tpsa_order)
     logger.info("\ncompute_Twiss_along_lattice\nA:\n" + mat2txt(A))
 
     # Not really required ... but used for convenience
@@ -461,7 +543,8 @@ def compute_Twiss_along_lattice(
 
     for k in range(len(acc)):
         acc.propagate(calc_config, A_map, k, 1)
-        # Zero the phase advance so that the fraction tune change is not exceeding two pi
+        # Zero the phase advance so that the fraction tune change is not
+        # exceeding two pi
         Aj = A_map.jacobian()
         rjac, _ = compute_A_CS(2, Aj)
         A_map.set_jacobian(rjac)
@@ -501,4 +584,8 @@ def compute_Twiss_along_lattice(
     return res
 
 
-__all__ = ["compute_map", "compute_nu_symp", "compute_map_and_diag", "compute_Twiss_along_lattice", "jac2twiss", "compute_M_diag"]
+__all__ = [
+    "compute_map", "compute_nu_symp", "check_if_stable_1D",
+    "check_if_stable_2D", "compute_nu_xi", "compute_map_and_diag",
+    "compute_Twiss_along_lattice", "jac2twiss", "compute_M_diag"
+]
