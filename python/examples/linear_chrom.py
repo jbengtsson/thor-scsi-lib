@@ -76,7 +76,7 @@ def ind_2(j, k):
 def compute_nu_xi(M):
     """Compute the tune & linear chromaticity from the trace of the Poincaré
        map:
-          nu + xi * delta = arccos( Trace{M} / 2 ) / = ( 2 * pi )
+          nu + xi * delta = arccos( Trace{M} / 2 ) / ( 2 * pi )
     """
     nu = np.zeros(2)
     xi = np.zeros(2)
