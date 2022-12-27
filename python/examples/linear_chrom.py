@@ -78,7 +78,7 @@ def compute_nu_xi(M):
        map:
           nu + xi * delta = arccos( Trace{M} / 2 ) / = ( 2 * pi )
     """
-    nu  = np.zeros(2)
+    nu = np.zeros(2)
     xi = np.zeros(2)
     for k in range(2):
         tr = gtpsa.tpsa(desc, tpsa_order)
