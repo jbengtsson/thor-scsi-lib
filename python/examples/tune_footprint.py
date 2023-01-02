@@ -1,6 +1,6 @@
-"""Use Case:
+'''Use Case:
      Sextupole strength calibration.
-"""
+'''
 
 import logging
 # Levels: DEBUG, INFO, WARNING, ERROR, and CRITICAL.
@@ -16,6 +16,7 @@ import copy
 import math
 import numpy as np
 import matplotlib.pyplot as plt
+import NAFFlib
 
 from scipy.constants import c as c0
 
@@ -149,8 +150,8 @@ def plt_Twiss(ds, file_name, title):
 
 
 def compute_eng_units(f0, f_RF, alpha_c, delta, nu):
-    """Convert from physics to engineering units.
-    """
+    '''Convert from physics to engineering units.
+    '''
     f_beta = np.zeros((len(delta), 2), dtype='float')
     df_RF = -alpha_c*f_RF*delta
     for k in range(2):
@@ -266,8 +267,143 @@ def compute_dnu_ddelta(lat, n, delta_max):
     return delta, nu
 
 
+def np2tps(a):
+    """Numpy array to ss_vect<double>.
+    """
+    dof = 3
+    a_tps = tslib.ss_vect_double()
+    for k in range(2*dof):
+        a_tps[k] = a[k]
+    return a_tps
+
+
+def tps2np(a_tps):
+    """ss_vect<double> to numpy array.
+    """
+    dof = 3
+    a = np.zeros(2*dof)
+    for k in range(2*dof):
+        a[k] = a_tps[k]
+    return a
+
+
+def chk_if_lost(ps):
+    """Check if particle is lost during tracking by checking for NAN result in phase-space vector.
+    """
+    dof = 3
+    lost = False
+    for k in range(2*dof):
+        if math.isnan(ps[k]):
+            lost = True
+            break
+    return lost
+
+
+def rd_track(file_name):
+    """Read tracking data from file <file_name>.
+    """
+    dof = 3
+    ps_list = []
+    with open(file_name) as f:
+        for line in f:
+            if line[0] != '#':
+                values = line.split()
+                n = int(values[0])
+                ps = map(float, values[1:2*dof+1])
+                ps_list.append(np.array(list(ps)))
+    ps_list = np.array(ps_list)
+    return ps_list
+
+
+def track(lat, model_state, n, ps):
+    """Track particle with initial conditions ps for n turns.
+    """
+
+    def prt_track(k, ps):
+        print(f' {k:4d} {ps[x_]:12.5e} {ps[px_]:12.5e} {ps[y_]:12.5e} {ps[py_]:12.5e}',
+              f'{ps[delta_]:12.5e} {ps[ct_]:12.5e}', file=outf)
+
+    outf = open('track.txt', 'w')
+    print('#   n      x            p_x          y            p_y          delta_       ct_',
+          file=outf)
+    prt_track(0, ps.cst())
+    for k in range(n):
+        lat.propagate(model_state, ps)
+        lost = chk_if_lost(ps)
+        if lost:
+            break
+        prt_track(k+1, ps.cst())
+    outf.close()
+    return lost
+
+
+def compute_cmplx_ps(ps_list):
+    dof = 3
+    n = len(ps_list)
+    ps_list_cmplx = np.zeros((n, dof), dtype = complex)
+    for j in range(n):
+        for k in range(dof):
+            if k < 2:
+                ps_list_cmplx[j][k] = complex(ps_list[j][2*k], -ps_list[j][2*k+1])
+            else:
+                ps_list_cmplx[j][k] = complex(ps_list[j][2*k+1], -ps_list[j][2*k])
+    return ps_list_cmplx
+
+
+def compute_nu(x):
+    """Compute nu from NAFF with complex turn-by-turn data: [x-i*p_x, y-i*p_y].
+
+       Documentation: https://pypi.org/project/NAFFlib
+    """
+    # Amplitudes for positive & negative nu.
+    nu, A_pos, A_neg = NAFFlib.get_tunes(x, 1)
+    [A_pos, A_neg] = [np.absolute(A_pos), np.absolute(A_neg)]
+    if A_pos < A_neg:
+        nu = 1e0 - nu
+    return nu
+  
+
+def get_nu(lat, model_state, n, A, delta, eps):
+    ps = gtpsa.ss_vect_double([A[X_], 0e0, A[Y_], 0e0, delta, 0e0])
+    nu = np.zeros(2, dtype=float)
+    lost = track(lat, model_state, n, ps)
+    ps_list = rd_track('track.txt')
+    ps_list_cmplx = compute_cmplx_ps(ps_list)
+    if not lost:
+        for k in range(2):
+            nu[k] = compute_nu(ps_list_cmplx[:, k])
+        print(f'nu = [{nu[X_]:7.5f}, {nu[Y_]:7.5f}]')
+    else:
+        print('\nget_nu: particle lost')
+    return not lost, nu[X_], nu[Y_]
+
+
+# def compute_dnu_dA(lat, model_state, n, A_max, delta):
+#     """Compute nu_x,y(A_x, A_y, delta)
+#     """
+#     A_min = 0.1e-3
+#     eps   = 0.01
+
+#   outf = open('dnu_dAx.out', 'a')
+#   fprintf(fp, '#   A_x        A_y        J_x        J_y      nu_x    nu_y\n')
+#   fprintf(fp, '#\n')
+#   fprintf(fp, '%10.3e %10.3e %10.3e %10.3e %8.6f %8.6f\n',
+# 	  0e0, 0e0, 0e0, 0e0, fract(nu_x), fract(nu_y))
+
+#   A_y = A_min
+#   for k in range(-n, n+1):
+#     A_x = k*A[X_]_max/n
+#     ps = [Ax, 0e0, Ay, 0e0]
+#     if (ok)
+#       fprintf(fp, '%10.3e %10.3e %10.3e %10.3e %8.6f %8.6f\n',
+# 	      1e3*Ax, 1e3*Ay, 1e6*Jx, 1e6*Jy, fract(nu_x), fract(nu_y))
+#     else
+#       fprintf(fp, '# %10.3e %10.3e particle lost\n', 1e3*Ax, 1e3*Ay)
+
+
 t_dir = os.path.join(os.environ['HOME'], 'git', 'dt4acc', 'lattices')
-t_file = os.path.join(t_dir, 'b2_stduser_beamports_blm_tracy_corr.lat')
+# t_file = os.path.join(t_dir, 'b2_stduser_beamports_blm_tracy_corr.lat')
+t_file = os.path.join(t_dir, 'BII_JB.lat')
 
 # Read in & parse lattice file.
 lat = accelerator_from_config(t_file)
@@ -283,12 +419,18 @@ model_state.Cavity_on = False
 if False:
     b_n_zero(lat, sextupole)
 
-# Compute Twiss parameters along lattice.
-M, A, data = compute_periodic_solution(lat, model_state)
+if not True:
+    # Compute Twiss parameters along lattice.
+    M, A, data = compute_periodic_solution(lat, model_state)
+    plt_Twiss(data, 'bessy-ii_1.png', 'BESSY-II - Linear Optics')
 
-plt_Twiss(data, 'bessy-ii_1.png', 'BESSY-II - Linear Optics')
+# delta, nu = compute_dnu_ddelta(lat, 20, 5e-2)
 
-delta, nu = compute_dnu_ddelta(lat, 10, 5e-2)
+A_max = np.array([0.1e-3, 0.1e-3])
+get_nu(lat, model_state, 511, A_max, 0e0, 0.01)
+# compute_dnu_dA(lat, 25, A_max)
+
+exit()
 
 phys_units = not True
 if phys_units:
