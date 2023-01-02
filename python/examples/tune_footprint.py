@@ -57,76 +57,6 @@ X_, Y_, Z_ = [
 [quadrupole, sextupole] = [2, 3]
 
 
-# BESSY-II Sextupole Families.
-b_3_s1 = [
-    's1mt1rl', 's1mt1rr', 's1md2rl', 's1md2rr', 's1mt2rl', 's1mt2rr',
-    's1md3rl', 's1md3rr', 's1mt3rl', 's1mt3rr', 's1md4rl', 's1md4rr',
-    's1mt4rl', 's1mt4rr', 's1md5rl', 's1md5rr', 's1mt5rl', 's1mt5rr',
-    's1md6rl', 's1md6rr', 's1mt6rl', 's1mt6rr', 's1md7rl', 's1md7rr',
-    's1mt7rl', 's1mt7rr', 's1md8rl', 's1md8rr', 's1mt8rl', 's1mt8rr',
-    's1md1rl', 's1md1rr'
-]
-
-b_3_s2 = [
-    's2m2d1rl', 's2m2d1rr', 's2m1t1rl', 's2m1t1rr', 's2m2t1rl', 's2m2t1rr',
-    's2m1d2rl', 's2m1d2rr', 's2m2d2rl', 's2m2d2rr', 's2m1t2rl', 's2m1t2rr',
-    's2m2t2rl', 's2m2t2rr', 's2m1d3rl', 's2m1d3rr', 's2m2d3rl', 's2m2d3rr',
-    's2m1t3rl', 's2m1t3rr', 's2m2t3rl', 's2m2t3rr', 's2m1d4rl', 's2m1d4rr',
-    's2m2d4rl', 's2m2d4rr', 's2m1t4rl', 's2m1t4rr', 's2m2t4rl', 's2m2t4rr',
-    's2m1d5rl', 's2m1d5rr', 's2m2d5rl', 's2m2d5rr', 's2m1t5rl', 's2m1t5rr',
-    's2m2t5rl', 's2m2t5rr', 's2m1d6rl', 's2m1d6rr', 's2m2d6rl', 's2m2d6rr',
-    's2m1t6rl', 's2m1t6rr', 's2m2t6rl', 's2m2t6rr', 's2m1d7rl', 's2m1d7rr',
-    's2m2d7rl', 's2m2d7rr', 's2m1t7rl', 's2m1t7rr', 's2m2t7rl', 's2m2t7rr',
-    's2m1d8rl', 's2m1d8rr', 's2m2d8rl', 's2m2d8rr', 's2m1t8rl', 's2m1t8rr',
-    's2m2t8rl', 's2m2t8rr', 's2m1d1rl', 's2m1d1rr'
-]
-
-b_3_s3_1 = [
-    's3m1d2rl', 's3m1d2rr', 's3m2d2rl', 's3m2d2rr', 's3m1d3rl', 's3m1d3rr',
-    's3m2d3rl', 's3m2d3rr', 's3m1d4rl', 's3m1d4rr', 's3m2d4rl', 's3m2d4rr',
-    's3m1d5rl', 's3m1d5rr', 's3m2d5rl', 's3m2d5rr', 's3m1d6rl', 's3m1d6rr',
-    's3m2d6rl', 's3m2d6rr', 's3m1d7rl', 's3m1d7rr', 's3m2d7rl', 's3m2d7rr',
-    's3m1d8rl', 's3m1d8rr', 's3m2d8rl', 's3m2d8rr'
-]
-
-b_3_s3_2 = [
-    's3m2d1rl', 's3m2d1rr', 's3m1d1rl', 's3m1d1rr'
-]
-
-b_3_s3_3 = [
-    's3m1t1rl', 's3m1t1rr', 's3m2t1rl', 's3m2t1rr', 's3m1t2rl', 's3m1t2rr',
-    's3m2t2rl', 's3m2t2rr', 's3m1t3rl', 's3m1t3rr', 's3m2t3rl', 's3m2t3rr',
-    's3m1t4rl', 's3m1t4rr', 's3m2t4rl', 's3m2t4rr', 's3m1t5rl', 's3m1t5rr',
-    's3m2t5rl', 's3m2t5rr', 's3m1t6rl', 's3m1t6rr', 's3m2t6rl', 's3m2t6rr',
-    's3m1t7rl', 's3m1t7rr', 's3m2t7rl', 's3m2t7rr', 's3m1t8rl', 's3m1t8rr',
-    's3m2t8rl', 's3m2t8rr'
-]
-
-b_3_s4_1 = [
-    's4m1d2rl', 's4m1d2rr', 's4m2d2rl', 's4m2d2rr', 's4m1d3rl', 's4m1d3rr',
-    's4m2d3rl', 's4m2d3rr', 's4m1d4rl', 's4m1d4rr', 's4m2d4rl', 's4m2d4rr',
-    's4m1d5rl', 's4m1d5rr', 's4m2d5rl', 's4m2d5rr', 's4m1d6rl', 's4m1d6rr',
-    's4m2d6rl', 's4m2d6rr', 's4m1d7rl', 's4m1d7rr', 's4m2d7rl', 's4m2d7rr',
-    's4m1d8rl', 's4m1d8rr', 's4m2d8rl', 's4m2d8rr'
-]
-
-b_3_s4_2 = [
-    's4m2d1rl', 's4m2d1rr', 's4m1d1rl', 's4m1d1rr'
-]
-
-b_3_s4_3 = [
-    's4m1t1rl', 's4m1t1rr', 's4m2t1rl', 's4m2t1rr', 's4m1t2rl', 's4m1t2rr',
-    's4m2t2rl', 's4m2t2rr', 's4m1t3rl', 's4m1t3rr', 's4m2t3rl', 's4m2t3rr',
-    's4m1t4rl', 's4m1t4rr', 's4m2t4rl', 's4m2t4rr', 's4m1t5rl', 's4m1t5rr',
-    's4m2t5rl', 's4m2t5rr', 's4m1t7rl', 's4m1t7rr', 's4m2t7rl', 's4m2t7rr',
-    's4m1t8rl', 's4m1t8rr', 's4m2t8rl', 's4m2t8rr'
-]
-
-b_3_s4_4 = [
-    's4m1t6rl', 's4m1t6rr', 's4m2t6rl', 's4m2t6rr'
-]
-
-
 def plt_Twiss(ds, file_name, title):
     # Turn interactive mode off.
     plt.ioff()
@@ -145,8 +75,32 @@ def plt_Twiss(ds, file_name, title):
     gr_2.set_xlabel('s [m]')
     gr_2.set_ylabel(r'$\eta_x$ [m]')
     gr_2.plot(ds.s, ds.dispersion.sel(phase_coordinate='x'), label=r'$\eta_x$')
+
     fig.tight_layout()
     plt.savefig(file_name)
+    print(f'File saved as: {file_name:s}')
+
+
+def plt_nu_vs_A(nu, file_name, title, plane):
+    # Turn interactive mode off.
+    plt.ioff()
+
+    fig, ax_1 = plt.subplots()
+
+    ax_1.set_title(title)
+    if plane == 0:
+        ax_1.set_xlabel(r'$A_{x,y}$ [mm]')
+        ax_1.set_ylabel(r'$\nu_x$')
+    else:
+        ax_1.set_xlabel(r'$A_{x,y}$ [mm]')
+        ax_1.set_ylabel(r'$\nu_y$')
+    ax_1.plot(1e3*nu[0][0, :], nu[0][1, :], 'b-', label=r'$\nu_x$')
+    ax_1.plot(1e3*nu[1][0, :], nu[1][1, :], 'r-', label=r'$\nu_y$')
+    ax_1.legend(loc='upper left')
+
+    fig.tight_layout()
+    plt.savefig(file_name)
+    print(f'File saved as: {file_name:s}')
 
 
 def compute_eng_units(f0, f_RF, alpha_c, delta, nu):
@@ -168,16 +122,16 @@ def plt_nu_vs_delta(delta, nu, file_name, title, phys_units):
     ax_1.set_title(title)
     if phys_units:
         ax_1.set_xlabel(r'$\delta$ [%]')
-        ax_1.set_ylabel(r'$\nu_x$ [m]')
+        ax_1.set_ylabel(r'$\nu_x$')
         ax_1.plot(1e2*delta, nu[:, X_], 'b-', label=r'$\nu_x$')
     else:
         ax_1.set_xlabel(r'$\Delta \rm f_{RF}$ [kHz]')
         ax_1.set_ylabel(r'$\Delta \rm f_{\beta,x}$ [kHz]')
         ax_1.plot(1e-3*delta, 1e-3*nu[:, X_], 'b-', label=r'$\nu_x$')
-    ax_1.legend(loc='upper left')
+    ax_1.legend(loc='upper right')
     ax_2 = ax_1.twinx()
     if phys_units:
-        ax_2.set_ylabel(r'$\nu_y$ [m]')
+        ax_2.set_ylabel(r'$\nu_y$')
         ax_2.plot(1e2*delta, nu[:, Y_], 'r-', label=r'$\nu_y$')
     else:
         ax_2.set_ylabel(r'$\Delta \rm f_{\beta,x}$ [kHz]')
@@ -185,6 +139,7 @@ def plt_nu_vs_delta(delta, nu, file_name, title, phys_units):
     ax_2.legend(loc='upper right')
     fig.tight_layout()
     plt.savefig(file_name)
+    print(f'File saved as: {file_name:s}')
 
 
 def get_b_n_elem(lat, fam_name, kid_num, n):
@@ -252,10 +207,11 @@ def prt_Twiss(str, Twiss):
     print(f'  beta   = [{beta[X_]:5.3f}, {beta[Y_]:5.3f}]')
 
 
-def compute_dnu_ddelta(lat, n, delta_max):
+def compute_nu_delta(lat, n, delta_max):
     n_dof = 2
     delta = np.zeros(2*n+1, dtype='float')
     nu = np.zeros((2*n+1, 2), dtype='float')
+
     for k in range(-n, n+1):
         delta[k+n] = k*delta_max/n
         map = compute_map(lat, model_state, delta=delta[k+n], desc=desc)
@@ -264,6 +220,7 @@ def compute_dnu_ddelta(lat, n, delta_max):
             nu[k+n] = compute_nu_symp(n_dof, M)
         else:
             nu[k+n] = np.array([np.nan, np.nan])
+
     return delta, nu
 
 
@@ -292,10 +249,12 @@ def chk_if_lost(ps):
     """
     dof = 3
     lost = False
+
     for k in range(2*dof):
         if math.isnan(ps[k]):
             lost = True
             break
+
     return lost
 
 
@@ -304,14 +263,16 @@ def rd_track(file_name):
     """
     dof = 3
     ps_list = []
+
     with open(file_name) as f:
         for line in f:
             if line[0] != '#':
                 values = line.split()
                 n = int(values[0])
-                ps = map(float, values[1:2*dof+1])
-                ps_list.append(np.array(list(ps)))
+                ps_k = map(float, values[1:2*dof+1])
+                ps_list.append(np.array(list(ps_k)))
     ps_list = np.array(ps_list)
+
     return ps_list
 
 
@@ -334,6 +295,7 @@ def track(lat, model_state, n, ps):
             break
         prt_track(k+1, ps.cst())
     outf.close()
+
     return lost
 
 
@@ -341,12 +303,14 @@ def compute_cmplx_ps(ps_list):
     dof = 3
     n = len(ps_list)
     ps_list_cmplx = np.zeros((n, dof), dtype = complex)
+
     for j in range(n):
         for k in range(dof):
             if k < 2:
                 ps_list_cmplx[j][k] = complex(ps_list[j][2*k], -ps_list[j][2*k+1])
             else:
                 ps_list_cmplx[j][k] = complex(ps_list[j][2*k+1], -ps_list[j][2*k])
+
     return ps_list_cmplx
 
 
@@ -360,45 +324,53 @@ def compute_nu(x):
     [A_pos, A_neg] = [np.absolute(A_pos), np.absolute(A_neg)]
     if A_pos < A_neg:
         nu = 1e0 - nu
+
     return nu
   
 
 def get_nu(lat, model_state, n, A, delta, eps):
     ps = gtpsa.ss_vect_double([A[X_], 0e0, A[Y_], 0e0, delta, 0e0])
     nu = np.zeros(2, dtype=float)
+
     lost = track(lat, model_state, n, ps)
     ps_list = rd_track('track.txt')
     ps_list_cmplx = compute_cmplx_ps(ps_list)
     if not lost:
         for k in range(2):
             nu[k] = compute_nu(ps_list_cmplx[:, k])
-        print(f'nu = [{nu[X_]:7.5f}, {nu[Y_]:7.5f}]')
-    else:
-        print('\nget_nu: particle lost')
-    return not lost, nu[X_], nu[Y_]
+
+    return lost, nu
 
 
-# def compute_dnu_dA(lat, model_state, n, A_max, delta):
-#     """Compute nu_x,y(A_x, A_y, delta)
-#     """
-#     A_min = 0.1e-3
-#     eps   = 0.01
+def compute_nu_A(lat, model_state, n, A_max, delta, plane):
+    """Compute nu_x,y(A_x, A_y, delta).
+       plane:
+         horizontal - 0
+         vertical   - 1
+    """
+    A       = np.zeros(2, dtype='float')
+    nu_list = []
 
-#   outf = open('dnu_dAx.out', 'a')
-#   fprintf(fp, '#   A_x        A_y        J_x        J_y      nu_x    nu_y\n')
-#   fprintf(fp, '#\n')
-#   fprintf(fp, '%10.3e %10.3e %10.3e %10.3e %8.6f %8.6f\n',
-# 	  0e0, 0e0, 0e0, 0e0, fract(nu_x), fract(nu_y))
+    A_min = 0.01e-3
+    eps   = 0.01
 
-#   A_y = A_min
-#   for k in range(-n, n+1):
-#     A_x = k*A[X_]_max/n
-#     ps = [Ax, 0e0, Ay, 0e0]
-#     if (ok)
-#       fprintf(fp, '%10.3e %10.3e %10.3e %10.3e %8.6f %8.6f\n',
-# 	      1e3*Ax, 1e3*Ay, 1e6*Jx, 1e6*Jy, fract(nu_x), fract(nu_y))
-#     else
-#       fprintf(fp, '# %10.3e %10.3e particle lost\n', 1e3*Ax, 1e3*Ay)
+    # print('\n#     A_x        A_y       nu_x     nu_y')
+    A[(plane+1) % 2] = A_min
+    for k in range(-n, n+1):
+        if k != 0:
+            A[plane] = k*A_max[plane]/n
+        else:
+            A[plane] = A_min
+        lost, nu = get_nu(lat, model_state, n, A, delta, eps)
+        if lost:
+            nu[X_], ny[Y_] = [math.nan, math.nan]
+            print('#  {:10.3e} {:10.3e}: particle lost', A[X_], A[Y_])
+        nu_k = np.array([A[X_], A[Y_], nu[X_], nu[Y_]])
+        nu_list.append(nu_k)
+        # print('  {:10.3e} {:10.3e} {:8.5f} {:8.5f}'.format(A[X_], A[Y_], nu[X_], nu[Y_]))
+    nu_list = np.array(nu_list)
+
+    return nu_list
 
 
 t_dir = os.path.join(os.environ['HOME'], 'git', 'dt4acc', 'lattices')
@@ -424,27 +396,34 @@ if not True:
     M, A, data = compute_periodic_solution(lat, model_state)
     plt_Twiss(data, 'bessy-ii_1.png', 'BESSY-II - Linear Optics')
 
-# delta, nu = compute_dnu_ddelta(lat, 20, 5e-2)
+if True:
+    n_points = 25
+    A_max = np.array([15e-3, 10e-3])
+    nu = []
+    nu_A_x = compute_nu_A(lat, model_state, n_points, A_max, 0e0, 0)
+    nu_A_y = compute_nu_A(lat, model_state, n_points, A_max, 0e0, 1)
+    nu_x_A_xy = np.array([nu_A_x[:, 0], nu_A_x[:, 2]]), np.array([nu_A_y[:, 1], nu_A_y[:, 2]])
+    nu_y_A_xy = np.array([nu_A_x[:, 0], nu_A_x[:, 3]]), np.array([nu_A_y[:, 1], nu_A_y[:, 3]])
+    plt_nu_vs_A(nu_x_A_xy, 'bessy-ii_2.png', 'BESSY-II - $\\nu_x ( A_{x,y} )$', 0)
+    plt_nu_vs_A(nu_y_A_xy, 'bessy-ii_3.png', 'BESSY-II - $\\nu_y ( A_{x,y} )$', 1)
 
-A_max = np.array([0.1e-3, 0.1e-3])
-get_nu(lat, model_state, 511, A_max, 0e0, 0.01)
-# compute_dnu_dA(lat, 25, A_max)
+if True:
+    delta, nu = compute_nu_delta(lat, 20, 5e-2)
 
-exit()
+    phys_units = not True
+    if phys_units:
+        plt_nu_vs_delta(
+            delta, nu, 'bessy-ii_2.png', 'BESSY-II - $\\nu_{x,y} ( \delta )$', True)
+    else:
+        circ = 240.0
+        f_RF = 499.6366302e6
+        alpha_c = 7.038e-4
+        f0 = c0/circ
+        df_RF, f_beta = compute_eng_units(f0, f_RF, alpha_c, delta, nu)
 
-phys_units = not True
-if phys_units:
-    plt_nu_vs_delta(
-        delta, nu, 'bessy-ii_2.png', 'BESSY-II - $\\nu_{x,y} ( \delta )$', True)
-else:
-    circ = 240.0
-    f_RF = 499.6366302e6
-    alpha_c = 7.038e-4
-    f0 = c0/circ
-    df_RF, f_beta = compute_eng_units(f0, f_RF, alpha_c, delta, nu)
+        plt_nu_vs_delta(
+            df_RF, f_beta, 'bessy-ii_4.png', 'BESSY-II - $\\nu_{x,y} ( \\Delta \\rm f_{RF} )$',
+            False)
 
-    plt_nu_vs_delta(
-        df_RF, f_beta, 'bessy-ii_2.png', 'BESSY-II - $\\nu_{x,y} ( \delta )$',
-        not True)
 if not False:
     plt.show()
