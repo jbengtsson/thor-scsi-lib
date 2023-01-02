@@ -39,6 +39,15 @@ config/
 *.Po
 *.*~
 
+# ???
+.idea/
+
+# Local Python installation.
+lib/
+
+# Clion or Intellij ?
+cmake-build-debug/
+
 libtool
 m4/
 .deps
