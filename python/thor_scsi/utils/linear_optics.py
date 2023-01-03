@@ -167,7 +167,7 @@ def acos2_tpsa(sin, cos):
 
 def compute_nu_xi(desc, tpsa_order, M):
     """Compute tune & linear chromaticity from trace of Poincaré map:
-          nu + xi * delta = arccos( Trace{M} / 2 ) / ( 2 * pi )
+          nu + xi * delta = arccos( Trace{M} / 2 ) / ( 2 * pi ).
     """
     nu, xi = [np.zeros(2), np.zeros(2)]
     stable = check_if_stable_2D(M.jacobian())
@@ -175,7 +175,7 @@ def compute_nu_xi(desc, tpsa_order, M):
         for k in range(2):
             tr = gtpsa.tpsa(desc, tpsa_order)
             # m_11 + delta * m_16.
-            tr.set(ind_0(), 1e0, M[2*k].get(ind_1(2*k)))
+            tr.set(ind_0(), 0e0, M[2*k].get(ind_1(2*k)))
             tr.set(ind_1(delta_), 1e0, M[2*k].get(ind_2(2*k, delta_)))
             # m_22 + delta * m_26.
             tr.set(ind_0(), 1e0, M[2*k+1].get(ind_1(2*k+1)))
