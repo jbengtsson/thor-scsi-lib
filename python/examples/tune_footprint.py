@@ -81,7 +81,7 @@ def plt_Twiss(ds, file_name, title):
     print(f'File saved as: {file_name:s}')
 
 
-def plt_nu_vs_A(nu, file_name, title, plane):
+def plt_nu_A(nu, file_name, title, plane):
     # Turn interactive mode off.
     plt.ioff()
 
@@ -113,7 +113,7 @@ def compute_eng_units(f0, f_RF, alpha_c, delta, nu):
     return df_RF, f_beta
 
 
-def plt_nu_vs_delta(delta, nu, file_name, title, phys_units):
+def plt_nu_delta(delta, nu, file_name, title, phys_units):
     # Turn interactive mode off.
     plt.ioff()
 
@@ -210,14 +210,19 @@ def prt_Twiss(str, Twiss):
 def compute_nu_delta(lat, n, delta_max):
     n_dof = 2
     delta = np.zeros(2*n+1, dtype='float')
-    nu = np.zeros((2*n+1, 2), dtype='float')
+    nu    = np.zeros((2*n+1, 2), dtype='float')
+    prt   = not False
 
+    if prt:
+        print('\n#    delta      nu_x     nu_y')
     for k in range(-n, n+1):
         delta[k+n] = k*delta_max/n
         map = compute_map(lat, model_state, delta=delta[k+n], desc=desc)
         M = np.array(map.jacobian())
         if check_if_stable_2D(M):
             nu[k+n] = compute_nu_symp(n_dof, M)
+        if prt:
+            print('  {:10.3e} {:8.5f} {:8.5f}'.format(delta[k+n], nu[k+n, X_], nu[k+n, Y_]))
         else:
             nu[k+n] = np.array([np.nan, np.nan])
 
@@ -276,7 +281,7 @@ def rd_track(file_name):
     return ps_list
 
 
-def track(lat, model_state, n, ps):
+def track(lat, model_state, n_turn, ps):
     """Track particle with initial conditions ps for n turns.
     """
 
@@ -284,19 +289,27 @@ def track(lat, model_state, n, ps):
         print(f' {k:4d} {ps[x_]:12.5e} {ps[px_]:12.5e} {ps[y_]:12.5e} {ps[py_]:12.5e}',
               f'{ps[delta_]:12.5e} {ps[ct_]:12.5e}', file=outf)
 
-    outf = open('track.txt', 'w')
-    print('#   n      x            p_x          y            p_y          delta_       ct_',
-          file=outf)
-    prt_track(0, ps.cst())
-    for k in range(n):
+    prt = False
+
+    if prt:
+        outf = open('track.out', 'w')
+        print('#   n      x            p_x          y            p_y          delta_       ct_',
+              file=outf)
+        prt_track(0, ps.cst())
+    ps_list = []
+    ps_list.append(ps)
+    for k in range(n_turn):
         lat.propagate(model_state, ps)
         lost = chk_if_lost(ps)
         if lost:
             break
-        prt_track(k+1, ps.cst())
-    outf.close()
+        ps_list.append(ps.cst())
+        if prt:
+            prt_track(k+1, ps.cst())
+    if prt:
+        outf.close()
 
-    return lost
+    return lost, ps_list
 
 
 def compute_cmplx_ps(ps_list):
@@ -328,12 +341,12 @@ def compute_nu(x):
     return nu
   
 
-def get_nu(lat, model_state, n, A, delta, eps):
+def get_nu(lat, model_state, n_turn, A, delta, eps):
     ps = gtpsa.ss_vect_double([A[X_], 0e0, A[Y_], 0e0, delta, 0e0])
     nu = np.zeros(2, dtype=float)
 
-    lost = track(lat, model_state, n, ps)
-    ps_list = rd_track('track.txt')
+    lost, ps_list = track(lat, model_state, n_turn, ps)
+    # ps_list = rd_track('track.out')
     ps_list_cmplx = compute_cmplx_ps(ps_list)
     if not lost:
         for k in range(2):
@@ -342,7 +355,7 @@ def get_nu(lat, model_state, n, A, delta, eps):
     return lost, nu
 
 
-def compute_nu_A(lat, model_state, n, A_max, delta, plane):
+def compute_nu_A(lat, model_state, n_points, A_max, delta, plane):
     """Compute nu_x,y(A_x, A_y, delta).
        plane:
          horizontal - 0
@@ -351,23 +364,28 @@ def compute_nu_A(lat, model_state, n, A_max, delta, plane):
     A       = np.zeros(2, dtype='float')
     nu_list = []
 
-    A_min = 0.01e-3
-    eps   = 0.01
+    prt = not False
 
-    # print('\n#     A_x        A_y       nu_x     nu_y')
+    A_min = 0.01e-3
+    eps    = 0.01
+    n_turn = 511 # n_turn + initial conditions = 512 = 2^9 for FFT.
+
+    if prt:
+        print('\n#     A_x        A_y       nu_x     nu_y')
     A[(plane+1) % 2] = A_min
-    for k in range(-n, n+1):
+    for k in range(-n_points, n_points+1):
         if k != 0:
-            A[plane] = k*A_max[plane]/n
+            A[plane] = k*A_max[plane]/n_points
         else:
             A[plane] = A_min
-        lost, nu = get_nu(lat, model_state, n, A, delta, eps)
+        lost, nu = get_nu(lat, model_state, n_turn, A, delta, eps)
         if lost:
             nu[X_], ny[Y_] = [math.nan, math.nan]
             print('#  {:10.3e} {:10.3e}: particle lost', A[X_], A[Y_])
         nu_k = np.array([A[X_], A[Y_], nu[X_], nu[Y_]])
         nu_list.append(nu_k)
-        # print('  {:10.3e} {:10.3e} {:8.5f} {:8.5f}'.format(A[X_], A[Y_], nu[X_], nu[Y_]))
+        if prt:
+            print('  {:10.3e} {:10.3e} {:8.5f} {:8.5f}'.format(A[X_], A[Y_], nu[X_], nu[Y_]))
     nu_list = np.array(nu_list)
 
     return nu_list
@@ -396,23 +414,24 @@ if not True:
     M, A, data = compute_periodic_solution(lat, model_state)
     plt_Twiss(data, 'bessy-ii_1.png', 'BESSY-II - Linear Optics')
 
+n_points = 15
+
 if True:
-    n_points = 25
     A_max = np.array([15e-3, 10e-3])
     nu = []
     nu_A_x = compute_nu_A(lat, model_state, n_points, A_max, 0e0, 0)
     nu_A_y = compute_nu_A(lat, model_state, n_points, A_max, 0e0, 1)
     nu_x_A_xy = np.array([nu_A_x[:, 0], nu_A_x[:, 2]]), np.array([nu_A_y[:, 1], nu_A_y[:, 2]])
     nu_y_A_xy = np.array([nu_A_x[:, 0], nu_A_x[:, 3]]), np.array([nu_A_y[:, 1], nu_A_y[:, 3]])
-    plt_nu_vs_A(nu_x_A_xy, 'bessy-ii_2.png', 'BESSY-II - $\\nu_x ( A_{x,y} )$', 0)
-    plt_nu_vs_A(nu_y_A_xy, 'bessy-ii_3.png', 'BESSY-II - $\\nu_y ( A_{x,y} )$', 1)
+    plt_nu_A(nu_x_A_xy, 'bessy-ii_2.png', 'BESSY-II - $\\nu_x ( A_{x,y} )$', 0)
+    plt_nu_A(nu_y_A_xy, 'bessy-ii_3.png', 'BESSY-II - $\\nu_y ( A_{x,y} )$', 1)
 
 if True:
-    delta, nu = compute_nu_delta(lat, 20, 5e-2)
+    delta, nu = compute_nu_delta(lat, n_points, 5e-2)
 
     phys_units = not True
     if phys_units:
-        plt_nu_vs_delta(
+        plt_nu_delta(
             delta, nu, 'bessy-ii_2.png', 'BESSY-II - $\\nu_{x,y} ( \delta )$', True)
     else:
         circ = 240.0
@@ -421,7 +440,7 @@ if True:
         f0 = c0/circ
         df_RF, f_beta = compute_eng_units(f0, f_RF, alpha_c, delta, nu)
 
-        plt_nu_vs_delta(
+        plt_nu_delta(
             df_RF, f_beta, 'bessy-ii_4.png', 'BESSY-II - $\\nu_{x,y} ( \\Delta \\rm f_{RF} )$',
             False)
 
