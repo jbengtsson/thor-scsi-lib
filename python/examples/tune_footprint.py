@@ -1,7 +1,7 @@
 '''Use Case:
      Sextupole strength calibration.
 '''
-
+import enum
 import logging
 # Levels: DEBUG, INFO, WARNING, ERROR, and CRITICAL.
 logging.basicConfig(level='INFO')
@@ -207,30 +207,36 @@ def prt_Twiss(str, Twiss):
     print(f'  beta   = [{beta[X_]:5.3f}, {beta[Y_]:5.3f}]')
 
 
-def compute_nu_delta(lat, n, delta_max):
+def compute_nu_delta(lat, deltas_to_probe):
+    """
+    Args:
+        lat: lattice
+        deltas_to_probe: off momenta deltas to check
+    """
     n_dof = 2
-    delta = np.zeros(2*n+1, dtype='float')
-    nu    = np.zeros((2*n+1, 2), dtype='float')
-    prt   = not False
+    nu = np.zeros(deltas_to_probe.shape + [2], dtype=float)
+    prt   = not not not False
 
     if prt:
         print('\n#    delta      nu_x     nu_y')
-    for k in range(-n, n+1):
-        delta[k+n] = k*delta_max/n
+
+    for k, delta in enumerate(deltas_to_probe):
         map = compute_map(lat, model_state, delta=delta[k+n], desc=desc)
         M = np.array(map.jacobian())
         if check_if_stable_2D(M):
-            nu[k+n] = compute_nu_symp(n_dof, M)
+            nu[k] = compute_nu_symp(n_dof, M)
         if prt:
-            print('  {:10.3e} {:8.5f} {:8.5f}'.format(delta[k+n], nu[k+n, X_], nu[k+n, Y_]))
+            print('  {:10.3e} {:8.5f} {:8.5f}'.format(delta[k+n], nu[k, X_], nu[k, Y_]))
         else:
-            nu[k+n] = np.array([np.nan, np.nan])
+            nu[k] = np.array([np.nan, np.nan])
 
     return delta, nu
 
 
 def np2tps(a):
     """Numpy array to ss_vect<double>.
+    Todo:
+        usse / implement the funcionality in gtspa ss_vbect wrapper
     """
     dof = 3
     a_tps = tslib.ss_vect_double()
@@ -251,6 +257,10 @@ def tps2np(a_tps):
 
 def chk_if_lost(ps):
     """Check if particle is lost during tracking by checking for NAN result in phase-space vector.
+
+    Todo:
+       rename to check_if_lost
+       Identifz used type and see if it uses cst of a gtpsa ss_vect
     """
     dof = 3
     lost = False
@@ -265,6 +275,9 @@ def chk_if_lost(ps):
 
 def rd_track(file_name):
     """Read tracking data from file <file_name>.
+
+    todo:
+        see if pandas.read_csv does the job?
     """
     dof = 3
     ps_list = []
@@ -283,6 +296,14 @@ def rd_track(file_name):
 
 def track(lat, model_state, n_turn, ps):
     """Track particle with initial conditions ps for n turns.
+
+    Returns: (lost, track)
+
+    Todo:
+        check output of twiss e.g.
+        return an xarraz object for the result?
+
+
     """
 
     def prt_track(k, ps):
@@ -320,9 +341,9 @@ def compute_cmplx_ps(ps_list):
     for j in range(n):
         for k in range(dof):
             if k < 2:
-                ps_list_cmplx[j][k] = complex(ps_list[j][2*k], -ps_list[j][2*k+1])
+                ps_list_cmplx[j, k] = complex(ps_list[j, 2*k], -ps_list[j,2*k+1])
             else:
-                ps_list_cmplx[j][k] = complex(ps_list[j][2*k+1], -ps_list[j][2*k])
+                ps_list_cmplx[j, k] = complex(ps_list[j, 2*k+1], -ps_list[j, 2*k])
 
     return ps_list_cmplx
 
@@ -334,7 +355,7 @@ def compute_nu(x):
     """
     # Amplitudes for positive & negative nu.
     nu, A_pos, A_neg = NAFFlib.get_tunes(x, 1)
-    [A_pos, A_neg] = [np.absolute(A_pos), np.absolute(A_neg)]
+    A_pos, A_neg = np.absolute([A_pos, A_neg])
     if A_pos < A_neg:
         nu = 1e0 - nu
 
@@ -342,6 +363,9 @@ def compute_nu(x):
   
 
 def get_nu(lat, model_state, n_turn, A, delta, eps):
+    """
+
+    """
     ps = gtpsa.ss_vect_double([A[X_], 0e0, A[Y_], 0e0, delta, 0e0])
     nu = np.zeros(2, dtype=float)
 
@@ -355,12 +379,40 @@ def get_nu(lat, model_state, n_turn, A, delta, eps):
     return lost, nu
 
 
-def compute_nu_A(lat, model_state, n_points, A_max, delta, plane):
+def validate_amplitude_above_minimum(amplitudes: np.ndarray,  minimum_amplitude: float=1e-5, strict: bool=False) -> np.ndarray:
+    """Check that amplitudes are not zero
+
+    If not in strict mode, the ones whose absolute value is below the minimum amplitude,
+    it is replaced by miminum value
+    """
+    chk = np.less(np.absolute(amplitudes), minimum_amplitude)
+    if np.sum(chk):
+        txt = f"compute amplitude dependent tune shift number of values below {minimum_amplitude}:{chk}"
+        logger.info(txt)
+        logger.debug(f"amplitude values changed {minimum_amplitude[chk]}")
+        if strict:
+            raise AssertionError(txt)
+        amplitudes[chk] = minimum_amplitude
+    return amplitudes
+
+def compute_nu_A(lat, model_state, amplitudes: np.ndarray, delta: float, plane,
+                 minimum_amplitude: float=0.01e-3, strict: bool=False):
     """Compute nu_x,y(A_x, A_y, delta).
+
+    Compute amplitude dependent tune shift?
        plane:
          horizontal - 0
          vertical   - 1
+
+       Todo:
+           use a sequence of amplitudes instead of A_max and A
+           return an xarray object?
+
+           Review how to handle A_min
     """
+
+    # make to
+    validate_amplitude_above_minimum(amplitudes, minimum_amplitude=minimum_amplitude, strict=strict)
     A       = np.zeros(2, dtype='float')
     nu_list = []
 
@@ -387,6 +439,13 @@ def compute_nu_A(lat, model_state, n_points, A_max, delta, plane):
         if prt:
             print('  {:10.3e} {:10.3e} {:8.5f} {:8.5f}'.format(A[X_], A[Y_], nu[X_], nu[Y_]))
     nu_list = np.array(nu_list)
+
+    # res = xr.DataArray(
+    #    data = []
+    #    dims = ["amplitude", "plane"],
+    #    coords=[amplitudes, 'x', 'y']
+    #
+    #)
 
     return nu_list
 
@@ -419,15 +478,18 @@ n_points = 15
 if True:
     A_max = np.array([15e-3, 10e-3])
     nu = []
-    nu_A_x = compute_nu_A(lat, model_state, n_points, A_max, 0e0, 0)
-    nu_A_y = compute_nu_A(lat, model_state, n_points, A_max, 0e0, 1)
+    amplitudes_x = np.linspace(-A_max[0], A_max[0], n_points)
+    amplitudes_y = np.linspace(-A_max[1], A_max[1], n_points)
+    nu_A_x = compute_nu_A(lat, model_state, amplitudes_x, 0e0, 0)
+    nu_A_y = compute_nu_A(lat, model_state, amplitudes_y, 0e0, 1)
     nu_x_A_xy = np.array([nu_A_x[:, 0], nu_A_x[:, 2]]), np.array([nu_A_y[:, 1], nu_A_y[:, 2]])
     nu_y_A_xy = np.array([nu_A_x[:, 0], nu_A_x[:, 3]]), np.array([nu_A_y[:, 1], nu_A_y[:, 3]])
     plt_nu_A(nu_x_A_xy, 'bessy-ii_2.png', 'BESSY-II - $\\nu_x ( A_{x,y} )$', 0)
     plt_nu_A(nu_y_A_xy, 'bessy-ii_3.png', 'BESSY-II - $\\nu_y ( A_{x,y} )$', 1)
 
 if True:
-    delta, nu = compute_nu_delta(lat, n_points, 5e-2)
+    delta_to_probe = np.linspace(-delta, delta, n_points)
+    delta, nu = compute_nu_delta(lat, delta_to_probe, 5e-2)
 
     phys_units = not True
     if phys_units:
