@@ -537,7 +537,7 @@ if True:
     if phys_units:
         plt_nu_delta(
             delta_to_probe, nu,
-            'bessy-ii_2.png', 'BESSY-III - $\\nu_{x,y} ( \delta )$', True)
+            'bessy-ii_4.png', 'BESSY-III - $\\nu_{x,y} ( \delta )$', True)
     else:
         # BESSY II.
         circ = 240.0
