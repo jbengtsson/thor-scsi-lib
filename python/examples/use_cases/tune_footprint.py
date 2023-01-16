@@ -1,5 +1,5 @@
 '''Use Case:
-     Sextupole strength calibration.
+     On & off-momentum tune footpring.
 '''
 import enum
 import logging
