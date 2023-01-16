@@ -106,10 +106,11 @@ def plt_nu_A(nu, file_name, title, plane):
 def compute_eng_units(f0, f_RF, alpha_c, delta, nu):
     '''Convert from physics to engineering units.
     '''
-    f_beta = np.zeros((len(delta), 2), dtype='float')
-    df_RF = -alpha_c*f_RF*delta
-    for k in range(2):
-        f_beta[:, k] = nu[:, k]*f0
+    # delta = np.asarray(delta)
+    # f_beta = np.zeros((len(delta), 2), dtype='float')
+    f_beta = np.zeros((2,), dtype='float')
+    df_RF = -alpha_c * f_RF * delta
+    f_beta = nu * np.array(f0)[np.newaxis]
     return df_RF, f_beta
 
 
@@ -207,30 +208,33 @@ def prt_Twiss(str, Twiss):
     print(f'  beta   = [{beta[X_]:5.3f}, {beta[Y_]:5.3f}]')
 
 
-def compute_nu_delta(lat, deltas_to_probe):
+def compute_nu_delta(lat, deltas_to_probe) -> float:
     """
     Args:
         lat: lattice
         deltas_to_probe: off momenta deltas to check
+
+    Returns:
+       :math:`nu` s correspoinding to the deltas to probe
     """
     n_dof = 2
-    nu = np.zeros(deltas_to_probe.shape + [2], dtype=float)
-    prt   = not not not False
+    nu = np.zeros(deltas_to_probe.shape + (2,), dtype=float)
+    prt   = not False
 
     if prt:
         print('\n#    delta      nu_x     nu_y')
 
     for k, delta in enumerate(deltas_to_probe):
-        map = compute_map(lat, model_state, delta=delta[k+n], desc=desc)
+        map = compute_map(lat, model_state, delta=delta, desc=desc)
         M = np.array(map.jacobian())
         if check_if_stable_2D(M):
             nu[k] = compute_nu_symp(n_dof, M)
         if prt:
-            print('  {:10.3e} {:8.5f} {:8.5f}'.format(delta[k+n], nu[k, X_], nu[k, Y_]))
+            print('  {:10.3e} {:8.5f} {:8.5f}'.format(delta, nu[k, X_], nu[k, Y_]))
         else:
             nu[k] = np.array([np.nan, np.nan])
 
-    return delta, nu
+    return nu
 
 
 def np2tps(a):
@@ -334,6 +338,7 @@ def track(lat, model_state, n_turn, ps):
 
 
 def compute_cmplx_ps(ps_list):
+    ps_list = np.asarray(ps_list)
     dof = 3
     n = len(ps_list)
     ps_list_cmplx = np.zeros((n, dof), dtype = complex)
@@ -360,7 +365,7 @@ def compute_nu(x):
         nu = 1e0 - nu
 
     return nu
-  
+
 
 def get_nu(lat, model_state, n_turn, A, delta, eps):
     """
@@ -389,7 +394,7 @@ def validate_amplitude_above_minimum(amplitudes: np.ndarray,  minimum_amplitude:
     if np.sum(chk):
         txt = f"compute amplitude dependent tune shift number of values below {minimum_amplitude}:{chk}"
         logger.info(txt)
-        logger.debug(f"amplitude values changed {minimum_amplitude[chk]}")
+        logger.debug(f"amplitude values changed {amplitudes[chk]}")
         if strict:
             raise AssertionError(txt)
         amplitudes[chk] = minimum_amplitude
@@ -451,8 +456,9 @@ def compute_nu_A(lat, model_state, amplitudes: np.ndarray, delta: float, plane,
 
 
 t_dir = os.path.join(os.environ['HOME'], 'git', 'dt4acc', 'lattices')
-# t_file = os.path.join(t_dir, 'b2_stduser_beamports_blm_tracy_corr.lat')
-t_file = os.path.join(t_dir, 'BII_JB.lat')
+t_dir = os.path.join(os.environ['HOME'], 'Devel', 'gitlab', 'dt4cc', 'lattices',)
+t_file = os.path.join(t_dir, 'b2_stduser_beamports_blm_tracy_corr.lat')
+# t_file = os.path.join(t_dir, 'BII_JB.lat')
 
 # Read in & parse lattice file.
 lat = accelerator_from_config(t_file)
@@ -475,7 +481,7 @@ if not True:
 
 n_points = 15
 
-if True:
+if not not not True:
     A_max = np.array([15e-3, 10e-3])
     nu = []
     amplitudes_x = np.linspace(-A_max[0], A_max[0], n_points)
@@ -488,8 +494,9 @@ if True:
     plt_nu_A(nu_y_A_xy, 'bessy-ii_3.png', 'BESSY-II - $\\nu_y ( A_{x,y} )$', 1)
 
 if True:
+    delta = 5e-2
     delta_to_probe = np.linspace(-delta, delta, n_points)
-    delta, nu = compute_nu_delta(lat, delta_to_probe, 5e-2)
+    nu = compute_nu_delta(lat, delta_to_probe)
 
     phys_units = not True
     if phys_units:
@@ -500,7 +507,7 @@ if True:
         f_RF = 499.6366302e6
         alpha_c = 7.038e-4
         f0 = c0/circ
-        df_RF, f_beta = compute_eng_units(f0, f_RF, alpha_c, delta, nu)
+        df_RF, f_beta = compute_eng_units(f0, f_RF, alpha_c, delta_to_probe, nu)
 
         plt_nu_delta(
             df_RF, f_beta, 'bessy-ii_4.png', 'BESSY-II - $\\nu_{x,y} ( \\Delta \\rm f_{RF} )$',
