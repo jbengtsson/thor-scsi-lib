@@ -7,7 +7,7 @@
 import logging
 import os
 import sys
-from setuptools import setup
+from setuptools import setup, find_packages
 from distutils.file_util import copy_file
 
 from pybind11.setup_helpers import Pybind11Extension, build_ext
@@ -45,9 +45,9 @@ except KeyError as ke:
     logger.info(f"no environment variable thor_scsi_PREFIX: ke")
 
 # a hack for mac
-boost_prefix="/usr/include"
+boost_prefix = "/usr/include"
 if sys.platform == "darwin":
-    boost_prefix=os.path.join("/", "usr", "local", "include")
+    boost_prefix = os.path.join("/", "usr", "local", "include")
 
 from pybind11.setup_helpers import ParallelCompile
 
@@ -75,9 +75,9 @@ ext_modules = [
     Pybind11Extension(
         "pyflame",
         ["src/flame.cc"],
-        include_dirs= include_dirs,
+        include_dirs=include_dirs,
         libraries=["flame", "flame_core"],
-        library_dirs=library_dirs
+        library_dirs=library_dirs,
     ),
     Pybind11Extension(
         "lib",
@@ -91,19 +91,30 @@ ext_modules = [
             ]
         ),
         # Required for MacBook llvm C++ compiler.
-        define_macros=[("GTPSA_DEFINE_BOOL",1)],
+        define_macros=[("GTPSA_DEFINE_BOOL", 1)],
         include_dirs=[d["gsl_include"]] + include_dirs,
         # define_macros=[("_GLIBCXX_DEBUG", 1), ("_GLIBCXX_DEBUG_PEDANTIC", 1)],
-        library_dirs=(library_dirs
+        library_dirs=(
+            library_dirs
             # ["../../engine/lib"]
             + [d["gsl_lib_dir"]]
         ),
-        libraries=["thor_scsi_gtpsa", "thor_scsi_core_gtpsa", "gtpsa", "tpsa_lin", "flame", "flame_core"]
+        libraries=[
+            "thor_scsi_gtpsa",
+            "thor_scsi_core_gtpsa",
+            "gtpsa",
+            "tpsa_lin",
+            "flame",
+            "flame_core",
+        ]
         + d["gsl_libs"],
     ),
 ]
 
 
 setup(
-    cmdclass={"build_ext": build_ext}, ext_package="thor_scsi", ext_modules=ext_modules
+    cmdclass={"build_ext": build_ext},
+    ext_package="thor_scsi",
+    ext_modules=ext_modules,
+    packages=find_packages(),
 )
