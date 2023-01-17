@@ -15,6 +15,7 @@ from pybind11.setup_helpers import Pybind11Extension, build_ext
 import gsl_conf
 import sys
 
+logger = logging.getLogger("thor-scsi-build")
 # Command line:
 #   \rm -rf build
 #   CC=g++-11 python3 setup.py <build|build_ext|install|--help>
@@ -31,10 +32,17 @@ d = gsl_conf.gsl_config()
 
 # How to define where the thor scsi library is located?
 # here there are some examples
-prefix = os.path.abspath(os.path.join(os.path.dirname(__name__), os.pardir, os.pardir))
-prefix = os.path.abspath(os.path.join(os.environ["HOME"], ".local"))
-prefix = os.path.abspath(os.path.join(os.path.dirname(__name__), os.pardir, "local"))
-#prefix = os.path.abspath(os.path.join(os.environ["HOME"], ".local"))
+prefix = None
+try:
+    prefix = os.environ["thor_scsi_DIR"]
+except KeyError as ke:
+    logger.info(f"no environment variable thor_scsi_DIR: ke")
+
+if not prefix:
+    prefix = os.path.abspath(os.path.join(os.path.dirname(__name__), os.pardir, os.pardir))
+    prefix = os.path.abspath(os.path.join(os.environ["HOME"], ".local"))
+    prefix = os.path.abspath(os.path.join(os.path.dirname(__name__), os.pardir, "local"))
+    #prefix = os.path.abspath(os.path.join(os.environ["HOME"], ".local"))
 
 boost_prefix="/usr/include"
 if sys.platform == "darwin":
