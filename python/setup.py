@@ -30,20 +30,21 @@ copy_file(
 
 d = gsl_conf.gsl_config()
 
-# How to define where the thor scsi library is located?
-# here there are some examples
 prefix = None
+
+# How to define where the thor scsi library is located?
+# Some hard coded preferences for your convienience
+# prefix = os.path.abspath(os.path.join(os.path.dirname(__name__), os.pardir, os.pardir))
+# prefix = os.path.abspath(os.path.join(os.environ["HOME"], ".local"))
+
+# deliberatley chosen _PREFIX instead of DIR ...
+# not to interfear with cmake's variables
 try:
-    prefix = os.environ["thor_scsi_DIR"]
+    prefix = os.environ["thor_scsi_PREFIX"]
 except KeyError as ke:
-    logger.info(f"no environment variable thor_scsi_DIR: ke")
+    logger.info(f"no environment variable thor_scsi_PREFIX: ke")
 
-if not prefix:
-    prefix = os.path.abspath(os.path.join(os.path.dirname(__name__), os.pardir, os.pardir))
-    prefix = os.path.abspath(os.path.join(os.environ["HOME"], ".local"))
-    prefix = os.path.abspath(os.path.join(os.path.dirname(__name__), os.pardir, "local"))
-    #prefix = os.path.abspath(os.path.join(os.environ["HOME"], ".local"))
-
+# a hack for mac
 boost_prefix="/usr/include"
 if sys.platform == "darwin":
     boost_prefix=os.path.join("/", "usr", "local", "include")
@@ -58,6 +59,13 @@ except KeyError:
 
 ParallelCompile("NPY_NUM_BUILD_JOBS").install()
 
+# Build up include and lib directories respecting prefix
+include_dirs = [boost_prefix]
+library_dirs = []
+if prefix:
+    include_dirs += [os.path.join(prefix, "include")]
+    library_dirs += [os.path.join(prefix, "lib")]
+
 ext_modules = [
     # Pybind11Extension(
     #    "testbind",
@@ -67,9 +75,9 @@ ext_modules = [
     Pybind11Extension(
         "pyflame",
         ["src/flame.cc"],
-        include_dirs=[d["gsl_include"]] + [os.path.join(prefix, "include"), boost_prefix],
-        library_dirs=([os.path.join(prefix, "lib")]),
+        include_dirs= include_dirs,
         libraries=["flame", "flame_core"],
+        library_dirs=library_dirs
     ),
     Pybind11Extension(
         "lib",
@@ -84,10 +92,9 @@ ext_modules = [
         ),
         # Required for MacBook llvm C++ compiler.
         define_macros=[("GTPSA_DEFINE_BOOL",1)],
-        include_dirs=[d["gsl_include"]] + [os.path.join(prefix, "include"), boost_prefix],
+        include_dirs=[d["gsl_include"]] + include_dirs,
         # define_macros=[("_GLIBCXX_DEBUG", 1), ("_GLIBCXX_DEBUG_PEDANTIC", 1)],
-        library_dirs=(
-            [os.path.join(prefix, "lib")]
+        library_dirs=(library_dirs
             # ["../../engine/lib"]
             + [d["gsl_lib_dir"]]
         ),
