@@ -6,6 +6,7 @@
 #include <array>
 
 namespace thor_scsi::elements {
+    using thor_scsi::core::ElemType;
 	class RadiationDelegate: public  RadiationDelegateInterface{
 	public:
 		~RadiationDelegate(void){};
@@ -49,12 +50,13 @@ namespace thor_scsi::elements {
 		int delegator_index;
 	};
 
+    typedef RadiationDelegateKickInterfaceKnobbed<thor_scsi::core::StandardDoubleType> RadiationDelegateKickInterface;
 	/**
 	 *
 	 * @note synchrotron integrals are not used nor has their
 	 *       functionality been checked
 	 */
-	class RadiationDelegateKick: public  RadiationDelegateKickInterface{
+	class RadiationDelegateKick: public RadiationDelegateKickInterface {
 	public:
 		RadiationDelegateKick(void)
 			: curly_dH_x(0e0)

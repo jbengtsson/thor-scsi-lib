@@ -94,7 +94,7 @@ set(thor_scsi_core_FILES
   std_machine/accelerator.cc
   # to be removed as soon as tps is removed ...
   ss_vect_tps.cc
-)
+        core/multipole_types.h)
 
 add_library(thor_scsi_core SHARED
   ${thor_scsi_core_FILES}

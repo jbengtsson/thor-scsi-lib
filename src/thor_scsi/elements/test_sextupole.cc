@@ -12,10 +12,13 @@
 namespace tsc = thor_scsi::core;
 namespace tse = thor_scsi::elements;
 
+using cdbl = std::complex<double>;
 
-static void check_only_sext_set(std::shared_ptr<tsc::TwoDimensionalMultipoles> muls, const tsc::cdbl ref)
+template<class C>
+static void check_only_sext_set(std::shared_ptr<tsc::TwoDimensionalMultipolesKnobbed<C>> muls, const cdbl ref)
 {
-	check_only_major_multipole_set(muls, ref, 3);
+    auto check = CheckMultipoles<C>();
+	check.only_major_multipole_set(muls, ref, 3);
 }
 
 
@@ -46,7 +49,7 @@ BOOST_AUTO_TEST_CASE(test10_sextupole_K)
 	C.set<double>("K", chroma);
 	C.set<double>("L", 0e0);
 	C.set<double>("N", 1);
-	const tsc::cdbl ref(chroma, 0e0);
+	const cdbl ref(chroma, 0e0);
 
 	auto sext = tse::SextupoleType(C);
 	BOOST_CHECK(sext.getMainMultipoleNumber() == 3);
@@ -88,12 +91,12 @@ BOOST_AUTO_TEST_CASE(test10_sextupole_setMul)
 			BOOST_CHECK_SMALL(val.imag(),  1e-12);
 		}
 
-		const tsc::cdbl ref(0e0, 0e0);
+		const cdbl ref(0e0, 0e0);
 		check_only_sext_set(sext.getMultipoles(), ref);
 	}
 	{
 		auto sext = tse::SextupoleType(C);
-		sext.setMainMultipoleStrength(tsc::cdbl(0, 0));
+		sext.setMainMultipoleStrength(cdbl(0, 0));
 		auto val = sext.getMainMultipoleStrength();
 		BOOST_CHECK_SMALL(val.real(),  1e-12);
 		BOOST_CHECK_SMALL(val.imag(),  1e-12);
@@ -115,7 +118,7 @@ BOOST_AUTO_TEST_CASE(test10_sextupole_setMul)
 			BOOST_CHECK_CLOSE(c.real(),  val,  1e-12);
 			BOOST_CHECK_SMALL(c.imag(),        1e-12);
 		}
-		const tsc::cdbl ref(val, 0e0);
+		const cdbl ref(val, 0e0);
 		check_only_sext_set(sext.getMultipoles(), ref);
 	}
 
@@ -123,7 +126,7 @@ BOOST_AUTO_TEST_CASE(test10_sextupole_setMul)
 	{
 		auto sext = tse::SextupoleType(C);
 		const double val = 3e0;
-		const tsc::cdbl ref(val, 0e0);
+		const cdbl ref(val, 0e0);
 		sext.setMainMultipoleStrength(ref);
 		auto c = sext.getMainMultipoleStrength();
 		BOOST_CHECK_CLOSE(c.real(),  val, 1e-12);
@@ -134,7 +137,7 @@ BOOST_AUTO_TEST_CASE(test10_sextupole_setMul)
 	{
 		auto sext = tse::SextupoleType(C);
 		const double val = 42e0;
-		const tsc::cdbl ref(0e0, val);
+		const cdbl ref(0e0, val);
 		sext.setMainMultipoleStrength(-ref);
 		auto c = sext.getMainMultipoleStrength();
 		BOOST_CHECK_SMALL(c.real(),      1e-12);
@@ -185,7 +188,7 @@ BOOST_AUTO_TEST_CASE(test20_sextupole_thin_eval)
 			continue;
 		}
 
-		sext.setMainMultipoleStrength(tsc::cdbl(1e0/i, 0e0));
+		sext.setMainMultipoleStrength(cdbl(1e0/i, 0e0));
 		gtpsa::ss_vect<double> ps(0e0);
 		sext.propagate(calc_config, ps);
 
@@ -201,7 +204,7 @@ BOOST_AUTO_TEST_CASE(test20_sextupole_thin_eval)
 		/* normal sextrupole */
 		const double chroma = 355e0 / 113e0;
 		auto sext = tse::SextupoleType(C);
-		sext.setMainMultipoleStrength(tsc::cdbl(chroma, 0));
+		sext.setMainMultipoleStrength(cdbl(chroma, 0));
 		for(int i = -1; i <= 1; ++i){
 			if (i == 0){
 				/* checked above */
@@ -231,7 +234,7 @@ BOOST_AUTO_TEST_CASE(test20_sextupole_thin_eval)
 		/* skew sextrupole */
 		const double chroma = 1/28.0;
 		auto sext = tse::SextupoleType(C);
-		sext.setMainMultipoleStrength(tsc::cdbl(0, chroma));
+		sext.setMainMultipoleStrength(cdbl(0, chroma));
 
 		for(int i = -1; i <= 1; ++i){
 			if (i == 0){

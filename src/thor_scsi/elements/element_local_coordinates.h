@@ -7,22 +7,23 @@
 #include <tps/tps_type.h>
 
 namespace thor_scsi::elements {
-	using thor_scsi::core::ElemType;
+	using thor_scsi::core::ElemTypeKnobbed;
 	using thor_scsi::core::ConfigType;
 	/**
 	 * @ brief: provide a local_pass method which will be executed in local coordiantes
 	 *
-	 * This class is never expected to be instanciated by it self so it gets no type name
+	 * This class is never expected to be instantiated by it self so it gets no type name
 	 *
 	 * Todo:
 	 *      transformation should contain a constant part and a random part
 	 */
-	class LocalCoordinates : public ElemType {
+	 template<class C>
+	class LocalCoordinatesKnobbed : public ElemTypeKnobbed<C> {
 
 	public:
-		inline LocalCoordinates(const Config &config) : ElemType(config){}
-		virtual ~LocalCoordinates(){}
-		LocalCoordinates(LocalCoordinates&& o) : ElemType(std::move(o)) {
+		inline LocalCoordinatesKnobbed(const Config &config) : ElemTypeKnobbed<C>(config){}
+		virtual ~LocalCoordinatesKnobbed(){}
+		LocalCoordinatesKnobbed(LocalCoordinatesKnobbed&& o) : ElemTypeKnobbed<C>(std::move(o)) {
 			/*
 			std::cerr << __FILE__ << "::" << __FUNCTION__ << " ctor @ " << __LINE__
 				  << " name " << this->name << std::endl;
@@ -76,16 +77,17 @@ namespace thor_scsi::elements {
 	 *
 	 * see thor_scsi::core::PhaseSpaceGalilean2DTransform for implementation
 	 */
-	class LocalGalilean : public LocalCoordinates {
+    template<class C>
+	class LocalGalileanKnobbed : public LocalCoordinatesKnobbed<C> {
 
 	public:
-		inline LocalGalilean(const Config &config)
-			: LocalCoordinates(config)
+		inline LocalGalileanKnobbed(const Config &config)
+			: LocalCoordinatesKnobbed<C>(config)
 			, transform()
 			{}
-		virtual ~LocalGalilean(){}
-		inline LocalGalilean(LocalGalilean&& o) :
-			LocalCoordinates(std::move(o)),
+		virtual ~LocalGalileanKnobbed(){}
+		inline LocalGalileanKnobbed(LocalGalileanKnobbed&& o) :
+			LocalCoordinatesKnobbed<C>(std::move(o)),
 			transform(std::move(o.transform))
 			{
 
@@ -108,7 +110,7 @@ namespace thor_scsi::elements {
 		inline auto* getTransform(void){
 			return &this->transform;
 		}
-		thor_scsi::core::PhaseSpaceGalilean2DTransform transform;
+		thor_scsi::core::PhaseSpaceGalilean2DTransformKnobbed<C> transform;
 
 	private:
 		// template<typename T> void _global2Local(ss_vect<T>        &ps){ this->transform.forward(ps);	}
@@ -122,17 +124,18 @@ namespace thor_scsi::elements {
 	 * @todo: could the template functions be defind by deriving ...
 	 * see thor_scsi::core::PhaseSpaceGalileanPRot2DTransform for implementation
 	 */
-	class LocalGalileanPRot  : public LocalCoordinates {
+    template<class C>
+	class LocalGalileanPRotKnobbed  : public LocalCoordinatesKnobbed<C> {
 
 	public:
-		inline LocalGalileanPRot(const Config &config)
-			: LocalCoordinates(config)
+		inline LocalGalileanPRotKnobbed(const Config &config)
+			: LocalCoordinatesKnobbed<C>(config)
 			, transform()
 			{}
 
-		virtual ~LocalGalileanPRot(){}
-		inline LocalGalileanPRot(LocalGalileanPRot&& o)
-			: LocalCoordinates(std::move(o) )
+		virtual ~LocalGalileanPRotKnobbed(){}
+		inline LocalGalileanPRotKnobbed(LocalGalileanPRotKnobbed&& o)
+			: LocalCoordinatesKnobbed<C>(std::move(o) )
 			, transform(std::move(o.transform))
 			{
 				// this->transform = o.transform;
@@ -154,7 +157,7 @@ namespace thor_scsi::elements {
 
 		inline auto* getTransform(void){return &this->transform;		}
 
-		thor_scsi::core::PhaseSpaceGalileanPRot2DTransform transform;
+		thor_scsi::core::PhaseSpaceGalileanPRot2DTransformKnobbed<C> transform;
 
 	private:
 		// template<typename T> void _global2Local(ss_vect<T> &ps){ this->transform.forward(ps);  }
@@ -163,6 +166,8 @@ namespace thor_scsi::elements {
 		template<typename T> void _local2Global(gtpsa::ss_vect<T> &ps){ this->transform.backward(ps); }
 	};
 
+    typedef LocalGalileanKnobbed<thor_scsi::core::StandardDoubleType> LocalGalilean;
+    typedef LocalGalileanPRotKnobbed<thor_scsi::core::StandardDoubleType> LocalGalileanPRot;
 
 } //namespace thor_scsi::elements
 

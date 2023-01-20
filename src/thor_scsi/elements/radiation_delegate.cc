@@ -9,16 +9,21 @@ namespace ts = thor_scsi;
 namespace tsc = thor_scsi::core;
 namespace tse = thor_scsi::elements;
 
+template<>
 std::string tse::RadiationDelegateInterface::repr(void) const
 {
   std::stringstream strm;
-  strm << *this;
+  //strm << *this;
+  this->show(strm, 0);
   return strm.str();
 }
+
+template<>
 std::string tse::RadiationDelegateKickInterface::repr(void) const
 {
   std::stringstream strm;
-  strm << *this;
+  this->show(strm, 0);
+  //strm << *this;
   return strm.str();
 }
 

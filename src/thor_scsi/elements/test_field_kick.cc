@@ -171,7 +171,7 @@ BOOST_AUTO_TEST_CASE(test20_4Order_constants)
 	C.set<double>("L", length);
 
 	auto kick = tse::FieldKick(C);
-	auto delegator = dynamic_cast<const tse::FieldKick::FieldKickForthOrder &>(kick.getFieldKickDelegator());
+	auto delegator = dynamic_cast<const tse::FieldKickForthOrder<tsc::StandardDoubleType> &>(kick.getFieldKickDelegator());
 
 	// constants as computed by python
 	const double c_1 =   0.6756035959798289;
@@ -200,7 +200,7 @@ BOOST_AUTO_TEST_CASE(test20_4Order_lengthes)
 	C.set<double>("N", 1);
 
 	auto kick = tse::FieldKick(C);
-	auto delegator = dynamic_cast<const tse::FieldKick::FieldKickForthOrder &>(kick.getFieldKickDelegator());
+	auto delegator = dynamic_cast<const tse::FieldKickForthOrder<tsc::StandardDoubleType>&>(kick.getFieldKickDelegator());
 
 }
 

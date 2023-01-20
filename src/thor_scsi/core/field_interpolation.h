@@ -3,6 +3,7 @@
 #include <ostream>
 #include <gtpsa/tpsa.hpp>
 #include <tps/tps_type.h>
+#include <thor_scsi/core/multipole_types.h>
 
 namespace thor_scsi::core {
   	/**
@@ -12,8 +13,15 @@ namespace thor_scsi::core {
 	 *
 	 * Todo: move to API part?
 	 */
-	struct Field2DInterpolation{
-		virtual ~Field2DInterpolation(){};
+    template<class C, typename = typename C::complex_type, typename = typename C::double_type>
+	class Field2DInterpolationKnobbed{
+    protected:
+        using double_type = typename C::double_type;
+        using complex_type = typename C::complex_type;
+        using complex_intern_type = typename C::complex_intern_type;
+
+    public:
+		virtual ~Field2DInterpolationKnobbed(){};
 		/**
 		 * @brief interpolate field at position x and y
 		 *
@@ -32,9 +40,9 @@ namespace thor_scsi::core {
 		 *
 		 * \endverbatim
 		 */
-		virtual inline void field(const double      x, const double      y, double      *Bx, double      *By) const = 0;
-		virtual inline void field(const tps         x, const tps         y, tps         *Bx, tps         *By) const = 0;
-		virtual inline void field(const gtpsa::tpsa x, const gtpsa::tpsa y, gtpsa::tpsa *Bx, gtpsa::tpsa *By) const = 0;
+		virtual inline void field(const double&      x, const double&      y, double      *Bx, double      *By) const = 0;
+		virtual inline void field(const tps&         x, const tps&         y, tps         *Bx, tps         *By) const = 0;
+		virtual inline void field(const gtpsa::tpsa& x, const gtpsa::tpsa& y, gtpsa::tpsa *Bx, gtpsa::tpsa *By) const = 0;
 
 		/**
 		 * @brief interpolate the gradient at the current position
@@ -42,15 +50,15 @@ namespace thor_scsi::core {
 		 * \verbatim embed:rst:leading-asterisk
 		 * \endverbatim
 		 */
-		virtual void gradient(const double x, const double y, double *Gx, double *Gy) const = 0;
+		virtual void gradient(const double& x, const double& y, double *Gx, double *Gy) const = 0;
 		/**
 		 * @todo review interface: with tps it could be that Gx is computed but never used
 		 * @todo should Gx and Gy be of type tps or type double
 		 */
-		virtual void gradient(const tps         x, const tps         y, tps         *Gx, tps         *Gy) const = 0;
-		virtual void gradient(const gtpsa::tpsa x, const gtpsa::tpsa y, gtpsa::tpsa *Gx, gtpsa::tpsa *Gy) const = 0;
-		virtual void gradient(const tps         x, const tps         y, double      *Gx, double      *Gy) const = 0;
-		virtual void gradient(const gtpsa::tpsa x, const gtpsa::tpsa y, double      *Gx, double      *Gy) const = 0;
+		virtual void gradient(const tps&         x, const tps&         y, tps         *Gx, tps         *Gy) const = 0;
+		virtual void gradient(const gtpsa::tpsa& x, const gtpsa::tpsa& y, gtpsa::tpsa *Gx, gtpsa::tpsa *Gy) const = 0;
+		virtual void gradient(const tps&         x, const tps&         y, double      *Gx, double      *Gy) const = 0;
+		virtual void gradient(const gtpsa::tpsa& x, const gtpsa::tpsa& y, double      *Gx, double      *Gy) const = 0;
 		virtual void show(std::ostream&, int level) const = 0;
 
 		std::string prettyClassname(void) const;
@@ -59,14 +67,17 @@ namespace thor_scsi::core {
 		std::string pstr(void) const;
 
 
+
 	};
 
-	inline
-	std::ostream& operator<<(std::ostream& strm, const Field2DInterpolation& intp)
-	{
-		intp.show(strm, 0);
-		return strm;
-	}
+    typedef Field2DInterpolationKnobbed<StandardDoubleType> Field2DInterpolation;
+
+    template<class C>
+    inline
+    std::ostream& operator<<(std::ostream& strm, const Field2DInterpolationKnobbed<C> & intp) {
+        intp.show(strm, 0);
+        return strm;
+    }
 
 }
 #endif /* _THOR_SCSI_FIELD_INTERPOLATION_H_ */

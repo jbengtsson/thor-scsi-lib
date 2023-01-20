@@ -4,7 +4,7 @@
 #include <array>
 #include <cmath>
 #include <ostream>
-
+#include <thor_scsi/core/multipole_types.h>
 
 /*
  * Should I separate the coefficients from the implementation ...
@@ -21,20 +21,31 @@ namespace thor_scsi::core {
 	 *      phase space (state) vectors. Implemented in an derived class
 	 *
 	 */
-       class Galilean2DTransform {
+    template<class C, typename = typename C::double_type>
+       class Galilean2DTransformKnobbed {
+       protected:
+           using double_type = typename C::double_type;
+#warning "Galilean transform not yet knobbed"
+           std::array<
+                   //double_type
+                   double
+                   , 2>
+                   m_dS{0e0, 0e0},              ///< Transverse displacement.
+           m_dT{0e0, 0e0};              ///< part of rotation matrix = (cos(dT), sin(dT)).
+
        public:
 	       ///< Euclidian Group: dx, dy
-	       inline Galilean2DTransform(void){
+	       inline Galilean2DTransformKnobbed(void){
 		       setdS(0.0, 0.0);
 			setRoll(0.0);
 	       }
-	       inline Galilean2DTransform(Galilean2DTransform&& O) :
+	       inline Galilean2DTransformKnobbed(Galilean2DTransformKnobbed&& O) :
 		       m_dS(std::move(O.m_dS)),
 		       m_dT(std::move(O.m_dT))
 		       {}
 
-	       virtual ~Galilean2DTransform(){};
-	       Galilean2DTransform& operator= (const Galilean2DTransform& O){
+	       virtual ~Galilean2DTransformKnobbed(){};
+	       Galilean2DTransformKnobbed& operator= (const Galilean2DTransformKnobbed& O){
 		       this->m_dS[0] = O.m_dS[0];
 		       this->m_dS[1] = O.m_dS[1];
 		       this->m_dT[0] = O.m_dT[0];
@@ -54,28 +65,28 @@ namespace thor_scsi::core {
 		}
 
 		///< Euclidian Group: Roll angle
-		inline double getRoll(void) const {
+		inline double_type getRoll(void) const {
 			return atan2(m_dT[1], m_dT[0]);
 		}
-		inline double getDx(void) const {
+		inline double_type getDx(void) const {
 			return m_dS[0];
 		}
-		inline double getDy(void) const {
+		inline double_type getDy(void) const {
 			return m_dS[1];
 		}
-		inline void setDx(const double x){
+		inline void setDx(const double_type x){
 			m_dS[0] = x;
 		}
-		inline void setDy(const double y){
+		inline void setDy(const double_type y){
 			m_dS[1] = y;
 		}
 
 		///< Euclidian Group: dx, dy
-		inline const std::array<double, 2>& getdS(void)  {
+		inline const std::array<double_type, 2>& getdS(void)  {
 			return m_dS;
 		}
 
-		inline const std::array<double, 2>& getdT(void)  {
+		inline const std::array<double_type, 2>& getdT(void)  {
 			return m_dT;
 		}
 
@@ -85,14 +96,11 @@ namespace thor_scsi::core {
 			     << "roll = " << this->getRoll();
 		}
 
-	protected:
-		std::array<double, 2>
-		m_dS{0e0, 0e0},              ///< Transverse displacement.
-				m_dT{0e0, 0e0};              ///< part of rotation matrix = (cos(dT), sin(dT)).
        };
 
+    template<class C>
 	inline
-	std::ostream& operator<<(std::ostream& strm, const Galilean2DTransform& tf)
+	std::ostream& operator<<(std::ostream& strm, const Galilean2DTransformKnobbed<C>& tf)
 	{
 		tf.show(strm, 0);
 		return strm;
@@ -107,22 +115,25 @@ namespace thor_scsi::core {
 	 *
 	 * Reference to CAD Tool document ?
 	 */
-	class PRotTransform {
+    template<class C, typename = typename C::double_type>
+	class PRotTransformKnobbed {
+    protected:
+        using double_type = typename C::double_type;
 	public:
-	    inline PRotTransform(void)
+	    inline PRotTransformKnobbed(void)
 		: c0(0e0)
 		, c1(0e0)
 		, s1(0e0)
 		{}
-	    inline PRotTransform(PRotTransform&& O)
+	    inline PRotTransformKnobbed(PRotTransformKnobbed&& O)
 		: c0(O.c0)
 		, c1(O.c1)
 		, s1(O.s1)
 		{}
 
-	    virtual ~PRotTransform(void) {}
+	    virtual ~PRotTransformKnobbed(void) {}
 
-	    inline PRotTransform& operator= (const PRotTransform& O)
+	    inline PRotTransformKnobbed& operator= (const PRotTransformKnobbed& O)
 		{
 			this->c0 = O.c0;
 			this->c1 = O.c1;
@@ -143,19 +154,24 @@ namespace thor_scsi::core {
 			     << "s1 = " << this->getS1();
 		}
 
-
+#warning "prot not yet parametrizable"
 	protected:
-		double c0, c1, s1;
+        double
+		//double_type
+        c0, c1, s1;
 	};
 
+    template<class C>
 	inline
-	std::ostream& operator<<(std::ostream& strm, const PRotTransform& tf)
+	std::ostream& operator<<(std::ostream& strm, const PRotTransformKnobbed<C>& tf)
 	{
 		tf.show(strm, 0);
 		return strm;
 	}
 
 
+    typedef Galilean2DTransformKnobbed<StandardDoubleType> Galilean2DTransform;
+    typedef PRotTransformKnobbed<StandardDoubleType> PRotTransform;
 }
 
 

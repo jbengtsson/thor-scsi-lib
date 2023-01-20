@@ -42,7 +42,140 @@
 
  */
 namespace thor_scsi::elements {
-	/**
+    // forward declaration
+    template<class>
+    class FieldKickKnobbed;
+
+
+    /**
+ * Symplectic integrator
+ * 2nd order
+ *
+ *  @f[ \frac{L}{2} \to bnl \to  \frac{L}{2} ]@
+ *
+ * Here 4th order: calculating coefficients
+ *
+ * 4th order:
+ *
+ *  @f[ d_1 L \to c_1  bnL \to d_1 L \to c_2 bnl \to d_1 L ]@
+ *
+ * with
+ *
+ * @f[ d_1 + d_2 + d_1 = L @f]
+ *
+ *  @f[c_1 + c_2 = 1 @f]
+ *
+ * d_2:  negative thus creates a negative drift
+ *
+ * @todo review interaction to configuration to see if integration intervals can be precomputed
+ */
+    template<class C>
+    class FieldKickDelegate {
+    public:
+        FieldKickDelegate(FieldKickKnobbed<C> *parent){
+            this->parent = parent;
+        }
+        FieldKickDelegate(void){
+            this->parent = nullptr;
+        }
+        virtual ~FieldKickDelegate() {};
+
+        inline void setNumberOfIntegrationSteps(const int n){
+            this->integration_steps = n;
+            this->computeIntegrationSteps();
+        }
+
+        inline int getNumberOfIntegrationSteps(void) const {
+            return this->integration_steps;
+        }
+
+        inline double getLength(void) const {
+            return parent->getLength();
+        }
+
+        void setParent(FieldKickKnobbed<C> * p){
+            this->parent = p;
+            this->computeIntegrationSteps();
+        }
+
+    protected:
+        inline auto getFieldInterpolator(void) const {
+            // required to cast parent to const ?
+            const FieldKickKnobbed<C> * ptr = this->parent;
+            if(!ptr){
+                throw std::runtime_error("Unknown parent!");
+            }
+            return ptr->getFieldInterpolator();
+        }
+
+        double PL = 0.0;
+        int integration_steps = 1;
+        FieldKickKnobbed<C> *parent = nullptr;
+
+    private:
+        // should be not defined as pointers are available
+        // FieldKickDelegate(const FieldKickDelegate& o) = delete;
+        FieldKickDelegate& operator= (const FieldKickDelegate& o) = delete;
+
+        virtual void computeIntegrationSteps(void) = 0;
+
+    };
+
+    template<class C>
+    class FieldKickForthOrder : public FieldKickDelegate<C> {
+    public:
+        /**
+         * @brief: calculate lengthes for drifts and kicks
+         *
+         * 4th order integration method is given by
+         */
+        void splitIntegrationStep(const double dL, double *dL1, double *dL2,
+                                  double *dkL1, double *dkL2) const;
+
+        //
+        // as it is a templated function ... not defined virtual ...
+        template<typename T>
+        void _localPropagate(thor_scsi::core::ConfigType &conf, gtpsa::ss_vect<T> &ps);
+
+        inline std::unique_ptr<std::vector<double>> getDriftLength(void) const {
+            auto res = std::make_unique<std::vector<double>>(2);
+            res->at(0) = this->dL1;
+            res->at(1) = this->dL2;
+            return res;
+        }
+
+        inline std::unique_ptr<std::vector<double>> getKickLength(void) const {
+            auto res = std::make_unique<std::vector<double>>(2);
+            res->at(0) = this->dL1;
+            res->at(1) = this->dL2;
+            return res;
+        }
+
+        // not really useful yet ... need to push configuration into
+        // objects
+        // fix for Cartesian bend treatment
+        // don't use this internal parametes yet
+        void computeIntegrationSteps(void) override final;
+
+    private:
+
+        /*
+         * c_1 = 1/(2*(2-2^(1/3))),    c_2 = (1-2^(1/3))/(2*(2-2^(1/3)))
+         *  d_1 = 1/(2-2^(1/3)),        d_2 = -2^(1/3)/(2-2^(1/3))
+         */
+
+        const double c_1 = 1e0/(2e0*(2e0-thirdroot(2e0)));
+        const double c_2 = 0.5e0 - c_1;
+        const double d_1 = 2e0*c_1;
+        const double d_2 = 1e0 - 2e0*d_1;
+
+        // Consider one set for
+        // an other set for Cartesian Bends
+        double dL1 = 0e0, dL2 = 0e0, dkL1 = 0e0, dkL2 = 0e0;
+
+    };
+
+    /**
 	 * Calculate multipole kick. The kick is given by
 	 * @f[
 	 *     \vartheta_x =  \frac{e}{p_\mathrm{0}} L B_y + \frac{L}{\rho}
@@ -88,7 +221,11 @@ namespace thor_scsi::elements {
 	 * Assumption: The magnetic field is constant within this element.
 	 *             Hence e.g. local curvature and gradient are constant
 	 */
-	class FieldKick : public FieldKickAPI {
+    template<class C>
+	class FieldKickKnobbed : public FieldKickAPIKnobbed<C> {
+    protected:
+        using complex_type = typename C::complex_type;
+        using double_type  = typename C::double_type;
 	public:
 		// using thor_scsi::core::ObservedState;
 		/*
@@ -105,9 +242,9 @@ namespace thor_scsi::elements {
 		///< used by meth:`repr`
 		// std::string repr_add(void);
 
-		FieldKick(const Config &config);
-		virtual ~FieldKick(){}
-		FieldKick(FieldKick&& O);
+		FieldKickKnobbed(const Config &config);
+		virtual ~FieldKickKnobbed(){}
+		FieldKickKnobbed(FieldKickKnobbed&& O);
 
 		const char* type_name(void) const override { return "field_kick"; };
 		virtual void show(std::ostream& strm, const int level) const override;
@@ -174,10 +311,10 @@ namespace thor_scsi::elements {
 		 *
 		 * Todo: review if interface should be kept that manner
 		 */
-		virtual void inline setLength(const double length) override final {
+		virtual void inline setLength(const double& length) override final {
 			// delegate ...
-			LocalGalileanPRot::setLength(length);
-			if(0e0 == length){
+            FieldKickAPIKnobbed<C>::setLength(length);
+			if(0e0 == gtpsa::cst(length)){
 				this->asThick(false);
 			} else {
 				this->asThick(true);
@@ -231,6 +368,12 @@ namespace thor_scsi::elements {
 		virtual void localPropagate(thor_scsi::core::ConfigType &conf, gtpsa::ss_vect<gtpsa::tpsa> &ps) override final { _localPropagate(conf, ps);}
 		virtual void localPropagate(thor_scsi::core::ConfigType &conf, gtpsa::ss_vect<tps>         &ps) override final { _localPropagate(conf, ps);}
 
+        // Required as radiation is now handled by a delegate
+        template<typename T>
+        inline void thinKickAndRadiate(const thor_scsi::core::ConfigType &conf,
+                                       const thor_scsi::core::Field2DInterpolationKnobbed<C>& intp,
+                                       const double L, const double h_bend, const double h_ref,
+                                       gtpsa::ss_vect<T> &ps);
 
 	  private:
 		template<typename T>
@@ -242,12 +385,6 @@ namespace thor_scsi::elements {
 		template<typename T>
 		        void _localPropagateBody(thor_scsi::core::ConfigType &conf, gtpsa::ss_vect<T> &ps);
 
-		// Required as radiation is now handled by a delegate
-		template<typename T>
-		inline void thinKickAndRadiate(const thor_scsi::core::ConfigType &conf,
-					   const thor_scsi::core::Field2DInterpolation& intp,
-					   const double L, const double h_bend, const double h_ref,
-					   gtpsa::ss_vect<T> &ps);
 
 		void inline validateIntegrationMethod(const int n) const {
 			switch(n){
@@ -280,144 +417,17 @@ namespace thor_scsi::elements {
 			 {0e0, 0e0, 0e0, 0e0, 0e0, 0e0, 0e0},
 			 {0e0, 0e0, 0e0, 0e0, 0e0, 0e0, 0e0}};
 
+    public:
+        /**
+         *
+         * @todo should a check be made that forth order is requested ?
+         */
+        inline const FieldKickDelegate<C>& getFieldKickDelegator(void) const {
+            return this->integ4O;
+        }
 
 
 
-		/**
-		 * Symplectic integrator
-		 * 2nd order
-		 *
-		 *  @f[ \frac{L}{2} \to bnl \to  \frac{L}{2} ]@
-		 *
-		 * Here 4th order: calculating coefficients
-		 *
-		 * 4th order:
-		 *
-		 *  @f[ d_1 L \to c_1  bnL \to d_1 L \to c_2 bnl \to d_1 L ]@
-		 *
-		 * with
-		 *
-		 * @f[ d_1 + d_2 + d_1 = L @f]
-		 *
-		 *  @f[c_1 + c_2 = 1 @f]
-		 *
-		 * d_2:  negative thus creates a negative drift
-		 *
-		 * @todo review interaction to configuration to see if integration intervals can be precomputed
-		 */
-
-		class FieldKickDelegate {
-		public:
-			FieldKickDelegate(FieldKick *parent){
-				this->parent = parent;
-			}
-			FieldKickDelegate(void){
-				this->parent = nullptr;
-			}
-			virtual ~FieldKickDelegate() {};
-
-			inline void setNumberOfIntegrationSteps(const int n){
-				this->integration_steps = n;
-				this->computeIntegrationSteps();
-			}
-
-			inline int getNumberOfIntegrationSteps(void) const {
-				return this->integration_steps;
-			}
-
-			inline double getLength(void) const {
-				return parent->getLength();
-			}
-
-			void setParent(FieldKick * p){
-				this->parent = p;
-				this->computeIntegrationSteps();
-			}
-
-		protected:
-			inline auto getFieldInterpolator(void) const {
-				// required to cast parent to const ?
-				const FieldKick * ptr = this->parent;
-				if(!ptr){
-					throw std::runtime_error("Unknown parent!");
-				}
-				return ptr->getFieldInterpolator();
-			}
-
-			double PL = 0.0;
-			int integration_steps = 1;
-			FieldKick *parent = nullptr;
-
-		private:
-			// should be not defined as pointers are available
-			// FieldKickDelegate(const FieldKickDelegate& o) = delete;
-			FieldKickDelegate& operator= (const FieldKickDelegate& o) = delete;
-
-			virtual void computeIntegrationSteps(void) = 0;
-
-		};
-
-
-		class FieldKickForthOrder : public FieldKickDelegate {
-		public:
-			/**
-			 * @brief: calculate lengthes for drifts and kicks
-			 *
-			 * 4th order integration method is given by
-			 */
-			void splitIntegrationStep(const double dL, double *dL1, double *dL2,
-						  double *dkL1, double *dkL2) const;
-
-			//
-			// as it is a templated function ... not defined virtual ...
-			template<typename T>
-			void _localPropagate(thor_scsi::core::ConfigType &conf, gtpsa::ss_vect<T> &ps);
-
-			inline std::unique_ptr<std::vector<double>> getDriftLength(void) const {
-				auto res = std::make_unique<std::vector<double>>(2);
-				res->at(0) = this->dL1;
-				res->at(1) = this->dL2;
-				return res;
-			}
-
-			inline std::unique_ptr<std::vector<double>> getKickLength(void) const {
-				auto res = std::make_unique<std::vector<double>>(2);
-				res->at(0) = this->dL1;
-				res->at(1) = this->dL2;
-				return res;
-			}
-
-			// not really useful yet ... need to push configuration into
-			// objects
-			// fix for Cartesian bend treatment
-                        // don't use this internal parametes yet
-			void computeIntegrationSteps(void) override final;
-
-		private:
-
-			/*
-			 * c_1 = 1/(2*(2-2^(1/3))),    c_2 = (1-2^(1/3))/(2*(2-2^(1/3)))
-			 *  d_1 = 1/(2-2^(1/3)),        d_2 = -2^(1/3)/(2-2^(1/3))
-			 */
-
-			const double c_1 = 1e0/(2e0*(2e0-thirdroot(2e0)));
-			const double c_2 = 0.5e0 - c_1;
-			const double d_1 = 2e0*c_1;
-			const double d_2 = 1e0 - 2e0*d_1;
-
-			// Consider one set for
-			// an other set for Cartesian Bends
-			double dL1 = 0e0, dL2 = 0e0, dkL1 = 0e0, dkL2 = 0e0;
-
-		};
-	public:
-		/**
-		 *
-		 * @todo should a check be made that forth order is requested ?
-		 */
-		inline const FieldKickDelegate& getFieldKickDelegator(void) const {
-			return this->integ4O;
-		}
 
 		inline void setRadiationDelegate(std::shared_ptr<thor_scsi::elements::RadiationDelegateKick> p){
 			this->rad_del = p;
@@ -472,7 +482,7 @@ namespace thor_scsi::elements {
 		template<typename T>
 		void _quadFringe(thor_scsi::core::ConfigType &conf, gtpsa::ss_vect<T> &ps);
 
-		FieldKickForthOrder integ4O;
+		FieldKickForthOrder<C> integ4O;
 		int  Pmethod;                 ///< Integration Method.
 		bool Pthick;                  ///< Thick or thin element
 
@@ -480,6 +490,9 @@ namespace thor_scsi::elements {
 		std::shared_ptr<thor_scsi::elements::RadiationDelegateKick> rad_del;
 
 	};
+
+    typedef FieldKickKnobbed<thor_scsi::core::StandardDoubleType> FieldKick;
+
 } // Name space
 
 #endif // _THOR_SCSI_ELEMENTS_FIELD_KICK_H_

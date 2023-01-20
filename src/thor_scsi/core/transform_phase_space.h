@@ -6,7 +6,8 @@
 #include <thor_scsi/core/transform.h>
 
 namespace thor_scsi::core {
-	class PhaseSpaceGalilean2DTransform : public Galilean2DTransform {
+    template <class C>
+	class PhaseSpaceGalilean2DTransformKnobbed : public Galilean2DTransformKnobbed<C> {
 	public:
 		/*
 		 * Todo
@@ -14,11 +15,11 @@ namespace thor_scsi::core {
 		 *
 		 *  Review if it can be split up for position and direction
 		 */
-		inline PhaseSpaceGalilean2DTransform() : Galilean2DTransform() {}
-		inline virtual ~PhaseSpaceGalilean2DTransform() {};
-		PhaseSpaceGalilean2DTransform(PhaseSpaceGalilean2DTransform&& O) = default;
-		PhaseSpaceGalilean2DTransform& operator= (const PhaseSpaceGalilean2DTransform &O) {
-			(Galilean2DTransform&)(*this) = (const Galilean2DTransform&) (O);
+		inline PhaseSpaceGalilean2DTransformKnobbed() : Galilean2DTransformKnobbed<C>() {}
+		inline virtual ~PhaseSpaceGalilean2DTransformKnobbed() {};
+		PhaseSpaceGalilean2DTransformKnobbed(PhaseSpaceGalilean2DTransformKnobbed&& O) = default;
+		PhaseSpaceGalilean2DTransformKnobbed& operator= (const PhaseSpaceGalilean2DTransformKnobbed &O) {
+			(Galilean2DTransformKnobbed<C>&)(*this) = (const Galilean2DTransformKnobbed<C>&) (O);
 			return *this;
 		}
 		template<typename T>
@@ -122,27 +123,30 @@ namespace thor_scsi::core {
 	 * Galileian Transformation it does not seem to make sense to support it as
 	 * standalone application
 	 */
-	class PhaseSpacePRotTransformMixin: public PRotTransform {
+    template <class C>
+	class PhaseSpacePRotTransformMixinKnobbed: public PRotTransformKnobbed<C> {
 	public:
-		inline PhaseSpacePRotTransformMixin(void) : PRotTransform() {}
-		inline virtual ~PhaseSpacePRotTransformMixin(void) {};
+		inline PhaseSpacePRotTransformMixinKnobbed(void) : PRotTransformKnobbed<C>() {}
+		inline virtual ~PhaseSpacePRotTransformMixinKnobbed(void) {};
 
-		PhaseSpacePRotTransformMixin(PhaseSpacePRotTransformMixin&& O)  = default;
+		PhaseSpacePRotTransformMixinKnobbed(PhaseSpacePRotTransformMixinKnobbed&& O)  = default;
 
-		PhaseSpacePRotTransformMixin& operator=(const PhaseSpacePRotTransformMixin& O){
+		PhaseSpacePRotTransformMixinKnobbed& operator=(const PhaseSpacePRotTransformMixinKnobbed& O){
 			static_cast<PRotTransform&>(*this) = static_cast<const PRotTransform&>(O);
 			return *this;
 		}
+        // explicit template for evaluating double vector with tpsa argument
 		template<typename T>
-		inline void forwardStep1(T & ps){
-			// Simplified rotated p_rot: R^-1(theta_des) prot(phi/2) R(theta_des).
-			ps[px_] += this->c1; ps[py_] += this->s1;
-		}
+        inline void forwardStep1(T & ps){
+            // Simplified rotated p_rot: R^-1(theta_des) prot(phi/2) R(theta_des).
+            ps[px_] += this->c1;
+            ps[py_] += this->s1;
+        }
 		template<typename T>
-		inline void forwardStep2(T & ps){
-			// Simplified p_rot.
-			ps[px_] -= this->c0;
-		}
+        inline void forwardStep2(T & ps){
+            // Simplified p_rot.
+            ps[px_] -= this->c0;
+        }
 		template<typename T>
 		inline void backwardStep1(T & ps){
 			// Reverse of GtoL, with inverted Euclidian.
@@ -157,37 +161,62 @@ namespace thor_scsi::core {
 		}
 	};
 
-	class PhaseSpaceGalileanPRot2DTransform : public PhaseSpaceGalilean2DTransform, PhaseSpacePRotTransformMixin {
-	public:
-		inline PhaseSpaceGalileanPRot2DTransform(void) :
-			PhaseSpaceGalilean2DTransform(),
-			PhaseSpacePRotTransformMixin() {}
-		inline virtual ~PhaseSpaceGalileanPRot2DTransform() {};
 
-		inline PhaseSpaceGalileanPRot2DTransform(PhaseSpaceGalileanPRot2DTransform&& o) :
-			PhaseSpaceGalilean2DTransform(std::move(o)),
-			PhaseSpacePRotTransformMixin(std::move(o))
+
+    template<class C>
+	class PhaseSpaceGalileanPRot2DTransformKnobbed : public PhaseSpaceGalilean2DTransformKnobbed<C>, PhaseSpacePRotTransformMixinKnobbed<C> {
+	public:
+		inline PhaseSpaceGalileanPRot2DTransformKnobbed(void) :
+                PhaseSpaceGalilean2DTransformKnobbed<C>(),
+			PhaseSpacePRotTransformMixinKnobbed<C>() {}
+		inline virtual ~PhaseSpaceGalileanPRot2DTransformKnobbed() {};
+
+		inline PhaseSpaceGalileanPRot2DTransformKnobbed(PhaseSpaceGalileanPRot2DTransformKnobbed&& o) :
+			PhaseSpaceGalilean2DTransformKnobbed<C>(std::move(o)),
+			PhaseSpacePRotTransformMixinKnobbed<C>(std::move(o))
 			{}
 
-		PhaseSpaceGalileanPRot2DTransform& operator= (const PhaseSpaceGalileanPRot2DTransform& o){
-			static_cast<PhaseSpaceGalilean2DTransform&>(*this) = static_cast<const PhaseSpaceGalilean2DTransform&>(o);
-			static_cast<PhaseSpacePRotTransformMixin&>(*this) = static_cast<const PhaseSpacePRotTransformMixin&>(o);
+		PhaseSpaceGalileanPRot2DTransformKnobbed& operator= (const PhaseSpaceGalileanPRot2DTransformKnobbed& o){
+			static_cast<PhaseSpaceGalilean2DTransformKnobbed<C>&>(*this) = static_cast<const PhaseSpaceGalilean2DTransformKnobbed<C>&>(o);
+			static_cast<PhaseSpacePRotTransformMixinKnobbed<C>&>(*this) = static_cast<const PhaseSpacePRotTransformMixinKnobbed<C>&>(o);
 			return *this;
 		}
 
 		template<typename T>
 		inline void forward(T & ps){
-			PhaseSpacePRotTransformMixin::forwardStep1(ps);
-			PhaseSpaceGalilean2DTransform::forward(ps);
-			PhaseSpacePRotTransformMixin::forwardStep2(ps);
+			PhaseSpacePRotTransformMixinKnobbed<C>::forwardStep1(ps);
+			PhaseSpaceGalilean2DTransformKnobbed<C>::forward(ps);
+			PhaseSpacePRotTransformMixinKnobbed<C>::forwardStep2(ps);
 		}
 		template<typename T>
 		inline void backward(T & ps){
-			PhaseSpacePRotTransformMixin::backwardStep1(ps);
-			PhaseSpaceGalilean2DTransform::backward(ps);
-			PhaseSpacePRotTransformMixin::backwardStep2(ps);
+			PhaseSpacePRotTransformMixinKnobbed<C>::backwardStep1(ps);
+			PhaseSpaceGalilean2DTransformKnobbed<C>::backward(ps);
+			PhaseSpacePRotTransformMixinKnobbed<C>::backwardStep2(ps);
 		}
 	};
+
+    typedef Galilean2DTransformKnobbed<StandardDoubleType> Galilean2DTransform;
+    typedef PhaseSpaceGalilean2DTransformKnobbed<StandardDoubleType> PhaseSpaceGalilean2DTransform;
+
+    // preparations: ss_vect uses double but parameter is tpsa
+    // currently a hack...
+    // to be removed when class templates are used for the elements
+    typedef PhaseSpacePRotTransformMixinKnobbed<TpsaVariantType> PhaseSpacePRotTransformTpsa;
+    template<> template<>
+    inline void PhaseSpacePRotTransformTpsa::forwardStep1(gtpsa::ss_vect<double> & ps){
+        // Simplified rotated p_rot: R^-1(theta_des) prot(phi/2) R(theta_des).
+        ps[px_] += gtpsa::cst(this->c1);
+        ps[py_] += gtpsa::cst(this->s1);
+    }
+
+    template<>template<>
+    inline void PhaseSpacePRotTransformTpsa::forwardStep2(gtpsa::ss_vect<double> & ps){
+        // Simplified p_rot.
+        ps[px_] -= gtpsa::cst(this->c0);
+    }
+
+
 }
 #endif //_THOR_SCSI_CORE_TRANSFORM_PHASE_SPACE_H_
 /*

@@ -6,7 +6,12 @@
 #include <iomanip>
 
 namespace thor_scsi::elements {
-	class MpoleType : public FieldKick {
+    template<class C, typename = typename C::complex_type, typename = typename C::double_type> // CK for complex knob
+	class MpoleTypeWithKnob : public FieldKickKnobbed<C> {
+    protected:
+        using complex_type = typename C::complex_type;
+        using double_type = typename C::double_type;
+        using multipoles_knobbed = thor_scsi::core::TwoDimensionalMultipolesKnobbed<C>;
 	public:
 		/**
 		 *
@@ -19,9 +24,9 @@ namespace thor_scsi::elements {
 		 *
 		 * \endverbatim
 		 */
-		inline MpoleType(const Config &config) : FieldKick(config){
-			std::shared_ptr<thor_scsi::core::TwoDimensionalMultipoles> tmp(new thor_scsi::core::TwoDimensionalMultipoles);
-			this->intp = std::move(std::dynamic_pointer_cast<thor_scsi::core::Field2DInterpolation>(tmp));
+		inline MpoleTypeWithKnob(const Config &config) : FieldKickKnobbed<C>(config){
+			std::shared_ptr<thor_scsi::core::TwoDimensionalMultipoles> tmp(new thor_scsi::core::TwoDimensionalMultipoles(0e0));
+			this->intp = std::move(std::dynamic_pointer_cast<thor_scsi::core::Field2DInterpolationKnobbed<C>>(tmp));
 			/*
 			  std::cerr << "Mpole Type: " << std::setw(10) << name << " interpolation object " << this->intp  << std::endl;
 			  auto parent = dynamic_cast<FieldKick*>(this);
@@ -32,12 +37,12 @@ namespace thor_scsi::elements {
 		const char* type_name(void) const override { return "mpole"; };
 
 		inline auto getFieldInterpolator(void) const {
-			auto p = std::dynamic_pointer_cast<thor_scsi::core::TwoDimensionalMultipoles>(this->intp);
-			return std::const_pointer_cast<thor_scsi::core::TwoDimensionalMultipoles>(p);
+			auto p = std::dynamic_pointer_cast<multipoles_knobbed>(this->intp);
+			return std::const_pointer_cast<multipoles_knobbed>(p);
 		}
 
-		inline void setFieldInterpolator(std::shared_ptr<thor_scsi::core::TwoDimensionalMultipoles> intp) {
-			auto p = std::dynamic_pointer_cast<thor_scsi::core::Field2DInterpolation>(intp);
+		inline void setFieldInterpolator(std::shared_ptr<thor_scsi::core::TwoDimensionalMultipolesKnobbed<C>> intp) {
+			auto p = std::dynamic_pointer_cast<thor_scsi::core::Field2DInterpolationKnobbed<C>>(intp);
 			if(!p){
 				throw std::runtime_error("Could not cast multipole to Field2DInterpolation");
 			}
@@ -46,6 +51,10 @@ namespace thor_scsi::elements {
 
 		//thor_scsi::core::TwoDimensionalMultipoles* intp;
 	};
+
+
+    typedef class MpoleTypeWithKnob<core::StandardDoubleType> MpoleType;
+    typedef class MpoleTypeWithKnob<core::TpsaVariantType> MpoleTypeTpsa;
 
 } // Name space
 
