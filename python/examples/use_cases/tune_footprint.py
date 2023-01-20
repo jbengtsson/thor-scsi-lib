@@ -1,5 +1,5 @@
 '''Use Case:
-     On & off-momentum tune footpring.
+     On & off-momentum tune footprintg.
 '''
 import enum
 import logging
@@ -83,7 +83,7 @@ def plt_Twiss(ds, file_name, title):
 
 def plt_nu_A(nu, file_name, title, plane):
     # Turn interactive mode off.
-    plt.ioff()
+    # plt.ioff()
 
     fig, ax_1 = plt.subplots()
 
