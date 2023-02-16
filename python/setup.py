@@ -34,7 +34,7 @@ d = gsl_conf.gsl_config()
 prefix = os.path.abspath(os.path.join(os.path.dirname(__name__), os.pardir, os.pardir))
 prefix = os.path.abspath(os.path.join(os.environ["HOME"], ".local"))
 prefix = os.path.abspath(os.path.join(os.path.dirname(__name__), os.pardir, "local"))
-#prefix = os.path.abspath(os.path.join(os.environ["HOME"], ".local"))
+prefix = os.path.abspath(os.path.join(os.environ["HOME"], ".local"))
 
 boost_prefix="/usr/include"
 if sys.platform == "darwin":
@@ -67,11 +67,18 @@ ext_modules = [
         "lib",
         sorted(
             [
-                "src/thor_scsi.cc",
-                "src/tps.cc",
+                "src/accelerator.cc",
+                "src/aperture.cc",
                 "src/config_type.cc",
                 "src/elements.cc",
-                "src/accelerator.cc",
+                "src/enums.cc",
+                "src/flame.cc",
+                "src/interpolation.cc",
+                "src/observer.cc",
+                "src/pybind_test.cc",
+                "src/radiation.cc",
+                "src/tps.cc",
+                "src/thor_scsi.cc",
             ]
         ),
         # Required for MacBook llvm C++ compiler.

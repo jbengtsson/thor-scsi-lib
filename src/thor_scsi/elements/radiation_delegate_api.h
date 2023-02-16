@@ -13,7 +13,7 @@ namespace thor_scsi::elements {
 	public:
 	        virtual ~RadiationDelegateInterfaceKnobbed(void){}
 		virtual void view(const thor_scsi::core::ElemTypeKnobbed<C>& elem, const gtpsa::ss_vect<double>      &ps, const enum ObservedState, const int cnt) = 0;
-		virtual void view(const thor_scsi::core::ElemTypeKnobbed<C>& elem, const gtpsa::ss_vect<tps>         &ps, const enum ObservedState, const int cnt) = 0;
+	    // virtual void view(const thor_scsi::core::ElemTypeKnobbed<C>& elem, const gtpsa::ss_vect<tps>         &ps, const enum ObservedState, const int cnt) = 0;
 		virtual void view(const thor_scsi::core::ElemTypeKnobbed<C>& elem, const gtpsa::ss_vect<gtpsa::tpsa> &ps, const enum ObservedState, const int cnt) = 0;
 		virtual void show(std::ostream& strm, int level) const{
 			strm << "RadiationDelegateInterface";
@@ -30,7 +30,7 @@ namespace thor_scsi::elements {
 	        virtual ~RadiationDelegateKickInterfaceKnobbed(void){}
 		virtual void view(const FieldKickAPIKnobbed<C>& kick, const gtpsa::ss_vect<double>      &ps, const enum ObservedState, const int cnt) = 0;
 		virtual void view(const FieldKickAPIKnobbed<C>& kick, const gtpsa::ss_vect<gtpsa::tpsa> &ps, const enum ObservedState, const int cnt) = 0;
-		virtual void view(const FieldKickAPIKnobbed<C>& kick, const gtpsa::ss_vect<tps>         &ps, const enum ObservedState, const int cnt) = 0;
+	    // virtual void view(const FieldKickAPIKnobbed<C>& kick, const gtpsa::ss_vect<tps>         &ps, const enum ObservedState, const int cnt) = 0;
 		virtual void show(std::ostream& strm, int level) const{
 			strm << "RadiationDelegateKickInterface";
 		}

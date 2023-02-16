@@ -73,9 +73,11 @@ namespace thor_scsi {
 		template <typename T>
 		int _propagate(thor_scsi::core::ConfigType& conf, gtpsa::ss_vect<T>& ps, size_t start, int max, size_t n_turns, bool tracy_compatible_indexing = false);
 
+	    /*
 		int propagate(thor_scsi::core::ConfigType&, ss_vect_tps  &ps,
 			      size_t start=0,
 			      int max_elements=std::numeric_limits<int>::max(), size_t n_turns=1, bool tracy_compatible_indexing = false);
+	    */
 		int propagate(thor_scsi::core::ConfigType&, ss_vect_tpsa &ps,
 			       size_t start=0,
 			      int max_elements=std::numeric_limits<int>::max(), size_t n_turns=1, bool tracy_compatible_indexing = false);

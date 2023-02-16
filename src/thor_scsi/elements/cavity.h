@@ -19,7 +19,7 @@ namespace thor_scsi::elements {
 		// virtual void localPropagate(thor_scsi::core::ConfigType &conf, ss_vect<double>             &ps) override final { _localPropagate(conf, ps); }
 		// virtual void localPropagate(thor_scsi::core::ConfigType &conf, ss_vect<tps>                &ps) override final { _localPropagate(conf, ps); }
 		virtual void localPropagate(thor_scsi::core::ConfigType &conf, gtpsa::ss_vect<double>      &ps) override final { _localPropagate(conf, ps); }
-		virtual void localPropagate(thor_scsi::core::ConfigType &conf, gtpsa::ss_vect<tps>         &ps) override final { _localPropagate(conf, ps); }
+	    // virtual void localPropagate(thor_scsi::core::ConfigType &conf, gtpsa::ss_vect<tps>         &ps) override final { _localPropagate(conf, ps); }
 		virtual void localPropagate(thor_scsi::core::ConfigType &conf, gtpsa::ss_vect<gtpsa::tpsa> &ps) override final { _localPropagate(conf, ps); }
 
 		inline void setVoltage(const double val){

@@ -61,10 +61,12 @@ void tse::RadiationDelegate::view(const tsc::ElemType& elem, const gtpsa::ss_vec
 {
 	_view(elem, ps, state, cnt);
 }
+/*
 void tse::RadiationDelegate::view(const tsc::ElemType& elem, const gtpsa::ss_vect<tps>         &ps, const enum tsc::ObservedState state, const int cnt)
 {
 	_view(elem, ps, state, cnt);
 }
+*/
 void tse::RadiationDelegate::view(const tsc::ElemType& elem, const gtpsa::ss_vect<gtpsa::tpsa> &ps, const enum tsc::ObservedState state, const int cnt)
 {
 	_view(elem, ps, state, cnt);
@@ -385,11 +387,13 @@ void tse::RadiationDelegateKick::view(const FieldKickAPI& kick, const gtpsa::ss_
 	_view(kick, ps, state, cnt);
 }
 
+/*
 void tse::RadiationDelegateKick::view(const FieldKickAPI& kick, const gtpsa::ss_vect<tps> &ps, const enum ObservedState state, const int cnt)
 {
 	std::cout<< "Rad Del.view(gtpsa::ss_vect<tps>) for element " << kick.name << "at index" << kick.index << std::endl;
 	_view(kick, ps, state, cnt);
 }
+*/
 void tse::RadiationDelegateKick::view(const FieldKickAPI& kick, const gtpsa::ss_vect<gtpsa::tpsa> &ps, const enum ObservedState state, const int cnt)
 {
 	std::cout<< "Rad Del.view(gtpsa::ss_vect<gtpa::tpsa>) for element " << kick.name << "at index" << kick.index << std::endl;
@@ -397,7 +401,7 @@ void tse::RadiationDelegateKick::view(const FieldKickAPI& kick, const gtpsa::ss_
 }
 template void tse::RadiationDelegateKick::radiate(const thor_scsi::core::ConfigType &conf, gtpsa::ss_vect<double>      &ps, const double L,
 						  const double h_ref, const std::array<double, 3>      B);
-template void tse::RadiationDelegateKick::radiate(const thor_scsi::core::ConfigType &conf, gtpsa::ss_vect<tps>         &ps, const double L,
-						  const double h_ref, const std::array<tps, 3>         B);
+// template void tse::RadiationDelegateKick::radiate(const thor_scsi::core::ConfigType &conf, gtpsa::ss_vect<tps>         &ps, const double L,
+//						  const double h_ref, const std::array<tps, 3>         B);
 template void tse::RadiationDelegateKick::radiate(const thor_scsi::core::ConfigType &conf, gtpsa::ss_vect<gtpsa::tpsa> &ps, const double L,
 						  const double h_ref, const std::array<gtpsa::tpsa, 3> B);

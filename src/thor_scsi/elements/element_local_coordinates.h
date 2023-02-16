@@ -37,24 +37,24 @@ namespace thor_scsi::elements {
 
 		inline virtual void global2Local(gtpsa::ss_vect<double>      &ps) = 0;
 		inline virtual void global2Local(gtpsa::ss_vect<gtpsa::tpsa> &ps) = 0;
-		inline virtual void global2Local(gtpsa::ss_vect<tps>         &ps) = 0;
+		 // inline virtual void global2Local(gtpsa::ss_vect<tps>         &ps) = 0;
 
 		inline virtual void local2Global(gtpsa::ss_vect<double>      &ps) = 0;
 		inline virtual void local2Global(gtpsa::ss_vect<gtpsa::tpsa> &ps) = 0;
-		inline virtual void local2Global(gtpsa::ss_vect<tps>         &ps) = 0;
+		 // inline virtual void local2Global(gtpsa::ss_vect<tps>         &ps) = 0;
 
 		// virtual void localPropagate(ConfigType &conf, ss_vect<double>             &ps)  = 0;
 		// virtual void localPropagate(ConfigType &conf, ss_vect<tps>                &ps)  = 0;
 
 		virtual void localPropagate(ConfigType &conf, gtpsa::ss_vect<double>      &ps)  = 0;
 		virtual void localPropagate(ConfigType &conf, gtpsa::ss_vect<gtpsa::tpsa> &ps)  = 0;
-		virtual void localPropagate(ConfigType &conf, gtpsa::ss_vect<tps>         &ps)  = 0;
+		 // virtual void localPropagate(ConfigType &conf, gtpsa::ss_vect<tps>         &ps)  = 0;
 
 		// inline void propagate(ConfigType &conf, ss_vect<double>             &ps) override final { _propagate(conf, ps); };
 		// inline void propagate(ConfigType &conf, ss_vect<tps>                &ps) override final { _propagate(conf, ps); };
 		virtual inline void propagate(ConfigType &conf, gtpsa::ss_vect<double>      &ps) override final { _propagate(conf, ps); };
 		virtual inline void propagate(ConfigType &conf, gtpsa::ss_vect<gtpsa::tpsa> &ps) override final { _propagate(conf, ps); };
-		virtual inline void propagate(ConfigType &conf, gtpsa::ss_vect<tps>         &ps) override final { _propagate(conf, ps); };
+		 // virtual inline void propagate(ConfigType &conf, gtpsa::ss_vect<tps>         &ps) override final { _propagate(conf, ps); };
 
 	private:
 		// template<typename T>
@@ -99,12 +99,12 @@ namespace thor_scsi::elements {
 		// inline virtual void local2Global(ss_vect<double>             &ps) override { this->_local2Global(ps); }
 
 		inline virtual void global2Local(gtpsa::ss_vect<double>      &ps) override { this->_global2Local(ps); }
- 		inline virtual void global2Local(gtpsa::ss_vect<gtpsa::tpsa> &ps) override { this->_global2Local(ps); }
- 		inline virtual void global2Local(gtpsa::ss_vect<tps>         &ps) override { this->_global2Local(ps); }
+	        inline virtual void global2Local(gtpsa::ss_vect<gtpsa::tpsa> &ps) override { this->_global2Local(ps); }
+	        // inline virtual void global2Local(gtpsa::ss_vect<tps>         &ps) override { this->_global2Local(ps); }
 
 		inline virtual void local2Global(gtpsa::ss_vect<double>      &ps) override { this->_local2Global(ps); }
 		inline virtual void local2Global(gtpsa::ss_vect<gtpsa::tpsa> &ps) override { this->_local2Global(ps); }
-		inline virtual void local2Global(gtpsa::ss_vect<tps>         &ps) override { this->_local2Global(ps); }
+	        // inline virtual void local2Global(gtpsa::ss_vect<tps>         &ps) override { this->_local2Global(ps); }
 
 
 		inline auto* getTransform(void){
@@ -148,10 +148,10 @@ namespace thor_scsi::elements {
 		// inline virtual void local2Global(ss_vect<tps>    &ps) override final { this->_local2Global(ps);  }
 
 		inline virtual void global2Local(gtpsa::ss_vect<double>      &ps) override final { this->_global2Local(ps);  }
-		inline virtual void global2Local(gtpsa::ss_vect<tps>         &ps) override final { this->_global2Local(ps);  }
+	    // inline virtual void global2Local(gtpsa::ss_vect<tps>         &ps) override final { this->_global2Local(ps);  }
 		inline virtual void global2Local(gtpsa::ss_vect<gtpsa::tpsa> &ps) override final { this->_global2Local(ps);  }
 		inline virtual void local2Global(gtpsa::ss_vect<double>      &ps) override final { this->_local2Global(ps);  }
-		inline virtual void local2Global(gtpsa::ss_vect<tps>         &ps) override final { this->_local2Global(ps);  }
+	    // inline virtual void local2Global(gtpsa::ss_vect<tps>         &ps) override final { this->_local2Global(ps);  }
 		inline virtual void local2Global(gtpsa::ss_vect<gtpsa::tpsa> &ps) override final { this->_local2Global(ps);  }
 
 

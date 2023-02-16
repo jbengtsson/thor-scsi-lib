@@ -8,7 +8,7 @@ if(CMAKE_COMPILER_IS_GNUCXX)
 	-Wformat=2
 	-Winit-self
 	-Wlogical-op
-	-Wnoexcept
+	# -Wnoexcept
 	# -Wold-style-cast
 	-Woverloaded-virtual
 	-Wredundant-decls
@@ -33,7 +33,6 @@ if(CMAKE_COMPILER_IS_GNUCXX)
     -Wno-error=deprecated-copy
   )
   add_definitions(
-  -Wno-Werror=all
    -Wmissing-declarations
   -Wno-error=unused-result
   -Wno-error=sign-compare
@@ -42,5 +41,11 @@ if(CMAKE_COMPILER_IS_GNUCXX)
   -Wno-error=strict-overflow
   -Wno-error=sign-promo
   -Wno-error=format-nonliteral
-  -Wno-error=switch-default)
+  -Wno-error=switch-default
+  # mad-ng uses it internally, I modified the header
+  -Wno-error=vla-parameter
+  # C++ implementation part
+  # currently a lot of warnings on gtpsa variant implementation
+  -Wno-error=noexcept
+  )
 endif()

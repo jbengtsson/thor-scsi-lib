@@ -17,9 +17,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 if(CMAKE_COMPILER_IS_GNUCXX)
   add_definitions(-g -ggdb -pedantic -Wall)
-  add_definitions(-Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers
-
-    )
+  # add_definitions(
+  #  -Wall
+  #  -Wextra
+  #  -Wno-unused-parameter
+  #  -Wno-missing-field-initializers
+  #  )
   #  message(STATUS "Enabling gxx debug preprocessor flags")
   # flame relies on boost ... have to search if ubuntu has a version which supports
   # GNU extra flags ...
@@ -68,7 +71,6 @@ include_directories(
 
 # Fortran implementation part
 add_subdirectory(TPSA)
-# C++ implementation part
 add_subdirectory(src)
 # python wrapper
 add_subdirectory(python)

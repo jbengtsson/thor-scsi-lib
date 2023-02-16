@@ -6,10 +6,6 @@
 
 namespace tsc = thor_scsi::core;
 
-namespace thor_scsi::core{
-
-}
-
 #if 0
 // Why do I need a copy constructor ??
 tsc::TwoDimensionalMultipolesKnobbed::TwoDimensionalMultipolesKnobbed(const tsc::TwoDimensionalMultipolesKnobbed& o): coeffs(o.coeffs){
@@ -48,9 +44,111 @@ tsc::TwoDimensionalMultipolesKnobbed::TwoDimensionalMultipolesKnobbed(std::vecto
 }
 */
 
-//tsc::TwoDimensionalMultipolesKnobbed& tsc::TwoDimensionalMultipolesKnobbed::right_multiply(const std::vector<double> &scale, const bool begnin)
 
-//tsc::TwoDimensionalMultipolesKnobbed& tsc::TwoDimensionalMultipolesKnobbed::right_add(const TwoDimensionalMultipolesKnobbed &other, const bool begnin)
+template<typename T>
+void tsc::right_multiply_helper(const std::vector<T> &scale, const bool begnin, std::vector<T>* coeffs)
+{
+	auto& c = *coeffs;
+	size_t n_coeff = c.size(), n_scale = scale.size();
+
+	if (begnin) {
+                if (n_coeff > n_scale) {
+			// Check for exception matching python length error
+			std::stringstream strm;
+			strm << "Received " << n_scale << " elements for scaling."
+			     << " being begnin I would ignore excess elements. but I need at least "
+			     << n_coeff << " .";
+			throw std::runtime_error(strm.str());
+                }
+	} else {
+                if (n_coeff != n_scale) {
+			// Check for exception matching python length error
+			std::stringstream strm;
+			strm << "Received " << n_scale << " elements for scaling."
+			     << " this does not match the number of coefficients " << n_coeff
+			     << " .";
+			throw std::runtime_error(strm.str());
+                }
+	}
+	std::transform(c.begin(), c.end(), scale.begin(), c.begin(), std::multiplies<>());
+}
+
+template<typename T>
+void tsc::right_add_helper(const std::vector<T>& other, const bool begnin, std::vector<T>* coeffs)
+{
+
+	auto &c = *coeffs;
+	size_t n_coeff = c.size(), n_add = other.size();
+
+	if (begnin) {
+		if (n_coeff > n_add) {
+                        // Check for exception matching python length error
+                        std::stringstream strm;
+                        strm << "Received " << n_add << " elements for adding."
+                             << " being begnin I would ignore excess elements. But I got only " << n_coeff
+                             << " .";
+                        throw std::runtime_error(strm.str());
+		}
+	} else {
+		if (n_coeff != n_add) {
+                        // Check for exception matching python length error
+                        std::stringstream strm;
+                        strm << "Received " << n_add << " elements for adding."
+                             << " this does not match the number of coefficients " << n_coeff
+                             << ".";
+                        throw std::runtime_error(strm.str());
+		}
+	}
+
+	std::transform(c.begin(), c.end(), other.begin(), c.begin(), std::plus<>());
+}
+
+template<typename T>
+void tsc::multipoles_show(std::ostream& strm, const std::vector<T>& coeffs, const int level)
+{
+	bool debug_print_made = false;
+	strm << "interpolation='2D multipoles'";
+	if (level > 2){
+                strm << "(num=" << coeffs.size();
+	}
+	if (level  > 3){
+                strm << ", muls={";
+                int i = 1;
+                for(auto c : coeffs){
+			if(i > 1){
+				strm << ", ";
+			}
+			/* deactivated for variant development */
+			if(!debug_print_made) {
+				debug_print_made = true;
+			}
+			strm << i << ":[" << c.real() << ", " << c.imag() << "]";
+			++i;
+                }
+                strm << "}";
+	}
+	strm<<")";
+}
+
+template
+void tsc::right_add_helper<std::complex<double>>(const std::vector<std::complex<double>>& other, const bool begnin,
+						 std::vector<std::complex<double>>* coeffs);
+template
+void tsc::right_multiply_helper<std::complex<double>>(const std::vector<std::complex<double>>& other, const bool begnin,
+						      std::vector<std::complex<double>>* coeffs);
+template
+void tsc::right_add_helper<gtpsa::CTpsaOrComplex>(const std::vector<gtpsa::CTpsaOrComplex>& other, const bool begnin,
+						 std::vector<gtpsa::CTpsaOrComplex>* coeffs);
+template
+void tsc::right_multiply_helper<gtpsa::CTpsaOrComplex>(const std::vector<gtpsa::CTpsaOrComplex>& other, const bool begnin,
+						 std::vector<gtpsa::CTpsaOrComplex>* coeffs);
+
+template
+void tsc::multipoles_show<std::complex<double>>(std::ostream& strm, const std::vector<std::complex<double>>& coeffs, const int level);
+template
+void tsc::multipoles_show<gtpsa::CTpsaOrComplex>(std::ostream& strm, const std::vector<gtpsa::CTpsaOrComplex>& coeffs, const int level);
+
+//tsc::TwoDimensionalMultipolesKnobbed& tsc::TwoDimensionalMultipolesKnobbed::
 
 //tsc::TwoDimensionalMultipolesKnobbed& tsc::TwoDimensionalMultipolesKnobbed::operator *= (const std::vector<double> &scale)
 
@@ -70,6 +168,8 @@ tsc::TwoDimensionalMultipolesKnobbed::TwoDimensionalMultipolesKnobbed(std::vecto
 //void tsc::TwoDimensionalMultipolesKnobbed::show(std::ostream& strm, int level) const
 
 //void tsc::TwoDimensionalMultipolesKnobbed::applyTranslation(const tsc::cdbl dzs)
+
+
 
 
 #if 0

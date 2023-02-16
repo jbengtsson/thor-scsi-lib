@@ -316,3 +316,66 @@ BOOST_AUTO_TEST_CASE(test20_sextupole_typical_length_eval)
 		}
 	}
 }
+
+BOOST_AUTO_TEST_CASE(test30_sextupole_tpsa)
+{
+
+	const double cdl = 6.336, length=0.16;
+	const double chroma = cdl / length;
+	tsc::ConfigType calc_config;
+	Config C;
+	C.set<std::string>("name", "test");
+	C.set<double>("K", chroma);
+	C.set<double>("L", length);
+	C.set<double>("N", 1);
+
+	const int mo = 9;
+	auto desc = std::make_shared<gtpsa::desc>(9, mo);
+
+	/* normal sextrupole */
+	auto sext = tse::SextupoleTypeTpsa(C);
+	auto muls = std::make_shared<tsc::TwoDimensionalMultipolesTpsa>(0e0, 20);
+	sext.setFieldInterpolator(muls);
+	sext.setNumberOfIntegrationSteps(1);
+	auto K2 = gtpsa::ctpsa(desc, mo);
+	K2.set(std::complex(0e0, 0e0), std::complex(6.3, 0e0));
+	/* gradient on K2 */
+	std::vector<cdbl> K2_grad({0, 0, 0,  0, 0, 0,  1, 0, 0});
+	K2.setv(1, K2_grad);
+	sext.setMainMultipoleStrength(K2);
+
+	auto c9 = gtpsa::ctpsa(desc, mo);
+	c9.set(std::complex(1e0, 0e0), std::complex(1e-4, 0e0));
+	/* gradient on K2 */
+	std::vector<cdbl> c9_grad({0, 0, 0,  0, 0, 0,  0, 0, 1});
+
+	c9.setv(1, c9_grad);
+	sext.getMultipoles()->setMultipole(9, c9);
+
+	auto dx = gtpsa::tpsa(desc, mo);
+	dx.set(0, 1e-3);
+	/* gradient on dx */
+	dx.setv(1, {0, 0, 0,  0, 0, 0,  0, 1, 0});
+	sext.getTransform()->setDx(dx);
+
+	std::cout << sext.repr() << std::endl;
+
+	gtpsa::ss_vect<gtpsa::tpsa> ssv(desc, mo);
+
+
+	std::vector<std::string> names = {"x", "px", "y", "py", "delta", "ct", "K2", "dx"};
+
+	{
+		for(size_t i=0; i<ssv.size(); ++i){
+			ssv[i].print(names[i].c_str(), 1e-12);
+		}
+	}
+
+	sext.propagate(calc_config, ssv);
+	{
+		for(size_t i=0; i<ssv.size(); ++i){
+			ssv[i].print(names[i].c_str(), 1e-12);
+		}
+	}
+
+}

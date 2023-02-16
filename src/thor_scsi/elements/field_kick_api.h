@@ -62,7 +62,7 @@ namespace thor_scsi::elements {
 		std::shared_ptr<thor_scsi::core::Field2DInterpolationKnobbed<C>> intp;
 		int integration_steps = 1;
 	};
-    
+
     typedef  FieldKickAPIKnobbed<thor_scsi::core::StandardDoubleType> FieldKickAPI;
 } // Name space
 

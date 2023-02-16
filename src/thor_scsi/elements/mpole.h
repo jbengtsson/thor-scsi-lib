@@ -25,7 +25,7 @@ namespace thor_scsi::elements {
 		 * \endverbatim
 		 */
 		inline MpoleTypeWithKnob(const Config &config) : FieldKickKnobbed<C>(config){
-			std::shared_ptr<thor_scsi::core::TwoDimensionalMultipoles> tmp(new thor_scsi::core::TwoDimensionalMultipoles(0e0));
+			auto tmp = std::make_shared<multipoles_knobbed>(0e0);
 			this->intp = std::move(std::dynamic_pointer_cast<thor_scsi::core::Field2DInterpolationKnobbed<C>>(tmp));
 			/*
 			  std::cerr << "Mpole Type: " << std::setw(10) << name << " interpolation object " << this->intp  << std::endl;
@@ -37,8 +37,22 @@ namespace thor_scsi::elements {
 		const char* type_name(void) const override { return "mpole"; };
 
 		inline auto getFieldInterpolator(void) const {
+			std::stringstream strm;
+			strm << __FILE__ << ":mpole.getFieldInterpolator: this->intp " << static_cast<void *>(this->intp.get());
 			auto p = std::dynamic_pointer_cast<multipoles_knobbed>(this->intp);
-			return std::const_pointer_cast<multipoles_knobbed>(p);
+			strm << " p " << static_cast<void *>(p.get());
+			if(!p){
+				strm<<" cast failed!";
+				throw std::runtime_error(strm.str());
+			}
+			auto cp =  std::const_pointer_cast<multipoles_knobbed>(p);
+			strm << " cp " << static_cast<void *>(cp.get());
+			if(!cp){
+				strm<<" cast failed!";
+				throw std::runtime_error(strm.str());
+			}
+					    // std::cerr << strm.str() << std::endl;
+			return cp;
 		}
 
 		inline void setFieldInterpolator(std::shared_ptr<thor_scsi::core::TwoDimensionalMultipolesKnobbed<C>> intp) {

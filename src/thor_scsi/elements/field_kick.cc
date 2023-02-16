@@ -12,6 +12,7 @@ namespace ts = thor_scsi;
 namespace tsc = thor_scsi::core;
 namespace tse = thor_scsi::elements;
 
+using gtpsa::sin;
 /* ==========================================================================
    Support functions
    required by other elements too ?
@@ -241,7 +242,7 @@ inline void tse::FieldKickForthOrder<C>::_localPropagate(tsc::ConfigType &conf, 
 
 	double  h_ref = 0.0;
 	auto PN = this->integration_steps;
-	double length = this->parent->getLength();
+	auto length = this->parent->getLength();
     double Pirho = this->parent->getCurvature();
 
 	THOR_SCSI_LOG(DEBUG) << "\n  name = " << this->parent->name << " N = " << PN << "\n";
@@ -615,7 +616,7 @@ using thor_scsi::core::TpsaVariantType;
 
 template void tse::FieldKickKnobbed<StandardDoubleType>::_localPropagate(tsc::ConfigType &conf, gtpsa::ss_vect<double>      &ps);
 template void tse::FieldKickKnobbed<StandardDoubleType>::_localPropagate(tsc::ConfigType &conf, gtpsa::ss_vect<gtpsa::tpsa> &ps);
-template void tse::FieldKickKnobbed<StandardDoubleType>::_localPropagate(tsc::ConfigType &conf, gtpsa::ss_vect<tps>         &ps);
+// template void tse::FieldKickKnobbed<StandardDoubleType>::_localPropagate(tsc::ConfigType &conf, gtpsa::ss_vect<tps>         &ps);
 
 template void tse::FieldKickKnobbed<TpsaVariantType>::_localPropagate(tsc::ConfigType &conf, gtpsa::ss_vect<double>      &ps);
 

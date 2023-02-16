@@ -9,13 +9,17 @@ namespace py = pybind11;
 namespace tse = thor_scsi::elements;
 
 
-PYBIND11_MODULE(lib, scsi) {
-    scsi.doc() = "Self-Consistent Symplectic Integrator (SCSI)";
+PYBIND11_MODULE(lib, m) {
+    m.doc() = "Self-Consistent Symplectic Integrator (SCSI)";
 
-    py_thor_scsi_init_tps(scsi);
-    py_thor_scsi_init_elements(scsi);
-    py_thor_scsi_init_accelerator(scsi);
-    py_thor_scsi_init_config_type(scsi);
+    py_thor_scsi_init_tps(m);
+    py_thor_scsi_init_field_interpolation(m);
+    py_thor_scsi_init_elements(m);
+    py_thor_scsi_init_aperture(m);
+    py_thor_scsi_init_radiation(m);
+    py_thor_scsi_init_observers(m);
+    py_thor_scsi_init_accelerator(m);
+    py_thor_scsi_init_config_type(m);
     // py_thor_scsi_init_lattice(scsi);
 
 
@@ -23,7 +27,7 @@ PYBIND11_MODULE(lib, scsi) {
 
     // Constants.
     //scsi.attr("HOMmax") = HOMmax;
-    scsi.attr("c0")     = tse::speed_of_light;
+    m.attr("c0")     = tse::speed_of_light;
     // scsi.attr("q_e")    = tsc::q_e;
     // scsi.attr("m_e")    = tsc::m_e;
     // scsi.attr("mu_0")   = tsc::mu_0;

@@ -98,8 +98,43 @@ BOOST_AUTO_TEST_CASE(test02_show)
 		h.show(output, 10);
 		BOOST_CHECK( !output.is_empty( false ) );
 	}
-
 }
+
+BOOST_AUTO_TEST_CASE(test03_set_hmax)
+{
+	// taking a reference here
+	int h_max = 23;
+	auto h = tsc::TwoDimensionalMultipoles(0e0, h_max);
+    // more output ...
+	BOOST_CHECK_CLOSE(double(h.getMultipoleMaxIndex()), double(h_max), 1e-12);
+}
+
+// check that it compiles and accepts the order
+BOOST_AUTO_TEST_CASE(test04_add_test)
+{
+	// taking a reference here
+	int h_max = 4;
+	auto h = tsc::TwoDimensionalMultipoles(0e0, h_max);
+	{
+		std::vector<std::complex<double>> offset = {1.0, 1e-3, 1e-5, 1e-4};
+		const auto h2 = h.clone();
+		const auto h3 = h + offset;
+	}
+}
+
+// check that it compiles and accepts the order
+BOOST_AUTO_TEST_CASE(test04_mul_test)
+{
+	// taking a reference here
+	int h_max = 4;
+	auto h = tsc::TwoDimensionalMultipoles(0e0, h_max);
+	{
+		std::vector<std::complex<double>> scale = {1.0, 1e-3, 1e-5, 1e-4};
+		const auto h2 = h.clone();
+		const auto h3 = h * scale;
+	}
+}
+
 
 BOOST_AUTO_TEST_CASE(test10_set_harmonic_dipole)
 {
@@ -1205,9 +1240,9 @@ BOOST_AUTO_TEST_CASE(test220_mul_multipoles)
 }
 
 
-static double ret_zero(const double val)
+static std::complex<double> ret_zero(const std::complex<double> val)
 {
-	return 0e0;
+	return std::complex<double>(0e0, 0e0);
 }
 
 BOOST_AUTO_TEST_CASE(test240_mul_multipoles_vector_inplace)
@@ -1216,7 +1251,7 @@ BOOST_AUTO_TEST_CASE(test240_mul_multipoles_vector_inplace)
 	const double b1 = 5e0, b2 = 7e0, s1 = 11e0, s2=13e0;
 
 	tsc::TwoDimensionalMultipoles h(0e0);
-	std::vector<double> scale(h.getCoeffs().size());
+	std::vector<std::complex<double>> scale(h.getCoeffs().size());
 	h.setMultipole(1, cdbl(b1, 0));
 	h.setMultipole(2, cdbl(b2, 0));
 
@@ -1239,7 +1274,7 @@ BOOST_AUTO_TEST_CASE(test240_mul_multipoles_vector_inplace)
 	}
 
 	h *= scale;
-	{
+    {
 		// properly assigned
 		// cross check harmonics properly set
 		const cdbl c1 = h.getMultipole(1);
@@ -1260,7 +1295,7 @@ BOOST_AUTO_TEST_CASE(test250_mul_multipoles_vector)
 	const double b1 = 5e0, b2 = 7e0, s1 = 1./11e0, s2=1./13e0;
 
 	tsc::TwoDimensionalMultipoles h(0e0);
-	std::vector<double> scale(h.getCoeffs().size());
+	std::vector<std::complex<double>> scale(h.getCoeffs().size());
 	h.setMultipole(1, cdbl(b1, 0));
 	h.setMultipole(2, cdbl(b2, 0));
 
@@ -1347,7 +1382,7 @@ BOOST_AUTO_TEST_CASE(test300_mul_tpsa_)
     c3.setv(1, {0, 0, 1, 0});
     c5.setv(1, {0, 0, 0, 1});
     // a rather standard dipole
-    auto c1 =  gtpsa::CTpsaOrComplex(std::complex<double>({1e0, 0e0}));
+    auto c1 =  gtpsa::CTpsaOrComplex(std::complex<double>(1e0, 0e0));
     h.setMultipole(1, c1);
     h.setMultipole(3, c3);
     h.setMultipole(5, c5);
@@ -1393,3 +1428,24 @@ BOOST_AUTO_TEST_CASE(test300_mul_tpsa_)
 
 }
 #endif
+
+// include dedicated honer complex tests
+// check that the last coefficient is honoured correctly ...
+BOOST_AUTO_TEST_CASE(test310_hohner_complex_last_coeff)
+{
+    int h_max = 4;
+    tsc::TwoDimensionalMultipolesTpsa h(0e0, h_max);
+    const std::complex<double> c4(23e-4, -355e-4/113e0);
+    std::vector<std::complex<double>> coeffs(h_max);
+    coeffs.at(h_max -1) = c4;
+
+    // consider x / rref
+    const double x = 1, y = .5;
+    std::complex<double> z_prop (x, y);
+    const auto h2 = h.clone();
+    const auto f = thor_scsi::core::honer_complex(coeffs, z_prop);
+
+    const auto ref_field = std::pow(z_prop, (4-1)) * c4;
+    BOOST_CHECK_CLOSE(ref_field.real(), f.real(), 1e-12);
+    BOOST_CHECK_CLOSE(ref_field.imag(), f.imag(), 1e-12);
+}

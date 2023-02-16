@@ -6,6 +6,10 @@
 #include <ostream>
 #include <thor_scsi/core/multipole_types.h>
 
+/* required for parameter study */
+using gtpsa::sin;
+using gtpsa::cos;
+
 /*
  * Should I separate the coefficients from the implementation ...
  */
@@ -21,14 +25,15 @@ namespace thor_scsi::core {
 	 *      phase space (state) vectors. Implemented in an derived class
 	 *
 	 */
+
     template<class C, typename = typename C::double_type>
        class Galilean2DTransformKnobbed {
        protected:
            using double_type = typename C::double_type;
-#warning "Galilean transform not yet knobbed"
+//#warning "Galilean transform not yet knobbed"
            std::array<
-                   //double_type
-                   double
+	       double_type
+	       // double
                    , 2>
                    m_dS{0e0, 0e0},              ///< Transverse displacement.
            m_dT{0e0, 0e0};              ///< part of rotation matrix = (cos(dT), sin(dT)).
@@ -53,13 +58,13 @@ namespace thor_scsi::core {
 		       return *this;
 	       }
 
-		inline void setdS(const double dx, const double dy)  {
+		inline void setdS(const double_type dx, const double_type dy)  {
 			m_dS[0] = dx;
 			m_dS[1] = dy;
 		}
 
 		///< Euclidian Group: Roll angle
-		inline void setRoll(const double roll)  {
+		inline void setRoll(const double_type roll)  {
 			m_dT[0] = cos(roll);
 			m_dT[1] = sin(roll);
 		}
@@ -141,12 +146,12 @@ namespace thor_scsi::core {
 			return *this;
 		}
 
-		inline void setC0(const double val){this->c0 = val;}
-		inline void setC1(const double val){this->c1 = val;}
-		inline void setS1(const double val){this->s1 = val;}
-		inline double getC0(void) const {return this->c0;}
-		inline double getC1(void) const {return this->c1;}
-		inline double getS1(void) const {return this->s1;}
+		inline void setC0(const double_type val){this->c0 = val;}
+		inline void setC1(const double_type val){this->c1 = val;}
+		inline void setS1(const double_type val){this->s1 = val;}
+		inline double_type getC0(void) const {return this->c0;}
+		inline double_type getC1(void) const {return this->c1;}
+		inline double_type getS1(void) const {return this->s1;}
 
 		inline void show(std::ostream& strm, int level) const {
 			strm << "c0 = " << this->getC0() << ", "
@@ -154,10 +159,10 @@ namespace thor_scsi::core {
 			     << "s1 = " << this->getS1();
 		}
 
-#warning "prot not yet parametrizable"
+// #warning "prot not yet parametrizable"
 	protected:
-        double
-		//double_type
+        //double
+	double_type
         c0, c1, s1;
 	};
 

@@ -39,7 +39,7 @@ namespace thor_scsi::core {
         size_t n = coeffs.size() -1;
         // how to handle maximum order in case of ctpsa?
         auto rB = gtpsa::clone(coeffs[n]) * (1.0 + z * 0e0);
-        for(int i=n - 2; i >= 0; --i) {
+        for(int i=n - 1; i >= 0; --i) {
             rB = z * rB + coeffs[i];
         }
         return rB;
@@ -65,8 +65,17 @@ namespace thor_scsi::core {
         *By = rBy;
     }
 
+    // these helper functions required to transmit the type used for the cofficients down to the functions
+    // otherwise this code would require to be part of the class definition
+    template<typename T>
+    void right_multiply_helper(const std::vector<T> &scale, const bool begnin, std::vector<T>* coeffs);
+    template<typename T>
+    void right_add_helper(const std::vector<T> &other, const bool begnin, std::vector<T>* coeffs);
 
-    /**
+    template<typename T>
+    void multipoles_show(std::ostream& strm, const std::vector<T>& coeffs, const int level);
+
+	/**
 	 *  @brief: Representation of planar 2D harmonics / multipoles
 	 *
 	 *  @f[
@@ -139,12 +148,18 @@ namespace thor_scsi::core {
         virtual inline ~TwoDimensionalMultipolesKnobbed(void){};
 		// Why do I need a copy constructor ?? Did I miss an assignment operator
 		// TwoDimensionalMultipolesKnobbed(const TwoDimensionalMultipolesKnobbed& o);
+        TwoDimensionalMultipolesKnobbed(const TwoDimensionalMultipolesKnobbed& o)
+	    :  m_max_multipole(std::move(o.m_max_multipole))
+	    , coeffs(o.coeffs)
+	    {}
+
         TwoDimensionalMultipolesKnobbed(const TwoDimensionalMultipolesKnobbed&& o)
-                :  m_max_multipole(o.m_max_multipole)
+	    :  m_max_multipole(std::move(o.m_max_multipole))
                 , coeffs(std::move(o.coeffs))
         {}
-		// Required e.g. for engineering tolerance studies
-		TwoDimensionalMultipolesKnobbed& operator= (const  TwoDimensionalMultipolesKnobbed &o)
+
+	// Required e.g. for engineering tolerance studies
+	TwoDimensionalMultipolesKnobbed& operator= (const  TwoDimensionalMultipolesKnobbed &o)
         {
             this->coeffs = o.coeffs;
             this->m_max_multipole = o.m_max_multipole;
@@ -392,7 +407,7 @@ namespace thor_scsi::core {
 		 *
 		 */
 		inline void applyRollAngle(const double alpha){
-			complex_intern_type I (0, 1);
+			complex_intern_type I (0e0, 1e0);
 			for(size_t i = 0; i < this->coeffs.size(); ++i){
 				const double phase = alpha * (i + 1);
 				complex_intern_type scale = exp(I * phase);
@@ -439,172 +454,122 @@ namespace thor_scsi::core {
         }
 
 	private:
-		TwoDimensionalMultipolesKnobbed& right_multiply (const std::vector<double>& scale, const bool begnin){
-            auto& c = this->coeffs;
-            size_t n_coeff = c.size(), n_scale = scale.size();
-
-            if (begnin) {
-                if (n_coeff > n_scale) {
-                    // Check for exception matching python length error
-                    std::stringstream strm;
-                    strm << "Received " << n_scale << " elements for scaling."
-                         << " being begnin I would ignore excess elements. but I got only "
-                         << n_coeff << " .";
-                    throw std::runtime_error(strm.str());
-                }
-            } else {
-                if (n_coeff != n_scale) {
-                    // Check for exception matching python length error
-                    std::stringstream strm;
-                    strm << "Received " << n_scale << " elements for scaling."
-                         << " this does not match the number of coefficients " << n_coeff
-                         << " .";
-                    throw std::runtime_error(strm.str());
-                }
-            }
-            std::transform(c.begin(), c.end(), scale.begin(), c.begin(), std::multiplies<>());
-            return *this;
-
-            }
-
-            TwoDimensionalMultipolesKnobbed& right_add (const TwoDimensionalMultipolesKnobbed &other, const bool begnin){
-
-                auto &c = this->coeffs;
-                size_t n_coeff = c.size(), n_add = other.size();
-
-                if (begnin) {
-                    if (n_coeff > n_add) {
-                        // Check for exception matching python length error
-                        std::stringstream strm;
-                        strm << "Received " << n_add << " elements for adding."
-                             << " being begnin I would ignore excess elements. But I got only " << n_coeff
-                             << " .";
-                        throw std::runtime_error(strm.str());
-                    }
-                } else {
-                    if (n_coeff != n_add) {
-                        // Check for exception matching python length error
-                        std::stringstream strm;
-                        strm << "Received " << n_add << " elements for adding."
-                             << " this does not match the number of coefficients " << n_coeff
-                             << ".";
-                        throw std::runtime_error(strm.str());
-                    }
-                }
-                auto &oc = other.getCoeffs();
-
-                std::transform(c.begin(), c.end(), oc.begin(), c.begin(), std::plus<>());
-
+	TwoDimensionalMultipolesKnobbed& right_multiply (const std::vector<complex_type>& scale, const bool begnin) {
+		right_multiply_helper<complex_intern_type>(scale, begnin, &this->coeffs);
+		return *this;
+	}
+	TwoDimensionalMultipolesKnobbed& right_add (const TwoDimensionalMultipolesKnobbed &other, const bool begnin){
+		right_add_helper<complex_intern_type>(other.coeffs, begnin, &this->coeffs);
                 return *this;
             }
 
 
         public:
 
-		/**
-		 *  scale all multipoles by a factor scale in place
-		 *
-		 * \verbatim embed:rst:leading-asterisk
-		 *
-		 * .. todo::
-		 *        Review if complex scale makes sense
-		 *
-		 * \endverbatim
-		 */
-		TwoDimensionalMultipolesKnobbed& operator *= (const double scale){
-			auto& c = this->coeffs;
-			auto f = [scale](const complex_intern_type c){
-					 return c * scale;
-				 };
-			std::transform(c.begin(), c.end(), c.begin(), f);
+	    /**
+	     *  scale all multipoles by a factor scale in place
+	     *
+	     * \verbatim embed:rst:leading-asterisk
+	     *
+	     * .. todo::
+	     *        Review if complex scale makes sense
+	     *
+	     * \endverbatim
+	     */
+	    TwoDimensionalMultipolesKnobbed& operator *= (const complex_type scale){
+		    auto& c = this->coeffs;
+		    auto f = [scale](const complex_intern_type c){
+			    return c * scale;
+		    };
+		    std::transform(c.begin(), c.end(), c.begin(), f);
 			return *this;
-		}
+	    }
 
-		/**
-		 * scale multipoles and return a new object.
-		 *
-		 * \verbatim embed:rst:leading-asterisk
-		 *
-		 * .. todo::
-		 *        Implementation correct ?
-		 * \endverbatim
-		 */
-		inline TwoDimensionalMultipolesKnobbed operator * (const double scale) const {
-			TwoDimensionalMultipolesKnobbed n = this->clone();
-			n *= scale;
-			return n;
-		}
-		inline TwoDimensionalMultipolesKnobbed operator / (const double scale) const {
-			return *this * (1.0/scale);
-		}
-		/*
-		 * @brief: Scaling each individual by a vector
-		 *
-		 * @args: bengin: ignore if surplas number of scaling vector elements are provided
-		 */
-		TwoDimensionalMultipolesKnobbed& operator *= (const std::vector<double>& scale){
-                // should be false ... leave it that way to get further with prototyping
-                return this->right_multiply(scale, true);
-        }
-		TwoDimensionalMultipolesKnobbed  operator * (const std::vector<double>& scale) const{
-            TwoDimensionalMultipolesKnobbed nh = this->clone();
-            nh *= scale;
-            return nh;
-        }
-		/**
-		 * add
-		 *
-		 * \verbatim embed:rst:leading-asterisk
-		 *
-		 * Add an other set of multipoles to this set.
-		 *
-		 * .. todo::
-		 *      *  Implementation correct ?
-		 *      *  Review behaviour if representations of different size
-		 * \endverbatim
-		 */
-        TwoDimensionalMultipolesKnobbed operator+(const TwoDimensionalMultipolesKnobbed &other) const {
-            /*
-            std::cerr << "Adding multipoles. this size " << this->getCoeffs().size()
+	    /*
+	     * @brief: Scaling each individual by a vector
+	     *
+	     * @args: bengin: ignore if surplas number of scaling vector elements are provided
+	     */
+	    TwoDimensionalMultipolesKnobbed& operator *= (const std::vector<complex_type>& scale){
+		    // should be false ... leave it that way to get further with prototyping
+		    return this->right_multiply(scale, true);
+	    }
+	    TwoDimensionalMultipolesKnobbed &operator += (const TwoDimensionalMultipolesKnobbed &other){
+		    // should be false ... leave it that way to get further with prototyping
+		    return this->right_add(other, true);
+
+            }
+	    TwoDimensionalMultipolesKnobbed &operator += (const std::vector<complex_type> &other){
+		    bool benign = true;
+		    right_add_helper<complex_intern_type>(other, benign, &this->coeffs);
+            return *this;
+            }
+	    TwoDimensionalMultipolesKnobbed& operator += (const double other) {
+		    auto& c = this->getCoeffs();
+		    for (auto& val : c){
+			    val += other;
+		    }
+		    return *this;
+	    }
+
+	    /**
+	     * add
+	     *
+	     * \verbatim embed:rst:leading-asterisk
+	     *
+	     * Add an other set of multipoles to this set.
+	     *
+	     * .. todo::
+	     *      *  Implementation correct ?
+	     *      *  Review behaviour if representations of different size
+	     * \endverbatim
+	     */
+	    TwoDimensionalMultipolesKnobbed operator+(const TwoDimensionalMultipolesKnobbed &other) const {
+		    /*
+		      std::cerr << "Adding multipoles. this size " << this->getCoeffs().size()
                       << " others size" << other.getCoeffs().size()
                       << std::endl;
                       */
-            TwoDimensionalMultipolesKnobbed nh = this->clone();
-            nh += other;
-            return nh;
+		    TwoDimensionalMultipolesKnobbed nh = this->clone();
+		    nh += other;
+		    return nh;
+	    }
 
-        }
+	    TwoDimensionalMultipolesKnobbed  operator + (const std::vector<complex_type>& offset) const{
+		    TwoDimensionalMultipolesKnobbed nh = this->clone();
+		    nh += offset;
+		    return nh;
+	    }
 
-        TwoDimensionalMultipolesKnobbed &operator+=(const TwoDimensionalMultipolesKnobbed &other){
-                // should be false ... leave it that way to get further with prototyping
-                return this->right_add(other, true);
 
-            }
+	    TwoDimensionalMultipolesKnobbed operator + (const double other) const {
+		    TwoDimensionalMultipolesKnobbed nh = this->clone();
+		    /* std::cerr << "Adding const "<< other << "to these multipoles. this size " << this->getCoeffs().size()
+		       << std::endl; */
+		    nh += other;
+		    return nh;
+	    }
 
-        TwoDimensionalMultipolesKnobbed& operator += (const double other) {
-            auto& c = this->getCoeffs();
-            for (auto& val : c){
-                val += other;
-            }
-            return *this;
-        }
+	    TwoDimensionalMultipolesKnobbed  operator * (const std::vector<complex_type>& scale) const{
+		    TwoDimensionalMultipolesKnobbed nh = this->clone();
+		    nh *= scale;
+		    return nh;
+	    }
 
-        TwoDimensionalMultipolesKnobbed& operator +(const double other) const {
-            TwoDimensionalMultipolesKnobbed nh = this->clone();
-            /* std::cerr << "Adding const "<< other << "to these multipoles. this size " << this->getCoeffs().size()
-                      << std::endl; */
-            nh += other;
-            return nh;
-        }
+	    TwoDimensionalMultipolesKnobbed  operator * (const complex_type& scale) const{
+		    TwoDimensionalMultipolesKnobbed nh = this->clone();
+		    nh *= scale;
+		    return nh;
+	    }
 
-        /**
-		 * The maximum index represented.
-		 */
-		inline unsigned int getMultipoleMaxIndex(void) const {
-			return this->m_max_multipole;
-		}
+	    /**
+	     * The maximum index represented.
+	     */
+	    inline unsigned int getMultipoleMaxIndex(void) const {
+		    return this->m_max_multipole;
+	    }
 
-		/**
+	        /**
 		 * @brief access to the coefficents.
 		 *
 		 * \verbatim embed:rst:leading-asterisk
@@ -632,8 +597,6 @@ namespace thor_scsi::core {
 		inline const std::vector<complex_intern_type>& getCoeffs(void) const {
 			return this->coeffs;
 		}
-
-
 		/**
 		 * @brief: access to coeffcs for python
 		 *
@@ -643,32 +606,9 @@ namespace thor_scsi::core {
 			return this->getCoeffs();
 		}
 
-		virtual void show(std::ostream& strm, int level) const override final
-        {
-            bool debug_print_made = false;
-            strm << "interpolation='2D multipoles'";
-            if (level > 2){
-                strm << "(num=" << this->coeffs.size();
-            }
-            if (level  > 3){
-                strm << ", muls={";
-                int i = 1;
-                for(auto c : this->coeffs){
-                    if(i > 1){
-                        strm << ", ";
-                    }
-                    /* deactivated for variant development */
-                    if(!debug_print_made) {
-                        strm << "Coefficient output deactivated for variant development";
-                        debug_print_made = true;
-                    }
-                    // strm << i << ":[" << c.real() << ", " << c.imag() << "]";
-                    ++i;
-                }
-                strm << "}";
-            }
-            strm<<")";
-        }
+	        virtual void show(std::ostream& strm, int level) const override final {
+			multipoles_show(strm, this->coeffs, level);
+		}
 
 	protected:
 		unsigned int m_max_multipole;
@@ -708,7 +648,12 @@ namespace thor_scsi::core {
         TwoDimensionalMultipoles(const base&& o)
                 : base(std::move(o))
         {}
-        TwoDimensionalMultipoles(const complex_type & default_value, const unsigned int h_max=max_multipole)
+
+        TwoDimensionalMultipoles(const base& o)
+                : base(o)
+        {}
+
+	TwoDimensionalMultipoles(const complex_type & default_value, const unsigned int h_max=max_multipole)
             : base(default_value, h_max)
             {}
 
@@ -724,19 +669,26 @@ namespace thor_scsi::core {
             honer_complex_as_real(this->coeffs, x, y, Bx, By);
         }
 
-        TwoDimensionalMultipoles& operator += (const double& o) {base::operator += (o); return *this;}
-        //TwoDimensionalMultipoles& operator -= (const double& o) {base::operator -= (o); return *this;}
-        TwoDimensionalMultipoles& operator *= (const double& o) {base::operator *= (o); return *this;}
-        TwoDimensionalMultipoles& operator *= (const std::vector<double>& o) {base::operator *= (o); return *this;}
-        //TwoDimensionalMultipoles& operator /= (const double& o) {base::operator /= (o); return *this;}
-        //TwoDimensionalMultipoles& operator - (void) {base::operator- o; return *this;}
+        inline TwoDimensionalMultipoles& operator += (const TwoDimensionalMultipoles           & o)   { base::operator+= (o); return *this;  }
+        inline TwoDimensionalMultipoles& operator += (const std::complex<double>               & o)   { base::operator+= (o); return *this;  }
+	inline TwoDimensionalMultipoles& operator += (const std::vector<std::complex<double>>  & o)   { base::operator+= (o); return *this;  }
 
-        TwoDimensionalMultipoles& operator += (const TwoDimensionalMultipoles& o) {base::operator += (o); return *this;}
-        //TwoDimensionalMultipoles& operator -= (const TwoDimensionalMultipoles& o) {base::operator -= (o); return *this;}
-        //TwoDimensionalMultipoles& operator *= (const TwoDimensionalMultipoles& o) {base::operator *= (o); return *this;}
-        //TwoDimensionalMultipoles& operator /= (const TwoDimensionalMultipoles& o) {base::operator /= (o); return *this;}
+        // TwoDimensionalMultipoles& operator *= (const TwoDimensionalMultipoles           & o)   { base::operator*= (o); return *this;  }
+        inline TwoDimensionalMultipoles& operator *= (const std::complex<double>               & o)   { base::operator*= (o); return *this;  }
+	inline TwoDimensionalMultipoles& operator *= (const std::vector<std::complex<double>>  & o)   { base::operator*= (o); return *this;  }
+
+        inline TwoDimensionalMultipoles operator +   (const TwoDimensionalMultipoles           & o) const  { return TwoDimensionalMultipoles( base::operator+ (o) );  }
+        inline TwoDimensionalMultipoles operator +   (const std::complex<double>               & o) const  { return TwoDimensionalMultipoles( base::operator+ (o) );  }
+	inline TwoDimensionalMultipoles operator +   (const std::vector<std::complex<double>>  & o) const  { return TwoDimensionalMultipoles( base::operator+ (o) );  }
+
+        // TwoDimensionalMultipoles operator *   (const TwoDimensionalMultipoles           & o) const  { return TwoDimensionalMultipoles( base::operator+ (o) );  }
+        inline TwoDimensionalMultipoles operator *   (const std::complex<double>               & o) const  { return TwoDimensionalMultipoles( base::operator* (o) );  }
+	inline TwoDimensionalMultipoles operator *   (const std::vector<std::complex<double>>  & o) const  { return TwoDimensionalMultipoles( base::operator* (o) );  }
+
     };
 
+    inline TwoDimensionalMultipoles operator + (const std::complex<double>& a, const TwoDimensionalMultipoles& b) {return b + a; }
+    inline TwoDimensionalMultipoles operator * (const std::complex<double>& a, const TwoDimensionalMultipoles& b) {return b * a; }
     /*
     inline TwoDimensionalMultipoles& operator+ (const TwoDimensionalMultipoles& a, const double& b) {
         TwoDimensionalMultipoles()
@@ -748,7 +700,43 @@ namespace thor_scsi::core {
     }
      */
 
-    typedef TwoDimensionalMultipolesKnobbed<TpsaVariantType> TwoDimensionalMultipolesTpsa;
+    class TwoDimensionalMultipolesTpsa : public TwoDimensionalMultipolesKnobbed<TpsaVariantType>
+    {
+        using base = TwoDimensionalMultipolesKnobbed<TpsaVariantType>;
+    public:
+        TwoDimensionalMultipolesTpsa(const base&& o)
+                : base(std::move(o))
+        {}
+
+        TwoDimensionalMultipolesTpsa(const base& o)
+                : base(o)
+        {}
+
+	TwoDimensionalMultipolesTpsa(const complex_type & default_value, const unsigned int h_max=max_multipole)
+            : base(default_value, h_max)
+            {}
+
+	inline TwoDimensionalMultipolesTpsa& operator += (const TwoDimensionalMultipolesTpsa       & o)   { base::operator+= (o); return *this;  }
+        inline TwoDimensionalMultipolesTpsa& operator += (const complex_type                       & o)   { base::operator+= (o); return *this;  }
+	inline TwoDimensionalMultipolesTpsa& operator += (const std::vector<complex_type>          & o)   { base::operator+= (o); return *this;  }
+
+        // TwoDimensionalMultipolesTpsa& operator *= (const TwoDimensionalMultipolesTpsa           & o)   { base::operator*= (o); return *this;  }
+        inline TwoDimensionalMultipolesTpsa& operator *= (const complex_type                       & o)   { base::operator*= (o); return *this;  }
+	inline TwoDimensionalMultipolesTpsa& operator *= (const std::vector<complex_type>          & o)   { base::operator*= (o); return *this;  }
+
+        inline TwoDimensionalMultipolesTpsa operator +   (const TwoDimensionalMultipolesTpsa       & o) const  { return TwoDimensionalMultipolesTpsa( base::operator+ (o) );  }
+        inline TwoDimensionalMultipolesTpsa operator +   (const complex_type                       & o) const  { return TwoDimensionalMultipolesTpsa( base::operator+ (o) );  }
+	inline TwoDimensionalMultipolesTpsa operator +   (const std::vector<complex_type>          & o) const  { return TwoDimensionalMultipolesTpsa( base::operator+ (o) );  }
+
+        // TwoDimensionalMultipolesTpsa operator *   (const TwoDimensionalMultipolesTpsa           & o) const  { return TwoDimensionalMultipolesTpsa( base::operator+ (o) );  }
+        inline TwoDimensionalMultipolesTpsa operator *   (const complex_type                       & o) const  { return TwoDimensionalMultipolesTpsa( base::operator* (o) );  }
+	inline TwoDimensionalMultipolesTpsa operator *   (const std::vector<complex_type>          & o) const  { return TwoDimensionalMultipolesTpsa( base::operator* (o) );  }
+
+    };
+
+    inline TwoDimensionalMultipolesTpsa operator + (const gtpsa::CTpsaOrComplex& a, const TwoDimensionalMultipolesTpsa& b) {return b + a; }
+    inline TwoDimensionalMultipolesTpsa operator * (const gtpsa::CTpsaOrComplex& a, const TwoDimensionalMultipolesTpsa& b) {return b * a; }
+
 }
 #endif /* _THOR_SCSI_MULTIPOLES_H_ */
 /*

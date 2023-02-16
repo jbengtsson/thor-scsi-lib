@@ -33,6 +33,7 @@ set(thor_scsi_core_HEADERS
   core/transform_phase_space.h
   core/math_comb.h
   core/field_interpolation.h
+  core/multipole_types.h
   core/multipoles.h
   core/elements_basis.h
   core/internals.h

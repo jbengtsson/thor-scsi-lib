@@ -113,7 +113,7 @@ namespace thor_scsi::core {
 			// virtual void propagate(thor_scsi::core::ConfigType &conf, ss_vect<tps> &ps) = 0;
 			virtual void propagate(ConfigType &conf, gtpsa::ss_vect<double>      &ps) = 0;
 			virtual void propagate(ConfigType &conf, gtpsa::ss_vect<gtpsa::tpsa> &ps) = 0;
-			virtual void propagate(ConfigType &conf, gtpsa::ss_vect<tps>         &ps) = 0;
+		        // virtual void propagate(ConfigType &conf, gtpsa::ss_vect<tps>         &ps) = 0;
 			/*
 			 * the non linear tps part ... to be made
 			 */

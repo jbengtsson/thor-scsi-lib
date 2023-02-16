@@ -14,7 +14,7 @@ namespace thor_scsi::core {
 	 * Todo: move to API part?
 	 */
     template<class C, typename = typename C::complex_type, typename = typename C::double_type>
-	class Field2DInterpolationKnobbed{
+    class Field2DInterpolationKnobbed{
     protected:
         using double_type = typename C::double_type;
         using complex_type = typename C::complex_type;
@@ -71,6 +71,7 @@ namespace thor_scsi::core {
 	};
 
     typedef Field2DInterpolationKnobbed<StandardDoubleType> Field2DInterpolation;
+    typedef Field2DInterpolationKnobbed<TpsaVariantType>    Field2DInterpolationDependence;
 
     template<class C>
     inline

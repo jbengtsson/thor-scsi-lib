@@ -49,7 +49,11 @@ namespace thor_scsi::elements {
 		inline const std::shared_ptr<thor_scsi::core::TwoDimensionalMultipolesKnobbed<C>> getMultipoles(void) const {
 			auto tmp = this->getFieldInterpolator();
 			if(!tmp){
-				throw std::logic_error("Field interpolator NULL");
+				std::stringstream strm;
+				strm << __FILE__ << " ClassicalMAgnet.getMultipoles: this->getFieldInterpolator = NULL ";
+				std::cerr << strm.str() << std::endl;
+				abort();
+				throw std::logic_error(strm.str());
 			}
 			return tmp;
 		}
@@ -92,6 +96,7 @@ namespace thor_scsi::elements {
 	};
 
     typedef ClassicalMagnetWithKnob<thor_scsi::core::StandardDoubleType> ClassicalMagnet;
+    typedef ClassicalMagnetWithKnob<thor_scsi::core::TpsaVariantType> ClassicalMagnetTpsa;
 } // Name space
 
 #endif // _THOR_SCSI_ELEMENTS_CLASSICAL_MAGNET_H_

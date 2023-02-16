@@ -132,8 +132,13 @@ def compute_A_CS(n_dof, A):
         # Rotation matrix
         k2 = 2 * k
         if True:
-            tmp = np.array([[c, -s], [s, c]])
+            # fmt: off
+            tmp = np.array([
+                [c, -s],
+                [s,  c]
+            ])
             R[k2 : k2 + 2, k2 : k2 + 2] = tmp
+            # fmt: on
             # continue
         else:
             R[k2, k2], R[k2][k2 + 1] = c, -s
