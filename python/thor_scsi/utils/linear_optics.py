@@ -129,13 +129,6 @@ def check_if_stable_2D(M):
     return check_if_stable_1D(0, M) and check_if_stable_1D(1, M)
 
 
-def ind_0():
-    """Index for constant TPSA term.
-    """
-    dof = 3
-    return np.zeros(2*dof, int)
-
-
 def ind_1(k):
     """Index for linear TPSA term.
     """
@@ -172,17 +165,18 @@ def compute_nu_xi(desc, tpsa_order, M):
     nu, xi = [np.zeros(2), np.zeros(2)]
     stable = check_if_stable_2D(M.jacobian())
     if stable:
+        M_delta = gtpsa.tpsa(desc, tpsa_order)
         for k in range(2):
-            tr = gtpsa.tpsa(desc, tpsa_order)
+            M_delta.clear()
             # m_11 + delta * m_16.
-            tr.set(ind_0(), 0e0, M[2*k].get(ind_1(2*k)))
-            tr.set(ind_1(delta_), 1e0, M[2*k].get(ind_2(2*k, delta_)))
+            M_delta += M[2*k].get(ind_1(2*k))
+            M_delta.set(ind_1(delta_), 0e0, M[2*k].get(ind_2(2*k, delta_)))
             # m_22 + delta * m_26.
-            tr.set(ind_0(), 1e0, M[2*k+1].get(ind_1(2*k+1)))
-            tr.set(ind_1(delta_), 1e0, M[2*k+1].get(ind_2(2*k+1, delta_)))
-            # tr = m_11 + m_22.
-            nu_tpsa = acos2_tpsa(M.jacobian()[2*k][2*k+1], tr/2e0)/(2e0*np.pi)
-            nu[k], xi[k] = [nu_tpsa.get(ind_0()), nu_tpsa.get(ind_1(delta_))]
+            M_delta += M[2*k+1].get(ind_1(2*k+1))
+            M_delta.set(ind_1(delta_), 1e0, M[2*k+1].get(ind_2(2*k+1, delta_)))
+            # M_delta = m_11 + m_22.
+            nu_tpsa = acos2_tpsa(M.jacobian()[2*k][2*k+1], M_delta/2e0)/(2e0*np.pi)
+            nu[k], xi[k] = [nu_tpsa.get(), nu_tpsa.get(ind_1(delta_))]
     return stable, nu, xi
 
 
