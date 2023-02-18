@@ -59,7 +59,7 @@ namespace thor_scsi::elements {
 		}
 
 		inline void setMainMultipoleStrength(const Config &config){
-			const double K = config.get<double>("K");
+			const double_type K = config.get<double>("K");
 			// Watch the apersand ...
 			this->setMainMultipoleStrength(K);
 		}
@@ -74,8 +74,8 @@ namespace thor_scsi::elements {
 			this->setMainMultipoleStrength(K);
 		}
 
-		inline void setMainMultipoleStrength(const double part){
-			double re=0e0, im=0e0;
+		inline void setMainMultipoleStrength(const double_type part){
+			double_type re=0e0, im=0e0;
 			if(!this->isSkew()){re = part; } else {	im = part;}
 			const complex_type Cn(re, im);
 			this->setMainMultipoleStrength(Cn);

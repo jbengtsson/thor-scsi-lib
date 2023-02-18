@@ -165,8 +165,9 @@ void add_methods_classical_magnet(py::class_<Class> t_mapper)
 		.def("get_main_multipole_strength", &Class::getMainMultipoleStrength)
 		.def("get_main_multipole_strength_component", &Class::getMainMultipoleStrengthComponent)
 
-		.def("set_main_multipole_strength", py::overload_cast<const double_type>(&Class::setMainMultipoleStrength))
-		.def("set_main_multipole_strength", py::overload_cast<const complex_type>(&Class::setMainMultipoleStrength))
+		//.def("set_main_multipole_strength", py::overload_cast<const double_type>(&Class::setMainMultipoleStrength))
+		// .def("set_main_multipole_strength", [](Class &inst, const double_type v) {inst.setMainMultipoleStrength(v);})
+		.def("set_main_multipole_strength", [](Class &inst, const complex_type v) {inst.setMainMultipoleStrength(v);})
 		.def("propagate", py::overload_cast<tsc::ConfigType&, gtpsa::ss_vect<double>&>      (&Class::propagate), pass_d_doc)
 		// .def("propagate", py::overload_cast<tsc::ConfigType&, gtpsa::ss_vect<tps>&>         (&tse::ClassicalMagnet::propagate), pass_tps_doc)
 		.def("propagate", py::overload_cast<tsc::ConfigType&, gtpsa::ss_vect<gtpsa::tpsa>&> (&Class::propagate), pass_tps_doc)
@@ -236,7 +237,7 @@ struct TemplatedClasses
 			PyClassicalMagnet<C>,
 			std::shared_ptr<tse::ClassicalMagnetWithKnob<C>>
 			> cm(this->m_module, cm_name.c_str(), mpole_type);
-		add_methods_classical_magnet<tsc::StandardDoubleType, tse::ClassicalMagnet>(cm);
+		add_methods_classical_magnet<C, tse::ClassicalMagnetWithKnob<C>>(cm);
 		cm
 			.def(py::init<const Config &>());
 

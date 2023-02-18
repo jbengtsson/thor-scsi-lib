@@ -8,6 +8,7 @@
 #include <thor_scsi/elements/sextupole.h>
 #include "check_multipole.h"
 #include <ostream>
+#include <chrono>
 
 namespace tsc = thor_scsi::core;
 namespace tse = thor_scsi::elements;
@@ -342,6 +343,7 @@ BOOST_AUTO_TEST_CASE(test30_sextupole_tpsa)
 	/* gradient on K2 */
 	std::vector<cdbl> K2_grad({0, 0, 0,  0, 0, 0,  1, 0, 0});
 	K2.setv(1, K2_grad);
+	// sext.getMultipoles()->setMultipole(3, K2);
 	sext.setMainMultipoleStrength(K2);
 
 	auto c9 = gtpsa::ctpsa(desc, mo);
@@ -361,20 +363,26 @@ BOOST_AUTO_TEST_CASE(test30_sextupole_tpsa)
 	std::cout << sext.repr() << std::endl;
 
 	gtpsa::ss_vect<gtpsa::tpsa> ssv(desc, mo);
-
+	ssv.set_identity();
 
 	std::vector<std::string> names = {"x", "px", "y", "py", "delta", "ct", "K2", "dx"};
 
 	{
 		for(size_t i=0; i<ssv.size(); ++i){
-			ssv[i].print(names[i].c_str(), 1e-12);
+			ssv[i].print(names[i].c_str(), 1e-6);
 		}
 	}
 
+
+	auto t_start = std::chrono::system_clock::now();
 	sext.propagate(calc_config, ssv);
+	auto t_end = std::chrono::system_clock::now();
+	std::chrono::duration<double> t_diff = t_end - t_start;
+	std::cout <<" Propgagte required " << t_diff.count() << " seconds" << std::endl;
+
 	{
 		for(size_t i=0; i<ssv.size(); ++i){
-			ssv[i].print(names[i].c_str(), 1e-12);
+			ssv[i].print(names[i].c_str(), 1e-6);
 		}
 	}
 

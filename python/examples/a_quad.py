@@ -40,11 +40,14 @@ C.setAny("K", 1.2)
 C.setAny("N", 1)
 quad = tslib.QuadrupoleTpsa(C)
 
-desc = gtpsa.desc(8, 4)
+mo = 4
+desc = gtpsa.desc(8, mo)
 
 desc = gtpsa.desc(8, mo)
 ps = gtpsa.ss_vect_tpsa(desc, 4)
 ps.set_identity()
 z = gtpsa.ctpsa(desc, mo)
+muls = quad.get_multipoles()
+print(muls)
 K = quad.get_multipoles().get_multipole(1).real()
 z.set(0, K)
