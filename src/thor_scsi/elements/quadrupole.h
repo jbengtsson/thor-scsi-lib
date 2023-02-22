@@ -4,11 +4,14 @@
 #include <thor_scsi/elements/classical_magnet.h>
 
 namespace thor_scsi::elements {
-	class QuadrupoleType : public ClassicalMagnet {
+    template<class C>
+	class QuadrupoleTypeWithKnob : public ClassicalMagnetWithKnob<C> {
 	public:
-		inline QuadrupoleType(const Config &config) : ClassicalMagnet(config){
-			this->setMainMultipoleStrength(config);
-		}
+		inline QuadrupoleTypeWithKnob(const Config &config)
+           : ClassicalMagnetWithKnob<C>(config)
+           {
+			    this->setMainMultipoleStrength(config);
+           }
 
 		inline int getMainMultipoleNumber(void) const override final {
 			return 2;
@@ -19,6 +22,7 @@ namespace thor_scsi::elements {
 		const char* type_name(void) const override final { return "Quadrupole"; };
 	};
 
+    typedef QuadrupoleTypeWithKnob<thor_scsi::core::StandardDoubleType> QuadrupoleType;
 } // Name space
 
 #endif // _THOR_SCSI_ELEMENTS_QUADRUPOLE_H_

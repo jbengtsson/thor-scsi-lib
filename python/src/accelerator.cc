@@ -96,9 +96,11 @@ Warning:\n\
 		.def("propagate", py::overload_cast<tsc::ConfigType&, ts::ss_vect_dbl&, size_t, int, size_t, bool>(&ts::Accelerator::propagate), prop_doc,
 		     py::arg("calc_config"), py::arg("ps"), py::arg("start") = 0, py::arg("max_elements") = imax, py::arg("n_turns") = n_turns,
 		     py::arg("tracy_compatible") = false)
+             /*
 		.def("propagate", py::overload_cast<tsc::ConfigType&, ts::ss_vect_tps&, size_t, int, size_t, bool>(&ts::Accelerator::propagate), prop_doc,
 		     py::arg("calc_config"), py::arg("ps"), py::arg("start") = 0, py::arg("max_elements") = imax, py::arg("n_turns") = n_turns,
 		     py::arg("tracy_compatible") = false)
+              */
 		.def("propagate", py::overload_cast<tsc::ConfigType&, ts::ss_vect_tpsa&, size_t, int, size_t, bool>(&ts::Accelerator::propagate), prop_doc,
 		     py::arg("calc_config"), py::arg("ps"), py::arg("start") = 0, py::arg("max_elements") = imax, py::arg("n_turns") = n_turns,
 		     py::arg("tracy_compatible") = false)

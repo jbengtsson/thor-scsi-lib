@@ -283,6 +283,7 @@ static void compute_transport_matrix_prop(ts::Accelerator& accelerator, const in
 		end = clock.now();
 	}
 
+	/*
 	if(do_tps){
 		for(int i=0; i< warmup_turns; ++i){
 			// gtpsa::ss_vect<gtpsa::tpsa> psw(ps[0]);
@@ -300,28 +301,35 @@ static void compute_transport_matrix_prop(ts::Accelerator& accelerator, const in
 			end_orig = clock.now();
 		}
 	}
+	*/
 	arma::mat pmap = ps.toMatrix();
 	arma::mat pmap_orig = ps_orig.toMatrix();
 
 	std::cout << "Computed poincare map " << std::endl;
 	if(very_verbose) {
 		std::cout  << "gtpsa::tpsa\n"  << pmap;
+		/*
 		if(do_tps){
 			std::cout  << "tps        \n"  << pmap_orig;
 		}
+		*/
 	}
+	/*
 	if(do_tps){
 		std::cout  << "diff\n" << pmap - pmap_orig  << std::endl;
 	}
+	*/
 	std::cout << "Computed poincare map (gtsa)" << std::endl;
 	ps.show(std::cout, 10);
 	std::cout << std::endl;
 
+	/*
 	if(do_tps){
 		std::cout << "                       (tps)" << std::endl;
 		ps_orig.show(std::cout, 10);
 		std::cout << std::endl;
 	}
+	*/
 
 	if(warmup_turns){
 		auto dt = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
@@ -332,6 +340,7 @@ static void compute_transport_matrix_prop(ts::Accelerator& accelerator, const in
 			  << " dt: " << dt << " us, " << dt / 1000.0 << " ms"
 			  << " per turn " << dtp << " us"
 			  << std::endl;
+		/*
 		if (do_tps) {
 			dt = std::chrono::duration_cast<std::chrono::microseconds>(end_orig - start_orig).count();
 			dtp = dt / n_turns;
@@ -342,6 +351,7 @@ static void compute_transport_matrix_prop(ts::Accelerator& accelerator, const in
 				  << " per turn " << dtp << " us"
 				  << std::endl;
 		}
+		*/
 	}
 }
 

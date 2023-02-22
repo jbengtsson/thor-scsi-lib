@@ -12,6 +12,7 @@ namespace ts = thor_scsi;
 namespace tsc = thor_scsi::core;
 namespace tse = thor_scsi::elements;
 
+using gtpsa::sin;
 /* ==========================================================================
    Support functions
    required by other elements too ?
@@ -30,8 +31,8 @@ namespace thor_scsi::elements {
 	template<typename T>
 	void bend_fringe(const tsc::ConfigType &conf, const double hb, gtpsa::ss_vect<T> &ps);
 
-	template<typename T>
-	void quad_fringe(const tsc::ConfigType &conf, const double b2, gtpsa::ss_vect<T> &ps);
+        template<typename T, typename P>
+	void quad_fringe(const tsc::ConfigType &conf, const P b2, gtpsa::ss_vect<T> &ps);
 
 }
 
@@ -144,11 +145,12 @@ void tse::bend_fringe(const tsc::ConfigType &conf, const double hb, gtpsa::ss_ve
 }
 
 
-template<typename T>
-void tse::quad_fringe(const tsc::ConfigType &conf, const double b2, gtpsa::ss_vect<T> &ps)
+template<typename T, typename P>
+void tse::quad_fringe(const tsc::ConfigType &conf, const P b2, gtpsa::ss_vect<T> &ps)
 {
     //T u, p_s;
-
+#warning "disabled quad fringe for tpsa parameter dependence"
+#if 0
   T u = b2/(12e0*(1e0+ps[delta_]));
   T p_s = u/(1e0+ps[delta_]);
   ps[py_] /= 1e0 - 3e0*u*sqr(ps[y_]); ps[y_] -= u*tse::cube(ps[y_]);
@@ -162,6 +164,8 @@ void tse::quad_fringe(const tsc::ConfigType &conf, const double b2, gtpsa::ss_ve
   ps[x_] = exp(u*sqr(ps[y_]))*ps[x_]; ps[px_] = exp(-u*sqr(ps[y_]))*ps[px_];
   ps[py_] -= 2e0*u*ps[y_]*ps[x_]*ps[px_];
   if (conf.Cavity_on) ps[ct_] += p_s*sqr(ps[y_])*ps[x_]*ps[px_];
+
+#endif
 }
 
 
@@ -171,18 +175,18 @@ void tse::quad_fringe(const tsc::ConfigType &conf, const double b2, gtpsa::ss_ve
    ========================================================================== */
 
 
-
-void tse::FieldKick::FieldKickForthOrder::computeIntegrationSteps(void)
+template<class C>
+void tse::FieldKickForthOrder<C>::computeIntegrationSteps(void)
 {
 
-	if(!parent){
+	if(!this->parent){
 		return;
 	}
-	const double Pirho = parent->getCurvature(), length = parent->getLength();
+	const double Pirho = this->parent->getCurvature(), length = this->parent->getLength();
 	double dL;
 	auto n_steps = this->getNumberOfIntegrationSteps();
 
-	if(parent->assumingCurvedTrajectory()){
+	if(this->parent->assumingCurvedTrajectory()){
 		// along the arc
 		dL = 2e0/ Pirho * sin(length * Pirho/2e0) / n_steps;
 	}else{
@@ -192,7 +196,8 @@ void tse::FieldKick::FieldKickForthOrder::computeIntegrationSteps(void)
 	this->splitIntegrationStep(dL, &this->dL1, &this->dL2, &this->dkL1, &this->dkL2);
 }
 
-void tse::FieldKick::FieldKickForthOrder::
+template<class C>
+void tse::FieldKickForthOrder<C>::
 splitIntegrationStep(const double dL, double *dL1, double *dL2, double *dkL1, double *dkL2)
   const
 {
@@ -229,17 +234,20 @@ splitIntegrationStep(const double dL, double *dL1, double *dL2, double *dkL1, do
  *
  *
  */
+template<class C>
 template<typename T>
-inline void tse::FieldKick::FieldKickForthOrder::_localPropagate(tsc::ConfigType &conf, gtpsa::ss_vect<T> &ps)
+inline void tse::FieldKickForthOrder<C>::_localPropagate(tsc::ConfigType &conf, gtpsa::ss_vect<T> &ps)
 {
 
 
-	double dL = 0.0, h_ref = 0.0;
+	double  h_ref = 0.0;
 	auto PN = this->integration_steps;
-	const double length = parent->getLength(), Pirho = parent->getCurvature();
+	auto length = this->parent->getLength();
+    double Pirho = this->parent->getCurvature();
 
-	THOR_SCSI_LOG(DEBUG) << "\n  name = " << parent->name << " N = " << PN << "\n";
+	THOR_SCSI_LOG(DEBUG) << "\n  name = " << this->parent->name << " N = " << PN << "\n";
 
+    auto dL = length/PN;
 	if (!conf.Cart_Bend) {
 		// Polar coordinates.
 		h_ref = Pirho; dL = length/PN;
@@ -247,7 +255,7 @@ inline void tse::FieldKick::FieldKickForthOrder::_localPropagate(tsc::ConfigType
 		// Cartesian coordinates.
 		h_ref = 0e0;
 		//if (Pirho == 0e0){
-		if(!parent->assumingCurvedTrajectory()){
+		if(!this->parent->assumingCurvedTrajectory()){
 			// along the straight line
 			dL = length/PN;
 		}else{
@@ -320,8 +328,8 @@ inline void tse::FieldKick::FieldKickForthOrder::_localPropagate(tsc::ConfigType
 #endif /* SYNCHROTRON_INTEGRALS */
 }
 
-
-tse::FieldKick::FieldKick(const Config &config) : tse::FieldKickAPI(config)
+template<class C>
+tse::FieldKickKnobbed<C>::FieldKickKnobbed(const Config &config) : tse::FieldKickAPIKnobbed<C>(config)
 {
 	// Field interpolation type
 	this->intp = nullptr;
@@ -337,9 +345,9 @@ tse::FieldKick::FieldKick(const Config &config) : tse::FieldKickAPI(config)
 
 }
 
-tse::FieldKick::FieldKick(tse::FieldKick&& O)
-	: tse::FieldKickAPI(std::move(O))
-
+template<class C>
+tse::FieldKickKnobbed<C>::FieldKickKnobbed(tse::FieldKickKnobbed<C>&& O)
+	: tse::FieldKickAPIKnobbed<C>(std::move(O))
 {
 	this->setBendingAngle(O.getBendingAngle());
 	this->setEntranceAngle(O.getEntranceAngle());
@@ -360,9 +368,10 @@ tse::FieldKick::FieldKick(tse::FieldKick&& O)
 
 }
 
-void tse::FieldKick::show(std::ostream& strm, const int level) const
+template<class C>
+void tse::FieldKickKnobbed<C>::show(std::ostream& strm, const int level) const
 {
-	tse::LocalGalileanPRot::show(strm, level);
+	tse::LocalGalileanPRotKnobbed<C>::show(strm, level);
 	if(level >= 1){
 		/* at least intercept it with a blank */
 		strm << " lens type: " <<  (this->isThick() ? "thick" : "thin") << " ";
@@ -394,8 +403,9 @@ void tse::FieldKick::show(std::ostream& strm, const int level) const
 }
 
 
+template<class C>
 template<typename T>
-void tse::FieldKick::_quadFringe(thor_scsi::core::ConfigType &conf, gtpsa::ss_vect<T> &ps)
+void tse::FieldKickKnobbed<C>::_quadFringe(thor_scsi::core::ConfigType &conf, gtpsa::ss_vect<T> &ps)
 {
 
 	if (!conf.quad_fringe){ return ; }
@@ -416,8 +426,9 @@ void tse::FieldKick::_quadFringe(thor_scsi::core::ConfigType &conf, gtpsa::ss_ve
 	// T Gy=0e0, Gx=0e0;
 	// should be checked how to implement
 	// muls->gradient(ps[x_], ps[y_], &Gx, &Gy);
-	const tsc::cdbl C2 = muls->getMultipole(2);
-	tse::quad_fringe(conf, C2.real(), ps);
+	const complex_type C2 = muls->getMultipole(2);
+#warning "Disabled quad fringe for tpsa"
+	//tse::quad_fringe(conf, C2.real(), ps);
 
 	/*
 	   if (conf.quad_fringe && (PB[Quad+HOMmax] != 0e0)){
@@ -426,10 +437,11 @@ void tse::FieldKick::_quadFringe(thor_scsi::core::ConfigType &conf, gtpsa::ss_ve
 	*/
 }
 
+template<class C>
 template<typename T>
-inline void tse::FieldKick::
+inline void tse::FieldKickKnobbed<C>::
 thinKickAndRadiate(const thor_scsi::core::ConfigType &conf,
-		   const thor_scsi::core::Field2DInterpolation& intp,
+		   const thor_scsi::core::Field2DInterpolationKnobbed<C>& intp,
 		   const double L, const double h_bend, const double h_ref,
 		   gtpsa::ss_vect<T> &ps)
 {
@@ -472,8 +484,9 @@ thinKickAndRadiate(const thor_scsi::core::ConfigType &conf,
  * typically used for implementing correctors
  *
  */
+template<class C>
 template<typename T>
-inline void tse::FieldKick::_localPropagateThin(const tsc::ConfigType &conf, gtpsa::ss_vect<T> &ps)
+inline void tse::FieldKickKnobbed<C>::_localPropagateThin(const tsc::ConfigType &conf, gtpsa::ss_vect<T> &ps)
 {
 	// length has to be zero here
 	/// todo: add a check at least for debug purposes
@@ -486,13 +499,13 @@ inline void tse::FieldKick::_localPropagateThin(const tsc::ConfigType &conf, gtp
 	this->thinKickAndRadiate(conf, *this->intp, length, 0e0, 0e0, ps);
 }
 
-
+template<class C>
 template<typename T>
-inline void tse::FieldKick::_localPropagateBody(tsc::ConfigType &conf, gtpsa::ss_vect<T> &ps)
+inline void tse::FieldKickKnobbed<C>::_localPropagateBody(tsc::ConfigType &conf, gtpsa::ss_vect<T> &ps)
 {
 	/* define integration step */
 	if (!this->isThick()) {
-		tse::FieldKick::_localPropagateThin(conf, ps);
+		tse::FieldKickKnobbed<C>::_localPropagateThin(conf, ps);
 		return;
 	}
 	this->integ4O._localPropagate(conf, ps);
@@ -523,10 +536,11 @@ inline void tse::FieldKick::_localPropagateBody(tsc::ConfigType &conf, gtpsa::ss
  *
  * \endverbatim
  */
+template<class C>
 template<typename T>
-void tse::FieldKick::_localPropagate(tsc::ConfigType &conf, gtpsa::ss_vect<T> &ps)
+void tse::FieldKickKnobbed<C>::_localPropagate(tsc::ConfigType &conf, gtpsa::ss_vect<T> &ps)
 {
-
+    const auto& Pirho = this->getCurvature();
 
 	switch (Pmethod) {
 	case Meth_Fourth: break;
@@ -584,7 +598,7 @@ void tse::FieldKick::_localPropagate(tsc::ConfigType &conf, gtpsa::ss_vect<T> &p
 	}
 
 	// Body calculation delegated
-	tse::FieldKick::_localPropagateBody(conf, ps);
+	tse::FieldKickKnobbed<C>::_localPropagateBody(conf, ps);
 
 	// Fringe fields.
 	if (!conf.Cart_Bend) {
@@ -597,7 +611,27 @@ void tse::FieldKick::_localPropagate(tsc::ConfigType &conf, gtpsa::ss_vect<T> &p
 	this->_quadFringe(conf, ps);
 }
 
+using thor_scsi::core::StandardDoubleType;
+using thor_scsi::core::TpsaVariantType;
 
-template void tse::FieldKick::_localPropagate(tsc::ConfigType &conf, gtpsa::ss_vect<double>      &ps);
-template void tse::FieldKick::_localPropagate(tsc::ConfigType &conf, gtpsa::ss_vect<gtpsa::tpsa> &ps);
-template void tse::FieldKick::_localPropagate(tsc::ConfigType &conf, gtpsa::ss_vect<tps>         &ps);
+template void tse::FieldKickKnobbed<StandardDoubleType>::_localPropagate(tsc::ConfigType &conf, gtpsa::ss_vect<double>      &ps);
+template void tse::FieldKickKnobbed<StandardDoubleType>::_localPropagate(tsc::ConfigType &conf, gtpsa::ss_vect<gtpsa::tpsa> &ps);
+// template void tse::FieldKickKnobbed<StandardDoubleType>::_localPropagate(tsc::ConfigType &conf, gtpsa::ss_vect<tps>         &ps);
+
+template void tse::FieldKickKnobbed<TpsaVariantType>::_localPropagate(tsc::ConfigType &conf, gtpsa::ss_vect<double>      &ps);
+
+template void tse::FieldKickKnobbed<StandardDoubleType>::show(std::ostream &strm, const int level) const;
+template void tse::FieldKickKnobbed<TpsaVariantType>::show(std::ostream &strm, const int level) const;
+
+template tse::FieldKickKnobbed<StandardDoubleType>::FieldKickKnobbed(const Config &config);
+template tse::FieldKickKnobbed<StandardDoubleType>::FieldKickKnobbed(thor_scsi::elements::FieldKickKnobbed<StandardDoubleType> &&);
+
+template tse::FieldKickKnobbed<TpsaVariantType>::FieldKickKnobbed(const Config &config);
+template tse::FieldKickKnobbed<TpsaVariantType>::FieldKickKnobbed(thor_scsi::elements::FieldKickKnobbed<TpsaVariantType> &&);
+
+
+template void tse::FieldKickForthOrder<StandardDoubleType>::splitIntegrationStep(const double dL, double *dL1, double *dL2,
+                                                                                 double *dkL1, double *dkL2) const;
+
+template void tse::FieldKickForthOrder<TpsaVariantType>::splitIntegrationStep(const double dL, double *dL1, double *dL2,
+                                                                                 double *dkL1, double *dkL2) const;

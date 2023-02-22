@@ -4,7 +4,8 @@
 #include <thor_scsi/elements/classical_magnet.h>
 
 namespace thor_scsi::elements {
-	class BendingType : public ClassicalMagnet {
+	template<class C>
+	class BendingTypeWithKnob : public ClassicalMagnetWithKnob<C> {
 		/**
 		 *1
 		 * Can derive from classical magnet -> mpole -> field kick as this is currently deriving from
@@ -37,7 +38,7 @@ namespace thor_scsi::elements {
 		     B: bending, L=0.70, T=10.0, T1:=5.0, T2:=5.0, K=-1.0, N=8, Method=2;
 		 */
 	public:
-		inline BendingType(const Config &config) : ClassicalMagnet(config){
+		inline BendingTypeWithKnob(const Config &config) : ClassicalMagnetWithKnob<C>(config){
 			const double gradient = config.get<double>("K");
 			this->getMultipoles()->setMultipole(2, gradient);
 
@@ -60,6 +61,8 @@ namespace thor_scsi::elements {
 		};
 		const char* type_name(void) const override final { return "Bending"; };
 	};
+
+	typedef BendingTypeWithKnob<thor_scsi::core::StandardDoubleType> BendingType;
 
 } // Name space
 

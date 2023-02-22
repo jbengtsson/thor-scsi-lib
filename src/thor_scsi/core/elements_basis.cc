@@ -1,10 +1,12 @@
 #include <thor_scsi/core/elements_basis.h>
 
 namespace tsc = thor_scsi::core;
+/*
+template<class C>
+void tsc::ElemTypeKnobbed<C>::show(std::ostream& strm, int level) const
 
-void tsc::ElemType::show(std::ostream& strm, int level) const
 {
-	CellVoid::show(strm, level);
+	tsc::CellVoid::show(strm, level);
 	if(level >= 1){
 		strm << " L="<<this->PL<<"";
 	}
@@ -22,3 +24,4 @@ void tsc::ElemType::show(std::ostream& strm, int level) const
 	}
 
 }
+ */

@@ -235,8 +235,8 @@ public:
 		 * Required as helper for drift -- kick -- drift implementationa
 		 * See drift.h for DriftType, which is an implementation as separate lattice lement
 		 */
-		template<typename T>
-		void drift_propagate(const thor_scsi::core::ConfigType &conf, const double L, gtpsa::ss_vect<T> &ps);
+		template<typename T, typename T2>
+		void drift_propagate(const thor_scsi::core::ConfigType &conf, const T2& L, gtpsa::ss_vect<T> &ps);
 
 		/**
 		 * @brief implementation of the thin kick (thin lens approximation)

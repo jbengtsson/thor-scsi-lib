@@ -11,13 +11,16 @@
 
 namespace tsc = thor_scsi::core;
 namespace tse = thor_scsi::elements;
+typedef typename tsc::StandardDoubleType::complex_type cdbl;
 
 auto desc = std::make_shared<gtpsa::desc>(6, 6);
 const auto t_ref = gtpsa::tpsa(desc, 1);
 
-static void check_only_quad_set(std::shared_ptr<tsc::TwoDimensionalMultipoles> muls, const tsc::cdbl ref)
+template<class C>
+static void check_only_quad_set(std::shared_ptr<tsc::TwoDimensionalMultipolesKnobbed<C>> muls, const cdbl ref)
 {
-	check_only_major_multipole_set(muls, ref, 2);
+	auto check = CheckMultipoles<C>();
+    check.only_major_multipole_set(muls, ref, 2);
 }
 
 BOOST_AUTO_TEST_CASE(test10_quadrupole_ostream)
@@ -48,7 +51,7 @@ BOOST_AUTO_TEST_CASE(test10_quadrupole_K)
 	C.set<double>("L", 0e0);
 	C.set<double>("N", 1);
 
-	const tsc::cdbl ref(grad, 0e0);
+	const cdbl ref(grad, 0e0);
 	auto quad = tse::QuadrupoleType(C);
 	BOOST_CHECK(quad.getMainMultipoleNumber() == 2);
 	// quadrupoles are always thin elements
@@ -89,12 +92,12 @@ BOOST_AUTO_TEST_CASE(test10_quadrupole_setMul)
 			BOOST_CHECK_SMALL(val.imag(),  1e-12);
 		}
 
-		const tsc::cdbl ref(0e0, 0e0);
+		const cdbl ref(0e0, 0e0);
 		check_only_quad_set(quad.getMultipoles(), ref);
 	}
 	{
 		auto quad = tse::QuadrupoleType(C);
-		quad.setMainMultipoleStrength(tsc::cdbl(0, 0));
+		quad.setMainMultipoleStrength(cdbl(0, 0));
 		auto val = quad.getMainMultipoleStrength();
 		BOOST_CHECK_SMALL(val.real(),  1e-12);
 		BOOST_CHECK_SMALL(val.imag(),  1e-12);
@@ -116,7 +119,7 @@ BOOST_AUTO_TEST_CASE(test10_quadrupole_setMul)
 			BOOST_CHECK_CLOSE(c.real(),  val,  1e-12);
 			BOOST_CHECK_SMALL(c.imag(),        1e-12);
 		}
-		const tsc::cdbl ref(val, 0e0);
+		const cdbl ref(val, 0e0);
 		check_only_quad_set(quad.getMultipoles(), ref);
 	}
 
@@ -124,7 +127,7 @@ BOOST_AUTO_TEST_CASE(test10_quadrupole_setMul)
 	{
 		auto quad = tse::QuadrupoleType(C);
 		const double val = 3e0;
-		const tsc::cdbl ref(val, 0e0);
+		const cdbl ref(val, 0e0);
 		quad.setMainMultipoleStrength(ref);
 		auto c = quad.getMainMultipoleStrength();
 		BOOST_CHECK_CLOSE(c.real(),  val, 1e-12);
@@ -135,7 +138,7 @@ BOOST_AUTO_TEST_CASE(test10_quadrupole_setMul)
 	{
 		auto quad = tse::QuadrupoleType(C);
 		const double val = 42e0;
-		const tsc::cdbl ref(0e0, val);
+		const cdbl ref(0e0, val);
 		quad.setMainMultipoleStrength(-ref);
 		auto c = quad.getMainMultipoleStrength();
 		BOOST_CHECK_SMALL(c.real(),      1e-12);
@@ -202,7 +205,7 @@ BOOST_AUTO_TEST_CASE(test20_quadrupole_thin_eval)
 			continue;
 		}
 
-		quad.setMainMultipoleStrength(tsc::cdbl(1e0/i, 0e0));
+		quad.setMainMultipoleStrength(cdbl(1e0/i, 0e0));
 		gtpsa::ss_vect<double> ps{0,0,0,0,0,0};;
 		quad.propagate(calc_config, ps);
 
@@ -229,7 +232,7 @@ BOOST_AUTO_TEST_CASE(test20_quadrupole_thin_eval)
 		/* normal quadrupole */
 		const double grad = 355e0 / 113e0;
 		auto quad = tse::QuadrupoleType(C);
-		quad.setMainMultipoleStrength(tsc::cdbl(grad, 0));
+		quad.setMainMultipoleStrength(cdbl(grad, 0));
 		for(int i = -1; i <= 1; ++i){
 			if (i == 0){
 				/* checked above */
@@ -283,7 +286,7 @@ BOOST_AUTO_TEST_CASE(test20_quadrupole_thin_eval)
 		/* skew quadrupole */
 		const double grad = 1/28.0;
 		auto quad = tse::QuadrupoleType(C);
-		quad.setMainMultipoleStrength(tsc::cdbl(0, grad));
+		quad.setMainMultipoleStrength(cdbl(0, grad));
 
 		for(int i = -1; i <= 1; ++i){
 			if (i == 0){

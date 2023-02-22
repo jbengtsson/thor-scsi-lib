@@ -174,6 +174,7 @@ propagate(thor_scsi::core::ConfigType& conf, ss_vect_dbl  &ps, size_t start,
     return _propagate(conf, ps, start, max_elements, n_turns, tracy_compatible_indexing);
 }
 
+/*
 int
 ts::Accelerator::
 propagate(thor_scsi::core::ConfigType& conf, ss_vect_tps  &ps, size_t start,
@@ -181,6 +182,7 @@ propagate(thor_scsi::core::ConfigType& conf, ss_vect_tps  &ps, size_t start,
 {
     return _propagate(conf, ps, start, max_elements, n_turns, tracy_compatible_indexing);
 }
+*/
 int
 ts::Accelerator::
 propagate(thor_scsi::core::ConfigType& conf, ss_vect_tpsa &ps, size_t start,
