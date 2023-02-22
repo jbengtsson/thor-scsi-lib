@@ -9,37 +9,49 @@ namespace thor_scsi::elements {
 	 * @todo: consider defining it as piggy pack power converter
 	 */
 
-	class CorrectorType : public ClassicalMagnet {
+	template<class C>
+	class CorrectorTypeWithKnob : public ClassicalMagnetWithKnob<C> {
 	public:
-		inline CorrectorType(const Config &config) : ClassicalMagnet(config)  {
-			// field kick insists that it is specified ...
-		}
+		inline CorrectorTypeWithKnob(const Config &config)
+			: ClassicalMagnetWithKnob<C>(config)
+			{ /* field kick insists that it is specified ... */ }
 		const char* type_name(void) const override { return "Corrector"; };
 	};
 
-	class SteererType: public CorrectorType {
+	template<class C>
+	class SteererTypeWithKnob: public CorrectorTypeWithKnob<C> {
 	public:
-		inline SteererType (const Config &config) : CorrectorType(config){
-		}
+		inline SteererTypeWithKnob (const Config &config)
+			: CorrectorTypeWithKnob<C>(config)
+			{}
 		inline int getMainMultipoleNumber(void) const override final {
 			return 1;
 		};
 	};
 
-	class HorizontalSteererType : public SteererType {
+	template<class C>
+	class HorizontalSteererTypeWithKnob : public SteererTypeWithKnob<C> {
 	  public:
-		inline HorizontalSteererType (const Config &config) : SteererType(config){}
+		inline HorizontalSteererTypeWithKnob (const Config &config)
+			: SteererTypeWithKnob<C>(config)
+			{}
 		const char* type_name(void) const override final { return "HorizontalSteerer"; };
 		inline bool isSkew(void) const override final {	return false; };
 
 	};
 
-	class VerticalSteererType : public SteererType {
+	template<class C>
+	class VerticalSteererTypeWithKnob : public SteererTypeWithKnob<C> {
 	  public:
-		inline VerticalSteererType (const Config &config) : SteererType(config){}
+		inline VerticalSteererTypeWithKnob (const Config &config)
+			: SteererTypeWithKnob<C>(config)
+			{}
 		const char* type_name(void) const override final { return "VerticalSteerer"; };
 		inline bool isSkew(void) const override final { return true; };
 	};
+
+	typedef HorizontalSteererTypeWithKnob<thor_scsi::core::StandardDoubleType> HorizontalSteererType;
+	typedef VerticalSteererTypeWithKnob<thor_scsi::core::StandardDoubleType>   VerticalSteererType;
 
 } // Name space
 

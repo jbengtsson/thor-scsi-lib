@@ -13,12 +13,13 @@
 namespace tsc = thor_scsi::core;
 
 static const double rad2deg = 180.0/M_PI;
-static const tsc::cdbl I(0, 1);
+typedef typename tsc::StandardDoubleType::complex_type cdbl;
+static const cdbl I(0, 1);
 
 auto desc = std::make_shared<gtpsa::desc>(6, 1);
 const auto t_ref = gtpsa::tpsa(desc, 1);
 
-auto create_ref_pos(void)
+static auto create_ref_pos(void)
 {
 	auto x_ref =  gtpsa::tpsa(desc, 1);
 	auto y_ref =  gtpsa::tpsa(desc, 1);
@@ -36,58 +37,57 @@ BOOST_AUTO_TEST_CASE(test01_complex_angle)
 
 	{
 		const double angle = M_PI/16.0;
-
-		tsc::cdbl cang = exp(angle * I);
+		cdbl cang = exp(angle * I);
 		BOOST_CHECK_CLOSE(std::arg(cang) * rad2deg, angle * rad2deg, 1e-4);
 	}
 
 	{
 		const double angle = M_PI/4.0;
-		tsc::cdbl cang = exp(angle * I);
+		cdbl cang = exp(angle * I);
 		BOOST_CHECK_CLOSE(std::arg(cang) * rad2deg, angle * rad2deg, 1e-4);
 
 	}
 	{
 		const double angle = M_PI/2.0;
-		tsc::cdbl cang = exp(angle * I);
+		cdbl cang = exp(angle * I);
 		BOOST_CHECK_CLOSE(std::arg(cang) * rad2deg, angle * rad2deg, 1e-4);
 
 	}
 	{
 		const double angle = -M_PI/2.0;
-		tsc::cdbl cang = exp(angle * I);
+		cdbl cang = exp(angle * I);
 		BOOST_CHECK_CLOSE(std::arg(cang) * rad2deg, angle * rad2deg, 1e-4);
 	}
 	{
 		const double angle = -M_PI*7/8.0;
-		tsc::cdbl cang = exp(angle * I);
+		cdbl cang = exp(angle * I);
 		BOOST_CHECK_CLOSE(std::arg(cang) * rad2deg, angle * rad2deg, 1e-4);
 	}
 }
 
 BOOST_AUTO_TEST_CASE(test01_init_zero)
 {
-
-	auto h = tsc::TwoDimensionalMultipoles();
+    // taking a reference here
+	auto h = tsc::TwoDimensionalMultipoles(0e0);
 	auto hmax = tsc::max_multipole;
 	// coefficient by interface
-	BOOST_CHECK_CLOSE(h.getMultipole(1).real(), 0, 1e-42);
-	BOOST_CHECK_CLOSE(h.getMultipole(1).imag(), 0, 1e-42);
-	BOOST_CHECK_CLOSE(h.getMultipole(hmax).real(), 0, 1e-42);
-	BOOST_CHECK_CLOSE(h.getMultipole(hmax).imag(), 0, 1e-42);
+	BOOST_CHECK_CLOSE(h.getMultipole(1).real(), 0, 1e-12);
+	BOOST_CHECK_CLOSE(h.getMultipole(1).imag(), 0, 1e-12);
+	BOOST_CHECK_CLOSE(h.getMultipole(hmax).real(), 0, 1e-12);
+	BOOST_CHECK_CLOSE(h.getMultipole(hmax).imag(), 0, 1e-12);
 
 	// access to coefficients
 	auto coeffs = h.getCoeffs();
-	BOOST_CHECK_CLOSE(coeffs.at(0).real(), 0, 1e-42);
-	BOOST_CHECK_CLOSE(coeffs.at(0).imag(), 0, 1e-42);
-	BOOST_CHECK_CLOSE(coeffs.at(hmax - 1).real(), 0, 1e-42);
-	BOOST_CHECK_CLOSE(coeffs.at(hmax - 1).imag(), 0, 1e-42);
+	BOOST_CHECK_CLOSE(coeffs.at(0).real(), 0, 1e-12);
+	BOOST_CHECK_CLOSE(coeffs.at(0).imag(), 0, 1e-12);
+	BOOST_CHECK_CLOSE(coeffs.at(hmax - 1).real(), 0, 1e-12);
+	BOOST_CHECK_CLOSE(coeffs.at(hmax - 1).imag(), 0, 1e-12);
 
 }
 
 BOOST_AUTO_TEST_CASE(test02_show)
 {
-	auto h = tsc::TwoDimensionalMultipoles();
+	auto h = tsc::TwoDimensionalMultipoles(0e0);
 	{
 		boost::test_tools::output_test_stream output;
 		output << h;
@@ -98,84 +98,119 @@ BOOST_AUTO_TEST_CASE(test02_show)
 		h.show(output, 10);
 		BOOST_CHECK( !output.is_empty( false ) );
 	}
-
 }
+
+BOOST_AUTO_TEST_CASE(test03_set_hmax)
+{
+	// taking a reference here
+	int h_max = 23;
+	auto h = tsc::TwoDimensionalMultipoles(0e0, h_max);
+    // more output ...
+	BOOST_CHECK_CLOSE(double(h.getMultipoleMaxIndex()), double(h_max), 1e-12);
+}
+
+// check that it compiles and accepts the order
+BOOST_AUTO_TEST_CASE(test04_add_test)
+{
+	// taking a reference here
+	int h_max = 4;
+	auto h = tsc::TwoDimensionalMultipoles(0e0, h_max);
+	{
+		std::vector<std::complex<double>> offset = {1.0, 1e-3, 1e-5, 1e-4};
+		const auto h2 = h.clone();
+		const auto h3 = h + offset;
+	}
+}
+
+// check that it compiles and accepts the order
+BOOST_AUTO_TEST_CASE(test04_mul_test)
+{
+	// taking a reference here
+	int h_max = 4;
+	auto h = tsc::TwoDimensionalMultipoles(0e0, h_max);
+	{
+		std::vector<std::complex<double>> scale = {1.0, 1e-3, 1e-5, 1e-4};
+		const auto h2 = h.clone();
+		const auto h3 = h * scale;
+	}
+}
+
 
 BOOST_AUTO_TEST_CASE(test10_set_harmonic_dipole)
 {
-	auto h = tsc::TwoDimensionalMultipoles();
+	auto h = tsc::TwoDimensionalMultipoles(0e0);
 
 	// pure dipole
-	h.setMultipole(1, tsc::cdbl(1, 0));
-	BOOST_CHECK_CLOSE(h.getMultipole(1).real(), 1, 1e-42);
-	BOOST_CHECK_CLOSE(h.getMultipole(1).imag(), 0, 1e-42);
+	h.setMultipole(1, cdbl(1, 0));
+	BOOST_CHECK_CLOSE(h.getMultipole(1).real(), 1, 1e-12);
+	BOOST_CHECK_CLOSE(h.getMultipole(1).imag(), 0, 1e-12);
 
-	BOOST_CHECK_CLOSE(h.getMultipole(2).real(), 0, 1e-42);
-	BOOST_CHECK_CLOSE(h.getMultipole(2).imag(), 0, 1e-42);
+	BOOST_CHECK_CLOSE(h.getMultipole(2).real(), 0, 1e-12);
+	BOOST_CHECK_CLOSE(h.getMultipole(2).imag(), 0, 1e-12);
 
 	auto coeffs = h.getCoeffs();
-	BOOST_CHECK_CLOSE(coeffs.at(0).real(), 1, 1e-42);
-	BOOST_CHECK_CLOSE(coeffs.at(0).imag(), 0, 1e-42);
-	BOOST_CHECK_CLOSE(coeffs.at(1).real(), 0, 1e-42);
-	BOOST_CHECK_CLOSE(coeffs.at(1).imag(), 0, 1e-42);
+	BOOST_CHECK_CLOSE(coeffs.at(0).real(), 1, 1e-12);
+	BOOST_CHECK_CLOSE(coeffs.at(0).imag(), 0, 1e-12);
+	BOOST_CHECK_CLOSE(coeffs.at(1).real(), 0, 1e-12);
+	BOOST_CHECK_CLOSE(coeffs.at(1).imag(), 0, 1e-12);
 
 	{
-		auto field =  h.field(tsc::cdbl(0,0));
-		BOOST_CHECK_CLOSE(field.real(), 1, 1e-22);
-		BOOST_CHECK_CLOSE(field.imag(), 0, 1e-22);
+		auto field =  h.field(cdbl(0,0));
+		BOOST_CHECK_CLOSE(field.real(), 1, 1e-12);
+		BOOST_CHECK_CLOSE(field.imag(), 0, 1e-12);
 	}
 	{
 		auto field =  h.field(1);
-		BOOST_CHECK_CLOSE(field.real(), 1, 1e-22);
-		BOOST_CHECK_CLOSE(field.imag(), 0, 1e-22);
+		BOOST_CHECK_CLOSE(field.real(), 1, 1e-12);
+		BOOST_CHECK_CLOSE(field.imag(), 0, 1e-12);
 	}
 
 	{
-		auto field =  h.field(tsc::cdbl(0,1));
-		BOOST_CHECK_CLOSE(field.real(), 1, 1e-22);
-		BOOST_CHECK_CLOSE(field.imag(), 0, 1e-22);
+		auto field =  h.field(cdbl(0,1));
+		BOOST_CHECK_CLOSE(field.real(), 1, 1e-12);
+		BOOST_CHECK_CLOSE(field.imag(), 0, 1e-12);
 	}
 	{
-		auto field =  h.field(tsc::cdbl(3,.2));
-		BOOST_CHECK_CLOSE(field.real(), 1, 1e-22);
-		BOOST_CHECK_CLOSE(field.imag(), 0, 1e-22);
+		auto field =  h.field(cdbl(3,.2));
+		BOOST_CHECK_CLOSE(field.real(), 1, 1e-12);
+		BOOST_CHECK_CLOSE(field.imag(), 0, 1e-12);
 	}
 
 	// tpsa ...
 	{
 		auto Bx = t_ref.clone(), By = t_ref.clone();
 		h.field(gtpsa::tpsa(t_ref), gtpsa::tpsa(t_ref), &Bx, &By);
-		BOOST_CHECK_CLOSE(By.cst(), 1, 1e-22);
-		BOOST_CHECK_CLOSE(Bx.cst(), 0, 1e-22);
+		BOOST_CHECK_CLOSE(By.cst(), 1, 1e-12);
+		BOOST_CHECK_CLOSE(Bx.cst(), 0, 1e-12);
 	}
 	{
 		auto x = t_ref.clone(), y = t_ref.clone(), Bx = t_ref.clone(), By = t_ref.clone();
 		x  =  1;
 		h.field(x, y, &Bx, &By);
-		BOOST_CHECK_CLOSE(By.cst(), 1, 1e-22);
-		BOOST_CHECK_CLOSE(Bx.cst(), 0, 1e-22);
+		BOOST_CHECK_CLOSE(By.cst(), 1, 1e-12);
+		BOOST_CHECK_CLOSE(Bx.cst(), 0, 1e-12);
 	}
 
 	{
 		auto x = t_ref.clone(), y = t_ref.clone(), Bx = t_ref.clone(), By = t_ref.clone();
 		y = 1;
 		h.field(x, y, &Bx, &By);
-		BOOST_CHECK_CLOSE(By.cst(), 1, 1e-22);
-		BOOST_CHECK_CLOSE(Bx.cst(), 0, 1e-22);
+		BOOST_CHECK_CLOSE(By.cst(), 1, 1e-12);
+		BOOST_CHECK_CLOSE(Bx.cst(), 0, 1e-12);
 	}
 	{
 		auto x = t_ref.clone(), y = t_ref.clone(), Bx = t_ref.clone(), By = t_ref.clone();
 		y = .2;
 		x = 3;
 		h.field(x, y, &Bx, &By);
-		BOOST_CHECK_CLOSE(By.cst(), 1, 1e-22);
-		BOOST_CHECK_CLOSE(Bx.cst(), 0, 1e-22);
+		BOOST_CHECK_CLOSE(By.cst(), 1, 1e-12);
+		BOOST_CHECK_SMALL(Bx.cst(),    1e-12);
 	}
 
 	h.applyRollAngle(M_PI/2);
 	BOOST_CHECK_CLOSE(h.getMultipole(1).imag(), 1, 1e-15);
-	BOOST_CHECK_CLOSE(h.getMultipole(2).real(), 0, 1e-42);
-	BOOST_CHECK_CLOSE(h.getMultipole(2).imag(), 0, 1e-42);
+	BOOST_CHECK_SMALL(h.getMultipole(2).real(), 1e-12);
+	BOOST_CHECK_SMALL(h.getMultipole(2).imag(), 1e-12);
 	BOOST_CHECK_SMALL(double(h.getMultipole(1).real()),  1e-13);
 
 	// Notice By + i Bx
@@ -192,33 +227,33 @@ BOOST_AUTO_TEST_CASE(test10_set_harmonic_dipole)
 BOOST_AUTO_TEST_CASE(test20_set_harmonic_quadrupole)
 {
 
-	auto h = tsc::TwoDimensionalMultipoles();
+	auto h = tsc::TwoDimensionalMultipoles(0e0);
 
 	// pure quadrupole
-	h.setMultipole(2, tsc::cdbl(1, 0));
-	BOOST_CHECK_CLOSE(h.getMultipole(2).real(), 1, 1e-42);
-	BOOST_CHECK_CLOSE(h.getMultipole(2).imag(), 0, 1e-42);
+	h.setMultipole(2, cdbl(1, 0));
+	BOOST_CHECK_CLOSE(h.getMultipole(2).real(), 1, 1e-12);
+	BOOST_CHECK_CLOSE(h.getMultipole(2).imag(), 0, 1e-12);
 
 	{
-		auto field =  h.field(tsc::cdbl(0,0));
-		BOOST_CHECK_SMALL(double(field.real()), 1e-22);
-		BOOST_CHECK_SMALL(double(field.imag()), 1e-22);
+		auto field =  h.field(cdbl(0,0));
+		BOOST_CHECK_SMALL(double(field.real()), 1e-12);
+		BOOST_CHECK_SMALL(double(field.imag()), 1e-12);
 	}
 	{
 		auto field =  h.field(1);
-		BOOST_CHECK_CLOSE(field.real(), 1, 1e-22);
-		BOOST_CHECK_SMALL(double(field.imag()), 1e-22);
+		BOOST_CHECK_CLOSE(field.real(), 1, 1e-12);
+		BOOST_CHECK_SMALL(double(field.imag()), 1e-12);
 	}
 
 	{
-		auto field =  h.field(tsc::cdbl(0,1));
-		BOOST_CHECK_SMALL(double(field.real()), 1e-22);
-		BOOST_CHECK_CLOSE(field.imag(), 1, 1e-22);
+		auto field =  h.field(cdbl(0,1));
+		BOOST_CHECK_SMALL(double(field.real()), 1e-12);
+		BOOST_CHECK_CLOSE(field.imag(), 1, 1e-12);
 	}
 	{
-		auto field =  h.field(tsc::cdbl(3,.2));
-		BOOST_CHECK_CLOSE(double(field.real()), 3, 1e-22);
-		BOOST_CHECK_CLOSE(double(field.imag()), .2, 1e-22);
+		auto field =  h.field(cdbl(3,.2));
+		BOOST_CHECK_CLOSE(double(field.real()), 3, 1e-12);
+		BOOST_CHECK_CLOSE(double(field.imag()), .2, 1e-12);
 	}
 
 	{
@@ -226,8 +261,8 @@ BOOST_AUTO_TEST_CASE(test20_set_harmonic_quadrupole)
 		std::cout << "x\n " << x << "\n"
 			  << "y\n " << y << "\n";
 		h.field(x, y, &Bx, &By);
-		BOOST_CHECK_SMALL(double(By.cst()), 1e-22);
-		BOOST_CHECK_SMALL(double(Bx.cst()), 1e-22);
+		BOOST_CHECK_SMALL(double(By.cst()), 1e-12);
+		BOOST_CHECK_SMALL(double(Bx.cst()), 1e-12);
 		std::cout << "Bx\n " << Bx << "\n"
 			  << "By\n " << By << "\n";
 
@@ -248,25 +283,25 @@ BOOST_AUTO_TEST_CASE(test20_set_harmonic_quadrupole)
 		auto x = t_ref.clone(), y = t_ref.clone(), Bx = t_ref.clone(), By = t_ref.clone();
 		x = 1;
 		h.field(x, y, &Bx, &By);
-		BOOST_CHECK_CLOSE(double(By.cst()), 1., 1e-22);
-		BOOST_CHECK_SMALL(double(Bx.cst()), 1e-22);
+		BOOST_CHECK_CLOSE(double(By.cst()), 1., 1e-12);
+		BOOST_CHECK_SMALL(double(Bx.cst()), 1e-12);
 	}
 
 	{
 		auto x = t_ref.clone(), y = t_ref.clone(), Bx = t_ref.clone(), By = t_ref.clone();
 		y = 1;
 		h.field(x, y, &Bx, &By);
-		BOOST_CHECK_SMALL(double(By.cst()), 1e-22);
-		BOOST_CHECK_CLOSE(double(Bx.cst()), 1., 1e-22);
+		BOOST_CHECK_SMALL(double(By.cst()), 1e-12);
+		BOOST_CHECK_CLOSE(double(Bx.cst()), 1., 1e-12);
 	}
 	{
-		auto field =  h.field(tsc::cdbl(3,.2));
+		auto field =  h.field(cdbl(3,.2));
 		auto x = t_ref.clone(), y = t_ref.clone(), Bx = t_ref.clone(), By = t_ref.clone();
 		x = 3;
 		y = .2;
 		h.field(x, y, &Bx, &By);
-		BOOST_CHECK_CLOSE(double(By.cst()), 3, 1e-22);
-		BOOST_CHECK_CLOSE(double(Bx.cst()), .2, 1e-22);
+		BOOST_CHECK_CLOSE(double(By.cst()), 3, 1e-12);
+		BOOST_CHECK_CLOSE(double(Bx.cst()), .2, 1e-12);
 	}
 
 	const double angle = M_PI/2;
@@ -280,10 +315,10 @@ BOOST_AUTO_TEST_CASE(test20_set_harmonic_quadrupole)
 BOOST_AUTO_TEST_CASE(test30_set_scale_sextupole)
 {
 	// pure quadrupole
-	auto h = tsc::TwoDimensionalMultipoles();
-	h.setMultipole(3, tsc::cdbl(.1, -.3));
-	BOOST_CHECK_CLOSE(h.getMultipole(3).real(),  0.1, 1e-42);
-	BOOST_CHECK_CLOSE(h.getMultipole(3).imag(), -0.3, 1e-42);
+	auto h = tsc::TwoDimensionalMultipoles(0e0);
+	h.setMultipole(3, cdbl(.1, -.3));
+	BOOST_CHECK_CLOSE(h.getMultipole(3).real(),  0.1, 1e-12);
+	BOOST_CHECK_CLOSE(h.getMultipole(3).imag(), -0.3, 1e-12);
 
 	h *= 3;
 	BOOST_CHECK_CLOSE(h.getMultipole(3).real(),  0.3, 1e-13);
@@ -298,12 +333,12 @@ BOOST_AUTO_TEST_CASE(test30_set_scale_sextupole)
 BOOST_AUTO_TEST_CASE(test40_rotate_quadrupole)
 {
 
-	auto h = tsc::TwoDimensionalMultipoles();
+	auto h = tsc::TwoDimensionalMultipoles(0e0);
 
 	// pure quadrupole
-	h.setMultipole(2, tsc::cdbl(1, 0));
-	BOOST_CHECK_CLOSE(h.getMultipole(2).real(), 1, 1e-42);
-	BOOST_CHECK_CLOSE(h.getMultipole(2).imag(), 0, 1e-42);
+	h.setMultipole(2, cdbl(1, 0));
+	BOOST_CHECK_CLOSE(h.getMultipole(2).real(), 1, 1e-12);
+	BOOST_CHECK_SMALL(h.getMultipole(2).imag(),    1e-12);
 
 
 	h.applyRollAngle(M_PI/2);
@@ -325,27 +360,27 @@ BOOST_AUTO_TEST_CASE(test41_rotate_quadrupole_consistency)
 
 	return;
 
-	auto h = tsc::TwoDimensionalMultipoles();
+	auto h = tsc::TwoDimensionalMultipoles(0e0);
 
 	const int n = 2;
 	// pure quadrupole
-	h.setMultipole(n, tsc::cdbl(1, 0));
+	h.setMultipole(n, cdbl(1, 0));
 
-	BOOST_CHECK_CLOSE(h.getMultipole(n).real(), 1, 1e-42);
-	BOOST_CHECK_CLOSE(h.getMultipole(n).imag(), 0, 1e-42);
+	BOOST_CHECK_CLOSE(h.getMultipole(n).real(), 1, 1e-12);
+	BOOST_CHECK_CLOSE(h.getMultipole(n).imag(), 0, 1e-12);
 
 
 	const double angle = M_PI/2.0, phase = angle * n;
-	const tsc::cdbl cang = exp(angle * I);
+	const cdbl cang = exp(angle * I);
 
-	const tsc::cdbl
+	const cdbl
 		pos0(  1,   0),
 		pos1(  0,   1),
 		pos2(  1,  -1),
 		pos3(-0.2,  3);
 
 	// Turn to position that will be found at the positions in question
-	const tsc::cdbl
+	const cdbl
 		field0 = h.field(pos0 - cang),
 		field1 = h.field(pos1 - cang),
 		field2 = h.field(pos2 - cang),
@@ -353,7 +388,7 @@ BOOST_AUTO_TEST_CASE(test41_rotate_quadrupole_consistency)
 
 	h.applyRollAngle(angle);
 
-	const tsc::cdbl
+	const cdbl
 		check0 = h.field(pos0),
 		check1 = h.field(pos1),
 		check2 = h.field(pos2),
@@ -391,45 +426,45 @@ BOOST_AUTO_TEST_CASE(test41_rotate_quadrupole_consistency)
 
 BOOST_AUTO_TEST_CASE(test50_octupole_field)
 {
-	auto h = tsc::TwoDimensionalMultipoles();
+	auto h = tsc::TwoDimensionalMultipoles(0e0);
 
 	const int n = 4;
 
 	// pure octupole
-	h.setMultipole(n, tsc::cdbl(1, 0));
+	h.setMultipole(n, cdbl(1, 0));
 
-	BOOST_CHECK_CLOSE(h.getMultipole(n).real(), 1, 1e-42);
-	BOOST_CHECK_CLOSE(h.getMultipole(n).imag(), 0, 1e-42);
+	BOOST_CHECK_CLOSE(h.getMultipole(n).real(), 1, 1e-12);
+	BOOST_CHECK_CLOSE(h.getMultipole(n).imag(), 0, 1e-12);
 
 
 	// cubic  interpolation
 	{
 		auto field =  h.field(0);
-		BOOST_CHECK_CLOSE(double(field.real()), 0, 1e-22);
-		BOOST_CHECK_CLOSE(double(field.imag()), 0, 1e-22);
+		BOOST_CHECK_CLOSE(double(field.real()), 0, 1e-12);
+		BOOST_CHECK_CLOSE(double(field.imag()), 0, 1e-12);
 	}
 	{
 		double val = -.5;
 		auto field =  h.field(-0.5);
-		BOOST_CHECK_CLOSE(double(field.real()), val * val * val, 1e-22);
-		BOOST_CHECK_CLOSE(double(field.imag()), 0, 1e-22);
+		BOOST_CHECK_CLOSE(double(field.real()), val * val * val, 1e-12);
+		BOOST_CHECK_CLOSE(double(field.imag()), 0, 1e-12);
 	}
 	{
 		auto field =  h.field(1);
-		BOOST_CHECK_CLOSE(field.real(), 1, 1e-22);
-		BOOST_CHECK_CLOSE(field.imag(), 0, 1e-22);
+		BOOST_CHECK_CLOSE(field.real(), 1, 1e-12);
+		BOOST_CHECK_CLOSE(field.imag(), 0, 1e-12);
 	}
 	{
 		double val = -.5;
 		auto field =  h.field(-0.5 * I);
-		BOOST_CHECK_CLOSE(field.real(), 0, 1e-22);
-		BOOST_CHECK_CLOSE(field.imag(), -val * val * val, 1e-22);
+		BOOST_CHECK_CLOSE(field.real(), 0, 1e-12);
+		BOOST_CHECK_CLOSE(field.imag(), -val * val * val, 1e-12);
 	}
 	{
 		auto field =  h.field(I);
-		BOOST_CHECK_CLOSE(field.real(), 0, 1e-22);
+		BOOST_CHECK_CLOSE(field.real(), 0, 1e-12);
 		// 90 degrees ...
-		BOOST_CHECK_CLOSE(field.imag(), -1, 1e-22);
+		BOOST_CHECK_CLOSE(field.imag(), -1, 1e-12);
 	}
 
 
@@ -437,29 +472,29 @@ BOOST_AUTO_TEST_CASE(test50_octupole_field)
 
 BOOST_AUTO_TEST_CASE(test62_rotate_dipole)
 {
-	auto h = tsc::TwoDimensionalMultipoles();
+	auto h = tsc::TwoDimensionalMultipoles(0e0);
 	const int n = 1;
 	// pure dipole
-	h.setMultipole(n, tsc::cdbl(1, 0));
+	h.setMultipole(n, cdbl(1, 0));
 
 	const double angle = M_PI/4, phase = angle * n;
-	const tsc::cdbl
+	const cdbl
 		pos0(1, 0),
 		pos1(1, 1);
 
-	const tsc::cdbl
+	const cdbl
 		field0 = h.field(pos0),
 		field1 = h.field(pos1);
 
 	h.applyRollAngle(angle);
-	BOOST_CHECK_CLOSE(h.getMultipole(n).real(), cos(phase), 1e-22);
-	BOOST_CHECK_CLOSE(h.getMultipole(n).imag(), sin(phase), 1e-22);
-	BOOST_CHECK_CLOSE(std::arg(h.getMultipole(n)), phase, 1e-22);
-	BOOST_CHECK_CLOSE(std::arg(h.getMultipole(n))/angle, n, 1e-22);
+	BOOST_CHECK_CLOSE(h.getMultipole(n).real(), cos(phase), 1e-12);
+	BOOST_CHECK_CLOSE(h.getMultipole(n).imag(), sin(phase), 1e-12);
+	BOOST_CHECK_CLOSE(std::arg(h.getMultipole(n)), phase, 1e-12);
+	BOOST_CHECK_CLOSE(std::arg(h.getMultipole(n))/angle, n, 1e-12);
 
 	{
 		// check that the phase advances as expected
-		const tsc::cdbl
+		const cdbl
 			check0 = h.field(pos0),
 			check1 = h.field(pos1);
 
@@ -468,8 +503,8 @@ BOOST_AUTO_TEST_CASE(test62_rotate_dipole)
 	}
 	{
 		// Same position in interial frame ... changed coefficients
-		const tsc::cdbl cang = exp(-angle * I);
-		const tsc::cdbl
+		const cdbl cang = exp(-angle * I);
+		const cdbl
 			rpos0 = pos0 * cang,
 			rpos1 = pos1 * cang;
 
@@ -479,7 +514,7 @@ BOOST_AUTO_TEST_CASE(test62_rotate_dipole)
 		BOOST_CHECK_CLOSE((std::arg(rpos0) + angle) * rad2deg, std::arg(pos0) * rad2deg, 1e-13);
 		BOOST_CHECK_CLOSE((std::arg(rpos1) + angle) * rad2deg, std::arg(pos1) * rad2deg, 1e-13);
 
-		const tsc::cdbl
+		const cdbl
 			check0 = h.field(rpos0),
 			check1 = h.field(rpos1);
 
@@ -493,15 +528,15 @@ BOOST_AUTO_TEST_CASE(test62_rotate_dipole)
 
 BOOST_AUTO_TEST_CASE(test63_rotate_octupole)
 {
-	auto h = tsc::TwoDimensionalMultipoles();
+	auto h = tsc::TwoDimensionalMultipoles(0e0);
 
 	const int n = 4;
 	// pure quadrupole
-	h.setMultipole(n, tsc::cdbl(1, 0));
+	h.setMultipole(n, cdbl(1, 0));
 
 	const double angle = M_PI/45, phase = angle * n;
 
-	const tsc::cdbl
+	const cdbl
 		pos0(0, 0),
 		pos1(1, 0),
 		pos2 = I,
@@ -509,7 +544,7 @@ BOOST_AUTO_TEST_CASE(test63_rotate_octupole)
 		pos4 = -0.5 * I;
 
 
-	const tsc::cdbl
+	const cdbl
 		field0 = h.field(pos0),
 		field1 = h.field(pos1),
 		field2 = h.field(pos2),
@@ -518,24 +553,24 @@ BOOST_AUTO_TEST_CASE(test63_rotate_octupole)
 
 
 	h.applyRollAngle(angle);
-	BOOST_CHECK_CLOSE(h.getMultipole(4).real(), cos(phase), 1e-22);
-	BOOST_CHECK_CLOSE(h.getMultipole(4).imag(), sin(phase), 1e-22);
-	BOOST_CHECK_CLOSE(std::arg(h.getMultipole(4)), phase, 1e-22);
-	BOOST_CHECK_CLOSE(std::arg(h.getMultipole(4))/angle, n, 1e-22);
+	BOOST_CHECK_CLOSE(h.getMultipole(4).real(), cos(phase), 1e-12);
+	BOOST_CHECK_CLOSE(h.getMultipole(4).imag(), sin(phase), 1e-12);
+	BOOST_CHECK_CLOSE(std::arg(h.getMultipole(4)), phase, 1e-12);
+	BOOST_CHECK_CLOSE(std::arg(h.getMultipole(4))/angle, n, 1e-12);
 	// BOOST_CHECK_SMALL(double(h.getMultipole(4).imag()),  1e-14);
 
-	BOOST_CHECK_CLOSE(h.getMultipole(5).real(),  0, 1e-22);
-	BOOST_CHECK_CLOSE(h.getMultipole(5).imag(),  0, 1e-22);
-	BOOST_CHECK_CLOSE(h.getMultipole(3).real(),  0, 1e-22);
-	BOOST_CHECK_CLOSE(h.getMultipole(3).imag(),  0, 1e-22);
-	BOOST_CHECK_CLOSE(h.getMultipole(2).real(),  0, 1e-22);
-	BOOST_CHECK_CLOSE(h.getMultipole(2).imag(),  0, 1e-22);
-	BOOST_CHECK_CLOSE(h.getMultipole(1).real(),  0, 1e-22);
-	BOOST_CHECK_CLOSE(h.getMultipole(1).imag(),  0, 1e-22);
+	BOOST_CHECK_CLOSE(h.getMultipole(5).real(),  0, 1e-12);
+	BOOST_CHECK_CLOSE(h.getMultipole(5).imag(),  0, 1e-12);
+	BOOST_CHECK_CLOSE(h.getMultipole(3).real(),  0, 1e-12);
+	BOOST_CHECK_CLOSE(h.getMultipole(3).imag(),  0, 1e-12);
+	BOOST_CHECK_CLOSE(h.getMultipole(2).real(),  0, 1e-12);
+	BOOST_CHECK_CLOSE(h.getMultipole(2).imag(),  0, 1e-12);
+	BOOST_CHECK_CLOSE(h.getMultipole(1).real(),  0, 1e-12);
+	BOOST_CHECK_CLOSE(h.getMultipole(1).imag(),  0, 1e-12);
 
 	{
 		// check that the phase advances as expected
-		const tsc::cdbl
+		const cdbl
 			check0 = h.field(pos0),
 			check1 = h.field(pos1),
 			check2 = h.field(pos2),
@@ -544,7 +579,7 @@ BOOST_AUTO_TEST_CASE(test63_rotate_octupole)
 
 
 		// No length no angle
-		// BOOST_CHECK_CLOSE(std::arg(field0) * rad2deg, std::arg(check0) * rad2deg, 1e-42);
+		// BOOST_CHECK_CLOSE(std::arg(field0) * rad2deg, std::arg(check0) * rad2deg, 1e-12);
 		BOOST_CHECK_CLOSE((std::arg(field1) + phase) * rad2deg, std::arg(check1) * rad2deg, 1e-10);
 		BOOST_CHECK_CLOSE((std::arg(field2) + phase) * rad2deg, std::arg(check2) * rad2deg, 1e-10);
 		BOOST_CHECK_CLOSE(-360 + (std::arg(field3) + phase) * rad2deg, std::arg(check3) * rad2deg, 1e-10);
@@ -552,8 +587,8 @@ BOOST_AUTO_TEST_CASE(test63_rotate_octupole)
 	}
 
 	{
-		const tsc::cdbl cang = exp(-angle * I);
-		const tsc::cdbl
+		const cdbl cang = exp(-angle * I);
+		const cdbl
 			rpos0 = pos0 * cang,
 			rpos1 = pos1 * cang,
 			rpos2 = pos2 * cang,
@@ -570,7 +605,7 @@ BOOST_AUTO_TEST_CASE(test63_rotate_octupole)
 
 		// check that the field has the same angle as before if probed at the same
 		// posititon ins pace is used (thus different coordinate coefficients)
-		const tsc::cdbl
+		const cdbl
 			check0 = h.field(rpos0),
 			check1 = h.field(rpos1),
 			check2 = h.field(rpos2),
@@ -578,7 +613,7 @@ BOOST_AUTO_TEST_CASE(test63_rotate_octupole)
 			check4 = h.field(rpos4);
 
 		// No length no angle
-		// BOOST_CHECK_CLOSE(std::arg(field0) * rad2deg, std::arg(check0) * rad2deg, 1e-42);
+		// BOOST_CHECK_CLOSE(std::arg(field0) * rad2deg, std::arg(check0) * rad2deg, 1e-12);
 		// angle of field is now rotated
 		BOOST_CHECK_SMALL(       (std::arg(check1) - angle) * rad2deg, 1e-10);
 		BOOST_CHECK_SMALL(       (std::arg(field1)        ) * rad2deg, 1e-10);
@@ -599,23 +634,23 @@ BOOST_AUTO_TEST_CASE(test63_rotate_octupole)
 
 BOOST_AUTO_TEST_CASE(test60_rotate_octupole_small_angle)
 {
-	auto h = tsc::TwoDimensionalMultipoles();
+	auto h = tsc::TwoDimensionalMultipoles(0e0);
 
 
 	const int n = 4;
-	// pure quadrupole
-	h.setMultipole(n, tsc::cdbl(1, 0));
+	// pure octupole
+	h.setMultipole(n, cdbl(1, 0));
 
 	const double angle = 1e-3, phase = angle * n;
-	const tsc::cdbl cang = exp(angle * I);
+	const cdbl cang = exp(angle * I);
 
 
-	const tsc::cdbl
+	const cdbl
 		pos0(0,0),
 		pos1 = -0.5 * I,
 		pos2(1,0);
 
-	const tsc::cdbl
+	const cdbl
 		field0 = h.field(pos0),
 		field1 = h.field(pos1),
 		field2 = h.field(pos2);
@@ -628,12 +663,12 @@ BOOST_AUTO_TEST_CASE(test60_rotate_octupole_small_angle)
 	BOOST_CHECK_CLOSE(h.getMultipole(n).imag()+1, 1 + phase, 1e-3);
 
 	// calculate phase as given by equation
-	BOOST_CHECK_CLOSE(h.getMultipole(n).real(), 1 * cos(phase), 1e-42);
+	BOOST_CHECK_CLOSE(h.getMultipole(n).real(), 1 * cos(phase), 1e-12);
 	// 1 for calculating relative size
 	BOOST_CHECK_CLOSE(h.getMultipole(n).imag(), sin(phase), 1e-13);
 
 	{
-		const tsc::cdbl
+		const cdbl
 			check0 = h.field(pos0),
 			check1 = h.field(pos1),
 			check2 = h.field(pos2);
@@ -650,13 +685,13 @@ BOOST_AUTO_TEST_CASE(test60_rotate_octupole_small_angle)
 	}
 
 	{
-		const tsc::cdbl cang = exp(-angle * I);
-		const tsc::cdbl
+		const cdbl cang = exp(-angle * I);
+		const cdbl
 			rpos0 = pos0 * cang,
 			rpos1 = pos1 * cang,
 			rpos2 = pos2 * cang;
 
-		const tsc::cdbl
+		const cdbl
 			check0 = h.field(rpos0),
 			check1 = h.field(rpos1),
 			check2 = h.field(rpos2);
@@ -671,22 +706,22 @@ BOOST_AUTO_TEST_CASE(test60_rotate_octupole_small_angle)
 BOOST_AUTO_TEST_CASE(test70_translate_quadrupole_zero)
 {
 
-	auto h = tsc::TwoDimensionalMultipoles();
+	auto h = tsc::TwoDimensionalMultipoles(0e0);
 
 	// pure quadrupole .. assuming harmonics have been checked
-	h.setMultipole(2, tsc::cdbl(1, 0));
+	h.setMultipole(2, cdbl(1, 0));
 
 
 	// checking interface
 	h.applyTranslation(0);
 	h.applyTranslation(0, 0);
 
-	tsc::cdbl dz(0,0);
+	cdbl dz(0,0);
 	h.applyTranslation(dz);
 
 
-	BOOST_CHECK_CLOSE(h.getMultipole(2).real(), 1, 1e-42);
-	BOOST_CHECK_CLOSE(h.getMultipole(2).imag(), 0, 1e-42);
+	BOOST_CHECK_CLOSE(h.getMultipole(2).real(), 1, 1e-12);
+	BOOST_CHECK_CLOSE(h.getMultipole(2).imag(), 0, 1e-12);
 
 	// check that no dipole component has been added
 	BOOST_CHECK_SMALL(double(h.getMultipole(1).real()), 1e-13);
@@ -698,72 +733,72 @@ BOOST_AUTO_TEST_CASE(test70_translate_quadrupole_zero)
 BOOST_AUTO_TEST_CASE(test80_translate_quadrupole_one)
 {
 
-	tsc::TwoDimensionalMultipoles h = tsc::TwoDimensionalMultipoles();
+	tsc::TwoDimensionalMultipolesKnobbed h = tsc::TwoDimensionalMultipoles(0e0);
 
 	// pure quadrupole .. assuming harmonics have been checked
-	h.setMultipole(2, tsc::cdbl(1, 0));
+	h.setMultipole(2, cdbl(1, 0));
 
-	const tsc::cdbl dz(1, 0);
-	const tsc::cdbl pos0(0, 0), pos1(0, .5), pos2(1., 0);
+	const cdbl dz(1, 0);
+	const cdbl pos0(0, 0), pos1(0, .5), pos2(1., 0);
 
 	// probe field where coordinates will be
-	const tsc::cdbl
+	const cdbl
 		field0 = h.field(pos0),
 		field1 = h.field(pos1),
 		field2 = h.field(pos2);
 
-	BOOST_CHECK_SMALL(field0.real(), 1e-42);
-	BOOST_CHECK_SMALL(field0.imag(), 1e-42);
-	BOOST_CHECK_CLOSE(field1.imag(), 0.5, 1e-42);
-	BOOST_CHECK_CLOSE(field2.real(),   1, 1e-42);
+	BOOST_CHECK_SMALL(field0.real(), 1e-12);
+	BOOST_CHECK_SMALL(field0.imag(), 1e-12);
+	BOOST_CHECK_CLOSE(field1.imag(), 0.5, 1e-12);
+	BOOST_CHECK_CLOSE(field2.real(),   1, 1e-12);
 
 	// checking interface
 	h.applyTranslation(dz);
 
-	BOOST_CHECK_CLOSE(h.getMultipole(2).real(), 1, 1e-42);
-	BOOST_CHECK_CLOSE(h.getMultipole(2).imag(), 0, 1e-42);
+	BOOST_CHECK_CLOSE(h.getMultipole(2).real(), 1, 1e-12);
+	BOOST_CHECK_CLOSE(h.getMultipole(2).imag(), 0, 1e-12);
 
 	// Dipole harmonic
-	BOOST_CHECK_CLOSE(h.getMultipole(1).real(), 1, 1e-42);
-	BOOST_CHECK_CLOSE(h.getMultipole(1).imag(), 0, 1e-42);
+	BOOST_CHECK_CLOSE(h.getMultipole(1).real(), 1, 1e-12);
+	BOOST_CHECK_CLOSE(h.getMultipole(1).imag(), 0, 1e-12);
 
 	// no sextupole
-	BOOST_CHECK_CLOSE(h.getMultipole(3).real(), 0, 1e-42);
-	BOOST_CHECK_CLOSE(h.getMultipole(3).imag(), 0, 1e-42);
+	BOOST_CHECK_CLOSE(h.getMultipole(3).real(), 0, 1e-12);
+	BOOST_CHECK_CLOSE(h.getMultipole(3).imag(), 0, 1e-12);
 
 	// no octupole
-	BOOST_CHECK_CLOSE(h.getMultipole(4).real(), 0, 1e-42);
-	BOOST_CHECK_CLOSE(h.getMultipole(4).imag(), 0, 1e-42);
+	BOOST_CHECK_CLOSE(h.getMultipole(4).real(), 0, 1e-12);
+	BOOST_CHECK_CLOSE(h.getMultipole(4).imag(), 0, 1e-12);
 
 	// probe field where coordinates were
-	const tsc::cdbl
+	const cdbl
 		check0 = h.field(pos0 - dz),
 		check1 = h.field(pos1 - dz),
 		check2 = h.field(pos2 - dz);
 
-	BOOST_CHECK_CLOSE(field0.real(), check0.real(), 1e-42);
-	BOOST_CHECK_CLOSE(field0.imag(), check0.imag(), 1e-42);
+	BOOST_CHECK_CLOSE(field0.real(), check0.real(), 1e-12);
+	BOOST_CHECK_CLOSE(field0.imag(), check0.imag(), 1e-12);
 
-	BOOST_CHECK_CLOSE(field1.real(), check1.real(), 1e-42);
-	BOOST_CHECK_CLOSE(field1.imag(), check1.imag(), 1e-42);
+	BOOST_CHECK_CLOSE(field1.real(), check1.real(), 1e-12);
+	BOOST_CHECK_CLOSE(field1.imag(), check1.imag(), 1e-12);
 
-	BOOST_CHECK_CLOSE(field2.real(), check2.real(), 1e-42);
-	BOOST_CHECK_CLOSE(field2.imag(), check2.imag(), 1e-42);
+	BOOST_CHECK_CLOSE(field2.real(), check2.real(), 1e-12);
+	BOOST_CHECK_CLOSE(field2.imag(), check2.imag(), 1e-12);
 }
 
 
 // A typical quadrupole for a MBA machine fairly misplaced
 BOOST_AUTO_TEST_CASE(test90_translate_quadrupole_test_field)
 {
-	tsc::TwoDimensionalMultipoles h = tsc::TwoDimensionalMultipoles();
+	tsc::TwoDimensionalMultipolesKnobbed h = tsc::TwoDimensionalMultipoles(0e0);
 
 	// pure quadrupole .. assuming harmonics have been checked
-	h.setMultipole(2, tsc::cdbl(1, 0) * 95e0);
-	const tsc::cdbl pos0(0, 0), pos1(0, -5e-3), pos2(-0.3e-3, -1e-3);
-	const tsc::cdbl dz(-.2e-3, 0);
+	h.setMultipole(2, cdbl(1, 0) * 95e0);
+	const cdbl pos0(0, 0), pos1(0, -5e-3), pos2(-0.3e-3, -1e-3);
+	const cdbl dz(-.2e-3, 0);
 
 	// probe field where coordinates will be
-	const tsc::cdbl
+	const cdbl
 		field0 = h.field(pos0),
 		field1 = h.field(pos1),
 		field2 = h.field(pos2);
@@ -772,32 +807,32 @@ BOOST_AUTO_TEST_CASE(test90_translate_quadrupole_test_field)
 	h.applyTranslation(dz);
 
 
-	const tsc::cdbl
+	const cdbl
 		check0 = h.field(pos0 - dz),
 		check1 = h.field(pos1 - dz),
 		check2 = h.field(pos2 - dz);
 
-	BOOST_CHECK_CLOSE(field0.real(), check0.real(), 1e-42);
-	BOOST_CHECK_CLOSE(field0.imag(), check0.imag(), 1e-42);
+	BOOST_CHECK_CLOSE(field0.real(), check0.real(), 1e-12);
+	BOOST_CHECK_CLOSE(field0.imag(), check0.imag(), 1e-12);
 
-	BOOST_CHECK_CLOSE(field1.real(), check1.real(), 1e-42);
-	BOOST_CHECK_CLOSE(field1.imag(), check1.imag(), 1e-42);
+	BOOST_CHECK_CLOSE(field1.real(), check1.real(), 1e-12);
+	BOOST_CHECK_CLOSE(field1.imag(), check1.imag(), 1e-12);
 
-	BOOST_CHECK_CLOSE(field2.real(), check2.real(), 1e-42);
-	BOOST_CHECK_CLOSE(field2.imag(), check2.imag(), 1e-42);
+	BOOST_CHECK_CLOSE(field2.real(), check2.real(), 1e-12);
+	BOOST_CHECK_CLOSE(field2.imag(), check2.imag(), 1e-12);
 
 }
 
 BOOST_AUTO_TEST_CASE(test91_translate_sextupole)
 {
 	const double sextupole = 100;
-	const tsc::cdbl dz(1, 0);
-	tsc::TwoDimensionalMultipoles h = tsc::TwoDimensionalMultipoles();
-	h.setMultipole(3, tsc::cdbl(1, 0) * sextupole);
-	const tsc::cdbl pos0(0, 0), pos1(0, .5), pos2(1., 0);
+	const cdbl dz(1, 0);
+	tsc::TwoDimensionalMultipolesKnobbed h = tsc::TwoDimensionalMultipoles(0e0);
+	h.setMultipole(3, cdbl(1, 0) * sextupole);
+	const cdbl pos0(0, 0), pos1(0, .5), pos2(1., 0);
 
-	BOOST_CHECK_CLOSE(h.getMultipole(3).real(), sextupole, 1e-42);
-	const tsc::cdbl
+	BOOST_CHECK_CLOSE(h.getMultipole(3).real(), sextupole, 1e-12);
+	const cdbl
 		field0 = h.field(pos0),
 		field1 = h.field(pos1),
 		field2 = h.field(pos2);
@@ -805,80 +840,80 @@ BOOST_AUTO_TEST_CASE(test91_translate_sextupole)
 	h.applyTranslation(dz);
 
 	// sextupole ... same as sextupole
-	BOOST_CHECK_CLOSE(h.getMultipole(3).real(), sextupole, 1e-42);
-	BOOST_CHECK_CLOSE(h.getMultipole(3).imag(), 0, 1e-42);
+	BOOST_CHECK_CLOSE(h.getMultipole(3).real(), sextupole, 1e-12);
+	BOOST_CHECK_CLOSE(h.getMultipole(3).imag(), 0, 1e-12);
 
 	// quadrupole ... half the sextupole
-	BOOST_CHECK_CLOSE(h.getMultipole(2).real(), 2 * sextupole, 1e-42);
-	BOOST_CHECK_CLOSE(h.getMultipole(2).imag(), 0, 1e-42);
+	BOOST_CHECK_CLOSE(h.getMultipole(2).real(), 2 * sextupole, 1e-12);
+	BOOST_CHECK_CLOSE(h.getMultipole(2).imag(), 0, 1e-12);
 
 	// dipole
-	BOOST_CHECK_CLOSE(h.getMultipole(1).real(), sextupole, 1e-42);
-	BOOST_CHECK_CLOSE(h.getMultipole(1).imag(), 0, 1e-42);
+	BOOST_CHECK_CLOSE(h.getMultipole(1).real(), sextupole, 1e-12);
+	BOOST_CHECK_CLOSE(h.getMultipole(1).imag(), 0, 1e-12);
 
 	// probe field where coordinates were
-	const tsc::cdbl
+	const cdbl
 		check0 = h.field(pos0 - dz),
 		check1 = h.field(pos1 - dz),
 		check2 = h.field(pos2 - dz);
 
-	BOOST_CHECK_CLOSE(field0.real(), check0.real(), 1e-42);
-	BOOST_CHECK_CLOSE(field0.imag(), check0.imag(), 1e-42);
+	BOOST_CHECK_CLOSE(field0.real(), check0.real(), 1e-12);
+	BOOST_CHECK_CLOSE(field0.imag(), check0.imag(), 1e-12);
 
-	BOOST_CHECK_CLOSE(field1.real(), check1.real(), 1e-42);
-	BOOST_CHECK_CLOSE(field1.imag(), check1.imag(), 1e-42);
+	BOOST_CHECK_CLOSE(field1.real(), check1.real(), 1e-12);
+	BOOST_CHECK_CLOSE(field1.imag(), check1.imag(), 1e-12);
 
-	BOOST_CHECK_CLOSE(field2.real(), check2.real(), 1e-42);
-	BOOST_CHECK_CLOSE(field2.imag(), check2.imag(), 1e-42);
+	BOOST_CHECK_CLOSE(field2.real(), check2.real(), 1e-12);
+	BOOST_CHECK_CLOSE(field2.imag(), check2.imag(), 1e-12);
 }
 
 BOOST_AUTO_TEST_CASE(test92_translate_octupole)
 {
 	const double octupole = 1000;
 
-	const tsc::cdbl dz(1, 0);
-	tsc::TwoDimensionalMultipoles h = tsc::TwoDimensionalMultipoles();
-	h.setMultipole(4, tsc::cdbl(1, 0) * octupole);
-	const tsc::cdbl pos0(0, 0), pos1(0, .5), pos2(1., 0);
+	const cdbl dz(1, 0);
+	tsc::TwoDimensionalMultipolesKnobbed h = tsc::TwoDimensionalMultipoles(0e0);
+	h.setMultipole(4, cdbl(1, 0) * octupole);
+	const cdbl pos0(0, 0), pos1(0, .5), pos2(1., 0);
 
-	BOOST_CHECK_CLOSE(h.getMultipole(4).real(), octupole, 1e-42);
+	BOOST_CHECK_CLOSE(h.getMultipole(4).real(), octupole, 1e-12);
 
 
-	const tsc::cdbl
+	const cdbl
 		field0 = h.field(pos0),
 		field1 = h.field(pos1),
 		field2 = h.field(pos2);
 
 	h.applyTranslation(dz);
 
-	BOOST_CHECK_CLOSE(h.getMultipole(4).real(), octupole, 1e-42);
-	BOOST_CHECK_CLOSE(h.getMultipole(4).imag(), 0, 1e-42);
+	BOOST_CHECK_CLOSE(h.getMultipole(4).real(), octupole, 1e-12);
+	BOOST_CHECK_CLOSE(h.getMultipole(4).imag(), 0, 1e-12);
 
 	// sextupole same as octupole
-	BOOST_CHECK_CLOSE(h.getMultipole(3).real(), 3 * octupole , 1e-42);
-	BOOST_CHECK_CLOSE(h.getMultipole(3).imag(), 0, 1e-42);
+	BOOST_CHECK_CLOSE(h.getMultipole(3).real(), 3 * octupole , 1e-12);
+	BOOST_CHECK_CLOSE(h.getMultipole(3).imag(), 0, 1e-12);
 
 	// quadrupole ... a third of
-	BOOST_CHECK_CLOSE(h.getMultipole(2).real(), 3 * octupole , 1e-42);
-	BOOST_CHECK_CLOSE(h.getMultipole(2).imag(), 0, 1e-42);
+	BOOST_CHECK_CLOSE(h.getMultipole(2).real(), 3 * octupole , 1e-12);
+	BOOST_CHECK_CLOSE(h.getMultipole(2).imag(), 0, 1e-12);
 
 	// dipole
-	BOOST_CHECK_CLOSE(h.getMultipole(1).real(), octupole, 1e-42);
-	BOOST_CHECK_CLOSE(h.getMultipole(1).imag(), 0, 1e-42);
+	BOOST_CHECK_CLOSE(h.getMultipole(1).real(), octupole, 1e-12);
+	BOOST_CHECK_CLOSE(h.getMultipole(1).imag(), 0, 1e-12);
 
-	const tsc::cdbl
+	const cdbl
 		check0 = h.field(pos0 - dz),
 		check1 = h.field(pos1 - dz),
 		check2 = h.field(pos2 - dz);
 
-	BOOST_CHECK_CLOSE(field0.real(), check0.real(), 1e-42);
-	BOOST_CHECK_CLOSE(field0.imag(), check0.imag(), 1e-42);
+	BOOST_CHECK_CLOSE(field0.real(), check0.real(), 1e-12);
+	BOOST_CHECK_CLOSE(field0.imag(), check0.imag(), 1e-12);
 
-	BOOST_CHECK_CLOSE(field1.real(), check1.real(), 1e-42);
-	BOOST_CHECK_CLOSE(field1.imag(), check1.imag(), 1e-42);
+	BOOST_CHECK_CLOSE(field1.real(), check1.real(), 1e-12);
+	BOOST_CHECK_CLOSE(field1.imag(), check1.imag(), 1e-12);
 
-	BOOST_CHECK_CLOSE(field2.real(), check2.real(), 1e-42);
-	BOOST_CHECK_CLOSE(field2.imag(), check2.imag(), 1e-42);
+	BOOST_CHECK_CLOSE(field2.real(), check2.real(), 1e-12);
+	BOOST_CHECK_CLOSE(field2.imag(), check2.imag(), 1e-12);
 
 }
 
@@ -886,31 +921,31 @@ BOOST_AUTO_TEST_CASE(test92_translate_octupole)
 BOOST_AUTO_TEST_CASE(test100_translate_quadrupole_small)
 {
 
-	tsc::TwoDimensionalMultipoles h = tsc::TwoDimensionalMultipoles();
+	tsc::TwoDimensionalMultipolesKnobbed h = tsc::TwoDimensionalMultipoles(0e0);
 	const double unit = 1e-4, rref=40e-3;
 	//  realistic example
-	const tsc::cdbl dz(1e-4/rref, .3e-3/rref);
+	const cdbl dz(1e-4/rref, .3e-3/rref);
 
 	// pure quadrupole .. assuming harmonics have been checked
-	h.setMultipole(1, tsc::cdbl(1, 0));
+	h.setMultipole(1, cdbl(1, 0));
 	{
 		const unsigned int n = 6;
-		const tsc::cdbl	dodecapole = tsc::cdbl(.2, 3) * unit;
+		const cdbl	dodecapole = cdbl(.2, 3) * unit;
 		if(n <= tsc::max_multipole){
 			h.setMultipole(n, dodecapole);
 		}
 	}
 	{
 		const unsigned int n = 10;
-		const tsc::cdbl icosapole = tsc::cdbl(.5, -.7) * unit;
+		const cdbl icosapole = cdbl(.5, -.7) * unit;
 		if(n <= tsc::max_multipole){
 			h.setMultipole(n, icosapole);
 		}
 	}
 
 
-	const tsc::cdbl pos0(0, 0e0/rref) , pos1(0, 17e-3/rref), pos2(23e-3/rref, 0);
-	const tsc::cdbl
+	const cdbl pos0(0, 0e0/rref) , pos1(0, 17e-3/rref), pos2(23e-3/rref, 0);
+	const cdbl
 		field0 = h.field(pos0),
 		field1 = h.field(pos1),
 		field2 = h.field(pos2);
@@ -918,12 +953,12 @@ BOOST_AUTO_TEST_CASE(test100_translate_quadrupole_small)
 
 	h.applyTranslation(dz);
 
-	const tsc::cdbl
+	const cdbl
 		check0 = h.field(pos0 - dz),
 		check1 = h.field(pos1 - dz),
 		check2 = h.field(pos2 - dz);
 #ifdef THOR_SCSI_PLANAR_MULTIPOLES_FIELD2
-	const tsc::cdbl
+	const cdbl
 		check0_2 = h.field2(pos0 - dz),
 		check1_2 = h.field2(pos1 - dz),
 		check2_2 = h.field2(pos2 - dz);
@@ -954,15 +989,15 @@ BOOST_AUTO_TEST_CASE(test100_translate_quadrupole_small)
 BOOST_AUTO_TEST_CASE(test200_add_multipoles_inplace)
 {
 
-	tsc::TwoDimensionalMultipoles h, h2, h3;
+	tsc::TwoDimensionalMultipoles h(0e0), h2(0e0), h3(0e0);
 
-	h.setMultipole(1, tsc::cdbl(1, 0));
-	h2.setMultipole(2, tsc::cdbl(2, 0));
+	h.setMultipole(1, cdbl(1, 0));
+	h2.setMultipole(2, cdbl(2, 0));
 	{
 		// cross check harmonics properly set
-		const tsc::cdbl c1 = h.getMultipole(1);
-		const tsc::cdbl c2 = h.getMultipole(2);
-		const tsc::cdbl c3 = h.getMultipole(3);
+		const cdbl c1 = h.getMultipole(1);
+		const cdbl c2 = h.getMultipole(2);
+		const cdbl c3 = h.getMultipole(3);
 
 		BOOST_CHECK_CLOSE(c1.real(), 1, 1e-12);
 		BOOST_CHECK_SMALL(c1.imag(), 1e-12);
@@ -974,9 +1009,9 @@ BOOST_AUTO_TEST_CASE(test200_add_multipoles_inplace)
 
 	{
 		// cross check harmonics properly set
-		const tsc::cdbl c1 = h2.getMultipole(1);
-		const tsc::cdbl c2 = h2.getMultipole(2);
-		const tsc::cdbl c3 = h2.getMultipole(3);
+		const cdbl c1 = h2.getMultipole(1);
+		const cdbl c2 = h2.getMultipole(2);
+		const cdbl c3 = h2.getMultipole(3);
 
 		BOOST_CHECK_SMALL(c1.real(), 1e-12);
 		BOOST_CHECK_SMALL(c1.imag(), 1e-12);
@@ -990,9 +1025,9 @@ BOOST_AUTO_TEST_CASE(test200_add_multipoles_inplace)
 	h3 += h;
 	{
 		// cross check harmonics properly set and maintained after math
-		const tsc::cdbl c1 = h.getMultipole(1);
-		const tsc::cdbl c2 = h.getMultipole(2);
-		const tsc::cdbl c3 = h.getMultipole(3);
+		const cdbl c1 = h.getMultipole(1);
+		const cdbl c2 = h.getMultipole(2);
+		const cdbl c3 = h.getMultipole(3);
 
 		BOOST_CHECK_CLOSE(c1.real(), 1, 1e-12);
 		BOOST_CHECK_SMALL(c1.imag(), 1e-12);
@@ -1004,9 +1039,9 @@ BOOST_AUTO_TEST_CASE(test200_add_multipoles_inplace)
 
 	{
 		// cross check harmonics properly set
-		const tsc::cdbl c1 = h2.getMultipole(1);
-		const tsc::cdbl c2 = h2.getMultipole(2);
-		const tsc::cdbl c3 = h2.getMultipole(3);
+		const cdbl c1 = h2.getMultipole(1);
+		const cdbl c2 = h2.getMultipole(2);
+		const cdbl c3 = h2.getMultipole(3);
 
 		BOOST_CHECK_SMALL(c1.real(), 1e-12);
 		BOOST_CHECK_SMALL(c1.imag(), 1e-12);
@@ -1018,9 +1053,9 @@ BOOST_AUTO_TEST_CASE(test200_add_multipoles_inplace)
 	{
 		// properly assigned
 		// cross check harmonics properly set
-		const tsc::cdbl c1 = h3.getMultipole(1);
-		const tsc::cdbl c2 = h3.getMultipole(2);
-		const tsc::cdbl c3 = h3.getMultipole(3);
+		const cdbl c1 = h3.getMultipole(1);
+		const cdbl c2 = h3.getMultipole(2);
+		const cdbl c3 = h3.getMultipole(3);
 
 		BOOST_CHECK_CLOSE(c1.real(), 1, 1e-12);
 		BOOST_CHECK_SMALL(c1.imag(), 1e-12);
@@ -1036,15 +1071,15 @@ BOOST_AUTO_TEST_CASE(test200_add_multipoles_inplace)
 BOOST_AUTO_TEST_CASE(test201_add_multipoles)
 {
 
-	tsc::TwoDimensionalMultipoles h, h2, h3;
+	tsc::TwoDimensionalMultipoles h(0e0), h2(0e0), h3(0e0);
 
-	h.setMultipole(1, tsc::cdbl(1, 0));
-	h2.setMultipole(2, tsc::cdbl(2, 0));
+	h.setMultipole(1, cdbl(1, 0));
+	h2.setMultipole(2, cdbl(2, 0));
 	{
 		// cross check harmonics properly set
-		const tsc::cdbl c1 = h.getMultipole(1);
-		const tsc::cdbl c2 = h.getMultipole(2);
-		const tsc::cdbl c3 = h.getMultipole(3);
+		const cdbl c1 = h.getMultipole(1);
+		const cdbl c2 = h.getMultipole(2);
+		const cdbl c3 = h.getMultipole(3);
 
 		BOOST_CHECK_CLOSE(c1.real(), 1, 1e-12);
 		BOOST_CHECK_SMALL(c1.imag(), 1e-12);
@@ -1056,9 +1091,9 @@ BOOST_AUTO_TEST_CASE(test201_add_multipoles)
 
 	{
 		// cross check harmonics properly set
-		const tsc::cdbl c1 = h2.getMultipole(1);
-		const tsc::cdbl c2 = h2.getMultipole(2);
-		const tsc::cdbl c3 = h2.getMultipole(3);
+		const cdbl c1 = h2.getMultipole(1);
+		const cdbl c2 = h2.getMultipole(2);
+		const cdbl c3 = h2.getMultipole(3);
 
 		BOOST_CHECK_SMALL(c1.real(), 1e-12);
 		BOOST_CHECK_SMALL(c1.imag(), 1e-12);
@@ -1072,9 +1107,9 @@ BOOST_AUTO_TEST_CASE(test201_add_multipoles)
 
 	{
 		// cross check harmonics properly set and maintained after math
-		const tsc::cdbl c1 = h.getMultipole(1);
-		const tsc::cdbl c2 = h.getMultipole(2);
-		const tsc::cdbl c3 = h.getMultipole(3);
+		const cdbl c1 = h.getMultipole(1);
+		const cdbl c2 = h.getMultipole(2);
+		const cdbl c3 = h.getMultipole(3);
 
 		BOOST_CHECK_CLOSE(c1.real(), 1, 1e-12);
 		BOOST_CHECK_SMALL(c1.imag(), 1e-12);
@@ -1086,9 +1121,9 @@ BOOST_AUTO_TEST_CASE(test201_add_multipoles)
 
 	{
 		// cross check harmonics properly set
-		const tsc::cdbl c1 = h2.getMultipole(1);
-		const tsc::cdbl c2 = h2.getMultipole(2);
-		const tsc::cdbl c3 = h2.getMultipole(3);
+		const cdbl c1 = h2.getMultipole(1);
+		const cdbl c2 = h2.getMultipole(2);
+		const cdbl c3 = h2.getMultipole(3);
 
 		BOOST_CHECK_SMALL(c1.real(), 1e-12);
 		BOOST_CHECK_SMALL(c1.imag(), 1e-12);
@@ -1100,9 +1135,9 @@ BOOST_AUTO_TEST_CASE(test201_add_multipoles)
 	{
 		// properly assigned
 		// cross check harmonics properly set
-		const tsc::cdbl c1 = h3.getMultipole(1);
-		const tsc::cdbl c2 = h3.getMultipole(2);
-		const tsc::cdbl c3 = h3.getMultipole(3);
+		const cdbl c1 = h3.getMultipole(1);
+		const cdbl c2 = h3.getMultipole(2);
+		const cdbl c3 = h3.getMultipole(3);
 
 		BOOST_CHECK_CLOSE(c1.real(), 1, 1e-12);
 		BOOST_CHECK_SMALL(c1.imag(), 1e-12);
@@ -1118,17 +1153,17 @@ BOOST_AUTO_TEST_CASE(test201_add_multipoles)
 BOOST_AUTO_TEST_CASE(test210_mul_multipoles_inplace)
 {
 
-	tsc::TwoDimensionalMultipoles h;
+	tsc::TwoDimensionalMultipoles h(0e0);
 	const double b1 = 5e0, b2 = 7e0, scale = 3e0;
-	h.setMultipole(1, tsc::cdbl(b1, 0));
-	h.setMultipole(2, tsc::cdbl(b2, 0));
+	h.setMultipole(1, cdbl(b1, 0));
+	h.setMultipole(2, cdbl(b2, 0));
 
 	{
 		// properly assigned
 		// cross check harmonics properly set
-		const tsc::cdbl c1 = h.getMultipole(1);
-		const tsc::cdbl c2 = h.getMultipole(2);
-		const tsc::cdbl c3 = h.getMultipole(3);
+		const cdbl c1 = h.getMultipole(1);
+		const cdbl c2 = h.getMultipole(2);
+		const cdbl c3 = h.getMultipole(3);
 		BOOST_CHECK_CLOSE(c1.real(), b1, 1e-12);
 		BOOST_CHECK_SMALL(c1.imag(), 1e-12);
 		BOOST_CHECK_CLOSE(c2.real(), b2, 1e-12);
@@ -1141,9 +1176,9 @@ BOOST_AUTO_TEST_CASE(test210_mul_multipoles_inplace)
 	{
 		// properly assigned
 		// cross check harmonics properly set
-		const tsc::cdbl c1 = h.getMultipole(1);
-		const tsc::cdbl c2 = h.getMultipole(2);
-		const tsc::cdbl c3 = h.getMultipole(3);
+		const cdbl c1 = h.getMultipole(1);
+		const cdbl c2 = h.getMultipole(2);
+		const cdbl c3 = h.getMultipole(3);
 		BOOST_CHECK_CLOSE(c1.real(), b1 * scale , 1e-12);
 		BOOST_CHECK_SMALL(c1.imag(), 1e-12);
 		BOOST_CHECK_CLOSE(c2.real(), b2 * scale , 1e-12);
@@ -1156,17 +1191,17 @@ BOOST_AUTO_TEST_CASE(test210_mul_multipoles_inplace)
 BOOST_AUTO_TEST_CASE(test220_mul_multipoles)
 {
 
-	tsc::TwoDimensionalMultipoles h;
+	tsc::TwoDimensionalMultipoles h(0e0);
 	const double b1 = 5e0, b2 = 7e0, scale = 3e0;
-	h.setMultipole(1, tsc::cdbl(b1, 0));
-	h.setMultipole(2, tsc::cdbl(b2, 0));
+	h.setMultipole(1, cdbl(b1, 0));
+	h.setMultipole(2, cdbl(b2, 0));
 
 	{
 		// properly assigned
 		// cross check harmonics properly set
-		const tsc::cdbl c1 = h.getMultipole(1);
-		const tsc::cdbl c2 = h.getMultipole(2);
-		const tsc::cdbl c3 = h.getMultipole(3);
+		const cdbl c1 = h.getMultipole(1);
+		const cdbl c2 = h.getMultipole(2);
+		const cdbl c3 = h.getMultipole(3);
 		BOOST_CHECK_CLOSE(c1.real(), b1, 1e-12);
 		BOOST_CHECK_SMALL(c1.imag(), 1e-12);
 		BOOST_CHECK_CLOSE(c2.real(), b2, 1e-12);
@@ -1175,13 +1210,13 @@ BOOST_AUTO_TEST_CASE(test220_mul_multipoles)
 		BOOST_CHECK_SMALL(c3.imag(), 1e-12);
 	}
 
-	tsc::TwoDimensionalMultipoles h2 = h * scale;
+	tsc::TwoDimensionalMultipolesKnobbed h2 = h * scale;
 	{
 		// properly assigned
 		// cross check harmonics not modified
-		const tsc::cdbl c1 = h.getMultipole(1);
-		const tsc::cdbl c2 = h.getMultipole(2);
-		const tsc::cdbl c3 = h.getMultipole(3);
+		const cdbl c1 = h.getMultipole(1);
+		const cdbl c2 = h.getMultipole(2);
+		const cdbl c3 = h.getMultipole(3);
 		BOOST_CHECK_CLOSE(c1.real(), b1, 1e-12);
 		BOOST_CHECK_SMALL(c1.imag(), 1e-12);
 		BOOST_CHECK_CLOSE(c2.real(), b2, 1e-12);
@@ -1192,9 +1227,9 @@ BOOST_AUTO_TEST_CASE(test220_mul_multipoles)
 	{
 		// properly assigned
 		// cross check harmonics properly set
-		const tsc::cdbl c1 = h2.getMultipole(1);
-		const tsc::cdbl c2 = h2.getMultipole(2);
-		const tsc::cdbl c3 = h2.getMultipole(3);
+		const cdbl c1 = h2.getMultipole(1);
+		const cdbl c2 = h2.getMultipole(2);
+		const cdbl c3 = h2.getMultipole(3);
 		BOOST_CHECK_CLOSE(c1.real(), b1 * scale , 1e-12);
 		BOOST_CHECK_SMALL(c1.imag(), 1e-12);
 		BOOST_CHECK_CLOSE(c2.real(), b2 * scale , 1e-12);
@@ -1205,9 +1240,9 @@ BOOST_AUTO_TEST_CASE(test220_mul_multipoles)
 }
 
 
-static double ret_zero(const double val)
+static std::complex<double> ret_zero(const std::complex<double> val)
 {
-	return 0e0;
+	return std::complex<double>(0e0, 0e0);
 }
 
 BOOST_AUTO_TEST_CASE(test240_mul_multipoles_vector_inplace)
@@ -1215,10 +1250,10 @@ BOOST_AUTO_TEST_CASE(test240_mul_multipoles_vector_inplace)
 
 	const double b1 = 5e0, b2 = 7e0, s1 = 11e0, s2=13e0;
 
-	tsc::TwoDimensionalMultipoles h;
-	std::vector<double> scale(h.getCoeffs().size());
-	h.setMultipole(1, tsc::cdbl(b1, 0));
-	h.setMultipole(2, tsc::cdbl(b2, 0));
+	tsc::TwoDimensionalMultipoles h(0e0);
+	std::vector<std::complex<double>> scale(h.getCoeffs().size());
+	h.setMultipole(1, cdbl(b1, 0));
+	h.setMultipole(2, cdbl(b2, 0));
 
 	std::transform(scale.begin(), scale.end(), scale.begin(),  ret_zero);
 	scale[0] = s1;
@@ -1227,9 +1262,9 @@ BOOST_AUTO_TEST_CASE(test240_mul_multipoles_vector_inplace)
 	{
 		// properly assigned
 		// cross check harmonics properly set
-		const tsc::cdbl c1 = h.getMultipole(1);
-		const tsc::cdbl c2 = h.getMultipole(2);
-		const tsc::cdbl c3 = h.getMultipole(3);
+		const cdbl c1 = h.getMultipole(1);
+		const cdbl c2 = h.getMultipole(2);
+		const cdbl c3 = h.getMultipole(3);
 		BOOST_CHECK_CLOSE(c1.real(), b1, 1e-12);
 		BOOST_CHECK_SMALL(c1.imag(), 1e-12);
 		BOOST_CHECK_CLOSE(c2.real(), b2, 1e-12);
@@ -1239,12 +1274,12 @@ BOOST_AUTO_TEST_CASE(test240_mul_multipoles_vector_inplace)
 	}
 
 	h *= scale;
-	{
+    {
 		// properly assigned
 		// cross check harmonics properly set
-		const tsc::cdbl c1 = h.getMultipole(1);
-		const tsc::cdbl c2 = h.getMultipole(2);
-		const tsc::cdbl c3 = h.getMultipole(3);
+		const cdbl c1 = h.getMultipole(1);
+		const cdbl c2 = h.getMultipole(2);
+		const cdbl c3 = h.getMultipole(3);
 		BOOST_CHECK_CLOSE(c1.real(), b1 * s1 , 1e-12);
 		BOOST_CHECK_SMALL(c1.imag(), 1e-12);
 		BOOST_CHECK_CLOSE(c2.real(), b2 * s2 , 1e-12);
@@ -1259,10 +1294,10 @@ BOOST_AUTO_TEST_CASE(test250_mul_multipoles_vector)
 
 	const double b1 = 5e0, b2 = 7e0, s1 = 1./11e0, s2=1./13e0;
 
-	tsc::TwoDimensionalMultipoles h;
-	std::vector<double> scale(h.getCoeffs().size());
-	h.setMultipole(1, tsc::cdbl(b1, 0));
-	h.setMultipole(2, tsc::cdbl(b2, 0));
+	tsc::TwoDimensionalMultipoles h(0e0);
+	std::vector<std::complex<double>> scale(h.getCoeffs().size());
+	h.setMultipole(1, cdbl(b1, 0));
+	h.setMultipole(2, cdbl(b2, 0));
 
 	std::transform(scale.begin(), scale.end(), scale.begin(),  ret_zero);
 	scale[0] = s1;
@@ -1271,9 +1306,9 @@ BOOST_AUTO_TEST_CASE(test250_mul_multipoles_vector)
 	{
 		// properly assigned
 		// cross check harmonics properly set
-		const tsc::cdbl c1 = h.getMultipole(1);
-		const tsc::cdbl c2 = h.getMultipole(2);
-		const tsc::cdbl c3 = h.getMultipole(3);
+		const cdbl c1 = h.getMultipole(1);
+		const cdbl c2 = h.getMultipole(2);
+		const cdbl c3 = h.getMultipole(3);
 		BOOST_CHECK_CLOSE(c1.real(), b1, 1e-12);
 		BOOST_CHECK_SMALL(c1.imag(), 1e-12);
 		BOOST_CHECK_CLOSE(c2.real(), b2, 1e-12);
@@ -1287,9 +1322,9 @@ BOOST_AUTO_TEST_CASE(test250_mul_multipoles_vector)
 	{
 		// properly assigned
 		// cross check h unchanged
-		const tsc::cdbl c1 = h.getMultipole(1);
-		const tsc::cdbl c2 = h.getMultipole(2);
-		const tsc::cdbl c3 = h.getMultipole(3);
+		const cdbl c1 = h.getMultipole(1);
+		const cdbl c2 = h.getMultipole(2);
+		const cdbl c3 = h.getMultipole(3);
 		BOOST_CHECK_CLOSE(c1.real(), b1, 1e-12);
 		BOOST_CHECK_SMALL(c1.imag(), 1e-12);
 		BOOST_CHECK_CLOSE(c2.real(), b2, 1e-12);
@@ -1301,9 +1336,9 @@ BOOST_AUTO_TEST_CASE(test250_mul_multipoles_vector)
 	{
 		// properly assigned
 		// cross check harmonics properly set
-		const tsc::cdbl c1 = h2.getMultipole(1);
-		const tsc::cdbl c2 = h2.getMultipole(2);
-		const tsc::cdbl c3 = h2.getMultipole(3);
+		const cdbl c1 = h2.getMultipole(1);
+		const cdbl c2 = h2.getMultipole(2);
+		const cdbl c3 = h2.getMultipole(3);
 		BOOST_CHECK_CLOSE(c1.real(), b1 * s1 , 1e-12);
 		BOOST_CHECK_SMALL(c1.imag(), 1e-12);
 		BOOST_CHECK_CLOSE(c2.real(), b2 * s2 , 1e-12);
@@ -1311,4 +1346,106 @@ BOOST_AUTO_TEST_CASE(test250_mul_multipoles_vector)
 		BOOST_CHECK_SMALL(c3.real(), 1e-12);
 		BOOST_CHECK_SMALL(c3.imag(), 1e-12);
 	}
+}
+
+#if 1
+BOOST_AUTO_TEST_CASE(test300_mul_tpsa_)
+{
+    const int nv = 4, no = 4;
+    auto a_desc = std::make_shared<gtpsa::desc>(nv, no);
+
+    auto t = gtpsa::CTpsaOrComplex(0e0);
+    //tsc::TwoDimensionalMultipolesKnobbed<tsc::TpsaVariantType> h(t);
+    tsc::TwoDimensionalMultipolesTpsa h(t);
+
+    auto x = gtpsa::tpsa(a_desc, 3);
+    auto y = gtpsa::tpsa(a_desc, 3);
+    auto Bx = gtpsa::tpsa(a_desc, 3);
+    auto By = gtpsa::tpsa(a_desc, 3);
+
+    x.setName("x");
+    y.setName("y");
+    Bx.setName("Bx");
+    By.setName("By");
+
+    // a sextupole
+    auto c3 = gtpsa::ctpsa(a_desc, 3);
+    c3.set({0,0},{1e-4, 0});
+    // a decapole
+    auto c5 = gtpsa::ctpsa(a_desc, 3);
+    c5.set({0,0},{3e-4, 0});
+
+    // Set identity by hand not avialable her
+    x.setv(1, {1, 0, 0, 0, 0, 0});
+    y.setv(1, {0, 1, 0, 0, 0, 0});
+
+    c3.setv(1, {0, 0, 1, 0});
+    c5.setv(1, {0, 0, 0, 1});
+    // a rather standard dipole
+    auto c1 =  gtpsa::CTpsaOrComplex(std::complex<double>(1e0, 0e0));
+    h.setMultipole(1, c1);
+    h.setMultipole(3, c3);
+    h.setMultipole(5, c5);
+
+    h.field(x, y, &Bx, &By);
+
+    {
+	// x "curvature"
+	double field_from_c3 = By.get("2");
+	double check = c3.cst().real();
+	BOOST_CHECK_CLOSE(field_from_c3, check, 1e-12);
+    }
+    {
+	// y "curvature"
+	double field_from_c3 = By.get("02");
+	double check = c3.cst().real();
+	BOOST_CHECK_CLOSE(field_from_c3, -check, 1e-12);
+    }
+    {
+	// c3 on c3
+	double c3_on_c3 = By.get("201");
+	double check = c3.cst().real();
+	BOOST_CHECK_CLOSE(c3_on_c3, 1e0, 1e-12);
+    }
+    {
+	// x "curvature"
+	double c3_on_c3 = By.get("021");
+	double check = c3.cst().real();
+	BOOST_CHECK_CLOSE(c3_on_c3, 1e0, 1e-12);
+    }
+    {
+	// y "curvature"
+	double field_from_c3 = Bx.get("11");
+	double check = c3.cst().real();
+	BOOST_CHECK_CLOSE(field_from_c3, -check,  1e-12);
+    }
+
+    {
+	const double eps = 1e-6;
+	By.print(0, eps, 0, 0);
+	Bx.print(0, eps, 0, 0);
+    }
+
+}
+#endif
+
+// include dedicated honer complex tests
+// check that the last coefficient is honoured correctly ...
+BOOST_AUTO_TEST_CASE(test310_hohner_complex_last_coeff)
+{
+    int h_max = 4;
+    tsc::TwoDimensionalMultipolesTpsa h(0e0, h_max);
+    const std::complex<double> c4(23e-4, -355e-4/113e0);
+    std::vector<std::complex<double>> coeffs(h_max);
+    coeffs.at(h_max -1) = c4;
+
+    // consider x / rref
+    const double x = 1, y = .5;
+    std::complex<double> z_prop (x, y);
+    const auto h2 = h.clone();
+    const auto f = thor_scsi::core::honer_complex(coeffs, z_prop);
+
+    const auto ref_field = std::pow(z_prop, (4-1)) * c4;
+    BOOST_CHECK_CLOSE(ref_field.real(), f.real(), 1e-12);
+    BOOST_CHECK_CLOSE(ref_field.imag(), f.imag(), 1e-12);
 }

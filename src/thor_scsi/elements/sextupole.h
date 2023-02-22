@@ -4,11 +4,13 @@
 #include <thor_scsi/elements/classical_magnet.h>
 
 namespace thor_scsi::elements {
-	class SextupoleType : public ClassicalMagnet {
+
+	template<class C>
+	class SextupoleTypeWithKnob : public ClassicalMagnetWithKnob<C> {
 	public:
-		inline SextupoleType(const Config &config) : ClassicalMagnet(config){
-			this->setMainMultipoleStrength(config);
-		}
+		inline SextupoleTypeWithKnob(const Config &config)
+			: ClassicalMagnetWithKnob<C> (config)
+			{ this->setMainMultipoleStrength(config); }
 
 		inline int getMainMultipoleNumber(void) const override final {
 			return 3;
@@ -19,6 +21,8 @@ namespace thor_scsi::elements {
 
 		const char* type_name(void) const override final { return "Sextupole"; };
 	};
+	typedef SextupoleTypeWithKnob<thor_scsi::core::StandardDoubleType> SextupoleType;
+	typedef SextupoleTypeWithKnob<thor_scsi::core::TpsaVariantType> SextupoleTypeTpsa;
 } // Name space
 
 #endif // _THOR_SCSI_ELEMENTS_SEXTUPOLE_H_

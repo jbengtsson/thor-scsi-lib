@@ -2,18 +2,20 @@
 #define _THOR_SCSI_ELEMENTS_FIELD_KICK_API_H_
 #include <thor_scsi/elements/element_local_coordinates.h>
 #include <thor_scsi/core/field_interpolation.h>
+#include <thor_scsi/core/multipole_types.h>
 
 namespace thor_scsi::elements {
 	// declaration of API ... to be used by radiation observer
-	class FieldKickAPI : public LocalGalileanPRot {
+    template<class C>
+	class FieldKickAPIKnobbed : public LocalGalileanPRotKnobbed<C> {
 
 	public:
-		inline FieldKickAPI(const Config &conf)
-			: LocalGalileanPRot(conf)
+		inline FieldKickAPIKnobbed(const Config &conf)
+			: LocalGalileanPRotKnobbed<C>(conf)
 			, intp(nullptr)
 			{}
-		inline FieldKickAPI(FieldKickAPI&& O)
-			: LocalGalileanPRot(std::move(O)),
+		inline FieldKickAPIKnobbed(FieldKickAPIKnobbed&& O)
+			: LocalGalileanPRotKnobbed<C>(std::move(O)),
 			  intp(std::move(O.intp))
 			{
 			}
@@ -35,7 +37,7 @@ namespace thor_scsi::elements {
 			return this->integration_steps;
 		}
 
-		inline void setFieldInterpolator(std::shared_ptr<thor_scsi::core::Field2DInterpolation> a_intp){
+		inline void setFieldInterpolator(std::shared_ptr<thor_scsi::core::Field2DInterpolationKnobbed<C>> a_intp){
 			this->intp = a_intp;
 		}
 		inline auto getFieldInterpolator(void) const {
@@ -51,16 +53,17 @@ namespace thor_scsi::elements {
 			  std::cerr << "use count " << this->intp.use_count() << std::endl;
 			  std::cerr.flush();
 			*/
-			auto tmp =  std::const_pointer_cast<thor_scsi::core::Field2DInterpolation>(this->intp);
+			auto tmp =  std::const_pointer_cast<thor_scsi::core::Field2DInterpolationKnobbed<C>>(this->intp);
 			return tmp;
 			// return ;
 		}
 	protected:
 		double Pirho = 0;             ///< 1/rho [1/m].
-		std::shared_ptr<thor_scsi::core::Field2DInterpolation> intp;
+		std::shared_ptr<thor_scsi::core::Field2DInterpolationKnobbed<C>> intp;
 		int integration_steps = 1;
 	};
 
+    typedef  FieldKickAPIKnobbed<thor_scsi::core::StandardDoubleType> FieldKickAPI;
 } // Name space
 
 #endif // _THOR_SCSI_ELEMENTS_FIELD_KICK_API_H_

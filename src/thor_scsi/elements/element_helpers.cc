@@ -97,8 +97,8 @@ namespace thor_scsi::elements{
 	}
 
 
-	template<typename T>
-	void tse::drift_propagate(const tsc::ConfigType &conf, const double L, gtpsa::ss_vect<T> &ps)
+	template<typename T, typename T2>
+	void drift_propagate(const tsc::ConfigType &conf, const T2& L, gtpsa::ss_vect<T> &ps)
 	{
 	        T u(ps[0]);
 
@@ -224,9 +224,9 @@ namespace thor_scsi::elements{
 
 }
 
-template void tse::drift_propagate(const tsc::ConfigType &conf, const double, gtpsa::ss_vect<double>      &);
-template void tse::drift_propagate(const tsc::ConfigType &conf, const double, gtpsa::ss_vect<tps>         &);
-template void tse::drift_propagate(const tsc::ConfigType &conf, const double, gtpsa::ss_vect<gtpsa::tpsa> &);
+template void tse::drift_propagate(const tsc::ConfigType &conf, const double&, gtpsa::ss_vect<double>      &);
+template void tse::drift_propagate(const tsc::ConfigType &conf, const double&, gtpsa::ss_vect<tps>         &);
+template void tse::drift_propagate(const tsc::ConfigType &conf, const double&, gtpsa::ss_vect<gtpsa::tpsa> &);
 
 
 template void tse::thin_kick(const tsc::ConfigType &conf, const double       BxoBrho, const double     ByoBrho,

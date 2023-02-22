@@ -19,7 +19,9 @@ BOOST_AUTO_TEST_CASE(test10_rad_del_strm)
 	auto rad_del = tse::RadiationDelegate();
 
 	boost::test_tools::output_test_stream output;
-	output << rad_del;
+
+    output << rad_del;
+    rad_del.show(output, 0);
 	BOOST_CHECK( !output.is_empty( false ) );
 
 	std::cout << rad_del << std::endl;

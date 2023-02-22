@@ -6,6 +6,10 @@ add_library(lib MODULE
   src/thor_scsi.cc
   src/tps.cc
   src/config_type.cc
+  src/aperture.cc
+  src/interpolation.cc
+  src/radiation.cc
+  src/observer.cc
   src/elements.cc
   src/accelerator.cc
   )
