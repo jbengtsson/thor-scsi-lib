@@ -54,34 +54,28 @@ def compute_diffusion_coefficients(rad_del_kicks):
 
 
 def compute_rad_prop(acc, calc_config, x0, dE, alpha_rad, D_rad):
-    prt_deb = not False
-
     dof = 3
     J = np.zeros(dof)
     tau = np.zeros(dof)
     eps = np.zeros(dof)
     C = compute_circ(acc)
-    print("\nC = ", C)
+    logger.info("\nC = %5.3f", C)
     U_0 = calc_config.Energy*dE
     for k in range(dof):
         J[k] = 2e0*(1e0+x0[delta_])*alpha_rad[k]/dE
         tau[k] = -C/(c0*alpha_rad[k])
         eps[k] = -D_rad[k]/(2e0*alpha_rad[k])
 
-    if prt_deb:
-        print("\nE [GeV]     = {:3.1f}".format(1e-9*calc_config.Energy))
-        print("U0 [keV]    = {:3.1f}".format(1e-3*U_0))
-        print("eps         = {:12.6e} {:12.6e} {:12.6e}".
-              format(eps[X_], eps[Y_], eps[Z_]))
-        print("tau [msec]  = {:8.6f} {:8.6f} {:8.6f}".
-              format(1e3*tau[X_], 1e3*tau[Y_], 1e3*tau[Z_]))
-        print("J           = {:8.6f} {:8.6f} {:8.6f}".
-              format(J[X_], J[Y_], J[Z_]))
-        print("alpha_rad   = {:13.6e} {:13.6e} {:13.6e}".
-                format(alpha_rad[X_], alpha_rad[Y_], alpha_rad[Z_]))
+    logger.info("\nE [GeV]     = {:3.1f}\nU0 [keV]    = {:3.1f}\neps         = {:12.6e} {:12.6e} {:12.6e}\ntau [msec]  = {:8.6f} {:8.6f} {:8.6f}\nJ           = {:8.6f} {:8.6f} {:8.6f}\nalpha_rad   = {:13.6e} {:13.6e} {:13.6e}\nD_rad       = {:12.6e} {:12.6e} {:12.6e}".
+                format(1e-9*calc_config.Energy,
+                       1e-3*U_0,
+                       eps[X_], eps[Y_], eps[Z_],
+                       1e3*tau[X_], 1e3*tau[Y_], 1e3*tau[Z_],
+                       J[X_], J[Y_], J[Z_],
+                       alpha_rad[X_], alpha_rad[Y_], alpha_rad[Z_],
+                       D_rad[X_], D_rad[Y_], D_rad[Z_]))
 
-        print("D_rad       = {:12.6e} {:12.6e} {:12.6e}".
-              format(D_rad[X_], D_rad[Y_], D_rad[Z_]))
+    return U_0, J, tau, eps
 
 
 
@@ -108,8 +102,8 @@ def compute_radiation(
     M = r.one_turn_map[:6, :6]
 
     logger.info(
-        "M:\n" + mat2txt(M)
-        + "\nx0 =", vec2txt(r.x0)
+        "\nM:\n" + mat2txt(M)
+        + "\n\nx0 =" + vec2txt(r.x0)
     )
 
     calc_config.dE = 0e0
@@ -129,7 +123,9 @@ def compute_radiation(
 
     D_rad = compute_diffusion_coefficients(rad_del_kicks)
 
-    compute_rad_prop(acc, calc_config, r.x0, dE, alpha_rad, D_rad)
+    U_0, J, tau, eps = compute_rad_prop(acc, calc_config, r.x0, dE, alpha_rad, D_rad)
+
+    return U_0, J, tau, eps
 
 
 # def calculate_radiation(
