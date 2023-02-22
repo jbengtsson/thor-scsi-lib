@@ -243,6 +243,7 @@ def set_phi_cell(name, phi):
 # Global additional variables needed for optimisation function.
 n_iter    = 0
 chi_2_min = 1e30
+n_iter_min  = 0
 prms_min  = []
 
 def opt_unit_cell(lat, prm_list, C, bounds, phi_des, eps_x_des, nu_des, weight,
@@ -258,6 +259,7 @@ def opt_unit_cell(lat, prm_list, C, bounds, phi_des, eps_x_des, nu_des, weight,
 
         global n_iter
         global chi_2_min
+        global n_iter_min
         global prms_min
 
         M = lo.compute_map(lat, model_state, desc=desc, tpsa_order=tpsa_order)
@@ -283,6 +285,7 @@ def opt_unit_cell(lat, prm_list, C, bounds, phi_des, eps_x_des, nu_des, weight,
 
         if chi_2 < chi_2_min:
             chi_2_min = chi_2
+            n_iter_min = n_iter
             prms_min = prms
             print(f"\n{n_iter:4d} chi_2 = {chi_2:9.3e}\n\n  prms   =", prms)
             if stable[0] and stable[1] and stable[2]:
@@ -314,6 +317,7 @@ def opt_unit_cell(lat, prm_list, C, bounds, phi_des, eps_x_des, nu_des, weight,
     def prt_result(f_unit_cell, prm_list, prms0, minimum):
         global n_iter
         global chi_2_min
+        global n_iter_min
         global prms_min
 
         M = lo.compute_map(lat, model_state, desc=desc, tpsa_order=tpsa_order)
@@ -328,11 +332,12 @@ def opt_unit_cell(lat, prm_list, C, bounds, phi_des, eps_x_des, nu_des, weight,
         plt_Twiss(data, "after.png", "Linear Optics - After")
 
         print("\nInitial parameter values:")
+        n = n_iter_min
         n_iter = 0
         chi_2_min = 1e30
         f_unit_cell(prms0)
         print("\nFinal parameter values:")
-        n_iter = 0
+        n_iter = n - 1
         chi_2_min = 1e30
         f_unit_cell(minimum["x"])
         print("\n Minimum:\n", minimum)
