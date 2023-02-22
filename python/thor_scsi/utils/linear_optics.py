@@ -62,6 +62,8 @@ def acos2(sin, cos):
     """arcos(phi): 0 - 2 * pi.
        The sin part is used to determine the quadrant.
     """
+    if abs(cos) > 1e0:
+        raise Exception(f"arg = {cos:22.15e}")
     phi = np.arccos(cos)
     if sin < 0e0:
         phi = 2e0 * np.pi - phi
@@ -122,18 +124,16 @@ def compute_nu_symp(n_dof, M):
 
 def check_if_stable_1D(dim, M):
     # Dim is [X_, Y_] = [0, 1].
-    return math.fabs(M[2*dim:2*dim+2, 2*dim:2*dim+2].trace()) < 2e0
+    return math.fabs(M[2*dim:2*dim+2, 2*dim:2*dim+2].trace()) <= 2e0
 
 
 def check_if_stable_2D(M):
-    return check_if_stable_1D(0, M) and check_if_stable_1D(1, M)
+    return check_if_stable_1D(0, M), check_if_stable_1D(1, M)
 
 
-def ind_0():
-    """Index for constant TPSA term.
-    """
-    dof = 3
-    return np.zeros(2*dof, int)
+def check_if_stable_3D(M):
+    return check_if_stable_1D(0, M), check_if_stable_1D(1, M),\
+        check_if_stable_1D(2, M)
 
 
 def ind_1(k):
@@ -171,18 +171,19 @@ def compute_nu_xi(desc, tpsa_order, M):
     """
     nu, xi = [np.zeros(2), np.zeros(2)]
     stable = check_if_stable_2D(M.jacobian())
-    if stable:
+    if stable[0] and stable[1]:
+        M_delta = gtpsa.tpsa(desc, tpsa_order)
         for k in range(2):
-            tr = gtpsa.tpsa(desc, tpsa_order)
+            M_delta.clear()
             # m_11 + delta * m_16.
-            tr.set(ind_0(), 0e0, M[2*k].get(ind_1(2*k)))
-            tr.set(ind_1(delta_), 1e0, M[2*k].get(ind_2(2*k, delta_)))
+            M_delta += M[2*k].get(ind_1(2*k))
+            M_delta.set(ind_1(delta_), 0e0, M[2*k].get(ind_2(2*k, delta_)))
             # m_22 + delta * m_26.
-            tr.set(ind_0(), 1e0, M[2*k+1].get(ind_1(2*k+1)))
-            tr.set(ind_1(delta_), 1e0, M[2*k+1].get(ind_2(2*k+1, delta_)))
-            # tr = m_11 + m_22.
-            nu_tpsa = acos2_tpsa(M.jacobian()[2*k][2*k+1], tr/2e0)/(2e0*np.pi)
-            nu[k], xi[k] = [nu_tpsa.get(ind_0()), nu_tpsa.get(ind_1(delta_))]
+            M_delta += M[2*k+1].get(ind_1(2*k+1))
+            M_delta.set(ind_1(delta_), 1e0, M[2*k+1].get(ind_2(2*k+1, delta_)))
+            # M_delta = m_11 + m_22.
+            nu_tpsa = acos2_tpsa(M.jacobian()[2*k][2*k+1], M_delta/2e0)/(2e0*np.pi)
+            nu[k], xi[k] = [nu_tpsa.get(), nu_tpsa.get(ind_1(delta_))]
     return stable, nu, xi
 
 
@@ -584,6 +585,6 @@ def compute_Twiss_along_lattice(
 
 __all__ = [
     "compute_map", "compute_nu_symp", "check_if_stable_1D",
-    "check_if_stable_2D", "compute_nu_xi", "compute_map_and_diag",
+    "check_if_stable_2D", "check_if_stable_3D", "compute_nu_xi", "compute_map_and_diag",
     "compute_Twiss_along_lattice", "jac2twiss", "compute_M_diag"
 ]

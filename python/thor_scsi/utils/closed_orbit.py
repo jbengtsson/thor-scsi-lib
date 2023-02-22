@@ -44,7 +44,9 @@ def select_subpart(mat, selected_dimensions: List[bool]) -> np.ndarray:
     assert (n_rows == n_cols)
 
     # Create a mask of the dimensions selected
-    sel = np.array(selected_dimensions, np.bool)
+    # J.B. 20/02/23:
+ #   sel = np.array(selected_dimensions, np.bool)
+    sel = np.array(selected_dimensions, bool)
     mask = sel[:, np.newaxis] * sel[np.newaxis, :]
 
     # Identity matrix as default
@@ -133,7 +135,9 @@ def compute_closed_orbit(
         conf.dPparticle = x0[tslib.phase_space_index_internal.delta]
 
     # create weighting matrix for inverse calculation
-    jj = np.zeros(tslib.ss_dim, np.bool)
+    # J.B. 20/02/23:
+ #   jj = np.zeros(tslib.ss_dim, np.bool)
+    jj = np.zeros(tslib.ss_dim, bool)
 
     jj[:n] = True  # select active phase space coordinates
     # for k in range(tslib.ss_dim):
