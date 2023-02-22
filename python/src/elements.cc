@@ -196,8 +196,6 @@ struct TemplatedClasses
 		elem_type
 			.def("__str__",        &tsc::ElemTypeKnobbed<C>::pstr)
 			.def("__repr__",       &tsc::ElemTypeKnobbed<C>::repr)
-			.def_readonly("name",  &tsc::ElemTypeKnobbed<C>::name)
-			.def_readonly("index", &tsc::ElemTypeKnobbed<C>::index)
 			.def("get_length",     &tsc::ElemTypeKnobbed<C>::getLength)
 			.def("set_length",     &tsc::ElemTypeKnobbed<C>::setLength)
 			.def("get_observer",   &tsc::ElemTypeKnobbed<C>::observer)
@@ -241,8 +239,6 @@ struct TemplatedClasses
 		cm
 			.def(py::init<const Config &>());
 
-#if 1
-
 		std::string quad_name =  "Quadrupole" + this->m_suffix;
 		typedef tse::QuadrupoleTypeWithKnob<C> QuadK;
 		py::class_<QuadK, std::shared_ptr<QuadK>>(this->m_module, quad_name.c_str(), cm)
@@ -253,24 +249,27 @@ struct TemplatedClasses
 		py::class_<SextK, std::shared_ptr<SextK>>(this->m_module, sext_name.c_str(), cm)
 			.def(py::init<const Config &>());
 
+		std::string oct_name =  "Octupole" + this->m_suffix;
+		typedef tse::OctupoleTypeWithKnob<C> OctK;
+		py::class_<OctK, std::shared_ptr<OctK>>(this->m_module, oct_name.c_str(), cm)
+			.def(py::init<const Config &>());
 
-#endif
+		std::string bending_name =  "Bending" + this->m_suffix;
+		typedef tse::BendingTypeWithKnob<C> BendingK;
+		py::class_<BendingK, std::shared_ptr<BendingK>>(this->m_module, bending_name.c_str(), cm)
+			.def(py::init<const Config &>());
 
-#if 0
+		std::string hor_st_name =  "HorizontalSteerer" + this->m_suffix;
+		typedef tse::HorizontalSteererTypeWithKnob<C> HorStK;
+		py::class_<HorStK, std::shared_ptr<HorStK>>(this->m_module, hor_st_name.c_str(), cm)
+			.def(py::init<const Config &>());
 
-	py::class_<tse::OctupoleType, std::shared_ptr<tse::OctupoleType>>(m, "Octupole", cm)
-		.def(py::init<const Config &>());
-	py::class_<tse::BendingType, std::shared_ptr<tse::BendingType>>(m, "Bending", cm)
-		.def(py::init<const Config &>());
-	py::class_<tse::HorizontalSteererType, std::shared_ptr<tse::HorizontalSteererType>>(m, "HorizontalSteerer", cm)
-		.def(py::init<const Config &>());
-	py::class_<tse::VerticalSteererType, std::shared_ptr<tse::VerticalSteererType>>(m, "VerticalSteerer", cm)
-		.def(py::init<const Config &>());
-
-		.def(py::init<const Config &>());
+		std::string ver_st_name =  "VerticalSteerer" + this->m_suffix;
+		typedef tse::VerticalSteererTypeWithKnob<C> VerStK;
+		py::class_<VerStK, std::shared_ptr<VerStK>>(this->m_module, ver_st_name.c_str(), cm)
+			.def(py::init<const Config &>());
 
 
-#endif
 		return elem_type;
 	}
 };
@@ -282,30 +281,28 @@ struct TemplatedClasses
 void py_thor_scsi_init_elements(py::module &m)
 {
 	py::class_<tsc::CellVoid, std::shared_ptr<tsc::CellVoid>> cell_void(m, "CellVoid");
+	cell_void
+		.def_readonly("name",  &tsc::CellVoid::name)
+		.def_readonly("index", &tsc::CellVoid::index)
+		;
 
 	TemplatedClasses<tsc::StandardDoubleType> templated_classes_std(m, "");
 	// required as marker and bpm are not knobbed yet
 	auto elem_type = templated_classes_std.buildClasses(cell_void);
 
+	// Device classes / types with knobs ... handled by these two lines
 	TemplatedClasses<tsc::TpsaVariantType> templated_classes_tpsa(m, "Tpsa");
 	templated_classes_tpsa.buildClasses(cell_void);
 
-        // typedef PyElemType<tsc::StandardDoubleType> _PyElemType;
-        // py::class_<tsc::ElemType, _PyElemType, std::shared_ptr<tsc::ElemType>> elem_type(m, "ElemType", cell_void);
-	// AddMethods<tsc::ElemType> elem_type_methods_adder;
-	// elem_type_methods_adder.add_methods<tsc::ElemType, double>(elem_type);
-
-
+	// classes without knobs follow
 
 	py::class_<tse::MarkerType, std::shared_ptr<tse::MarkerType>>(m, "Marker", elem_type)
 		.def("get_radiation_delegate", &tse::MarkerType::getRadiationDelegate)
 		.def("set_radiation_delegate", &tse::MarkerType::setRadiationDelegate)
 		.def(py::init<const Config &>());
 
-#if 0
 	py::class_<tse::BPMType, std::shared_ptr<tse::BPMType>>(m, "BPM", elem_type)
 		.def(py::init<const Config &>());
-
 
 
 	//, std::shared_ptr<tse::>
@@ -326,31 +323,6 @@ void py_thor_scsi_init_elements(py::module &m)
 	*/
 
 
-	// py::class_<tsc::Observer,  PyObserver, std::shared_ptr<tsc::Observer>> observer(m, "Observer");
-	// observer.def(py::init<>());
-
-	/*
-	 * causes seg fault .... memory management ...
-	 *
-	py::class_<tsc::PhaseSpaceGalileanPRot2DTransform, std::shared_ptr<tsc::PhaseSpaceGalileanPRot2DTransform>> prtf(m, "PhaseSpaceGalileanPRot2DTransform");
-	prtf
-		.def("setDx", &tsc::PhaseSpaceGalileanPRot2DTransform::setDx);
-	*/
-
-	py::class_<tse::FieldKickTpsa, std::shared_ptr<tse::FieldKickTpsa>> field_kick_var(m, "FieldKickVar", elem_type);
-	add_methods_field_kick<tsc::StandardVariantType, tsc::Field2DInterpolationTpsa>(field_kick_var);
-	field_kick_var
-		// .def("getTransform",                &tse::FieldKick::getTransform) // causes segfault
-		.def(py::init<const Config &>());
-
-	py::class_<tse::MpoleTypeTpsa, std::shared_ptr<tse::MpoleTypeTpsa>> mpole_type(m, "Mpole", field_kickvar);
-	mpole_type
-		.def("getFieldInterpolator",            &tse::ClassicalMagnet::getFieldInterpolator)
-		.def(py::init<const Config &>());
-
-
-
-#endif
 #if 0
 	py::class_<WigglerType,    ElemType>(m, "WigglerType")
 		.def(py::init<>());

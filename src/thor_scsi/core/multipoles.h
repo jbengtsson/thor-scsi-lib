@@ -1,5 +1,6 @@
 #ifndef _THOR_SCSI_CORE_MULTIPOLES_H_
 #define _THOR_SCSI_CORE_MULTIPOLES_H_ 1
+
 #include <algorithm>
 #include <complex>
 #include <cassert>
@@ -295,24 +296,24 @@ namespace thor_scsi::core {
 		virtual inline void field(const gtpsa::tpsa& x, const gtpsa::tpsa& y, gtpsa::tpsa *Bx, gtpsa::tpsa *By) const override      { _field(x, y, Bx, By); }
 
 		virtual inline void gradient(const tps& x, const tps&    y, tps    *Gx, tps     *Gy) const override final{
-		    // "Need to understand how to interpolate gradient with tps"
+			// "Need to understand how to interpolate gradient with tps"
 			throw thor_scsi::NotImplemented("Multipoles: gradient in tps not implemented");
 		}
 		virtual inline void gradient(const gtpsa::tpsa& x, const gtpsa::tpsa&    y, gtpsa::tpsa    *Gx, gtpsa::tpsa     *Gy) const override final{
-		    // "Need to understand how to interpolate gradient with tps"
+			// "Need to understand how to interpolate gradient with tps"
 			throw thor_scsi::NotImplemented("Multipoles: gradient in tps, gtpsa::tpsa not implemented");
 		}
 		virtual inline void gradient(const tps& x, const tps&    y, double *Gx, double *Gy) const override final{
 			// "Need to understand how to interpolate gradient with tps"
 		        // throw thor_scsi::NotImplemented("Computing gradient in doubles for coordinates in tps x and tps y not implemented");
-			const auto tmp = this->gradient((0e0, 0e0));
+			const auto tmp = this->gradient({0e0, 0e0});
 			*Gy = tmp.real();
 			*Gx = tmp.imag();
 		}
 		virtual inline void gradient(const gtpsa::tpsa& x, const gtpsa::tpsa&    y, double *Gx, double *Gy) const override final{
 			// "Need to understand how to interpolate gradient with tps"
 		        // throw thor_scsi::NotImplemented("Computing gradient in doubles for coordinates in tps x and tps y not implemented");
-		    auto tmp = this->gradient((0e0, 0e0));
+			auto tmp = this->gradient({0e0, 0e0});
 			*Gy = tmp.real();
 			*Gx = tmp.imag();
 		}
