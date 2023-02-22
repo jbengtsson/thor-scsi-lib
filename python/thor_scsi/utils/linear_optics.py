@@ -62,6 +62,8 @@ def acos2(sin, cos):
     """arcos(phi): 0 - 2 * pi.
        The sin part is used to determine the quadrant.
     """
+    if abs(cos) > 1e0:
+        raise Exception(f"arg = {cos:22.15e}")
     phi = np.arccos(cos)
     if sin < 0e0:
         phi = 2e0 * np.pi - phi
@@ -122,11 +124,16 @@ def compute_nu_symp(n_dof, M):
 
 def check_if_stable_1D(dim, M):
     # Dim is [X_, Y_] = [0, 1].
-    return math.fabs(M[2*dim:2*dim+2, 2*dim:2*dim+2].trace()) < 2e0
+    return math.fabs(M[2*dim:2*dim+2, 2*dim:2*dim+2].trace()) <= 2e0
 
 
 def check_if_stable_2D(M):
-    return check_if_stable_1D(0, M) and check_if_stable_1D(1, M)
+    return check_if_stable_1D(0, M), check_if_stable_1D(1, M)
+
+
+def check_if_stable_3D(M):
+    return check_if_stable_1D(0, M), check_if_stable_1D(1, M),\
+        check_if_stable_1D(2, M)
 
 
 def ind_1(k):
@@ -164,7 +171,7 @@ def compute_nu_xi(desc, tpsa_order, M):
     """
     nu, xi = [np.zeros(2), np.zeros(2)]
     stable = check_if_stable_2D(M.jacobian())
-    if stable:
+    if stable[0] and stable[1]:
         M_delta = gtpsa.tpsa(desc, tpsa_order)
         for k in range(2):
             M_delta.clear()
@@ -578,6 +585,6 @@ def compute_Twiss_along_lattice(
 
 __all__ = [
     "compute_map", "compute_nu_symp", "check_if_stable_1D",
-    "check_if_stable_2D", "compute_nu_xi", "compute_map_and_diag",
+    "check_if_stable_2D", "check_if_stable_3D", "compute_nu_xi", "compute_map_and_diag",
     "compute_Twiss_along_lattice", "jac2twiss", "compute_M_diag"
 ]
