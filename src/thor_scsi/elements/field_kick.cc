@@ -614,6 +614,9 @@ void tse::FieldKickKnobbed<C>::_localPropagate(tsc::ConfigType &conf, gtpsa::ss_
 using thor_scsi::core::StandardDoubleType;
 using thor_scsi::core::TpsaVariantType;
 
+template void tse::FieldKickForthOrder<StandardDoubleType>::computeIntegrationSteps(void);
+template void tse::FieldKickForthOrder<TpsaVariantType>::computeIntegrationSteps(void);
+
 template void tse::FieldKickKnobbed<StandardDoubleType>::_localPropagate(tsc::ConfigType &conf, gtpsa::ss_vect<double>      &ps);
 template void tse::FieldKickKnobbed<StandardDoubleType>::_localPropagate(tsc::ConfigType &conf, gtpsa::ss_vect<gtpsa::tpsa> &ps);
 // template void tse::FieldKickKnobbed<StandardDoubleType>::_localPropagate(tsc::ConfigType &conf, gtpsa::ss_vect<tps>         &ps);
