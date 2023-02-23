@@ -619,6 +619,7 @@ template void tse::FieldKickKnobbed<StandardDoubleType>::_localPropagate(tsc::Co
 // template void tse::FieldKickKnobbed<StandardDoubleType>::_localPropagate(tsc::ConfigType &conf, gtpsa::ss_vect<tps>         &ps);
 
 template void tse::FieldKickKnobbed<TpsaVariantType>::_localPropagate(tsc::ConfigType &conf, gtpsa::ss_vect<double>      &ps);
+template void tse::FieldKickKnobbed<TpsaVariantType>::_localPropagate(tsc::ConfigType &conf, gtpsa::ss_vect<gtpsa::tpsa> &ps);
 
 template void tse::FieldKickKnobbed<StandardDoubleType>::show(std::ostream &strm, const int level) const;
 template void tse::FieldKickKnobbed<TpsaVariantType>::show(std::ostream &strm, const int level) const;
