@@ -71,7 +71,7 @@ class MultipoleIndex(enum.IntEnum):
     sextupole  = 3
 
 
-def plt_Twiss(ds, file_name, title):
+def plot_Twiss(ds, file_name, title):
     # Turn interactive mode off.
     plt.ioff()
 
@@ -93,7 +93,7 @@ def plt_Twiss(ds, file_name, title):
     plt.savefig(file_name)
 
 
-def prt_Twiss(str, Twiss):
+def print_Twiss_params(str, Twiss):
     """
 
     todo:
@@ -107,6 +107,25 @@ def prt_Twiss(str, Twiss):
     print(f"  eta    = [{eta[X_]:9.3e}, {eta[Y_]:9.3e}]")
     print(f"  alpha  = [{alpha[X_]:9.3e}, {alpha[Y_]:9.3e}]")
     print(f"  beta   = [{beta[X_]:5.3f}, {beta[Y_]:5.3f}]")
+
+
+def print_Twiss(lat, data):
+    """
+    Print Twiss parameters along the lattice.
+    """
+    L = 0e0
+    nu = np.zeros(2, dtype=float)
+    print("")
+    for k in range(len(data.index)):
+        L += lat[k].get_length()
+        nu[X_] += data.twiss.sel(plane="x", par="dnu").values[k]
+        nu[Y_] += data.twiss.sel(plane="y", par="dnu").values[k]
+        print("{:3d} {:8s} {:7.3f} {:8.5f} {:8.5f} {:7.5f} {:8.5f} {:8.5f} {:8.5f} {:7.5f} {:8.5f}".
+              format(k, lat[k].name, L,
+                     data.twiss.sel(plane="x", par="alpha").values[k], data.twiss.sel(plane="x", par="beta").values[k],
+                     nu[X_], data.dispersion.sel(phase_coordinate="x")[k],
+                     data.twiss.sel(plane="y", par="alpha").values[k], data.twiss.sel(plane="y", par="beta").values[k],
+                     nu[Y_], data.dispersion.sel(phase_coordinate="y")[k]))
 
 
 def compute_periodic_solution(lat, model_state, prt):
@@ -126,7 +145,7 @@ def compute_periodic_solution(lat, model_state, prt):
     res= cs.compute_Twiss_A(A)
     Twiss = res[:3]
     if prt:
-        prt_Twiss("\nTwiss:\n", Twiss)
+         print_Twiss_params("\nTwiss:\n", Twiss)
     ds = lo.compute_Twiss_along_lattice(n_dof, lat, model_state, A=A, desc=desc)
 
     return M, A, ds
@@ -204,7 +223,7 @@ def compute_phi(lat):
     return phi
 
 
-def get_prm(lat, prm_list):
+def get_prm(lat, param_list):
     # Dictionary of parameter types and corresponding get functions.
     how_to_get_prm = {
         "dphi": get_phi_elem,
@@ -213,14 +232,13 @@ def get_prm(lat, prm_list):
     }
 
     prms = []
-    for k in range(len(prm_list)):
-        print(prm_list[k][0], prm_list[k][1])
-        prms.append(how_to_get_prm[prm_list[k][1]](lat, prm_list[k][0], 0))
-    print("So far, so good!")
+    for k in range(len(param_list)):
+        print(param_list[k][0], param_list[k][1])
+        prms.append(how_to_get_prm[param_list[k][1]](lat, param_list[k][0], 0))
     return np.array(prms)
 
 
-def set_prm(lat, prm_list, prms):
+def set_prm(lat, param_list, prms):
     # Dictionary of parameter types and corresponding set functions.
     how_to_set_prm = {
         "dphi": set_phi_fam,
@@ -228,8 +246,8 @@ def set_prm(lat, prm_list, prms):
         "L":    set_L_fam
     }
 
-    for k in range(len(prm_list)):
-        how_to_set_prm[prm_list[k][1]](lat, prm_list[k][0], prms[k])
+    for k in range(len(param_list)):
+        how_to_set_prm[param_list[k][1]](lat, param_list[k][0], prms[k])
 
 
 @dataclass
@@ -244,13 +262,13 @@ def set_phi_cell(name, phi):
 
 
 # Global additional variables needed for optimisation function.
-n_iter    = 0
-chi_2_min = 1e30
-n_iter_min  = 0
-prms_min  = []
+n_iter     = 0
+chi_2_min  = 1e30
+n_iter_min = 0
+prms_min   = []
+rbend      = ""
 
-def opt_super_period(lat, prm_list, C, bounds, phi_des, eps_x_des, nu_des, weight,
-                  rbend, phi):
+def opt_super_period(lat, param_list, C, bounds, phi_des, eps_x_des, nu_des, beta_straight_des, weights, phi):
     """Use Case: optimise unit cell.
     """
 
@@ -267,7 +285,7 @@ def opt_super_period(lat, prm_list, C, bounds, phi_des, eps_x_des, nu_des, weigh
             lat: tslib.Accelerator, model_state: tslib.ConfigType,
             eps_x_des: float, nu_des, prms
     ) -> Tuple[float, float]:
-        """Computes weighted sum square
+        """Computes weightsed sum square
         """
 
         global n_iter
@@ -283,17 +301,22 @@ def opt_super_period(lat, prm_list, C, bounds, phi_des, eps_x_des, nu_des, weigh
             _, nu, xi = lo.compute_nu_xi(desc, tpsa_order, M)
 
             M, A, data = compute_periodic_solution(lat, model_state, False)
+
+            beta_straight = np.zeros(2, dtype=float)
+            beta_straight[X_] = data.twiss.sel(plane="x", par="beta").values[0]
+            beta_straight[Y_] = data.twiss.sel(plane="y", par="beta").values[0]
             nu_cell = compute_nu_cell(data)
 
             U_0, J, tau, eps = \
                 rad.compute_radiation(lat, model_state, 2.5e9, 1e-15, desc=desc)
 
-            n = len(weight)
+            n = len(weights)
             dchi_2 = np.zeros(n, dtype=float)
-            dchi_2[0] = weight[0] * np.sum((eps[X_] - eps_x_des) ** 2)
-            dchi_2[1] = weight[1] * np.sum((nu_cell - nu_des) ** 2)
-            dchi_2[2] = weight[2] * np.sum(xi ** 2)
-            dchi_2[3] = weight[3] * alpha_c ** 2
+            dchi_2[0] = weights["eps_x"] * np.sum((eps[X_] - eps_x_des) ** 2)
+            dchi_2[1] = weights["nu_cell"] * np.sum((nu_cell - nu_des) ** 2)
+            dchi_2[2] = weights["beta_straight"] * np.sum((beta_straight - beta_straight_des) ** 2)
+            dchi_2[3] = weights["xi"] * np.sum(xi ** 2)
+            dchi_2[4] = weights["alpha_c"] / alpha_c ** 2
             chi_2 = 0e0
             for k in range(n):
                 chi_2 += dchi_2[k]
@@ -304,17 +327,21 @@ def opt_super_period(lat, prm_list, C, bounds, phi_des, eps_x_des, nu_des, weigh
             chi_2_min = chi_2
             n_iter_min = n_iter
             prms_min = prms
-            print(f"\n{n_iter:4d} chi_2 = {chi_2:9.3e}\n\n  prms   =", prms)
+            print(f"\n{n_iter:4d} chi_2 = {chi_2:9.3e}\n\n  prms   =\n", prms)
             if stable[0] and stable[1] and stable[2]:
-                print(f"  dchi_2 =", dchi_2)
-            print(f"\n  phi     = {compute_phi(lat):5.3f}")
-            print(f"""  bb_h    = {get_phi_elem(lat, "bb_h", 0):5.3f}""")
-            print(f"  dphi    = {get_phi_elem(lat, rbend, 0):7.5f}")
+                print(f"\n  dchi_2 =\n", dchi_2)
+            print(f"\n  phi           = {compute_phi(lat):8.5f}")
+            [b1, b2, b3, b4] = [param_list[0][0], param_list[1][0], param_list[2][0], param_list[4][0]]
+            print(f"  {b1:5s}         = {get_phi_elem(lat, b1, 0):8.5f}")
+            print(f"  {b2:5s}         = {get_phi_elem(lat, b2, 0):8.5f}")
+            print(f"  {b3:5s}         = {get_phi_elem(lat, b3, 0):8.5f}")
+            print(f"  {b4:5s}         = {get_phi_elem(lat, b4, 0):8.5f}")
             if stable[0] and stable[1] and stable[2]:
-                print(f"  eps_x   = {1e12*eps[X_]:5.3f}")
-                print(f"  nu_cell = [{nu_cell[X_]:7.5f}, {nu_cell[Y_]:7.5f}]")
-                print(f"  xi      = [{xi[X_]:5.3f}, {xi[Y_]:5.3f}]")
-                print(f"  alpha_c = {alpha_c:9.3e}")
+                print(f"\n  eps_x         = {1e12*eps[X_]:5.3f}")
+                print(f"  nu_cell       = [{nu_cell[X_]:7.5f}, {nu_cell[Y_]:7.5f}]")
+                print(f"  beta_straight = [{beta_straight[X_]:7.5f}, {beta_straight[Y_]:7.5f}]")
+                print(f"  xi            = [{xi[X_]:5.3f}, {xi[Y_]:5.3f}]")
+                print(f"  alpha_c       = {alpha_c:9.3e}")
             else:
                 print("\n Unstable.")
         return chi_2
@@ -323,15 +350,16 @@ def opt_super_period(lat, prm_list, C, bounds, phi_des, eps_x_des, nu_des, weigh
         global n_iter
         global chi_2_min
         global prms_min
+        global rbend
 
         n_iter += 1
-        set_prm(lat, prm_list, prms)
-        dphi = phi/2e0 - prms[0]
+        set_prm(lat, param_list, prms)
+        dphi = (phi - 8*prms[0] - 2*prms[2] - 2*prms[4])/8e0
         set_phi_fam(lat, rbend, dphi)
         chi_2 = compute_chi_2(lat, model_state, eps_x_des, nu_des, prms)
         return chi_2
 
-    def prt_result(f_unit_cell, prm_list, prms0, minimum):
+    def prt_result(f_unit_cell, param_list, prms0, minimum):
         global n_iter
         global chi_2_min
         global n_iter_min
@@ -343,10 +371,10 @@ def opt_super_period(lat, prm_list, C, bounds, phi_des, eps_x_des, nu_des, weigh
             print("\nCell unstable:")
             print("  prms_min =", prms_min)
             print("  Setting prs_min for plot.")
-            set_prm(lat, prm_list, prms_min)
+            set_prm(lat, param_list, prms_min)
         # Compute new Twiss parameters along lattice.
         M, A, data = compute_periodic_solution(lat, model_state, False)
-        plt_Twiss(data, "after.png", "Linear Optics - After")
+        plot_Twiss(data, "after.png", "Linear Optics - After")
 
         print("\nInitial parameter values:")
         n = n_iter_min
@@ -359,13 +387,19 @@ def opt_super_period(lat, prm_list, C, bounds, phi_des, eps_x_des, nu_des, weigh
         f_unit_cell(minimum["x"])
         print("\n Minimum:\n", minimum)
 
+        print_Twiss(lat, data)
+
+    global rbend
+
     max_iter = 1000
     f_tol = 1e-4
     x_tol = 1e-4
 
     print("\nopt_super_period:\n")
     # Initialise parameters.
-    prms1 = prms0 = get_prm(lat, prm_list)
+    prms1 = prms0 = get_prm(lat, param_list)
+    rbend = param_list[1][0]
+    print("\nrbend = ", rbend)
     print("\nprms = ", prms1)
 
     # Methods:
@@ -379,7 +413,7 @@ def opt_super_period(lat, prm_list, C, bounds, phi_des, eps_x_des, nu_des, weigh
         options={"xtol": x_tol, "ftol": f_tol, "maxiter": max_iter},
     )
 
-    prt_result(f_unit_cell, prm_list, prms0, minimum)
+    prt_result(f_unit_cell, param_list, prms0, minimum)
 
 
 def get_Twiss(loc):
@@ -429,7 +463,9 @@ if False:
 
 # Compute Twiss parameters along lattice.
 M, A, data = compute_periodic_solution(lat, model_state, True)
-plt_Twiss(data, "before.png", "Linear Optics - Before")
+plot_Twiss(data, "before.png", "Linear Optics - Before")
+if False:
+    print_Twiss(lat, data)
 if False:
     plt.show()
 
@@ -453,22 +489,28 @@ print("  eps_x [pm.rad] = {:3.1f}".format(1e12*eps[X_]))
 print("  xi             = [{:7.5f}, {:7.5f}]".format(xi[X_], xi[Y_]))
 
 # Design parameters.
-phi   = 4.0                   # Total bend angle.
+phi   = 22.5                  # Total bend angle.
 eps_x = 100e-12               # Horizontal emittance.
 nu    = np.array([0.4, 0.1])  # Cell tune.
+beta  = np.array([3.0, 3.0])  # Beta functions at the centre of the straight.
 
 # Weights.
-weight = np.array([
-    1e15,                     # eps_x.
-    1e0,                      # nu.
-    1e-6,                     # xi.
-    1e2                       # alpha_c
-])
+weights = {
+    "eps_x":         1e15,
+    "nu_cell":       1e0,
+    "beta_straight": 1e-4,
+    "xi":            1e-6,
+    "alpha_c":       1e-14
+}
 
 # Parameter family names & type.
-prm_list = [
+param_list = [
     ("bb_h", "dphi"),         # Dipole.
-    ("br",   "b_2"),          # Reverse bend.
+    ("br",   "b_2"),          # Focusing reverse bend.
+    ("mbr",   "dphi"),        # Focusing reverse bend.
+    ("mbr",   "b_2"),
+    ("mbb",   "dphi"),        # Defocusing reverse bend.
+    ("mbb",   "b_2"),
     ("qd",   "b_2"),          # Defocusing quadrupole.
     ("uq1",  "b_2"),          # Triplet for matching section.
     ("uq2",  "b_2"),
@@ -483,8 +525,12 @@ b_2_max = 12.0
 L_min   = 0.1
 
 bounds = [
-    (1.5,      2.5),          # dphi.
+    (1.5,      2.5),          # bb_h phi.
     (0.0,      b_2_max),      # br b_2.
+    (-0.5,     1.0),          # mbr phi.
+    ( 0.0,     b_2_max),      # mbr b_2.
+    (3.0,      4.5),          # mbb phi.
+    (-b_2_max, 0.0),          # mbb b_2.
     (-b_2_max, 0.0),          # qd b_2.
     (-b_2_max, 0.0),          # uq1 b_2.
     ( 0.0,     b_2_max),      # uq2 b_2.
@@ -494,7 +540,7 @@ bounds = [
     ( L_min,   0.25)          # ul3 L.
 ]
 
-opt_super_period(lat, prm_list, C, bounds, phi, eps_x, nu, weight, "br", phi)
+opt_super_period(lat, param_list, C, bounds, phi, eps_x, nu, beta, weights, phi)
 
 if not False:
     plt.show()
