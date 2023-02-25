@@ -1,16 +1,17 @@
 """Use Case:
-     Optimisation of unit cell.
+     Optimisation of super period.
    Input:
-     Lattice with one unit cell.
+     Lattice with one super period.
    Constraints:
      horizontal emittance,
      cell tune,
      minimize linear chromaticity,
      linear momentum compaction.
    Parameters:
-     dipole with bend angle,
-     dipole with reverse bend angle & focusing gradient,
-     and quadrupole with defocusing gradient.
+     dipole bend angle,
+     focusing gradient gradient reverse bend angle,
+     defocusing quadrupole,
+     triplet gradients (3) & spacing (3).
 """
 import enum
 import logging
@@ -213,7 +214,9 @@ def get_prm(lat, prm_list):
 
     prms = []
     for k in range(len(prm_list)):
+        print(prm_list[k][0], prm_list[k][1])
         prms.append(how_to_get_prm[prm_list[k][1]](lat, prm_list[k][0], 0))
+    print("So far, so good!")
     return np.array(prms)
 
 
@@ -246,10 +249,20 @@ chi_2_min = 1e30
 n_iter_min  = 0
 prms_min  = []
 
-def opt_unit_cell(lat, prm_list, C, bounds, phi_des, eps_x_des, nu_des, weight,
+def opt_super_period(lat, prm_list, C, bounds, phi_des, eps_x_des, nu_des, weight,
                   rbend, phi):
     """Use Case: optimise unit cell.
     """
+
+    def compute_nu_cell(data):
+        nu_cell = np.zeros(2, dtype=float)
+        loc1 = lat.find("bb_h", 1).index
+        loc2 = lat.find("bb_h", 3).index
+        for k in range(loc1, loc2):
+            nu_cell[X_] += data.twiss.sel(plane="x", par="dnu").values[k]
+            nu_cell[Y_] += data.twiss.sel(plane="y", par="dnu").values[k]
+        return nu_cell
+
     def compute_chi_2(
             lat: tslib.Accelerator, model_state: tslib.ConfigType,
             eps_x_des: float, nu_des, prms
@@ -268,13 +281,17 @@ def opt_unit_cell(lat, prm_list, C, bounds, phi_des, eps_x_des, nu_des, weight,
         if stable[0] and stable[1] and stable[2]:
             alpha_c = M[ct_].get(lo.ind_1(delta_))/C
             _, nu, xi = lo.compute_nu_xi(desc, tpsa_order, M)
+
+            M, A, data = compute_periodic_solution(lat, model_state, False)
+            nu_cell = compute_nu_cell(data)
+
             U_0, J, tau, eps = \
                 rad.compute_radiation(lat, model_state, 2.5e9, 1e-15, desc=desc)
 
             n = len(weight)
-            dchi_2 = np.zeros(n, float)
+            dchi_2 = np.zeros(n, dtype=float)
             dchi_2[0] = weight[0] * np.sum((eps[X_] - eps_x_des) ** 2)
-            dchi_2[1] = weight[1] * np.sum((nu - nu_des) ** 2)
+            dchi_2[1] = weight[1] * np.sum((nu_cell - nu_des) ** 2)
             dchi_2[2] = weight[2] * np.sum(xi ** 2)
             dchi_2[3] = weight[3] * alpha_c ** 2
             chi_2 = 0e0
@@ -295,7 +312,7 @@ def opt_unit_cell(lat, prm_list, C, bounds, phi_des, eps_x_des, nu_des, weight,
             print(f"  dphi    = {get_phi_elem(lat, rbend, 0):7.5f}")
             if stable[0] and stable[1] and stable[2]:
                 print(f"  eps_x   = {1e12*eps[X_]:5.3f}")
-                print(f"  nu      = [{nu[X_]:7.5f}, {nu[Y_]:7.5f}]")
+                print(f"  nu_cell = [{nu_cell[X_]:7.5f}, {nu_cell[Y_]:7.5f}]")
                 print(f"  xi      = [{xi[X_]:5.3f}, {xi[Y_]:5.3f}]")
                 print(f"  alpha_c = {alpha_c:9.3e}")
             else:
@@ -346,7 +363,7 @@ def opt_unit_cell(lat, prm_list, C, bounds, phi_des, eps_x_des, nu_des, weight,
     f_tol = 1e-4
     x_tol = 1e-4
 
-    print("\nopt_unit_cell:\n")
+    print("\nopt_super_period:\n")
     # Initialise parameters.
     prms1 = prms0 = get_prm(lat, prm_list)
     print("\nprms = ", prms1)
@@ -357,7 +374,7 @@ def opt_unit_cell(lat, prm_list, C, bounds, phi_des, eps_x_des, nu_des, weight,
     minimum = optimize.minimize(
         f_unit_cell,
         prms1,
-        method="Nelder-Mead",
+        method="CG",
         bounds=bounds,
         options={"xtol": x_tol, "ftol": f_tol, "maxiter": max_iter},
     )
@@ -389,9 +406,10 @@ def get_Twiss(loc):
     return eta, alpha, beta
 
 
-t_dir = os.path.join(os.environ["HOME"], "Nextcloud", "thor_scsi")
+t_dir = os.path.join(os.environ["HOME"], "Nextcloud", "thor_scsi", "JB")
 # t_file = os.path.join(t_dir, 'b3_tst.lat')
-t_file = os.path.join(t_dir, "b3_sf_40Grad_JB.lat")
+# t_file = os.path.join(t_dir, "b3_sf_40Grad_JB.lat")
+t_file = os.path.join(t_dir, "b3_sf(sf)_4Quads_unitcell.lat")
 
 # Read in & parse lattice file.
 lat = accelerator_from_config(t_file)
@@ -444,26 +462,39 @@ weight = np.array([
     1e15,                     # eps_x.
     1e0,                      # nu.
     1e-6,                     # xi.
-    1e0                       # alpha_c
+    1e2                       # alpha_c
 ])
 
 # Parameter family names & type.
 prm_list = [
-    ("bb_h", "dphi"),
-    ("br",   "b_2"),
-    ("qd", "b_2")
+    ("bb_h", "dphi"),         # Dipole.
+    ("br",   "b_2"),          # Reverse bend.
+    ("qd",   "b_2"),          # Defocusing quadrupole.
+    ("uq1",  "b_2"),          # Triplet for matching section.
+    ("uq2",  "b_2"),
+    ("uq3",  "b_2"),
+    ("ul1",  "L"),
+    ("ul2",  "L"),
+    ("ul3",  "L"),
 ]
 
 # Max parameter range.
 b_2_max = 12.0
+L_min   = 0.1
 
 bounds = [
     (1.5,      2.5),          # dphi.
     (0.0,      b_2_max),      # br b_2.
     (-b_2_max, 0.0),          # qd b_2.
+    (-b_2_max, 0.0),          # uq1 b_2.
+    ( 0.0,     b_2_max),      # uq2 b_2.
+    (-b_2_max, 0.0),          # uq3 b_2.
+    ( L_min,   0.25),         # ul1 L.
+    ( L_min,   0.3),          # ul2 L.
+    ( L_min,   0.25)          # ul3 L.
 ]
 
-opt_unit_cell(lat, prm_list, C, bounds, phi, eps_x, nu, weight, "br", phi)
+opt_super_period(lat, prm_list, C, bounds, phi, eps_x, nu, weight, "br", phi)
 
 if not False:
     plt.show()
