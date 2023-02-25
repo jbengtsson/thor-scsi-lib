@@ -8,9 +8,10 @@
      minimize linear chromaticity,
      linear momentum compaction.
    Parameters:
-     dipole with bend angle,
-     dipole with reverse bend angle & focusing gradient,
-     and quadrupole with defocusing gradient.
+     dipole bend angle,
+     focusing gradient dipole reverse bend angle,
+     defocusing quadrupole,
+     and dipole with bend angle.
 """
 import enum
 import logging
@@ -92,7 +93,7 @@ def plt_Twiss(ds, file_name, title):
     plt.savefig(file_name)
 
 
-def prt_Twiss(str, Twiss):
+def print_Twiss_param(str, Twiss):
     """
 
     todo:
@@ -106,6 +107,24 @@ def prt_Twiss(str, Twiss):
     print(f"  eta    = [{eta[X_]:9.3e}, {eta[Y_]:9.3e}]")
     print(f"  alpha  = [{alpha[X_]:9.3e}, {alpha[Y_]:9.3e}]")
     print(f"  beta   = [{beta[X_]:5.3f}, {beta[Y_]:5.3f}]")
+
+
+def print_Twiss(lat, data):
+    """
+    Print Twiss parameters along the lattice.
+    """
+    L = 0e0
+    nu = np.zeros(2, dtype=float)
+    for k in range(len(data.index)):
+        L += lat[k].get_length()
+        nu[X_] += data.twiss.sel(plane="x", par="dnu").values[k]
+        nu[Y_] += data.twiss.sel(plane="y", par="dnu").values[k]
+        print("{:3d} {:8s} {:7.3f} {:8.5f} {:7.5f} {:7.5f} {:8.5f} {:7.5f} {:7.5f}".
+              format(k, lat[k].name, L,
+                     data.twiss.sel(plane="x", par="alpha").values[k], data.twiss.sel(plane="x", par="beta").values[k],
+                     nu[X_],
+                     data.twiss.sel(plane="y", par="alpha").values[k], data.twiss.sel(plane="y", par="beta").values[k],
+                     nu[Y_]))
 
 
 def compute_periodic_solution(lat, model_state, prt):
@@ -125,7 +144,7 @@ def compute_periodic_solution(lat, model_state, prt):
     res= cs.compute_Twiss_A(A)
     Twiss = res[:3]
     if prt:
-        prt_Twiss("\nTwiss:\n", Twiss)
+        print_Twiss_param("\nTwiss:\n", Twiss)
     ds = lo.compute_Twiss_along_lattice(n_dof, lat, model_state, A=A, desc=desc)
 
     return M, A, ds
@@ -272,7 +291,7 @@ def opt_unit_cell(lat, prm_list, C, bounds, phi_des, eps_x_des, nu_des, weight,
                 rad.compute_radiation(lat, model_state, 2.5e9, 1e-15, desc=desc)
 
             n = len(weight)
-            dchi_2 = np.zeros(n, float)
+            dchi_2 = np.zeros(n, dtype=float)
             dchi_2[0] = weight[0] * np.sum((eps[X_] - eps_x_des) ** 2)
             dchi_2[1] = weight[1] * np.sum((nu - nu_des) ** 2)
             dchi_2[2] = weight[2] * np.sum(xi ** 2)
@@ -349,7 +368,12 @@ def opt_unit_cell(lat, prm_list, C, bounds, phi_des, eps_x_des, nu_des, weight,
     print("\nopt_unit_cell:\n")
     # Initialise parameters.
     prms1 = prms0 = get_prm(lat, prm_list)
-    print("\nprms = ", prms1)
+
+    print("\nInitial parameter values:")
+    n = n_iter_min
+    n_iter = 0
+    chi_2_min = 1e30
+    f_unit_cell(prms0)
 
     # Methods:
     #   Nelder-Mead, Powell, CG, BFGS, Newton-CG, L-BFGS-B, TNC, COBYLA,
@@ -357,7 +381,7 @@ def opt_unit_cell(lat, prm_list, C, bounds, phi_des, eps_x_des, nu_des, weight,
     minimum = optimize.minimize(
         f_unit_cell,
         prms1,
-        method="Nelder-Mead",
+        method="CG",
         bounds=bounds,
         options={"xtol": x_tol, "ftol": f_tol, "maxiter": max_iter},
     )
@@ -389,9 +413,10 @@ def get_Twiss(loc):
     return eta, alpha, beta
 
 
-t_dir = os.path.join(os.environ["HOME"], "Nextcloud", "thor_scsi")
+t_dir = os.path.join(os.environ["HOME"], "Nextcloud", "thor_scsi", "JB")
 # t_file = os.path.join(t_dir, 'b3_tst.lat')
-t_file = os.path.join(t_dir, "b3_sf_40Grad_JB.lat")
+# t_file = os.path.join(t_dir, "b3_sf_40Grad_JB.lat")
+t_file = os.path.join(t_dir, "b3_sfsf_4Quads_uc_only.lat")
 
 # Read in & parse lattice file.
 lat = accelerator_from_config(t_file)
@@ -411,11 +436,13 @@ if False:
 
 # Compute Twiss parameters along lattice.
 M, A, data = compute_periodic_solution(lat, model_state, True)
+# print_Twiss(lat, data)
+raise Exception()
 plt_Twiss(data, "before.png", "Linear Optics - Before")
 if False:
     plt.show()
 
-# Zero sextopoles.
+# Zero sextupoles.
 print("\nZeroing sextupoles.")
 set_b_n_fam(lat, "sf_h", MultipoleIndex.sextupole, 0e0)
 set_b_n_fam(lat, "sd_h", MultipoleIndex.sextupole, 0e0)
@@ -436,6 +463,7 @@ print("  xi             = [{:7.5f}, {:7.5f}]".format(xi[X_], xi[Y_]))
 
 # Design parameters.
 phi   = 4.0                   # Total bend angle.
+phi   = 4.375                 # Total bend angle.
 eps_x = 100e-12               # Horizontal emittance.
 nu    = np.array([0.4, 0.1])  # Cell tune.
 
