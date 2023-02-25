@@ -1,9 +1,12 @@
 """Use Case:
-     Super period straight section matching with a triplet.
+     Matching the centre of a straight section with a triplet.
+   Input:
+     Lattice with one super period.
    Constraints:
-    [alpha_x,y, beta_x,y, eta_x, eta'_x] at the centre of the straigth.
+    [alpha_x,y, beta_x,y, eta_x, eta'_x] at the centre of the straight,
+    minimize linear chromaticity.
    Parameters:
-     triplet gradients (3) & spacing (3).
+     Triplet gradients (3) & spacing (3).
 """
 import enum
 import logging
@@ -71,8 +74,10 @@ def plt_Twiss(ds, file_name, title):
     gr_1.set_title(title)
     gr_1.set_xlabel("s [m]")
     gr_1.set_ylabel(r"$\beta_{x,y}$ [m]")
-    gr_1.plot(ds.s, ds.twiss.sel(plane="x", par="beta"), "b-", label=r"$\beta_x$")
-    gr_1.plot(ds.s, ds.twiss.sel(plane="y", par="beta"), "r-", label=r"$\beta_y$")
+    gr_1.plot(ds.s, ds.twiss.sel(plane="x", par="beta"), "b-",
+              label=r"$\beta_x$")
+    gr_1.plot(ds.s, ds.twiss.sel(plane="y", par="beta"), "r-",
+              label=r"$\beta_y$")
     gr_1.legend()
 
     gr_2.set_xlabel("s [m]")
@@ -180,52 +185,6 @@ def set_prm(lat, prm_list, prms):
         how_to_set_prm[prm_list[k][1]](lat, prm_list[k][0], prms[k])
 
 
-def compute_chi_2(lat: tslib.Accelerator, model_state: tslib.ConfigType, A0: np.ndarray, chi_2_min: float, prms, copy: bool = True) -> Tuple[float, float]:
-    """Computes weighted sum square
-
-    Args:
-        A0: start map
-    Returns:
-         :math:`\chiˆ2`
-
-    Todo:
-    check selection of dimensions
-        model state - calc_config?
-    """
-    # Local copy.
-    if copy:
-        A0 = _copy.copy(A0)
-
-    lat.propagate(model_state, A0, loc, len(lat) - loc)
-
-    chi_2 = 0e0
-
-    # returns Twiss parameters [alpha, beta, eta] and dnu
-    Twiss_k = cs.compute_Twiss_A(A0.jacobian())[:3]
-    # todo: sum to twiis
-    for k in range(3):
-        chi_2 += weight[k] * np.sum((Twiss_k[k] - Twiss1_design[k]) ** 2)
-
-    # py ?
-    if weight[3] != 0e0:
-        M = lo.compute_map(lat, model_state, desc=desc, tpsa_order=tpsa_order)
-        stable, _, xi = lo.compute_nu_xi(desc, tpsa_order, M)
-        if stable:
-            dchi_2 = weight[3] * np.sum(xi**2)
-        else:
-            dchi_2 = 1e30
-        chi_2 += dchi_2
-
-    if chi_2 < chi_2_min:
-        chi_2_min = chi_2
-        logger.info(f"\n{n_iter:4d} chi_2 = {chi_2:9.3e}\n\n  prms   =" + vec2txt(prms))
-        prt_Twiss("\n", Twiss_k)
-        if weight[3] != 0e0:
-            logger.info(f"\n  xi     = [{xi[X_]:5.3f}, {xi[Y_]:5.3f}]")
-            logger.info(f"  dchi_2 = {dchi_2:9.3e}")
-    return chi_2, chi_2_min
-
-
 @dataclass
 class MatchingState:
     n_iter: float = 0
@@ -233,8 +192,48 @@ class MatchingState:
     chi_2: float = np.nan
 
 
-def match_straight(lat, loc, prm_list, bounds, Twiss0, Twiss1, Twiss1_design, weight):
+def match_straight(lat, loc, prm_list, bounds, Twiss0, Twiss1, Twiss1_design,
+                   weight):
     """ """
+
+    def compute_chi_2(
+            A0: np.ndarray, chi_2_min: float, prms, copy: bool = True
+    ) -> Tuple[float, float]:
+        """Computes weighted sum square
+        """
+        # Local copy.
+        if copy:
+            A0 = _copy.copy(A0)
+
+        lat.propagate(model_state, A0, loc, len(lat) - loc)
+
+        chi_2 = 0e0
+
+        # returns Twiss parameters [alpha, beta, eta] and dnu
+        Twiss_k = cs.compute_Twiss_A(A0.jacobian())[:3]
+        # todo: sum to twiis
+        for k in range(3):
+            chi_2 += weight[k] * np.sum((Twiss_k[k] - Twiss1_design[k]) ** 2)
+
+        # py ?
+        if weight[3] != 0e0:
+            M = lo.compute_map(lat, model_state, desc=desc, tpsa_order=tpsa_order)
+            stable, _, xi = lo.compute_nu_xi(desc, tpsa_order, M)
+            if stable:
+                dchi_2 = weight[3] * np.sum(xi ** 2)
+            else:
+                dchi_2 = 1e30
+            chi_2 += dchi_2
+
+        if chi_2 < chi_2_min:
+            chi_2_min = chi_2
+            print(f"\n{n_iter:4d} chi_2 = {chi_2:9.3e}\n\n  prms   ="
+                  + vec2txt(prms))
+            prt_Twiss("\n", Twiss_k)
+            if weight[3] != 0e0:
+                print(f"\n  xi     = [{xi[X_]:5.3f}, {xi[Y_]:5.3f}]")
+                print(f"  dchi_2 = {dchi_2:9.3e}")
+        return chi_2, chi_2_min
 
     def f_match(prms):
         global n_iter
@@ -242,7 +241,7 @@ def match_straight(lat, loc, prm_list, bounds, Twiss0, Twiss1, Twiss1_design, we
 
         n_iter += 1
         set_prm(lat, prm_list, prms)
-        chi_2, chi_2_min = compute_chi_2(lat, model_state, A0, chi_2_min, prms)
+        chi_2, chi_2_min = compute_chi_2(A0, chi_2_min, prms)
 
         return chi_2
 
@@ -274,7 +273,8 @@ def match_straight(lat, loc, prm_list, bounds, Twiss0, Twiss1, Twiss1_design, we
     print("\nmatch_straight:\n\nloc = ", loc)
     prt_Twiss("\nTwiss parameters at centre of super period:\n", Twiss0)
     prt_Twiss("\nTwiss parameters at centre of straight:\n", Twiss1)
-    prt_Twiss("\nDesired Twiss parameters at the centre of straight:\n", Twiss1_design)
+    prt_Twiss("\nDesired Twiss parameters at the centre of straight:\n",
+              Twiss1_design)
 
     A0 = gtpsa.ss_vect_tpsa(desc, 1)
     A0.set_zero()
@@ -340,8 +340,8 @@ model_state.Cavity_on = False
 M, A, data = compute_periodic_solution(lat, model_state)
 plt_Twiss(data, "before.png", "Linear Optics - Before")
 
-# Get dispersion & Twiss parameters at centre of super period.
-loc = lat.find("sf_m", 3).index
+# Get dispersion & Twiss parameters at centre of the last unit cell.
+loc = lat.find("sf_m", 4).index
 print(f"\nCentre of super period: {loc:1d} {lat[loc].name:s}")
 Twiss0 = get_Twiss(loc)
 
@@ -349,18 +349,24 @@ Twiss0 = get_Twiss(loc)
 M = lo.compute_map(lat, model_state, desc=desc, tpsa_order=tpsa_order)
 stable, nu, xi = lo.compute_nu_xi(desc, tpsa_order, M)
 print("\n  nu = [{:7.5f}, {:7.5f}]".format(nu[X_], nu[Y_]))
-print("  xi = [{:7.5}, {:7.5}]".format(xi[X_], xi[Y_]))
+print("  xi = [{:7.5f}, {:7.5f}]".format(xi[X_], xi[Y_]))
 
 # Twiss parameters at centre of straight.
 Twiss1 = get_Twiss(len(lat) - 1)
 
 # Desired Twiss parameters at centre of straight.
-eta = np.array([0e0, 0e0, 0e0, 0e0])
+eta   = np.array([0e0, 0e0, 0e0, 0e0])
 alpha = np.array([0e0, 0e0])
-beta = np.array([2.5, 2.5])
+beta  = np.array([2.5, 2.5])
 Twiss1_design = eta, alpha, beta
 
-weight = np.array([1e0, 1e3, 1e0, 1e-5])  # Eta.  # Alpha.  # Beta.  # xi.
+# Weights: eta, alpha, beta, xi.
+weight = np.array([
+    1e0,
+    1e3,
+    1e0,                     # xi.
+    1e-5
+])
 
 # Triplet parameter family names & type.
 prm_list = [
@@ -374,15 +380,15 @@ prm_list = [
 
 # Max parameter range.
 b_2_max = 10.0
-L_min = 0.1
+L_min   = 0.1
 
 bounds = [
-    (-b_2_max, 0.0),
-    (0.0, b_2_max),
-    (-b_2_max, 0.0),
-    (L_min, 0.25),
-    (L_min, 0.3),
-    (L_min, 0.25),
+    (-b_2_max, 0.0),          # uq1 b_2.
+    ( 0.0,     b_2_max),      # uq2 b_2.
+    (-b_2_max, 0.0),          # uq3 b_2.
+    ( L_min,   0.25),         # ul1 L.
+    ( L_min,   0.3),          # ul2 L.
+    ( L_min,   0.25)          # ul3 L.
 ]
 
 # Zero sextopoles.
@@ -394,7 +400,8 @@ stable, nu, xi = lo.compute_nu_xi(desc, tpsa_order, M)
 print("\n  nu = [{:7.5f}, {:7.5f}]".format(nu[X_], nu[Y_]))
 print("  xi = [{:7.5}, {:7.5}]".format(xi[X_], xi[Y_]))
 
-match_straight(lat, loc, prm_list, bounds, Twiss0, Twiss1, Twiss1_design, weight)
+match_straight(lat, loc, prm_list, bounds, Twiss0, Twiss1, Twiss1_design,
+               weight)
 
 if not False:
     plt.show()
