@@ -122,9 +122,11 @@ def print_Twiss(lat, data):
         nu[Y_] += data.twiss.sel(plane="y", par="dnu").values[k]
         print("{:3d} {:8s} {:7.3f} {:8.5f} {:8.5f} {:7.5f} {:8.5f} {:8.5f} {:8.5f} {:7.5f} {:8.5f}".
               format(k, lat[k].name, L,
-                     data.twiss.sel(plane="x", par="alpha").values[k], data.twiss.sel(plane="x", par="beta").values[k],
+                     data.twiss.sel(plane="x", par="alpha").values[k],
+                     data.twiss.sel(plane="x", par="beta").values[k],
                      nu[X_], data.dispersion.sel(phase_coordinate="x")[k],
-                     data.twiss.sel(plane="y", par="alpha").values[k], data.twiss.sel(plane="y", par="beta").values[k],
+                     data.twiss.sel(plane="y", par="alpha").values[k],
+                     data.twiss.sel(plane="y", par="beta").values[k],
                      nu[Y_], data.dispersion.sel(phase_coordinate="y")[k]))
 
 
@@ -268,7 +270,8 @@ n_iter_min = 0
 prms_min   = []
 rbend      = ""
 
-def opt_super_period(lat, param_list, C, bounds, phi_des, eps_x_des, nu_des, beta_straight_des, weights, phi):
+def opt_super_period(lat, param_list, C, bounds, phi_des, eps_x_des, nu_des,
+                     beta_straight_des, weights, phi):
     """Use Case: optimise unit cell.
     """
 
@@ -305,6 +308,8 @@ def opt_super_period(lat, param_list, C, bounds, phi_des, eps_x_des, nu_des, bet
             beta_straight = np.zeros(2, dtype=float)
             beta_straight[X_] = data.twiss.sel(plane="x", par="beta").values[0]
             beta_straight[Y_] = data.twiss.sel(plane="y", par="beta").values[0]
+            eta_straight_x    = \
+                data.dispersion.sel(phase_coordinate="x").values[0]
             nu_cell = compute_nu_cell(data)
 
             U_0, J, tau, eps = \
@@ -314,9 +319,12 @@ def opt_super_period(lat, param_list, C, bounds, phi_des, eps_x_des, nu_des, bet
             dchi_2 = np.zeros(n, dtype=float)
             dchi_2[0] = weights["eps_x"] * np.sum((eps[X_] - eps_x_des) ** 2)
             dchi_2[1] = weights["nu_cell"] * np.sum((nu_cell - nu_des) ** 2)
-            dchi_2[2] = weights["beta_straight"] * np.sum((beta_straight - beta_straight_des) ** 2)
-            dchi_2[3] = weights["xi"] * np.sum(xi ** 2)
-            dchi_2[4] = weights["alpha_c"] / alpha_c ** 2
+            dchi_2[2] = \
+                weights["beta_straight"] \
+                * np.sum((beta_straight - beta_straight_des) ** 2)
+            dchi_2[3] = weights["eta_straight_x"] * eta_straight_x ** 2
+            dchi_2[4] = weights["xi"] * np.sum(xi ** 2)
+            dchi_2[5] = weights["alpha_c"] / alpha_c ** 2
             chi_2 = 0e0
             for k in range(n):
                 chi_2 += dchi_2[k]
@@ -330,18 +338,23 @@ def opt_super_period(lat, param_list, C, bounds, phi_des, eps_x_des, nu_des, bet
             print(f"\n{n_iter:4d} chi_2 = {chi_2:9.3e}\n\n  prms   =\n", prms)
             if stable[0] and stable[1] and stable[2]:
                 print(f"\n  dchi_2 =\n", dchi_2)
-            print(f"\n  phi           = {compute_phi(lat):8.5f}")
-            [b1, b2, b3, b4] = [param_list[0][0], param_list[1][0], param_list[2][0], param_list[4][0]]
-            print(f"  {b1:5s}         = {get_phi_elem(lat, b1, 0):8.5f}")
-            print(f"  {b2:5s}         = {get_phi_elem(lat, b2, 0):8.5f}")
-            print(f"  {b3:5s}         = {get_phi_elem(lat, b3, 0):8.5f}")
-            print(f"  {b4:5s}         = {get_phi_elem(lat, b4, 0):8.5f}")
+            print(f"\n  phi            = {compute_phi(lat):8.5f}")
+            [b1, b2, b3, b4] = \
+                [param_list[0][0], param_list[1][0], param_list[2][0],
+                 param_list[4][0]]
+            print(f"  {b1:5s}          = {get_phi_elem(lat, b1, 0):8.5f}")
+            print(f"  {b2:5s}          = {get_phi_elem(lat, b2, 0):8.5f}")
+            print(f"  {b3:5s}          = {get_phi_elem(lat, b3, 0):8.5f}")
+            print(f"  {b4:5s}          = {get_phi_elem(lat, b4, 0):8.5f}")
             if stable[0] and stable[1] and stable[2]:
-                print(f"\n  eps_x         = {1e12*eps[X_]:5.3f}")
-                print(f"  nu_cell       = [{nu_cell[X_]:7.5f}, {nu_cell[Y_]:7.5f}]")
-                print(f"  beta_straight = [{beta_straight[X_]:7.5f}, {beta_straight[Y_]:7.5f}]")
-                print(f"  xi            = [{xi[X_]:5.3f}, {xi[Y_]:5.3f}]")
-                print(f"  alpha_c       = {alpha_c:9.3e}")
+                print(f"\n  eps_x          = {1e12*eps[X_]:5.3f}")
+                print("  nu_cell        = [{:7.5f}, {:7.5f}]".
+                      format(nu_cell[X_], nu_cell[Y_]))
+                print("  beta_straight  = [{:7.5f}, {:7.5f}]".
+                      format(beta_straight[X_], beta_straight[Y_]))
+                print(f"  eta_straight_x = {eta_straight_x:10.3e}")
+                print(f"  xi             = [{xi[X_]:5.3f}, {xi[Y_]:5.3f}]")
+                print(f"  alpha_c        = {alpha_c:9.3e}")
             else:
                 print("\n Unstable.")
         return chi_2
@@ -405,12 +418,15 @@ def opt_super_period(lat, param_list, C, bounds, phi_des, eps_x_des, nu_des, bet
     # Methods:
     #   Nelder-Mead, Powell, CG, BFGS, Newton-CG, L-BFGS-B, TNC, COBYLA,
     #   SLSQP, trust-constr, dogleg, truct-ncg, trust-exact, trust-krylov.
+
+    # Powell ftol
+    # CG     gtol
     minimum = optimize.minimize(
         f_unit_cell,
         prms1,
         method="CG",
         bounds=bounds,
-        options={"xtol": x_tol, "ftol": f_tol, "maxiter": max_iter},
+        options={"xtol": x_tol, "gtol": f_tol, "maxiter": max_iter},
     )
 
     prt_result(f_unit_cell, param_list, prms0, minimum)
@@ -496,11 +512,12 @@ beta  = np.array([3.0, 3.0])  # Beta functions at the centre of the straight.
 
 # Weights.
 weights = {
-    "eps_x":         1e15,
-    "nu_cell":       1e0,
-    "beta_straight": 1e-4,
-    "xi":            1e-6,
-    "alpha_c":       1e-14
+    "eps_x":          1e15,
+    "nu_cell":        1e0,
+    "beta_straight":  1e-4,
+    "eta_straight_x": 1e3,
+    "xi":             1e-6,
+    "alpha_c":        1e-14
 }
 
 # Parameter family names & type.
