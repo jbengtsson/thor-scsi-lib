@@ -13,11 +13,12 @@ import gtpsa
 
 desc = gtpsa.desc(6, 1)
 
-t_dir = os.path.join(os.environ["HOME"], "Nextcloud", "thor_scsi")
-t_file = os.path.join(t_dir, "b3_tst.lat")
-
+t_dir = os.path.join(os.environ["HOME"], "Nextcloud", "thor_scsi", "JB")
 # t_file = os.path.join("lattices", "tme_rb.lat")
 # t_file = os.path.join("lattices", "tme.lat")
+# t_file = os.path.join(t_dir, "b3_tst.lat")
+t_file = os.path.join(t_dir, "b3_sf(sf)_4Quads_unitcell.lat")
+
 acc = accelerator_from_config(t_file)
 calc_config = tslib.ConfigType()
 acc.set_log_level(tslib.accelerator_log_level.warning)
