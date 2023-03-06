@@ -228,9 +228,9 @@ def compute_phi(lat):
 def get_prm(lat, param_list):
     # Dictionary of parameter types and corresponding get functions.
     how_to_get_prm = {
-        "dphi": get_phi_elem,
-        "b_2":  get_b_2_elem,
-        "L":    get_L_elem
+        "dphi":     get_phi_elem,
+        "b_2":      get_b_2_elem,
+        "L":        get_L_elem
     }
 
     prms = []
@@ -243,9 +243,9 @@ def get_prm(lat, param_list):
 def set_prm(lat, param_list, prms):
     # Dictionary of parameter types and corresponding set functions.
     how_to_set_prm = {
-        "dphi": set_phi_fam,
-        "b_2":  set_b_2_fam,
-        "L":    set_L_fam
+        "dphi":     set_phi_fam,
+        "b_2":      set_b_2_fam,
+        "L":        set_L_fam
     }
 
     for k in range(len(param_list)):
@@ -367,7 +367,7 @@ def opt_super_period(lat, param_list, C, bounds, phi_des, eps_x_des, nu_des,
 
         n_iter += 1
         set_prm(lat, param_list, prms)
-        dphi = (phi - 8*prms[0] - 2*prms[2] - 2*prms[4])/8e0
+        dphi = (phi - 8*prms[0] - 2*prms[1] - 2*prms[3])/8e0
         set_phi_fam(lat, rbend, dphi)
         chi_2 = compute_chi_2(lat, model_state, eps_x_des, nu_des, prms)
         return chi_2
@@ -411,7 +411,7 @@ def opt_super_period(lat, param_list, C, bounds, phi_des, eps_x_des, nu_des,
     print("\nopt_super_period:\n")
     # Initialise parameters.
     prms1 = prms0 = get_prm(lat, param_list)
-    rbend = param_list[1][0]
+    rbend = param_list[2][0]
     print("\nrbend = ", rbend)
     print("\nprms = ", prms1)
 
@@ -459,7 +459,8 @@ def get_Twiss(loc):
 t_dir = os.path.join(os.environ["HOME"], "Nextcloud", "thor_scsi", "JB")
 # t_file = os.path.join(t_dir, 'b3_tst.lat')
 # t_file = os.path.join(t_dir, "b3_sf_40Grad_JB.lat")
-t_file = os.path.join(t_dir, "b3_sf(sf)_4Quads_unitcell.lat")
+# t_file = os.path.join(t_dir, "b3_sfsf_4Quads_unitcell.lat")
+t_file = os.path.join(t_dir, "b3_sfsf4Q_tracy.lat")
 
 # Read in & parse lattice file.
 lat = accelerator_from_config(t_file)
@@ -487,8 +488,8 @@ if False:
 
 # Zero sextopoles.
 print("\nZeroing sextupoles.")
-set_b_n_fam(lat, "sf_h", MultipoleIndex.sextupole, 0e0)
-set_b_n_fam(lat, "sd_h", MultipoleIndex.sextupole, 0e0)
+set_b_n_fam(lat, "sf", MultipoleIndex.sextupole, 0e0)
+set_b_n_fam(lat, "sd", MultipoleIndex.sextupole, 0e0)
 # Compute linear chromaticity.
 M = lo.compute_map(lat, model_state, desc=desc, tpsa_order=tpsa_order)
 stable, nu, xi = lo.compute_nu_xi(desc, tpsa_order, M)
@@ -523,18 +524,27 @@ weights = {
 # Parameter family names & type.
 param_list = [
     ("bb_h", "dphi"),         # Dipole.
-    ("br",   "b_2"),          # Focusing reverse bend.
+
+    ("mbb",   "dphi"),        # Dipole.
+
+#    ("br",   "not used"),     # Focusing reverse bend;
+    ("br",   "b_2"),          # used to set total bend angle.
+
     ("mbr",   "dphi"),        # Focusing reverse bend.
     ("mbr",   "b_2"),
-    ("mbb",   "dphi"),        # Defocusing reverse bend.
-    ("mbb",   "b_2"),
+
+
     ("qd",   "b_2"),          # Defocusing quadrupole.
+
     ("uq1",  "b_2"),          # Triplet for matching section.
     ("uq2",  "b_2"),
     ("uq3",  "b_2"),
+    ("uq4",  "b_2"),
+
     ("ul1",  "L"),
     ("ul2",  "L"),
     ("ul3",  "L"),
+    ("ul4",  "L"),
 ]
 
 # Max parameter range.
@@ -543,18 +553,26 @@ L_min   = 0.1
 
 bounds = [
     (1.5,      2.5),          # bb_h phi.
+
     (0.0,      b_2_max),      # br b_2.
+
     (-0.5,     1.0),          # mbr phi.
     ( 0.0,     b_2_max),      # mbr b_2.
+
     (3.0,      4.5),          # mbb phi.
     (-b_2_max, 0.0),          # mbb b_2.
+
     (-b_2_max, 0.0),          # qd b_2.
-    (-b_2_max, 0.0),          # uq1 b_2.
-    ( 0.0,     b_2_max),      # uq2 b_2.
-    (-b_2_max, 0.0),          # uq3 b_2.
+
+    ( 0.0,     b_2_max),      # uq1 b_2.
+    (-b_2_max, 0.0),          # uq2 b_2.
+    ( 0.0,     b_2_max),      # uq3 b_2.
+    (-b_2_max, 0.0),          # uq4 b_2.
+
     ( L_min,   0.25),         # ul1 L.
     ( L_min,   0.3),          # ul2 L.
-    ( L_min,   0.25)          # ul3 L.
+    ( L_min,   0.25),         # ul3 L.
+    ( L_min,   0.25)          # ul4 L.
 ]
 
 opt_super_period(lat, param_list, C, bounds, phi, eps_x, nu, beta, weights, phi)
