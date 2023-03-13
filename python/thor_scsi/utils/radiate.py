@@ -111,21 +111,28 @@ def compute_radiation(
     acc.propagate(calc_config, ps)
     dE = calc_config.dE
 
-    A, A_inv, alpha_rad = compute_M_diag(dof, M)
+    stable, A, A_inv, alpha_rad = compute_M_diag(dof, M)
 
-    calc_config.emittance = True
+    if stable:
+        calc_config.emittance = True
 
-    #A_cpy = vec_mat2ss_vect_tps(r.x0, A)
-    A_cpy  = gtpsa.ss_vect_tpsa(desc, 1)
-    A_cpy += r.x0
-    A_cpy.set_jacobian(A)
-    acc.propagate(calc_config, A_cpy)
+        #A_cpy = vec_mat2ss_vect_tps(r.x0, A)
+        A_cpy  = gtpsa.ss_vect_tpsa(desc, 1)
+        A_cpy += r.x0
+        A_cpy.set_jacobian(A)
+        acc.propagate(calc_config, A_cpy)
 
-    D_rad = compute_diffusion_coefficients(rad_del_kicks)
+        D_rad = compute_diffusion_coefficients(rad_del_kicks)
 
-    U_0, J, tau, eps = compute_rad_prop(acc, calc_config, r.x0, dE, alpha_rad, D_rad)
+        U_0, J, tau, eps = \
+            compute_rad_prop(acc, calc_config, r.x0, dE, alpha_rad, D_rad)
+    else:
+        U_0 = np.nan
+        J = np.zeros(3, float)
+        tau = np.zeros(3, float)
+        eps = np.zeros(3, float)
 
-    return U_0, J, tau, eps
+    return stable, U_0, J, tau, eps
 
 
 # def calculate_radiation(
