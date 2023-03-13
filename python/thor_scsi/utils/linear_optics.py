@@ -82,8 +82,8 @@ def compute_nu(M):
         sin = np.sqrt(np.fabs(sin2))
         return acos2(sgn*sin, tr / 2e0) / (2e0 * np.pi)
     else:
-        print("\ncompute_nu: unstable\n")
-        return float("nan")
+        print("\ncompute_nu: unstable")
+        return np.nan
 
 
 def compute_nus(n_dof, M):
@@ -132,8 +132,21 @@ def check_if_stable_2D(M):
 
 
 def check_if_stable_3D(M):
-    return check_if_stable_1D(0, M), check_if_stable_1D(1, M),\
+    return \
+        check_if_stable_1D(0, M), check_if_stable_1D(1, M), \
         check_if_stable_1D(2, M)
+
+
+def check_if_stable(n_dof, M):
+    if n_dof == 2:
+        stable = check_if_stable_2D(M)
+        stable = stable[0] and stable[1]
+    elif n_dof == 3:
+        stable = check_if_stable_3D(M)
+        stable = stable[0] and stable[1] and stable[2]
+    else:
+        raise Exception("check_if_stable: undef. n_dof")
+    return stable
 
 
 def ind_1(k):
@@ -169,9 +182,9 @@ def compute_nu_xi(desc, tpsa_order, M):
     """Compute tune & linear chromaticity from trace of Poincaré map:
           nu + xi * delta = arccos( Trace{M} / 2 ) / ( 2 * pi ).
     """
-    nu, xi = [np.zeros(2), np.zeros(2)]
-    stable = check_if_stable_2D(M.jacobian())
-    if stable[0] and stable[1]:
+    stable = check_if_stable(2, M.jacobian())
+    if stable:
+        nu, xi = [np.zeros(2), np.zeros(2)]
         M_delta = gtpsa.tpsa(desc, tpsa_order)
         for k in range(2):
             M_delta.clear()
@@ -182,8 +195,14 @@ def compute_nu_xi(desc, tpsa_order, M):
             M_delta += M[2*k+1].get(ind_1(2*k+1))
             M_delta.set(ind_1(delta_), 1e0, M[2*k+1].get(ind_2(2*k+1, delta_)))
             # M_delta = m_11 + m_22.
-            nu_tpsa = acos2_tpsa(M.jacobian()[2*k][2*k+1], M_delta/2e0)/(2e0*np.pi)
+            nu_tpsa = \
+                acos2_tpsa(M.jacobian()[2*k][2*k+1], M_delta/2e0)/(2e0*np.pi)
             nu[k], xi[k] = [nu_tpsa.get(), nu_tpsa.get(ind_1(delta_))]
+    else:
+        nu = np.nan
+        xi = np.nan
+        print("\ncompute_nu_xi: unstable ", stable)
+
     return stable, nu, xi
 
 
@@ -281,7 +300,8 @@ def compute_dispersion(M: np.ndarray) -> np.ndarray:
 
 
 def compute_M_diag(
-        n_dof: int, M: np.ndarray) -> [np.ndarray, np.ndarray, np.ndarray]:
+        n_dof: int, M: np.ndarray
+) -> [bool, np.ndarray, np.ndarray, np.ndarray]:
     """
 
     Args:
@@ -292,103 +312,116 @@ def compute_M_diag(
 
     See xxx reference
     """
-    n = 2 * n_dof
+    stable = check_if_stable(n_dof, M)
+    if stable:
+        n = 2 * n_dof
 
-    nu_symp = compute_nu_symp(n_dof, M)
-    logger.debug("computed tunes (for symplectic matrix): %s", nu_symp)
+        nu_symp = compute_nu_symp(n_dof, M)
+        logger.debug("computed tunes (for symplectic matrix): %s", nu_symp)
 
-    # Diagonalise M.
-    [w, u] = np.linalg.eig(M[:n, :n])
+        # Diagonalise M.
+        
+        [w, u] = np.linalg.eig(M[:n, :n])
 
-    # nu_eig = acos2(w.imag, w.real) / (2e0 * np.pi)
-    nu_eig = np.zeros(n)
-    for k in range(n):
-        nu_eig[k] = acos2(w[k].imag, w[k].real) / (2e0 * np.pi)
+        # nu_eig = acos2(w.imag, w.real) / (2e0 * np.pi)
+        nu_eig = np.zeros(n)
+        for k in range(n):
+            if abs(w[k].real) > 1e0:
+                print("\ncompute_M_diag: |arg| for acos2 > 1 ", w[k])
+                return False, np.nan, np.nan, np.nan
 
-    logger.debug(
-        "\nu:\n"
-        + mat2txt(u)
-        + "\nnu_symp:\n"
-        + vec2txt(nu_symp)
-        + "\nnu_eig:\n"
-        + vec2txt(nu_eig)
-        + "\nlambda:\n"
-        + vec2txt(w)
-    )
+            nu_eig[k] = acos2(w[k].imag, w[k].real) / (2e0 * np.pi)
 
-    order = sort_eigen_vec(n_dof, nu_symp, w)
-
-    w_ord = np.zeros(n, complex)
-    u_ord = np.zeros((n, n), complex)
-    nu_eig_ord = np.zeros(n, float)
-    for k in range(n):
-        w_ord[k] = w[order[k]]
-        u_ord[:, k] = u[:, order[k]]
-        nu_eig_ord[k] = acos2(w_ord[k].imag, w_ord[k].real) / (2e0 * np.pi)
-
-    logger.debug(
-        "\norder:\n"
-        + vec2txt(order)
-        + "\nnu_eig_ord:\n"
-        + vec2txt(nu_eig_ord)
-        + "\nlambda_ord:\n"
-        + vec2txt(w_ord)
-        + "\nu_ord^-1.M.u_ord:\n"
-        + mat2txt(chop_array(np.linalg.inv(u_ord) @ M[:n, :n] @ u_ord, 1e-15))
-    )
-
-    eta = compute_dispersion(M)
-
-    logger.debug("\neta:\n" + vec2txt(eta))
-
-    [A, A_inv, u1] = compute_A(n_dof, eta, u_ord)
-    A, _ = compute_A_CS(2, A)
-
-    logger.debug(
-        "\nu1:\n"
-        + mat2txt(u1)
-        + "\nu1^-1.M.u1:\n"
-        + mat2txt(chop_array(np.linalg.inv(u1) @ M[:n, :n] @ u1, 1e-13))
-        + "\nu1^T.omega.u1:\n"
-        + mat2txt(chop_array(u1.T @ omega_block_matrix(n_dof) @ u1, 1e-13))
-        + "\nA:\n"
-        + mat2txt(chop_array(A, 1e-13))
-        + "\nA^T.omega.A:\n"
-        + mat2txt(chop_array(A[:n, :n].T @ omega_block_matrix(n_dof)
-                             @ A[:n, :n], 1e-13))
-    )
-
-    R = A_inv @ M @ A
-
-    nu = np.zeros(3, float)
-    alpha_rad = np.zeros(3, float)
-    for k in range(n_dof):
-        nu[k] = np.arctan2(R[2 * k][2 * k + 1], R[2 * k][2 * k]) / (2e0 * np.pi)
-        if (nu[k] < 0e0) and (k < 2):
-            nu[k] += 1e0
-        if n_dof == 3:
-            alpha_rad[k] = \
-                np.log(np.sqrt(np.absolute(w_ord[2 * k])
-                               * np.absolute(w_ord[2 * k + 1])))
-
-    A_CS, dnu_cs = compute_A_CS(n_dof, A)
-    logger.debug(
-        "\n\nA_CS:\n"
-        + mat2txt(chop_array(A_CS, 1e-10))
-        + "\n\nR:\n"
-        + mat2txt(chop_array(R, 1e-10))
-        + "\n\nnu        = {:18.16f} {:18.16f} {:18.16f}".
-        format(nu[X_], nu[Y_], nu[Z_])
-    )
-    logger.debug(f"dnu_cs  {dnu_cs}")
-    if n_dof == 3:
         logger.debug(
-            "alpha_rad = {:13.6e} {:13.6e} {:13.6e}".format(
-                alpha_rad[X_], alpha_rad[Y_], alpha_rad[Z_]
-            )
+            "\nu:\n"
+            + mat2txt(u)
+            + "\nnu_symp:\n"
+            + vec2txt(nu_symp)
+            + "\nnu_eig:\n"
+            + vec2txt(nu_eig)
+            + "\nlambda:\n"
+            + vec2txt(w)
         )
 
-    return A, A_inv, alpha_rad
+        order = sort_eigen_vec(n_dof, nu_symp, w)
+
+        w_ord = np.zeros(n, complex)
+        u_ord = np.zeros((n, n), complex)
+        nu_eig_ord = np.zeros(n, float)
+        for k in range(n):
+            w_ord[k] = w[order[k]]
+            u_ord[:, k] = u[:, order[k]]
+            nu_eig_ord[k] = acos2(w_ord[k].imag, w_ord[k].real) / (2e0 * np.pi)
+
+        logger.debug(
+            "\norder:\n"
+            + vec2txt(order)
+            + "\nnu_eig_ord:\n"
+            + vec2txt(nu_eig_ord)
+            + "\nlambda_ord:\n"
+            + vec2txt(w_ord)
+            + "\nu_ord^-1.M.u_ord:\n"
+            + mat2txt(chop_array(np.linalg.inv(u_ord) @ M[:n, :n] @ u_ord,
+                                 1e-15))
+        )
+
+        eta = compute_dispersion(M)
+
+        logger.debug("\neta:\n" + vec2txt(eta))
+
+        [A, A_inv, u1] = compute_A(n_dof, eta, u_ord)
+        A, _ = compute_A_CS(2, A)
+
+        logger.debug(
+            "\nu1:\n"
+            + mat2txt(u1)
+            + "\nu1^-1.M.u1:\n"
+            + mat2txt(chop_array(np.linalg.inv(u1) @ M[:n, :n] @ u1, 1e-13))
+            + "\nu1^T.omega.u1:\n"
+            + mat2txt(chop_array(u1.T @ omega_block_matrix(n_dof) @ u1, 1e-13))
+            + "\nA:\n"
+            + mat2txt(chop_array(A, 1e-13))
+            + "\nA^T.omega.A:\n"
+            + mat2txt(chop_array(A[:n, :n].T @ omega_block_matrix(n_dof)
+                                 @ A[:n, :n], 1e-13))
+        )
+
+        R = A_inv @ M @ A
+
+        nu = np.zeros(3, float)
+        alpha_rad = np.zeros(3, float)
+        for k in range(n_dof):
+            nu[k] = \
+                np.arctan2(R[2 * k][2 * k + 1], R[2 * k][2 * k]) / (2e0 * np.pi)
+            if (nu[k] < 0e0) and (k < 2):
+                nu[k] += 1e0
+            if n_dof == 3:
+                alpha_rad[k] = \
+                    np.log(np.sqrt(np.absolute(w_ord[2 * k])
+                                   * np.absolute(w_ord[2 * k + 1])))
+
+        A_CS, dnu_cs = compute_A_CS(n_dof, A)
+        logger.debug(
+            "\n\nA_CS:\n"
+            + mat2txt(chop_array(A_CS, 1e-10))
+            + "\n\nR:\n"
+            + mat2txt(chop_array(R, 1e-10))
+            + "\n\nnu        = {:18.16f} {:18.16f} {:18.16f}".
+            format(nu[X_], nu[Y_], nu[Z_])
+        )
+        logger.debug(f"dnu_cs  {dnu_cs}")
+        if n_dof == 3:
+            logger.debug(
+                "alpha_rad = {:13.6e} {:13.6e} {:13.6e}".format(
+                    alpha_rad[X_], alpha_rad[Y_], alpha_rad[Z_]
+                )
+            )
+    else:
+        A         = np.nan
+        A_inv     = np.nan
+        alpha_rad = np.nan
+
+    return stable, A, A_inv, alpha_rad
 
 
 #: scale arctan2 (a12/a11) to Floquet coordinates (correct?)
@@ -490,12 +523,15 @@ def compute_map_and_diag(
     M = np.array(t_map.jacobian())
     logger.info("\ncompute_map_and_diag\nM:\n" + mat2txt(M))
 
-    A, A_inv, alpha_rad = compute_M_diag(n_dof, M)
-    Atest = gtpsa.ss_vect_tpsa(desc, 1)
-    Atest.set_zero()
-    Atest.set_jacobian(A)
-    acc.propagate(calc_config, Atest)
-    return t_map, A
+    stable, A, A_inv, alpha_rad = compute_M_diag(n_dof, M)
+    if stable:
+        Atest = gtpsa.ss_vect_tpsa(desc, 1)
+        Atest.set_zero()
+        Atest.set_jacobian(A)
+        acc.propagate(calc_config, Atest)
+    else:
+        print("\ncompute_map_and_diag: unstable")
+    return stable, t_map, A
 
 
 def compute_Twiss_along_lattice(
@@ -553,7 +589,8 @@ def compute_Twiss_along_lattice(
     indices = [elem.index for elem in acc]
     tps_tmp = [_extract_tps(elem) for elem in acc]
     data = [tps2twiss(t) for t in tps_tmp]
-    tps_tmp = np.array(tps_tmp)
+    print(type(tps_tmp), type(tps_tmp[0]))
+    tps_tmp = np.array(tps_tmp, dtype=object)
     twiss_pars = [d[1] for d in data]
     disp = [d[0] for d in data]
 
@@ -585,6 +622,7 @@ def compute_Twiss_along_lattice(
 
 __all__ = [
     "compute_map", "compute_nu_symp", "check_if_stable_1D",
-    "check_if_stable_2D", "check_if_stable_3D", "compute_nu_xi", "compute_map_and_diag",
-    "compute_Twiss_along_lattice", "jac2twiss", "compute_M_diag"
+    "check_if_stable_2D", "check_if_stable_3D", "check_if_stable_3D",
+    "compute_nu_xi", "compute_map_and_diag", "compute_Twiss_along_lattice",
+    "jac2twiss", "compute_M_diag"
 ]
