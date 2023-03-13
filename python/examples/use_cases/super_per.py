@@ -312,8 +312,11 @@ def opt_super_period(lat, param_list, C, bounds, phi_des, eps_x_des, nu_des,
                 data.dispersion.sel(phase_coordinate="x").values[0]
             nu_cell = compute_nu_cell(data)
 
-            U_0, J, tau, eps = \
+            stable, U_0, J, tau, eps = \
                 rad.compute_radiation(lat, model_state, 2.5e9, 1e-15, desc=desc)
+
+            if not stable:
+                return 1e30
 
             n = len(weights)
             dchi_2 = np.zeros(n, dtype=float)
@@ -329,7 +332,7 @@ def opt_super_period(lat, param_list, C, bounds, phi_des, eps_x_des, nu_des,
             for k in range(n):
                 chi_2 += dchi_2[k]
         else:
-            chi_2 = 1e30
+            return 1e30
 
         if chi_2 < chi_2_min:
             chi_2_min = chi_2
@@ -494,7 +497,7 @@ set_b_n_fam(lat, "sd", MultipoleIndex.sextupole, 0e0)
 M = lo.compute_map(lat, model_state, desc=desc, tpsa_order=tpsa_order)
 stable, nu, xi = lo.compute_nu_xi(desc, tpsa_order, M)
 # Compute radiation properties.
-U_0, J, tau, eps = \
+stable, U_0, J, tau, eps = \
     rad.compute_radiation(lat, model_state, 2.5e9, 1e-15, desc=desc)
 
 C = rad.compute_circ(lat)
@@ -507,31 +510,31 @@ print("  xi             = [{:7.5f}, {:7.5f}]".format(xi[X_], xi[Y_]))
 
 # Design parameters.
 phi   = 22.5                  # Total bend angle.
-eps_x = 100e-12               # Horizontal emittance.
+eps_x = 0*100e-12               # Horizontal emittance.
 nu    = np.array([0.4, 0.1])  # Cell tune.
 beta  = np.array([3.0, 3.0])  # Beta functions at the centre of the straight.
 
 # Weights.
 weights = {
-    "eps_x":          1e15,
+    "eps_x":          1e2*1e15,
     "nu_cell":        1e0,
     "beta_straight":  1e-4,
     "eta_straight_x": 1e3,
     "xi":             1e-6,
-    "alpha_c":        1e-14
+    "alpha_c":        1e-5*1e-14
 }
 
 # Parameter family names & type.
 param_list = [
     ("bb_h", "dphi"),         # Dipole.
 
-    ("mbb",   "dphi"),        # Dipole.
+    ("mbb",  "dphi"),         # Dipole.
 
 #    ("br",   "not used"),     # Focusing reverse bend;
     ("br",   "b_2"),          # used to set total bend angle.
 
-    ("mbr",   "dphi"),        # Focusing reverse bend.
-    ("mbr",   "b_2"),
+    ("mbr",  "dphi"),         # Focusing reverse bend.
+    ("mbr",  "b_2"),
 
 
     ("qd",   "b_2"),          # Defocusing quadrupole.
@@ -554,7 +557,7 @@ L_min   = 0.1
 bounds = [
     (1.5,      2.5),          # bb_h phi.
 
-    (0.0,      b_2_max),      # br b_2.
+    (1.5,      2.5),          # mbb phi.
 
     (-0.5,     1.0),          # mbr phi.
     ( 0.0,     b_2_max),      # mbr b_2.
