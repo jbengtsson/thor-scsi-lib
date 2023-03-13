@@ -8,22 +8,6 @@
 #include <gtpsa/tpsa.hpp>
 #include <tps/tps_type.h>
 
-#ifndef NO_TPSA
-  #error "NO_TPSA not defined"
-  // Abort compilation.
-  #include <stop here>
-#else
-/* worth a util header ...*/
-#define STRINGIFY(a_var) #a_var
-#define TOSTRING(a_str) STRINGIFY(a_str)
-#define DISPLAY_VAR(a_var) #a_var  " = " STRINGIFY(a_var)
-#define DISPLAY_AT() __FILE__ ":" TOSTRING(__LINE__)
-#define DISPLAY_VAR_AT(a_var)  DISPLAY_AT() " "  DISPLAY_VAR(NO_TPSA)
-
-#pragma message(DISPLAY_VAR_AT(NO_TPSA))
-
-//#pragma message("thor_py.cc: "NO_TPSA = " STRINGIFY(NO_TPSA) NO_TPSA)
-#endif
 
 namespace py = pybind11;
 

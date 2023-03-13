@@ -8,13 +8,17 @@
 
 namespace thor_scsi::elements {
 	using thor_scsi::core::ObservedState;
-    template<class C>
+
+	/*
+	 * EC typically is thor_scsi::core::ElemTypeKnobbed<C>
+	 */
+	template<class EC>
 	class RadiationDelegateInterfaceKnobbed {
 	public:
 	        virtual ~RadiationDelegateInterfaceKnobbed(void){}
-		virtual void view(const thor_scsi::core::ElemTypeKnobbed<C>& elem, const gtpsa::ss_vect<double>      &ps, const enum ObservedState, const int cnt) = 0;
+		virtual void view(const EC& elem, const gtpsa::ss_vect<double>      &ps, const enum ObservedState, const int cnt) = 0;
 	    // virtual void view(const thor_scsi::core::ElemTypeKnobbed<C>& elem, const gtpsa::ss_vect<tps>         &ps, const enum ObservedState, const int cnt) = 0;
-		virtual void view(const thor_scsi::core::ElemTypeKnobbed<C>& elem, const gtpsa::ss_vect<gtpsa::tpsa> &ps, const enum ObservedState, const int cnt) = 0;
+		virtual void view(const EC& elem, const gtpsa::ss_vect<gtpsa::tpsa> &ps, const enum ObservedState, const int cnt) = 0;
 		virtual void show(std::ostream& strm, int level) const{
 			strm << "RadiationDelegateInterface";
 		}
@@ -22,14 +26,17 @@ namespace thor_scsi::elements {
 		std::string repr(void) const;
 
 	};
-    typedef RadiationDelegateInterfaceKnobbed<thor_scsi::core::StandardDoubleType> RadiationDelegateInterface;
+	typedef RadiationDelegateInterfaceKnobbed<thor_scsi::core::ElemType> RadiationDelegateInterface;
 
-    template<class C>
+	/*
+	 * EC typically is FieldKickAPIKnobbed<C>
+	 */
+	template<class FC>
 	class RadiationDelegateKickInterfaceKnobbed {
 	public:
 	        virtual ~RadiationDelegateKickInterfaceKnobbed(void){}
-		virtual void view(const FieldKickAPIKnobbed<C>& kick, const gtpsa::ss_vect<double>      &ps, const enum ObservedState, const int cnt) = 0;
-		virtual void view(const FieldKickAPIKnobbed<C>& kick, const gtpsa::ss_vect<gtpsa::tpsa> &ps, const enum ObservedState, const int cnt) = 0;
+		virtual void view(const FC& kick, const gtpsa::ss_vect<double>      &ps, const enum thor_scsi::core::ObservedState, const int cnt) = 0;
+		virtual void view(const FC& kick, const gtpsa::ss_vect<gtpsa::tpsa> &ps, const enum thor_scsi::core::ObservedState, const int cnt) = 0;
 	    // virtual void view(const FieldKickAPIKnobbed<C>& kick, const gtpsa::ss_vect<tps>         &ps, const enum ObservedState, const int cnt) = 0;
 		virtual void show(std::ostream& strm, int level) const{
 			strm << "RadiationDelegateKickInterface";
@@ -48,19 +55,20 @@ namespace thor_scsi::elements {
 	 * @f]
 	 *
 	 * @todo: depends on energy of ring .... currently taken from config ...
+	 *        put comment on correct place
 	 *
 	 * M. Sands "The hysics of Electron Storage Rings" SLAC-121, p. 98.
 	 */
 	//inline
-    template<typename C>
-	std::ostream& operator<<(std::ostream& strm, const RadiationDelegateKickInterfaceKnobbed<C>& rd)
+	template<typename FC>
+	std::ostream& operator<<(std::ostream& strm, const RadiationDelegateKickInterfaceKnobbed<FC>& rd)
 	{
 		rd.show(strm, 0);
 		return strm;
 	}
 
-    template<class C>
-	std::ostream& operator<<(std::ostream& strm, const RadiationDelegateInterfaceKnobbed<C>& rd)
+	template<class EC>
+	std::ostream& operator<<(std::ostream& strm, const RadiationDelegateInterfaceKnobbed<EC>& rd)
 	{
 		rd.show(strm, 0);
 		return strm;

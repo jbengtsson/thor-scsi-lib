@@ -13,9 +13,9 @@ namespace thor_scsi::elements {
 		using thor_scsi::core::ElemTypeKnobbed;
 		using thor_scsi::core::ConfigType;
 		template<class C>
-		class DriftTypeWithKnob : public ElemTypeKnobbed<C> {
+		class DriftTypeWithKnob : public ElemTypeKnobbed /* <C> */ {
 		public:
-			using base = ElemTypeKnobbed<C>;
+			using base = ElemTypeKnobbed /* <C> */ ;
 			inline DriftTypeWithKnob(const Config &config) :
 				base(config)
 				{

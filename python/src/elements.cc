@@ -39,13 +39,13 @@ public:
 	}
 };
 
-template<class C>
-class PyElemType: public tsc::ElemTypeKnobbed<C>{
-	using base = tse::ElemTypeKnobbed <C>;
+// template<class C>
+class PyElemType: public tsc::ElemTypeKnobbed/*<C>*/{
+	using base = tse::ElemTypeKnobbed /*<C>*/;
 public:
-	// typedef tsc::ElemTypeKnobbed<C> _ElemType;
+	// typedef tsc::ElemTypeKnobbed/*<C>*/ _ElemType;
         PyElemType(const Config& config)
-		: tsc::ElemTypeKnobbed<C>(config)
+		: tsc::ElemTypeKnobbed/*<C>*/(config)
 		{}
 
 	void propagate(thor_scsi::core::ConfigType & conf, gtpsa::ss_vect<double>& ps) override {
@@ -124,10 +124,16 @@ class PyFieldKick: public tse::FieldKick {
 template<typename Types, typename Class>
 void add_methods_field_kick(py::class_<Class> t_mapper)
 {
+
+	using double_type = typename Types::double_type;
+
 	t_mapper
-		.def("set_dx",                          [](Class &kick, const double dx){kick.getTransform()->setDx(dx);})
-		.def("set_dy",                          [](Class &kick, const double dy){kick.getTransform()->setDy(dy);})
-		.def("set_roll",                        [](Class &kick, const double roll){kick.getTransform()->setRoll(roll);})
+		.def("set_dx",                          [](Class &kick, const double_type dx){kick.getTransform()->setDx(dx);})
+		.def("set_dy",                          [](Class &kick, const double_type dy){kick.getTransform()->setDy(dy);})
+		.def("set_roll",                        [](Class &kick, const double_type roll){kick.getTransform()->setRoll(roll);})
+		.def("get_dx",                          [](Class &kick){return kick.getTransform()->getDx();})
+		.def("get_dy",                          [](Class &kick){return kick.getTransform()->getDy();})
+		// .def("get_roll",                        [](Class &kick){kick.getTransform()->getRoll();})
 		.def("is_thick",                        &Class::isThick)
 		.def("as_thick",                        &Class::asThick)
 		.def("get_number_of_integration_steps", &Class::getNumberOfIntegrationSteps)
@@ -187,28 +193,11 @@ struct TemplatedClasses
 		, m_module(m)
   		{}
 
-	auto buildClasses(py::class_<tsc::CellVoid, std::shared_ptr<tsc::CellVoid>>& cell_void) {
-
-		std::string elem_type_name = "ElemType" + this->m_suffix;
-		py::class_<tsc::ElemTypeKnobbed<C>, PyElemType<C>,  std::shared_ptr<tsc::ElemTypeKnobbed<C>>> elem_type(this->m_module, elem_type_name.c_str(), cell_void);
-		elem_type.def(py::init<const Config &>());
-
-		elem_type
-			.def("__str__",        &tsc::ElemTypeKnobbed<C>::pstr)
-			.def("__repr__",       &tsc::ElemTypeKnobbed<C>::repr)
-			.def("get_length",     &tsc::ElemTypeKnobbed<C>::getLength)
-			.def("set_length",     &tsc::ElemTypeKnobbed<C>::setLength)
-			.def("get_observer",   &tsc::ElemTypeKnobbed<C>::observer)
-			.def("set_observer",   &tsc::ElemTypeKnobbed<C>::set_observer)
-			.def("get_aperture",   &tsc::ElemTypeKnobbed<C>::getAperture)
-			.def("set_aperture",   &tsc::ElemTypeKnobbed<C>::setAperture)
-			.def("propagate", py::overload_cast<tsc::ConfigType&, gtpsa::ss_vect<double>&>(&tse::ElemTypeKnobbed<C>::propagate), pass_d_doc)
-			.def("propagate", py::overload_cast<tsc::ConfigType&, gtpsa::ss_vect<gtpsa::tpsa>&>(&tse::ElemTypeKnobbed<C>::propagate), pass_d_doc)
-			//.def("propagate", py::overload_cast<tsc::ConfigType&, gtpsa::ss_vect<tps>&>(&tse::ElemType::propagate),    pass_tpsa_doc)
-                ;
+	//auto buildClasses(py::class_<tsc::CellVoid, std::shared_ptr<tsc::CellVoid>>& cell_void)
+	auto buildClasses(py::class_<tsc::ElemType, PyElemType, std::shared_ptr<tsc::ElemType>>& elem_type){
 
 		typedef tse::DriftTypeWithKnob<C> DriftTypeK;
-		std::string drift_type_name = "DriftType" + this->m_suffix;
+		std::string drift_type_name = "Drift" + this->m_suffix;
 		py::class_<DriftTypeK, std::shared_ptr<DriftTypeK>> drift(this->m_module, drift_type_name.c_str(), elem_type);
 		drift
 			.def(py::init<const Config &>());
@@ -284,15 +273,36 @@ void py_thor_scsi_init_elements(py::module &m)
 	cell_void
 		.def_readonly("name",  &tsc::CellVoid::name)
 		.def_readonly("index", &tsc::CellVoid::index)
+		.def("config", &tsc::CellVoid::conf)
 		;
+
+	std::string elem_type_name = "ElemType";
+	py::class_<tsc::ElemTypeKnobbed/*<C>*/, PyElemType/*<C>*/,  std::shared_ptr<tsc::ElemTypeKnobbed/*<C>*/>> elem_type(m, elem_type_name.c_str(), cell_void);
+	elem_type.def(py::init<const Config &>());
+
+	elem_type
+		.def("__str__",        &tsc::ElemTypeKnobbed/*<C>*/::pstr)
+		.def("__repr__",       &tsc::ElemTypeKnobbed/*<C>*/::repr)
+		.def("get_length",     &tsc::ElemTypeKnobbed/*<C>*/::getLength)
+		.def("set_length",     &tsc::ElemTypeKnobbed/*<C>*/::setLength)
+		.def("get_observer",   &tsc::ElemTypeKnobbed/*<C>*/::observer)
+		.def("set_observer",   &tsc::ElemTypeKnobbed/*<C>*/::set_observer)
+		.def("get_aperture",   &tsc::ElemTypeKnobbed/*<C>*/::getAperture)
+		.def("set_aperture",   &tsc::ElemTypeKnobbed/*<C>*/::setAperture)
+		.def("propagate", py::overload_cast<tsc::ConfigType&, gtpsa::ss_vect<double>&>(&tse::ElemTypeKnobbed/*<C>*/::propagate), pass_d_doc)
+		.def("propagate", py::overload_cast<tsc::ConfigType&, gtpsa::ss_vect<gtpsa::tpsa>&>(&tse::ElemTypeKnobbed/*<C>*/::propagate), pass_d_doc)
+			//.def("propagate", py::overload_cast<tsc::ConfigType&, gtpsa::ss_vect<tps>&>(&tse::ElemType::propagate),    pass_tpsa_doc)
+                ;
+
 
 	TemplatedClasses<tsc::StandardDoubleType> templated_classes_std(m, "");
 	// required as marker and bpm are not knobbed yet
-	auto elem_type = templated_classes_std.buildClasses(cell_void);
+	// auto elem_type =
+	templated_classes_std.buildClasses(elem_type);
 
 	// Device classes / types with knobs ... handled by these two lines
 	TemplatedClasses<tsc::TpsaVariantType> templated_classes_tpsa(m, "Tpsa");
-	templated_classes_tpsa.buildClasses(cell_void);
+	templated_classes_tpsa.buildClasses(elem_type);
 
 	// classes without knobs follow
 

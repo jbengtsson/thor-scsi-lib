@@ -25,10 +25,11 @@ namespace thor_scsi::core {
 		//< Element virtual base class.
 		using thor_scsi::core::ConfigType;
 
-        template<class C, typename = typename C::double_type>
+        //template<class C, typename = typename C::double_type>
         class ElemTypeKnobbed : public CellVoid {
         protected:
-		using double_type = typename C::double_type;
+		// using double_type = typename C::double_type;
+		using double_type = double;
 #warning "not yet supporting PL as tpsa"
 		double PL = 0.0;                        ///< Length[m].
 
@@ -161,8 +162,9 @@ namespace thor_scsi::core {
 
 		};
 
-        typedef class ElemTypeKnobbed<thor_scsi::core::StandardDoubleType> ElemType;
-        typedef class ElemTypeKnobbed<thor_scsi::core::TpsaVariantType> ElemTypeEng;
+	    typedef class ElemTypeKnobbed ElemType;
+        // typedef class ElemTypeKnobbed<thor_scsi::core::StandardDoubleType> ElemType;
+        // typedef class ElemTypeKnobbed<thor_scsi::core::TpsaVariantType> ElemTypeEng;
 
 
 }

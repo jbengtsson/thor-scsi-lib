@@ -287,6 +287,8 @@ inline void tse::FieldKickForthOrder<C>::_localPropagate(tsc::ConfigType &conf, 
 #ifdef SYNCHROTRON_INTEGRALS
 	// computeRadiationIntegralsStart
 	parent->_synchrotronIntegralsInit(conf, ps);
+#else
+#error "Only compiling with synchrotron integrals"
 #endif /* SYNCHROTRON_INTEGRALS */
 
 	/* 4th order integration steps  */

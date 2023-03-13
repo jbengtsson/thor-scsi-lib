@@ -16,7 +16,7 @@ static int reg_done = ts::register_elements();
 
 int main(int argc, char * argv[])
 {
-    #if 0
+#if 0
     Config config_drift;
     Config config_bend;
     Config config;
@@ -49,7 +49,7 @@ int main(int argc, char * argv[])
     elems.reserve(2);
     std::cout <<  "Building elems"  << std::endl;
 
-#if 0
+#if 1
     {
 	/*
 	  const std::string bending_txt(

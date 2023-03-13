@@ -18,12 +18,12 @@ namespace thor_scsi::elements {
 	 *      transformation should contain a constant part and a random part
 	 */
 	 template<class C>
-	class LocalCoordinatesKnobbed : public ElemTypeKnobbed<C> {
+	 class LocalCoordinatesKnobbed : public ElemTypeKnobbed /* <C> */ {
 
 	public:
-		inline LocalCoordinatesKnobbed(const Config &config) : ElemTypeKnobbed<C>(config){}
+		 inline LocalCoordinatesKnobbed(const Config &config) : ElemTypeKnobbed /* <C> */ (config){}
 		virtual ~LocalCoordinatesKnobbed(){}
-		LocalCoordinatesKnobbed(LocalCoordinatesKnobbed&& o) : ElemTypeKnobbed<C>(std::move(o)) {
+		 LocalCoordinatesKnobbed(LocalCoordinatesKnobbed&& o) : ElemTypeKnobbed /* <C> */ (std::move(o)) {
 			/*
 			std::cerr << __FILE__ << "::" << __FUNCTION__ << " ctor @ " << __LINE__
 				  << " name " << this->name << std::endl;

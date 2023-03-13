@@ -23,7 +23,8 @@ namespace thor_scsi {
 		bool success;
 	};
 
-	class Accelerator : public thor_scsi::core::Machine {
+	template<class C>
+	class AcceleratorKnobbable : public thor_scsi::core::Machine {
 	public:
 
 		/**
@@ -35,7 +36,7 @@ namespace thor_scsi {
 		 * @warning consider if the marker is not better added manually to the lattice
 		 *          file
 		 */
-		Accelerator(const Config &conf, bool add_marker_at_start=false);
+		AcceleratorKnobbable(const Config &conf, bool add_marker_at_start=false);
 
 		/**
 		 * @brief inititsialse accelerator with a list of elements
@@ -47,9 +48,13 @@ namespace thor_scsi {
 		 *          file
 		 * @param conf
 		 */
-	        Accelerator(const std::vector<std::shared_ptr<thor_scsi::core::ElemType>>& elements,
-			    bool add_marker_at_start=false);
+		/*
+		*/
+		AcceleratorKnobbable(std::vector<std::shared_ptr<thor_scsi::core::CellVoid>>& elements,
+				     bool add_marker_at_start=false);
 
+		AcceleratorKnobbable(const std::vector<std::shared_ptr<thor_scsi::core::ElemTypeKnobbed>>& elements,
+				     bool add_marker_at_start=false);
 		/** @brief pass the given state through the machine
 		 *
 		 * @param conf Configuration of calculation
@@ -96,6 +101,9 @@ namespace thor_scsi {
 		template <typename T>
 		int _propagate(thor_scsi::core::ConfigType& conf, ss_vect<T>& ps, size_t start, int max, size_t n_turns, bool tracy_compatible_indexing);
 	};
+
+    typedef class AcceleratorKnobbable<thor_scsi::core::StandardDoubleType> Accelerator;
+    typedef class AcceleratorKnobbable<thor_scsi::core::TpsaVariantType> AcceleratorTpsa;
   }
 #endif // _THOR_SCSI_STD_MACHINE_ACCELERATOR_
 /*
