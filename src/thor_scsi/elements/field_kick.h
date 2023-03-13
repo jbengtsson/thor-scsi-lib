@@ -431,10 +431,17 @@ namespace thor_scsi::elements {
             return this->integ4O;
         }
 
+        /*
+         * radiation delegate part
+         */
+    public:
+        typedef thor_scsi::elements::RadiationDelegateKickKnobbed<thor_scsi::elements::FieldKickAPIKnobbed<C>> rad_del_t;
 
+    protected:
+        std::shared_ptr<rad_del_t> rad_del;
 
-
-		inline void setRadiationDelegate(std::shared_ptr<thor_scsi::elements::RadiationDelegateKick> p){
+    public:
+		inline void setRadiationDelegate(std::shared_ptr<rad_del_t> p){
 			this->rad_del = p;
 		}
 		inline auto getRadiationDelegate(void) const {
@@ -449,6 +456,7 @@ namespace thor_scsi::elements {
 			return this->rad_del.get();
 		}
 
+    public:
 		template<typename T>
 		inline void _synchrotronIntegralsInit(const thor_scsi::core::ConfigType &conf,  gtpsa::ss_vect<T> &ps){
 			if(this->computeSynchrotronIntegrals(conf)){
@@ -466,7 +474,6 @@ namespace thor_scsi::elements {
 			if(this->computeSynchrotronIntegrals(conf)){
 				auto obj = this->_getRadiationDelegate();
 				if(obj){
-
 					obj->view(*this, ps, thor_scsi::core::ObservedState::end, 0);
 				}
 			}
@@ -490,9 +497,6 @@ namespace thor_scsi::elements {
 		FieldKickForthOrder<C> integ4O;
 		int  Pmethod;                 ///< Integration Method.
 		bool Pthick;                  ///< Thick or thin element
-
-	protected:
-		std::shared_ptr<thor_scsi::elements::RadiationDelegateKick> rad_del;
 
 	};
 

@@ -2,9 +2,10 @@ include(../../cmake/gpp_warnings.cmake)
 
 add_subdirectory(core)
 
-# add_compile_definitions(
-#   GTSPA_ONLY_OPTIMISED_OPS
-#  )
+add_compile_definitions(
+  #   GTSPA_ONLY_OPTIMISED_OPS
+  SYNCHROTRON_INTEGRALS
+)
 
 if(FLAME_INTERNAL)
     set(flame_INCLUDE_DIR "${flame_SOURCE_DIR}/src/")

@@ -4,28 +4,31 @@
 #include <thor_scsi/elements/marker.h>
 #include <thor_scsi/core/exceptions.h>
 #include <sstream>
+#include <thor_scsi/core/multipole_types.h>
 
 namespace ts = thor_scsi;
 namespace tsc = thor_scsi::core;
 namespace tse = thor_scsi::elements;
 
 
+//template<class C>
 static tsc::p_elements_t
 vec_elem_type_to_cell_void
-(const std::vector<std::shared_ptr<thor_scsi::core::ElemType>>& elements)
+(const std::vector<std::shared_ptr<thor_scsi::core::ElemTypeKnobbed/*<C>*/>>& elements)
 {
   tsc::p_elements_t cells;
   cells.reserve(elements.size());
   /* order needs to be preserved */
   std::transform(elements.begin(), elements.end(), std::back_inserter(cells),
-		 [](std::shared_ptr<thor_scsi::core::ElemType> elem)
+		 [](std::shared_ptr<thor_scsi::core::ElemTypeKnobbed/*<C>*/> elem)
 		     { return std::dynamic_pointer_cast<tsc::CellVoid>(elem) ; }
       );
   return cells;
 
 }
 
-ts::Accelerator::Accelerator(const Config & conf, bool marker_at_start)
+template<class C>
+ts::AcceleratorKnobbable<C>::AcceleratorKnobbable(const Config & conf, bool marker_at_start)
   :tsc::Machine(conf)
 {
     if(marker_at_start){
@@ -34,16 +37,29 @@ ts::Accelerator::Accelerator(const Config & conf, bool marker_at_start)
 
 }
 
-ts::Accelerator::Accelerator
-(const std::vector<std::shared_ptr<thor_scsi::core::ElemType>>& elements, bool marker_at_start)
-  :tsc::Machine(vec_elem_type_to_cell_void(elements))
+
+template<class C>
+ts::AcceleratorKnobbable<C>::AcceleratorKnobbable
+(const std::vector<std::shared_ptr<thor_scsi::core::ElemTypeKnobbed>>& elements, bool marker_at_start)
+    :tsc::Machine(vec_elem_type_to_cell_void(elements))
 {
     if(marker_at_start){
 	this->addMarkerAtStartIfRequired();
     }
 }
 
-void ts::Accelerator::addMarkerAtStart(void)
+template<class C>
+ts::AcceleratorKnobbable<C>::AcceleratorKnobbable
+(std::vector<std::shared_ptr<thor_scsi::core::CellVoid>>& elements, bool marker_at_start)
+    : tsc::Machine(elements)
+{
+    if(marker_at_start){
+	this->addMarkerAtStartIfRequired();
+    }
+}
+
+template<class CTypes>
+void ts::AcceleratorKnobbable<CTypes>::addMarkerAtStart(void)
 {
     Config C;
     C.setAny("name", "Start");
@@ -57,7 +73,8 @@ void ts::Accelerator::addMarkerAtStart(void)
     this->updateElementList(elements);
 }
 
-void ts::Accelerator::addMarkerAtStartIfRequired(void)
+template<class C>
+void ts::AcceleratorKnobbable<C>::addMarkerAtStartIfRequired(void)
 {
     auto cv = this->at(0);
     auto elem = std::dynamic_pointer_cast<tsc::ElemType>(cv);
@@ -79,9 +96,10 @@ void ts::Accelerator::addMarkerAtStartIfRequired(void)
     this->addMarkerAtStart();
 }
 
+template<class C>
 template<typename T>
 int
-ts::Accelerator::_propagate(thor_scsi::core::ConfigType& conf, gtpsa::ss_vect<T> &ps, size_t start_elem, int max_elements, size_t n_turns,  bool tracy_compatible_indexing)// const
+ts::AcceleratorKnobbable<C>::_propagate(thor_scsi::core::ConfigType& conf, gtpsa::ss_vect<T> &ps, size_t start_elem, int max_elements, size_t n_turns,  bool tracy_compatible_indexing)// const
 {
 
 	/* I guess Tobin would complain about this extra complexity */
@@ -115,11 +133,11 @@ ts::Accelerator::_propagate(thor_scsi::core::ConfigType& conf, gtpsa::ss_vect<T>
 		size_t n = next_elem;
 
 		std::shared_ptr<tsc::CellVoid> cv = this->at(n);
-		auto elem = std::dynamic_pointer_cast<tsc::ElemType>(cv);
+		auto elem = std::dynamic_pointer_cast<tsc::ElemTypeKnobbed/*<C>*/>(cv);
 		if(!elem){
 		    // Should raise an exception!
 		    THOR_SCSI_LOG(ERROR)
-			<< "Failed to cast to element to Elemtype " << cv->name << "\n";
+			<< "Failed to cast to element to ElemtypeKnobbed " << cv->name << "\n";
 		    std::runtime_error("Could not cast cell void to elemtype");
 		    return next_elem;
 		}
@@ -130,7 +148,7 @@ ts::Accelerator::_propagate(thor_scsi::core::ConfigType& conf, gtpsa::ss_vect<T>
 		}
 		std::shared_ptr<tsc::Observer> observer = elem->observer();
 		if(observer){
-			observer->view(std::const_pointer_cast<tsc::ElemType>(elem), ps, tsc::ObservedState::start, 0);
+			observer->view(std::const_pointer_cast<tsc::ElemTypeKnobbed/*<C>*/>(elem), ps, tsc::ObservedState::start, 0);
 		}
 		elem->propagate(conf, ps);
 		if(observer){
@@ -166,8 +184,9 @@ ts::Accelerator::_propagate(thor_scsi::core::ConfigType& conf, gtpsa::ss_vect<T>
 }
 
 
+template<class C>
 int
-ts::Accelerator::
+ts::AcceleratorKnobbable<C>::
 propagate(thor_scsi::core::ConfigType& conf, ss_vect_dbl  &ps, size_t start,
 	  int max_elements, size_t n_turns, bool tracy_compatible_indexing)// const
 {
@@ -176,17 +195,45 @@ propagate(thor_scsi::core::ConfigType& conf, ss_vect_dbl  &ps, size_t start,
 
 /*
 int
-ts::Accelerator::
+ts::AcceleratorKnobbable::
 propagate(thor_scsi::core::ConfigType& conf, ss_vect_tps  &ps, size_t start,
 	  int max_elements, size_t n_turns, bool tracy_compatible_indexing)// const
 {
     return _propagate(conf, ps, start, max_elements, n_turns, tracy_compatible_indexing);
 }
 */
+template<class C>
 int
-ts::Accelerator::
+ts::AcceleratorKnobbable<C>::
 propagate(thor_scsi::core::ConfigType& conf, ss_vect_tpsa &ps, size_t start,
 	  int max_elements, size_t n_turns,  bool tracy_compatible_indexing)// const
 {
     return _propagate(conf, ps, start, max_elements, n_turns, tracy_compatible_indexing);
 }
+
+template ts::AcceleratorKnobbable<tsc::StandardDoubleType>::AcceleratorKnobbable(const Config &conf, bool add_marker_at_start);
+template ts::AcceleratorKnobbable<tsc::TpsaVariantType>::AcceleratorKnobbable(const Config &conf, bool add_marker_at_start);
+template ts::AcceleratorKnobbable<tsc::StandardDoubleType>::
+AcceleratorKnobbable(std::vector<std::shared_ptr<thor_scsi::core::CellVoid>>& elements, bool add_marker_at_start);
+template ts::AcceleratorKnobbable<tsc::TpsaVariantType>::
+AcceleratorKnobbable(std::vector<std::shared_ptr<thor_scsi::core::CellVoid>>& elements, bool add_marker_at_start);
+template ts::AcceleratorKnobbable<tsc::StandardDoubleType>::
+AcceleratorKnobbable(const std::vector<std::shared_ptr<thor_scsi::core::ElemTypeKnobbed>>& elements, bool add_marker_at_start);
+template ts::AcceleratorKnobbable<tsc::TpsaVariantType>::
+AcceleratorKnobbable(const std::vector<std::shared_ptr<thor_scsi::core::ElemTypeKnobbed>>& elements, bool add_marker_at_start);
+template void ts::AcceleratorKnobbable<tsc::TpsaVariantType>::addMarkerAtStart(void);
+template void ts::AcceleratorKnobbable<tsc::StandardDoubleType>::addMarkerAtStart(void);
+
+template
+int ts::AcceleratorKnobbable<tsc::StandardDoubleType>::propagate(thor_scsi::core::ConfigType&, ss_vect_tpsa &ps,
+              size_t start, int max_elements, size_t n_turns, bool tracy_compatible_indexing);
+template
+int ts::AcceleratorKnobbable<tsc::StandardDoubleType>::propagate(thor_scsi::core::ConfigType&, ss_vect_dbl  &ps,
+              size_t start, int max_elements, size_t n_turns, bool tracy_compatible_indexing);
+
+template
+int ts::AcceleratorKnobbable<tsc::TpsaVariantType>::propagate(thor_scsi::core::ConfigType&, ss_vect_tpsa &ps,
+              size_t start, int max_elements, size_t n_turns, bool tracy_compatible_indexing);
+template
+int ts::AcceleratorKnobbable<tsc::TpsaVariantType>::propagate(thor_scsi::core::ConfigType&, ss_vect_dbl  &ps,
+              size_t start, int max_elements, size_t n_turns, bool tracy_compatible_indexing);

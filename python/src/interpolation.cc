@@ -281,11 +281,17 @@ void py_thor_scsi_init_field_interpolation(py::module &m) {
 
 		py::class_<tsc::TwoDimensionalMultipolesTpsa, std::shared_ptr<tsc::TwoDimensionalMultipolesTpsa>>
 		    multipoles_tpsa(m, "TwoDimensionalMultipolesTpsa", multipoles_tpsa_base //, py::buffer_protocol()
-	    );
-	    add_methods_multipoles<tsc::TpsaVariantType, tsc::TwoDimensionalMultipolesTpsa>(multipoles_tpsa);
-	    multipoles_tpsa
+			);
+		add_methods_multipoles<tsc::TpsaVariantType, tsc::TwoDimensionalMultipolesTpsa>(multipoles_tpsa);
+		multipoles_tpsa
 		    .def(py::init<const std::complex<double>, const unsigned int>(), "initalise multipoles",
 			 py::arg("default_value"), py::arg("h_max") = tsc::max_multipole)
+		    /*
+		    // shall one return a list of base objects ?
+		    .def("get_multipole",  [](tsc::TwoDimensionalMultipolesTpsa& inst, const unsigned int n)
+			{ auto obj = inst.getMultipole(n); }
+			)
+		    */
 		    ;
 
 

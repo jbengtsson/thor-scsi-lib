@@ -9,6 +9,7 @@
 /* required for parameter study */
 using gtpsa::sin;
 using gtpsa::cos;
+// using gtpsa::atan2;
 
 /*
  * Should I separate the coefficients from the implementation ...
