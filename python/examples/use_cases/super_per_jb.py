@@ -483,6 +483,7 @@ t_dir = os.path.join(os.environ["HOME"], "Nextcloud", "thor_scsi", "JB")
 # t_file = os.path.join(t_dir, 'b3_tst.lat')
 # t_file = os.path.join(t_dir, "b3_sf_40Grad_JB.lat")
 # t_file = os.path.join(t_dir, "b3_sfsf_4Quads_unitcell.lat")
+# t_file = os.path.join(t_dir, "b3_sfsf4Q_tracy_jb.lat")
 t_file = os.path.join(t_dir, "b3_sfsf4Q_tracy_jb_2.lat")
 
 # Read in & parse lattice file.
@@ -495,7 +496,7 @@ n_dof = 2
 model_state.radiation = False
 model_state.Cavity_on = False
 
-if not False:
+if False:
     # Set RF cavity phase for negative alpha_c.
     cav = lat.find("cav", 0)
     cav.set_phase(180.0)

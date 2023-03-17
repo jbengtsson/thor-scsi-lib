@@ -27,6 +27,10 @@ int main(int argc, char *argv[])
 
 	std::cout << "after sextupole" << ps << std::endl;
 
+	for (int i = 0; i < ps.size(); i++) {
+	  ps[i].print();
+	}
+
 	auto lie_factors =  gtpsa::M_to_h_DF(ps);
 	std::cout << "lie factors" << lie_factors << std::endl;
 
