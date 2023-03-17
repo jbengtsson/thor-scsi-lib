@@ -39,7 +39,7 @@ void tse::CavityType::_localPropagate(tsc::ConfigType &conf, gtpsa::ss_vect<T> &
 		auto energy = conf.Energy;
 		if(!std::isfinite(energy)){
 			throw std::runtime_error(
-				"Energy is not NaN and cavity calculation requested");
+				"Energy is NaN and cavity calculation requested");
 		}
 		// if(np.finite(energy))
 		const T delta = - this->Pvolt / (energy)

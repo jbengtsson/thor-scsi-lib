@@ -81,8 +81,9 @@ template<class FC>
 template<typename T>
 inline void tse::RadiationDelegateKickKnobbed<FC>::synchrotronIntegralsFinish(const FC &kick, const gtpsa::ss_vect<T> &ps)
 {
-       throw std::runtime_error("synchrotron integral steps need to be implemented ");
 #if 0
+       throw std::runtime_error("synchrotron integral steps need to be implemented ");
+#else
 	// Why only when cavities are not on ?
 	// Needs A^-1.
 	const T x = ps[x_], y = ps[y_];
@@ -92,7 +93,7 @@ inline void tse::RadiationDelegateKickKnobbed<FC>::synchrotronIntegralsFinish(co
 	const double Pirho = kick.getCurvature();
 	const auto PN = kick.getNumberOfIntegrationSteps();
 	this->curly_dH_x /= 6e0*PN;
-	this->dI[1] += PL*is_tps<tps>::get_dI_eta(ps)*Pirho;
+	this->dI[1] += PL * get_dI_eta(ps) * Pirho;
 	this->dI[2] += PL*sqr(Pirho);
 	this->dI[3] += PL*fabs(tse::cube(Pirho));
 	this->dI[4] *=
@@ -396,21 +397,21 @@ void tse::RadiationDelegateKickKnobbed<FC>::radiate(const thor_scsi::core::Confi
 template<class FC>
 void tse::RadiationDelegateKickKnobbed<FC>::view(const FC& kick, const gtpsa::ss_vect<double> &ps, const enum tsc::ObservedState state, const int cnt)
 {
-	std::cout<< "Rad Del.view(gtpsa::ss_vect<double>) for element " << kick.name << "at index" << kick.index << std::endl;
+   std::cout<< "Rad Del.view(gtpsa::ss_vect<double>) for element " << kick.name << "at index" << kick.index << std::endl;
 	_view(kick, ps, state, cnt);
 }
 
 /*
 void tse::RadiationDelegateKick::view(const FieldKickAPI& kick, const gtpsa::ss_vect<tps> &ps, const enum ObservedState state, const int cnt)
 {
-	std::cout<< "Rad Del.view(gtpsa::ss_vect<tps>) for element " << kick.name << "at index" << kick.index << std::endl;
+	// std::cout<< "Rad Del.view(gtpsa::ss_vect<tps>) for element " << kick.name << "at index" << kick.index << std::endl;
 	_view(kick, ps, state, cnt);
 }
 */
 template<class FC>
 void tse::RadiationDelegateKickKnobbed<FC>::view(const FC& kick, const gtpsa::ss_vect<gtpsa::tpsa> &ps, const enum tsc::ObservedState state, const int cnt)
 {
-	std::cout<< "Rad Del.view(gtpsa::ss_vect<gtpa::tpsa>) for element " << kick.name << "at index" << kick.index << std::endl;
+   std::cout<< "Rad Del.view(gtpsa::ss_vect<gtpa::tpsa>) for element " << kick.name << "at index" << kick.index << std::endl;
 	_view(kick, ps, state, cnt);
 }
 
