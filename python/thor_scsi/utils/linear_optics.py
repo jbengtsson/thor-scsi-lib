@@ -589,7 +589,7 @@ def compute_Twiss_along_lattice(
     indices = [elem.index for elem in acc]
     tps_tmp = [_extract_tps(elem) for elem in acc]
     data = [tps2twiss(t) for t in tps_tmp]
-    print(type(tps_tmp), type(tps_tmp[0]))
+    # print(type(tps_tmp), type(tps_tmp[0]))
     tps_tmp = np.array(tps_tmp, dtype=object)
     twiss_pars = [d[1] for d in data]
     disp = [d[0] for d in data]
