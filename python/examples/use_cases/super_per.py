@@ -43,6 +43,7 @@ from thor_scsi.utils import linear_optics as lo, courant_snyder as cs, \
 
 # from thor_scsi.utils.phase_space_vector import map2numpy
 from thor_scsi.utils.output import prt2txt, mat2txt, vec2txt
+import thor_scsi.utils.accelerator
 
 tpsa_order = 2
 
@@ -475,6 +476,28 @@ n_dof = 2
 model_state.radiation = False
 model_state.Cavity_on = False
 
+
+energy = 2.5e9
+rad_del_kicks = thor_scsi.utils.accelerator.instrument_with_radiators(lat, energy=energy)
+
+model_state_test = tslib.ConfigType()
+model_state_test.Energy = energy
+model_state_test.radiation = True
+model_state_test.Cavity_on = True
+model_state_test.emittance = True
+
+ps = gtpsa.ss_vect_tpsa(desc, 2)
+ps.set_identity()
+ps[0] += 1e-6
+lat.propagate(model_state_test, ps)
+for cnt,rk in enumerate(rad_del_kicks):
+    dI = rk.get_synchrotron_integrals_increments()
+    print("synchrotron integrals", rk, dI)
+    if cnt > 10:
+        break
+
+assert(0)
+
 if False:
     print(compute_phi(lat))
     set_phi_elem(lat, "br", 0, -0.20)
@@ -498,7 +521,7 @@ M = lo.compute_map(lat, model_state, desc=desc, tpsa_order=tpsa_order)
 stable, nu, xi = lo.compute_nu_xi(desc, tpsa_order, M)
 # Compute radiation properties.
 stable, U_0, J, tau, eps = \
-    rad.compute_radiation(lat, model_state, 2.5e9, 1e-15, desc=desc)
+    rad.compute_radiation(lat, model_state, energy, 1e-15, desc=desc)
 
 C = rad.compute_circ(lat)
 
