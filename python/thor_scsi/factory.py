@@ -31,14 +31,14 @@ def parse_config_file(file_name: str, t_dir=None) -> Config:
 
 
 def accelerator_from_config(
-    filename: str, add_marker_at_start: bool = False
+    filename: str, add_marker_at_start: bool = False, accelerator=Accelerator
 ) -> Accelerator:
     """Create an accelerator object from configuration file
 
     Reads configuration and returns accelerator object
     """
     C = parse_config_file(filename)
-    acc = Accelerator(C, add_marker_at_start=add_marker_at_start)
+    acc = accelerator(C, add_marker_at_start=add_marker_at_start)
     return acc
 
 

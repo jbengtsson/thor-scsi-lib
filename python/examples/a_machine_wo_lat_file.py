@@ -1,7 +1,15 @@
 import thor_scsi
 from thor_scsi.pyflame import Config
-from thor_scsi.lib import Accelerator
+from thor_scsi.lib import Accelerator, AcceleratorTpsa
 from thor_scsi.lib import Bending, Cavity, Drift, Marker, Quadrupole
+from thor_scsi.lib import BendingTpsa, DriftTpsa, QuadrupoleTpsa
+import gtpsa
+
+use_tpsa = True
+if use_tpsa:
+    Bending = BendingTpsa
+    Drift =  DriftTpsa
+    Quadrupole = QuadrupoleTpsa
 
 # Transcript of TME lattice
 Energy = 3e9
@@ -38,7 +46,15 @@ config.setAny("L", 3.02934)
 d3 = Drift(config)
 
 elems = [start, d3, cav]
+elems = [start, d3, cav]
 
-acc = Accelerator(elems)
+if use_tpsa:
+    acc = AcceleratorTpsa(elems)
+else:
+    acc = Accelerator(elems)
+
 for e in acc:
     print(e)
+
+
+gtpsa
