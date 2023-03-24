@@ -78,8 +78,10 @@ def plt_Twiss(ds, file_name, title):
     gr_1.set_title(title)
     gr_1.set_xlabel("s [m]")
     gr_1.set_ylabel(r"$\beta_{x,y}$ [m]")
-    gr_1.plot(ds.s, ds.twiss.sel(plane="x", par="beta"), "b-", label=r"$\beta_x$")
-    gr_1.plot(ds.s, ds.twiss.sel(plane="y", par="beta"), "r-", label=r"$\beta_y$")
+    gr_1.plot(ds.s, ds.twiss.sel(plane="x", par="beta"), "b-",
+              label=r"$\beta_x$")
+    gr_1.plot(ds.s, ds.twiss.sel(plane="y", par="beta"), "r-",
+              label=r"$\beta_y$")
     gr_1.legend()
 
     gr_2.set_xlabel("s [m]")
