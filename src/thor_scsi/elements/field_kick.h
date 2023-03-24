@@ -403,7 +403,6 @@ namespace thor_scsi::elements {
 		}
 
 	  public:
-
 		double
 		Pbending_angle = 0e0,                     ///<  Todo: Already defined or combination of PTx1 and PTx2?
 			PTx1 = 0e0,                      ///<  Bend angle [deg]:  hor. entrance angle
@@ -411,17 +410,8 @@ namespace thor_scsi::elements {
 			Pgap = 0e0;                      ///< Total magnet gap [m].
 
 		/*
-		 * see :any:`isThick` or :any:`asThick` for a descriptio
+		 * see :any:`isThick` or :any:`asThick` for a description
 		 */
-		std::vector< std::vector<double> >
-		M_elem                     ///< Transport matrix & orbit.
-			{{0e0, 0e0, 0e0, 0e0, 0e0, 0e0, 0e0},
-			 {0e0, 0e0, 0e0, 0e0, 0e0, 0e0, 0e0},
-			 {0e0, 0e0, 0e0, 0e0, 0e0, 0e0, 0e0},
-			 {0e0, 0e0, 0e0, 0e0, 0e0, 0e0, 0e0},
-			 {0e0, 0e0, 0e0, 0e0, 0e0, 0e0, 0e0},
-			 {0e0, 0e0, 0e0, 0e0, 0e0, 0e0, 0e0}};
-
     public:
         /**
          *

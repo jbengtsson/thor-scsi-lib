@@ -483,20 +483,17 @@ rad_del_kicks = thor_scsi.utils.accelerator.instrument_with_radiators(lat, energ
 model_state_test = tslib.ConfigType()
 model_state_test.Energy = energy
 model_state_test.radiation = True
-model_state_test.Cavity_on = True
+model_state_test.Cavity_on = False
 model_state_test.emittance = True
 
 ps = gtpsa.ss_vect_tpsa(desc, 2)
 ps.set_identity()
 ps[0] += 1e-6
 lat.propagate(model_state_test, ps)
-for cnt,rk in enumerate(rad_del_kicks):
-    dI = rk.get_synchrotron_integrals_increments()
-    print("synchrotron integrals", rk, dI)
-    if cnt > 10:
-        break
 
-assert(0)
+dI = [rk.get_synchrotron_integrals_increments() for rk in rad_del_kicks]
+synchotron_integrals = np.sum(dI, axis=0)
+print(synchotron_integrals)
 
 if False:
     print(compute_phi(lat))
