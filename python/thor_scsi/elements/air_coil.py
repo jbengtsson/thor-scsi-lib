@@ -53,21 +53,27 @@ class AirCoilMagneticField(tslib.Field2DInterpolation):
         pos0 = np.array([self.positions.real, self.positions.imag])
         dpos = pos[:, np.newaxis] - pos0
 
-        # Compute distance to different points
-        dpos * dpos
-        dz = dpos
-        r = np.absolute(dz)
-        phi = np.angle(dz)
-        Bphi = self.precomp * 1 / r
+        # Compute distance to different points .. in complex plane
+        if False:
+            dz = dpos[0, :] + dpos[1, :] * 1j
+            r = np.absolute(dz)
+            phi = np.angle(dz)
+            Bphi = self.precomp * 1 / r
+            # Bphi 90 degree to radius vector
+            B = Bphi * np.exp((phi + np.pi / 2) * 1j)
+            B = B.sum()
+            field[0] = B.imag
+            field[1] = B.real
 
-        # Bphi 90 degree to radius vector
-        B = Bphi * np.exp((phi + np.pi / 2) * 1j)
-        B = B.sum()
+        else:
+            r2 = np.sum(dpos**2, axis=0)
+            B = self.precomp * 1/r2 * dpos
+            B = np.sum(B, axis=1)
+            field[0] = B[0]
+            field[1] = B[1]
 
-        field[0] = B.imag
-        field[1] = B.real
         logger.debug(
-            "%s: pos %s -> field %s <- %s", self.__class__.__name__, pos, field, B
+            "%s: pos %s -> field %s", self.__class__.__name__, pos, field
         )
 
     def gradient_py(self, pos, gradient):
@@ -123,8 +129,9 @@ class NonlinearKickerField(AirCoilMagneticField):
                 -pos,
             ]
         )
-        currents = np.array([current] * len(positions))
-        currents *= [1, -1, -1, 1]
+        polarity = np.array([1, -1, -1, 1])
+        polarity = np.array([1,  1,  1, 1])
+        currents = polarity * current
         AirCoilMagneticField.__init__(self, positions=positions, currents=currents)
 
 

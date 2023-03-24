@@ -6,10 +6,10 @@ import matplotlib.pyplot as plt
 from numpy import fft
 
 
-def plot_field():
-    ref_pos = 20e-3 + 10e-3j
-    t_current = 7e2
+ref_pos = 16.4e-3/2 + 25e-3j
+t_current = 7e2
 
+def plot_field(fignum=10):
     nlkf = NonlinearKickerField(position=ref_pos, current=t_current)
     left = AirCoilMagneticField(
         positions=np.array([ref_pos, ref_pos.conjugate()]),
@@ -20,11 +20,11 @@ def plot_field():
         currents=np.array([t_current, -t_current]),
     )
 
-    x = np.linspace(-30e-3, 30e-3, num=300)
+    x = np.linspace(-40e-3, 40e-3, num=300)
     pos = np.zeros([len(x), 2], dtype=np.float)
     pos[:, 0] = x
 
-    fig, axes = plt.subplots(1, 2, sharex=True, sharey=True)
+    fig, axes = plt.subplots(1, 2, sharex=True, sharey=True, num=fignum)
     ax_x, ax_y = axes
 
     B = np.zeros([len(x), 2], dtype=np.float)
@@ -42,22 +42,19 @@ def plot_field():
     B = np.zeros([len(x), 2], dtype=np.float)
     [left.field_py(tp, tB) for tp, tB in zip(pos, B)]
     B = B * 1e3
-    ax_x.plot(xs, B[:, 0], "--", label="left")
-    ax_y.plot(xs, B[:, 1], "--", label="left")
+    # ax_x.plot(xs, B[:, 0], "--", label="left")
+    # ax_y.plot(xs, B[:, 1], "--", label="left")
 
     B = np.zeros([len(x), 2], dtype=np.float)
     [right.field_py(tp, tB) for tp, tB in zip(pos, B)]
     B = B * 1e3
-    ax_x.plot(xs, B[:, 0], "-.", label="right")
-    ax_y.plot(xs, B[:, 1], "-.", label="right")
+    # ax_x.plot(xs, B[:, 0], "-.", label="right")
+    # ax_y.plot(xs, B[:, 1], "-.", label="right")
 
     fig.savefig("nlk_field_x.pdf")
 
 
 def plot_field_circle(fignum=None):
-    ref_pos = 20e-3 + 10e-3j
-    t_current = 7e2
-
     a = 30e-3
     b = 6e-3
 
