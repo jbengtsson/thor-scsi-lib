@@ -64,12 +64,20 @@ set(thor_scsi_element_HEADERS
   # Or should that already be a util ...
   elements/standard_observer.h
   elements/standard_aperture.h
+
+  # need g
+  )
+
+set(thor_scsi_customs_HEADERS
+  customs/aircoil_interpolation.h
+  customs/nonlinear_kicker_interpolation.h
   )
 
 set(thor_scsi_std_machine_HEADERS
   std_machine/std_machine.h
   std_machine/accelerator.h
-)
+  )
+
 set(thor_scsi_core_FILES
   core/transform.cc
   core/cell_void.cc
@@ -94,9 +102,13 @@ set(thor_scsi_core_FILES
   elements/standard_aperture.cc
   std_machine/std_machine.cc
   std_machine/accelerator.cc
+
+  custom/aircoil_interpolation.cc
+  custom/nonlinear_kicker_interpolation.cc
+
   # to be removed as soon as tps is removed ...
   ss_vect_tps.cc
-        core/multipole_types.h)
+  )
 
 add_library(thor_scsi_core SHARED
   ${thor_scsi_core_FILES}
@@ -219,6 +231,7 @@ add_test(transform_phase_space test_transform_phase_space)
 add_subdirectory(elements)
 add_subdirectory(std_machine)
 add_subdirectory(examples)
+add_subdirectory(custom)
 
 # ---- install helpers --
 

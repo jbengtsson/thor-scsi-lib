@@ -3,6 +3,7 @@
 #include <pybind11/numpy.h>
 #include <pybind11/operators.h>
 #include <pybind11/stl.h>
+#include <pybind11/pytypes.h>
 #include <thor_scsi/core/field_interpolation.h>
 #include <thor_scsi/core/multipoles.h>
 #include <complex>
@@ -12,6 +13,10 @@ namespace tsc = thor_scsi::core;
 
 typedef std::complex<double> cdbl;
 typedef std::complex<double> cdbl_intern;
+
+#include <thor_scsi/custom/aircoil_interpolation.h>
+#include <thor_scsi/custom/nonlinear_kicker_interpolation.h>
+namespace tsu = thor_scsi::custom;
 
 template<class C>
 class PyField2DInterpolation: public tsc::Field2DInterpolationKnobbed<C> {
@@ -157,6 +162,25 @@ void add_methods_multipoles(py::class_<Class> t_mapper)
 		;
 }
 
+
+static const std::vector<tsu::aircoil_filament_t>
+aircoil_filaments_from_array(const py::array_t<tsu::aircoil_filament_t>& input)
+{
+    std::vector<tsu::aircoil_filament_t> filaments;
+    filaments.reserve(input.size());
+
+    py::buffer_info buf = input.request();
+
+    if (buf.ndim != 1)
+        throw std::runtime_error("air coil filaments array: number of dimensions must be one");
+
+    const auto *ptr = static_cast<tsu::aircoil_filament_t *>(buf.ptr);
+    for (size_t idx = 0; idx < size_t(buf.shape[0]); ++idx){
+	filaments.push_back(ptr[idx]);
+    }
+    return filaments;
+}
+
 void py_thor_scsi_init_field_interpolation(py::module &m) {
 
 	py::class_<
@@ -282,17 +306,52 @@ void py_thor_scsi_init_field_interpolation(py::module &m) {
 		py::class_<tsc::TwoDimensionalMultipolesTpsa, std::shared_ptr<tsc::TwoDimensionalMultipolesTpsa>>
 		    multipoles_tpsa(m, "TwoDimensionalMultipolesTpsa", multipoles_tpsa_base //, py::buffer_protocol()
 			);
-		add_methods_multipoles<tsc::TpsaVariantType, tsc::TwoDimensionalMultipolesTpsa>(multipoles_tpsa);
+        multipoles_tpsa
+                .def("set_multipole",  [](tsc::TwoDimensionalMultipolesTpsa& inst, const unsigned int n, gtpsa::ctpsa& obj){
+                    inst.setMultipole(n, obj);
+                })
+                .def("set_multipole",  [](tsc::TwoDimensionalMultipolesTpsa& inst, const unsigned int n, std::complex<double>& obj){
+                    inst.setMultipole(n, obj);
+                })
+                ;
+        add_methods_multipoles<tsc::TpsaVariantType, tsc::TwoDimensionalMultipolesTpsa>(multipoles_tpsa);
 		multipoles_tpsa
 		    .def(py::init<const std::complex<double>, const unsigned int>(), "initalise multipoles",
 			 py::arg("default_value"), py::arg("h_max") = tsc::max_multipole)
-		    /*
 		    // shall one return a list of base objects ?
-		    .def("get_multipole",  [](tsc::TwoDimensionalMultipolesTpsa& inst, const unsigned int n)
-			{ auto obj = inst.getMultipole(n); }
+            /*
+		     .def("get_multipoles",  [](tsc::TwoDimensionalMultipolesTpsa& inst, const unsigned int n)
+			    { tsc::TwoDimensionalMultipolesTpsa obj = inst.getMultipole(n); return obj;}
 			)
-		    */
+             */
 		    ;
 
 
+	/* air coil magnets helpers */
+/* for communicating the field description		*/
+		PYBIND11_NUMPY_DTYPE(tsu::aircoil_filament_t, x, y, current);
+
+	py::class_<
+	    tsu:: AirCoilMagneticFieldKnobbed<tsc::StandardDoubleType>,
+	    std::shared_ptr<tsu:: AirCoilMagneticFieldKnobbed<tsc::StandardDoubleType>>
+	    >
+	    aircoil_magnetic_field(m, "AirCoilMagneticField", field2dintp //, py::buffer_protocol()
+		);
+	aircoil_magnetic_field
+	    .def("set_scale", &tsu::AirCoilMagneticFieldKnobbed<tsc::StandardDoubleType>::setScale)
+	    .def("get_scale", &tsu::AirCoilMagneticFieldKnobbed<tsc::StandardDoubleType>::getScale)
+	    .def(py::init([](py::array_t<tsu::aircoil_filament_t, py::array::c_style|py::array::forcecast>& a) {
+		return tsu::AirCoilMagneticField(aircoil_filaments_from_array(a));
+	    }) , "initalise with filaments (x, y, current)");
+
+	py::class_<
+	    tsu:: NonlinearKickerKnobbed<tsc::StandardDoubleType>,
+	    std::shared_ptr<tsu:: NonlinearKickerKnobbed<tsc::StandardDoubleType>>
+	    >
+	    nonlinear_kicker(m, "NonlinearKicker", aircoil_magnetic_field);
+
+	nonlinear_kicker
+	    .def(py::init([](py::array_t<tsu::aircoil_filament_t, py::array::c_style|py::array::forcecast>& a) {
+		return tsu::NonlinearKicker(aircoil_filaments_from_array(a));
+	    }), "initalise with filaments (x, y, current) of one quater");
 }

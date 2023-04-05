@@ -14,6 +14,7 @@ PYBIND11_MODULE(lib, m) {
 
     py_thor_scsi_init_tps(m);
     py_thor_scsi_init_field_interpolation(m);
+    py_thor_scsi_init_custom(m);
     py_thor_scsi_init_elements(m);
     py_thor_scsi_init_aperture(m);
     py_thor_scsi_init_radiation(m);
