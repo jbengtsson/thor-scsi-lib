@@ -226,9 +226,9 @@ static void compute_transport_matrix_prop(ts::Accelerator& accelerator, const in
 	ps[ct_]    = vm["ct"].as<double>();
 	ps[delta_] = vm["delta"].as<double>();
 
+#if 0
 	tps a_orig_tps;
 	gtpsa::ss_vect<tps> ps_orig(a_orig_tps);
-
 	ps_orig[x_]     = vm["x_pos"].as<double>();
 	ps_orig[px_]    = vm["px"].as<double>();
 	ps_orig[y_]     = vm["y_pos"].as<double>();
@@ -237,6 +237,7 @@ static void compute_transport_matrix_prop(ts::Accelerator& accelerator, const in
 	ps_orig[delta_] = vm["delta"].as<double>();
 
 	ps_orig.set_identity();
+#endif
 
 	tsc::ConfigType calc_config;
 
@@ -244,13 +245,13 @@ static void compute_transport_matrix_prop(ts::Accelerator& accelerator, const in
 		std::cout << "Starting poincare map computation with " << std::endl
 			  << "gtpsa::tpsa\n"
 			  << ps.toMatrix()
-			  << "tps\n"
-			  << ps_orig.toMatrix()
+			// << "tps\n"
+			// << ps_orig.toMatrix()
 			  << std::endl;
 		std::cout << "gtpsa::tpsa\n";
 		ps.show(std::cout, 10);
-		std::cout << std::endl << "tps\n";
-		ps_orig.show(std::cout, 10);
+		// std::cout << std::endl << "tps\n";
+		// ps_orig.show(std::cout, 10);
 	}
 	if(verbose){
 		std::cout << "Processing elements: from " << first_element << " to " << last_element << std::endl ;
@@ -303,7 +304,7 @@ static void compute_transport_matrix_prop(ts::Accelerator& accelerator, const in
 	}
 	*/
 	arma::mat pmap = ps.toMatrix();
-	arma::mat pmap_orig = ps_orig.toMatrix();
+	//arma::mat pmap_orig = ps_orig.toMatrix();
 
 	std::cout << "Computed poincare map " << std::endl;
 	if(very_verbose) {
