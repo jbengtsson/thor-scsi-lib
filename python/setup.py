@@ -104,6 +104,7 @@ ext_modules = [
                 "src/radiation.cc",
                 "src/tps.cc",
                 "src/thor_scsi.cc",
+                "src/custom.cc"
             ]
         ),
         # Required for MacBook llvm C++ compiler.
