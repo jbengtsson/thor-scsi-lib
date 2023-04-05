@@ -247,6 +247,7 @@ message(STATUS "CMAKE install Dirs  lib: '${CMAKE_INSTALL_LIBDIR}' bin '${CMAKE_
 install(FILES ${thor_scsi_core_HEADERS} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/thor_scsi/core/)
 install(FILES ${thor_scsi_element_HEADERS} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/thor_scsi/elements/)
 install(FILES ${thor_scsi_std_machine_HEADERS} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/thor_scsi/std_machine/)
+install(FILES ${thor_scsi_custom_HEADERS} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/thor_scsi/custom/)
 install(TARGETS thor_scsi_core
         EXPORT thor_scsi_coreTargets
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
