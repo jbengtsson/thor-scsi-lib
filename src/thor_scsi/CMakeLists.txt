@@ -68,9 +68,9 @@ set(thor_scsi_element_HEADERS
   # need g
   )
 
-set(thor_scsi_customs_HEADERS
-  customs/aircoil_interpolation.h
-  customs/nonlinear_kicker_interpolation.h
+set(thor_scsi_custom_HEADERS
+  custom/aircoil_interpolation.h
+  custom/nonlinear_kicker_interpolation.h
   )
 
 set(thor_scsi_std_machine_HEADERS
