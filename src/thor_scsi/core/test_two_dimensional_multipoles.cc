@@ -7,6 +7,7 @@
 #include <tps/tps_type.h>
 #include <cmath>
 #include <array>
+#include <iostream>
 
 /* Second implemntation of .field method available? */
 // #define THOR_SCSI_PLANAR_MULTIPOLES_FIELD2

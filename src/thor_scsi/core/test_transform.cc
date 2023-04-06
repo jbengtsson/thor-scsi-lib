@@ -3,6 +3,7 @@
 #include <boost/test/unit_test.hpp>
 #include <thor_scsi/core/transform.h>
 #include <cmath>
+#include <iostream>
 
 namespace tsc = thor_scsi::core;
 
