@@ -64,9 +64,11 @@ set(thor_scsi_element_HEADERS
   # Or should that already be a util ...
   elements/standard_observer.h
   elements/standard_aperture.h
+
+  # need g
   )
 
-set(thor_scsi_element_HEADERS
+set(thor_scsi_custom_HEADERS
   custom/aircoil_interpolation.h
   custom/nonlinear_kicker_interpolation.h
   )
@@ -74,7 +76,8 @@ set(thor_scsi_element_HEADERS
 set(thor_scsi_std_machine_HEADERS
   std_machine/std_machine.h
   std_machine/accelerator.h
-)
+  )
+
 set(thor_scsi_core_FILES
   core/transform.cc
   core/cell_void.cc
@@ -105,7 +108,6 @@ set(thor_scsi_core_FILES
 
   # to be removed as soon as tps is removed ...
   ss_vect_tps.cc
-
   )
 
 add_library(thor_scsi_core SHARED
@@ -227,9 +229,9 @@ add_test(transform_phase_space test_transform_phase_space)
 
 
 add_subdirectory(elements)
-add_subdirectory(custom)
 add_subdirectory(std_machine)
 add_subdirectory(examples)
+add_subdirectory(custom)
 
 # ---- install helpers --
 
@@ -244,8 +246,8 @@ message(STATUS "CMAKE install Dirs  lib: '${CMAKE_INSTALL_LIBDIR}' bin '${CMAKE_
 
 install(FILES ${thor_scsi_core_HEADERS} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/thor_scsi/core/)
 install(FILES ${thor_scsi_element_HEADERS} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/thor_scsi/elements/)
-install(FILES ${thor_scsi_custom_HEADERS} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/thor_scsi/custom/)
 install(FILES ${thor_scsi_std_machine_HEADERS} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/thor_scsi/std_machine/)
+install(FILES ${thor_scsi_custom_HEADERS} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/thor_scsi/custom/)
 install(TARGETS thor_scsi_core
         EXPORT thor_scsi_coreTargets
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}

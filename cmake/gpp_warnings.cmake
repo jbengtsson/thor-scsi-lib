@@ -36,14 +36,15 @@ if(CMAKE_COMPILER_IS_GNUCXX)
    -Wmissing-declarations
   -Wno-error=unused-result
   -Wno-error=sign-compare
-  -Wno-error=vla -Wno-error=old-style-cast
+  # -Wno-error=vla
+  -Wno-error=old-style-cast
   -Wno-error=shadow
   -Wno-error=strict-overflow
   -Wno-error=sign-promo
   -Wno-error=format-nonliteral
   -Wno-error=switch-default
   # mad-ng uses it internally, I modified the header
-  -Wno-error=vla-parameter
+  #-Wno-error=vla-parameter
   # C++ implementation part
   # currently a lot of warnings on gtpsa variant implementation
   -Wno-error=noexcept
