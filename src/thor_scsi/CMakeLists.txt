@@ -71,6 +71,7 @@ set(thor_scsi_element_HEADERS
 set(thor_scsi_custom_HEADERS
   custom/aircoil_interpolation.h
   custom/nonlinear_kicker_interpolation.h
+  custom/nonlinear_kicker.h
   )
 
 set(thor_scsi_std_machine_HEADERS
@@ -105,6 +106,7 @@ set(thor_scsi_core_FILES
 
   custom/aircoil_interpolation.cc
   custom/nonlinear_kicker_interpolation.cc
+  custom/nonlinear_kicker.cc
 
   # to be removed as soon as tps is removed ...
   ss_vect_tps.cc

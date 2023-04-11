@@ -14,10 +14,12 @@
 #include <thor_scsi/elements/octupole.h>
 #include <thor_scsi/elements/corrector.h>
 #include <thor_scsi/elements/cavity.h>
+#include <thor_scsi/custom/nonlinear_kicker.h>
 
 
 namespace tse = thor_scsi::elements;
 namespace tsc = thor_scsi::core;
+namespace tsu = thor_scsi::custom;
 namespace py = pybind11;
 
 #warning "implement using cdbl properly (templating  elemtype  etc)"
@@ -259,6 +261,12 @@ struct TemplatedClasses
 			.def(py::init<const Config &>());
 
 
+		std::string nlk_name =  "NonLinearKicker" + this->m_suffix;
+		typedef tsu::NonLinearKickerTypeWithKnob<C> nlk;
+		py::class_<nlk, std::shared_ptr<nlk>>(this->m_module, nlk_name.c_str(), field_kick)
+			.def("get_field_interpolator", &nlk::getFieldInterpolator)
+			.def("set_field_interpolator", &nlk::setFieldInterpolator)
+			.def(py::init<const Config &>());
 		return elem_type;
 	}
 };

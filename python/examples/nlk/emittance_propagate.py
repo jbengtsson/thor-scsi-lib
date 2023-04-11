@@ -15,7 +15,7 @@ x_, px_ = 0, 2
 
 # t_file = Path(os.environ["HOME"]) / "Devel"/ "gitlab" / "dt4cc"/"lattices" / "b2_stduser_beamports_blm_tracy_corr.lat"
 t_dir =  Path(os.environ["HOME"]) / "Devel" / "gitlab" / "dt4acc" / "lattices"
-t_file = t_dir / "b2_stduser_beamports_blm_tracy_corr.lat"
+t_file = t_dir / "b2_stduser_beamports_blm_tracy_corr_with_nlk.lat"
 
 def create_nlk_interpolation(nlk_name):
     def compute_mirror_position_plate(ref_pos, mirror_pos, *, y_plane=True):
@@ -39,10 +39,10 @@ def create_nlk_interpolation(nlk_name):
     mirror_pos1 = compute_mirror_position_plate(ref_pos1, plate_position1)
     print(f"{ref_pos1*1e3=} {mirror_pos1*1e3}")
 
-    inner = (ref_pos1.real, ref_pos1.imag,  t_current)
-    outer = (ref_pos2.real, ref_pos2.imag, -t_current)
-    mirror = (mirror_pos1.real, mirror_pos1.imag, -t_current * 0.14)
-    nlkf_intp = tslib.NonlinearKicker([inner, outer, mirror])
+    inner = tslib.aircoil_filament(ref_pos1.real, ref_pos1.imag,  t_current)
+    outer = tslib.aircoil_filament(ref_pos2.real, ref_pos2.imag, -t_current)
+    mirror = tslib.aircoil_filament(mirror_pos1.real, mirror_pos1.imag, -t_current * 0.14)
+    nlkf_intp = tslib.NonLinearKickerInterpolation([inner, outer, mirror])
 
     c = Config()
     c.setAny("L", 0e0)
@@ -64,7 +64,8 @@ elem_names = [elem.name for elem in acc_orig]
 nlk_name = "pkdnl1kr"
 nlk_index = elem_names.index(nlk_name)
 nlk = acc_orig[nlk_index]
-
+print(nlk)
+nlk.get_field_interpolator().set_scale(1.0)
 
 nv = 6
 mo = 1
@@ -141,7 +142,6 @@ ps[x_] = t_x
 ps[px_] = t_px
 
 print(ps)
-sys.exit()
 ps_orig = ps.copy()
 print("setup\n", ps_orig)
 
@@ -149,6 +149,8 @@ nlkfk.propagate(calc_config, ps)
 print("nlkfk\n", ps)
 
 ps = ps_orig.copy()
+ps = gtpsa.ss_vect_tpsa(desc, mo, nv)
+ps.set_identity()
 acc.propagate(calc_config, ps)
 around_ring = ps.copy()
 
@@ -158,6 +160,8 @@ print(around_ring)
 ps = ps_orig.copy()
 # Set kicker off
 nlkf_intp.set_scale(0e0)
+ps = gtpsa.ss_vect_tpsa(desc, mo, nv)
+ps.set_identity()
 acc.propagate(calc_config, ps)
 print("maps: nlk off")
 print(ps)
@@ -165,6 +169,8 @@ print(ps)
 
 ps = ps_orig.copy()
 print(ps)
+ps = gtpsa.ss_vect_tpsa(desc, mo, nv)
+ps.set_identity()
 acc_orig.propagate(calc_config, ps)
 print("bessy ii standard machine")
 print(ps)

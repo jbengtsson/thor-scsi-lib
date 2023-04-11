@@ -15,17 +15,20 @@ namespace thor_scsi::custom {
     const std::vector<aircoil_filament_t> construct_aircoil_filaments(const std::vector<aircoil_filament_t>& filaments_one_quater);
 
     template<class C>
-    class NonlinearKickerKnobbed: public AirCoilMagneticFieldKnobbed<C>  {
+    class NonLinearKickerInterpolationKnobbed: public AirCoilMagneticFieldKnobbed<C>  {
 
     public:
-	NonlinearKickerKnobbed(const std::vector<aircoil_filament_t>& filaments_one_quater)
+	NonLinearKickerInterpolationKnobbed(const std::vector<aircoil_filament_t> filaments_one_quater)
 	    : AirCoilMagneticFieldKnobbed<C>(construct_aircoil_filaments(filaments_one_quater))
 	    {}
 
+	inline void setFilaments(const std::vector<aircoil_filament_t> filaments_one_quater) {
+        this->setFilaments(construct_aircoil_filaments(filaments_one_quater));
+    }
 	void show(std::ostream&, int level) const override;
     };
 
-    typedef  NonlinearKickerKnobbed<thor_scsi::core::StandardDoubleType> NonlinearKicker;
+    typedef  NonLinearKickerInterpolationKnobbed<thor_scsi::core::StandardDoubleType> NonLinearKickerInterpolation;
 } //namespace thor_scsi::custom
 
 #endif /* _THOR_SCSI_CUSTOM_NONLINEAR_KICKER_INTERPOLATION_H_ */

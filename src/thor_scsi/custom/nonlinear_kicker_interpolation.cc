@@ -24,12 +24,12 @@ const std::vector<tsu::aircoil_filament_t> tsu::construct_aircoil_filaments(
 
 
 template<class C>
-void tsu::NonlinearKickerKnobbed<C>::show(std::ostream& strm, int level) const
+void tsu::NonLinearKickerInterpolationKnobbed<C>::show(std::ostream& strm, int level) const
 {
-    strm << "NonlinearKickerKnobbed({ ";
+    strm << "NonLinearKickerInterpolationKnobbed({ ";
     tsu::AirCoilMagneticFieldKnobbed<C>::show(strm, level);
     strm << "})";
 }
 
-template void tsu::NonlinearKickerKnobbed<tsc::StandardDoubleType>::show(std::ostream& strm, int level) const;
-template void tsu::NonlinearKickerKnobbed<tsc::TpsaVariantType>::show(std::ostream& strm, int level) const;
+template void tsu::NonLinearKickerInterpolationKnobbed<tsc::StandardDoubleType>::show(std::ostream& strm, int level) const;
+template void tsu::NonLinearKickerInterpolationKnobbed<tsc::TpsaVariantType>::show(std::ostream& strm, int level) const;
