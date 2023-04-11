@@ -10,6 +10,7 @@ import thor_scsi.lib as tslib
 import numpy as np
 import gtpsa
 import os
+import copy
 
 x_, px_ = 0, 2
 
@@ -52,104 +53,73 @@ def create_nlk_interpolation(nlk_name):
     nlk.set_field_interpolator(nlkf_intp)
     return nlk, nlkf_intp
 
-# Setup function start
-print(f"Reading lattice file {t_file}")
-acc_orig = accelerator_from_config(t_file)
-calc_config = tslib.ConfigType()
-
-elem_names = [elem.name for elem in acc_orig]
-
-
-# thor scsi non linear kicker names
-nlk_name = "pkdnl1kr"
-nlk_index = elem_names.index(nlk_name)
-nlk = acc_orig[nlk_index]
-print(nlk)
-nlk.get_field_interpolator().set_scale(1.0)
-
 nv = 6
 mo = 1
-desc = gtpsa.desc(nv, 1)
-ps = gtpsa.ss_vect_tpsa(desc, mo, nv)
-ps.set_identity()
-print("bessy ii standard machine: start")
-print(ps)
-acc_orig.propagate(calc_config, ps)
-print("propagated\n", ps)
-print()
+default_desc = gtpsa.desc(nv, 1)
+emittance_start = 70e-9
+mu_x = 1e-3
+mu_px = 1e-4
 
-nlkfk, nlkf_intp = create_nlk_interpolation(nlk.name)
+def calulate_sigma_px(sigma_x, *, emittance=emittance_start):
+    sigma_px = np.sqrt(emittance ** 2 - sigma_x ** 2)
+    return sigma_px
+
+# 70 nm rad
+sigma_x = .25e-9
+sigma_px = calulate_sigma_px(sigma_x)
+
+def create_state_space_vector(*, mu_x=0e0, mu_px=0e0, desc=default_desc):
+    nv = 6
+    mo = 1
+    desc = gtpsa.desc(nv, 1)
+    ps = gtpsa.ss_vect_tpsa(desc, mo, nv)
+    ps.set_identity()
+
+    t_x = ps[x_]
+    t_x.set(0, mu_x)
+    t_px = ps[px_]
+    t_px.set(0, mu_px)
+    ps[x_] = t_x
+    ps[px_] = t_px
+    return ps
+
+# Setup function start
+print(f"Reading lattice file {t_file}")
+acc = accelerator_from_config(t_file)
+calc_config = tslib.ConfigType()
+
+
+
+ps = create_state_space_vector()
+print("bessy ii standard machine: with nlk off")
+print(ps)
+acc.propagate(calc_config, ps)
+print("propagated\n", ps, "\n")
+
+nlkfk = acc.find("pkdnl1kr", 0)
+nlk_name = nlkfk.name
+_, nlkf_intp = create_nlk_interpolation(nlk_name)
+nlkfk.set_field_interpolator(nlkf_intp)
 assert(nlkfk.name == nlk_name)
 # Use set_scale to set it to zero for any following turns ...
 nlkf_intp.set_scale(1.0)
 
-# place the thin kicker in the middle of the lattice
-C = Config()
-C.setAny("name", nlk_name + "_drift_upstream")
-C.setAny("L", nlk.get_length()/2.0)
-C_upstream = C
-C = Config()
-C.setAny("name", nlk_name + "_drift_downstream")
-C.setAny("L", nlk.get_length()/2.0)
-C_downstream = C
-del C
 
-# Split up the drift and insert the kicker in the middle of it
-nlkf_elements = [tslib.Drift(C_upstream), nlkfk, tslib.Drift(C_downstream)]
-print([repr(elem) for elem in nlkf_elements])
-# construct the non linear kicker
-print(nlk_name, nlk, nlk.get_length())
-
-# make elements a list, these are easier to manipulate with
-elements_orig = [elem for elem in acc_orig]
-print("Stopping before nlk?", elements_orig[:nlk_index][-1])
-print("Starting after  nlk?", elements_orig[nlk_index+1:][0])
-print("Elements around nlk", [elem.name for elem in elements_orig[nlk_index - 2: nlk_index + 2]])
-
-elements = elements_orig[:nlk_index] + nlkf_elements + elements_orig[nlk_index + 1:]
-elem_names = [elem.name for elem in elements]
-nlk_index = elem_names.index(nlk_name)
-
-# round the ring ...
-# do it twice once with the kicker on and once without it
-acc = tslib.Accelerator(elements)
-
-length_orig = np.sum([elem.get_length() for elem in acc_orig])
 length = np.sum([elem.get_length() for elem in acc])
-print(f"{length_orig=}, {length=}")
+print(f"{length=}")
 
 # print(" ".join(elem_names))
-mu_x = 1e-3
-mu_px = 1e-4
-
-# 70 nm rad
-emittance = 70e-9
-sigma_x = .25e-9
-sigma_px = np.sqrt(emittance**2 - sigma_x**2 )
 print(f"{sigma_x=} {sigma_px=}")
 
-nv = 6
-mo = 1
-desc = gtpsa.desc(nv, 1)
-ps = gtpsa.ss_vect_tpsa(desc, mo, nv)
-ps.set_identity()
 
-t_x  = ps[x_]
-t_x.set(0, mu_x)
-t_px = ps[px_]
-t_px.set(0, mu_px)
-ps[x_] = t_x
-ps[px_] = t_px
-
-print(ps)
-ps_orig = ps.copy()
+ps = create_state_space_vector()
+ps_orig = copy.copy(ps)
 print("setup\n", ps_orig)
 
 nlkfk.propagate(calc_config, ps)
 print("nlkfk\n", ps)
 
-ps = ps_orig.copy()
-ps = gtpsa.ss_vect_tpsa(desc, mo, nv)
+ps = create_state_space_vector()
 ps.set_identity()
 acc.propagate(calc_config, ps)
 around_ring = ps.copy()
@@ -157,21 +127,19 @@ around_ring = ps.copy()
 print("maps: nlk on")
 print(around_ring)
 
-ps = ps_orig.copy()
 # Set kicker off
 nlkf_intp.set_scale(0e0)
-ps = gtpsa.ss_vect_tpsa(desc, mo, nv)
+ps = create_state_space_vector()
 ps.set_identity()
 acc.propagate(calc_config, ps)
 print("maps: nlk off")
 print(ps)
 
 
-ps = ps_orig.copy()
-print(ps)
-ps = gtpsa.ss_vect_tpsa(desc, mo, nv)
-ps.set_identity()
-acc_orig.propagate(calc_config, ps)
+
+# print(ps)
+ps = create_state_space_vector()
+acc.propagate(calc_config, ps)
 print("bessy ii standard machine")
 print(ps)
 
