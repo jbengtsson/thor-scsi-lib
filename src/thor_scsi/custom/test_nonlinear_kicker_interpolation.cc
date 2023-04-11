@@ -3,6 +3,8 @@
 #include <boost/test/unit_test.hpp>
 
 #include <thor_scsi/custom/nonlinear_kicker_interpolation.h>
+#include <iostream>
+
 
 namespace tsc = thor_scsi::core;
 namespace tsu = thor_scsi::custom;
