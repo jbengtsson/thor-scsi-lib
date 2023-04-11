@@ -40,7 +40,7 @@ ts::AcceleratorKnobbable<C>::AcceleratorKnobbable(const Config & conf, bool mark
 
 template<class C>
 ts::AcceleratorKnobbable<C>::AcceleratorKnobbable
-(const std::vector<std::shared_ptr<thor_scsi::core::ElemTypeKnobbed>>& elements, bool marker_at_start)
+(const std::vector<std::shared_ptr<thor_scsi::core::ElemTypeKnobbed>> elements, bool marker_at_start)
     :tsc::Machine(vec_elem_type_to_cell_void(elements))
 {
     if(marker_at_start){
@@ -50,7 +50,7 @@ ts::AcceleratorKnobbable<C>::AcceleratorKnobbable
 
 template<class C>
 ts::AcceleratorKnobbable<C>::AcceleratorKnobbable
-(std::vector<std::shared_ptr<thor_scsi::core::CellVoid>>& elements, bool marker_at_start)
+(std::vector<std::shared_ptr<thor_scsi::core::CellVoid>> elements, bool marker_at_start)
     : tsc::Machine(elements)
 {
     if(marker_at_start){
@@ -214,13 +214,13 @@ propagate(thor_scsi::core::ConfigType& conf, ss_vect_tpsa &ps, size_t start,
 template ts::AcceleratorKnobbable<tsc::StandardDoubleType>::AcceleratorKnobbable(const Config &conf, bool add_marker_at_start);
 template ts::AcceleratorKnobbable<tsc::TpsaVariantType>::AcceleratorKnobbable(const Config &conf, bool add_marker_at_start);
 template ts::AcceleratorKnobbable<tsc::StandardDoubleType>::
-AcceleratorKnobbable(std::vector<std::shared_ptr<thor_scsi::core::CellVoid>>& elements, bool add_marker_at_start);
+AcceleratorKnobbable(std::vector<std::shared_ptr<thor_scsi::core::CellVoid>> elements, bool add_marker_at_start);
 template ts::AcceleratorKnobbable<tsc::TpsaVariantType>::
-AcceleratorKnobbable(std::vector<std::shared_ptr<thor_scsi::core::CellVoid>>& elements, bool add_marker_at_start);
+AcceleratorKnobbable(std::vector<std::shared_ptr<thor_scsi::core::CellVoid>> elements, bool add_marker_at_start);
 template ts::AcceleratorKnobbable<tsc::StandardDoubleType>::
-AcceleratorKnobbable(const std::vector<std::shared_ptr<thor_scsi::core::ElemTypeKnobbed>>& elements, bool add_marker_at_start);
+AcceleratorKnobbable(const std::vector<std::shared_ptr<thor_scsi::core::ElemTypeKnobbed>> elements, bool add_marker_at_start);
 template ts::AcceleratorKnobbable<tsc::TpsaVariantType>::
-AcceleratorKnobbable(const std::vector<std::shared_ptr<thor_scsi::core::ElemTypeKnobbed>>& elements, bool add_marker_at_start);
+AcceleratorKnobbable(const std::vector<std::shared_ptr<thor_scsi::core::ElemTypeKnobbed>> elements, bool add_marker_at_start);
 template void ts::AcceleratorKnobbable<tsc::TpsaVariantType>::addMarkerAtStart(void);
 template void ts::AcceleratorKnobbable<tsc::StandardDoubleType>::addMarkerAtStart(void);
 

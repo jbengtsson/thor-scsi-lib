@@ -50,10 +50,10 @@ namespace thor_scsi {
 		 */
 		/*
 		*/
-		AcceleratorKnobbable(std::vector<std::shared_ptr<thor_scsi::core::CellVoid>>& elements,
+		AcceleratorKnobbable(std::vector<std::shared_ptr<thor_scsi::core::CellVoid>> elements,
 				     bool add_marker_at_start=false);
 
-		AcceleratorKnobbable(const std::vector<std::shared_ptr<thor_scsi::core::ElemTypeKnobbed>>& elements,
+		AcceleratorKnobbable(const std::vector<std::shared_ptr<thor_scsi::core::ElemTypeKnobbed>> elements,
 				     bool add_marker_at_start=false);
 		/** @brief pass the given state through the machine
 		 *
