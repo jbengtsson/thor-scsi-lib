@@ -451,7 +451,7 @@ thinKickAndRadiate(const thor_scsi::core::ConfigType &conf,
 	// const auto x = ps[x_];
 	// const auto y = ps[y_];
         const gtpsa::ss_vect<T> ps0 = ps.clone();
-	T BxoBrho(ps[0]), ByoBrho(ps[0]);
+	T BxoBrho = gtpsa::same_as_instance(ps[0]), ByoBrho = gtpsa::same_as_instance(ps[2]);
 
 	//intp.field(ps[x_], ps[y_], &BxoBrho, &ByoBrho);
 	/*
@@ -459,7 +459,6 @@ thinKickAndRadiate(const thor_scsi::core::ConfigType &conf,
 		throw std::logic_error("Interpolation object not set!");
 	}
 	*/
-
 	// THOR_SCSI_LOG(DEBUG) << "\n  thinKickAndRadiate ->: ps = " << ps << "\n";
 
 	intp.field(ps[x_], ps[y_], &BxoBrho, &ByoBrho);
