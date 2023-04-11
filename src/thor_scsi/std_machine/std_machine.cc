@@ -8,10 +8,12 @@
 #include <thor_scsi/elements/cavity.h>
 #include <thor_scsi/elements/bending.h>
 #include <thor_scsi/elements/corrector.h>
+#include <thor_scsi/custom/nonlinear_kicker.h>
 
 namespace ts = thor_scsi;
 namespace tsc = thor_scsi::core;
 namespace tse = thor_scsi::elements;
+namespace tsu = thor_scsi::custom;
 
 int
 ts::register_elements(void)
@@ -26,6 +28,7 @@ ts::register_elements(void)
 	tsc::Machine::registerElement<tse::HorizontalSteererType>("HorizontalSteerer");
 	tsc::Machine::registerElement<tse::VerticalSteererType>("VerticalSteerer");
 	tsc::Machine::registerElement<tse::BendingType>("Bending");
+	tsc::Machine::registerElement<tsu::NonLinearKickerType>("NonLinearKicker");
 
 	// tsc::Machine::registerElement<tse::MpoleType>("mpole");
 	return 1;
