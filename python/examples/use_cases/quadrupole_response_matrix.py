@@ -27,17 +27,16 @@ po = 2
 default_desc = gtpsa.desc(nv=6, mo=mo, np=3, po=po)
 # default_desc = gtpsa.desc(nv=6, mo=3, np=144*3, po=1)
 
-t_file = (
-    Path(os.environ["HOME"])
-    / "Devel"
-    / "gitlab"
-    / "dt4acc"
-    / "lattices"
-    / "b2_stduser_beamports_blm_tracy_corr.lat"
-)
-
 
 def convert_quad(a_quad: Quadrupole):
+    """Make a quadrupole knobbable using tpsa
+
+    Args:
+        a_quad:
+
+    Returns:
+
+    """
     config = a_quad.config()
     quad_tpsa = QuadrupoleTpsa(config)
     return quad_tpsa
@@ -95,7 +94,6 @@ def make_quad_unknobbable(quad):
     return quad
 
 
-
 def response_of_one_quad(
     acc, quad, *, desc=default_desc, n_start=0, n_elements=2 ** 30, **kwargs
 ):
@@ -106,81 +104,6 @@ def response_of_one_quad(
     acc.propagate(calc_config, ps, n_start, n_elements)
     make_quad_unknobbable(quad)
     return ps
-
-
-print(f"Reading lattice file {t_file}")
-acc = accelerator_from_config(t_file)
-acc_tpsa = lattice_tpsa(acc)
-
-# assuming that the fixed point corresponds to 0, 0,
-# add observers before we propagate
-# select bpms
-n_start = 0
-n_elements = 2000
-
-compare_to_lattice_without_knobs = False
-if compare_to_lattice_without_knobs:
-    desc = default_desc
-    ps = gtpsa.ss_vect_tpsa(desc, mo, 6, named_index)
-    ps.set_identity()
-    calc_config = ConfigType()
-    # print(ps)
-    acc.propagate(calc_config, ps, n_start, n_elements)
-    # print(ps)
-    ps2 = copy.copy(ps)
-
-    print("tpsa")
-    ps.set_identity()
-    # print(ps)
-    acc_tpsa.propagate(calc_config, ps, n_start, n_elements)
-    # print(ps)
-
-    print("Difference ")
-    print(ps2 - ps)
-
-
-for elem in acc_tpsa:
-    if isinstance(elem, QuadrupoleTpsa):
-        print(elem.name, elem.index)
-        ps3 = response_of_one_quad(
-            acc_tpsa, elem, n_start=n_start, n_elements=n_elements
-        )
-        break
-
-print("#----------------------------------------------------------------------")
-print("Replaced quad")
-print("#----------------------------------------------------------------------")
-
-if compare_to_lattice_without_knobs:
-    np.set_printoptions(precision=3)
-    print(ps3)
-    print("Find difference")
-    print("cst", ps3.cst() - ps.cst())
-    print("ps\n", ps)
-    print("ps3\n", ps3)
-    jac = ps.jacobian()
-    jac3 = ps3.jacobian()
-    print("ps jac\n", jac)
-    print("ps3 jac\n\n", jac3)
-    n_jac = np.array(jac)
-    n_jac3 = np.array(jac3)
-    print("ps jac\n", n_jac)
-    print("ps3 jac\n\n", n_jac3)
-    nrows, ncols = jac.shape
-    jac3 = jac3[:nrows, :ncols]
-    djac = jac3 - jac
-    # djac =  (djac*1e6).astype(int) / 1e6
-    print("djac ps\n", djac[:6, :6])
-    print("djac knobs?\n", djac[:, 6:])
-    print("djac knobs?\n", djac[6:, :])
-    hes = ps.hessian()
-    hes = ps3.hessian()
-    nslices, nrows, ncols = hes.shape
-    # print(ps3.hessian()[:nslices, :nrows, :ncols] - hes)
-
-
-bpm_elems = [elem for elem in acc if isinstance(elem, tslib.BPM)]
-observers = instrument_with_standard_observers(bpm_elems, mapping=named_index)
 
 
 def combine_responses(observers: Sequence[tslib.StandardObserver]):
@@ -262,16 +185,7 @@ def compute_phase_advance(
     return phase_advance
 
 
-calc_config = ConfigType()
-acc_tpsa.propagate(calc_config, ps3)
-compute_phase_advance(ps3, ["x", "px"])
-response_one_quad = combine_responses(observers)
-print(response_one_quad.effect.sel(plane="x", dep="dx"))
-
-all_responses = []
-
-
-def process_one_quad(quad):
+def process_one_quad(quad, calc_config=tslib.ConfigType()):
     nps = response_of_one_quad(acc_tpsa, quad)
     acc_tpsa.propagate(calc_config, nps)
     response_one_quad = combine_responses(observers)
@@ -317,8 +231,27 @@ def process_one_quad(quad):
     )
 
     response_one_quad["phase_advance"] = phase_advance
-
     return response_one_quad
+
+
+t_file = (
+    Path(os.environ["HOME"])
+    / "Devel"
+    / "gitlab"
+    / "dt4acc"
+    / "lattices"
+    / "b2_stduser_beamports_blm_tracy_corr.lat"
+)
+
+print(f"Reading lattice file {t_file}")
+acc = accelerator_from_config(t_file)
+acc_tpsa = lattice_tpsa(acc)
+
+# assuming that the fixed point corresponds to 0, 0,
+# add observers before we propagate
+# select bpms
+bpm_elems = [elem for elem in acc if isinstance(elem, tslib.BPM)]
+observers = instrument_with_standard_observers(bpm_elems, mapping=named_index)
 
 
 all_responses = {
