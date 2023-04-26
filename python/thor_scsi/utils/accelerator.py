@@ -237,7 +237,7 @@ def instrument_with_radiators(
 
 
 def instrument_with_standard_observers(
-    acc: tslib.Accelerator
+        elems: Sequence[tslib.ElemType], *, mapping = None
 ) -> Sequence[tslib.StandardObserver]:
     """Instrument accelerator with observers
 
@@ -245,9 +245,10 @@ def instrument_with_standard_observers(
     """
     # Instrument it with observers ... I guess I have to keep them here so that
     # internally these are not weak references ... to be tested
-    observers = [tslib.StandardObserver() for elem in acc]
+    assert(mapping)
+    observers = [tslib.StandardObserver(mapping) for elem in elems]
     # Register them to the elments
-    for ob, elem in zip(observers, acc):
+    for ob, elem in zip(observers, elems):
         elem.set_observer(ob)
     return observers
 

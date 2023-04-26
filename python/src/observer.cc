@@ -1,9 +1,11 @@
 #include <pybind11/pybind11.h>
 #include <thor_scsi/elements/standard_observer.h>
+#include <gtpsa/python/objects_with_named_index.h>
 
 namespace py = pybind11;
 namespace tsc = thor_scsi::core;
 namespace tse = thor_scsi::elements;
+namespace gpy = gtpsa::python;
 
 class PyObserver: public tsc::Observer {
 public:
@@ -24,6 +26,29 @@ public:
 	}
 };
 
+namespace thor_scsi::python {
+    class StandardObserverWithIndex : public tse::StandardObserver {
+	std::shared_ptr<gpy::IndexMapping> m_mapping = nullptr;
+	using base = tse::StandardObserver;
+
+    public:
+	StandardObserverWithIndex(std::shared_ptr<gpy::IndexMapping> mapping = gpy::default_index_mapping_ptr)
+	    : m_mapping(mapping)
+	    {}
+
+	auto getMapping(void) const {
+	    return std::const_pointer_cast<gpy::IndexMapping>(this->m_mapping);
+	}
+
+	auto getTruncatedPowerSeriesA(void) {
+	    // can I avoid this copy?
+	    gtpsa::ss_vect<gtpsa::tpsa> *vec = base::getTruncatedPowerSeriesA().get();
+	    return gpy::StateSpaceWithNamedIndex<gtpsa::tpsa>(*vec, this->getMapping());
+	}
+    };
+}
+namespace tpy = thor_scsi::python;
+
 void py_thor_scsi_init_observers(py::module &m)
 {
 
@@ -38,8 +63,8 @@ void py_thor_scsi_init_observers(py::module &m)
 	py::class_<tsc::Observer,  PyObserver, std::shared_ptr<tsc::Observer>> observer(m, "Observer");
 	observer.def(py::init<>());
 
-	py::class_<tse::StandardObserver, tsc::Observer, std::shared_ptr<tse::StandardObserver>> std_observer(m, "StandardObserver");
-	std_observer
+	py::class_<tse::StandardObserver, tsc::Observer, std::shared_ptr<tse::StandardObserver>> std_observer_intern(m, "_StandardObserver");
+	std_observer_intern
 		.def("__str__",                      &tse::StandardObserver::pstr)
 		.def("__repr__",                     &tse::StandardObserver::repr)
 		.def("get_observed_name",            &tse::StandardObserver::getObservedName)
@@ -49,8 +74,15 @@ void py_thor_scsi_init_observers(py::module &m)
 		.def("has_truncated_power_series",   &tse::StandardObserver::hasTruncatedPowerSeries)
 		.def("get_truncated_power_series",   &tse::StandardObserver::getTruncatedPowerSeries)
 		.def("has_truncated_power_series_a", &tse::StandardObserver::hasTruncatedPowerSeriesA)
-		.def("get_truncated_power_series_a", &tse::StandardObserver::getTruncatedPowerSeriesA)
+	        .def("get_truncated_power_series_a", &tse::StandardObserver::getTruncatedPowerSeriesA)
 		.def("reset",                        &tse::StandardObserver::reset)
 		.def(py::init<>());
+
+
+	py::class_<tpy::StandardObserverWithIndex, std::shared_ptr<tpy::StandardObserverWithIndex>> std_observer(m, "StandardObserver", std_observer_intern);
+	std_observer
+	    .def("get_truncated_power_series_a", &tpy::StandardObserverWithIndex::getTruncatedPowerSeriesA)
+	    .def(py::init<std::shared_ptr<gpy::IndexMapping>>())
+	    ;
 
 }
