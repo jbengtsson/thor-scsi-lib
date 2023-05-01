@@ -45,6 +45,12 @@ namespace thor_scsi::python {
 	    gtpsa::ss_vect<gtpsa::tpsa> *vec = base::getTruncatedPowerSeriesA().get();
 	    return gpy::StateSpaceWithNamedIndex<gtpsa::tpsa>(*vec, this->getMapping());
 	}
+
+	auto getPhaseSpace(void) {
+	    // can I avoid this copy?
+	    gtpsa::ss_vect<double> vec = base::getPhaseSpace();
+	    return gpy::StateSpaceWithNamedIndex<double>(vec, this->getMapping());
+	}
     };
 }
 namespace tpy = thor_scsi::python;
@@ -81,6 +87,7 @@ void py_thor_scsi_init_observers(py::module &m)
 
 	py::class_<tpy::StandardObserverWithIndex, std::shared_ptr<tpy::StandardObserverWithIndex>> std_observer(m, "StandardObserver", std_observer_intern);
 	std_observer
+	    .def("get_phase_space",              &tpy::StandardObserverWithIndex::getPhaseSpace)
 	    .def("get_truncated_power_series_a", &tpy::StandardObserverWithIndex::getTruncatedPowerSeriesA)
 	    .def(py::init<std::shared_ptr<gpy::IndexMapping>>())
 	    ;
