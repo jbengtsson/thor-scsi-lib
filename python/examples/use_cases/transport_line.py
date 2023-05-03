@@ -53,6 +53,14 @@ def plot_Twiss(ds, file_name, title):
     plt.savefig(file_name)
 
 
+def print_map(M):
+    n_dof = 3;
+    labels = ["x", "p_x", "y", "p_y", "delta", "ct"]
+    for k in range(2*n_dof):
+        hdr = "M[" + str(labels[k]) + "]:\n"
+        M[k].print(hdr)
+
+
 t_dir = \
     os.path.join(os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "BESSY-II")
 t_file = os.path.join(t_dir, "b2_transferline.lat")
@@ -66,7 +74,11 @@ n_dof = 4
 
 # Compute the Poincaré map.
 M = lo.compute_map(lat, model_state, desc=desc, tpsa_order=tpsa_order)
+
 print("\nM:\n", M)
+# Print in TPSA format.
+if False:
+    print_map(M)
 
 # Twiss functions at the entrance.
 eta   = np.array([0.0, 0.0, 0.0, 0.0])
@@ -84,4 +96,7 @@ with open("twiss.tsf", "wt") as fp:
     fp.write(df_to_tsv(df))
 df.to_json("twiss.json")
 
-plt.show()
+if not False:
+    plt.show()
+
+
