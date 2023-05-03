@@ -87,6 +87,7 @@ alpha = np.array([1.0, 1.0])
 beta  = np.array([1.0, 1.0])
 
 A = lo.compute_A(eta, alpha, beta, desc)
+
 print("\nA:\n", A)
 
 data = lo.compute_Twiss_along_lattice(n_dof, lat, model_state, A=A, desc=desc)
