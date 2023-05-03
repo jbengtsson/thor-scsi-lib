@@ -144,7 +144,9 @@ def tweak_nu(fam_names, dnu_x, dnu_y):
         set_db_2L_fam(acc, fam_names[k], db_2L[k])
 
 
-t_dir = os.path.join(os.environ["HOME"], "Nextcloud", "thor_scsi")
+t_dir = \
+    os.path.join(os.environ["HOME"], "Nextcloud", "thor_scsi", "JB",
+                 "BESSY-III")
 t_file = os.path.join(t_dir, "alsu-7ba-20180503c.lat")
 # t_file = os.path.join(t_dir, "b3_sf_40Grad_JB.lat")
 
@@ -180,7 +182,9 @@ nu = compute_nu_symp(dof, M)
 print("\nM:\n" + mat2txt(M))
 print("\nnu = [{:7.5f}, {:7.5f}]".format(nu[X_], nu[Y_]))
 
-A, A_inv, _ = compute_M_diag(dof, M)
+stable, A_mat, _, _ = compute_M_diag(dof, M)
+A = gtpsa.ss_vect_tpsa(desc, 1)
+A.set_jacobian(A_mat)
 
 ds = compute_Twiss_along_lattice(dof, acc, calc_config, A=A, desc=desc)
 df = twiss_ds_to_df(ds)
