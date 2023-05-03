@@ -70,6 +70,7 @@ lat = accelerator_from_config(t_file)
 # Set lattice state (Rf cavity on/off, etc.)
 model_state = tslib.ConfigType()
 
+# Coasting beam.
 n_dof = 2
 
 # Compute the Poincaré map.
@@ -90,11 +91,11 @@ print("\nA:\n", A)
 
 data = lo.compute_Twiss_along_lattice(n_dof, lat, model_state, A=A, desc=desc)
 
-plot_Twiss(data, "twiss.png", "Transport Line")
+plot_Twiss(data, "transport_line_twiss.png", "Transport Line")
 df = twiss_ds_to_df(data)
-with open("twiss.tsf", "wt") as fp:
+with open("transport_line_twiss.tsf", "wt") as fp:
     fp.write(df_to_tsv(df))
-df.to_json("twiss.json")
+df.to_json("transport_line_twiss.json")
 
 if not False:
     plt.show()
