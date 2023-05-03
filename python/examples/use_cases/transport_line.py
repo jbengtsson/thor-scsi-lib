@@ -70,7 +70,7 @@ lat = accelerator_from_config(t_file)
 # Set lattice state (Rf cavity on/off, etc.)
 model_state = tslib.ConfigType()
 
-n_dof = 4
+n_dof = 2
 
 # Compute the Poincaré map.
 M = lo.compute_map(lat, model_state, desc=desc, tpsa_order=tpsa_order)
