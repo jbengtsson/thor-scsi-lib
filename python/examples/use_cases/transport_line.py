@@ -77,6 +77,7 @@ A = lo.compute_A(eta, alpha, beta, desc)
 print("\nA:\n", A)
 
 data = lo.compute_Twiss_along_lattice(n_dof, lat, model_state, A=A, desc=desc)
+
 plot_Twiss(data, "twiss.png", "Transport Line")
 df = twiss_ds_to_df(data)
 with open("twiss.tsf", "wt") as fp:
