@@ -9,7 +9,7 @@
      linear momentum compaction.
    Parameters:
      dipole bend angle,
-     focusing gradient gradient reverse bend angle,
+     focusing gradient reverse bend angle,
      defocusing quadrupole,
      triplet gradients (3) & spacing (3).
 """

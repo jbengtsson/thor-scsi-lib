@@ -142,7 +142,7 @@ def compute_periodic_solution(lat, model_state, prt):
     model_state.radiation = False
     model_state.Cavity_on = False
 
-    M, A = lo.compute_map_and_diag(n_dof, lat, model_state, desc=desc)
+    stable, M, A = lo.compute_map_and_diag(n_dof, lat, model_state, desc=desc)
     if prt:
         print("\nM:\n", mat2txt(M.jacobian()))
     res= cs.compute_Twiss_A(A)
@@ -340,7 +340,7 @@ def opt_super_period(lat, param_list, C, bounds, phi_des, eps_x_des, nu_des,
             n_iter_min = n_iter
             prms_min = prms
             print(f"\n{n_iter:4d} chi_2 = {chi_2:9.3e}\n\n  prms   =\n", prms)
-            if stable[0] and stable[1] and stable[2]:
+            if stable:
                 print(f"\n  dchi_2 =\n", dchi_2)
             print(f"\n  phi            = {compute_phi(lat):8.5f}")
             [b1, b2, b3, b4] = \
@@ -350,7 +350,7 @@ def opt_super_period(lat, param_list, C, bounds, phi_des, eps_x_des, nu_des,
             print(f"  {b2:5s}          = {get_phi_elem(lat, b2, 0):8.5f}")
             print(f"  {b3:5s}          = {get_phi_elem(lat, b3, 0):8.5f}")
             print(f"  {b4:5s}          = {get_phi_elem(lat, b4, 0):8.5f}")
-            if stable[0] and stable[1] and stable[2]:
+            if stable:
                 print(f"\n  eps_x          = {1e12*eps[X_]:5.3f}")
                 print("  nu_cell        = [{:7.5f}, {:7.5f}]".
                       format(nu_cell[X_], nu_cell[Y_]))

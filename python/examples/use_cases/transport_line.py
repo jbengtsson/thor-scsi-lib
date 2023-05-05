@@ -63,7 +63,7 @@ def print_map(M):
 
 t_dir = \
     os.path.join(os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "BESSY-II")
-t_file = os.path.join(t_dir, "b2_transferline.lat")
+t_file = os.path.join(t_dir, "b2_transferline_thor_scsi.lat")
 
 # Read in & parse lattice file.
 lat = accelerator_from_config(t_file)
@@ -83,8 +83,8 @@ if False:
 
 # Twiss functions at the entrance.
 eta   = np.array([0.0, 0.0, 0.0, 0.0])
-alpha = np.array([1.0, 1.0])
-beta  = np.array([1.0, 1.0])
+alpha = np.array([3.659608, -1.150305])
+beta  = np.array([9.853867,  2.899539])
 
 A = lo.compute_A(eta, alpha, beta, desc)
 

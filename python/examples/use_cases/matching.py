@@ -391,7 +391,7 @@ bounds = [
     ( L_min,   0.25)          # ul3 L.
 ]
 
-# Zero sextopoles.
+# Zero sextupoles.
 # Compute linear chromaticity.
 set_b_n_fam(lat, "sf_h", MultipoleIndex.sextupole, 0e0)
 set_b_n_fam(lat, "sd_h", MultipoleIndex.sextupole, 0e0)
