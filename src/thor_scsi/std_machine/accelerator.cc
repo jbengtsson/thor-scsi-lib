@@ -101,26 +101,26 @@ template<typename T>
 int
 ts::AcceleratorKnobbable<C>::_propagate(thor_scsi::core::ConfigType& conf, gtpsa::ss_vect<T> &ps, size_t start_elem, int max_elements, size_t n_turns,  bool tracy_compatible_indexing)// const
 {
-
-	/* I guess Tobin would complain about this extra complexity */
-	int nelem = static_cast<int>(this->size());
-	bool retreat = std::signbit(max_elements);
-
+    /* I guess Tobin would complain about this extra complexity */
 	if(tracy_compatible_indexing){
-		if(start_elem>0) {
-			// take the one off
-			start_elem -= 1;
-		} else {
+		if(start_elem<=0) {
 			std:: stringstream strm;
 			strm << "Requested tracy compatible indexing, but start element "
 			     << start_elem << "was smaller or equal to zero";
 			throw std::runtime_error(strm.str());
 		}
-	}
+        // take the one off
+        start_elem -= 1;
+    }
 
+    bool retreat = std::signbit(max_elements);
+
+    // default arguments ... do all
+    if(start_elem == 0 && max_elements == ts::max_elements_default){
+        max_elements = static_cast<int>(this->size());
+    }
 	int next_elem = static_cast<int>(start_elem);
 	auto trace = this->trace();
-
 
 	for(size_t turn=0; turn<n_turns; ++turn) {
 	    if(trace)
@@ -128,8 +128,13 @@ ts::AcceleratorKnobbable<C>::_propagate(thor_scsi::core::ConfigType& conf, gtpsa
 			 << " for a maximum of elements " << max_elements << std::endl;
 
 	    next_elem = static_cast<int>(start_elem);
-	    for(int i=0; next_elem >= 0 && next_elem<nelem && i<std::abs(max_elements); i++)
+        // iterate over the number of requested elements ...
+	    for(int i=0; i<std::abs(max_elements); i++)
 	    {
+            // check if next element is acceptable ...
+            // currently not required as I access elements using .at which checks
+            // that the access is within range
+            // assert(next_elem >= 0 && next_elem<nelem);
 		size_t n = next_elem;
 
 		std::shared_ptr<tsc::CellVoid> cv = this->at(n);
@@ -147,12 +152,13 @@ ts::AcceleratorKnobbable<C>::_propagate(thor_scsi::core::ConfigType& conf, gtpsa
 		    next_elem++;
 		}
 		std::shared_ptr<tsc::Observer> observer = elem->observer();
+        const auto celem = std::const_pointer_cast<tsc::ElemTypeKnobbed/*<C>*/>(elem);
 		if(observer){
-			observer->view(std::const_pointer_cast<tsc::ElemTypeKnobbed/*<C>*/>(elem), ps, tsc::ObservedState::start, 0);
+			observer->view(celem, ps, tsc::ObservedState::start, 0);
 		}
 		elem->propagate(conf, ps);
 		if(observer){
-			observer->view(elem, ps, tsc::ObservedState::end, 0);
+			observer->view(celem, ps, tsc::ObservedState::end, 0);
 		}
 		auto aperture = elem->getAperture();
 		if(aperture){

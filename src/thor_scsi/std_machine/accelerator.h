@@ -6,11 +6,12 @@
 // #include <tps/ss_vect.h>
 
 namespace thor_scsi {
-
 	typedef gtpsa::ss_vect<tps>         ss_vect_tps;
 	typedef gtpsa::ss_vect<gtpsa::tpsa> ss_vect_tpsa;
 	typedef gtpsa::ss_vect<double>      ss_vect_dbl;
 
+    // just a huge number that is beyond any real lattice
+    const int max_elements_default = std::numeric_limits<int>::max();
 	/**
 	 * @brief propagation result of accelerator
 	 *
@@ -85,10 +86,10 @@ namespace thor_scsi {
 	    */
 		int propagate(thor_scsi::core::ConfigType&, ss_vect_tpsa &ps,
 			       size_t start=0,
-			      int max_elements=std::numeric_limits<int>::max(), size_t n_turns=1, bool tracy_compatible_indexing = false);
+			      int max_elements=max_elements_default, size_t n_turns=1, bool tracy_compatible_indexing = false);
 		int propagate(thor_scsi::core::ConfigType&, ss_vect_dbl  &ps,
 			       size_t start=0,
-			      int max_elements=std::numeric_limits<int>::max(), size_t n_turns=1, bool tracy_compatible_indexing = false);
+			      int max_elements=max_elements_default, size_t n_turns=1, bool tracy_compatible_indexing = false);
 	private:
 		/**
 		 * @brief add a marker at the beginning of the lattice if the lattice does not start with one
