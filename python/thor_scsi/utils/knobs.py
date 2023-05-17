@@ -38,6 +38,8 @@ def make_magnet_offset_knobbable(
     dy = gtpsa.tpsa(desc, po, mapping=named_index)
     dx.set_knob(dxv, "dx")
     dy.set_knob(dyv, "dy")
+    # dx.set_variable(dxv, "dx")
+    # dy.set_variable(dyv, "dy")
     dx.name = magnet.name + "_dx"
     dy.name = magnet.name + "_dy"
     magnet.set_dx(gtpsa.TpsaOrDouble(dx))
@@ -65,6 +67,7 @@ def make_magnet_strength_knobbable(
     k = gtpsa.ctpsa(desc, po, mapping=named_index)
     k.name = magnet.name + "_K"
     k.set_knob(k_orig, "K")
+    # k.set_variable(k_orig, "K")
     magnet.get_multipoles().set_multipole(multipole_number, gtpsa.CTpsaOrComplex(k))
 
 

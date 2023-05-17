@@ -53,7 +53,7 @@ def compute_map(
         t_map = gtpsa.ss_vect_tpsa(desc, tpsa_order)
         t_map.set_identity()
 
-    t_map[delta_] += delta
+    t_map.delta += delta
     acc.propagate(calc_config, t_map)
     return t_map
 
@@ -539,6 +539,7 @@ def compute_Twiss_along_lattice(
     acc: tslib.Accelerator,
     calc_config: tslib.ConfigType = None,
     *,
+    mapping : gtpsa.IndexMapping,
     A: gtpsa.ss_vect_tpsa = None,
     desc: gtpsa.desc = None,
     tpsa_order: int = 1
@@ -562,13 +563,15 @@ def compute_Twiss_along_lattice(
         calc_config = tslib.ConfigType()
 
     if A is None:
-        _, A = \
+        stable, _, A = \
             compute_map_and_diag(n_dof, acc, calc_config, desc=desc,
                                  tpsa_order=tpsa_order)
+    if not stable:
+        raise ValueError("Compute map and diag did not converge")
     logger.info("\ncompute_Twiss_along_lattice\nA:\n" + mat2txt(A))
 
     # Not really required ... but used for convenience
-    observers = instrument_with_standard_observers(acc)
+    observers = instrument_with_standard_observers(acc, mapping=mapping)
 
     # Propagate through the accelerator
     A_map = gtpsa.ss_vect_tpsa(desc, 1)
@@ -590,7 +593,6 @@ def compute_Twiss_along_lattice(
     tps_tmp = [_extract_tps(elem) for elem in acc]
     data = [tps2twiss(t) for t in tps_tmp]
     # print(type(tps_tmp), type(tps_tmp[0]))
-    tps_tmp = np.array(tps_tmp, dtype=object)
     twiss_pars = [d[1] for d in data]
     disp = [d[0] for d in data]
 
@@ -608,15 +610,18 @@ def compute_Twiss_along_lattice(
         coords=[indices, ["x", "y"], ["alpha", "beta", "dnu"]],
     )
     phase_space_coords_names = ["x", "px", "y", "py", "ct", "delta"]
-    tps = xr.DataArray(
-        data=tps_tmp,
-        name="tps",
-        dims=["index", "phase_coordinate"],
-        coords=[indices, phase_space_coords_names],
-    )
+    # tps_tmp = np.array(tps_tmp.iloc, dtype=object)
+    # tps = xr.DataArray(
+    #    data=tps_tmp,
+    #    name="tps",
+    #    dims=["index", "phase_coordinate"],
+    #    coords=[indices, phase_space_coords_names],
+    # )
     info = accelerator_info(acc)
     res = \
-        info.merge(dict(twiss=twiss_parameters, dispersion=dispersion, tps=tps))
+        info.merge(dict(twiss=twiss_parameters, dispersion=dispersion,
+                        #tps=tps
+                        ))
     return res
 
 
