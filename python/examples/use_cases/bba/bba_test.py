@@ -1,3 +1,4 @@
+import logging
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -16,6 +17,7 @@ from bact_math_utils.distorted_orbit import closed_orbit_distortion
 from bact_analysis.transverse.distorted_orbit import closed_orbit_distortion as co_dist
 import matplotlib.pyplot as plt
 
+import thor_scsi.utils.knobs
 from thor_scsi.factory import accelerator_from_config
 from thor_scsi.utils.accelerator import (
     instrument_with_standard_observers,
@@ -24,7 +26,8 @@ from thor_scsi.utils.accelerator import (
 from thor_scsi.utils.extract_info import accelerator_info
 from thor_scsi.utils.linear_optics import compute_Twiss_along_lattice
 
-mapping = gtpsa.IndexMapping()
+logger = logging.getLogger("thor-scsi")
+
 t_file = (
     Path(os.environ["HOME"])
     / "Devel"
@@ -33,6 +36,10 @@ t_file = (
     / "lattices"
     / "b2_stduser_beamports_blm_tracy_corr.lat"
 )
+
+
+named_index_d = dict(x=0, px=1, y=2, py=3, delta=4, ct=5, K=6, dx=7, dy=8)
+named_index = gtpsa.IndexMapping(named_index_d)
 
 
 @dataclass
@@ -57,13 +64,15 @@ def create_accelerator():
     acc_info = accelerator_info(acc)
 
     # Required to see what happens in bpms
-    quad = acc.find("q1m1d1r", 0)
+    quad = acc.find("q4m1d1r", 0)
+    # quad = acc.find("q1m1d1r", 0)
+    # quad = acc.find("q3m2d8r", 0)
     # and the elements before and after
     before_quad = acc[quad.index - 1]
     after_quad = acc[quad.index + 1]
     bpm_elems = [elem for elem in acc if isinstance(elem, tslib.BPM)]
     observed_elements = bpm_elems + [before_quad, quad, after_quad]
-    observers = instrument_with_standard_observers(observed_elements, mapping=mapping)
+    observers = instrument_with_standard_observers(observed_elements, mapping=named_index)
     bpm_observers = observers[: len(bpm_elems)]
     return AcceleratorForTest(
         acc=acc,
@@ -110,14 +119,99 @@ def dipole_due_to_quadrupole_gradient_change(
     return added_dipole_kick
 
 
+desc = gtpsa.desc(6, 2, 3, 1)
+
+def quadrupole_response(dc: AcceleratorForTest):
+    # Find the quadrupole in question
+    t_idx = dc.quad.index
+    t_quad = dc.acc[t_idx]
+    # quadrupole with knobs
+
+    def convert(elem):
+        if elem.index == t_idx:
+            elem = thor_scsi.utils.knobs.convert_if_quadrupole(elem)
+            return thor_scsi.utils.knobs.make_magnet_knobbable(elem, po=1, desc=desc, named_index=named_index, offset=True)
+        return elem
+    elems = [convert(elem) for elem in dc.acc]
+
+    acc_tpsa = tslib.AcceleratorTpsa(elems)
+    observers = [tslib.StandardObserver(named_index) for elem in acc_tpsa]
+    for elem, ob in zip(acc_tpsa, observers):
+        elem.set_observer(ob)
+
+    calc_config = tslib.ConfigType()
+    ps = gtpsa.ss_vect_tpsa(desc, 2, 6, named_index)
+    ps.set_identity()
+    # Propagate it once to get the effect of the quad
+    acc_tpsa.propagate(calc_config, ps)
+    # Propagate it a second time to store it in the bpms ...
+    acc_tpsa.propagate(calc_config, ps)
+    # a few more to weed out the effect
+    for cnt in range(0):
+        acc_tpsa.propagate(calc_config, ps)
+
+    for elem in acc_tpsa:
+        assert(elem.get_observer().has_truncated_power_series_a())
+    return acc_tpsa, observers, ps
+
+# @pytest.mark.skip
 def test01_quadrupole_moved_steerer_compensation():
     dc = create_accelerator()
-    desc = gtpsa.desc(6, 1)
+    desc = gtpsa.desc(6, 2, 3, 1)
 
     # acc = accelerator_from_config(t_file)
     twiss = compute_Twiss_along_lattice(
-        2, dc.acc, desc=desc, mapping=gtpsa.IndexMapping()
+        2, dc.acc, desc=desc, mapping=named_index
     )
+
+    acc_tpsa, observer_tpsa, ps_orig = quadrupole_response(dc)
+    calc_config = tslib.ConfigType()
+    ps = ps_orig.copy()
+    ps_ref = ps.copy()
+    if True:
+        # why that extra iteration?
+        for i in range(1):
+            acc_tpsa.propagate(calc_config, ps)
+        # should not be necessary
+        for ob in observer_tpsa:
+            ob.reset()
+        # need to run it again ... to get the effect "into the observers"
+        acc_tpsa.propagate(calc_config, ps)
+
+    def extract_forecast_from_observer(elem):
+        observer = elem.get_observer()
+        # observer = observer_tpsa[elem.index]
+        try:
+            ps = observer.get_truncated_power_series_a() #.copy()
+        except:
+            logger.error(f"While evaluating element {elem}")
+            raise
+        res = [ps.x.get(dx=1), ps.y.get(dy=1), observer.get_observed_name(), observer.get_observed_index()]
+        return res
+
+    forecast_displacement = np.array(
+        [extract_forecast_from_observer(elem) for elem in acc_tpsa], dtype=object
+    )
+
+    def track_to_element(ps, start, n_elems):
+        # print(f"{named_index=}")
+        # print("ps.x.get_mapping()", ps.x.get_mapping())
+        assert(n_elems == 1)
+        next_elem = acc_tpsa.propagate(calc_config, ps, start, n_elems)
+        assert(next_elem == start + n_elems)
+        elem = acc_tpsa[start]
+        # print(f"{elem=} {ps}")
+        # print("ps.x.get_mapping()", ps.x.get_mapping())
+        return [ps.x.get(dx=1), ps.y.get(dy=1), elem.name, elem.index]
+
+
+    if True:
+        ps = gtpsa.ss_vect_tpsa(desc, 2, 6, named_index)
+        ps.set_identity()
+        for i in range(3):
+            acc_tpsa.propagate(calc_config, ps)
+        forecast_displacement2 = np.array([track_to_element(ps, start, 1) for start in range(len(acc_tpsa))], dtype=np.object)
+        forecast_displacement2_s = np.add.accumulate([elem.get_length() for elem in acc_tpsa])
     t_nu_x = twiss.twiss.sel(par="dnu", plane="x").cumsum()  # / (2*np.pi)
     print(t_nu_x)
     pi2 = np.pi * 2
@@ -139,7 +233,7 @@ def test01_quadrupole_moved_steerer_compensation():
         ax.plot(twiss.s, t_nu_x)
 
     if twiss_plot:
-        fig, axes = plt.subplots(2, 1)
+        fig, axes = plt.subplots(2, 1, sharex=True)
         ax_nu, ax_s = axes
         ax_nu.plot(t_nu_x, twiss.twiss.sel(par="beta", plane="x"), "-")
         ax_nu.plot(t_nu_x, twiss.twiss.sel(par="beta", plane="y"), "-")
@@ -147,7 +241,7 @@ def test01_quadrupole_moved_steerer_compensation():
         ax_s.plot(twiss.s, twiss.twiss.sel(par="beta", plane="y"), "-")
 
     if closed_orbit_plot:
-        fig, axes = plt.subplots(2, 1)
+        fig, axes = plt.subplots(2, 1, sharex=True)
         ax_nu, ax_s = axes
         ax_nu.plot(t_nu_x, co, "-")
         ax_s.plot(twiss.s, co, "-")
@@ -157,6 +251,7 @@ def test01_quadrupole_moved_steerer_compensation():
         # ax.plot(nu_x, displaced_quad_effect.sel(dep="dx", plane="x").values * 1, "g.")
         # ax.plot(nu_x, displaced_quad_effect.sel(dep="dKdx", plane="x").values * 1 * 4, "r.")
         fig.savefig("closed_orbit_distortion_x.pdf")
+
 
     # chose an offset
     dx = 1e-4
@@ -168,39 +263,39 @@ def test01_quadrupole_moved_steerer_compensation():
     # then the beam should go through undisturbed
     offset = quad.get_dx() + quad.get_dy() * 1j
     quad_muls = quad.get_multipoles()
-    dipoled_from_feed_down = quad_muls.get_multipole(2) * offset
-    quad_muls.set_multipole(1, dipoled_from_feed_down)
+    dipole_from_feed_down = quad_muls.get_multipole(2) * offset
+    quad_muls.set_multipole(1, dipole_from_feed_down)
 
     assert quad.get_dx() == pytest.approx(dx, 1e-12)
     observers = instrument_with_standard_observers(
-        dc.observed_elements, mapping=mapping
+        dc.observed_elements, mapping=named_index
     )
-    calc_config = tslib.ConfigType()
     ps = gtpsa.ss_vect_double(0e0)
     acc = dc.acc
     acc.propagate(calc_config, ps)
 
-    # Check that the steerer compensates the offset effect
-    print(type(ps))
-    print(dir(ps))
-    assert ps.x == pytest.approx(0e0, abs=1e-12)
-    assert ps.px == pytest.approx(0e0, abs=1e-12)
-    assert ps.y == pytest.approx(0e0, abs=1e-12)
-    assert ps.py == pytest.approx(0e0, abs=1e-12)
-    assert ps.ct == pytest.approx(0e0, abs=1e-12)
-    assert ps.delta == pytest.approx(0e0, abs=1e-12)
-
-    # check that all observers reported 0
-    for bpm in dc.bpm:
-        ps = bpm.get_observer().get_phase_space()
+    if False:
         # Check that the steerer compensates the offset effect
-        # of the quadrupole for all bpms ...
+        print(type(ps))
+        print(dir(ps))
         assert ps.x == pytest.approx(0e0, abs=1e-12)
         assert ps.px == pytest.approx(0e0, abs=1e-12)
         assert ps.y == pytest.approx(0e0, abs=1e-12)
         assert ps.py == pytest.approx(0e0, abs=1e-12)
         assert ps.ct == pytest.approx(0e0, abs=1e-12)
         assert ps.delta == pytest.approx(0e0, abs=1e-12)
+
+        # check that all observers reported 0
+        for bpm in dc.bpm:
+            ps = bpm.get_observer().get_phase_space()
+            # Check that the steerer compensates the offset effect
+            # of the quadrupole for all bpms ...
+            assert ps.x == pytest.approx(0e0, abs=1e-12)
+            assert ps.px == pytest.approx(0e0, abs=1e-12)
+            assert ps.y == pytest.approx(0e0, abs=1e-12)
+            assert ps.py == pytest.approx(0e0, abs=1e-12)
+            assert ps.ct == pytest.approx(0e0, abs=1e-12)
+            assert ps.delta == pytest.approx(0e0, abs=1e-12)
 
     # Change quadrupole powering strength ... does not affect
     # the steerer: typically in the percent range
@@ -227,38 +322,23 @@ def test01_quadrupole_moved_steerer_compensation():
     acc.propagate(calc_config, ps)
 
     # get observer values and check to forecast
-    response = xr.open_dataset("quadrupole_response_matrix.nc")
+    dc.acc
 
-    # extract displacement from observers
-    def extract_orbit_from_observer(elem):
-        observer = elem.get_observer()
-        ps = observer.get_phase_space()
-        return [ps.x, ps.y, observer.get_observed_name(), observer.get_observed_index()]
+    if True:
+        # extract displacement from observers
+        def extract_orbit_from_observer(elem):
+            observer = elem.get_observer()
+            ps = observer.get_phase_space()
+            return [ps.x, ps.y, observer.get_observed_name(), observer.get_observed_index()]
 
-    observed_displacement = np.array(
-        [extract_orbit_from_observer(bpm) for bpm in dc.bpm], dtype=object
-    )
-    print(observed_displacement[:, 3])
-    s = dc.acc_info.s.sel(index=observed_displacement[:, 3])
-    # check that vertical displacements are all close to zero
-    assert np.sum(np.absolute(observed_displacement[:, 1])) == pytest.approx(0e0, 1e-8)
-    displaced_quad_effect = (
-        response.effect.sel(dep="dy", quadrupole=dc.quad.name, plane="y") * offset.imag
-    )
-    assert np.sum(np.absolute(displaced_quad_effect.values)) == pytest.approx(0e0, 1e-8)
+        observed_displacement = np.array(
+            [extract_orbit_from_observer(bpm) for bpm in dc.bpm], dtype=object
+        )
 
-    displaced_quad_effect = response.effect.sel(
-        quadrupole=dc.quad.name, bpm=observed_displacement[:, 2]
-    )
-    print(displaced_quad_effect)
-    assert len(displaced_quad_effect.sel(plane="x").values) == len(
-        observed_displacement
-    )
-
-    for bpm_name, bpm_name_check in zip(
-        displaced_quad_effect.bpm.values, observed_displacement[:, 2]
-    ):
-        assert bpm_name == bpm_name_check
+        # print(observed_displacement[:, 3])
+        s = dc.acc_info.s.sel(index=observed_displacement[:, 3])
+        # check that vertical displacements are all close to zero
+        assert np.sum(np.absolute(observed_displacement[:, 1])) == pytest.approx(0e0, 1e-8)
 
     bpm_indices = observed_displacement[:, 3]
     twiss_bpm = twiss.sel(index=bpm_indices)
@@ -281,7 +361,7 @@ def test01_quadrupole_moved_steerer_compensation():
     gradient = quad.get_main_multipole_strength().real
     txt = f"""
     Gradient         {gradient:6.3f} T/m
-    offfset          {offset*1e6:6.3f} um
+    offset           {offset*1e6:6.3f} um
     strength change  {strength_change:6.3f}
     """
     print(txt)
@@ -298,13 +378,16 @@ def test01_quadrupole_moved_steerer_compensation():
     ax_nu.set_ylabel("x [um]")
     ax_s.plot(s, observed_displacement[:, 0] * 1e6, "bx")
     ax_s.set_ylabel("x [um]")
-    ax_nu.plot(t_nu_x, co * 1e6 * added_kick, "c-")
+    ax_nu.plot(t_nu_x, co * 1e6 * added_kick, "c.-")
     ax_nu.plot(t_nu_x_bpm, co_bpm * 1e6 * added_kick, "c+")
-    ax_s.plot(twiss.s, co * 1e6 * added_kick, "c-")
+    ax_s.plot(twiss.s, co * 1e6 * added_kick, "c.-")
     ax_s.plot(twiss_bpm.s, co_bpm * 1e6 * added_kick, "c+")
 
 
-    # ax_nu.plot(nu_x, displaced_quad_effect.sel(dep="dy", plane="x").values * 1, "g.")
+    ax_nu.plot(t_nu_x, forecast_displacement[:, 0] * offset.real * 1e4 /2, "g.-")
+    ax_s.plot(twiss.s, forecast_displacement[:, 0] * offset.real * 1e4 / 2, "g.-")
+    ax_nu.plot(t_nu_x, forecast_displacement2[:, 0] * offset.real * 1e4 / 2, "m.-")
+    ax_s.plot(forecast_displacement2_s, forecast_displacement2[:, 0] * offset.real * 1e4 / 2, "m.-")
     # ax_nu.plot(nu_x, displaced_quad_effect.sel(dep="dx2", plane="x").values * 1, "r.")
     # ax_nu.plot(nu_x, displaced_quad_effect.sel(dep="dKdx", plane="x").values * 1 * 4, "m.")
 

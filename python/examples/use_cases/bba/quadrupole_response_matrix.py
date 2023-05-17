@@ -16,6 +16,7 @@ import xarray as xr
 from typing import Sequence
 from dataclasses import dataclass
 from thor_scsi.utils import knobs
+import gtpsa.utils_df
 
 named_index_d = dict(x=0, px=1, y=2, py=3, delta=4, ct=5, K=6, dx=7, dy=8)
 named_index = gtpsa.IndexMapping(named_index_d)
@@ -125,7 +126,7 @@ def process_one_quad(quad, calc_config=tslib.ConfigType()):
     acc_tpsa.propagate(calc_config, nps)
     response_one_quad = combine_responses(observers)
     response_one_quad["name"] = quad.name
-    return response_one_quad
+    # return response_one_quad
     # list comprehension as currently iloc not active?
     ps = [
         np.array(
