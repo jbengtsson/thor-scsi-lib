@@ -13,6 +13,13 @@ logger = logging.getLogger("thor_scsi")
 
 @dataclass
 class ClosedOrbitResult:
+    """
+    Todo:
+        should one rather store numpy arrays instead of an
+        elaborate object
+
+
+    """
     #: was a closed orbit found?
     found_closed_orbit: bool
 
@@ -102,7 +109,7 @@ def compute_closed_orbit(
     if eps <= 0e0:
         raise AssertionError(f"tolerance {eps} <= 0e0")
 
-    if x0 is not None and not np.isfinite(x0).all():
+    if x0 is not None and not np.isfinite(x0.iloc).all():
         raise AssertionError(f"given start {x0} is not finite!")
 
     if conf.Cavity_on:
@@ -121,18 +128,18 @@ def compute_closed_orbit(
         x0 = gtpsa.ss_vect_double(0e0)
         if n == 4:
             x0.set_zero()
-            x0[tslib.phase_space_index_internal.delta] = delta
+            x0.delta = delta
         elif n == 6:
             # To be revisited ...
             # if delta != 0 add eta * delta
             x0.set_zero()
-            x0[tslib.phase_space_index_internal.delta] = delta
+            x0.delta = delta
         else:
             raise AssertionError("Only implemented for 4D or 6D phase space")
     else:
         if delta is not None:
             raise AssertionError("if x0 is given delta must be None")
-        conf.dPparticle = x0[tslib.phase_space_index_internal.delta]
+        conf.dPparticle = x0.delta
 
     # create weighting matrix for inverse calculation
     # J.B. 20/02/23:
@@ -183,8 +190,10 @@ def compute_closed_orbit(
             # required i.e. the cavity is on
             t_jac = tmp.jacobian()
             gradient = partial_inverse(t_jac, jj)
+            # extract the array from dx
+            dxa = np.array(dx.iloc)
             # Now using numpy arrays here ... thus matrix multiplication
-            dx0 = gradient @ dx
+            dx0 = gradient @ dxa
 
             # Next start point following line search ?
             # if the right side is not a tpsa vector x0 seems to be

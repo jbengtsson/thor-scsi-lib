@@ -159,10 +159,33 @@ refered to as `python` directory below.
 Installation instruction for one of the packages
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+The process of building the python package depends on the C++ headers and libraries.
+Thus it needs to know where these are installed. The process described below will
+use the directory provided by the corresponding environment variables:
+
+* gtpsa_PREFIX for the `gtpsa` package
+* thor_scsi_PREFIX for the `thor_scsi` package.
+
+Please note that when `thor_scsi` is built `pyflame` is built too.
+
 Change into the repositories `python` directory. Edit the
 `setup.py` file and define the variable `prefix` to contain the path you installed
-to. As soon that has been done, you should be able to use e.g.
+the C++ library to.
 
+For `gtpsa` this would be
+
+.. code:: shell
+
+    export gtpsa_PREFIX=path/to/install/to
+
+For `thor_scsi` this would be
+
+.. code:: shell
+
+    export thor_scsi_PREFIX=path/to/install/to
+
+
+As soon that has been done, you should be able to use e.g.
 
 .. code:: shell
 
@@ -171,8 +194,8 @@ to. As soon that has been done, you should be able to use e.g.
 
 to build the module and
 
-
 .. code:: shell
+
    python setup.py install
 
 
@@ -187,6 +210,9 @@ Alternatively you could use `pip` e.g.
 
 to install the package.
 
+If you are curios how and where to get pip see the link below.
+
+https://pip.pypa.io/en/stable/installation/
 
 .. _cmake-find-subcomponents:
 

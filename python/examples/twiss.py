@@ -22,8 +22,7 @@ t_file = os.path.join("lattices", "tme_rb.lat")
 
 t_file = (
     Path(os.environ["HOME"])
-    / "Devel"
-    / "gitlab"
+    / "cpp"
     / "dt4acc"
     / "lattices"
     / "b2_stduser_beamports_blm_tracy_corr.lat"

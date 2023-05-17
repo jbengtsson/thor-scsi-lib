@@ -277,14 +277,15 @@ def extract_orbit_from_standard_observers(
     indices = indices[with_observer == True]
     phase_space_coords_names = ["x", "px", "y", "py", "ct", "delta"]
     tps_tmp = [ob.get_truncated_power_series_a() for ob in ob_sub]
+    logger.debug(tps_tmp)
     tps = xr.DataArray(
-        data=tps_tmp,
-        name="tps",
-        dims=["index", "phase_coordinate"],
-        coords=[indices, phase_space_coords_names],
+        data=[t.jacobian() for t in tps_tmp],
+        name="tps_jacobian",
+        dims=["index", "phase_coordinate_row", "phase_coordinate_col"],
+        coords=[indices, phase_space_coords_names, phase_space_coords_names],
     )
     ps = xr.DataArray(
-        data=[t.cst() for t in tps_tmp],
+        data=[np.array(t.cst().iloc) for t in tps_tmp],
         name="ps",
         dims=["index", "phase_coordinate"],
         coords=[indices, phase_space_coords_names],
