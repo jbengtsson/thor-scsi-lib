@@ -8,6 +8,14 @@ namespace thor_scsi::elements{
 	 */
 
 	class StandardObserver : public thor_scsi::core::Observer{
+
+		gtpsa::ss_vect<double> m_ps = {0, 0, 0, 0, 0, 0};
+		gtpsa::ss_vect<tps> m_tps = {tps(), tps(), tps(), tps(), tps(), tps()};
+	        std::shared_ptr<gtpsa::ss_vect<gtpsa::tpsa>> m_ptpsa = nullptr;
+		bool m_has_ps = false, m_has_tps = false, m_has_tpsa = false;
+	        std::string m_observed_name = "";
+		int m_observed_index=-1;
+
 	public:
 
 		void view(std::shared_ptr<const thor_scsi::core::CellVoid> elem, const gtpsa::ss_vect<double>      &ps, const enum thor_scsi::core::ObservedState, const int cnt) override final;
@@ -81,12 +89,6 @@ namespace thor_scsi::elements{
 		template<typename T>
 		void _view(std::shared_ptr<const thor_scsi::core::CellVoid> elem, const gtpsa::ss_vect<T> &ps, const enum thor_scsi::core::ObservedState, const int cnt);
 
-		gtpsa::ss_vect<double> m_ps = {0, 0, 0, 0, 0, 0};
-		gtpsa::ss_vect<tps> m_tps = {tps(), tps(), tps(), tps(), tps(), tps()};
-		std::shared_ptr<gtpsa::ss_vect<gtpsa::tpsa>> m_ptpsa = nullptr;
-		bool m_has_ps = false, m_has_tps = false, m_has_tpsa = false;
-		std::string m_observed_name = "";
-		int m_observed_index=-1;
 	};
 
 

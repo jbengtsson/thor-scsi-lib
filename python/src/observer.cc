@@ -1,7 +1,7 @@
 #include <pybind11/pybind11.h>
 #include <thor_scsi/elements/standard_observer.h>
 #include <gtpsa/python/objects_with_named_index.h>
-
+#include <cassert>
 namespace py = pybind11;
 namespace tsc = thor_scsi::core;
 namespace tse = thor_scsi::elements;
@@ -31,6 +31,9 @@ namespace thor_scsi::python {
 	std::shared_ptr<gpy::IndexMapping> m_mapping = nullptr;
 	using base = tse::StandardObserver;
 
+	// if putting out a pointer ... keep a copy ... not nice ...
+	std::shared_ptr<gtpsa::ss_vect<gtpsa::tpsa>> m_ptpsa = nullptr;
+
     public:
 	StandardObserverWithIndex(std::shared_ptr<gpy::IndexMapping> mapping = gpy::default_index_mapping_ptr)
 	    : m_mapping(mapping)
@@ -42,8 +45,18 @@ namespace thor_scsi::python {
 
 	auto getTruncatedPowerSeriesA(void) {
 	    // can I avoid this copy?
-	    gtpsa::ss_vect<gtpsa::tpsa> *vec = base::getTruncatedPowerSeriesA().get();
-	    return gpy::StateSpaceWithNamedIndex<gtpsa::tpsa>(*vec, this->getMapping());
+	    //gtpsa::ss_vect<gtpsa::tpsa> *vec = base::getTruncatedPowerSeriesA().get();
+	    // ((gtpsa::ss_vect<gtpsa::tpsa> vec = *vec;
+	    //return gpy::StateSpaceWithNamedIndex<gtpsa::tpsa>(vec, this->getMapping());
+
+	    // keep a reference so that it does not disappear ...
+	    // fragile setup
+	    if(! this->hasTruncatedPowerSeriesA() ){
+		throw std::runtime_error("no gtpsa::ss_vect<gtpsa::tpsa> observed!");
+	    }
+	    this->m_ptpsa = base::getTruncatedPowerSeriesA();
+	    assert(this->m_ptpsa.get());
+	    return gpy::StateSpaceWithNamedIndex<gtpsa::tpsa>(*this->m_ptpsa.get(), this->getMapping());
 	}
 
 	auto getPhaseSpace(void) {
@@ -80,7 +93,7 @@ void py_thor_scsi_init_observers(py::module &m)
 		.def("has_truncated_power_series",   &tse::StandardObserver::hasTruncatedPowerSeries)
 		.def("get_truncated_power_series",   &tse::StandardObserver::getTruncatedPowerSeries)
 		.def("has_truncated_power_series_a", &tse::StandardObserver::hasTruncatedPowerSeriesA)
-	        .def("get_truncated_power_series_a", &tse::StandardObserver::getTruncatedPowerSeriesA)
+	        .def("get_truncated_power_series_a", &tse::StandardObserver::getTruncatedPowerSeries, py::keep_alive<0,1>())
 		.def("reset",                        &tse::StandardObserver::reset)
 		.def(py::init<>());
 
