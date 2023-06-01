@@ -102,7 +102,7 @@ def compute_closed_orbit(
     if eps <= 0e0:
         raise AssertionError(f"tolerance {eps} <= 0e0")
 
-    if x0 is not None and not np.isfinite(x0).all():
+    if x0 is not None and not np.isfinite(x0.iloc).all():
         raise AssertionError(f"given start {x0} is not finite!")
 
     if conf.Cavity_on:
@@ -121,18 +121,18 @@ def compute_closed_orbit(
         x0 = gtpsa.ss_vect_double(0e0)
         if n == 4:
             x0.set_zero()
-            x0[tslib.phase_space_index_internal.delta] = delta
+            x0.delta = delta
         elif n == 6:
             # To be revisited ...
             # if delta != 0 add eta * delta
             x0.set_zero()
-            x0[tslib.phase_space_index_internal.delta] = delta
+            x0.delta = delta
         else:
             raise AssertionError("Only implemented for 4D or 6D phase space")
     else:
         if delta is not None:
             raise AssertionError("if x0 is given delta must be None")
-        conf.dPparticle = x0[tslib.phase_space_index_internal.delta]
+        conf.dPparticle = x0.delta
 
     # create weighting matrix for inverse calculation
     # J.B. 20/02/23:
@@ -184,8 +184,8 @@ def compute_closed_orbit(
             t_jac = tmp.jacobian()
             gradient = partial_inverse(t_jac, jj)
             # Now using numpy arrays here ... thus matrix multiplication
-            dx0 = gradient @ dx
-
+            tmp = gradient @ dx.iloc
+            dx0 = tmp
             # Next start point following line search ?
             # if the right side is not a tpsa vector x0 seems to be
             # converted to an array
