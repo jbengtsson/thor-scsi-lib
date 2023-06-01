@@ -21,18 +21,23 @@ from thor_scsi.utils.extract_info import accelerator_info
 from thor_scsi.utils.output import mat2txt, vec2txt
 import matplotlib.pyplot as plt
 import os
+import pathlib
+from thor_scsi.utils import canonical_variables_mapping_default
+
 
 t_dir = os.path.join(os.environ["HOME"], "Nextcloud", "thor_scsi")
 t_file = os.path.join(t_dir, "b3_tst.lat")
+t_home_dir = pathlib.Path(os.environ["HOME"])
 
 t_file = os.path.join("lattices", "tme.lat")
-# t_file = os.path.join("lattices", "tme_rb.lat")
+t_file = os.path.join("lattices", "tme_rb.lat")
 acc = accelerator_from_config(t_file)
 conf = ConfigType()
 
 # Standard setup does not come with observers ...
 # see why in a second
-observers_non_perturbated = instrument_with_standard_observers(acc)
+observers_non_perturbated = instrument_with_standard_observers(acc, mapping=canonical_variables_mapping_default
+                                                               )
 # Observers will then flag if new data has arrived
 [ob.reset() for ob in observers_non_perturbated]
 result = compute_closed_orbit(acc, conf, delta=0e0, max_iter=10, eps=1e-10)
@@ -51,7 +56,7 @@ print(
     fmt.format(
         "as defined by lattice",
         result.found_closed_orbit,
-        vec2txt(result.x0),
+        vec2txt(result.x0.iloc),
         mat2txt(result.one_turn_map),
     )
 )
@@ -82,7 +87,7 @@ line_y, = ax_y.plot(
 elem = acc.find("QF", 0)
 muls = elem.get_multipoles()
 muls.set_multipole(1, 1e-3 - 1e-3j)
-observers_perturbated = instrument_with_standard_observers(acc)
+observers_perturbated = instrument_with_standard_observers(acc, mapping=canonical_variables_mapping_default)
 # Observers will then flag if new data has arrived.
 # Not strictly necessary here as a new set or observers was
 # created and registered.
@@ -93,7 +98,7 @@ print(
     fmt.format(
         f"added dipole component to element {elem.name}, ",
         result.found_closed_orbit,
-        vec2txt(result.x0),
+        vec2txt(result.x0.iloc),
         mat2txt(result.one_turn_map),
     )
 )

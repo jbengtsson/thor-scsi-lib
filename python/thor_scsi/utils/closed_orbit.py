@@ -13,6 +13,13 @@ logger = logging.getLogger("thor_scsi")
 
 @dataclass
 class ClosedOrbitResult:
+    """
+    Todo:
+        should one rather store numpy arrays instead of an
+        elaborate object
+
+
+    """
     #: was a closed orbit found?
     found_closed_orbit: bool
 
@@ -183,9 +190,11 @@ def compute_closed_orbit(
             # required i.e. the cavity is on
             t_jac = tmp.jacobian()
             gradient = partial_inverse(t_jac, jj)
+            # extract the array from dx
+            dxa = np.array(dx.iloc)
             # Now using numpy arrays here ... thus matrix multiplication
-            tmp = gradient @ dx.iloc
-            dx0 = tmp
+            dx0 = gradient @ dxa
+
             # Next start point following line search ?
             # if the right side is not a tpsa vector x0 seems to be
             # converted to an array
