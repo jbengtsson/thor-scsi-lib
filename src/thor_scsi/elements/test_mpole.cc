@@ -501,7 +501,7 @@ BOOST_AUTO_TEST_CASE(test30_mpole_engineering)
     tse::MpoleTypeTpsa mpole(C);
 
     // not yet using knobs ... to be explored
-    int nv = 8;
+    int nv = 9;
     auto a_desc = std::make_shared<gtpsa::desc>(nv, 5);
     // auto L = gtpsa::tpsa(a_desc, 1);
     //mpole.setLength(L);
