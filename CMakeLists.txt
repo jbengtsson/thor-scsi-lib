@@ -62,12 +62,8 @@ endif()
 # Need to write proper .cmake
 set(gtpsa_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/gtpsa/)
 set(gtpsa_cpp_INCLUDE_DIR ${gtpsa_DIR}/c++)
-set(mad_ng_SRC_DIR ${gtpsa_DIR}/mad-ng/src/)
-
-include_directories(
-  ${mad_ng_SRC_DIR}/libgtpsa/
-  ${mad_ng_SRC_DIR}
-  )
+# only required by test transfomr?
+set(gtpsa_mad_ng_INCLUDE_DIR ${gtpsa_DIR}/mad-ng/src)
 
 # Fortran implementation part
 add_subdirectory(TPSA)
