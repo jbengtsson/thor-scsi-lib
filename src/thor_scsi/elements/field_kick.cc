@@ -173,8 +173,8 @@ void tse::quad_fringe(const tsc::ConfigType &conf, const P b2, gtpsa::ss_vect<T>
 /* ==========================================================================
    End support functions
    ========================================================================== */
-
-
+// remove me after debug
+#include <iostream>
 template<class C>
 void tse::FieldKickForthOrder<C>::computeIntegrationSteps(void)
 {
@@ -185,7 +185,7 @@ void tse::FieldKickForthOrder<C>::computeIntegrationSteps(void)
 	const double Pirho = this->parent->getCurvature(), length = this->parent->getLength();
 	double dL;
 	auto n_steps = this->getNumberOfIntegrationSteps();
-
+	// std::cerr << __FILE__ << " Field kick forth order: using " << n_steps << " n steps" << std::endl;
 	if(this->parent->assumingCurvedTrajectory()){
 		// along the arc
 		dL = 2e0/ Pirho * sin(length * Pirho/2e0) / n_steps;
@@ -241,7 +241,8 @@ inline void tse::FieldKickForthOrder<C>::_localPropagate(tsc::ConfigType &conf, 
 
 
 	double  h_ref = 0.0;
-	auto PN = this->integration_steps;
+	auto PN = this->getNumberOfIntegrationSteps();
+    // std::cerr << __FILE__ << " field kick local propagate:: number of integration steps "  << PN << std::endl;
 	auto length = this->parent->getLength();
     double Pirho = this->parent->getCurvature();
 
@@ -268,6 +269,7 @@ inline void tse::FieldKickForthOrder<C>::_localPropagate(tsc::ConfigType &conf, 
 	 * Calculating the individual pieces
 	 */
 	double dL1, dL2, dkL1, dkL2;
+    // std::cerr << "dL of element " << this->getLength() << " dL " << std::endl;
 	this->splitIntegrationStep(dL, &dL1, &dL2, &dkL1, &dkL2);
 
 	// std::cout <<  "local pass " <<  std::endl;
@@ -293,6 +295,7 @@ inline void tse::FieldKickForthOrder<C>::_localPropagate(tsc::ConfigType &conf, 
 
 	/* 4th order integration steps  */
 	for (int seg = 1; seg <= PN; seg++) {
+	    // std::cerr << __FILE__ << ": 4th order integration step " << seg << "/" << PN << std::endl;
 		const int rad_step = (seg - 1) * 4;
 		// computeRadiationIntegralsStep
 		THOR_SCSI_LOG(DEBUG) << "\n  seg = " << seg << "\n";

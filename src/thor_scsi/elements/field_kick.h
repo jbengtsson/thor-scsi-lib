@@ -264,7 +264,9 @@ namespace thor_scsi::elements {
 		}
 
 		inline int getNumberOfIntegrationSteps(void) const {
-			return this->integ4O.getNumberOfIntegrationSteps();
+			auto n_steps = this->integ4O.getNumberOfIntegrationSteps();
+            // std::cerr << __FILE__ << " get integration steps " << n_steps << std::endl;
+            return n_steps;
 		}
 
 		/**
