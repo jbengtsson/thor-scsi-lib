@@ -128,13 +128,13 @@ ts::AcceleratorKnobbable<C>::_propagate(thor_scsi::core::ConfigType& conf, gtpsa
 			 << " for a maximum of elements " << max_elements << std::endl;
 
 	    next_elem = static_cast<int>(start_elem);
-        // iterate over the number of requested elements ...
+	    // iterate over the number of requested elements ...
 	    for(int i=0; i<std::abs(max_elements); i++)
 	    {
-            // check if next element is acceptable ...
-            // currently not required as I access elements using .at which checks
-            // that the access is within range
-            // assert(next_elem >= 0 && next_elem<nelem);
+		// check if next element is acceptable ...
+		// currently not required as I access elements using .at which checks
+		// that the access is within range
+		// assert(next_elem >= 0 && next_elem<nelem);
 		size_t n = next_elem;
 
 		std::shared_ptr<tsc::CellVoid> cv = this->at(n);
@@ -152,13 +152,16 @@ ts::AcceleratorKnobbable<C>::_propagate(thor_scsi::core::ConfigType& conf, gtpsa
 		    next_elem++;
 		}
 		std::shared_ptr<tsc::Observer> observer = elem->observer();
-        const auto celem = std::const_pointer_cast<tsc::ElemTypeKnobbed/*<C>*/>(elem);
-		if(observer){
-			observer->view(celem, ps, tsc::ObservedState::start, 0);
-		}
-		elem->propagate(conf, ps);
-		if(observer){
-			observer->view(celem, ps, tsc::ObservedState::end, 0);
+                const auto celem = std::const_pointer_cast<tsc::ElemTypeKnobbed/*<C>*/>(elem);
+                /* keep view on observer the same , end always in forward upstream direction */
+                const auto observed_first = (retreat) ? tsc::ObservedState::end : tsc::ObservedState::start;
+                const auto observed_last  = (retreat) ? tsc::ObservedState::start : tsc::ObservedState::end;
+                if(observer){
+                        observer->view(celem, ps, observed_first, 0);
+                }
+                elem->propagate(conf, ps);
+                if(observer){
+                        observer->view(celem, ps, observed_last, 0);
 		}
 		auto aperture = elem->getAperture();
 		if(aperture){
