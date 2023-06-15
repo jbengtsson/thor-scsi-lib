@@ -190,6 +190,7 @@ def compute_nu_xi(desc, tpsa_order, M):
             M_delta.clear()
             # m_11 + delta * m_16.
             M_delta += M[2*k].get(ind_1(2*k))
+            # The 2nd argument scales the existing value & the 3rd value is set.
             M_delta.set(ind_1(delta_), 0e0, M[2*k].get(ind_2(2*k, delta_)))
             # m_22 + delta * m_26.
             M_delta += M[2*k+1].get(ind_1(2*k+1))
@@ -234,7 +235,7 @@ def sort_eigen_vec(n_dof, nu, w):
     return order
 
 
-def compute_A(n_dof, eta, u):
+def compute_A_from_eigenvec(n_dof, eta, u):
     """
 
     Original version thanks to Johan
@@ -276,7 +277,7 @@ def compute_A(n_dof, eta, u):
         B = np.identity(6)
         B[x_, delta_], B[px_, delta_] = eta[x_], eta[px_]
         B[ct_, x_], B[ct_, px_] = eta[px_], -eta[x_]
-        logger.info("\ncompute_A\nB:\n" + mat2txt(B))
+        logger.info("\ncompute_A_from_eigenvec\nB:\n" + mat2txt(B))
 
         A = B @ A
 
@@ -369,7 +370,7 @@ def compute_M_diag(
 
         logger.debug("\neta:\n" + vec2txt(eta))
 
-        [A, A_inv, u1] = compute_A(n_dof, eta, u_ord)
+        [A, A_inv, u1] = compute_A_from_eigenvec(n_dof, eta, u_ord)
         A, _ = compute_A_CS(2, A)
 
         logger.debug(
@@ -534,6 +535,29 @@ def compute_map_and_diag(
     return stable, t_map, A
 
 
+# J.B. 03/04/23.
+def compute_A(
+        eta: np.ndarray,
+        alpha: np.ndarray,
+        beta: np.ndarray,
+        desc: gtpsa.desc):
+    """Compute A from Twiss parameters.
+    """
+    A_mat = np.zeros((6, 6), dtype=float)
+    A = gtpsa.ss_vect_tpsa(desc, 1)
+    for k in range(2):
+        A_mat[2*k, 2*k]   = np.sqrt(beta[k])
+        A_mat[2*k+1, 2*k] = -alpha[k]/np.sqrt(beta[k])
+        A_mat[2*k+1, 2*k+1] = 1e0/np.sqrt(beta[k])
+    A_mat[ct_, ct_] = 1e0
+    A_mat[delta_, delta_] = 1e0
+    # Include dispersion.
+    for k in range(4):
+        A_mat[k, delta_] = eta[k]
+    A.set_jacobian(A_mat)
+    return A
+
+
 def compute_Twiss_along_lattice(
     n_dof: int,
     acc: tslib.Accelerator,
@@ -565,15 +589,17 @@ def compute_Twiss_along_lattice(
         _, A = \
             compute_map_and_diag(n_dof, acc, calc_config, desc=desc,
                                  tpsa_order=tpsa_order)
-    logger.info("\ncompute_Twiss_along_lattice\nA:\n" + mat2txt(A))
+    logger.info("\ncompute_Twiss_along_lattice\nA:\n" + prt2txt(A))
 
     # Not really required ... but used for convenience
     observers = instrument_with_standard_observers(acc)
 
     # Propagate through the accelerator
     A_map = gtpsa.ss_vect_tpsa(desc, 1)
-    A_map.set_zero()
-    A_map.set_jacobian(A)
+    # J.B. 03/04/23.
+    # A_map.set_zero()
+    # A_map.set_jacobian(A)
+    A_map = A
     logger.debug("\ncompute_Twiss_along_lattice\nA:\n" + prt2txt(A_map))
 
     for k in range(len(acc)):
@@ -623,6 +649,6 @@ def compute_Twiss_along_lattice(
 __all__ = [
     "compute_map", "compute_nu_symp", "check_if_stable_1D",
     "check_if_stable_2D", "check_if_stable_3D", "check_if_stable_3D",
-    "compute_nu_xi", "compute_map_and_diag", "compute_Twiss_along_lattice",
-    "jac2twiss", "compute_M_diag"
+    "compute_nu_xi", "compute_map_and_diag", "compute_A",
+    "compute_Twiss_along_lattice", "jac2twiss", "compute_M_diag"
 ]
