@@ -79,6 +79,7 @@ dist/
 
 # Python build
 build/
+build_debug/
 libtracy.*
 
 
