@@ -118,10 +118,10 @@ If build was successful use
 
 .. code:: shell
 
-  cmake --install . --prefix /path/to/install/to
+  cmake --install . --prefix < path to install to e.g.: > ../local
 
 
-with `/path/to/install/to` the absolute path of the directory you
+with `path to install to` the absolute path of the directory you
 would like to install to.
 
 **NB**: The libaries implementing the python interface will be
