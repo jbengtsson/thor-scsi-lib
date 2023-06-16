@@ -72,6 +72,8 @@ sls-2
 *.png
 *.gif
 *.log
+*.json
+*.tsf
 
 
 # Python dist
