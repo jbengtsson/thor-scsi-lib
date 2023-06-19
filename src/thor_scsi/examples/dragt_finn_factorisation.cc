@@ -13,7 +13,7 @@ int main(int argc, char *argv[])
   //const auto t =
   Config C;
   C.set<std::string>("name", "test");
-  C.set<double>("K", 1e0);
+  C.set<double>("K", 3e0);
   C.set<double>("L", 0e0);
   C.set<double>("N", 1);
 
@@ -24,14 +24,13 @@ int main(int argc, char *argv[])
   ps.set_identity();
   sext.propagate(calc_config, ps);
 
+  std::cout << "\nAfter sextupole:\n" << ps << std::endl;
 
-  std::cout << "after sextupole\n" << ps << std::endl;
-
-  for (int i = 0; i < ps.size(); i++) {
+  for (auto i = 0; i < ps.size(); i++) {
     ps[i].print();
   }
 
-  auto lie_factors = gtpsa::M_to_h_DF(ps);
-  std::cout << "lie factors\n" << lie_factors << std::endl;
-  lie_factors.print();
+  std::cout << "\nLie generator:\n";
+  auto lie_generator = gtpsa::M_to_h_DF(ps);
+  lie_generator.print();
 }
