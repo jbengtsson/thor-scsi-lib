@@ -150,9 +150,9 @@ def prt_twiss_sxt(lat, data, fam_name):
                          data.twiss.values[k, 1, 1]))
 
     
-lat_file = "b3_sfsf_thor_sextsplit.lat"
+lat_file = "b3_cf425cf_thor_scsi.lat"
 t_dir = os.path.join(os.environ["HOME"], "Nextcloud", "thor_scsi", "JB",
-                     "BESSY-III")
+                     "BESSY-III", "ipac_2023")
 t_file = os.path.join(t_dir, lat_file)
 
 # Read in & parse lattice file.
@@ -166,11 +166,12 @@ model_state.radiation = False
 model_state.Cavity_on = False
 
 # Compute Twiss parameters along lattice.
-M, A, data = compute_periodic_solution(lat, model_state, )
+M, A, data = compute_periodic_solution(lat, model_state)
 
 print("\nR:\n", mat2txt(np.linalg.inv(A) @ M.jacobian() @ A))
 
-prt_map("\nM:", M)
+if not True:
+    prt_map("\nM:", M)
 
 h = tslib.M_to_h_DF(M)
 print("\nh:")
