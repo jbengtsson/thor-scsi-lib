@@ -118,15 +118,26 @@ def compute_periodic_solution(lat, model_state):
     model_state.radiation = False
     model_state.Cavity_on = False
 
-    M, A = lo.compute_map_and_diag(n_dof, lat, model_state, desc=desc)
+    stable, M, A = lo.compute_map_and_diag(n_dof, lat, model_state, desc=desc,
+                                           tpsa_order=tpsa_order)
     print("\nM:\n", mat2txt(M.jacobian()))
-    res= cs.compute_Twiss_A(A)
+    res = cs.compute_Twiss_A(A)
     Twiss = res[:3]
     prt_Twiss("\nTwiss:\n", Twiss)
-    print("\nend of twiss\n")
-    ds = lo.compute_Twiss_along_lattice(n_dof, lat, model_state, A=A, desc=desc)
+    print("\nEnd of twiss\n")
+    A_map = gtpsa.ss_vect_tpsa(desc, 1)
+    A_map.set_jacobian(A)
+    ds = lo.compute_Twiss_along_lattice(n_dof, lat, model_state, A=A_map,
+                                        desc=desc)
 
     return M, A, ds
+
+
+def prt_map(str, map):
+    n_dof = 3;
+    print(str)
+    for k in range(2*n_dof):
+        map[k].print()
 
 
 def prt_twiss_sxt(lat, data, fam_name):
@@ -139,8 +150,9 @@ def prt_twiss_sxt(lat, data, fam_name):
                          data.twiss.values[k, 1, 1]))
 
     
-lat_file = "b3_sfsf_thor_sextsplit.lat"
-t_dir = os.path.join("/Volumes", "qst", "thor_scsi", "JB")
+lat_file = "b3_cf425cf_thor_scsi.lat"
+t_dir = os.path.join(os.environ["HOME"], "Nextcloud", "thor_scsi", "JB",
+                     "BESSY-III", "ipac_2023")
 t_file = os.path.join(t_dir, lat_file)
 
 # Read in & parse lattice file.
@@ -156,12 +168,20 @@ model_state.Cavity_on = False
 # Compute Twiss parameters along lattice.
 M, A, data = compute_periodic_solution(lat, model_state)
 
-if True:
+print("\nR:\n", mat2txt(np.linalg.inv(A) @ M.jacobian() @ A))
+
+if not True:
+    prt_map("\nM:", M)
+
+h = tslib.M_to_h_DF(M)
+print("\nh:")
+h.print()
+
+if not True:
     plt_Twiss(data, "lin_opt.png", "Linear Optics")
     plt.show()
     print("\nPlots saved as: before.png & after.png")
 
-print("\nR:\n", mat2txt(np.linalg.inv(A) @ M.jacobian() @ A))
-
-prt_twiss_sxt(lat, data, "om_sf")
-prt_twiss_sxt(lat, data, "om_sd")
+if not True:
+    prt_twiss_sxt(lat, data, "om_sf")
+    prt_twiss_sxt(lat, data, "om_sd")

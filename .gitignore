@@ -72,7 +72,8 @@ sls-2
 *.png
 *.gif
 *.log
-
+*.tsf
+*.json
 
 # Python dist
 dist/
@@ -81,7 +82,6 @@ dist/
 build/
 build_debug/
 libtracy.*
-
 
 # python egg files
 *.egg-info/
