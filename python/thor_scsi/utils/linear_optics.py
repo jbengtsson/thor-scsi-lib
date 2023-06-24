@@ -589,7 +589,7 @@ def compute_Twiss_along_lattice(
         stable, _, A = \
             compute_map_and_diag(n_dof, acc, calc_config, desc=desc,
                                  tpsa_order=tpsa_order)
-    logger.info("\ncompute_Twiss_along_lattice\nA:\n" + prt2txt(A))
+    logger.info("\ncompute_Twiss_along_lattice\nA:\n" + mat2txt(A))
 
     # Not really required ... but used for convenience
     observers = instrument_with_standard_observers(acc)
