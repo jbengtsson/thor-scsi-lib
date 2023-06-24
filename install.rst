@@ -55,7 +55,7 @@ First clone the repository using
    git clone https://github.com/jbengtsson/thor-scsi-lib.git
 
 
-change to the directory (persumably) `thor-scsi-lib`.
+change to the directory (presumably) `thor-scsi-lib`.
 
 Then initialise submodules using the following command
 
@@ -66,7 +66,6 @@ Then initialise submodules using the following command
 *NB*: this command currently will pull a subrepository (`cmake4epics`).
 This repository currently does not support (llvm/clang). Thus build on
 MAC currently fails. A fix is currently worked on.
-
 
 
 Getting ready to build
@@ -133,7 +132,6 @@ if you want to use these. The python wrapper and module
 can be installed using `setup.py` too.
 
 
-
 Installing python module thor_scsi and gtpsa
 --------------------------------------------
 
@@ -187,6 +185,9 @@ Alternatively you could use `pip` e.g.
 
 to install the package.
 
+**NB**: The c++ library is wrapped as part of the `thor_scsi` python module. If your
+favourite python interpreter is not found, consider defining the `Python3_EXECUTABLE`
+so that it contains the path to your executable
 
 .. _cmake-find-subcomponents:
 
