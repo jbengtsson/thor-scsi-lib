@@ -9,7 +9,8 @@ namespace thor_scsi::elements {
 	using thor_scsi::core::ElemType;
 
 	template<class EC>
-	class RadiationDelegateKnobbed: public  RadiationDelegateInterfaceKnobbed<EC>{
+	class RadiationDelegateKnobbed:
+		public RadiationDelegateInterfaceKnobbed<EC>{
 	public:
 		~RadiationDelegateKnobbed(void){};
 		inline RadiationDelegateKnobbed(void)
@@ -28,11 +29,18 @@ namespace thor_scsi::elements {
 		/*
 		 * Used for computing curly_dHx
 		 */
-		virtual void view(const EC& kick, const gtpsa::ss_vect<double>      &ps, const enum ObservedState state, const int cnt) override;
-		// virtual void view(const ElemType& kick, const gtpsa::ss_vect<tps>         &ps, const enum ObservedState state, const int cnt) override;
-		virtual void view(const EC& kick, const gtpsa::ss_vect<gtpsa::tpsa> &ps, const enum ObservedState state, const int cnt) override;
+		virtual void view
+		(const EC& kick, const gtpsa::ss_vect<double> &ps,
+		 const enum ObservedState state, const int cnt) override;
+		// virtual void view
+		// (const ElemType& kick, const gtpsa::ss_vect<tps> &ps,
+		//  const enum ObservedState state, const int cnt) override;
+		virtual void view
+		(const EC& kick, const gtpsa::ss_vect<gtpsa::tpsa> &ps,
+		 const enum ObservedState state, const int cnt) override;
 
-		virtual void show(std::ostream& strm, int level) const override final;
+		virtual void show
+		(std::ostream& strm, int level) const override final;
 
 		std::string getDelegatorName(void){
 			return this->delegator_name;
@@ -42,7 +50,9 @@ namespace thor_scsi::elements {
 		}
 	private:
 		template<typename T>
-		inline void _view(const EC&, const gtpsa::ss_vect<T> &ps, const enum ObservedState state, const int cnt);
+		inline void _view
+		(const EC&, const gtpsa::ss_vect<T> &ps,
+		 const enum ObservedState state, const int cnt);
 
 		template<typename T>
 		inline void computeAndStoreCurlyH(const gtpsa::ss_vect<T> &ps);
@@ -52,7 +62,8 @@ namespace thor_scsi::elements {
 		int delegator_index;
 	};
 
-	typedef RadiationDelegateKickInterfaceKnobbed<ElemType> RadiationDelegateKickInterface;
+	typedef RadiationDelegateKickInterfaceKnobbed<ElemType>
+	RadiationDelegateKickInterface;
 	/**
 	 *
 	 * @note synchrotron integrals are not used nor has their
@@ -63,7 +74,8 @@ namespace thor_scsi::elements {
 	 * EC typically is FieldKickAPIKnobbed<C>
 	 */
 	template<class FC>
-	class RadiationDelegateKickKnobbed: public RadiationDelegateKickInterfaceKnobbed<FC> {
+	class RadiationDelegateKickKnobbed:
+		public RadiationDelegateKickInterfaceKnobbed<FC> {
 	public:
 		RadiationDelegateKickKnobbed(void)
 			: curly_dH_x(0e0)
@@ -71,14 +83,15 @@ namespace thor_scsi::elements {
 			, dI( {0e0, 0e0, 0e0, 0e0, 0e0, 0e0} )
 			, D_rad( {0e0, 0e0, 0e0} )
 			{
-			this->reset();
-		}
+				this->reset();
+			}
 		~RadiationDelegateKickKnobbed(void){};
 
 		/*
 		 * @brief: reset parameters for radiation
 		 *
-		 * passing ps to template the function. currently these functions are void
+		 * passing ps to template the function. currently these
+		 * functions are void
 		 * (perhaps required later on)
 		 */
 		inline void reset(void) {
@@ -90,7 +103,8 @@ namespace thor_scsi::elements {
 		}
 
 		// should be renamed to diffusion coefficient ...
-		// add in coment that it is a prerequisite for emittance calculations
+		// add in coment that it is a prerequisite for emittance
+		// calculations
 		/*
 		 * @brief computing diffusion coefficients
 		 * @todo review if it would be a better approach to store B66
@@ -112,28 +126,46 @@ namespace thor_scsi::elements {
 		/*
 		 * Used for computing synchrotron integrals
 		 */
-		virtual void view(const FC& kick, const gtpsa::ss_vect<double>      &ps, const enum ObservedState state, const int cnt) override;
-		// virtual void view(const FieldKickAPI& kick, const gtpsa::ss_vect<tps>         &ps, const enum ObservedState state, const int cnt) override;
-		virtual void view(const FC& kick, const gtpsa::ss_vect<gtpsa::tpsa> &ps, const enum ObservedState state, const int cnt) override;
+		virtual void view
+		(const FC& kick, const gtpsa::ss_vect<double> &ps,
+		 const enum ObservedState state, const int cnt) override;
+		// virtual void view
+		// (const FieldKickAPI& kick, const gtpsa::ss_vect<tps> &ps,
+		//  const enum ObservedState state, const int cnt) override;
+		virtual void view
+		(const FC& kick, const gtpsa::ss_vect<gtpsa::tpsa> &ps,
+		 const enum ObservedState state, const int cnt) override;
 
-		virtual void show(std::ostream& strm, int level) const override final;
-		//virtual void view(const ElemType& kick, const gtpsa::ss_vect<double> &ps, const enum ObservedState state, const int cnt) override final;
-		//virtual void view(const ElemType& kick, const gtpsa::ss_vect<tps> &ps, const enum ObservedState state, const int cnt) override final;
+		virtual void show
+		(std::ostream& strm, int level) const override final;
+		// virtual void view
+		// (const ElemType& kick, const gtpsa::ss_vect<double> &ps,
+		//  const enum ObservedState state, const int cnt)
+		// 	override final;
+		// virtual void view
+		// (const ElemType& kick, const gtpsa::ss_vect<tps> &ps,
+		//  const enum ObservedState state, const int cnt)
+		// 	override final;
 		/**
 		 * @brief Radiation effect due to local field
 		 *
 		 * @f[
 		 *     \frac{\mathrm{d}\delta}{\mathrm{d}(ds)} =
-		 *           -C_{\gamma} \, E_0^3 \, (1 + \delta)^2 \, \left( \frac{B_{perp}}{B \rho}\right)^2
-		 *                \frac{1}{2\pi}
+		 *           -C_{\gamma} \, E_0^3 \, (1 + \delta)^2 \,
+		 *            \left( \frac{B_{perp}}{B \rho}\right)^2
+		 *            \frac{1}{2\pi}
 		 * @f]
 		 *
-		 * @todo: depends on energy of ring .... currently taken from config ...
+		 * @todo: depends on energy of ring .... currently taken from
+		 *        config ...
 		 *
-		 * M. Sands "The hysics of Electron Storage Rings" SLAC-121, p. 98.
+		 * M. Sands "The hysics of Electron Storage Rings" SLAC-121,
+		 * p. 98.
 		 */
 		template<typename T>
-		void radiate(const thor_scsi::core::ConfigType &conf, gtpsa::ss_vect<T> &x, const double L, const double h_ref, const std::array<T, 3> B);
+		void radiate
+		(const thor_scsi::core::ConfigType &conf, gtpsa::ss_vect<T> &x,
+		 const double L, const double h_ref, const std::array<T, 3> B);
 
 		inline auto getSynchrotronIntegralsIncrement(void) const {
 			return this->dI;
@@ -166,7 +198,8 @@ namespace thor_scsi::elements {
 		 */
 		//
 		template<typename T>
-		inline void synchrotronIntegralsFinish(const FC &kick, const gtpsa::ss_vect<T> &ps);
+		inline void synchrotronIntegralsFinish
+		(const FC &kick, const gtpsa::ss_vect<T> &ps);
 
 		// calculate the effect of radiation
 		template<typename T>
@@ -174,26 +207,34 @@ namespace thor_scsi::elements {
 		synchrotronIntegralsStep(const gtpsa::ss_vect<T> &ps);
 
 		template<typename T>
-		inline void _view(const FC&, const gtpsa::ss_vect<T> &ps, const enum ObservedState state, const int cnt);
+		inline void _view
+		(const FC&, const gtpsa::ss_vect<T> &ps,
+		 const enum ObservedState state, const int cnt);
 
 		template<typename T>
-		void diffusion(const T &B2_perp, const T &ds, const T &p_s0,  const gtpsa::ss_vect<T> &A);
+		void diffusion
+		(const T &B2_perp, const T &ds, const T &p_s0,
+		 const gtpsa::ss_vect<T> &A);
 
 		double curly_dH_x;
 		int index;
-		std::array<double, 6> dI;           ///< Local contributions to the synchrotron integrals
-		std::array<double, 3> D_rad;        //< Diffusion coefficients (Floquet space).
+		std::array<double, 6> dI;       /* < Local contributions to the
+						   synchrotron integrals */
+		std::array<double, 3> D_rad;    /* < Diffusion coefficients
+						   (Floquet space). */
 		bool compute_diffusion = false;
 		double energy = NAN;
 		double q_fluct = NAN;
 
 		std::string delegator_name = "";
 		int delegator_index = -1;
-
 	};
 
-    typedef RadiationDelegateKnobbed<thor_scsi::core::ElemTypeKnobbed> RadiationDelegate;
-    typedef RadiationDelegateKickKnobbed<thor_scsi::elements::FieldKickAPIKnobbed<thor_scsi::core::StandardDoubleType>> RadiationDelegateKick;
+	typedef RadiationDelegateKnobbed<thor_scsi::core::ElemTypeKnobbed>
+	RadiationDelegate;
+	typedef RadiationDelegateKickKnobbed
+	<thor_scsi::elements::FieldKickAPIKnobbed
+	 <thor_scsi::core::StandardDoubleType>> RadiationDelegateKick;
 } // namespace thor_scsi::elements
 
 #endif /* _THOR_SCSI_RADIATION_DELEGATOR_H_ */
