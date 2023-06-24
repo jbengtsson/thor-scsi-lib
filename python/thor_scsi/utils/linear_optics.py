@@ -321,7 +321,7 @@ def compute_M_diag(
         logger.debug("computed tunes (for symplectic matrix): %s", nu_symp)
 
         # Diagonalise M.
-
+        
         [w, u] = np.linalg.eig(M[:n, :n])
 
         # nu_eig = acos2(w.imag, w.real) / (2e0 * np.pi)
@@ -586,10 +586,10 @@ def compute_Twiss_along_lattice(
         calc_config = tslib.ConfigType()
 
     if A is None:
-        stable, _, A = \
+        _, A = \
             compute_map_and_diag(n_dof, acc, calc_config, desc=desc,
                                  tpsa_order=tpsa_order)
-    logger.info("\ncompute_Twiss_along_lattice\nA:\n" + mat2txt(A))
+    logger.info("\ncompute_Twiss_along_lattice\nA:\n" + prt2txt(A))
 
     # Not really required ... but used for convenience
     observers = instrument_with_standard_observers(acc)
