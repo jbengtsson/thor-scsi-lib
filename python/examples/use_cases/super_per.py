@@ -121,7 +121,8 @@ def print_Twiss(lat, data):
         L += lat[k].get_length()
         nu[X_] += data.twiss.sel(plane="x", par="dnu").values[k]
         nu[Y_] += data.twiss.sel(plane="y", par="dnu").values[k]
-        print("{:3d} {:8s} {:7.3f} {:8.5f} {:8.5f} {:7.5f} {:8.5f} {:8.5f} {:8.5f} {:7.5f} {:8.5f}".
+        print("{:3d} {:8s} {:7.3f} {:8.5f} {:8.5f} {:7.5f} {:8.5f} {:8.5f}"
+              " {:8.5f} {:7.5f} {:8.5f}".
               format(k, lat[k].name, L,
                      data.twiss.sel(plane="x", par="alpha").values[k],
                      data.twiss.sel(plane="x", par="beta").values[k],
@@ -143,13 +144,21 @@ def compute_periodic_solution(lat, model_state, prt):
     model_state.Cavity_on = False
 
     stable, M, A = lo.compute_map_and_diag(n_dof, lat, model_state, desc=desc)
-    if prt:
-        print("\nM:\n", mat2txt(M.jacobian()))
-    res= cs.compute_Twiss_A(A)
-    Twiss = res[:3]
-    if prt:
-         print_Twiss_params("\nTwiss:\n", Twiss)
-    ds = lo.compute_Twiss_along_lattice(n_dof, lat, model_state, A=A, desc=desc)
+    if stable:
+        if prt:
+            print("\nM:\n", mat2txt(M.jacobian()))
+        res= cs.compute_Twiss_A(A)
+        Twiss = res[:3]
+        if prt:
+             print_Twiss_params("\nTwiss:\n", Twiss)
+        A_map = gtpsa.ss_vect_tpsa(desc, 1)
+        A_map.set_jacobian(A)
+        ds = \
+            lo.compute_Twiss_along_lattice(
+                n_dof, lat, model_state, A=A_map, desc=desc)
+    else:
+        ds = np.nan
+        print("\ncompute_periodic_solution: unstable")
 
     return M, A, ds
 
@@ -476,9 +485,9 @@ n_dof = 2
 model_state.radiation = False
 model_state.Cavity_on = False
 
-
 energy = 2.5e9
-rad_del_kicks = thor_scsi.utils.accelerator.instrument_with_radiators(lat, energy=energy)
+rad_del_kicks = \
+    thor_scsi.utils.accelerator.instrument_with_radiators(lat, energy=energy)
 
 model_state_test = tslib.ConfigType()
 model_state_test.Energy = energy

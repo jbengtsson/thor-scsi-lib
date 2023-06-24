@@ -43,6 +43,7 @@ from thor_scsi.utils import linear_optics as lo, courant_snyder as cs, \
 
 # from thor_scsi.utils.phase_space_vector import map2numpy
 from thor_scsi.utils.output import prt2txt, mat2txt, vec2txt
+import thor_scsi.utils.accelerator
 
 tpsa_order = 2
 
@@ -481,12 +482,83 @@ def get_Twiss(loc):
     return eta, alpha, beta
 
 
+def compute_eps_x(E_0, C, I):
+    c_0      = 2.99792458e8
+    h_bar   = 6.58211899e-16                    # Tracy-2.
+    # h_bar   = 6.582119569e-16
+    m_e     = 0.51099906e6                      # Tracy-2.
+    # m_e     = 0.5109989461
+    q_e     = 1.602e-19                         # Tracy-2.
+    # q_e     = 1.60217663
+    mu_0    = 4e0*np.pi*1e-7
+    eps_0   = 1e0/(c_0**2*mu_0)
+    r_e     = q_e/(40*np.pi*eps_0*m_e)
+    C_gamma = 4e0*np.pi*r_e/(3.0*(1e-9*m_e)**3)
+    C_u     = 55e0/(24e0*np.sqrt(3e0))
+    C_q     = 3e0*C_u*h_bar*c_0/(4e0*m_e)
+    C_q_scl = 1e18*C_q/m_e**2
+    T_0     = C/c_0
+
+    U_0 = 1e9*C_gamma*(1e-9*energy)**4*I[2]/(2e0*np.pi)
+    eps_x = C_q_scl*energy**2*I[5]/(I[2]-I[4])
+    sigma_delta = np.sqrt(C_q_scl*energy**2*I[3]/(2e0*I[2]+I[4]))
+    J = np.zeros(3)
+    J[X_] = 1e0 - I[4]/I[2]
+    J[Z_] = 2e0 + I[4]/I[2]
+    J[Y_] = 4e0 - J[X_] - J[Z_]
+
+    tau = np.zeros(3)
+    for k in range(3):
+        tau[k] = 4e0*np.pi*T_0/(C_gamma*(1e-9*E_0)**3*J[k]*I[2])
+
+    print("\n  I[1..5] = ", end="")
+    for k in range(1, 6):
+        print(" {:10.3e}".format(I[k]), end="")
+    print()
+
+    print("\n  U_0   [keV]    = {:5.1f}".format(1e-3*U_0))
+    print("  eps_x [nm.rad] = {:6.4f}".format(1e9*eps_x))
+    print("  sigma_delta    = {:9.3e}".format(sigma_delta))
+    print("  J              = [{:5.3f}, {:5.3f}, {:5.3f}]".
+          format(J[X_], J[Y_], J[Z_]))
+    print("  tau   [msec]   = [{:e}, {:e}, {:e}]".
+          format(1e3*tau[X_], 1e3*tau[Y_], 1e3*tau[Z_]))
+
+    return eps_x, sigma_delta, U_0, J, tau, I
+
+
+def compute_synchr_int(energy):
+    rad_del_kicks = \
+        thor_scsi.utils.accelerator.instrument_with_radiators \
+        (lat, energy=energy)
+
+    model_state_test = tslib.ConfigType()
+    model_state_test.Energy = energy
+    model_state_test.radiation = True
+    model_state_test.Cavity_on = False
+    model_state_test.emittance = True
+
+    ps = gtpsa.ss_vect_tpsa(desc, 2)
+    ps.set_identity()
+    ps[0] += 1e-6
+    lat.propagate(model_state_test, ps)
+
+    dI = [rk.get_synchrotron_integrals_increments() for rk in rad_del_kicks]
+    I = np.sum(dI, axis=0)
+    print("\n I[1..5] = ", end="")
+    for k in range(1, len(I)):
+        print("{:11.3e}".format(I[k]), end="")
+    print()
+
+    return I
+
+
 t_dir = os.path.join(os.environ["HOME"], "Nextcloud", "thor_scsi", "JB")
 # t_file = os.path.join(t_dir, 'b3_tst.lat')
 # t_file = os.path.join(t_dir, "b3_sf_40Grad_JB.lat")
 # t_file = os.path.join(t_dir, "b3_sfsf_4Quads_unitcell.lat")
-# t_file = os.path.join(t_dir, "b3_sfsf4Q_tracy_jb.lat")
-t_file = os.path.join(t_dir, "b3_sfsf4Q_tracy_jb_2.lat")
+t_file = os.path.join(t_dir, "b3_sfsf4Q_tracy_jb.lat")
+# t_file = os.path.join(t_dir, "b3_sfsf4Q_tracy_jb_2.lat")
 
 # Read in & parse lattice file.
 lat = accelerator_from_config(t_file)
@@ -497,6 +569,12 @@ model_state = tslib.ConfigType()
 n_dof = 2
 model_state.radiation = False
 model_state.Cavity_on = False
+
+energy = 2.5e9
+
+I = compute_synchr_int(energy)
+compute_eps_x(energy, rad.compute_circ(lat), I)
+exit()
 
 if False:
     # Set RF cavity phase for negative alpha_c.
@@ -531,7 +609,7 @@ M = lo.compute_map(lat, model_state, desc=desc, tpsa_order=tpsa_order)
 stable, nu, xi = lo.compute_nu_xi(desc, tpsa_order, M)
 # Compute radiation properties.
 stable, U_0, J, tau, eps = \
-    rad.compute_radiation(lat, model_state, 2.5e9, 1e-15, desc=desc)
+    rad.compute_radiation(lat, model_state, energy, 1e-15, desc=desc)
 
 C = rad.compute_circ(lat)
 
@@ -568,17 +646,17 @@ param_list = [
     ("mbb3",  "dphi"),        # Dipole.
     ("mbb4",  "dphi"),        # Dipole.
 
-#    ("br",   "not used"),     # Focusing reverse bend;
-    ("br",    "b_2"),          # used to set total bend angle.
+    # ("br",   "not used"),     # Focusing reverse bend.
+    ("br",    "b_2"),         # used to set total bend angle.
 
     ("mbr",   "dphi"),        # Focusing reverse bend.
     ("mbr",   "b_2"),
 
 
-    ("qd",    "b_2"),          # Defocusing quadrupole.
-    ("mqd",   "b_2"),          # Defocusing quadrupole.
+    ("qd",    "b_2"),         # Defocusing quadrupole.
+    ("mqd",   "b_2"),         # Defocusing quadrupole.
 
-    ("uq1",   "b_2"),          # Triplet for matching section.
+    ("uq1",   "b_2"),         # Triplet for matching section.
     ("uq2",   "b_2"),
     ("uq3",   "b_2"),
     ("uq4",   "b_2"),
