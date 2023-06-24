@@ -149,9 +149,11 @@ def compute_periodic_solution(lat, model_state, prt):
         Twiss = res[:3]
         if prt:
              print_Twiss_params("\nTwiss:\n", Twiss)
+        A_map = gtpsa.ss_vect_tpsa(desc, 1)
+        A_map.set_jacobian(A)
         ds = \
             lo.compute_Twiss_along_lattice(
-                n_dof, lat, model_state, A=A, desc=desc)
+                n_dof, lat, model_state, A=A_map, desc=desc)
     else:
         ds = np.nan
         print("\ncompute_periodic_solution: unstable")

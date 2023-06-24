@@ -219,7 +219,8 @@ namespace thor_scsi::elements{
 #endif
 	}
       } else {
-	// std::cerr << "Calculating horizontal thin kick: By"  << ByoBrho <<  " h_bend=1/rho_bend " << h_bend;
+	// std::cerr << "Calculating horizontal thin kick: By"  << ByoBrho
+	// 	  << " h_bend=1/rho_bend " << h_bend;
 	// Cartesian bend.
 	ps[px_] -= L*(h_bend+ByoBrho);
 	// std::cerr << "ps[px_] " << ps[px_]  << std::endl;

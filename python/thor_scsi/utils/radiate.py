@@ -66,7 +66,12 @@ def compute_rad_prop(acc, calc_config, x0, dE, alpha_rad, D_rad):
         tau[k] = -C/(c0*alpha_rad[k])
         eps[k] = -D_rad[k]/(2e0*alpha_rad[k])
 
-    logger.info("\nE [GeV]     = {:3.1f}\nU0 [keV]    = {:3.1f}\neps         = {:12.6e} {:12.6e} {:12.6e}\ntau [msec]  = {:8.6f} {:8.6f} {:8.6f}\nJ           = {:8.6f} {:8.6f} {:8.6f}\nalpha_rad   = {:13.6e} {:13.6e} {:13.6e}\nD_rad       = {:12.6e} {:12.6e} {:12.6e}".
+    logger.info("\nE [GeV]     = {:3.1f}\nU0 [keV]    = {:3.1f}\neps"
+                "         = {:12.6e} {:12.6e} {:12.6e}\ntau [msec]"
+                "  = {:8.6f} {:8.6f} {:8.6f}\nJ"
+                "           = {:8.6f} {:8.6f} {:8.6f}\nalpha_rad"
+                "   = {:13.6e} {:13.6e} {:13.6e}\nD_rad"
+                "       = {:12.6e} {:12.6e} {:12.6e}".
                 format(1e-9*calc_config.Energy,
                        1e-3*U_0,
                        eps[X_], eps[Y_], eps[Z_],
@@ -180,10 +185,10 @@ def compute_radiation(
 #         calc_config.Cavity_on = True
 
 #     calc_config.Energy = energy
-#     logger.debug(
-#         f"calc_config radiation { calc_config.radiation} emmittance {calc_config.emittance} Cavity on {calc_config.Cavity_on}"
-#     )
-
+    # logger.debug(
+    #     f"calc_config radiation { calc_config.radiation} emmittance
+    #     {calc_config.emittance} Cavity on {calc_config.Cavity_on}"
+    # )
 
 #     # Diffusion coefficients
 #     acc.propagate(calc_config, Ap)
