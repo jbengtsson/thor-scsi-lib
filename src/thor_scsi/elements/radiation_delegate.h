@@ -204,7 +204,8 @@ namespace thor_scsi::elements {
 		// calculate the effect of radiation
 		template<typename T>
 		inline void //radiate
-		synchrotronIntegralsStep(const gtpsa::ss_vect<T> &ps);
+		synchrotronIntegralsStep
+		(const gtpsa::ss_vect<T> &ps, const int cnt);
 
 		template<typename T>
 		inline void _view

@@ -80,8 +80,9 @@ namespace thor_scsi::elements {
  *
  */
 	template<typename T>
-	void get_twoJ(const int n_DOF, const gtpsa::ss_vect<double> &ps,
-		      const gtpsa::ss_vect<T> &A, double twoJ[]);
+	void get_twoJ
+	(const int n_DOF, const gtpsa::ss_vect<double> &ps,
+	 const gtpsa::ss_vect<T> &A, double twoJ[]);
 
 /**
  *
@@ -132,8 +133,8 @@ namespace thor_scsi::elements {
 	template<typename T>
 	static inline double get_dI_eta(const gtpsa::ss_vect<T> &A){
 #warning "optimise dI eta"
-		arma::mat jac = A.jacobian();
-		return jac(x_, delta_);
+		arma::mat A_mat = A.jacobian();
+		return A_mat(x_, delta_);
 	}
 
 	static inline double get_dI_eta(const gtpsa::ss_vect<tps> &A){
