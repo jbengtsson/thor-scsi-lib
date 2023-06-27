@@ -101,6 +101,8 @@ def plot_Twiss(ds, file_name, title):
     fig.tight_layout()
     plt.savefig(file_name)
 
+    return plt
+
 
 def print_Twiss_params(str, Twiss):
     """
@@ -124,20 +126,25 @@ def print_Twiss(lat, data):
     """
     L = 0e0
     nu = np.zeros(2, dtype=float)
-    print("")
+    print("\n#   name         s    alpha_x  beta_x   nu_x     eta_x   eta'_x"
+          "   alpha_y  beta_y   nu_y     eta_y   eta'_y")
     for k in range(len(data.index)):
         L += lat[k].get_length()
         nu[X_] += data.twiss.sel(plane="x", par="dnu").values[k]
         nu[Y_] += data.twiss.sel(plane="y", par="dnu").values[k]
         print("{:3d} {:8s} {:7.3f} {:8.5f} {:8.5f} {:7.5f} {:8.5f} {:8.5f}"
-              " {:8.5f} {:7.5f} {:8.5f}".
+              " {:8.5f} {:8.5f} {:7.5f} {:8.5f} {:8.5f}".
               format(k, lat[k].name, L,
                      data.twiss.sel(plane="x", par="alpha").values[k],
                      data.twiss.sel(plane="x", par="beta").values[k],
-                     nu[X_], data.dispersion.sel(phase_coordinate="x")[k],
+                     nu[X_],
+                     data.dispersion.sel(phase_coordinate="x")[k],
+                     data.dispersion.sel(phase_coordinate="px")[k],
                      data.twiss.sel(plane="y", par="alpha").values[k],
                      data.twiss.sel(plane="y", par="beta").values[k],
-                     nu[Y_], data.dispersion.sel(phase_coordinate="y")[k]))
+                     nu[Y_],
+                     data.dispersion.sel(phase_coordinate="y")[k],
+                     data.dispersion.sel(phase_coordinate="py")[k]))
 
 
 def compute_periodic_solution(lat, model_state):
@@ -365,6 +372,9 @@ def opt_super_period(lat, param_list, C, bounds, phi_des, eps_x_des, nu_des,
         global n_iter_min
         global prms_min
 
+        loc1 = lat.find("om_sf", 1).index - 1
+        loc2 = lat.find("om_sf", 3).index - 1
+
         M = lo.compute_map(lat, model_state, desc=desc, tpsa_order=tpsa_order)
         stable = lo.check_if_stable_3D(M.jacobian())
 
@@ -377,8 +387,20 @@ def opt_super_period(lat, param_list, C, bounds, phi_des, eps_x_des, nu_des,
             beta_straight = np.zeros(2, dtype=float)
             beta_straight[X_] = data.twiss.sel(plane="x", par="beta").values[0]
             beta_straight[Y_] = data.twiss.sel(plane="y", par="beta").values[0]
-            eta_straight_x    = \
+            eta_straight_x = \
                 data.dispersion.sel(phase_coordinate="x").values[0]
+
+            alpha_sym = np.zeros(4, dtype=float)
+            alpha_sym[0] = data.twiss.sel(plane="x", par="alpha").values[loc1]
+            alpha_sym[1] = data.twiss.sel(plane="y", par="alpha").values[loc1]
+            alpha_sym[2] = data.twiss.sel(plane="x", par="alpha").values[loc2]
+            alpha_sym[3] = data.twiss.sel(plane="y", par="alpha").values[loc2]
+            etap_sym_x = np.zeros(2, dtype=float)
+            etap_sym_x[0] = \
+                data.dispersion.sel(phase_coordinate="px").values[loc1]
+            etap_sym_x[1] = \
+                data.dispersion.sel(phase_coordinate="px").values[loc2]
+
             nu_cell = compute_nu_cell(data)
 
             if False:
@@ -393,15 +415,27 @@ def opt_super_period(lat, param_list, C, bounds, phi_des, eps_x_des, nu_des,
             if stable:
                 n = len(weights)
                 dchi_2 = np.zeros(n, dtype=float)
+
                 dchi_2[0] = \
                     weights["eps_x"] * np.sum((eps_x - eps_x_des) ** 2)
+
                 dchi_2[1] = weights["nu_cell"] * np.sum((nu_cell - nu_des) ** 2)
+
                 dchi_2[2] = \
                     weights["beta_straight"] \
                     * np.sum((beta_straight - beta_straight_des) ** 2)
                 dchi_2[3] = weights["eta_straight_x"] * eta_straight_x ** 2
-                dchi_2[4] = weights["xi"] * np.sum(xi ** 2)
-                dchi_2[5] = weights["alpha_c"] / alpha_c ** 2
+
+                dchi_2[4] = \
+                    weights["alpha_sym"] * np.sum(alpha_sym ** 2)
+                dchi_2[5] = \
+                    weights["etap_sym_x"] * np.sum(etap_sym_x ** 2)
+
+
+                dchi_2[6] = weights["xi"] * np.sum(xi ** 2)
+
+                dchi_2[7] = weights["alpha_c"] / alpha_c ** 2
+
                 chi_2 = 0e0
                 for k in range(n):
                     chi_2 += dchi_2[k]
@@ -440,10 +474,20 @@ def opt_super_period(lat, param_list, C, bounds, phi_des, eps_x_des, nu_des,
                 print("  beta_straight  = [{:7.5f}, {:7.5f}]".
                       format(beta_straight[X_], beta_straight[Y_]))
                 print(f"  eta_straight_x = {eta_straight_x:10.3e}")
+                print("  alpha_sym      = [{:10.3e}, {:10.3e}]".
+                      format(alpha_sym[0], alpha_sym[1]))
+                print("  alpha_sym      = [{:10.3e}, {:10.3e}]".
+                      format(alpha_sym[2], alpha_sym[3]))
+                print(f"  etap_sym_x     = {etap_sym_x[0]:10.3e}")
+                print(f"  etap_sym_x     = {etap_sym_x[1]:10.3e}")
                 print(f"  xi             = [{xi[X_]:5.3f}, {xi[Y_]:5.3f}]")
                 print(f"  alpha_c        = {alpha_c:9.3e}")
             else:
                 print("\n Unstable.")
+
+            plt = plot_Twiss(data, "work_in_progress.png", "Linear Optics")
+            plt.close()
+
         return chi_2
 
     def f_unit_cell(prms):
@@ -491,7 +535,8 @@ def opt_super_period(lat, param_list, C, bounds, phi_des, eps_x_des, nu_des,
         f_unit_cell(minimum["x"])
         print("\n Minimum:\n", minimum)
 
-        print_Twiss(lat, data)
+        if False:
+            print_Twiss(lat, data)
 
     global rbend
 
@@ -568,13 +613,10 @@ def compute_synchr_int(energy, A):
 
 
 t_dir = os.path.join(os.environ["HOME"], "Nextcloud", "thor_scsi", "JB")
-# t_file = os.path.join(t_dir, 'b3_tst.lat')
-# t_file = os.path.join(t_dir, "b3_sf_40Grad_JB.lat")
-# t_file = os.path.join(t_dir, "b3_sfsf_4Quads_unitcell.lat")
 # t_file = os.path.join(t_dir, "b3_sfsf4Q_tracy.lat")
-# t_file = os.path.join(t_dir, "b3_sfsf4Q_tracy_jb.lat")
+t_file = os.path.join(t_dir, "b3_sfsf4Q_tracy_jb.lat")
 # t_file = os.path.join(t_dir, "b3_sfsf4Q_tracy_jb_2.lat")
-t_file = os.path.join(t_dir, "b3_sfsf4Q_tracy_jb_3.lat")
+# t_file = os.path.join(t_dir, "b3_sfsf4Q_tracy_jb_3.lat")
 
 # Read in & parse lattice file.
 lat = accelerator_from_config(t_file)
@@ -607,20 +649,20 @@ plot_Twiss(data, "before.png", "Linear Optics - Before")
 if False:
     plt.show()
 
-stable, U_0, J, tau, eps = \
-    rad.compute_radiation(lat, model_state, energy, 1e-15, desc=desc)
+if False:
+    stable, U_0, J, tau, eps = \
+        rad.compute_radiation(lat, model_state, energy, 1e-15, desc=desc)
 
-prt_rad(energy, U_0, eps[X_], 0e0, J, tau)
+    prt_rad(energy, U_0, eps[X_], 0e0, J, tau)
 
-I, U_0, eps_x, sigma_delta, J, tau = compute_synchrotron_integrals(energy, A)
+    I, U_0, eps_x, sigma_delta, J, tau = \
+        compute_synchrotron_integrals(energy, A)
 
-print("\n  I[1..5]        = ", end="")
-for k in range(1, 6):
-    print(" {:10.3e}".format(I[k]), end="")
-print()
-prt_rad(energy, U_0, eps_x, sigma_delta, J, tau)
-
-exit()
+    print("\n  I[1..5]        = ", end="")
+    for k in range(1, 6):
+        print(" {:10.3e}".format(I[k]), end="")
+        print()
+        prt_rad(energy, U_0, eps_x, sigma_delta, J, tau)
 
 if False:
     # Set RF cavity phase for negative alpha_c.
@@ -669,6 +711,8 @@ weights = {
     "nu_cell":        1e0,
     "beta_straight":  1e-5,
     "eta_straight_x": 1e3,
+    "alpha_sym":      1e2,
+    "etap_sym_x":     1e2,
     "xi":             1e-6,
     "alpha_c":        0*1e-14
 }
