@@ -300,7 +300,7 @@ inline void tse::FieldKickForthOrder<C>::_localPropagate
 
   /* 4th order integration steps  */
   for (int seg = 1; seg <= N; seg++) {
-    const int rad_step = (seg - 1) * 4;
+    const int rad_step = (seg - 1) * 3;
     // computeRadiationIntegralsStep
     THOR_SCSI_LOG(DEBUG) << "\n  seg = " << seg << "\n";
 

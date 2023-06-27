@@ -120,7 +120,7 @@ inline void tse::RadiationDelegateKickKnobbed<FC>::synchrotronIntegralsStep
 (const gtpsa::ss_vect<T> &ps, const int cnt)
 {
   // Needs A^-1.
-  if ((cnt % 2) == 0) {
+  if ((cnt % 3) != 1) {
     this->curly_dH_x += get_curly_H(ps);
     this->dI[4] += get_dI_eta(ps);
   } else {
