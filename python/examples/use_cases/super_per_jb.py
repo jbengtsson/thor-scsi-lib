@@ -45,7 +45,15 @@ from thor_scsi.utils import linear_optics as lo, courant_snyder as cs, \
 from thor_scsi.utils.output import prt2txt, mat2txt, vec2txt
 import thor_scsi.utils.accelerator
 
+
+# os.environ["PYTHONPATH"]        = \
+#     "/Users/johan/git/thor-scsi-lib_ps/python" \
+#     ":/Users/johan/git/thor-scsi-lib_ps/src/gtpsa/python"
+# os.environ["DYLD_LIBRARY_PATH"] = \
+#     "/Users/johan/git/thor-scsi-lib_ps/local/lib"
+
 tpsa_order = 2
+
 
 # Descriptor for Truncated Power Series Algebra variables.
 desc = gtpsa.desc(6, tpsa_order)
@@ -105,9 +113,9 @@ def print_Twiss_params(str, Twiss):
     # that way I also check that Twiss has exactly three parameters
     eta, alpha, beta = Twiss
     print(str, end="")
-    print(f"  eta    = [{eta[X_]:9.3e}, {eta[Y_]:9.3e}]")
-    print(f"  alpha  = [{alpha[X_]:9.3e}, {alpha[Y_]:9.3e}]")
-    print(f"  beta   = [{beta[X_]:5.3f}, {beta[Y_]:5.3f}]")
+    print(f"  eta   = [{eta[X_]:9.3e}, {eta[Y_]:9.3e}]")
+    print(f"  alpha = [{alpha[X_]:9.3e}, {alpha[Y_]:9.3e}]")
+    print(f"  beta  = [{beta[X_]:5.3f}, {beta[Y_]:5.3f}]")
 
 
 def print_Twiss(lat, data):
@@ -121,7 +129,8 @@ def print_Twiss(lat, data):
         L += lat[k].get_length()
         nu[X_] += data.twiss.sel(plane="x", par="dnu").values[k]
         nu[Y_] += data.twiss.sel(plane="y", par="dnu").values[k]
-        print("{:3d} {:8s} {:7.3f} {:8.5f} {:8.5f} {:7.5f} {:8.5f} {:8.5f} {:8.5f} {:7.5f} {:8.5f}".
+        print("{:3d} {:8s} {:7.3f} {:8.5f} {:8.5f} {:7.5f} {:8.5f} {:8.5f}"
+              " {:8.5f} {:7.5f} {:8.5f}".
               format(k, lat[k].name, L,
                      data.twiss.sel(plane="x", par="alpha").values[k],
                      data.twiss.sel(plane="x", par="beta").values[k],
@@ -131,7 +140,7 @@ def print_Twiss(lat, data):
                      nu[Y_], data.dispersion.sel(phase_coordinate="y")[k]))
 
 
-def compute_periodic_solution(lat, model_state, prt):
+def compute_periodic_solution(lat, model_state):
     """
     Todo:
         model_state: rename to calculation_configuration or calc_config
@@ -144,12 +153,8 @@ def compute_periodic_solution(lat, model_state, prt):
 
     stable, M, A = lo.compute_map_and_diag(n_dof, lat, model_state, desc=desc)
     if stable:
-        if prt:
-            print("\nM:\n", mat2txt(M.jacobian()))
         res= cs.compute_Twiss_A(A)
         Twiss = res[:3]
-        if prt:
-             print_Twiss_params("\nTwiss:\n", Twiss)
         A_map = gtpsa.ss_vect_tpsa(desc, 1)
         A_map.set_jacobian(A)
         ds = \
@@ -159,7 +164,62 @@ def compute_periodic_solution(lat, model_state, prt):
         ds = np.nan
         print("\ncompute_periodic_solution: unstable")
 
-    return M, A, ds
+    return M, A, Twiss, ds
+
+
+def compute_eps_x(E_0, C, I):
+    c_0     = 2.99792458e8
+    h_bar   = 6.58211899e-16                    # Tracy-2.
+    # h_bar   = 6.582119569e-16
+    m_e     = 0.51099906e6                      # Tracy-2.
+    # m_e     = 0.5109989461
+    q_e     = 1.602e-19                         # Tracy-2.
+    # q_e     = 1.60217663
+    mu_0    = 4e0*np.pi*1e-7
+    eps_0   = 1e0/(c_0**2*mu_0)
+    r_e     = q_e/(4e0*np.pi*eps_0*m_e)
+    C_gamma = 4e0*np.pi*r_e/(3.0*(1e-9*m_e)**3)
+    C_u     = 55e0/(24e0*np.sqrt(3e0))
+    C_q     = 3e0*C_u*h_bar*c_0/(4e0*m_e)
+    C_q_scl = 1e18*C_q/m_e**2
+    T_0     = C/c_0
+
+    U_0 = -1e9*C_gamma*(1e-9*energy)**4*I[2]/(2e0*np.pi)
+    eps_x = C_q_scl*(1e-9*energy)**2*I[5]/(I[2]-I[4])
+    sigma_delta = np.sqrt(C_q_scl*(1e-9*energy)**2*I[3]/(2e0*I[2]+I[4]))
+    J = np.zeros(3)
+    J[X_] = 1e0 - I[4]/I[2]
+    J[Z_] = 2e0 + I[4]/I[2]
+    J[Y_] = 4e0 - J[X_] - J[Z_]
+
+    tau = np.zeros(3)
+    for k in range(3):
+        tau[k] = 4e0*np.pi*T_0/(C_gamma*(1e-9*E_0)**3*J[k]*I[2])
+
+    return U_0, eps_x, sigma_delta, J, tau
+
+
+def compute_synchrotron_integrals(energy, A):
+    A_map = gtpsa.ss_vect_tpsa(desc, 1)
+    A_map.set_jacobian(A)
+
+    I = compute_synchr_int(energy, A_map)
+    U_0, eps_x, sigma_delta, J, tau = \
+        compute_eps_x(energy, rad.compute_circ(lat), I)
+
+    return I, U_0, eps_x, sigma_delta, J, tau
+
+
+def prt_rad(E_b, U_0, eps_x, sigma_delta, J, tau):
+    print("\n  E_b   [GeV]    = {:5.1f}".format(1e-9*E_b))
+    print("  U_0   [keV]    = {:5.1f}".format(1e-3*U_0))
+    print("  eps_x [nm.rad] = {:6.4f}".format(1e9*eps_x))
+    print("  sigma_delta    = {:9.3e}".format(sigma_delta))
+    print("  J              = [{:5.3f}, {:5.3f}, {:5.3f}]".
+          format(J[X_], J[Y_], J[Z_]))
+    print("  tau   [msec]   = [{:5.3f}, {:5.3f}, {:5.3f}]".
+          format(1e3*tau[X_], 1e3*tau[Y_], 1e3*tau[Z_]))
+
 
 # check that a is a vector, as an example
 # _, = a.shape
@@ -312,7 +372,7 @@ def opt_super_period(lat, param_list, C, bounds, phi_des, eps_x_des, nu_des,
             alpha_c = M[ct_].get(lo.ind_1(delta_))/C
             _, nu, xi = lo.compute_nu_xi(desc, tpsa_order, M)
 
-            M, A, data = compute_periodic_solution(lat, model_state, False)
+            M, A, Twiss, data = compute_periodic_solution(lat, model_state)
 
             beta_straight = np.zeros(2, dtype=float)
             beta_straight[X_] = data.twiss.sel(plane="x", par="beta").values[0]
@@ -321,14 +381,20 @@ def opt_super_period(lat, param_list, C, bounds, phi_des, eps_x_des, nu_des,
                 data.dispersion.sel(phase_coordinate="x").values[0]
             nu_cell = compute_nu_cell(data)
 
-            stable, U_0, J, tau, eps = \
-                rad.compute_radiation(lat, model_state, 2.5e9, 1e-15, desc=desc)
+            if False:
+                stable, U_0, J, tau, eps = \
+                    rad.compute_radiation \
+                    (lat, model_state, 2.5e9, 1e-15, desc=desc)
+                eps_x = eps[X_]
+            else:
+                I, U_0, eps_x, sigma_delta, J, tau = \
+                    compute_synchrotron_integrals(energy, A)
 
             if stable:
                 n = len(weights)
                 dchi_2 = np.zeros(n, dtype=float)
                 dchi_2[0] = \
-                    weights["eps_x"] * np.sum((eps[X_] - eps_x_des) ** 2)
+                    weights["eps_x"] * np.sum((eps_x - eps_x_des) ** 2)
                 dchi_2[1] = weights["nu_cell"] * np.sum((nu_cell - nu_des) ** 2)
                 dchi_2[2] = \
                     weights["beta_straight"] \
@@ -368,7 +434,7 @@ def opt_super_period(lat, param_list, C, bounds, phi_des, eps_x_des, nu_des,
             print(f"\n  {b1:5s}          = {get_phi_elem(lat, b1, 0):8.5f}")
             print(f"  {b2:5s}          = {get_phi_elem(lat, b2, 0):8.5f}")
             if stable:
-                print(f"\n  eps_x          = {1e12*eps[X_]:5.3f}")
+                print(f"\n  eps_x          = {1e12*eps_x:5.3f}")
                 print("  nu_cell        = [{:7.5f}, {:7.5f}]".
                       format(nu_cell[X_], nu_cell[Y_]))
                 print("  beta_straight  = [{:7.5f}, {:7.5f}]".
@@ -411,7 +477,7 @@ def opt_super_period(lat, param_list, C, bounds, phi_des, eps_x_des, nu_des,
             print("  Setting prs_min for plot.")
             set_prm(lat, param_list, prms_min)
         # Compute new Twiss parameters along lattice.
-        M, A, data = compute_periodic_solution(lat, model_state, False)
+        M, A, Twiss, data = compute_periodic_solution(lat, model_state)
         plot_Twiss(data, "after.png", "Linear Optics - After")
 
         print("\nInitial parameter values:")
@@ -482,52 +548,7 @@ def get_Twiss(loc):
     return eta, alpha, beta
 
 
-def compute_eps_x(E_0, C, I):
-    c_0      = 2.99792458e8
-    h_bar   = 6.58211899e-16                    # Tracy-2.
-    # h_bar   = 6.582119569e-16
-    m_e     = 0.51099906e6                      # Tracy-2.
-    # m_e     = 0.5109989461
-    q_e     = 1.602e-19                         # Tracy-2.
-    # q_e     = 1.60217663
-    mu_0    = 4e0*np.pi*1e-7
-    eps_0   = 1e0/(c_0**2*mu_0)
-    r_e     = q_e/(40*np.pi*eps_0*m_e)
-    C_gamma = 4e0*np.pi*r_e/(3.0*(1e-9*m_e)**3)
-    C_u     = 55e0/(24e0*np.sqrt(3e0))
-    C_q     = 3e0*C_u*h_bar*c_0/(4e0*m_e)
-    C_q_scl = 1e18*C_q/m_e**2
-    T_0     = C/c_0
-
-    U_0 = 1e9*C_gamma*(1e-9*energy)**4*I[2]/(2e0*np.pi)
-    eps_x = C_q_scl*energy**2*I[5]/(I[2]-I[4])
-    sigma_delta = np.sqrt(C_q_scl*energy**2*I[3]/(2e0*I[2]+I[4]))
-    J = np.zeros(3)
-    J[X_] = 1e0 - I[4]/I[2]
-    J[Z_] = 2e0 + I[4]/I[2]
-    J[Y_] = 4e0 - J[X_] - J[Z_]
-
-    tau = np.zeros(3)
-    for k in range(3):
-        tau[k] = 4e0*np.pi*T_0/(C_gamma*(1e-9*E_0)**3*J[k]*I[2])
-
-    print("\n  I[1..5] = ", end="")
-    for k in range(1, 6):
-        print(" {:10.3e}".format(I[k]), end="")
-    print()
-
-    print("\n  U_0   [keV]    = {:5.1f}".format(1e-3*U_0))
-    print("  eps_x [nm.rad] = {:6.4f}".format(1e9*eps_x))
-    print("  sigma_delta    = {:9.3e}".format(sigma_delta))
-    print("  J              = [{:5.3f}, {:5.3f}, {:5.3f}]".
-          format(J[X_], J[Y_], J[Z_]))
-    print("  tau   [msec]   = [{:e}, {:e}, {:e}]".
-          format(1e3*tau[X_], 1e3*tau[Y_], 1e3*tau[Z_]))
-
-    return eps_x, sigma_delta, U_0, J, tau, I
-
-
-def compute_synchr_int(energy):
+def compute_synchr_int(energy, A):
     rad_del_kicks = \
         thor_scsi.utils.accelerator.instrument_with_radiators \
         (lat, energy=energy)
@@ -538,17 +559,10 @@ def compute_synchr_int(energy):
     model_state_test.Cavity_on = False
     model_state_test.emittance = True
 
-    ps = gtpsa.ss_vect_tpsa(desc, 2)
-    ps.set_identity()
-    ps[0] += 1e-6
-    lat.propagate(model_state_test, ps)
+    lat.propagate(model_state_test, A)
 
     dI = [rk.get_synchrotron_integrals_increments() for rk in rad_del_kicks]
     I = np.sum(dI, axis=0)
-    print("\n I[1..5] = ", end="")
-    for k in range(1, len(I)):
-        print("{:11.3e}".format(I[k]), end="")
-    print()
 
     return I
 
@@ -557,8 +571,10 @@ t_dir = os.path.join(os.environ["HOME"], "Nextcloud", "thor_scsi", "JB")
 # t_file = os.path.join(t_dir, 'b3_tst.lat')
 # t_file = os.path.join(t_dir, "b3_sf_40Grad_JB.lat")
 # t_file = os.path.join(t_dir, "b3_sfsf_4Quads_unitcell.lat")
-t_file = os.path.join(t_dir, "b3_sfsf4Q_tracy_jb.lat")
+# t_file = os.path.join(t_dir, "b3_sfsf4Q_tracy.lat")
+# t_file = os.path.join(t_dir, "b3_sfsf4Q_tracy_jb.lat")
 # t_file = os.path.join(t_dir, "b3_sfsf4Q_tracy_jb_2.lat")
+t_file = os.path.join(t_dir, "b3_sfsf4Q_tracy_jb_3.lat")
 
 # Read in & parse lattice file.
 lat = accelerator_from_config(t_file)
@@ -572,8 +588,38 @@ model_state.Cavity_on = False
 
 energy = 2.5e9
 
-I = compute_synchr_int(energy)
-compute_eps_x(energy, rad.compute_circ(lat), I)
+# qd = lat.find("qd", 0)
+# print(qd.get_integration_method(), qd.get_number_of_integration_steps())
+
+# Compute Twiss parameters along lattice.
+M, A, Twiss, data = compute_periodic_solution(lat, model_state)
+stable, nu, xi = lo.compute_nu_xi(desc, tpsa_order, M)
+
+print("\nM:\n", mat2txt(M.jacobian()))
+print("\nA:\n", mat2txt(A))
+print("\n  nu = [{:7.5f}, {:7.5f}]".format(nu[X_], nu[Y_]))
+print("  xi = [{:7.5f}, {:7.5f}]".format(xi[X_], xi[Y_]))
+print_Twiss_params("\nTwiss:\n", Twiss)
+
+if False:
+    print_Twiss(lat, data)
+plot_Twiss(data, "before.png", "Linear Optics - Before")
+if False:
+    plt.show()
+
+stable, U_0, J, tau, eps = \
+    rad.compute_radiation(lat, model_state, energy, 1e-15, desc=desc)
+
+prt_rad(energy, U_0, eps[X_], 0e0, J, tau)
+
+I, U_0, eps_x, sigma_delta, J, tau = compute_synchrotron_integrals(energy, A)
+
+print("\n  I[1..5]        = ", end="")
+for k in range(1, 6):
+    print(" {:10.3e}".format(I[k]), end="")
+print()
+prt_rad(energy, U_0, eps_x, sigma_delta, J, tau)
+
 exit()
 
 if False:
@@ -591,14 +637,6 @@ if False:
     set_phi_elem(lat, "br", 0, -0.20)
     print(compute_phi(lat))
     raise Exception("")
-
-# Compute Twiss parameters along lattice.
-M, A, data = compute_periodic_solution(lat, model_state, True)
-plot_Twiss(data, "before.png", "Linear Optics - Before")
-if False:
-    print_Twiss(lat, data)
-if False:
-    plt.show()
 
 # Zero sextopoles.
 print("\nZeroing sextupoles.")
