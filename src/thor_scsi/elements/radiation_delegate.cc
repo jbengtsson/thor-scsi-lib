@@ -32,10 +32,7 @@ template<class EC>
 template <typename T>
 inline void tse::RadiationDelegateKnobbed<EC>::computeAndStoreCurlyH
 (const gtpsa::ss_vect<T> &ps)
-{
-  //throw std::runtime_error("computeAndStoreCurlyH needs implementation" );
-  this->curly_dH_x = get_curly_H(ps);
-}
+{ this->curly_dH_x = get_curly_H(ps);}
 
 template<class EC>
 template <typename T>
@@ -95,44 +92,41 @@ template<typename T>
 inline void tse::RadiationDelegateKickKnobbed<FC>::synchrotronIntegralsFinish
 (const FC &kick, const gtpsa::ss_vect<T> &ps)
 {
-#if 0
-  throw std::runtime_error
-    ("synchrotron integral steps need to be implemented ");
-#else
   // Why only when cavities are not on ?
   // Needs A^-1.
   const T x = ps[x_], y = ps[y_];
   double Gx = NAN, Gy = NAN;
   kick.getFieldInterpolator()->gradient(x, y, &Gx, &Gy);
-  const double PL = kick.getLength();
-  const double Pirho = kick.getCurvature();
-  const auto PN = kick.getNumberOfIntegrationSteps();
-  this->curly_dH_x /= 6e0*PN;
-  this->dI[1] += PL * get_dI_eta(ps) * Pirho;
-  this->dI[2] += PL*sqr(Pirho);
-  this->dI[3] += PL*fabs(tse::cube(Pirho));
-  this->dI[4] *=
-    PL*Pirho*(sqr(Pirho)+2e0*Gy)
-    /(6e0*PN);
-  this->dI[5] += PL*fabs(tse::cube(Pirho))*curly_dH_x;
+  const double L = kick.getLength();
+  const double h_bend = kick.getCurvature();
+  // Bug:
+  //   Integration_steps is set to 1 in API.
+#if 0
+  const auto N = kick.getNumberOfIntegrationSteps();
+#else
+  const auto N = 10;
 #endif
+  this->curly_dH_x /= 6e0*N;
+  this->dI[1] += L * get_dI_eta(ps) * h_bend;
+  this->dI[2] += L * sqr(h_bend);
+  this->dI[3] += L * fabs(tse::cube(h_bend));
+  this->dI[4] *= L * h_bend*(sqr(h_bend)+2e0*Gy)/(6e0*N);
+  this->dI[5] += L * fabs(tse::cube(h_bend))*curly_dH_x;
 }
 
 template<class FC>
 template<typename T>
 inline void tse::RadiationDelegateKickKnobbed<FC>::synchrotronIntegralsStep
-(const gtpsa::ss_vect<T> &ps)
+(const gtpsa::ss_vect<T> &ps, const int cnt)
 {
-
-#if 0
-  throw std::runtime_error
-    ("synchrotron integral steps need to be implemented ");
-#else
-
   // Needs A^-1.
-  this->curly_dH_x += get_curly_H<T>(ps);
-  this->dI[4] += get_dI_eta(ps);
-#endif
+  if ((cnt % 2) == 0) {
+    this->curly_dH_x += get_curly_H(ps);
+    this->dI[4] += get_dI_eta(ps);
+  } else {
+    this->curly_dH_x += 4e0*get_curly_H(ps);
+    this->dI[4] += 4e0*get_dI_eta(ps);
+  }
 }
 
 /**
@@ -157,13 +151,8 @@ template<typename T>
 inline void tse::RadiationDelegateKickKnobbed<FC>::diffusion
 (const T &B2_perp,  const T &ds, const T &p_s0,  const gtpsa::ss_vect<T> &A)
 {
-
-
   // gtpsa::ss_vect<T> A_inv(A[0]);
 
-#if 0
-  throw std::runtime_error("diffusion needs to be implemented");
-#else
   if (B2_perp > 0e0){
     // Fix move function to RadiationDelegateKick
     auto q_fluct = this->q_fluct;
@@ -180,7 +169,6 @@ inline void tse::RadiationDelegateKickKnobbed<FC>::diffusion
 	(sqr(A_inv(j*2, delta_))+sqr(A_inv(j*2+1, delta_)))*B_66/2e0;
     }
   }
-#endif
 }
 
 template<class FC>
@@ -197,7 +185,7 @@ inline void tse::RadiationDelegateKickKnobbed<FC>::_view
     return;
     break;
   case tsc::ObservedState::event:
-    this->synchrotronIntegralsStep(ps);
+    this->synchrotronIntegralsStep(ps, cnt);
     return;
     break;
   case tsc::ObservedState::end:

@@ -32,63 +32,40 @@ double tse::get_psi(const double irho, const double phi, const double gap)
 
 
 namespace thor_scsi::elements{
-  template<typename T>
-  void get_twoJ
-  (const int n_DOF, const gtpsa::ss_vect<double> &ps,
-   const gtpsa::ss_vect<T> &A, double twoJ[])
+  arma::vec get_twoJ(const int n_DOF, const arma::vec &ps, const arma::mat &A)
   {
-    int             j, no;
-    long int        jj[ps_dim];
-    const double unused=0e0;
-    gtpsa::ss_vect<double> z(unused);
+    arma::vec z(2*n_DOF), twoJ(n_DOF);
 
-    //throw std::runtime_error("get_twoJ needs to be ported");
-    // no = no_tps;
-    // sets the truncation order of calculation
-    // danot_(1);
+    z = inv(A)*ps;
 
-    for (j = 0; j < ps_dim; j++)
-      jj[j] = (j < 2*n_DOF)? 1 : 0;
+    for (auto k = 0; k < n_DOF; k++)
+      twoJ[k] = sqr(z[2*k]) + sqr(z[2*k+1]);
 
-    // inspect if mad_tpsa_pminv can be used?
-    // z = (PInv(A, jj)*ps).cst();
-
-    for (j = 0; j < n_DOF; j++)
-      twoJ[j] = sqr(z[2*j]) + sqr(z[2*j+1]);
-
-    // danot_(no);
+    return twoJ;
   }
 
   template<typename T>
   double get_curly_H(const gtpsa::ss_vect<T> &A){
-    int             j;
-    double          curly_H[2], unused=0e0;
-    gtpsa::ss_vect<double> eta(unused);
+    const int n_DOF = 2;
 
-    arma::mat jac = A.jacobian();
-    eta.set_zero();
-    for (j = 0; j < 4; j++)
-      eta[j] = jac(j, delta_);
+    arma::vec eta(2*n_DOF);
+    arma::mat A_mat = A.jacobian();
 
-    get_twoJ(2, eta, A, curly_H);
+    for (auto k = 0; k < (2*n_DOF); k++)
+      eta[k] = A_mat(k, delta_);
+
+    A_mat = A_mat(arma::span(0, 2*n_DOF-1), arma::span(0, 2*n_DOF-1));
+
+    auto curly_H = get_twoJ(n_DOF, eta, A_mat);
 
     return curly_H[X_];
   }
 
-  double get_curly_H(const gtpsa::ss_vect<tps> &A)
-  {
-
-    int             j;
-    double          curly_H[2], unused=0e0;
-    gtpsa::ss_vect<double> eta(unused);
-
-    eta.set_zero();
-    for (j = 0; j < 4; j++)
-      eta[j] = A[j][delta_];
-
-    get_twoJ(2, eta, A, curly_H);
-
-    return curly_H[X_];
+  // Not called.
+  double get_curly_H(const gtpsa::ss_vect<tps> &A){
+    printf("\n*** not implemented:"
+	   " double get_curly_H(const gtpsa::ss_vect<tps> &A)\n");
+    exit(1);
   }
 
   double get_curly_H(const gtpsa::ss_vect<double> &x){
@@ -253,13 +230,6 @@ template void tse::thin_kick
  const gtpsa::tpsa ByoBrho, const double L, const double h_bend,
  const double h_ref, const gtpsa::ss_vect<gtpsa::tpsa> &ps0,
  gtpsa::ss_vect<gtpsa::tpsa> &ps);
-
-template void tse::get_twoJ
-(const int n_DOF, const gtpsa::ss_vect<double> &ps,
- const gtpsa::ss_vect<gtpsa::tpsa> &A, double twoJ[]);
-template void tse::get_twoJ
-(const int n_DOF, const gtpsa::ss_vect<double> &ps,
- const gtpsa::ss_vect<tps> &A, double twoJ[]);
 
 template double tse::get_curly_H(const gtpsa::ss_vect<gtpsa::tpsa> &A);
 template double tse::get_curly_H(const gtpsa::ss_vect<tps>         &A);
