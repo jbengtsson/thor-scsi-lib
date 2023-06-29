@@ -304,9 +304,9 @@ def compute_phi(lat):
 def get_prm(lat, param_list):
     # Dictionary of parameter types and corresponding get functions.
     how_to_get_prm = {
-        "dphi":     get_phi_elem,
-        "b_2":      get_b_2_elem,
-        "L":        get_L_elem
+        "dphi": get_phi_elem,
+        "b_2":  get_b_2_elem,
+        "L":    get_L_elem
     }
 
     prms = []
@@ -319,13 +319,50 @@ def get_prm(lat, param_list):
 def set_prm(lat, param_list, prms):
     # Dictionary of parameter types and corresponding set functions.
     how_to_set_prm = {
-        "dphi":     set_phi_fam,
-        "b_2":      set_b_2_fam,
-        "L":        set_L_fam
+        "dphi": set_phi_fam,
+        "b_2":  set_b_2_fam,
+        "L":    set_L_fam
     }
 
     for k in range(len(param_list)):
         how_to_set_prm[param_list[k][1]](lat, param_list[k][0], prms[k])
+
+
+def prt_phi_fam(outf, lat, fam_name):
+    b   = lat.find(fam_name, 0)
+    L   = b.get_length()
+    phi = get_phi_elem(lat, fam_name, 0)
+    b_2 = get_b_2_elem(lat, fam_name, 0)
+    print("{:7s}: Bending, L = {:7.5f}, T = {:8.5f}, K = {:8.5f},\n"
+          "          T1 = {:8.5f}/2.0, T2 = {:8.5f}/2.0, N=nbend, method=meth;".
+          format(fam_name, L, phi, b_2, phi, phi), file=outf)
+
+
+def prt_b_2_fam(outf, lat, fam_name):
+    b = lat.find(fam_name, 0)
+    L = b.get_length()
+    b_2 = get_b_2_elem(lat, fam_name, 1)
+    print("{:7s}: Quadrupole, L = {:7.5f}, K = {:8.5f},"
+          "          N=nbend, method=meth;".
+          format(fam_name, L, b_2), file=outf)
+
+
+def prt_L_fam(outf, lat, fam_name):
+    b = lat.find(fam_name, 0)
+    L = b.get_length()
+    print("{:7s}: Drift, L = {:7.5f};".
+          format(fam_name, L), file=outf)
+
+
+def prt_param(outf, lat, param_list, prms):
+    how_to_prt_prm = {
+        "dphi": prt_phi_fam,
+        "b_2":  prt_b_2_fam,
+        "L":    prt_L_fam
+    }
+
+    for k in range(len(param_list)):
+        how_to_prt_prm[param_list[k][1]](outf, lat, param_list[k][0])
 
 
 @dataclass
@@ -345,6 +382,7 @@ chi_2_min  = 1e30
 n_iter_min = 0
 prms_min   = []
 rbend      = ""
+file_name  = "super_per_jb.out"
 
 def opt_super_period(lat, param_list, C, bounds, phi_des, eps_x_des, nu_des,
                      beta_straight_des, weights, phi):
@@ -372,8 +410,7 @@ def opt_super_period(lat, param_list, C, bounds, phi_des, eps_x_des, nu_des,
         global n_iter_min
         global prms_min
 
-        loc1 = lat.find("om_sf", 1).index - 1
-        loc2 = lat.find("om_sf", 3).index - 1
+        loc1 = lat.find("bb_h4", 3).index - 1
 
         M = lo.compute_map(lat, model_state, desc=desc, tpsa_order=tpsa_order)
         stable = lo.check_if_stable_3D(M.jacobian())
@@ -390,16 +427,11 @@ def opt_super_period(lat, param_list, C, bounds, phi_des, eps_x_des, nu_des,
             eta_straight_x = \
                 data.dispersion.sel(phase_coordinate="x").values[0]
 
-            alpha_sym = np.zeros(4, dtype=float)
-            alpha_sym[0] = data.twiss.sel(plane="x", par="alpha").values[loc1]
-            alpha_sym[1] = data.twiss.sel(plane="y", par="alpha").values[loc1]
-            alpha_sym[2] = data.twiss.sel(plane="x", par="alpha").values[loc2]
-            alpha_sym[3] = data.twiss.sel(plane="y", par="alpha").values[loc2]
-            etap_sym_x = np.zeros(2, dtype=float)
-            etap_sym_x[0] = \
+            alpha_sym = np.zeros(2, dtype=float)
+            alpha_sym[X_] = data.twiss.sel(plane="x", par="alpha").values[loc1]
+            alpha_sym[Y_] = data.twiss.sel(plane="y", par="alpha").values[loc1]
+            etap_sym_x = \
                 data.dispersion.sel(phase_coordinate="px").values[loc1]
-            etap_sym_x[1] = \
-                data.dispersion.sel(phase_coordinate="px").values[loc2]
 
             nu_cell = compute_nu_cell(data)
 
@@ -452,19 +484,21 @@ def opt_super_period(lat, param_list, C, bounds, phi_des, eps_x_des, nu_des,
             if stable:
                 print(f"\n  dchi_2 =\n", dchi_2)
             print(f"\n  phi            = {compute_phi(lat):8.5f}")
-            [b1, b2, b3] = \
-                [param_list[0][0], param_list[1][0], param_list[2][0]]
-            print(f"\n  {b1:5s}          = {get_phi_elem(lat, b1, 0):8.5f}")
-            print(f"  {b2:5s}          = {get_phi_elem(lat, b2, 0):8.5f}")
-            print(f"  {b3:5s}          = {get_phi_elem(lat, b3, 0):8.5f}")
             [b1, b2, b3, b4] = \
-                [param_list[3][0], param_list[4][0], param_list[5][0],
-                 param_list[6][0]]
+                [param_list[0][0], param_list[1][0], param_list[2][0],
+                 param_list[3][0]]
             print(f"\n  {b1:5s}          = {get_phi_elem(lat, b1, 0):8.5f}")
             print(f"  {b2:5s}          = {get_phi_elem(lat, b2, 0):8.5f}")
             print(f"  {b3:5s}          = {get_phi_elem(lat, b3, 0):8.5f}")
             print(f"  {b4:5s}          = {get_phi_elem(lat, b4, 0):8.5f}")
-            [b1, b2] = [rbend, param_list[8][0]]
+            [b1, b2, b3, b4] = \
+                [param_list[4][0], param_list[5][0], param_list[6][0],
+                 param_list[7][0]]
+            print(f"\n  {b1:5s}          = {get_phi_elem(lat, b1, 0):8.5f}")
+            print(f"  {b2:5s}          = {get_phi_elem(lat, b2, 0):8.5f}")
+            print(f"  {b3:5s}          = {get_phi_elem(lat, b3, 0):8.5f}")
+            print(f"  {b4:5s}          = {get_phi_elem(lat, b4, 0):8.5f}")
+            [b1, b2] = [rbend, param_list[9][0]]
             print(f"\n  {b1:5s}          = {get_phi_elem(lat, b1, 0):8.5f}")
             print(f"  {b2:5s}          = {get_phi_elem(lat, b2, 0):8.5f}")
             if stable:
@@ -475,11 +509,8 @@ def opt_super_period(lat, param_list, C, bounds, phi_des, eps_x_des, nu_des,
                       format(beta_straight[X_], beta_straight[Y_]))
                 print(f"  eta_straight_x = {eta_straight_x:10.3e}")
                 print("  alpha_sym      = [{:10.3e}, {:10.3e}]".
-                      format(alpha_sym[0], alpha_sym[1]))
-                print("  alpha_sym      = [{:10.3e}, {:10.3e}]".
-                      format(alpha_sym[2], alpha_sym[3]))
-                print(f"  etap_sym_x     = {etap_sym_x[0]:10.3e}")
-                print(f"  etap_sym_x     = {etap_sym_x[1]:10.3e}")
+                      format(alpha_sym[X_], alpha_sym[Y_]))
+                print(f"  etap_sym_x     = {etap_sym_x:10.3e}")
                 print(f"  xi             = [{xi[X_]:5.3f}, {xi[Y_]:5.3f}]")
                 print(f"  alpha_c        = {alpha_c:9.3e}")
             else:
@@ -488,6 +519,9 @@ def opt_super_period(lat, param_list, C, bounds, phi_des, eps_x_des, nu_des,
             plt = plot_Twiss(data, "work_in_progress.png", "Linear Optics")
             plt.close()
 
+        outf = open(file_name, 'w')
+        prt_param(outf, lat, param_list, prms)
+        outf.close()
         return chi_2
 
     def f_unit_cell(prms):
@@ -500,9 +534,9 @@ def opt_super_period(lat, param_list, C, bounds, phi_des, eps_x_des, nu_des,
         set_prm(lat, param_list, prms)
         dphi = \
             (phi
-             - 8*(prms[0] + prms[1] + prms[2])
-             - 2*(prms[3] + prms[4] + prms[5] + prms[6])
-             - 2*prms[8])/8e0
+             - 8*(prms[0] + prms[1] + prms[2] + prms[3])
+             - 2*(prms[4] + prms[5] + prms[6] + prms[7])
+             - 2*prms[9])/8e0
         set_phi_fam(lat, rbend, dphi)
         chi_2 = compute_chi_2(lat, model_state, eps_x_des, nu_des, prms)
         return chi_2
@@ -547,7 +581,8 @@ def opt_super_period(lat, param_list, C, bounds, phi_des, eps_x_des, nu_des,
     print("\nopt_super_period:\n")
     # Initialise parameters.
     prms1 = prms0 = get_prm(lat, param_list)
-    rbend = param_list[7][0]
+    # rbend = param_list[7][0]
+    rbend = "br"
     print("\nrbend = ", rbend)
     print("\nprms = ", prms1)
 
@@ -614,9 +649,9 @@ def compute_synchr_int(energy, A):
 
 t_dir = os.path.join(os.environ["HOME"], "Nextcloud", "thor_scsi", "JB")
 # t_file = os.path.join(t_dir, "b3_sfsf4Q_tracy.lat")
-t_file = os.path.join(t_dir, "b3_sfsf4Q_tracy_jb.lat")
+# t_file = os.path.join(t_dir, "b3_sfsf4Q_tracy_jb.lat")
 # t_file = os.path.join(t_dir, "b3_sfsf4Q_tracy_jb_2.lat")
-# t_file = os.path.join(t_dir, "b3_sfsf4Q_tracy_jb_3.lat")
+t_file = os.path.join(t_dir, "b3_sfsf4Q_tracy_jb_3.lat")
 
 # Read in & parse lattice file.
 lat = accelerator_from_config(t_file)
@@ -645,6 +680,7 @@ print_Twiss_params("\nTwiss:\n", Twiss)
 
 if False:
     print_Twiss(lat, data)
+    raise Exception("")
 plot_Twiss(data, "before.png", "Linear Optics - Before")
 if False:
     plt.show()
@@ -676,8 +712,8 @@ if False:
 
 if False:
     print(compute_phi(lat))
-    set_phi_elem(lat, "br", 0, -0.20)
-    print(compute_phi(lat))
+    # set_phi_elem(lat, "br", 0, -0.20)
+    # print(compute_phi(lat))
     raise Exception("")
 
 # Zero sextopoles.
@@ -707,21 +743,23 @@ beta  = np.array([3.0, 3.0])  # Beta functions at the centre of the straight.
 
 # Weights.
 weights = {
-    "eps_x":          1e2*1e15,
+    "eps_x":          1e1*1e15,
     "nu_cell":        1e0,
     "beta_straight":  1e-5,
     "eta_straight_x": 1e3,
-    "alpha_sym":      1e2,
-    "etap_sym_x":     1e2,
-    "xi":             1e-6,
+    "alpha_sym":      1e1,
+    "etap_sym_x":     1e1,
+    "xi":             1e1*1e-6,
     "alpha_c":        0*1e-14
 }
+
 
 # Parameter family names & type.
 param_list = [
     ("bb_h1", "dphi"),        # Dipole.
     ("bb_h2", "dphi"),        # Dipole.
     ("bb_h3", "dphi"),        # Dipole.
+    ("bb_h4", "dphi"),        # Dipole.
 
     ("mbb1",  "dphi"),        # Dipole.
     ("mbb2",  "dphi"),        # Dipole.
@@ -754,6 +792,7 @@ b_2_max = 12.0
 L_min   = 0.05
 
 bounds = [
+    (0.5,      7.0),          # bb phi.
     (0.5,      7.0),          # bb phi.
     (0.5,      7.0),          # bb phi.
     (0.5,      7.0),          # bb phi.
