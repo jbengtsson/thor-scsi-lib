@@ -303,10 +303,12 @@ def compute_phi(lat):
 
 def get_prm(lat, param_list):
     # Dictionary of parameter types and corresponding get functions.
+
     how_to_get_prm = {
-        "dphi": get_phi_elem,
-        "b_2":  get_b_2_elem,
-        "L":    get_L_elem
+        "dphi":      get_phi_elem,
+        "b_2":       get_b_2_elem,
+        "L":         get_L_elem,
+        "dphi corr": get_phi_elem
     }
 
     prms = []
@@ -318,10 +320,16 @@ def get_prm(lat, param_list):
 
 def set_prm(lat, param_list, prms):
     # Dictionary of parameter types and corresponding set functions.
+
+    def dphi_corr(lat, fam_name, val):
+        # NOP (No Operation).
+        return
+
     how_to_set_prm = {
-        "dphi": set_phi_fam,
-        "b_2":  set_b_2_fam,
-        "L":    set_L_fam
+        "dphi":      set_phi_fam,
+        "b_2":       set_b_2_fam,
+        "L":         set_L_fam,
+        "dphi corr": dphi_corr
     }
 
     for k in range(len(param_list)):
@@ -354,11 +362,15 @@ def prt_L_fam(outf, lat, fam_name):
           format(fam_name, L), file=outf)
 
 
-def prt_param(outf, lat, param_list, prms):
+def prt_param(outf, lat, param_list, prms, rbend):
+    def dphi_corr(outf, lat, fam_name):
+        prt_phi_fam(outf, lat, param_list[k][0])
+
     how_to_prt_prm = {
-        "dphi": prt_phi_fam,
-        "b_2":  prt_b_2_fam,
-        "L":    prt_L_fam
+        "dphi":      prt_phi_fam,
+        "b_2":       prt_b_2_fam,
+        "L":         prt_L_fam,
+        "dphi corr": dphi_corr
     }
 
     for k in range(len(param_list)):
@@ -385,7 +397,7 @@ rbend      = ""
 file_name  = "super_per_jb.out"
 
 def opt_super_period(lat, param_list, C, bounds, phi_des, eps_x_des, nu_des,
-                     beta_straight_des, weights, phi):
+                     beta_straight_des, alpha_c_des, weights):
     """Use Case: optimise unit cell.
     """
 
@@ -466,7 +478,7 @@ def opt_super_period(lat, param_list, C, bounds, phi_des, eps_x_des, nu_des,
 
                 dchi_2[6] = weights["xi"] * np.sum(xi ** 2)
 
-                dchi_2[7] = weights["alpha_c"] / alpha_c ** 2
+                dchi_2[7] = weights["alpha_c"] / (alpha_c - alpha_c_des) ** 2
 
                 chi_2 = 0e0
                 for k in range(n):
@@ -498,7 +510,7 @@ def opt_super_period(lat, param_list, C, bounds, phi_des, eps_x_des, nu_des,
             print(f"  {b2:5s}          = {get_phi_elem(lat, b2, 0):8.5f}")
             print(f"  {b3:5s}          = {get_phi_elem(lat, b3, 0):8.5f}")
             print(f"  {b4:5s}          = {get_phi_elem(lat, b4, 0):8.5f}")
-            [b1, b2] = [rbend, param_list[9][0]]
+            [b1, b2] = [param_list[8][0], param_list[10][0]]
             print(f"\n  {b1:5s}          = {get_phi_elem(lat, b1, 0):8.5f}")
             print(f"  {b2:5s}          = {get_phi_elem(lat, b2, 0):8.5f}")
             if stable:
@@ -520,7 +532,7 @@ def opt_super_period(lat, param_list, C, bounds, phi_des, eps_x_des, nu_des,
             plt.close()
 
         outf = open(file_name, 'w')
-        prt_param(outf, lat, param_list, prms)
+        prt_param(outf, lat, param_list, prms, rbend)
         outf.close()
         return chi_2
 
@@ -533,10 +545,10 @@ def opt_super_period(lat, param_list, C, bounds, phi_des, eps_x_des, nu_des,
         n_iter += 1
         set_prm(lat, param_list, prms)
         dphi = \
-            (phi
+            (phi_des
              - 8*(prms[0] + prms[1] + prms[2] + prms[3])
              - 2*(prms[4] + prms[5] + prms[6] + prms[7])
-             - 2*prms[9])/8e0
+             - 2*prms[10])/8e0
         set_phi_fam(lat, rbend, dphi)
         chi_2 = compute_chi_2(lat, model_state, eps_x_des, nu_des, prms)
         return chi_2
@@ -650,8 +662,7 @@ def compute_synchr_int(energy, A):
 t_dir = os.path.join(os.environ["HOME"], "Nextcloud", "thor_scsi", "JB")
 # t_file = os.path.join(t_dir, "b3_sfsf4Q_tracy.lat")
 # t_file = os.path.join(t_dir, "b3_sfsf4Q_tracy_jb.lat")
-# t_file = os.path.join(t_dir, "b3_sfsf4Q_tracy_jb_2.lat")
-t_file = os.path.join(t_dir, "b3_sfsf4Q_tracy_jb_3.lat")
+t_file = os.path.join(t_dir, "b3_sfsf4Q_eps_70_alpha_-2e-6.lat")
 
 # Read in & parse lattice file.
 lat = accelerator_from_config(t_file)
@@ -736,21 +747,22 @@ print("  eps_x [pm.rad] = {:3.1f}".format(1e12*eps[X_]))
 print("  xi             = [{:7.5f}, {:7.5f}]".format(xi[X_], xi[Y_]))
 
 # Design parameters.
-phi   = 22.5                  # Total bend angle.
-eps_x = 0*100e-12               # Horizontal emittance.
-nu    = np.array([0.4, 0.1])  # Cell tune.
-beta  = np.array([3.0, 3.0])  # Beta functions at the centre of the straight.
+phi     = 22.5                  # Total bend angle.
+eps_x   = 0*100e-12               # Horizontal emittance.
+nu      = np.array([0.4, 0.1])  # Cell tune.
+beta    = np.array([3.0, 3.0])  # Beta functions at the centre of the straight.
+alpha_c = -1e-4
 
 # Weights.
 weights = {
-    "eps_x":          1e1*1e15,
+    "eps_x":          1e2*1e15,
     "nu_cell":        1e0,
     "beta_straight":  1e-5,
     "eta_straight_x": 1e3,
     "alpha_sym":      1e1,
     "etap_sym_x":     1e1,
-    "xi":             1e1*1e-6,
-    "alpha_c":        0*1e-14
+    "xi":             1e0*1e-6,
+    "alpha_c":        1e2*1e-14
 }
 
 
@@ -766,7 +778,7 @@ param_list = [
     ("mbb3",  "dphi"),        # Dipole.
     ("mbb4",  "dphi"),        # Dipole.
 
-    # ("br",   "not used"),     # Focusing reverse bend.
+    ("br",    "dphi corr"),   # Focusing reverse bend.
     ("br",    "b_2"),         # used to set total bend angle.
 
     ("mbr",   "dphi"),        # Focusing reverse bend.
@@ -802,7 +814,7 @@ bounds = [
     (0.5,      7.0),          # mbb phi.
     (0.5,      7.0),          # mbb phi.
 
-    # (-0.5,     1.0),          # br phi.
+    (-1.0,     1.0),          # br phi.
     ( 0.0,     b_2_max),      # br b_2.
 
     (-1.0,     0.0),          # mbr phi.
@@ -822,7 +834,8 @@ bounds = [
     ( L_min,   0.5)           # ul4 L.
 ]
 
-opt_super_period(lat, param_list, C, bounds, phi, eps_x, nu, beta, weights, phi)
+opt_super_period(lat, param_list, C, bounds, phi, eps_x, nu, beta, alpha_c,
+                 weights)
 
 if not False:
     plt.show()
