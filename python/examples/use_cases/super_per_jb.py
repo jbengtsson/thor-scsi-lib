@@ -342,7 +342,7 @@ def prt_phi_fam(outf, lat, fam_name):
     phi = get_phi_elem(lat, fam_name, 0)
     b_2 = get_b_2_elem(lat, fam_name, 0)
     print("{:7s}: Bending, L = {:7.5f}, T = {:8.5f}, K = {:8.5f},\n"
-          "          T1 = {:8.5f}/2.0, T2 = {:8.5f}/2.0, N=nbend, method=meth;".
+          "         T1 = {:8.5f}/2.0, T2 = {:8.5f}/2.0, N=nbend, method=meth;".
           format(fam_name, L, phi, b_2, phi, phi), file=outf)
 
 
@@ -350,8 +350,7 @@ def prt_b_2_fam(outf, lat, fam_name):
     b = lat.find(fam_name, 0)
     L = b.get_length()
     b_2 = get_b_2_elem(lat, fam_name, 1)
-    print("{:7s}: Quadrupole, L = {:7.5f}, K = {:8.5f},"
-          "          N=nbend, method=meth;".
+    print("{:7s}: Quadrupole, L = {:7.5f}, K = {:8.5f}, N=nbend, method=meth;".
           format(fam_name, L, b_2), file=outf)
 
 
@@ -442,6 +441,8 @@ def opt_super_period(lat, param_list, C, bounds, phi_des, eps_x_des, nu_des,
             alpha_sym = np.zeros(2, dtype=float)
             alpha_sym[X_] = data.twiss.sel(plane="x", par="alpha").values[loc1]
             alpha_sym[Y_] = data.twiss.sel(plane="y", par="alpha").values[loc1]
+            eta_sym_x = \
+                data.dispersion.sel(phase_coordinate="x").values[loc1]
             etap_sym_x = \
                 data.dispersion.sel(phase_coordinate="px").values[loc1]
 
@@ -473,12 +474,14 @@ def opt_super_period(lat, param_list, C, bounds, phi_des, eps_x_des, nu_des,
                 dchi_2[4] = \
                     weights["alpha_sym"] * np.sum(alpha_sym ** 2)
                 dchi_2[5] = \
+                    weights["eta_sym_x"] * np.sum(eta_sym_x ** 2)
+                dchi_2[6] = \
                     weights["etap_sym_x"] * np.sum(etap_sym_x ** 2)
 
 
-                dchi_2[6] = weights["xi"] * np.sum(xi ** 2)
+                dchi_2[7] = weights["xi"] * np.sum(xi ** 2)
 
-                dchi_2[7] = weights["alpha_c"] / (alpha_c - alpha_c_des) ** 2
+                dchi_2[8] = weights["alpha_c"] * (alpha_c - alpha_c_des) ** 2
 
                 chi_2 = 0e0
                 for k in range(n):
@@ -522,6 +525,7 @@ def opt_super_period(lat, param_list, C, bounds, phi_des, eps_x_des, nu_des,
                 print(f"  eta_straight_x = {eta_straight_x:10.3e}")
                 print("  alpha_sym      = [{:10.3e}, {:10.3e}]".
                       format(alpha_sym[X_], alpha_sym[Y_]))
+                print(f"  eta_sym_x      = {eta_sym_x:10.3e}")
                 print(f"  etap_sym_x     = {etap_sym_x:10.3e}")
                 print(f"  xi             = [{xi[X_]:5.3f}, {xi[Y_]:5.3f}]")
                 print(f"  alpha_c        = {alpha_c:9.3e}")
@@ -531,9 +535,10 @@ def opt_super_period(lat, param_list, C, bounds, phi_des, eps_x_des, nu_des,
             plt = plot_Twiss(data, "work_in_progress.png", "Linear Optics")
             plt.close()
 
-        outf = open(file_name, 'w')
-        prt_param(outf, lat, param_list, prms, rbend)
-        outf.close()
+            outf = open(file_name, 'w')
+            prt_param(outf, lat, param_list, prms, rbend)
+            outf.close()
+
         return chi_2
 
     def f_unit_cell(prms):
@@ -662,7 +667,8 @@ def compute_synchr_int(energy, A):
 t_dir = os.path.join(os.environ["HOME"], "Nextcloud", "thor_scsi", "JB")
 # t_file = os.path.join(t_dir, "b3_sfsf4Q_tracy.lat")
 # t_file = os.path.join(t_dir, "b3_sfsf4Q_tracy_jb.lat")
-t_file = os.path.join(t_dir, "b3_sfsf4Q_eps_70_alpha_-2e-6.lat")
+# t_file = os.path.join(t_dir, "b3_sfsf4Q_eps_48_3.4.lat")
+t_file = os.path.join(t_dir, "b3_sfsf4Q_wip.lat")
 
 # Read in & parse lattice file.
 lat = accelerator_from_config(t_file)
@@ -748,21 +754,22 @@ print("  xi             = [{:7.5f}, {:7.5f}]".format(xi[X_], xi[Y_]))
 
 # Design parameters.
 phi     = 22.5                  # Total bend angle.
-eps_x   = 0*100e-12               # Horizontal emittance.
+eps_x   = 50e-12                # Horizontal emittance.
 nu      = np.array([0.4, 0.1])  # Cell tune.
 beta    = np.array([3.0, 3.0])  # Beta functions at the centre of the straight.
 alpha_c = -1e-4
 
 # Weights.
 weights = {
-    "eps_x":          1e2*1e15,
+    "eps_x":          1e18,
     "nu_cell":        1e0,
     "beta_straight":  1e-5,
     "eta_straight_x": 1e3,
     "alpha_sym":      1e1,
+    "eta_sym_x":      1e2,
     "etap_sym_x":     1e1,
     "xi":             1e0*1e-6,
-    "alpha_c":        1e2*1e-14
+    "alpha_c":        0e1*1e4
 }
 
 
@@ -778,8 +785,8 @@ param_list = [
     ("mbb3",  "dphi"),        # Dipole.
     ("mbb4",  "dphi"),        # Dipole.
 
-    ("br",    "dphi corr"),   # Focusing reverse bend.
-    ("br",    "b_2"),         # used to set total bend angle.
+    ("br",    "dphi corr"),   # Focusing reverse bend:
+    ("br",    "b_2"),         #   used to set total bend angle.
 
     ("mbr",   "dphi"),        # Focusing reverse bend.
     ("mbr",   "b_2"),
