@@ -529,15 +529,15 @@ def opt_super_period(lat, param_list, C, bounds, phi_des, eps_x_des, nu_des,
                 print(f"  etap_sym_x     = {etap_sym_x:10.3e}")
                 print(f"  xi             = [{xi[X_]:5.3f}, {xi[Y_]:5.3f}]")
                 print(f"  alpha_c        = {alpha_c:9.3e}")
+
+                outf = open(file_name, 'w')
+                prt_param(outf, lat, param_list, prms, rbend)
+                outf.close()
             else:
                 print("\n Unstable.")
 
             plt = plot_Twiss(data, "work_in_progress.png", "Linear Optics")
             plt.close()
-
-            outf = open(file_name, 'w')
-            prt_param(outf, lat, param_list, prms, rbend)
-            outf.close()
 
         return chi_2
 
@@ -667,8 +667,8 @@ def compute_synchr_int(energy, A):
 t_dir = os.path.join(os.environ["HOME"], "Nextcloud", "thor_scsi", "JB")
 # t_file = os.path.join(t_dir, "b3_sfsf4Q_tracy.lat")
 # t_file = os.path.join(t_dir, "b3_sfsf4Q_tracy_jb.lat")
-# t_file = os.path.join(t_dir, "b3_sfsf4Q_eps_48_3.4.lat")
 t_file = os.path.join(t_dir, "b3_sfsf4Q_wip.lat")
+# t_file = os.path.join(t_dir, "b3_sfsf4Q_eps_64_0.87.lat")
 
 # Read in & parse lattice file.
 lat = accelerator_from_config(t_file)
