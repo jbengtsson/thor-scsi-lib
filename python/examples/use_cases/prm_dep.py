@@ -35,7 +35,7 @@ def quad_dep_b_2_dx_dy():
     # Number of parameters.
     nv_prm = 3
     # Parameters max order.
-    no_prm = 1
+    no_prm = 2
 
     length = 0.1
     K      = 1e0
@@ -79,7 +79,7 @@ def sext_dep_b_3():
     # Number of parameters.
     nv_prm = 3
     # Parameters max order.
-    no_prm = 1
+    no_prm = 2
 
     length = 0.1
     K      = 1e0
