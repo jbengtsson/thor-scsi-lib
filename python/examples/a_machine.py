@@ -10,7 +10,7 @@ import numpy as np
 import os.path
 
 #  Find the file
-t_dir = os.path.join(os.environ["HOME"], "Nextcloud", "thor_scsi")
+t_dir = os.path.join(os.environ["HOME"], "Nextcloud", "thor_scsi", "JB")
 t_file = os.path.join(t_dir, "b3_tst.lat")
 
 print(f"Reading lattice file {t_file}")
@@ -86,7 +86,7 @@ ps = gtpsa.ss_vect_tpsa(desc, 1)
 ps.set_identity()
 
 print(ps)
-m.propagate(calc_config, ps, 0, 2000)
+m.propagate(calc_config, ps)
 print(ps)
 
 res = np.array(ps.jacobian())
