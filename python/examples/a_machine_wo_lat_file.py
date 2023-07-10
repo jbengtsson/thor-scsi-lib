@@ -20,6 +20,7 @@ Brho = Energy / c0
 
 config = Config()
 config.setAny("name", "Start")
+config.setAny("L", 0.0)
 start = Marker(config)
 
 config = Config()
