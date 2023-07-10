@@ -34,23 +34,12 @@ from thor_scsi.utils import linear_optics as lo, courant_snyder as cs
 # from thor_scsi.utils.phase_space_vector import map2numpy
 from thor_scsi.utils.output import prt2txt, mat2txt, vec2txt
 
-named_index_d = dict(x=0, px=1, y=2, py=3, delta=4, ct=5, K=6, dx=7, dy=8)
-named_index = gtpsa.IndexMapping(named_index_d)
 
 # Configuration space coordinates.
 X_, Y_, Z_ = [
     tslib.spatial_index.X,
     tslib.spatial_index.Y,
     tslib.spatial_index.Z
-]
-# Phase-space coordinates.
-[x_, px_, y_, py_, ct_, delta_] = [
-    tslib.phase_space_index_internal.x,
-    tslib.phase_space_index_internal.px,
-    tslib.phase_space_index_internal.y,
-    tslib.phase_space_index_internal.py,
-    tslib.phase_space_index_internal.ct,
-    tslib.phase_space_index_internal.delta,
 ]
 
 
@@ -75,7 +64,7 @@ def prt_Twiss(str, Twiss):
     print(f"  beta   = [{beta[X_]:5.3f}, {beta[Y_]:5.3f}]")
 
 
-def compute_periodic_solution(lat, model_state, desc, no):
+def compute_periodic_solution(lat, model_state, named_index, desc, no):
     """
     Todo:
         model_state: rename to calculation_configuration or calc_config
@@ -87,7 +76,7 @@ def compute_periodic_solution(lat, model_state, desc, no):
     model_state.Cavity_on = False
 
     stable, M, A = lo.compute_map_and_diag(n_dof, lat, model_state, desc=desc,
-                                           tpsa_order=mo)
+                                           tpsa_order=no)
     print("\nM:\n", M)
     res = cs.compute_Twiss_A(A)
     Twiss = res[:3]
@@ -111,113 +100,66 @@ def prt_map(str, map):
     map.ct.print()
 
 
-def quad_dep_b_2_dx_dy(desc):
-    """
-    """
-    length = 0.1
-    K      = 1e0
-    N      = 4
+def read_lattice(t_file):
+    n_dof = 2
 
-    calc_config = tslib.ConfigType()
+    # Read in & parse lattice file.
+    lat = accelerator_from_config(t_file)
 
-    name = "QF"
-    C = Config()
-    C.setAny("L", length)
-    C.setAny("name", name)
-    C.setAny("K", K)
-    C.setAny("N", N)
-    quad = tslib.QuadrupoleTpsa(C)
-    quad.set_number_of_integration_steps(N)
+    # Set lattice state (Rf cavity on/off, etc.)
+    model_state = tslib.ConfigType()
 
-    named_index = gtpsa.IndexMapping(
-        dict(x=0, px=1, y=2, py=3, delta=4, ct=5, K=6, dx=7, dy=8)
-    )
+    model_state.radiation = False
+    model_state.Cavity_on = False
 
-    knobs.make_magnet_knobbable(
-        quad, po=2, offset=True, desc=desc, named_index=named_index
-    )
-
-    M = gtpsa.ss_vect_tpsa(desc, 2, 6, named_index)
-    M.set_identity()
-    quad.propagate(calc_config, M)
-    print("\nM:\n", M)
-    prt_map("\nM:", M)
+    return n_dof, lat, model_state
 
 
-def sext_dep_b_3(desc):
-    """
-    """
-    length = 0.1
-    K      = 1e0
-    N      = 4
+# Number of phase-space coordinates.
+nv = 6
+# Variables max order.
+no = 2
+# Number of parameters.
+nv_prm = 0
+# Parameters max order.
+no_prm = 0
 
-    calc_config = tslib.ConfigType()
-
-    name = "SF"
-    C = Config()
-    C.setAny("L", length)
-    C.setAny("name", name)
-    C.setAny("K", K)
-    C.setAny("N", N)
-    sext = tslib.SextupoleTpsa(C)
-    sext.set_number_of_integration_steps(N)
-
-    named_index = gtpsa.IndexMapping(
-        dict(x=0, px=1, y=2, py=3, delta=4, ct=5, K=6, dx=7, dy=8)
-    )
-
-    knobs.make_magnet_knobbable(
-        sext, po=2, offset=True, desc=desc, named_index=named_index
-    )
-
-    M = gtpsa.ss_vect_tpsa(desc, 2, 6, named_index)
-    M.set_identity()
-    sext.propagate(calc_config, M)
-    print("\nM:\n", M)
-    prt_map("\nM:", M)
-
+named_index = gtpsa.IndexMapping(
+    dict(x=0, px=1, y=2, py=3, delta=4, ct=5)
+)
 
 t_dir = os.path.join(os.environ["HOME"], "Nextcloud", "thor_scsi", "JB")
 t_file = os.path.join(t_dir, "b3_sfsf4Q_tracy_jb_3.lat")
 
-# Variables max order.
-mo = 2
-# Parameters max order.
-po = 1
+n_dof, lat, model_state = read_lattice(t_file)
 
-# Descriptor for Truncated Power Series Algebra variables.
-desc = gtpsa.desc(6, mo, 3, po)
+desc = gtpsa.desc(nv, no, nv_prm, no_prm)
 
-quad_dep_b_2_dx_dy(desc)
-
-desc = gtpsa.desc(6, mo, 3, po)
-
-sext_dep_b_3(desc)
+M, A, data = compute_periodic_solution(lat, model_state, named_index, desc, no)
 
 assert False
 
+nv_prm = 3
+no_prm = 1
 
+named_index = gtpsa.IndexMapping(
+    dict(x=0, px=1, y=2, py=3, delta=4, ct=5, K=6, dx=7, dy=8)
+)
 
-# Read in & parse lattice file.
-lat = accelerator_from_config(t_file)
+desc = gtpsa.desc(nv, no, nv_prm, no_prm)
 
-# Set lattice state (Rf cavity on/off, etc.)
-model_state = tslib.ConfigType()
-
-n_dof = 2
-model_state.radiation = False
-model_state.Cavity_on = False
-
-M, A, data = compute_periodic_solution(lat, model_state, desc)
-
-elem = lat.find("uq4", 0)
+elem = lat.find("sf", 0)
 print("\nuq4 = {:d}".format(elem.index))
+
+knobs.make_magnet_knobbable(
+    sext, po=2, offset=True, desc=desc, named_index=named_index
+)
 
 elem = knobs.convert_magnet_to_knobbable(elem)
 knobs.make_magnet_knobbable(
     elem, po=po, desc=desc, named_index=named_index, offset=True)
 
-M = gtpsa.ss_vect_tpsa(desc, mo, 6, index_mapping=named_index)
+M = gtpsa.ss_vect_tpsa(desc, no, nv, index_mapping=named_index)
 M.set_identity()
 lat.propagate(model_state, M)
 print("\nM:\n", M)
