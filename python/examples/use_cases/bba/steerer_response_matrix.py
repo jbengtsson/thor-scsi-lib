@@ -1,6 +1,8 @@
 # Find the lattice file
 from pathlib import Path
 
+import os
+
 import tqdm
 
 from thor_scsi.factory import accelerator_from_config
