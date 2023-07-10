@@ -7,7 +7,6 @@ logger = logging.getLogger("thor_scsi")
 
 from scipy import optimize
 
-import copy as _copy
 from dataclasses import dataclass
 import math
 import os
@@ -101,18 +100,32 @@ def prt_map(str, map):
 
 
 def read_lattice(t_file):
-    n_dof = 2
-
     # Read in & parse lattice file.
     lat = accelerator_from_config(t_file)
 
     # Set lattice state (Rf cavity on/off, etc.)
     model_state = tslib.ConfigType()
 
+    n_dof = 2
     model_state.radiation = False
     model_state.Cavity_on = False
 
     return n_dof, lat, model_state
+
+
+def convert(elem, t_idx):
+    if elem.index == t_idx:
+        print("\nconvert: {:s}".format(elem.name))
+        print("  elem 1:\n", elem)
+        elem = tslib.QuadrupoleTpsa(elem.config())
+        print("  elem 2:\n", elem)
+        elem = \
+            knobs.make_magnet_knobbable(
+                elem, po=1, desc=desc, named_index=named_index,
+                multipole_number=2, offset=True
+            )
+        print("  elem 3:\n", elem)
+    return elem
 
 
 # Number of phase-space coordinates.
@@ -124,20 +137,20 @@ nv_prm = 0
 # Parameters max order.
 no_prm = 0
 
-named_index = gtpsa.IndexMapping(
-    dict(x=0, px=1, y=2, py=3, delta=4, ct=5)
-)
-
 t_dir = os.path.join(os.environ["HOME"], "Nextcloud", "thor_scsi", "JB")
 t_file = os.path.join(t_dir, "b3_sfsf4Q_tracy_jb_3.lat")
 
 n_dof, lat, model_state = read_lattice(t_file)
 
-desc = gtpsa.desc(nv, no, nv_prm, no_prm)
+if not False:
+    named_index = gtpsa.IndexMapping(
+        dict(x=0, px=1, y=2, py=3, delta=4, ct=5)
+    )
 
-M, A, data = compute_periodic_solution(lat, model_state, named_index, desc, no)
+    desc = gtpsa.desc(nv, no, nv_prm, no_prm)
 
-assert False
+    M, A, data = \
+        compute_periodic_solution(lat, model_state, named_index, desc, no)
 
 nv_prm = 3
 no_prm = 1
@@ -148,20 +161,36 @@ named_index = gtpsa.IndexMapping(
 
 desc = gtpsa.desc(nv, no, nv_prm, no_prm)
 
-elem = lat.find("sf", 0)
-print("\nuq4 = {:d}".format(elem.index))
+elems = [elem for elem in lat]
 
-knobs.make_magnet_knobbable(
-    sext, po=2, offset=True, desc=desc, named_index=named_index
-)
+quads = lat.elements_with_name("uq4")
 
-elem = knobs.convert_magnet_to_knobbable(elem)
-knobs.make_magnet_knobbable(
-    elem, po=po, desc=desc, named_index=named_index, offset=True)
+print()
+for k in range(len(quads)):
+    index = quads[k].index
+    elem = elems[index]
+    print("elem: {:s} {:d}".format(elem.name, elem.index))
+    elem = tslib.QuadrupoleTpsa(elem.config())
+    elem = \
+        knobs.make_magnet_knobbable(
+            elem, po=1, desc=desc, named_index=named_index, multipole_number=2,
+            offset=True
+        )
+    elems[index] = elem
+
+lat_tpsa = tslib.AcceleratorTpsa(elems)
+
+# Bug in lattice propagator.
 
 M = gtpsa.ss_vect_tpsa(desc, no, nv, index_mapping=named_index)
 M.set_identity()
-lat.propagate(model_state, M)
+index1 = quads[0].index
+lat_tpsa.propagate(model_state, M, 0, index1)
+lat_tpsa[index1].propagate(model_state, M)
+index2 = quads[1].index
+lat_tpsa.propagate(model_state, M, index1+1, index2-index1-1)
+lat_tpsa[index2].propagate(model_state, M)
+lat_tpsa.propagate(model_state, M, index2+1, len(lat_tpsa)-index2-1)
 print("\nM:\n", M)
 
 if False:
