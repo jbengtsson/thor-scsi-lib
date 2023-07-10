@@ -585,31 +585,31 @@ def compute_Twiss_along_lattice(
         calc_config = tslib.ConfigType()
 
     if A is None:
-        stable, _, A = \
+        stable, _, A_mat = \
             compute_map_and_diag(
                 n_dof, acc, calc_config, desc=desc, tpsa_order=tpsa_order
             )
+        A = gtpsa.ss_vect_tpsa(desc, 1)
+        A.set_jacobian(A_mat)
         if not stable:
             raise ValueError("Compute map and diag did not converge")
-        logger.info("\ncompute_Twiss_along_lattice\nA:\n" + mat2txt(A))
+        logger.info("\ncompute_Twiss_along_lattice\nA:\n" + prt2txt(A))
 
     # Not really required ... but used for convenience
     observers = instrument_with_standard_observers(acc, mapping=mapping)
 
     # Propagate through the accelerator
-    A_map = gtpsa.ss_vect_tpsa(desc, 1)
-    A_map = A
-    logger.debug("\ncompute_Twiss_along_lattice\nA:\n" + prt2txt(A_map))
+    logger.debug("\ncompute_Twiss_along_lattice\nA:\n" + prt2txt(A))
 
     for k in range(len(acc)):
-        acc.propagate(calc_config, A_map, k, 1)
+        acc.propagate(calc_config, A, k, 1)
         # Zero the phase advance so that the fraction tune change is not
         # exceeding two pi
-        Aj = A_map.jacobian()
+        Aj = A.jacobian()
         rjac, _ = compute_A_CS(2, Aj)
-        A_map.set_jacobian(rjac)
+        A.set_jacobian(rjac)
 
-    logger.debug("\ncompute_Twiss_along_lattice A:\n%s" + prt2txt(A_map))
+    logger.debug("\ncompute_Twiss_along_lattice A:\n%s" + prt2txt(A))
 
     indices = [elem.index for elem in acc]
     tps_tmp = [_extract_tps(elem) for elem in acc]
