@@ -37,14 +37,6 @@ from thor_scsi.utils.output import prt2txt, mat2txt, vec2txt
 named_index_d = dict(x=0, px=1, y=2, py=3, delta=4, ct=5, K=6, dx=7, dy=8)
 named_index = gtpsa.IndexMapping(named_index_d)
 
-# Variables max order.
-mo = 2
-# Parameters max order.
-po = 1
-
-# Descriptor for Truncated Power Series Algebra variables.
-desc = gtpsa.desc(6, mo, 3, po)
-
 # Configuration space coordinates.
 X_, Y_, Z_ = [
     tslib.spatial_index.X,
@@ -83,7 +75,7 @@ def prt_Twiss(str, Twiss):
     print(f"  beta   = [{beta[X_]:5.3f}, {beta[Y_]:5.3f}]")
 
 
-def compute_periodic_solution(lat, model_state):
+def compute_periodic_solution(lat, model_state, desc, no):
     """
     Todo:
         model_state: rename to calculation_configuration or calc_config
@@ -100,7 +92,7 @@ def compute_periodic_solution(lat, model_state):
     res = cs.compute_Twiss_A(A)
     Twiss = res[:3]
     prt_Twiss("\nTwiss:\n", Twiss)
-    A_map = gtpsa.ss_vect_tpsa(desc, 1)
+    A_map = gtpsa.ss_vect_tpsa(desc, no)
     A_map.set_jacobian(A)
     ds = \
         lo.compute_Twiss_along_lattice \
@@ -119,15 +111,16 @@ def prt_map(str, map):
     map.ct.print()
 
 
-def quad_dep_b_2_dx_dy(calc_config):
+def quad_dep_b_2_dx_dy(desc):
     """
     """
-    length = 0e0
     length = 0.1
-    K = 1e0
-    N = 4
+    K      = 1e0
+    N      = 4
 
-    name = "Q1"
+    calc_config = tslib.ConfigType()
+
+    name = "QF"
     C = Config()
     C.setAny("L", length)
     C.setAny("name", name)
@@ -151,12 +144,60 @@ def quad_dep_b_2_dx_dy(calc_config):
     prt_map("\nM:", M)
 
 
+def sext_dep_b_3(desc):
+    """
+    """
+    length = 0.1
+    K      = 1e0
+    N      = 4
+
+    calc_config = tslib.ConfigType()
+
+    name = "SF"
+    C = Config()
+    C.setAny("L", length)
+    C.setAny("name", name)
+    C.setAny("K", K)
+    C.setAny("N", N)
+    sext = tslib.SextupoleTpsa(C)
+    sext.set_number_of_integration_steps(N)
+
+    named_index = gtpsa.IndexMapping(
+        dict(x=0, px=1, y=2, py=3, delta=4, ct=5, K=6, dx=7, dy=8)
+    )
+
+    knobs.make_magnet_knobbable(
+        sext, po=2, offset=True, desc=desc, named_index=named_index
+    )
+
+    M = gtpsa.ss_vect_tpsa(desc, 2, 6, named_index)
+    M.set_identity()
+    sext.propagate(calc_config, M)
+    print("\nM:\n", M)
+    prt_map("\nM:", M)
+
+
 t_dir = os.path.join(os.environ["HOME"], "Nextcloud", "thor_scsi", "JB")
 t_file = os.path.join(t_dir, "b3_sfsf4Q_tracy_jb_3.lat")
 
-quad_dep_b_2_dx_dy(calc_config = tslib.ConfigType())
+# Variables max order.
+mo = 2
+# Parameters max order.
+po = 1
+
+# Descriptor for Truncated Power Series Algebra variables.
+desc = gtpsa.desc(6, mo, 3, po)
+
+quad_dep_b_2_dx_dy(desc)
+
+desc = gtpsa.desc(6, mo, 3, po)
+
+sext_dep_b_3(desc)
 
 assert False
+
+
+
 # Read in & parse lattice file.
 lat = accelerator_from_config(t_file)
 
@@ -167,7 +208,7 @@ n_dof = 2
 model_state.radiation = False
 model_state.Cavity_on = False
 
-M, A, data = compute_periodic_solution(lat, model_state)
+M, A, data = compute_periodic_solution(lat, model_state, desc)
 
 elem = lat.find("uq4", 0)
 print("\nuq4 = {:d}".format(elem.index))
