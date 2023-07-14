@@ -193,7 +193,7 @@ struct TemplatedClasses
 		, m_module(m)
   		{}
 
-	//auto buildClasses(py::class_<tsc::CellVoid, std::shared_ptr<tsc::CellVoid>>& cell_void)
+	// auto buildClasses(py::class_<tsc::CellVoid, std::shared_ptr<tsc::CellVoid>>& cell_void)
 	auto buildClasses(py::class_<tsc::ElemType, PyElemType, std::shared_ptr<tsc::ElemType>>& elem_type){
 
 		typedef tse::DriftTypeWithKnob<C> DriftTypeK;
@@ -228,32 +228,41 @@ struct TemplatedClasses
 		cm
 			.def(py::init<const Config &>());
 
-		std::string quad_name =  "Quadrupole" + this->m_suffix;
+#if 1
+		std::string quad_name = "Quadrupole" + this->m_suffix;
 		typedef tse::QuadrupoleTypeWithKnob<C> QuadK;
 		py::class_<QuadK, std::shared_ptr<QuadK>>(this->m_module, quad_name.c_str(), cm)
 			.def(py::init<const Config &>());
-
-		std::string sext_name =  "Sextupole" + this->m_suffix;
+#else
+		// J.B. 14/07/23: test.
+		std::string quad_name = "Quadrupole" + this->m_suffix;
+		typedef tse::QuadrupoleTypeWithKnob<C> QuadK;
+		py::class_<QuadK, std::shared_ptr<QuadK>>(this->m_module, quad_name.c_str(), cm)
+			.def(py::init<const Config &, tse::ElemTypeKnobbed *>())
+			.def("Q_init", &QuadK::Q_init)
+			;
+#endif
+		std::string sext_name = "Sextupole" + this->m_suffix;
 		typedef tse::SextupoleTypeWithKnob<C> SextK;
 		py::class_<SextK, std::shared_ptr<SextK>>(this->m_module, sext_name.c_str(), cm)
 			.def(py::init<const Config &>());
 
-		std::string oct_name =  "Octupole" + this->m_suffix;
+		std::string oct_name = "Octupole" + this->m_suffix;
 		typedef tse::OctupoleTypeWithKnob<C> OctK;
 		py::class_<OctK, std::shared_ptr<OctK>>(this->m_module, oct_name.c_str(), cm)
 			.def(py::init<const Config &>());
 
-		std::string bending_name =  "Bending" + this->m_suffix;
+		std::string bending_name = "Bending" + this->m_suffix;
 		typedef tse::BendingTypeWithKnob<C> BendingK;
 		py::class_<BendingK, std::shared_ptr<BendingK>>(this->m_module, bending_name.c_str(), cm)
 			.def(py::init<const Config &>());
 
-		std::string hor_st_name =  "HorizontalSteerer" + this->m_suffix;
+		std::string hor_st_name = "HorizontalSteerer" + this->m_suffix;
 		typedef tse::HorizontalSteererTypeWithKnob<C> HorStK;
 		py::class_<HorStK, std::shared_ptr<HorStK>>(this->m_module, hor_st_name.c_str(), cm)
 			.def(py::init<const Config &>());
 
-		std::string ver_st_name =  "VerticalSteerer" + this->m_suffix;
+		std::string ver_st_name = "VerticalSteerer" + this->m_suffix;
 		typedef tse::VerticalSteererTypeWithKnob<C> VerStK;
 		py::class_<VerStK, std::shared_ptr<VerStK>>(this->m_module, ver_st_name.c_str(), cm)
 			.def(py::init<const Config &>());
@@ -291,7 +300,7 @@ void py_thor_scsi_init_elements(py::module &m)
 		.def("set_aperture",   &tsc::ElemTypeKnobbed/*<C>*/::setAperture)
 		.def("propagate", py::overload_cast<tsc::ConfigType&, gtpsa::ss_vect<double>&>(&tse::ElemTypeKnobbed/*<C>*/::propagate), pass_d_doc)
 		.def("propagate", py::overload_cast<tsc::ConfigType&, gtpsa::ss_vect<gtpsa::tpsa>&>(&tse::ElemTypeKnobbed/*<C>*/::propagate), pass_d_doc)
-			//.def("propagate", py::overload_cast<tsc::ConfigType&, gtpsa::ss_vect<tps>&>(&tse::ElemType::propagate),    pass_tpsa_doc)
+		//.def("propagate", py::overload_cast<tsc::ConfigType&, gtpsa::ss_vect<tps>&>(&tse::ElemType::propagate), pass_tpsa_doc)
                 ;
 
 

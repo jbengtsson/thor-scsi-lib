@@ -2,6 +2,7 @@
 #include <thor_scsi/elements/standard_aperture.h>
 #include <thor_scsi/elements/elements_enums.h>
 #include <thor_scsi/elements/marker.h>
+#include <thor_scsi/elements/quadrupole.h>
 #include <thor_scsi/core/exceptions.h>
 #include <sstream>
 #include <thor_scsi/core/multipole_types.h>
@@ -138,7 +139,20 @@ ts::AcceleratorKnobbable<C>::_propagate(thor_scsi::core::ConfigType& conf, gtpsa
 		size_t n = next_elem;
 
 		std::shared_ptr<tsc::CellVoid> cv = this->at(n);
-		auto elem = std::dynamic_pointer_cast<tsc::ElemTypeKnobbed/*<C>*/>(cv);
+		// auto elem = std::dynamic_pointer_cast<tsc::ElemTypeKnobbed/*<C>*/>(cv);
+
+		// J.B. 14/07/23: debugging.
+		printf("_propagate: %-8s\n", cv->name.c_str());
+		if (std::dynamic_pointer_cast<tsc::CellVoid>(cv) != NULL)
+		  printf("  CellVoid\n", cv->name.c_str());
+		if (std::dynamic_pointer_cast<tsc::ElemTypeKnobbed>(cv) != NULL)
+		  printf("  ElemTypeKnobbed\n", cv->name.c_str());
+		if (std::dynamic_pointer_cast<tse::QuadrupoleType>(cv) != NULL)
+		  printf("  QuadrupoleType\n", cv->name.c_str());
+		if (std::dynamic_pointer_cast<tse::QuadrupoleTypeTpsa>(cv) != NULL)
+		  printf("  QuadrupoleTypeTpsa\n", cv->name.c_str());
+		std::shared_ptr<tsc::ElemTypeKnobbed> elem = std::dynamic_pointer_cast<tsc::ElemTypeKnobbed>(cv);
+
 		if(!elem){
 		    // Should raise an exception!
 		    THOR_SCSI_LOG(ERROR)
