@@ -112,6 +112,7 @@ def read_lattice(t_file):
 
 
 corresponding_types = {
+    tslib.Sextupole:         tslib.SextupoleTpsa,
     tslib.Quadrupole:        tslib.QuadrupoleTpsa,
     tslib.HorizontalSteerer: tslib.HorizontalSteererTpsa,
     tslib.VerticalSteerer:   tslib.VerticalSteererTpsa,
@@ -124,8 +125,8 @@ def convert_magnet_to_knobbable(a_magnet: tslib.Mpole) -> tslib.MpoleTpsa:
     return corresponding_type(config)
 
 
-def multipole_prm(elems, mult_family, n):
-    print("\nmultipole_prm ->")
+def mult_prm(elems, mult_family, n, desc):
+    print("\nmult_prm ->")
     for k in range(len(mult_family)):
         index = mult_family[k].index
         elem = convert_magnet_to_knobbable(elems[index])
@@ -145,15 +146,26 @@ def multipole_prm(elems, mult_family, n):
         # will lead to an assert on line 158 in:
         #   thor_scsi/std_machine/accelerator.cc
         #
-        elems[index] = tslib.QuadrupoleTpsa(elems[index].config())
-    print("-> multipole_prm\n")
+    print("-> mult_prm\n")
     return elems
 
 
-def prt_lat(lat):
-    print("\nprt_lat:")
-    for k in range(0, 3):
-        print("\n", lat[k].name, "\n", lat[k], "\n", lat[k].config)
+def lat_mult_prm(mult_prm_name, lat, n, desc):
+    elems = [elem for elem in lat]
+    mult_family = lat.elements_with_name(mult_prm_name)
+    elems = mult_prm(elems, mult_family, n, desc)
+    return tslib.AcceleratorTpsa(elems)
+
+
+# Work-around for C++ virtual function -> Python mapping issue.
+# See function above:
+#   mult_prm
+def propagate(lat, model_state, desc, no, nv, named_index):
+    M = gtpsa.ss_vect_tpsa(desc, no, nv, index_mapping=named_index)
+    M.set_identity()
+    for k in range(len(lat)):
+        lat[k].propagate(model_state, M)
+    return M
 
 
 # Number of phase-space coordinates.
@@ -189,40 +201,10 @@ named_index = gtpsa.IndexMapping(
 
 desc = gtpsa.desc(nv, no, nv_prm, no_prm)
 
-elems = [elem for elem in lat]
+lat_ptc = lat_mult_prm("uq4", lat, 2, desc)
 
-mult_family = lat.elements_with_name("uq4")
-elems = multipole_prm(elems, mult_family, 2)
-
-lat_tpsa = tslib.AcceleratorTpsa(elems)
-
-if False:
-    prt_lat(lat)
-    prt_lat(lat_tpsa)
-    assert False
-
-M = gtpsa.ss_vect_tpsa(desc, no, nv, index_mapping=named_index)
-M.set_identity()
-
-# Bug in lattice propagator.
-if not True:
-    index1 = mult_family[0].index
-    lat_tpsa.propagate(model_state, M, 0, index1)
-    lat_tpsa[index1].propagate(model_state, M)
-    index2 = mult_family[1].index
-    lat_tpsa.propagate(model_state, M, index1+1, index2-index1-1)
-    lat_tpsa[index2].propagate(model_state, M)
-    lat_tpsa.propagate(model_state, M, index2+1, len(lat_tpsa)-index2-1)
-
-    print("\nM:\n", M)
-
-    assert False
-
-lat.propagate(model_state, M)
-print()
-lat_tpsa.propagate(model_state, M)
-
+M = propagate(lat_ptc, model_state, desc, no, nv, named_index)
 print("\nM:\n", M)
 
-if False:
+if not False:
     prt_map("\nM:", M)

@@ -124,10 +124,11 @@ def convert_magnet_to_knobbable(a_magnet: tslib.Mpole) -> tslib.MpoleTpsa:
     return corresponding_type(config)
 
 
-def multipole_prm(elems, mult_family, n):
+def multipole_prm(elems, mult_family, n, desc, named_index):
     print("\nmultipole_prm ->")
     for k in range(len(mult_family)):
         index = mult_family[k].index
+        print(mult_family[k].name, mult_family[k].index)
         elem = convert_magnet_to_knobbable(elems[index])
         elems[index] = \
             knobs.make_magnet_knobbable(
@@ -145,7 +146,6 @@ def multipole_prm(elems, mult_family, n):
         # will lead to an assert on line 158 in:
         #   thor_scsi/std_machine/accelerator.cc
         #
-        elems[index] = tslib.QuadrupoleTpsa(elems[index].config())
     print("-> multipole_prm\n")
     return elems
 
@@ -171,12 +171,8 @@ t_file = os.path.join(t_dir, "b3_sfsf4Q_tracy_jb_3.lat")
 n_dof, lat, model_state = read_lattice(t_file)
 
 if False:
-    named_index = gtpsa.IndexMapping(
-        dict(x=0, px=1, y=2, py=3, delta=4, ct=5)
-    )
-
+    named_index = gtpsa.IndexMapping(dict(x=0, px=1, y=2, py=3, delta=4, ct=5))
     desc = gtpsa.desc(nv, no, nv_prm, no_prm)
-
     M, A, data = \
         compute_periodic_solution(lat, model_state, named_index, desc, no)
 
@@ -190,10 +186,8 @@ named_index = gtpsa.IndexMapping(
 desc = gtpsa.desc(nv, no, nv_prm, no_prm)
 
 elems = [elem for elem in lat]
-
 mult_family = lat.elements_with_name("uq4")
-elems = multipole_prm(elems, mult_family, 2)
-
+elems = multipole_prm(elems, mult_family, 2, desc, named_index)
 lat_tpsa = tslib.AcceleratorTpsa(elems)
 
 if False:
@@ -201,11 +195,11 @@ if False:
     prt_lat(lat_tpsa)
     assert False
 
-M = gtpsa.ss_vect_tpsa(desc, no, nv, index_mapping=named_index)
-M.set_identity()
-
 # Bug in lattice propagator.
-if not True:
+if not False:
+    M = gtpsa.ss_vect_tpsa(desc, no, nv, index_mapping=named_index)
+    M.set_identity()
+
     index1 = mult_family[0].index
     lat_tpsa.propagate(model_state, M, 0, index1)
     lat_tpsa[index1].propagate(model_state, M)
@@ -216,13 +210,19 @@ if not True:
 
     print("\nM:\n", M)
 
-    assert False
-
-lat.propagate(model_state, M)
-print()
-lat_tpsa.propagate(model_state, M)
-
-print("\nM:\n", M)
+    if False:
+        prt_map("\nM:", M)
 
 if False:
-    prt_map("\nM:", M)
+    M = gtpsa.ss_vect_tpsa(desc, no, nv, index_mapping=named_index)
+    M.set_identity()
+    lat.propagate(model_state, M)
+    print()
+
+    M = gtpsa.ss_vect_tpsa(desc, no, nv, index_mapping=named_index)
+    M.set_identity()
+    lat_tpsa.propagate(model_state, M)
+    print("\nM:\n", M)
+
+    if not False:
+        prt_map("\nM:", M)
