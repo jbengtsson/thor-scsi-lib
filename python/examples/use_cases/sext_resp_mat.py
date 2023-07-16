@@ -79,8 +79,8 @@ def compute_periodic_solution(lat, model_state, named_index, desc, no):
     A_map = gtpsa.ss_vect_tpsa(desc, no)
     A_map.set_jacobian(A)
     ds = \
-        lo.compute_Twiss_along_lattice \
-        (n_dof, lat, model_state, A=A_map, desc=desc, mapping=named_index)
+        lo.compute_Twiss_along_lattice(
+            n_dof, lat, model_state, A=A_map, desc=desc, mapping=named_index)
 
     return M, A, ds
 
