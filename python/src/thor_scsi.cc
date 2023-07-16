@@ -1,7 +1,10 @@
 #include <pybind11/pybind11.h>
 #include <thor_scsi/version.h>
 #include <thor_scsi/elements/constants.h>
+
 #include "thor_scsi.h"
+#include <gtpsa/lielib.hpp>
+
 #include <string>
 #include <sstream>
 
@@ -14,7 +17,6 @@ PYBIND11_MODULE(lib, m) {
 
     py_thor_scsi_init_tps(m);
     py_thor_scsi_init_field_interpolation(m);
-    py_thor_scsi_init_custom(m);
     py_thor_scsi_init_elements(m);
     py_thor_scsi_init_aperture(m);
     py_thor_scsi_init_radiation(m);
@@ -39,5 +41,5 @@ PYBIND11_MODULE(lib, m) {
     */
     // Enums.
 
-
+    m.def("M_to_h_DF", &gtpsa::M_to_h_DF);
 }
