@@ -171,7 +171,7 @@ def propagate(lat, model_state, desc, no, nv, named_index):
 # Number of phase-space coordinates.
 nv = 6
 # Variables max order.
-no = 2
+no = 4
 # Number of parameters.
 nv_prm = 0
 # Parameters max order.
@@ -183,12 +183,8 @@ t_file = os.path.join(t_dir, "b3_sfsf4Q_tracy_jb_3.lat")
 n_dof, lat, model_state = read_lattice(t_file)
 
 if False:
-    named_index = gtpsa.IndexMapping(
-        dict(x=0, px=1, y=2, py=3, delta=4, ct=5)
-    )
-
+    named_index = gtpsa.IndexMapping(dict(x=0, px=1, y=2, py=3, delta=4, ct=5))
     desc = gtpsa.desc(nv, no, nv_prm, no_prm)
-
     M, A, data = \
         compute_periodic_solution(lat, model_state, named_index, desc, no)
 
@@ -205,6 +201,9 @@ lat_ptc = lat_mult_prm("uq4", lat, 2, desc)
 
 M = propagate(lat_ptc, model_state, desc, no, nv, named_index)
 print("\nM:\n", M)
-
 if not False:
     prt_map("\nM:", M)
+
+h = tslib.M_to_h_DF(M)
+print("\nh:")
+h.print()
