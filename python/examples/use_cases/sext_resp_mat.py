@@ -177,8 +177,9 @@ nv_prm = 0
 # Parameters max order.
 no_prm = 0
 
-t_dir = os.path.join(os.environ["HOME"], "Nextcloud", "thor_scsi", "JB")
-t_file = os.path.join(t_dir, "b3_sfsf4Q_tracy_jb_3.lat")
+t_dir = os.path.join(os.environ["HOME"], "Nextcloud", "thor_scsi", "JB",
+                     "BESSY-III", "ipac_2023")
+t_file = os.path.join(t_dir, "b3_cf425cf_thor_scsi.lat")
 
 n_dof, lat, model_state = read_lattice(t_file)
 
@@ -197,11 +198,11 @@ named_index = gtpsa.IndexMapping(
 
 desc = gtpsa.desc(nv, no, nv_prm, no_prm)
 
-lat_ptc = lat_mult_prm("uq4", lat, 2, desc)
+lat_ptc = lat_mult_prm("uq3", lat, 3, desc)
 
 M = propagate(lat_ptc, model_state, desc, no, nv, named_index)
 print("\nM:\n", M)
-if not False:
+if False:
     prt_map("\nM:", M)
 
 h = tslib.M_to_h_DF(M)
