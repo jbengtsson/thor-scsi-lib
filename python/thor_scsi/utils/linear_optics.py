@@ -188,12 +188,23 @@ def compute_nu_xi(desc, tpsa_order, M):
         M_delta = gtpsa.tpsa(desc, tpsa_order)
         for k in range(2):
             M_delta.clear()
+            # J.B. 21/07/23.
+            # Map indexing syntax changed & broken for existing Use Cases;
+            # i.e., transparency for ditto & backwards compatibility
+            # missed/ignored.
             # m_11 + delta * m_16.
-            M_delta += M[2*k].get(ind_1(2*k))
-            M_delta.set(ind_1(delta_), 0e0, M[2*k].get(ind_2(2*k, delta_)))
-            # m_22 + delta * m_26.
-            M_delta += M[2*k+1].get(ind_1(2*k+1))
-            M_delta.set(ind_1(delta_), 1e0, M[2*k+1].get(ind_2(2*k+1, delta_)))
+            if k == 0:
+                M_delta += M.x.get(ind_1(2*k))
+                M_delta.set(ind_1(delta_), 0e0, M.x.get(ind_2(2*k, delta_)))
+                # m_22 + delta * m_26.
+                M_delta += M.px.get(ind_1(2*k+1))
+                M_delta.set(ind_1(delta_), 1e0, M.px.get(ind_2(2*k+1, delta_)))
+            elif k == 1:
+                M_delta += M.y.get(ind_1(2*k))
+                M_delta.set(ind_1(delta_), 0e0, M.y.get(ind_2(2*k, delta_)))
+                # m_22 + delta * m_26.
+                M_delta += M.py.get(ind_1(2*k+1))
+                M_delta.set(ind_1(delta_), 1e0, M.py.get(ind_2(2*k+1, delta_)))
             # M_delta = m_11 + m_22.
             nu_tpsa = \
                 acos2_tpsa(M.jacobian()[2*k][2*k+1], M_delta/2e0)/(2e0*np.pi)
