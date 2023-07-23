@@ -12,6 +12,9 @@
 #include <cassert>
 #include "thor_scsi.h"
 
+
+// Interface to linear TPSA; i.e., obsolete.
+
 namespace py = pybind11;
 
 
