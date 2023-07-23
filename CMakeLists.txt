@@ -30,7 +30,8 @@ if(CMAKE_COMPILER_IS_GNUCXX)
 endif()
 
 if(NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE RELEASE) # default to debug build
+  set(CMAKE_BUILD_TYPE DEBUG) # default to debug build
+  # set(CMAKE_BUILD_TYPE RELEASE) # default to debug build
   message(STATUS "Default to DEBUG build")
 endif()
 
