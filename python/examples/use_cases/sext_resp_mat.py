@@ -176,7 +176,7 @@ def mult_prm(elems, mult_family, n, desc):
         elems[index] = \
             knobs.make_magnet_knobbable(
                 elem, po=1, desc=desc, named_index=named_index,
-                multipole_number=n, offset=True
+                multipole_number=n, offset=False
             )
         print("\nmult_prm:", elems[index])
         # While the RHS pointer can be recasted to:
@@ -228,13 +228,14 @@ t_file = os.path.join(t_dir, "b3_cf425cf_thor_scsi.lat")
 
 n_dof, lat, model_state = read_lattice(t_file)
 
-# Zero sextopoles.
-print("\nZeroing sextupoles.")
-set_b_n_fam(lat, "sf", MultipoleIndex.sextupole, 0e0)
-set_b_n_fam(lat, "sd", MultipoleIndex.sextupole, 0e0)
-set_b_n_fam(lat, "sd2", MultipoleIndex.sextupole, 0e0)
+if False:
+    # Zero sextopoles.
+    print("\nZeroing sextupoles.")
+    set_b_n_fam(lat, "sf", MultipoleIndex.sextupole, 0e0)
+    set_b_n_fam(lat, "sd", MultipoleIndex.sextupole, 0e0)
+    set_b_n_fam(lat, "sd2", MultipoleIndex.sextupole, 0e0)
 
-if not False:
+if False:
     named_index = gtpsa.IndexMapping(dict(x=0, px=1, y=2, py=3, delta=4, ct=5))
     desc = gtpsa.desc(nv, no, nv_prm, no_prm)
     M, A, data = \
@@ -251,8 +252,8 @@ if not False:
     print("  nu        = [{:7.5f}, {:7.5f}]".format(nu[X_], nu[Y_]))
     print("  xi        = [{:7.5f}, {:7.5f}]".format(xi[X_], xi[Y_]))
 
-nv_prm = 0
-no_prm = 0
+nv_prm = 3
+no_prm = 1
 
 named_index = gtpsa.IndexMapping(
     dict(x=0, px=1, y=2, py=3, delta=4, ct=5, K=6, dx=7, dy=8)
@@ -260,20 +261,16 @@ named_index = gtpsa.IndexMapping(
 
 desc = gtpsa.desc(nv, no, nv_prm, no_prm)
 
+lat_ptc = lat_mult_prm("uq3", lat, 2, desc)
+M = propagate(lat_ptc, model_state, desc, no, nv, named_index)
+
+# print("\nM:\n", M)
 if False:
-    lat_ptc = lat_mult_prm("uq3", lat, 2, desc)
-    M = propagate(lat, model_state, desc, no, nv, named_index)
-
-M = gtpsa.ss_vect_tpsa(desc, no, nv, index_mapping=named_index)
-M.set_identity()
-lat.propagate(model_state, M)
-
-print("\nM:\n", M)
-if not False:
     prt_map("\nM:", M)
 
-assert False
+# print("\n:\n", M.getOrder(M, 2))
 
 h = tslib.M_to_h_DF(M)
+# assert False
 print("\nh:")
 h.print()
