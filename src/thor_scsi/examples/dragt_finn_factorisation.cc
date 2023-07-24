@@ -42,6 +42,27 @@ void dragt_finn_fact(void)
 }
 
 
+gtpsa::ss_vect<gtpsa::tpsa> convert(gtpsa::ss_vect<gtpsa::tpsa> &A)
+{
+  const auto desc = A[0].getDescription();
+  const auto info  = desc->getInfo();
+
+  const auto nv = info.getNumberOfVariables();
+  const auto no = info.getVariablesMaximumOrder();
+  const auto np = info.getNumberOfParameters();
+  const auto po = info.getParametersMaximumOrder();
+
+  auto desc2 = std::make_shared<gtpsa::desc>(nv, no);
+  gtpsa::ss_vect<gtpsa::tpsa> B(desc2, no);
+  auto nm = A[0].getDescription()->getNv();
+  std::vector<num_t> v(nm);
+  A[0].getv(0, &v);
+  B[0].setv(0, v);
+
+  return B;
+}
+
+
 gtpsa::ss_vect<gtpsa::tpsa> cct
 (const gtpsa::ss_vect<gtpsa::tpsa> &A, const gtpsa::ss_vect<gtpsa::tpsa> &B)
 {
@@ -53,13 +74,15 @@ gtpsa::ss_vect<gtpsa::tpsa> cct
   const auto np = info.getNumberOfParameters();
   const auto po = info.getParametersMaximumOrder();
 
-  auto nm = A[0].getDescription()->getNv(0,0,0);
+  auto nm = A[0].getDescription()->getNv();
+  std::cout << "\nnv = " << nv << "no = " << no
+	    << " np = " << np << " po = " << po << "\n";
   std::vector<num_t> v(nm);
   A[0].getv(0, &v);
 
   std::cout << info << "\n";
   std::cout << "\nnm = " << nm << "\n";
-  for (num_t mn : v)
+  for (auto mn : v)
     std::cout << std::scientific << std::setprecision(3)
 	      << std::setw(11) << mn;
   std::cout << "\n";
@@ -72,12 +95,12 @@ gtpsa::ss_vect<gtpsa::tpsa> cct
 void test(void)
 {
   const int
-    mo = 4, nv = 7, np = 1, po = 4;
+    nv = 6, no = 4, np = 1, po = 4;
 
-  auto desc = std::make_shared<gtpsa::desc>(nv, mo, np, po);
-  auto Id   = gtpsa::ss_vect<gtpsa::tpsa>(desc, mo);
-  auto M1   = gtpsa::ss_vect<gtpsa::tpsa>(desc, mo);
-  auto M2   = gtpsa::ss_vect<gtpsa::tpsa>(desc, mo);
+  auto desc = std::make_shared<gtpsa::desc>(nv, no, np, po);
+  auto Id   = gtpsa::ss_vect<gtpsa::tpsa>(desc, no);
+  auto M1   = gtpsa::ss_vect<gtpsa::tpsa>(desc, no);
+  auto M2   = gtpsa::ss_vect<gtpsa::tpsa>(desc, no);
 
   Id.set_identity();
   std::cout << "\nId:" << Id;
@@ -94,9 +117,17 @@ void test(void)
       0e0, 0e0, 0e0, 0e0, 0e0, 0e0, 0e0, 0e0, 0e0, 0e0,
       3.14});
   std::cout << "\nM1:" << M1;
+
+  auto desc2 = std::make_shared<gtpsa::desc>(nv, no);
+  gtpsa::ss_vect<gtpsa::tpsa> B(desc2, no);
+
   M1[0].print("\nM1[0]:", 1e-30, 0);
-  M2 = cct(M1, Id);
+  B = convert(M1);
+  B[0].print("\nB[0]:", 1e-30, 0);
+
   assert(false);
+
+  M2 = cct(M1, Id);
   M2[0].print("\nM2[0]:", 1e-30, 0);
   M2 = compose_jb(Id, M1);
   M2[0].print("\nM2[0]:", 1e-30, 0);
