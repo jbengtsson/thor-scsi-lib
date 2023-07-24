@@ -15,7 +15,7 @@ void print_map(const std::string &str, gtpsa::ss_vect<gtpsa::tpsa> &M)
 }
 
 
-void dragt_finn_fact()
+void dragt_finn_fact(void)
 {
   const int mo = 4, nv = 6;
 
@@ -42,10 +42,37 @@ void dragt_finn_fact()
 }
 
 
-void test()
+gtpsa::ss_vect<gtpsa::tpsa> cct
+(const gtpsa::ss_vect<gtpsa::tpsa> &A, const gtpsa::ss_vect<gtpsa::tpsa> &B)
+{
+  const auto desc = A[0].getDescription();
+  const auto info  = desc->getInfo();
+
+  const auto nv = info.getNumberOfVariables();
+  const auto no = info.getVariablesMaximumOrder();
+  const auto np = info.getNumberOfParameters();
+  const auto po = info.getParametersMaximumOrder();
+
+  auto nm = A[0].getDescription()->getNv(0,0,0);
+  std::vector<num_t> v(nm);
+  A[0].getv(0, &v);
+
+  std::cout << info << "\n";
+  std::cout << "\nnm = " << nm << "\n";
+  for (num_t mn : v)
+    std::cout << std::scientific << std::setprecision(3)
+	      << std::setw(11) << mn;
+  std::cout << "\n";
+
+  auto C = gtpsa::ss_vect<gtpsa::tpsa>(desc, no);
+  return C;
+}
+
+
+void test(void)
 {
   const int
-    mo = 4, nv = 6, np = 1, po = 4;
+    mo = 4, nv = 7, np = 1, po = 4;
 
   auto desc = std::make_shared<gtpsa::desc>(nv, mo, np, po);
   auto Id   = gtpsa::ss_vect<gtpsa::tpsa>(desc, mo);
@@ -68,11 +95,12 @@ void test()
       3.14});
   std::cout << "\nM1:" << M1;
   M1[0].print("\nM1[0]:", 1e-30, 0);
-  M2 = compose(M1, Id);
+  M2 = cct(M1, Id);
+  assert(false);
   M2[0].print("\nM2[0]:", 1e-30, 0);
-  M2 = compose(Id, M1);
+  M2 = compose_jb(Id, M1);
   M2[0].print("\nM2[0]:", 1e-30, 0);
-  M2 = compose(M1, M1);
+  M2 = compose_jb(M1, M1);
   M2[0].print("\nM2[0]:", 1e-30, 0);
 }
 
