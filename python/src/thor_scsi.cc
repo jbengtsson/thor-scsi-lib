@@ -43,5 +43,6 @@ PYBIND11_MODULE(lib, m) {
 
     m.def("inv", &gtpsa::minv);
     m.def("pinv", &gtpsa::pminv);
+    m.def("compose", &gtpsa::compose);
     m.def("M_to_h_DF", &gtpsa::M_to_h_DF);
 }

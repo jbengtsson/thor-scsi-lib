@@ -113,7 +113,7 @@ def compute_phi(lat):
     return phi
 
 
-def prt_map(str, map):
+def print_map(str, map):
     """
     # 
     """
@@ -264,13 +264,26 @@ desc = gtpsa.desc(nv, no, nv_prm, no_prm)
 lat_ptc = lat_mult_prm("uq3", lat, 2, desc)
 M = propagate(lat_ptc, model_state, desc, no, nv, named_index)
 
-# print("\nM:\n", M)
+print("\nM:\n", M)
+if not False:
+    print_map("\nM:", M)
+
 if False:
-    prt_map("\nM:", M)
+    M2 = M
+    # Busted.
+    M2.getOrder(M2, 2)
+    print("\n:\n", M2)
 
-# print("\n:\n", M.getOrder(M, 2))
+M_inv = tslib.inv(M)
 
+M_M_inv = gtpsa.ss_vect_tpsa(desc, no, nv, index_mapping=named_index)
+M_M_inv = tslib.compose(M, M_inv)
+print("\nM:", M)
+print("\nM^-1:", M_inv)
+print("\nM*M^-1:", M_M_inv)
+# print("\nM*M^-1:", M_M_inv[0])
+
+assert False
 h = tslib.M_to_h_DF(M)
-# assert False
 print("\nh:")
 h.print()
