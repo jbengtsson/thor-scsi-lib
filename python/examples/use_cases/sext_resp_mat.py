@@ -215,7 +215,7 @@ def propagate(lat, model_state, desc, no, nv, named_index):
 # Number of phase-space coordinates.
 nv = 6
 # Variables max order.
-no = 2
+no = 3
 # Number of parameters.
 nv_prm = 0
 # Parameters max order.
@@ -252,11 +252,11 @@ if False:
     print("  nu        = [{:7.5f}, {:7.5f}]".format(nu[X_], nu[Y_]))
     print("  xi        = [{:7.5f}, {:7.5f}]".format(xi[X_], xi[Y_]))
 
-nv_prm = 3
+nv_prm = 1
 no_prm = 1
 
 named_index = gtpsa.IndexMapping(
-    dict(x=0, px=1, y=2, py=3, delta=4, ct=5, K=6, dx=7, dy=8)
+    dict(x=0, px=1, y=2, py=3, delta=4, ct=5, K=6)
 )
 
 desc = gtpsa.desc(nv, no, nv_prm, no_prm)
@@ -274,16 +274,18 @@ if False:
     M2.getOrder(M2, 2)
     print("\n:\n", M2)
 
-M_inv = tslib.inv(M)
+if False:
+    M_inv = tslib.inv(M)
 
-M_M_inv = gtpsa.ss_vect_tpsa(desc, no, nv, index_mapping=named_index)
-M_M_inv = tslib.compose(M, M_inv)
-print("\nM:", M)
-print("\nM^-1:", M_inv)
-print("\nM*M^-1:", M_M_inv)
-# print("\nM*M^-1:", M_M_inv[0])
+    M_M_inv = gtpsa.ss_vect_tpsa(desc, no, nv, index_mapping=named_index)
+    M_M_inv = tslib.compose(M, M_inv)
+    print("\nM:", M)
+    print("\nM^-1:", M_inv)
+    print("\nM*M^-1:", M_M_inv)
+    # print("\nM*M^-1:", M_M_inv[0])
 
-assert False
+# assert False
+
 h = tslib.M_to_h_DF(M)
 print("\nh:")
 h.print()
