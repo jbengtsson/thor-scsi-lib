@@ -264,7 +264,7 @@ if not True:
     lat_ptc = lat_mult_prm("", lat, 2, desc)
 else:
     nv_prm = 1
-    no_prm = 1
+    no_prm = 2
     desc = gtpsa.desc(nv, no, nv_prm, no_prm)
     lat_ptc = lat_mult_prm("uq3", lat, 2, desc)
 
