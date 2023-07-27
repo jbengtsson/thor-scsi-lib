@@ -7,75 +7,9 @@
 namespace tsc = thor_scsi::core;
 namespace tse = thor_scsi::elements;
 
-void print_map(const std::string &str, gtpsa::ss_vect<gtpsa::tpsa> &M)
-{
-  for (auto k = 0; k < M.size(); k++) 
-    M[k].print(str.c_str(), 1e-30, 0);
-}
+#if 0
 
-
-void print_vec(std::vector<num_t> &v)
-{
-  for (auto mn: v)
-    std::cout << std::scientific << std::setprecision(3)
-	      << std::setw(11) << mn;
-  std::cout << "\n";
-}
-
-
-gtpsa::ss_vect<gtpsa::tpsa> param_to_ss_vect(gtpsa::ss_vect<gtpsa::tpsa> &A)
-{
-  const auto desc0 = A[0].getDescription();
-  const auto info  = desc0->getInfo();
-  const auto nv    = info.getNumberOfVariables();
-  const auto no    = info.getVariablesMaximumOrder();
-  const auto np    = info.getNumberOfParameters();
-  const auto po    = info.getParametersMaximumOrder();
-
-  auto desc1 = std::make_shared<gtpsa::desc>(nv+np, no);
-  auto nm    = desc0->maxLen(no);
-
-  gtpsa::ss_vect<gtpsa::tpsa> B(desc1, no);
-
-  for (auto k = 0; k < A.size(); k++) {
-    std::vector<num_t> v(nm);
-
-    A[k].getv(0, &v);
-    B[k].setv(0, v);
-  }
-
-  return B;
-}
-
-
-gtpsa::ss_vect<gtpsa::tpsa> ss_vect_to_param(gtpsa::ss_vect<gtpsa::tpsa> &A)
-{
-  const int ps_dim = 6;
-
-  const auto desc0 = A[0].getDescription();
-  const auto info  = desc0->getInfo();
-  const auto nv    = info.getNumberOfVariables();
-  const auto no    = info.getVariablesMaximumOrder();
-  const auto np    = info.getNumberOfParameters();
-  const auto po    = info.getParametersMaximumOrder();
-
-  auto desc1 = std::make_shared<gtpsa::desc>(ps_dim, no, nv-ps_dim, no);
-  auto nm    = desc0->maxLen(no);
-
-  gtpsa::ss_vect<gtpsa::tpsa> B(desc1, no);
-
-  for (auto k = 0; k < A.size(); k++) {
-    std::vector<num_t> v(nm);
-
-    A[k].getv(0, &v);
-    B[k].setv(0, v);
-  }
-
-  return B;
-}
-
-
-void test(void)
+void test1(void)
 {
   const int
     nv = 6, no = 3, np = 1, po = 2;
@@ -120,8 +54,9 @@ void test(void)
   compose(M2, M2)[0].print("\nM2*M2[0]:", 1e-30, 0);
 }
 
+#endif
 
-void dragt_finn_fact(void)
+void test2(void)
 {
   const int mo = 3, nv = 7;
 
@@ -157,10 +92,100 @@ void dragt_finn_fact(void)
 }
 
 
+gtpsa::ss_vect<gtpsa::tpsa> compute_sext_map
+(const int no, const std::shared_ptr<gtpsa::mad::desc> &desc)
+{
+  Config C;
+  C.set<std::string>("name", "test");
+  C.set<double>("K", 3e0);
+  C.set<double>("L", 0e0);
+  C.set<double>("N", 1);
+
+  tsc::ConfigType config;
+  auto sext = tse::SextupoleType(C);
+  auto M    = gtpsa::ss_vect<gtpsa::tpsa>(desc, no);
+
+  M.set_identity();
+  sext.propagate(config, M);
+  print_map("\nM:", M);
+
+  return M;
+}
+
+
+void test3(void)
+{
+  const int no = 3, nv = 6 + 1;
+
+  auto desc = std::make_shared<gtpsa::desc>(nv, no);
+  auto M    = gtpsa::ss_vect<gtpsa::tpsa>(desc, no);
+
+  const int nm = desc->maxLen(no);
+
+  M = compute_sext_map(no, desc);
+
+  std::cout << "\nM[1].get(8)  = " << std::scientific << std::setprecision(3)
+	    << M[1].get(8) << "\n";
+
+  std::cout << "M[1].get()   = " << std::scientific << std::setprecision(3)
+	    <<  M[1].get(std::vector<ord_t>{2, 0, 0, 0, 0, 0, 0}) << "\n";
+
+  std::cout << "M[1].index() = "
+	    <<  M[1].index(std::vector<ord_t>{2, 0, 0, 0, 0, 0, 0}) << "\n";
+
+  ord_t              err;
+  std::vector<ord_t> ind(nv);
+  err = M[4].mono(11, &ind);
+  std::cout << "M[4].mono(11):  \n  " << (int)err << "\n ";
+  for (auto k: ind)
+    std::cout << std::setw(2) << (int)k;
+  std::cout << "\n";
+
+  if (false) {
+    std::vector<num_t> v(nm);
+    M[0].getv(0, &v);
+    print_vec("\nv:", v);
+  }
+}
+
+
+void dragt_finn_fact(void)
+{
+  const int no = 3, nv = 6 + 1;
+
+  auto desc = std::make_shared<gtpsa::desc>(nv, no);
+  auto M    = gtpsa::ss_vect<gtpsa::tpsa>(desc, no);
+
+  M = compute_sext_map(no, desc);
+
+  auto h = gtpsa::M_to_h_DF(M);
+  h.print("\nh:", 1e-30, 0);
+}
+
+
+void setvar(void)
+{
+  auto a_desc = std::make_shared<gtpsa::desc>(6, 1);
+  auto a      = gtpsa::tpsa(a_desc, mad_tpsa_default);
+
+  a.setVariable(0e0, 2, 0e0);
+  a.print("\na:");
+}
+
+
 int main(int argc, char *argv[])
 {
+  // if (false)
+  //   test1();
+
+  // if (false)
+  //   test2();
+
   if (false)
-    test();
+    setvar();
+
+  if (false)
+    test3();
 
   if (!false)
     dragt_finn_fact();
