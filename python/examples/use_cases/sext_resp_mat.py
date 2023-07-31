@@ -256,22 +256,24 @@ named_index = gtpsa.IndexMapping(
     dict(x=0, px=1, y=2, py=3, delta=4, ct=5, K=6)
 )
 
-
 if not True:
     nv_prm = 0
     no_prm = 0
     desc = gtpsa.desc(nv, no, nv_prm, no_prm)
-    lat_ptc = lat_mult_prm("", lat, 2, desc)
+    lat_ptc = lat_mult_prm("", lat, 0, desc)
 else:
     nv_prm = 1
-    no_prm = 2
+    no_prm = 1
     desc = gtpsa.desc(nv, no, nv_prm, no_prm)
-    lat_ptc = lat_mult_prm("uq3", lat, 2, desc)
+    if not True:
+        lat_ptc = lat_mult_prm("sf", lat, 3, desc)
+    else:
+        lat_ptc = lat_mult_prm("uq3", lat, 2, desc)
 
 M = propagate(lat_ptc, model_state, desc, no, nv, named_index)
 
 print("\nM:\n", M)
-if not False:
+if False:
     print_map("\nM:", M)
 
 if False:
@@ -291,6 +293,5 @@ if False:
     # print("\nM*M^-1:", M_M_inv[0])
 
 h = tslib.M_to_h_DF(M)
-assert False
 print("\nh:")
 h.print()
