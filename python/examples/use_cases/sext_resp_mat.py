@@ -215,7 +215,7 @@ def propagate(lat, model_state, desc, no, nv, named_index):
 # Number of phase-space coordinates.
 nv = 6
 # Variables max order.
-no = 3
+no = 4
 # Number of parameters.
 nv_prm = 0
 # Parameters max order.
@@ -265,7 +265,7 @@ else:
     nv_prm = 1
     no_prm = 1
     desc = gtpsa.desc(nv, no, nv_prm, no_prm)
-    if not True:
+    if True:
         lat_ptc = lat_mult_prm("sf", lat, 3, desc)
     else:
         lat_ptc = lat_mult_prm("uq3", lat, 2, desc)
