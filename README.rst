@@ -188,7 +188,7 @@ Malika Meddahi was a postdoc at ALS who did her thesis at CERN (for which she re
 
   *Effets faisceau-faisceau dans le collisionneur protons-antiprotons du SPS* `CERN-SL-91-30-BI (1991)`_
 
-  .. _`CERN-SL-91-30-BI (1991)`: http://cds.cern.ch/record/223301)
+  .. _`CERN-SL-91-30-BI (1991)`: http://cds.cern.ch/record/223301
 
 The resulting C code, see below, has now been re-factored by introducing a C++ *beam line class*; i.e., to recover the transparency & simplicity of the original *beam dynamics model*.
 
