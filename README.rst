@@ -202,7 +202,7 @@ for which the *beam dynamics model* was based on the *linearized quadratic Hamil
 
   .. image:: images/H_2.png
 
-for *linear optics design*. I.e., for a *bare lattice* with *mid-plane symmetry*; originating from the model/code:
+for *linear optics design*. I.e., for a *bare lattice* with *mid-plane symmetry* - implemented by 2x2 matrices for the horizontal and vertical planes - originating from the model/code:
 
   A\. Wrülich *Racetrack a Computer Code for the Simulation of Nonlinear Particle Motion in Accelerators* `DESY 84-026 (1984)`_
 
