@@ -38,6 +38,10 @@ n_dof = 2
 model_state.radiation = False
 model_state.Cavity_on = False
 
+if not False:
+    for elem in lat:
+        print(elem)
+
 M = lo.compute_map(lat, model_state, desc=desc)
 M_mat = M.jacobian()[:6, :6]
 stable, A_mat, A_inv_mat, alpha_rad = lo.compute_M_diag(n_dof, M_mat)
