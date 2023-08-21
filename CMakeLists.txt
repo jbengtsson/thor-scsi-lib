@@ -71,7 +71,7 @@ include_directories(
   )
 
 # Fortran implementation part
-add_subdirectory(TPSA)
+#add_subdirectory(TPSA)
 add_subdirectory(src)
 # python wrapper
 add_subdirectory(python)
