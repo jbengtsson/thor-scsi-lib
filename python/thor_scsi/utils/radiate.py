@@ -62,7 +62,7 @@ def compute_rad_prop(acc, calc_config, x0, dE, alpha_rad, D_rad):
     logger.info("\nC = %5.3f", C)
     U_0 = calc_config.Energy*dE
     for k in range(dof):
-        J[k] = 2e0*(1e0+x0[delta_])*alpha_rad[k]/dE
+        J[k] = 2e0*(1e0+x0.delta)*alpha_rad[k]/dE
         tau[k] = -C/(c0*alpha_rad[k])
         eps[k] = -D_rad[k]/(2e0*alpha_rad[k])
 
@@ -103,7 +103,9 @@ def compute_radiation(
 
     logger.info(
         "\nM:\n" + mat2txt(M)
-        + "\n\nx0 =" + vec2txt(r.x0)
+        + "\n\nx0 ="
+        + vec2txt(np.array(
+            [r.x0.x, r.x0.px, r.x0.y, r.x0.py, r.x0.delta, r.x0.ct]))
     )
 
     calc_config.dE = 0e0
@@ -113,13 +115,18 @@ def compute_radiation(
 
     stable, A, A_inv, alpha_rad = compute_M_diag(dof, M)
 
+    A_7x7 = np.zeros((7, 7))
+    A_7x7[:6, :6] = A
+    A_7x7[6, 6] = 1e0
+    print("\nA_7x7:\n", mat2txt(A_7x7))
     if stable:
         calc_config.emittance = True
 
         #A_cpy = vec_mat2ss_vect_tps(r.x0, A)
         A_cpy  = gtpsa.ss_vect_tpsa(desc, 1)
         A_cpy += r.x0
-        A_cpy.set_jacobian(A)
+        A_cpy.set_jacobian(A_7x7)
+        print("\nA_cpy:\n", A_cpy)
         acc.propagate(calc_config, A_cpy)
 
         D_rad = compute_diffusion_coefficients(rad_del_kicks)
@@ -132,7 +139,7 @@ def compute_radiation(
         tau = np.zeros(3, float)
         eps = np.zeros(3, float)
 
-    return stable, U_0, J, tau, eps
+    return stable, U_0, J, tau, eps, D_rad
 
 
 # def calculate_radiation(
