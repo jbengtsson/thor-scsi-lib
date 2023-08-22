@@ -19,10 +19,19 @@ from thor_scsi.utils import linear_optics as lo, courant_snyder as cs, \
 from thor_scsi.utils.output import prt2txt, mat2txt, vec2txt
 
 
-def print_rad(C, alpha_c, nu, U_0, J, tau, eps, D):
-    print("\n  C [m]         = {:9.7f}".format(C))
-    print("  alpha_c       = {:9.3e}".format(alpha_c))
-    print("  nu            = [{:7.5f}, {:7.5f}]".format(nu[0], nu[1]))
+def compute_Sigma(eps, A):
+    n_dof = 3
+    ps_dim = 2*n_dof
+    Sigma = np.zeros((6, 6))
+    for j in range(ps_dim):
+        for k in range(ps_dim):
+            if j == k:
+                Sigma[j, k] = eps[k//2]
+    Sigma = A @ Sigma @ A.T
+    return Sigma
+
+
+def print_rad(_0, J, tau, eps, D):
     print("  eps_x [m.rad] = [{:9.3e}, {:9.3e}, {:9.3e}]".format(
         eps[0], eps[1], eps[2]))
     print("  J             = [{:5.3f}, {:5.3f}, {:5.3f}]".format(
@@ -73,7 +82,21 @@ C = rad.compute_circ(lat)
 alpha_c = M_mat[5, 4]/C
 stable, nu, xi = lo.compute_nu_xi(desc, tpsa_order, M)
 
-stable, U_0, J, tau, eps, D = \
+print("\n  C [m]         = {:9.7f}".format(C))
+print("  alpha_c       = {:9.3e}".format(alpha_c))
+print("  nu            = [{:7.5f}, {:7.5f}]".format(nu[0], nu[1]))
+
+stable, M, cod, A, U_0, J, tau, eps, D = \
     rad.compute_radiation(lat, model_state, 2.5e9, 1e-15, desc=desc)
 
-print_rad(C, alpha_c, nu, U_0, J, tau, eps, D)
+print_rad(U_0, J, tau, eps, D)
+
+print("\ncod:\n", vec2txt(cod))
+print("\nM:\n", mat2txt(M))
+print("\nA:\n", mat2txt(A))
+
+Sigma = compute_Sigma(eps, A)
+Sigma1 = M @ Sigma @ M.T
+
+print("\nSigma:\n", mat2txt(Sigma))
+print("\nM*Sigma*M^T:\n", mat2txt(Sigma1-Sigma))
