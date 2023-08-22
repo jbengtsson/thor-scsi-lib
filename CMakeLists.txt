@@ -67,7 +67,7 @@ set(gtpsa_cpp_INCLUDE_DIR ${gtpsa_DIR}/c++)
 set(gtpsa_mad_ng_INCLUDE_DIR ${gtpsa_DIR}/mad-ng/src)
 
 # Fortran implementation part
-add_subdirectory(TPSA)
+#add_subdirectory(TPSA)
 add_subdirectory(src)
 # python wrapper
 add_subdirectory(python)
