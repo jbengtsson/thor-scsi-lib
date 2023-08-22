@@ -73,7 +73,7 @@ def partial_inverse(mat, selected_dimensions: List[bool]):
     Returns:
         inverted matrix
     """
-    sel_mat = select_subpart(mat, selected_dimensions)
+    sel_mat = select_subpart(mat[:6, :6], selected_dimensions)
     pinv = np.linalg.inv(sel_mat)
     return pinv
 
@@ -118,7 +118,7 @@ def compute_closed_orbit(
         n = 4
 
     if desc is None:
-        desc = gtpsa.desc(6, 1)
+        desc = gtpsa.desc(7, 1)
 
     logger.debug(f" Cavity on ? {conf.Cavity_on} {n=}")
 
