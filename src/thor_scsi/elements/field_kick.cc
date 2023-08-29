@@ -350,7 +350,7 @@ tse::FieldKickKnobbed<C>::FieldKickKnobbed
 (const Config &config) : tse::FieldKickAPIKnobbed<C>(config)
 {
   // Field interpolation type
-  std::cout << "FieldKickKnobbed(config)" << "\n";
+  // std::cout << "FieldKickKnobbed(config)" << "\n";
   this->intp = nullptr;
   this->asThick(false);
   this->setIntegrationMethod(config.get<double>("Method", 4));
