@@ -52,11 +52,8 @@ else()
 endif()
 
 
-# Need to write proper .cmake
-set(gtpsa_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/gtpsa/)
-set(gtpsa_cpp_INCLUDE_DIR ${gtpsa_DIR}/c++)
-# only required by test transfomr?
-set(gtpsa_mad_ng_INCLUDE_DIR ${gtpsa_DIR}/mad-ng/src)
+find_package(gtpsa  REQUIRED COMPONENTS gtpsacpp)
+
 
 add_subdirectory(src)
 # python wrapper
