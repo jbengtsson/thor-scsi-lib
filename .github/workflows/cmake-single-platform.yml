@@ -40,7 +40,7 @@ jobs:
          # gfortran ... currently for mad-ng gtpsa library
          sudo apt install g++ gfortran cmake make bison flex libarmadillo-dev
          # deliberatly only installing a subset of boost
-         sudo apt install  libboost-chrono-dev libboost-thread-dev libboost-filesystem-dev libboost-program-options-dev libboost-test-dev
+         sudo apt install  libboost-chrono-dev libboost-thread-dev libboost-filesystem-dev libboost-program-options-dev libboost-regex-dev libboost-test-dev
          # for building the python interface ... hopefully python3-xarray is not needed this rather heavy
          sudo apt install pybind11-dev python3-pytest # python3-xarray
 
