@@ -11,11 +11,8 @@
 #include <thor_scsi/core/field_interpolation.h>
 #include <thor_scsi/core/exceptions.h>
 #include <thor_scsi/core/multipole_types.h>
-// for binom
-#include <tps/utils.h>
+#include <thor_scsi/core/math_comb.h>
 #include <gtpsa/utils.hpp>
-#include <gtpsa/utils_tps.hpp>
-
 // #define THOR_SCSI_USE_F128 1
 #ifdef THOR_SCSI_USE_F128
 #include <boost/multiprecision/float128.hpp>
@@ -46,25 +43,6 @@ namespace thor_scsi::core {
         return rB;
     }
 
-    /**
-     *
-     * solely here for support of tps ... to be removed with tps
-     */
-    inline void honer_complex_as_real(const std::vector<std::complex<double>>& coeffs,
-                                      const tps& x, const tps& y, tps *Bx, tps * By) {
-        size_t n = coeffs.size() -1;
-        // how to handle maximum order in case of ctpsa?
-        tps rBy = coeffs[n].real();
-        tps rBx = coeffs[n].imag();
-        for(int i=n - 2; i >= 0; --i) {
-            auto tmp = coeffs[i];
-            auto trBy = x * rBy - y * rBx + tmp.real();
-            rBx       = y * rBy + x * rBx + tmp.imag();
-            rBy  = std::move(trBy);
-        }
-        *Bx = rBx;
-        *By = rBy;
-    }
 
     // these helper functions required to transmit the type used for the cofficients down to the functions
     // otherwise this code would require to be part of the class definition
@@ -249,10 +227,6 @@ namespace thor_scsi::core {
             tmp.imag(Bx);
         }
 
-        inline void _field(const tps& x, const tps& y, tps *Bx, tps *By) const {
-            throw std::runtime_error("_field with tps arguments not implemented for all class template types");
-        }
-
 #else
         template<typename T>
 		inline void _field(const T& x, const T& y, T *Bx, T * By)  const {
@@ -292,23 +266,11 @@ namespace thor_scsi::core {
 #endif
 		virtual inline void field(const double&      x, const double&      y, double      *Bx, double      *By) const override      { _field(x, y, Bx, By); }
 	    // "Need to understand how to interpolate field with tps"
-		virtual inline void field(const tps&         x, const tps&        y, tps         *Bx, tps         *By) const override       { _field(x, y, Bx, By); }
 		virtual inline void field(const gtpsa::tpsa& x, const gtpsa::tpsa& y, gtpsa::tpsa *Bx, gtpsa::tpsa *By) const override      { _field(x, y, Bx, By); }
 
-		virtual inline void gradient(const tps& x, const tps&    y, tps    *Gx, tps     *Gy) const override final{
-			// "Need to understand how to interpolate gradient with tps"
-			throw thor_scsi::NotImplemented("Multipoles: gradient in tps not implemented");
-		}
 		virtual inline void gradient(const gtpsa::tpsa& x, const gtpsa::tpsa&    y, gtpsa::tpsa    *Gx, gtpsa::tpsa     *Gy) const override final{
 			// "Need to understand how to interpolate gradient with tps"
 			throw thor_scsi::NotImplemented("Multipoles: gradient in tps, gtpsa::tpsa not implemented");
-		}
-		virtual inline void gradient(const tps& x, const tps&    y, double *Gx, double *Gy) const override final{
-			// "Need to understand how to interpolate gradient with tps"
-		        // throw thor_scsi::NotImplemented("Computing gradient in doubles for coordinates in tps x and tps y not implemented");
-			const auto tmp = this->gradient({0e0, 0e0});
-			*Gy = tmp.real();
-			*Gx = tmp.imag();
 		}
 		virtual inline void gradient(const gtpsa::tpsa& x, const gtpsa::tpsa&    y, double *Gx, double *Gy) const override final{
 			// "Need to understand how to interpolate gradient with tps"
@@ -665,9 +627,6 @@ namespace thor_scsi::core {
         }
         virtual inline void field(const gtpsa::tpsa& x, const gtpsa::tpsa& y, gtpsa::tpsa *Bx, gtpsa::tpsa *By) const override final {
             base::field(x, y, Bx, By);
-        }
-        virtual inline void field(const tps& x, const tps& y, tps *Bx, tps *By) const override final {
-            honer_complex_as_real(this->coeffs, x, y, Bx, By);
         }
 
         inline TwoDimensionalMultipoles& operator += (const TwoDimensionalMultipoles           & o)   { base::operator+= (o); return *this;  }

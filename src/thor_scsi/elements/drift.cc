@@ -1,9 +1,6 @@
 #include <thor_scsi/core/config.h>
 #include <thor_scsi/elements/element_helpers.h>
 #include <thor_scsi/elements/drift.h>
-// #include <tps/ss_vect.h>
-// #include <tps/tps.h>
-#include <tps/tps_type.h>
 
 namespace tsc = thor_scsi::core;
 namespace tse = thor_scsi::elements;
@@ -24,11 +21,9 @@ void tse::DriftTypeWithKnob<C>::_propagate(const tsc::ConfigType &conf, gtpsa::s
 
 template void tse::DriftType::_propagate(const tsc::ConfigType &conf, gtpsa::ss_vect<double>      &ps);
 template void tse::DriftType::_propagate(const tsc::ConfigType &conf, gtpsa::ss_vect<gtpsa::tpsa> &ps);
-// template void tse::DriftType::_propagate(const tsc::ConfigType &conf, gtpsa::ss_vect<tps>         &ps);
 
 template void tse::DriftTypeTpsa::_propagate(const tsc::ConfigType &conf, gtpsa::ss_vect<double>      &ps);
 template void tse::DriftTypeTpsa::_propagate(const tsc::ConfigType &conf, gtpsa::ss_vect<gtpsa::tpsa> &ps);
-// template void tse::DriftTypeTpsa::_propagate(const tsc::ConfigType &conf, gtpsa::ss_vect<tps>         &ps);
 
 
 /*

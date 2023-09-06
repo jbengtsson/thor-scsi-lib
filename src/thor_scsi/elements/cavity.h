@@ -2,7 +2,6 @@
 #define _THOR_SCSI_ELEMENTS_CAVITY_H_
 
 #include <thor_scsi/elements/element_local_coordinates.h>
-#include <tps/tps_type.h>
 
 namespace thor_scsi::elements {
 	/**
@@ -16,10 +15,7 @@ namespace thor_scsi::elements {
 
 		const char* type_name(void) const override final { return "Cavity"; };
 
-		// virtual void localPropagate(thor_scsi::core::ConfigType &conf, ss_vect<double>             &ps) override final { _localPropagate(conf, ps); }
-		// virtual void localPropagate(thor_scsi::core::ConfigType &conf, ss_vect<tps>                &ps) override final { _localPropagate(conf, ps); }
 		virtual void localPropagate(thor_scsi::core::ConfigType &conf, gtpsa::ss_vect<double>      &ps) override final { _localPropagate(conf, ps); }
-	    // virtual void localPropagate(thor_scsi::core::ConfigType &conf, gtpsa::ss_vect<tps>         &ps) override final { _localPropagate(conf, ps); }
 		virtual void localPropagate(thor_scsi::core::ConfigType &conf, gtpsa::ss_vect<gtpsa::tpsa> &ps) override final { _localPropagate(conf, ps); }
 
 		inline void setVoltage(const double val){

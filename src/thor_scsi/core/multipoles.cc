@@ -1,6 +1,5 @@
 #include <thor_scsi/core/multipoles.h>
 #include <thor_scsi/core/math_comb.h>
-#include <tps/utils.h>
 #include <algorithm>
 #include <iostream>
 

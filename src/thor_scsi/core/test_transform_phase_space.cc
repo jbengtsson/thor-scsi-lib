@@ -6,6 +6,7 @@
 #include <cmath>
 
 namespace tsc = thor_scsi::core;
+using tsc::x_, tsc::y_, tsc::px_, tsc::py_, tsc::delta_, tsc::ct_;
 
 #define CHECK_LONGITUDINAL_ZERO(ps) do{	BOOST_CHECK_SMALL(ps[ct_], 1e-21); BOOST_CHECK_SMALL(ps[delta_], 1e-21);}while(0)
 

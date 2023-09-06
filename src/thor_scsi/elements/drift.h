@@ -31,21 +31,10 @@ namespace thor_scsi::elements {
 			 * Todo:
 			 *     replace function with mv operator
 			 */
-			//virtual void assign(const ElementVoidBase *other) override{
-			//	const DriftType *O = static_cast<const DriftType*>(other);
-			//	// transform = O->transform
-			//	ElementVoidBase::assign(other);
-			//}
-			// double GetPB(const int n) { return 0e0; };
-
-		        // inline void propagate(ConfigType &conf, ss_vect<double>             &ps) override final { _propagate(conf, ps); };
-			// inline void propagate(ConfigType &conf, ss_vect<tps>                &ps) override final { _propagate(conf, ps); };
 			inline virtual void propagate(ConfigType &conf, gtpsa::ss_vect<double>      &ps) override final { _propagate(conf, ps); };
 			inline virtual void propagate(ConfigType &conf, gtpsa::ss_vect<gtpsa::tpsa> &ps) override final { _propagate(conf, ps); };
-			// inline virtual void propagate(ConfigType &conf, gtpsa::ss_vect<tps>         &ps) override final { _propagate(conf, ps); };
 
 		private:
-			// template<typename T> void _propagate(const ConfigType &conf, ss_vect<T>        &ps);
 			template<typename T> void _propagate(const ConfigType &conf, gtpsa::ss_vect<T> &ps);
 		};
 

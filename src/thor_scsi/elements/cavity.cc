@@ -63,10 +63,7 @@ void tse::CavityType::_localPropagate(tsc::ConfigType &conf, gtpsa::ss_vect<T> &
 	drift_propagate(conf, L/2e0, ps);
 }
 
-// template void tse::CavityType::_localPropagate(tsc::ConfigType &conf, ss_vect<double>             &ps);
-// template void tse::CavityType::_localPropagate(tsc::ConfigType &conf, ss_vect<tps>                &ps);
 template void tse::CavityType::_localPropagate(tsc::ConfigType &conf, gtpsa::ss_vect<double>      &ps);
-// template void tse::CavityType::_localPropagate(tsc::ConfigType &conf, gtpsa::ss_vect<tps>         &ps);
 template void tse::CavityType::_localPropagate(tsc::ConfigType &conf, gtpsa::ss_vect<gtpsa::tpsa> &ps);
 
 /*

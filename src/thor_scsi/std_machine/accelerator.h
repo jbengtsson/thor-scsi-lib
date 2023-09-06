@@ -2,11 +2,8 @@
 #define _THOR_SCSI_STD_MACHINE_ACCELERATOR_
 
 #include <thor_scsi/core/machine.h>
-#include <tps/tps_type.h>
-// #include <tps/ss_vect.h>
 
 namespace thor_scsi {
-  typedef gtpsa::ss_vect<tps>         ss_vect_tps;
   typedef gtpsa::ss_vect<gtpsa::tpsa> ss_vect_tpsa;
   typedef gtpsa::ss_vect<double>      ss_vect_dbl;
 
@@ -111,10 +108,6 @@ namespace thor_scsi {
      */
     void addMarkerAtStartIfRequired(void);
     void addMarkerAtStart(void);
-    template <typename T>
-    int _propagate
-    (thor_scsi::core::ConfigType& conf, ss_vect<T>& ps, size_t start, int max,
-     size_t n_turns, bool tracy_compatible_indexing);
   };
 
   typedef class AcceleratorKnobbable<thor_scsi::core::StandardDoubleType>

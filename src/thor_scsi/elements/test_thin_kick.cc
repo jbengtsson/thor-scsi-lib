@@ -12,6 +12,8 @@
 namespace tsc = thor_scsi::core;
 namespace tse = thor_scsi::elements;
 
+using tsc::x_, tsc::y_, tsc::px_, tsc::py_, tsc::delta_, tsc::ct_;
+
 typedef std::array<bool, 6> flags_t;
 typedef std::array<double, 6> eps_rel_t;
 

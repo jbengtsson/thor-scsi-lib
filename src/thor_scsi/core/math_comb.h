@@ -6,7 +6,7 @@ namespace thor_scsi::core {
 	 *
 	 * @ todo: check if in standard library or in GSL
 	 */
-	// unsigned long binom (unsigned long const n, unsigned long const k);
+	unsigned long binom (unsigned long const n, unsigned long const k);
 }
 #endif /* THOR_SCSI_MATH_COMB_H */
 /*

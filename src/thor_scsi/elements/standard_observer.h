@@ -10,7 +10,6 @@ namespace thor_scsi::elements{
 	class StandardObserver : public thor_scsi::core::Observer{
 
 		gtpsa::ss_vect<double> m_ps = {0, 0, 0, 0, 0, 0};
-		gtpsa::ss_vect<tps> m_tps = {tps(), tps(), tps(), tps(), tps(), tps()};
 	        std::shared_ptr<gtpsa::ss_vect<gtpsa::tpsa>> m_ptpsa = nullptr;
 		bool m_has_ps = false, m_has_tps = false, m_has_tpsa = false;
 	        std::string m_observed_name = "";
@@ -19,7 +18,6 @@ namespace thor_scsi::elements{
 	public:
 
 		void view(std::shared_ptr<const thor_scsi::core::CellVoid> elem, const gtpsa::ss_vect<double>      &ps, const enum thor_scsi::core::ObservedState, const int cnt) override final;
-		void view(std::shared_ptr<const thor_scsi::core::CellVoid> elem, const gtpsa::ss_vect<tps>         &ps, const enum thor_scsi::core::ObservedState, const int cnt) override final;
 		void view(std::shared_ptr<const thor_scsi::core::CellVoid> elem, const gtpsa::ss_vect<gtpsa::tpsa> &ps, const enum thor_scsi::core::ObservedState, const int cnt) override final;
 
 		inline std::string getObservedName(void) const {
@@ -43,16 +41,10 @@ namespace thor_scsi::elements{
 		 *
 		 * @todo  decide if it should return tps
 		 */
-		inline bool hasTruncatedPowerSeries(void) const {
-			return this->m_has_tps;
-		}
 		inline bool hasTruncatedPowerSeriesA(void) const {
 			return this->m_has_tpsa;
 		}
 
-		inline  gtpsa::ss_vect<tps>& getTruncatedPowerSeries(void){
-			return this->m_tps;
-		}
 		inline auto getTruncatedPowerSeriesA(void){
 			return this->m_ptpsa;
 		}
@@ -71,10 +63,6 @@ namespace thor_scsi::elements{
 	private:
 		std::string _repr(const int level) const;
 
-		inline void store(const gtpsa::ss_vect<tps>         &a_tps) {
-			this->m_tps = a_tps.clone();
-			this->m_has_tps = true;
-		}
 		inline void store(const gtpsa::ss_vect<gtpsa::tpsa> &a_tps)  {
 			this->m_ptpsa = std::make_shared<gtpsa::ss_vect<gtpsa::tpsa>>(a_tps[0]);
 			this->m_ptpsa->_copyInPlace(a_tps);

@@ -10,7 +10,6 @@
 #include <flame/core/util.h>
 #include <gtpsa/ss_vect.h>
 #include <gtpsa/tpsa.hpp>
-#include <tps/tps_type.h>
 
 
 namespace thor_scsi::core {
@@ -68,7 +67,6 @@ namespace thor_scsi::core {
 		// view for state vector of double
 		virtual void view(std::shared_ptr<const CellVoid> elem, const gtpsa::ss_vect<double>      &ps, const enum ObservedState, const int cnt) = 0;
 		// view for state vector of truncated power series
-		virtual void view(std::shared_ptr<const CellVoid> elem, const gtpsa::ss_vect<tps>         &ps, const enum ObservedState,  const int cnt) = 0;
 	        virtual void view(std::shared_ptr<const CellVoid> elem, const gtpsa::ss_vect<gtpsa::tpsa> &ps, const enum ObservedState,  const int cnt) = 0;
 
 		virtual void show(std::ostream& strm, int level) const = 0;

@@ -69,21 +69,11 @@ namespace thor_scsi::custom {
 			{
 				this->_field(x, y, Bx, By);
 			}
-		inline void field(const tps& x, const tps& y, tps *Bx, tps *By) const override final
-			{
-				this->_field(x, y, Bx, By);
-			}
 
 		inline void gradient(const double& x, const double& y, double *Gx, double *Gy) const override final
 			{ /* this->gradient(x, y, Gx, Gy); */ };
 
-		inline void gradient(const tps& x, const tps& y, tps *Gx, tps *Gy) const override final
-			{ /* this->gradient(x, y, Gx, Gy); */ };
-
 		inline void gradient(const gtpsa::tpsa& x, const gtpsa::tpsa& y, gtpsa::tpsa *Gx, gtpsa::tpsa *Gy) const override final
-			{ /* this->gradient(x, y, Gx, Gy); */ };
-
-		inline void gradient(const tps& x, const tps& y, double *Gx, double *Gy) const override final
 			{ /* this->gradient(x, y, Gx, Gy); */ };
 
 		inline void gradient(const gtpsa::tpsa& x, const gtpsa::tpsa& y, double *Gx, double *Gy) const override final

@@ -7,9 +7,7 @@ target_include_directories(test_aircoil_interpolation
 target_link_libraries(test_aircoil_interpolation
   thor_scsi
   thor_scsi_core
-  tpsa_lin
-  gtpsa-c++
-  gtpsa
+  gtpsa::gtpsa-c++
   # PRIVATE Boost::boost
   #  quadmath
     ${Boost_PRG_EXEC_MONITOR_LIBRARY}
@@ -26,9 +24,7 @@ target_include_directories(test_nonlinear_kicker_interpolation
 target_link_libraries(test_nonlinear_kicker_interpolation
   thor_scsi
   thor_scsi_core
-  tpsa_lin
-  gtpsa-c++
-  gtpsa
+  gtpsa::gtpsa-c++
   # PRIVATE Boost::boost
   #  quadmath
     ${Boost_PRG_EXEC_MONITOR_LIBRARY}

@@ -42,8 +42,7 @@ target_link_libraries(test_two_dimensional_multipoles
   #  quadmath
   # gsl
   # gslcblas
-  tpsa_lin
-  gtpsa-c++
+  gtpsa::c++
   gtpsa
     ${Boost_PRG_EXEC_MONITOR_LIBRARY}
     ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}

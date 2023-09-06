@@ -2,13 +2,13 @@
 #include <thor_scsi/elements/elements_enums.h>
 #include <thor_scsi/elements/utils.h>
 
-#include <tps/tps_type.h>
-// #include <tps/tps.h>
 
 namespace tse = thor_scsi::elements;
 namespace tsc = thor_scsi::core;
 
-// template tps sqr(const tps &);
+using gtpsa::sqr;
+using tsc::x_, tsc::y_, tsc::px_, tsc::py_, tsc::delta_, tsc::ct_;
+using tsc::X_, tsc::Y_, tsc::Z_;
 
 
 double tse::get_psi(const double irho, const double phi, const double gap)
@@ -36,6 +36,7 @@ namespace thor_scsi::elements{
 	void get_twoJ(const int n_DOF, const gtpsa::ss_vect<double> &ps, const gtpsa::ss_vect<T> &A,
 		      double twoJ[])
 	{
+	        const size_t ps_dim = ps.size();
 		int             j, no;
 		long int        jj[ps_dim];
 		const double unused=0e0;
@@ -74,21 +75,6 @@ namespace thor_scsi::elements{
 		return curly_H[X_];
 	}
 
-	double get_curly_H(const gtpsa::ss_vect<tps> &A)
-	{
-
-		int             j;
-		double          curly_H[2], unused=0e0;
-		gtpsa::ss_vect<double> eta(unused);
-
-		eta.set_zero();
-		for (j = 0; j < 4; j++)
-			eta[j] = A[j][delta_];
-
-		get_twoJ(2, eta, A, curly_H);
-
-		return curly_H[X_];
-	}
 
 	double get_curly_H(const gtpsa::ss_vect<double> &x){
 		// THOR_SCSI_LOG(THOR_SCSI_WARN) << "get_curly_H: operation not defined for double\n";
@@ -225,20 +211,15 @@ namespace thor_scsi::elements{
 }
 
 template void tse::drift_propagate(const tsc::ConfigType &conf, const double&, gtpsa::ss_vect<double>      &);
-template void tse::drift_propagate(const tsc::ConfigType &conf, const double&, gtpsa::ss_vect<tps>         &);
 template void tse::drift_propagate(const tsc::ConfigType &conf, const double&, gtpsa::ss_vect<gtpsa::tpsa> &);
 
 
 template void tse::thin_kick(const tsc::ConfigType &conf, const double       BxoBrho, const double     ByoBrho,
 			     const double L, const double h_bend, const double h_ref, const gtpsa::ss_vect<double>      &ps0, gtpsa::ss_vect<double>      &ps);
-template void tse::thin_kick(const tsc::ConfigType &conf, const tps          BxoBrho, const tps        ByoBrho,
-			     const double L, const double h_bend, const double h_ref, const gtpsa::ss_vect<tps>         &ps0, gtpsa::ss_vect<tps>         &ps);
 template void tse::thin_kick(const tsc::ConfigType &conf, const gtpsa::tpsa BxoBrho, const gtpsa::tpsa ByoBrho,
 			     const double L, const double h_bend, const double h_ref, const gtpsa::ss_vect<gtpsa::tpsa> &ps0, gtpsa::ss_vect<gtpsa::tpsa> &ps);
 
 template void tse::get_twoJ(const int n_DOF, const gtpsa::ss_vect<double> &ps, const gtpsa::ss_vect<gtpsa::tpsa> &A, double twoJ[]);
-template void tse::get_twoJ(const int n_DOF, const gtpsa::ss_vect<double> &ps, const gtpsa::ss_vect<tps>         &A, double twoJ[]);
 
 template double tse::get_curly_H(const gtpsa::ss_vect<gtpsa::tpsa> &A);
-template double tse::get_curly_H(const gtpsa::ss_vect<tps>         &A);
 template double tse::get_curly_H(const gtpsa::ss_vect<double>      &A);
