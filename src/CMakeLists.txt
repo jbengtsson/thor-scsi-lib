@@ -4,9 +4,6 @@ find_package(Boost 1.52.0 REQUIRED COMPONENTS
   program_options
   )
 
-add_subdirectory(gtpsa)
-add_subdirectory(tps)
-
 set(thor_scsi_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
 
