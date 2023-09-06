@@ -26,11 +26,11 @@ jobs:
         submodules: True
 
 
-    - name: checkout gtpsa repo
+    - name: checkout gtpsa-cpp repo
       uses: actions/checkout@v4
       with:
-        repository: hz-b/gtpsa
-        path: gtpsa
+        repository: hz-b/gtpsa-cpp
+        path: gtpsa-cpp
         ref: main
         submodules: True
 
