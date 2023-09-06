@@ -30,7 +30,8 @@ jobs:
       uses: actions/checkout@v4
       with:
         repository: hz-b/gtpsa
-        path: gtpsa
+        path: main
+        submodules: True
 
     - name: install apt dependencies
       run: |
