@@ -14,19 +14,7 @@ import gtpsa
 
 desc = gtpsa.desc(6, 1)
 
-t_dir = os.path.join(os.environ["HOME"], "Nextcloud", "thor_scsi", "JB")
-t_file = os.path.join("lattices", "tme_rb.lat")
-# t_file = os.path.join("lattices", "tme.lat")
-# t_file = os.path.join(t_dir, "b3_tst.lat")
-# t_file = os.path.join(t_dir, "b3_sf(sf)_4Quads_unitcell.lat")
-
-t_file = (
-    Path(os.environ["HOME"])
-    / "cpp"
-    / "dt4acc"
-    / "lattices"
-    / "b2_stduser_beamports_blm_tracy_corr.lat"
-)
+t_file = Path(os.path.dirname(__file__)) /  "lattices" / "tme_rb.lat"
 print("twiss from file", t_file)
 acc = accelerator_from_config(t_file)
 calc_config = tslib.ConfigType()
