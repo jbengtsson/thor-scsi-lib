@@ -79,5 +79,5 @@ jobs:
     - name : thor-scsi-lib build and install python package
       run:  (cd python && thor_scsi_PREFIX=/usr/local pip3 install -v . )
 
-    - name : gtpsa test python package
+    - name : thor-scsi-lib test python package
       run :  (cd python && LD_LIBRARY_PATH=/usr/local/lib pytest-3)
