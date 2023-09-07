@@ -27,6 +27,7 @@ set(thor_scsi_HEADERS
 set(thor_scsi_core_HEADERS
   core/exceptions.h
   core/config.h
+  core/constants.h
   core/machine.h
   core/cell_void.h
   core/aperture.h
