@@ -3,7 +3,7 @@
 import thor_scsi.lib as tslib
 
 import gtpsa
-from .accelerator import instrument_with_radiators
+from .accelerator import instrument_with_standard_radiator_kickers
 import numpy as np
 from scipy.constants import c as c0
 from dataclasses import dataclass
@@ -95,7 +95,7 @@ def compute_radiation(
     calc_config.Cavity_on = True
 
     # Install radiators that radiation is calculated
-    rad_del_kicks = instrument_with_radiators(acc, energy=E)
+    rad_del_kicks = instrument_with_standard_radiator_kickers(acc, energy=E)
 
     r = compute_closed_orbit(acc, calc_config, delta=0e0, eps=eps)
     #print("M:\n" + mat2txt(map2numpy(r.one_turn_map)))
