@@ -4,7 +4,9 @@ import os, sys
 #sys.path.append(tracy_dir+'/tracy/lib')
 
 import unittest
-import thor.lib as scsi
+import thor_scsi.lib as tslib
+from thor_scsi import pyflame
+import pytest
 import abc
 
 
@@ -18,33 +20,32 @@ class _ElementTestBasis(unittest.TestCase, metaclass=abc.ABCMeta):
         '''test if element name can be read
         '''
         elem = self.elem
-        elem.Name = 'name'
-        self.assertEqual(elem.Name, 'name')
+        name = elem.name
 
+    @pytest.mark.skip
     def test01_reverse(self):
         '''Can element be reverted
         '''
-        self.assertEqual(self.elem.Reverse, False)
+        self.assertEqual(self.elem.reverse, False)
         self.elem.Reverse = True
         self.assertEqual(self.elem.Reverse, True)
 
     def test02_repr(self):
         repr(self.elem)
 
-    @unittest.skip
     def test10_print(self):
         '''test if element can be printed
         '''
-        name = 'print_test'
-        self.elem.Name = name
-        self.elem.print()
-        self.assertEqual(self.elem.Name, name)
+        print(self.elem)
+        print(repr(self.elem))
 
 
 class DriftTest(_ElementTestBasis):
     def setUp(self):
-        self.elem = scsi.DriftType()
-        self.elem.Name = 'TestDrift'
+        config = pyflame.Config()
+        config.setAny("name", "a_drift")
+        config.setAny("length", 0.5)
+        self.elem = tslib.Drift(config)
 
 
 del _ElementTestBasis

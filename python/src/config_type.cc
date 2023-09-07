@@ -35,5 +35,10 @@ void py_thor_scsi_init_config_type(py::module &m)
       .def_readwrite("chambre",        &tsc::ConfigType::chambre)
       // long int
       // int
+      // anything below this line ... expect to be removed
+      // reason: these data are rather summary than configuration
+      // double
+      .def_readwrite("dPcommon",       &tsc::ConfigType::dPcommon)
+      .def_readwrite("dPparticle",     &tsc::ConfigType::dPparticle)
       .def(py::init<>());
 }
