@@ -15,7 +15,6 @@ namespace tse = thor_scsi::elements;
 PYBIND11_MODULE(lib, m) {
     m.doc() = "Self-Consistent Symplectic Integrator (SCSI)";
 
-    py_thor_scsi_init_tps(m);
     py_thor_scsi_init_field_interpolation(m);
     py_thor_scsi_init_elements(m);
     py_thor_scsi_init_aperture(m);

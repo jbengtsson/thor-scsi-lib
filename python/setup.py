@@ -99,13 +99,11 @@ ext_modules = [
                 "src/aperture.cc",
                 "src/config_type.cc",
                 "src/elements.cc",
-                "src/enums.cc",
                 "src/flame.cc",
                 "src/interpolation.cc",
                 "src/observer.cc",
                 "src/pybind_test.cc",
                 "src/radiation.cc",
-                "src/tps.cc",
                 "src/thor_scsi.cc",
                 "src/custom.cc"
             ]
