@@ -1,6 +1,6 @@
 # This starter workflow is for a CMake project running on a single platform. There is a different starter workflow if you need cross-platform coverage.
 # See: https://github.com/actions/starter-workflows/blob/main/ci/cmake-multi-platform.yml
-name: CMake on a single platform
+name: build and test, c++ and python part
 
 on:
   push:
@@ -11,6 +11,8 @@ on:
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
   BUILD_TYPE: Release
+  # cmake is used to install file ... defaults to /usr/local
+  LD_LIBRARY_PATH: /usr/local/lib
 
 jobs:
   build:
@@ -42,7 +44,7 @@ jobs:
          # deliberatly only installing a subset of boost
          sudo apt install  libboost-chrono-dev libboost-thread-dev libboost-filesystem-dev libboost-program-options-dev libboost-regex-dev libboost-test-dev
          # for building the python interface ... hopefully python3-xarray is not needed this rather heavy
-         sudo apt install pybind11-dev python3-pytest python3-pip # python3-xarray
+         sudo apt install pybind11-dev python3-pytest python3-pip python3-pybind11 # python3-xarray
 
     - name: Configure cmake for gtpsa-cpp
       run: cmake gtpsa-cpp -B ${{github.workspace}}/gtpsa-cpp/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
@@ -71,13 +73,10 @@ jobs:
 
     - name : gtpsa build and install python package
       # need to do that here as it is not yet a python wheel
-      run: (cd gtpsa-cpp/python && gtpsa_PREFIX=/usr/local pip3 install -v . )
-
-    - name : gtpsa test python package
-      run : (cd gtpsa-cpp && pytest-3)
+      run: gtpsa_PREFIX=/usr/local pip3 install -v gtpsa-cpp/python
 
     - name : thor-scsi-lib build and install python package
-      run:  (cd python && gtpsa_PREFIX=/usr/local thor_scsi_PREFIX=/usr/local pip3 install -v . )
+      run: gtpsa_PREFIX=/usr/local thor_scsi_PREFIX=/usr/local pip3 install -v ./python/
 
     - name : thor-scsi-lib test python package
-      run :  (cd python && LD_LIBRARY_PATH=/usr/local/lib pytest-3)
+      run: pytest-3 python
