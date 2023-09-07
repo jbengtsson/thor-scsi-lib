@@ -439,15 +439,20 @@ namespace thor_scsi::core {
 	     *
 	     * \endverbatim
 	     */
-	    TwoDimensionalMultipolesKnobbed& operator *= (const complex_type scale){
-		    auto& c = this->coeffs;
-		    auto f = [scale](const complex_intern_type c){
-			    return c * scale;
-		    };
-		    std::transform(c.begin(), c.end(), c.begin(), f);
-			return *this;
-	    }
+	     TwoDimensionalMultipolesKnobbed& operator *= (const complex_type scale){
+                    auto& c = this->coeffs;
+                    auto f = [scale](const complex_intern_type c){
+                            return c * scale;
+                    };
+                    std::transform(c.begin(), c.end(), c.begin(), f);
+                    return *this;
+            }
 
+            inline TwoDimensionalMultipolesKnobbed& operator *= (const double scale){
+		    complex_type o = {scale, 0};
+		    this->operator *= (o);
+                    return *this;
+	    }
 	    /*
 	     * @brief: Scaling each individual by a vector
 	     *
@@ -462,16 +467,24 @@ namespace thor_scsi::core {
 		    return this->right_add(other, true);
 
             }
-	    TwoDimensionalMultipolesKnobbed &operator += (const std::vector<complex_type> &other){
-		    bool benign = true;
-		    right_add_helper<complex_intern_type>(other, benign, &this->coeffs);
-            return *this;
+
+            TwoDimensionalMultipolesKnobbed &operator += (const std::vector<complex_type> &other){
+                    bool benign = true;
+                    right_add_helper<complex_intern_type>(other, benign, &this->coeffs);
+                    return *this;
             }
-	    TwoDimensionalMultipolesKnobbed& operator += (const double other) {
+
+            TwoDimensionalMultipolesKnobbed& operator += (const complex_type other)  {
 		    auto& c = this->getCoeffs();
 		    for (auto& val : c){
 			    val += other;
 		    }
+		    return *this;
+            }
+
+	    TwoDimensionalMultipolesKnobbed& operator += (const double other) {
+		    complex_type o = {other, 0};
+		    this->operator += (o);
 		    return *this;
 	    }
 
@@ -504,6 +517,13 @@ namespace thor_scsi::core {
 		    return nh;
 	    }
 
+           TwoDimensionalMultipolesKnobbed operator + (const complex_type other) const {
+		    TwoDimensionalMultipolesKnobbed nh = this->clone();
+		    /* std::cerr << "Adding const "<< other << "to these multipoles. this size " << this->getCoeffs().size()
+		       << std::endl; */
+		    nh += other;
+		    return nh;
+	    }
 
 	    TwoDimensionalMultipolesKnobbed operator + (const double other) const {
 		    TwoDimensionalMultipolesKnobbed nh = this->clone();
@@ -629,21 +649,21 @@ namespace thor_scsi::core {
             base::field(x, y, Bx, By);
         }
 
-        inline TwoDimensionalMultipoles& operator += (const TwoDimensionalMultipoles           & o)   { base::operator+= (o); return *this;  }
-        inline TwoDimensionalMultipoles& operator += (const std::complex<double>               & o)   { base::operator+= (o); return *this;  }
-	inline TwoDimensionalMultipoles& operator += (const std::vector<std::complex<double>>  & o)   { base::operator+= (o); return *this;  }
+        inline TwoDimensionalMultipoles& operator += (const TwoDimensionalMultipoles  & o)   { base::operator+= (o); return *this;  }
+	inline TwoDimensionalMultipoles& operator += (const std::vector<complex_type> & o)   { base::operator+= (o); return *this;  }
+        inline TwoDimensionalMultipoles& operator += (const std::complex<double>        o)   { base::operator+= (o); return *this;  }
 
-        // TwoDimensionalMultipoles& operator *= (const TwoDimensionalMultipoles           & o)   { base::operator*= (o); return *this;  }
-        inline TwoDimensionalMultipoles& operator *= (const std::complex<double>               & o)   { base::operator*= (o); return *this;  }
-	inline TwoDimensionalMultipoles& operator *= (const std::vector<std::complex<double>>  & o)   { base::operator*= (o); return *this;  }
+        // TwoDimensionalMultipoles& operator *= (const TwoDimensionalMultipoles      & o)   { base::operator*= (o); return *this;  }
+        inline TwoDimensionalMultipoles& operator *= (const std::complex<double>        o)   { base::operator*= (o); return *this;  }
+	inline TwoDimensionalMultipoles& operator *= (const std::vector<complex_type> & o)   { base::operator*= (o); return *this;  }
 
-        inline TwoDimensionalMultipoles operator +   (const TwoDimensionalMultipoles           & o) const  { return TwoDimensionalMultipoles( base::operator+ (o) );  }
-        inline TwoDimensionalMultipoles operator +   (const std::complex<double>               & o) const  { return TwoDimensionalMultipoles( base::operator+ (o) );  }
-	inline TwoDimensionalMultipoles operator +   (const std::vector<std::complex<double>>  & o) const  { return TwoDimensionalMultipoles( base::operator+ (o) );  }
+        inline TwoDimensionalMultipoles operator +   (const TwoDimensionalMultipoles  & o) const  { return TwoDimensionalMultipoles( base::operator+ (o) );  }
+        inline TwoDimensionalMultipoles operator +   (const std::complex<double>      & o) const  { return TwoDimensionalMultipoles( base::operator+ (o) );  }
+	inline TwoDimensionalMultipoles operator +   (const std::vector<complex_type> & o) const  { return TwoDimensionalMultipoles( base::operator+ (o) );  }
 
-        // TwoDimensionalMultipoles operator *   (const TwoDimensionalMultipoles           & o) const  { return TwoDimensionalMultipoles( base::operator+ (o) );  }
-        inline TwoDimensionalMultipoles operator *   (const std::complex<double>               & o) const  { return TwoDimensionalMultipoles( base::operator* (o) );  }
-	inline TwoDimensionalMultipoles operator *   (const std::vector<std::complex<double>>  & o) const  { return TwoDimensionalMultipoles( base::operator* (o) );  }
+        // TwoDimensionalMultipoles operator *   (const TwoDimensionalMultipoles      & o) const  { return TwoDimensionalMultipoles( base::operator+ (o) );  }
+        inline TwoDimensionalMultipoles operator *   (const std::complex<double>      & o) const  { return TwoDimensionalMultipoles( base::operator* (o) );  }
+	inline TwoDimensionalMultipoles operator *   (const std::vector<complex_type> & o) const  { return TwoDimensionalMultipoles( base::operator* (o) );  }
 
     };
 

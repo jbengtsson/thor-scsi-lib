@@ -117,12 +117,14 @@ void add_methods_multipoles(py::class_<Class> t_mapper)
 		.def("get_coefficients", &Class::getCoeffsConst)
 		.def(py::self += py::self)
 		.def(py::self + py::self)
-	    #if 0
 		.def(py::self += std::complex<double>())
-		.def(py::self + std::complex<double>())
+	        .def(py::self += double())
 		.def(py::self *= std::complex<double>())
+	        .def(py::self *= double())
+		.def(py::self + std::complex<double>())
+	        .def(py::self + double())
 		.def(py::self * std::complex<double>())
-	    #endif
+	        .def(py::self * double())
 		.def(std::complex<double>() * py::self)
 		.def(std::complex<double>() + py::self)
 		.def(py::self *= std::vector<typename Types::complex_type>())
@@ -194,39 +196,39 @@ void py_thor_scsi_init_field_interpolation(py::module &m) {
 		})
             .def(py::init<>());
 
-	/*
-	  py::class_<PyField2DInterpolation, std::shared_ptr<PyField2DInterpolation>> field2dintp(m, "Field2DInterpolation", _field2dintp);
-	  field2dintp
-	  .def("field", static_cast<void (PyField2DInterpolation::*)(const std::array<double, 2>&,  std::array<double, 2>&) const>(&PyField2DInterpolation::field_py))
-	  .def("field", static_cast<void (PyField2DInterpolation::*)(const std::array<tps, 2>&, std::array<tps, 2>&) const>(&PyField2DInterpolation::field_py))
-	  .def(py::init<>());
-	*/
-	py::class_<
-	    tsc::TwoDimensionalMultipolesKnobbed<tsc::StandardDoubleType>,
-	    std::shared_ptr<tsc::TwoDimensionalMultipolesKnobbed<tsc::StandardDoubleType>>
-	    >
-	    multipoles_knobbed(m, "_TwoDimensionalMultipolesKnobbedDouble", field2dintp //, py::buffer_protocol()
-		);
-	add_methods_multipoles<tsc::StandardDoubleType, tsc::TwoDimensionalMultipolesKnobbed<tsc::StandardDoubleType>>(multipoles_knobbed);
-	py::class_<tsc::TwoDimensionalMultipoles, std::shared_ptr<tsc::TwoDimensionalMultipoles>>
-	    multipole(m, "TwoDimensionalMultipoles", multipoles_knobbed //, py::buffer_protocol()
-		);
+        /*
+          py::class_<PyField2DInterpolation, std::shared_ptr<PyField2DInterpolation>> field2dintp(m, "Field2DInterpolation", _field2dintp);
+          field2dintp
+          .def("field", static_cast<void (PyField2DInterpolation::*)(const std::array<double, 2>&,  std::array<double, 2>&) const>(&PyField2DInterpolation::field_py))
+          .def("field", static_cast<void (PyField2DInterpolation::*)(const std::array<tps, 2>&, std::array<tps, 2>&) const>(&PyField2DInterpolation::field_py))
+          .def(py::init<>());
+        */
+        py::class_<
+            tsc::TwoDimensionalMultipolesKnobbed<tsc::StandardDoubleType>,
+            std::shared_ptr<tsc::TwoDimensionalMultipolesKnobbed<tsc::StandardDoubleType>>
+            >
+            multipoles_knobbed(m, "_TwoDimensionalMultipolesKnobbedDouble", field2dintp //, py::buffer_protocol()
+                );
+        add_methods_multipoles<tsc::StandardDoubleType, tsc::TwoDimensionalMultipolesKnobbed<tsc::StandardDoubleType>>(multipoles_knobbed);
+        py::class_<tsc::TwoDimensionalMultipoles, std::shared_ptr<tsc::TwoDimensionalMultipoles>>
+            multipole(m, "TwoDimensionalMultipoles", multipoles_knobbed //, py::buffer_protocol()
+                );
 
-	add_methods_multipoles<tsc::StandardDoubleType, tsc::TwoDimensionalMultipoles>(multipole);
-	multipole
-	    //.def("field", static_cast<void (tsc::Field2DInterpolation::*)(const double, const double, double *, double *) const>(&tsc::TwoDimensionalMultipolesKnobbed::field))
-	    //.def("field", static_cast<void (tsc::Field2DInterpolation::*)(const tps, const tps, tps *, tps *) const>(&tsc::TwoDimensionalMultipolesKnobbed::field))
-	    .def("apply_translation", py::overload_cast<const cdbl>(&tsc::TwoDimensionalMultipoles::applyTranslation))
-	    .def("apply_translation",
-		 py::overload_cast<const double, const double>(&tsc::TwoDimensionalMultipoles::applyTranslation))
-	    .def(py::init<std::vector<cdbl_intern>>())
-	    .def(py::init<const std::complex<double>, const unsigned int>(), "initalise multipoles",
-		     py::arg("default_value"), py::arg("h_max") = tsc::max_multipole);
+        add_methods_multipoles<tsc::StandardDoubleType, tsc::TwoDimensionalMultipoles>(multipole);
+        multipole
+            //.def("field", static_cast<void (tsc::Field2DInterpolation::*)(const double, const double, double *, double *) const>(&tsc::TwoDimensionalMultipolesKnobbed::field))
+            //.def("field", static_cast<void (tsc::Field2DInterpolation::*)(const tps, const tps, tps *, tps *) const>(&tsc::TwoDimensionalMultipolesKnobbed::field))
+            .def("apply_translation", py::overload_cast<const cdbl>(&tsc::TwoDimensionalMultipoles::applyTranslation))
+            .def("apply_translation",
+                 py::overload_cast<const double, const double>(&tsc::TwoDimensionalMultipoles::applyTranslation))
+            .def(py::init<std::vector<cdbl_intern>>())
+            .def(py::init<const std::complex<double>, const unsigned int>(), "initalise multipoles",
+                     py::arg("default_value"), py::arg("h_max") = tsc::max_multipole);
 #if 0
-	.def_buffer([](tsc::TwoDimensionalMultipoles &muls) -> py::buffer_info {
-	    std::vector<cdbl_intern> coeffs = muls.getCoeffs();
-	    size_t n = coeffs.size();
-	    py::buffer_info r;
+        .def_buffer([](tsc::TwoDimensionalMultipoles &muls) -> py::buffer_info {
+            std::vector<cdbl_intern> coeffs = muls.getCoeffs();
+            size_t n = coeffs.size();
+            py::buffer_info r;
                 r.ptr = coeffs.data();         /* Pointer to buffer */
                 r.itemsize = sizeof(cdbl_intern); /* Size of one scalar */
                 r.format = py::format_descriptor<cdbl_intern>::format(); /* Python struct-style format descriptor */
@@ -238,7 +240,7 @@ void py_thor_scsi_init_field_interpolation(py::module &m) {
                 };
                 return r;
             })
-	    .def(py::init([](py::array_t<cdbl_intern, py::array::c_style|py::array::forcecast> b) {
+            .def(py::init([](py::array_t<cdbl_intern, py::array::c_style|py::array::forcecast> b) {
                                   /* Request a buffer descriptor from Python */
                                   py::buffer_info info = b.request();
 
