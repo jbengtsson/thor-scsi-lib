@@ -1,5 +1,6 @@
 #include <pybind11/pybind11.h>
 #include <thor_scsi/version.h>
+#include <thor_scsi/core/constants.h>
 #include <thor_scsi/elements/constants.h>
 
 #include "thor_scsi.h"
@@ -10,6 +11,7 @@
 
 namespace py = pybind11;
 namespace tse = thor_scsi::elements;
+namespace tsc = thor_scsi::core;
 
 
 PYBIND11_MODULE(lib, m) {
@@ -45,4 +47,19 @@ PYBIND11_MODULE(lib, m) {
     m.def("compose", &gtpsa::compose);
     // m.def("integ", &gtpsa::integ);
     m.def("M_to_h_DF", &gtpsa::M_to_h_DF);
+
+    py::enum_<tsc::spatial_index>(m, "spatial_index")
+	.value("X", tsc::X_)
+	.value("Y", tsc::Y_)
+	.value("Z", tsc::Z_);
+
+    // does not follow standard convention
+    py::enum_<tsc::phase_space_index>(m, "phase_space_index_internal")
+	.value("x",     tsc::x_)
+	.value("px",    tsc::px_)
+	.value("y",     tsc::y_)
+	.value("py",    tsc::py_)
+	.value("delta", tsc::delta_)
+	.value("ct",    tsc::ct_);
+
 }
