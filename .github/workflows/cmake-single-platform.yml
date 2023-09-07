@@ -71,6 +71,10 @@ jobs:
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
       run: ctest -C ${{env.BUILD_TYPE}}
 
+    - name: Install thor-scsi-lib
+      # need to be root to install ?
+      run: sudo cmake --install ${{github.workspace}}/build
+
     - name : gtpsa build and install python package
       # need to do that here as it is not yet a python wheel
       run: gtpsa_PREFIX=/usr/local pip3 install -v gtpsa-cpp/python
