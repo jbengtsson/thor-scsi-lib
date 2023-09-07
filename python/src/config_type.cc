@@ -41,5 +41,6 @@ void py_thor_scsi_init_config_type(py::module &m)
       .def_readwrite("dPcommon",       &tsc::ConfigType::dPcommon)
       .def_readwrite("dPparticle",     &tsc::ConfigType::dPparticle)
       .def_readwrite("Energy",         &tsc::ConfigType::Energy)
+      .def_readwrite("dE",             &tsc::ConfigType::dE)
       .def(py::init<>());
 }
