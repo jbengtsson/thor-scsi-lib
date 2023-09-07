@@ -71,7 +71,7 @@ jobs:
 
     - name : gtpsa: build and install python package
       # need to do that here as it is not yet a python wheel
-       run: |
+      run: |
          (cd gtpsa-cpp/python && gtpsa_PREFIX=/usr/local pip3 install -v . )
 
     - name : gtpsa: test python package
@@ -79,7 +79,7 @@ jobs:
         (cd gtpsa-cpp && pytest-3)
 
     - name : thor-scsi-lib: build and install python package
-       run: |
+      run: |
          (cd python && thor_scsi_PREFIX=/usr/local pip3 install -v . )
 
     - name : gtpsa: test python package
