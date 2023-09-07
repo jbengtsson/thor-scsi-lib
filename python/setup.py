@@ -120,8 +120,8 @@ ext_modules = [
         libraries=[
             "thor_scsi_gtpsa",
             "thor_scsi_core_gtpsa",
+            "gtpsa-c++",
             "gtpsa",
-            "tpsa_lin",
             "flame",
             "flame_core",
         ]
