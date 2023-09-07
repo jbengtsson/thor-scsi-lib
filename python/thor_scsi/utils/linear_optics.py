@@ -2,7 +2,6 @@
 """
 
 import thor_scsi.lib as tslib
-# from .phase_space_vector import ss_vect_tps2ps_jac, array2ss_vect_tps
 from .courant_snyder import compute_A_CS
 from .extract_info import accelerator_info
 from .accelerator import instrument_with_standard_observers
@@ -331,7 +330,7 @@ def compute_M_diag(
         logger.debug("computed tunes (for symplectic matrix): %s", nu_symp)
 
         # Diagonalise M.
-        
+
         [w, u] = np.linalg.eig(M[:n, :n])
 
         # nu_eig = acos2(w.imag, w.real) / (2e0 * np.pi)
@@ -474,7 +473,7 @@ def jac2twiss(A: np.ndarray) -> (float, float, float):
     return alpha, beta, dnu
 
 
-def _extract_tps(elem: tslib.Observer) -> tslib.ss_vect_tps:
+def _extract_tps(elem: tslib.Observer):
     """Extract tps data from the elments' observer
     """
     ob = elem.get_observer()

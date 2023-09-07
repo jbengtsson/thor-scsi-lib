@@ -24,10 +24,10 @@ class ClosedOrbitResult:
     found_closed_orbit: bool
 
     #: start vector for found closed orbit
-    x0: tslib.ss_vect_double
+    x0: gtpsa.ss_vect_double
 
     # one turn map for the closed orbit
-    one_turn_map: tslib.ss_vect_tps
+    one_turn_map: gtpsa.ss_vect_tpsa
 
     #: last element traced to
     last_element: int
@@ -83,7 +83,7 @@ def compute_closed_orbit(
         conf: tslib.ConfigType,
         *,
         delta: float = None,
-        x0: tslib.ss_vect_double = None,
+        x0: gtpsa.ss_vect_double = None,
         max_iter: int = 10,
         eps: float = 1e-6,
         desc: gtpsa.desc = None,
@@ -144,7 +144,7 @@ def compute_closed_orbit(
     # create weighting matrix for inverse calculation
     # J.B. 20/02/23:
  #   jj = np.zeros(tslib.ss_dim, np.bool)
-    jj = np.zeros(tslib.ss_dim, bool)
+    jj = np.zeros(len(x0), bool)
 
     jj[:n] = True  # select active phase space coordinates
     # for k in range(tslib.ss_dim):
