@@ -7,7 +7,6 @@
 #include <thor_scsi/core/multipoles.h>
 #include <thor_scsi/elements/bending.h>
 #include "check_multipole.h"
-#include <tps/enums.h>
 #include <ostream>
 #include <armadillo>
 #include <cmath>
@@ -16,6 +15,7 @@ namespace tsc = thor_scsi::core;
 namespace tse = thor_scsi::elements;
 
 using gtpsa::sqr;
+using tsc::x_,  tsc::px_, tsc::y_, tsc::py_, tsc::delta_, tsc::ct_;
 
 auto a_desc = std::make_shared<gtpsa::desc>(6, 1);
 auto tpsa_ref = gtpsa::tpsa(a_desc, gtpsa::init::default_);
