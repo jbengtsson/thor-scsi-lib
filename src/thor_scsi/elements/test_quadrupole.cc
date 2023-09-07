@@ -13,6 +13,8 @@ namespace tsc = thor_scsi::core;
 namespace tse = thor_scsi::elements;
 typedef typename tsc::StandardDoubleType::complex_type cdbl;
 
+using tsc::x_,  tsc::px_, tsc::y_, tsc::py_, tsc::delta_, tsc::ct_;
+
 auto desc = std::make_shared<gtpsa::desc>(6, 6);
 const auto t_ref = gtpsa::tpsa(desc, 1);
 

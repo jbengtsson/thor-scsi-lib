@@ -11,6 +11,9 @@ namespace tsc = thor_scsi::core;
 namespace tse = thor_scsi::elements;
 
 using gtpsa::sin;
+using tsc::x_,  tsc::px_, tsc::y_, tsc::py_, tsc::delta_, tsc::ct_;
+
+
 /* ==========================================================================
    Support functions
    required by other elements too ?

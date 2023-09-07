@@ -8,6 +8,10 @@ namespace ts = thor_scsi;
 namespace tsc = thor_scsi::core;
 namespace tse = thor_scsi::elements;
 
+using gtpsa::sqr;
+using tsc::x_,  tsc::px_, tsc::y_, tsc::py_, tsc::delta_;
+using tsc::X_, tsc::Y_, tsc::Z_;
+
 template<>
 std::string tse::RadiationDelegateInterface::repr(void) const
 {
@@ -252,7 +256,7 @@ template<typename T>
 static bool check_ps_finite(gtpsa::ss_vect<T>& ps, const double max_val = 1e3)
 {
 	bool check_ps_finite = true;
-	for(int i=0; i < nv_tps; ++i){
+	for(int i=0; i < ps.size(); ++i){
 		double ref_val = gtpsa::cst(ps[i]);
 		check_ps_finite &= std::isfinite(ref_val);
 		check_ps_finite &= (std::abs(ref_val) < max_val);

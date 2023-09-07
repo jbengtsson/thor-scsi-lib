@@ -16,6 +16,8 @@ namespace tsc = thor_scsi::core;
 namespace tse = thor_scsi::elements;
 namespace ts = thor_scsi;
 
+using tsc::x_,  tsc::px_, tsc::y_, tsc::py_, tsc::delta_, tsc::ct_;
+
 static int log_level = THOR_SCSI_WARN;
 
 po::variables_map vm;
@@ -41,7 +43,6 @@ static void process_cmd_line(int argc, char *argv[])
 		("number,n",               po::value<int>()        ->default_value(-1),         "number of element to inspect")
 		("n-turns",                po::value<int>()        ->default_value(1),         "propagate n turns (set to zero for none)" )
 		("n-warmup-turns",         po::value<int>()        ->default_value(0),         "propagate n turn (if none no timing run will be made)" )
-		("tps",                    po::value<bool>()       ->default_value(0),         "compute transport matrix also with tpsa lin" )
 		("transport-matrix",       po::value<bool>()       ->default_value(false),     "compute transport matrix")
 		("start-element-number,s", po::value<int>()        ->default_value(0),         "first element to use")
 		("end-element-number,e",   po::value<int>()        ->default_value(-1),        "last element to use, (-1) for last element of lattice")
@@ -148,71 +149,12 @@ static void add_radiation_delegates(ts::Accelerator& accelerator)
 	}
 }
 
-namespace gtpsa {
-	template<>
-	inline void ss_vect<tps>::set_identity(void)
-	{
-
-		for(size_t i = 0; i < this->state_space.size(); ++i){
-			this->state_space[i] = tps(0e0, i+1);
-		}
-	}
-	template<>
-	inline void ss_vect<tps>::show(std::ostream& strm, int level, bool with_endl) const {
-		int precision = 6;
-
-		strm << std::scientific << std::setprecision(precision);
-		strm  << "cst\n";
-		for(size_t i= 0; i<this->state_space.size(); ++i){
-			auto t_tpsa = this->state_space[i];
-			auto val = t_tpsa.cst();
-			strm << std::setw(14) << val << " ";
-		}
-		if(with_endl || (level >= 1)) {	strm << "\n";        }
-		if(level == 0){
-			return;
-		}
-
-		strm  << "map\n";
-		// preserve order
-		for(size_t i= 0; i<this->state_space.size(); ++i){
-			auto t_tps = this->state_space[i];
-			for (int j = 0; j<6; ++j){
-				// todo: validate index
-				auto val = t_tps[j];
-				strm << std::setw(14) << val << " ";
-			}
-			strm << "\n";
-		}
-	}
-	template<>
-	inline arma::mat ss_vect<tps>::toMatrix(void){
-		arma::mat mat(this->size(), this->size());
-
-		//mat.fill(NAN);
-		mat.fill(0e0);
-
-		for (unsigned int j = 0; j < this->size(); j++) {
-			auto& t_tps = this->state_space[j];
-			for (unsigned int k = 0; k < this->size(); k++){
-				mat(j, k) = t_tps[(k + 0)];
-			}
-			// mat(j, tps_n-1) = get_m_ij(map, j+1, 0);
-			// mat(j, tps_n-1) = get_m_ij(map, j+1, 0);
-		}
-		// mat(tps_n-1, tps_n-1) = 1e0;
-  return mat;
-
-}
-
-}
 static void compute_transport_matrix_prop(ts::Accelerator& accelerator, const int first_element, const int last_element, const int n_turns)
 {
 	bool verbose = vm["verbose"].as<bool>();
 	bool very_verbose = vm["very-verbose"].as<bool>();
 	bool radiate = vm["radiate"].as<bool>();
 	int warmup_turns = vm["n-warmup-turns"].as<int>();
-	bool do_tps =  vm["tps"].as<bool>();
 
 	auto desc = std::make_shared<gtpsa::desc>(6, 2);
 	auto a_tps = gtpsa::tpsa(desc, mad_tpsa_default);
@@ -226,18 +168,6 @@ static void compute_transport_matrix_prop(ts::Accelerator& accelerator, const in
 	ps[ct_]    = vm["ct"].as<double>();
 	ps[delta_] = vm["delta"].as<double>();
 
-#if 0
-	tps a_orig_tps;
-	gtpsa::ss_vect<tps> ps_orig(a_orig_tps);
-	ps_orig[x_]     = vm["x_pos"].as<double>();
-	ps_orig[px_]    = vm["px"].as<double>();
-	ps_orig[y_]     = vm["y_pos"].as<double>();
-	ps_orig[py_]    = vm["py"].as<double>();
-	ps_orig[ct_]    = vm["ct"].as<double>();
-	ps_orig[delta_] = vm["delta"].as<double>();
-
-	ps_orig.set_identity();
-#endif
 
 	tsc::ConfigType calc_config;
 
@@ -284,53 +214,16 @@ static void compute_transport_matrix_prop(ts::Accelerator& accelerator, const in
 		end = clock.now();
 	}
 
-	/*
-	if(do_tps){
-		for(int i=0; i< warmup_turns; ++i){
-			// gtpsa::ss_vect<gtpsa::tpsa> psw(ps[0]);
-			auto psw = ps_orig.clone();
-			accelerator.propagate(calc_config, psw, first_element, last_element);
-		}
-		if(warmup_turns){
-			start_orig = clock.now();
-		}
-
-		for(int i=0; i< n_turns; ++i){
-			accelerator.propagate(calc_config, ps_orig, first_element, last_element);
-		}
-		if(warmup_turns){
-			end_orig = clock.now();
-		}
-	}
-	*/
 	arma::mat pmap = ps.toMatrix();
-	//arma::mat pmap_orig = ps_orig.toMatrix();
 
 	std::cout << "Computed poincare map " << std::endl;
 	if(very_verbose) {
 		std::cout  << "gtpsa::tpsa\n"  << pmap;
-		/*
-		if(do_tps){
-			std::cout  << "tps        \n"  << pmap_orig;
-		}
-		*/
 	}
-	/*
-	if(do_tps){
-		std::cout  << "diff\n" << pmap - pmap_orig  << std::endl;
-	}
-	*/
 	std::cout << "Computed poincare map (gtsa)" << std::endl;
 	ps.show(std::cout, 10);
 	std::cout << std::endl;
 
-	/*
-	if(do_tps){
-		std::cout << "                       (tps)" << std::endl;
-		ps_orig.show(std::cout, 10);
-		std::cout << std::endl;
-	}
-	*/
 
 	if(warmup_turns){
 		auto dt = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
@@ -341,18 +234,6 @@ static void compute_transport_matrix_prop(ts::Accelerator& accelerator, const in
 			  << " dt: " << dt << " us, " << dt / 1000.0 << " ms"
 			  << " per turn " << dtp << " us"
 			  << std::endl;
-		/*
-		if (do_tps) {
-			dt = std::chrono::duration_cast<std::chrono::microseconds>(end_orig - start_orig).count();
-			dtp = dt / n_turns;
-			std::cout << std::fixed
-				  << "tps:   "
-				  << "Required time span for " << n_turns << " turns "
-				  << " dt: " << dt << " us, " << dt / 1000.0 << " ms"
-				  << " per turn " << dtp << " us"
-				  << std::endl;
-		}
-		*/
 	}
 }
 

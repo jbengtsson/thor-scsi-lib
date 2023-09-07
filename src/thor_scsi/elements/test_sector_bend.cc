@@ -15,6 +15,7 @@
 namespace tsc = thor_scsi::core;
 namespace tse = thor_scsi::elements;
 
+using gtpsa::sqr;
 
 auto a_desc = std::make_shared<gtpsa::desc>(6, 1);
 auto tpsa_ref = gtpsa::tpsa(a_desc, gtpsa::init::default_);
@@ -376,11 +377,6 @@ static void to_ps_jac(gtpsa::ss_vect<T>& ssv, arma::mat *ps, arma::mat *jac)
     *jac = ssv.jacobian();
 }
 
-static void to_ps_jac(gtpsa::ss_vect<tps>& ssv, arma::mat *ps, arma::mat *jac)
-{
-    throw std::runtime_error("Not implemented");
-    // extract_ps_jac(maptomat(ssv), ps, jac);
-}
 
 BOOST_AUTO_TEST_CASE(test21_sector_tps_symplectic)
 {

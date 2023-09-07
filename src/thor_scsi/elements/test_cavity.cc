@@ -10,6 +10,8 @@
 namespace tse = thor_scsi::elements;
 namespace tsc = thor_scsi::core;
 
+using tsc::x_,  tsc::px_, tsc::y_, tsc::py_, tsc::delta_, tsc::ct_;
+
 
 static double compute_delta(const double volt,  const double frequency, const double phase,
 		     const double energy, const double ct)

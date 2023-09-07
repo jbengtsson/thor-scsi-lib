@@ -10,6 +10,7 @@
 namespace tsc = thor_scsi::core;
 namespace tse = thor_scsi::elements;
 
+using tsc::delta_, tsc::ct_;
 
 tse::CavityType::CavityType(const Config &config) :  LocalGalilean(config)
 {

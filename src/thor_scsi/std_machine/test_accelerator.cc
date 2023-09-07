@@ -22,6 +22,8 @@ namespace tse = thor_scsi::elements;
 namespace tsc = thor_scsi::core;
 namespace ts = thor_scsi;
 
+using tsc::x_,  tsc::px_, tsc::y_, tsc::py_, tsc::delta_, tsc::ct_;
+
 int reg_done = ts::register_elements();
 
 auto a_desc = std::make_shared<gtpsa::desc>(1, 6);
