@@ -61,7 +61,7 @@ Then initialise submodules using the following command
 
 .. code:: shell
 
-   git submodule update --init --recursive
+   git submodule update --init
 
 *NB*: this command currently will pull a subrepository (`cmake4epics`).
 This repository currently does not support (llvm/clang). Thus build on
