@@ -6,16 +6,16 @@
 #include <sstream>
 #include <gtpsa/ss_vect.h>
 #include <gtpsa/tpsa.hpp>
-#include <tps/tps_type.h>
 
 
 namespace py = pybind11;
 
+#if 0
 template<typename T>
-void declare_field(py::module &scsi, const std::string &typestr) {
+void declare_field(py::module &m, const std::string &typestr) {
   using Class = ss_vect<T>;
   std::string pyclass_name = std::string("ss_vect") + typestr;
-  py::class_<Class>(scsi, pyclass_name.c_str(), py::buffer_protocol(),
+  py::class_<Class>(m, pyclass_name.c_str(), py::buffer_protocol(),
 		    py::dynamic_attr())
     .def(py::init<>())
     // Python print redirect.
@@ -36,8 +36,8 @@ void declare_field(py::module &scsi, const std::string &typestr) {
     .def("zero",       &Class::zero)
     .def("identity",   &Class::identity);
 }
+#endif
 
-void py_thor_scsi_init_tps(py::module &m);
 void py_thor_scsi_init_field_interpolation(py::module &m);
 void py_thor_scsi_init_elements(py::module &m);
 void py_thor_scsi_init_custom(py::module &m);

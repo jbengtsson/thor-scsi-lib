@@ -3,8 +3,6 @@
 #include <thor_scsi/elements/field_kick.h>
 #include <thor_scsi/elements/element_helpers.h>
 #include <thor_scsi/elements/utils.h>
-#include <tps/tps_type.h>
-// #include <tps/math_pass.h>
 
 #include <sstream>
 
@@ -13,6 +11,9 @@ namespace tsc = thor_scsi::core;
 namespace tse = thor_scsi::elements;
 
 using gtpsa::sin;
+using tsc::x_,  tsc::px_, tsc::y_, tsc::py_, tsc::delta_, tsc::ct_;
+
+
 /* ==========================================================================
    Support functions
    required by other elements too ?
@@ -649,8 +650,6 @@ template void tse::FieldKickKnobbed<StandardDoubleType>::_localPropagate
 (tsc::ConfigType &conf, gtpsa::ss_vect<double>      &ps);
 template void tse::FieldKickKnobbed<StandardDoubleType>::_localPropagate
 (tsc::ConfigType &conf, gtpsa::ss_vect<gtpsa::tpsa> &ps);
-// template void tse::FieldKickKnobbed<StandardDoubleType>::_localPropagate
-// (tsc::ConfigType &conf, gtpsa::ss_vect<tps> &ps);
 
 template void tse::FieldKickKnobbed<TpsaVariantType>::_localPropagate
 (tsc::ConfigType &conf, gtpsa::ss_vect<double>      &ps);

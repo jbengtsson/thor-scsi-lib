@@ -2,12 +2,15 @@
 #include <thor_scsi/elements/radiation_delegate.h>
 #include <thor_scsi/elements/element_helpers.h>
 #include <thor_scsi/elements/utils.h>
-#include <gtpsa/utils_tps.hpp>
 
 
 namespace ts = thor_scsi;
 namespace tsc = thor_scsi::core;
 namespace tse = thor_scsi::elements;
+
+using gtpsa::sqr;
+using tsc::x_,  tsc::px_, tsc::y_, tsc::py_, tsc::delta_;
+using tsc::X_, tsc::Y_, tsc::Z_;
 
 template<>
 std::string tse::RadiationDelegateInterface::repr(void) const
@@ -56,21 +59,11 @@ inline void tse::RadiationDelegateKnobbed<EC>::_view(const EC& elem, const gtpsa
 	}
 }
 
-//template
-//void tse::RadiationDelegate::_view(const tsc::ElemType& elem, const gtpsa::ss_vect<double> &ps, const enum tsc::ObservedState state, const int cnt);
-//template
-//void tse::RadiationDelegate::_view(const tsc::ElemType& elem, const gtpsa::ss_vect<tps> &ps, const enum tsc::ObservedState state, const int cnt);
 template<class EC>
 void tse::RadiationDelegateKnobbed<EC>::view(const EC& elem, const gtpsa::ss_vect<double>      &ps, const enum tsc::ObservedState state, const int cnt)
 {
 	_view(elem, ps, state, cnt);
 }
-/*
-void tse::RadiationDelegate::view(const tsc::ElemType& elem, const gtpsa::ss_vect<tps>         &ps, const enum tsc::ObservedState state, const int cnt)
-{
-	_view(elem, ps, state, cnt);
-}
-*/
 template<class EC>
 void tse::RadiationDelegateKnobbed<EC>::view(const EC& elem, const gtpsa::ss_vect<gtpsa::tpsa> &ps, const enum tsc::ObservedState state, const int cnt)
 {
@@ -263,7 +256,7 @@ template<typename T>
 static bool check_ps_finite(gtpsa::ss_vect<T>& ps, const double max_val = 1e3)
 {
 	bool check_ps_finite = true;
-	for(int i=0; i < nv_tps; ++i){
+	for(int i=0; i < ps.size(); ++i){
 		double ref_val = gtpsa::cst(ps[i]);
 		check_ps_finite &= std::isfinite(ref_val);
 		check_ps_finite &= (std::abs(ref_val) < max_val);
@@ -392,8 +385,6 @@ void tse::RadiationDelegateKickKnobbed<FC>::radiate(const thor_scsi::core::Confi
 
 
 
-//template void tse::RadiationDelegate::_view(const FieldKickAPI& kick, const gtpsa::ss_vect<double> &ps, const enum tsc::ObservedState state, const int cnt);
-//template void tse::RadiationDelegate::_view(const FieldKickAPI& kick, const gtpsa::ss_vect<tps> &ps, const enum tsc::ObservedState state, const int cnt);
 template<class FC>
 void tse::RadiationDelegateKickKnobbed<FC>::view(const FC& kick, const gtpsa::ss_vect<double> &ps, const enum tsc::ObservedState state, const int cnt)
 {
@@ -401,13 +392,6 @@ void tse::RadiationDelegateKickKnobbed<FC>::view(const FC& kick, const gtpsa::ss
 	_view(kick, ps, state, cnt);
 }
 
-/*
-void tse::RadiationDelegateKick::view(const FieldKickAPI& kick, const gtpsa::ss_vect<tps> &ps, const enum ObservedState state, const int cnt)
-{
-	// std::cout<< "Rad Del.view(gtpsa::ss_vect<tps>) for element " << kick.name << "at index" << kick.index << std::endl;
-	_view(kick, ps, state, cnt);
-}
-*/
 template<class FC>
 void tse::RadiationDelegateKickKnobbed<FC>::view(const FC& kick, const gtpsa::ss_vect<gtpsa::tpsa> &ps, const enum tsc::ObservedState state, const int cnt)
 {
@@ -440,8 +424,6 @@ template void tse::RadiationDelegateKickKnobbed<fka_dt>::radiate(const thor_scsi
                                                                  const double h_ref, const std::array<double, 3>      B);
 template void tse::RadiationDelegateKickKnobbed<fka_dvt>::radiate(const thor_scsi::core::ConfigType &conf, gtpsa::ss_vect<double>      &ps, const double L,
                                                                  const double h_ref, const std::array<double, 3>      B);
-// template void tse::RadiationDelegateKick::radiate(const thor_scsi::core::ConfigType &conf, gtpsa::ss_vect<tps>         &ps, const double L,
-//						  const double h_ref, const std::array<tps, 3>         B);
 
 template void tse::RadiationDelegateKickKnobbed<fka_dt>::radiate(const thor_scsi::core::ConfigType &conf, gtpsa::ss_vect<gtpsa::tpsa> &ps, const double L,
                                                                    const double h_ref, const std::array<gtpsa::tpsa, 3> B);

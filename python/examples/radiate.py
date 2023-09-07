@@ -7,14 +7,14 @@ import xarray as xr
 logging.basicConfig(level="WARNING")
 
 from thor_scsi.factory import accelerator_from_config
-from thor_scsi.utils.accelerator import instrument_with_radiators
+from thor_scsi.utils.accelerator import instrument_with_standard_radiators
 from thor_scsi.utils.courant_snyder import compute_Twiss_A
 from thor_scsi.utils.radiate import compute_radiation
 
+from gtpsa import ss_vect_tpsa, ss_vect_double
+
 from thor_scsi.lib import (
     ConfigType,
-    ss_vect_tps,
-    ss_vect_double,
     RadiationDelegate,
     RadiationDelegateKick,
     ObservedState

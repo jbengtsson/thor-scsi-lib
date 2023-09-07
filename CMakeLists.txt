@@ -1,10 +1,9 @@
 cmake_minimum_required(VERSION 3.0.0)
 
-project("thor_scsi" LANGUAGES CXX Fortran)
+project("thor-scsi-lib" LANGUAGES CXX)
 
-ENABLE_LANGUAGE(Fortran)
 
-set(THOR_SCSI_VERSION 0.0.1)
+set(THOR_SCSI_VERSION 0.0.2)
 
 # option(PYTHON_MODULE_INSTALL "Install python module" OFF)
 option(PYTHON_MODULE_DEVELOPMENT_INSTALL "Install python binary module to source directory" ON)
@@ -31,18 +30,11 @@ endif()
 
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE DEBUG) # default to debug build
-  # set(CMAKE_BUILD_TYPE RELEASE) # default to debug build
   message(STATUS "Default to DEBUG build")
 endif()
 
 find_package(Armadillo REQUIRED)
-
 find_package(PythonInterp 3)
-# find_package(Java REQUIRED)
-# message(STATUS "Java include dirs" ${JAVA_INCLUDE_PATH})
-# find_package(JNI REQUIRED)
-# message(STATUS "Jini include dirs" ${JINI_INCLUDE_DIRS})
-# include(CMakeAddFortranSubdirectory)
 
 enable_testing()
 
@@ -60,14 +52,9 @@ else()
 endif()
 
 
-# Need to write proper .cmake
-set(gtpsa_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/gtpsa/)
-set(gtpsa_cpp_INCLUDE_DIR ${gtpsa_DIR}/c++)
-# only required by test transfomr?
-set(gtpsa_mad_ng_INCLUDE_DIR ${gtpsa_DIR}/mad-ng/src)
+find_package(gtpsa  REQUIRED COMPONENTS gtpsacpp)
 
-# Fortran implementation part
-#add_subdirectory(TPSA)
+
 add_subdirectory(src)
 # python wrapper
 add_subdirectory(python)

@@ -40,16 +40,16 @@ if do_readme_copy:
 d = gsl_conf.gsl_config()
 
 prefix = None
-
-# How to define where the thor scsi library is located?
-# Some hard coded preferences for your convienience
-# prefix = os.path.abspath(os.path.join(os.path.dirname(__name__), os.pardir, os.pardir))
-# prefix = os.path.abspath(os.path.join(os.environ["HOME"], ".local"))
+gtpsa_prefix = None
 
 # deliberatley chosen _PREFIX instead of DIR ...
-# not to interfear with cmake's variables
+# not to interfere with cmake's variables
 try:
     prefix = os.environ["thor_scsi_PREFIX"]
+except KeyError as ke:
+    logger.info(f"no environment variable thor_scsi_PREFIX: ke")
+try:
+    gtpsa_prefix = os.environ["gtpsa_PREFIX"]
 except KeyError as ke:
     logger.info(f"no environment variable thor_scsi_PREFIX: ke")
 
@@ -74,6 +74,9 @@ library_dirs = []
 if prefix:
     include_dirs += [os.path.join(prefix, "include")]
     library_dirs += [os.path.join(prefix, "lib")]
+if gtpsa_prefix:
+    include_dirs += [os.path.join(gtpsa_prefix, "include")]
+    library_dirs += [os.path.join(gtpsa_prefix, "lib")]
 
 ext_modules = [
     # Pybind11Extension(
@@ -96,13 +99,11 @@ ext_modules = [
                 "src/aperture.cc",
                 "src/config_type.cc",
                 "src/elements.cc",
-                "src/enums.cc",
                 "src/flame.cc",
                 "src/interpolation.cc",
                 "src/observer.cc",
                 "src/pybind_test.cc",
                 "src/radiation.cc",
-                "src/tps.cc",
                 "src/thor_scsi.cc",
                 "src/custom.cc"
             ]
@@ -119,8 +120,8 @@ ext_modules = [
         libraries=[
             "thor_scsi_gtpsa",
             "thor_scsi_core_gtpsa",
+            "gtpsa-c++",
             "gtpsa",
-            "tpsa_lin",
             "flame",
             "flame_core",
         ]

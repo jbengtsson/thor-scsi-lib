@@ -118,8 +118,8 @@ def test_quadrupole_dependence_on_offset():
 
     named_index_d = dict(x=0, px=1, y=2, py=3, delta=4, ct=5, K=6, dx=7, dy=8)
     named_index = gtpsa.IndexMapping(named_index_d)
-    # desc = gtpsa.desc(6, 2, 3, 2)
-    desc = gtpsa.desc(9, 2)
+    desc = gtpsa.desc(6, 2, 3, 2)
+    # desc = gtpsa.desc(9, 2)
     knobs.make_magnet_knobbable(
         quad, po=2, offset=True, desc=desc, named_index=named_index
     )

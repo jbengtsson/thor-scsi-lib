@@ -78,13 +78,11 @@ def ps_intern_to_std(a: np.ndarray, copy: bool = True) -> np.ndarray:
 def map2numpy(t_map):
     """convert a tps based map to a numpy array
     """
-    mat = tslib.ss_vect_tps_to_mat(t_map)
-    mat = np.array(mat)
-    return mat
+    raise NotImplementedError("predates gtpsa")
 
 
 def ss_vect_tps2ps_jac(
-    ps: tslib.ss_vect_tps, std: bool = False
+    ps, std: bool = False
 ) -> (np.ndarray, np.ndarray):
     """Extract phase space and jacobian from internal ss_vect_tps representation
 
@@ -101,21 +99,11 @@ def ss_vect_tps2ps_jac(
       Currently only std == False is supported. Don't remove the assert below
       unless you know what you are doing.
     """
-    assert(std == False)
-
-    raw = tslib.ss_vect_tps_to_mat(ps)
-    tmp = np.array(raw)
-    n_jac = 6
-    jac = tmp[:n_jac, :n_jac]
-    ps = tmp[n_jac, :]
-
-    if std:
-        jac = jac_intern_to_std(jac)
-        ps = ps_intern_to_std(ps)
-    return ps, jac
+    raise NotImplementedError("predates gtpsa")
 
 
-def array2ss_vect_tps(a_mat: np.ndarray) -> tslib.ss_vect_tps:
+def array2ss_vect_tps(a_mat: np.ndarray):
+    raise NotImplementedError("predates gtpsa")
     t_map = tslib.ss_vect_tps()
     n = a_mat[0].size
     if n != 7:
@@ -125,9 +113,10 @@ def array2ss_vect_tps(a_mat: np.ndarray) -> tslib.ss_vect_tps:
     return t_map
 
 
-def vec_mat2ss_vect_tps(vec: np.ndarray, mat: np.ndarray) -> tslib.ss_vect_tps:
+def vec_mat2ss_vect_tps(vec: np.ndarray, mat: np.ndarray):
     """
     """
+    raise NotImplementedError("predates gtpsa")
     tmp = np.zeros([7, 7], np.float)
     [tmp[6, :6], tmp[:6, :6]] = [vec, mat]
     return tslib.vec_mat_to_ss_vect(tslib.Matrix(tmp))

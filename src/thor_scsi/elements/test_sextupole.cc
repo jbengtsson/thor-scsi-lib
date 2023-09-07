@@ -14,6 +14,7 @@ namespace tsc = thor_scsi::core;
 namespace tse = thor_scsi::elements;
 
 using cdbl = std::complex<double>;
+using tsc::x_,  tsc::px_, tsc::y_, tsc::py_, tsc::delta_, tsc::ct_;
 
 template<class C>
 static void check_only_sext_set(std::shared_ptr<tsc::TwoDimensionalMultipolesKnobbed<C>> muls, const cdbl ref)

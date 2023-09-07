@@ -86,6 +86,7 @@ quadK.propagate(calc_config, ps)
 print(ps)
 
 for key in index_dict:
+    print(key)
     getattr(ps, key).print(key, 1e-7)
 
 coeffs = gtpsa.utils.tpsa_extract_coefficients_to_nrec(ps.x)

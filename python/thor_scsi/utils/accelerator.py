@@ -3,241 +3,64 @@
 Todo:
     check if Facade should be created hiding all the functionallity
 """
+import gtpsa
 import thor_scsi.lib as tslib
 from .extract_info import accelerator_info
 import numpy as np
 import xarray as xr
 from typing import Sequence
 import logging
-logger = logging.getLogger("thor-scsi")
-
-
-## def instrument_sequence_with_standard_radiators(
-##     elems: Sequence[tslib.ElemType]
-## ) -> Sequence[tslib.RadiationDelegate]:
-##     """Instrument a sequence of elements with radiation delegates
-##     """
-##     ps_zero = tslib.ss_vect_double()
-##     rad_del = [tslib.RadiationDelegate() for elem in elems]
-##     for a_del, elem in zip(rad_del, elems):
-##         elem.setRadiationDelegate(a_del)
-##         # Just use that that the marker knows who is calling him
-##         a_del.view(elem, ps_zero, tslib.ObservedState.start, 0)
-##     return rad_del
-
-
-def instrument_with_radiators(
-    acc: tslib.Accelerator, *, energy
-) -> Sequence[tslib.RadiationDelegate]:
-    """Instrument all resonable elements with a radiation delegate
-
-    Todo:
-        review if a radation delegate should be registered to any
-        element unless it refuses to accept one
-    """
-
-    # I think anything derived from a mpole can tak an radiation delegate
-    ps_zero = tslib.ss_vect_double()
-
-    ## Untested code below
-    ## for type_name in ["Marker"]:
-    ##     elems = [elem for elem in acc.elementsWithNameType(type_name)]
-    ##
-    ## # Markers and similar devices solely store the data ...
-    ## rad_del = [tslib.RadiationDelegate() for elem in elems]
-    ## for a_del, elem in zip(rad_del, elems):
-    ##     elem.setRadiationDelegate(a_del)
-    ##     # Just use that that the marker knows who is calling him
-    ##     a_del.view(elem, ps_zero, tslib.ObservedState.start, 0)
-
-    elems = [elem for elem in acc if isinstance(elem, (tslib.Mpole,))]
-    logger.info(
-        "\nRadiators added to:\n({})".
-        format(", ".join([e.name for e in elems]))
-    )
-
-    rad_del_kick = [tslib.RadiationDelegateKick() for elem in elems]
-    for a_del, elem in zip(rad_del_kick, elems):
-        elem.setRadiationDelegate(a_del)
-        a_del.setEnergy(energy)
-        # Just use that that the marker knows who is calling him
-        # a_del.view(elem, ps_zero, tslib.ObservedState.start, 0)
-
-    return rad_del_kick  # , rad_del
 
 logger = logging.getLogger("thor-scsi")
 
 
-## def instrument_sequence_with_standard_radiators(
-##     elems: Sequence[tslib.ElemType]
-## ) -> Sequence[tslib.RadiationDelegate]:
-##     """Instrument a sequence of elements with radiation delegates
-##     """
-##     ps_zero = tslib.ss_vect_double()
-##     rad_del = [tslib.RadiationDelegate() for elem in elems]
-##     for a_del, elem in zip(rad_del, elems):
-##         elem.setRadiationDelegate(a_del)
-##         # Just use that that the marker knows who is calling him
-##         a_del.view(elem, ps_zero, tslib.ObservedState.start, 0)
-##     return rad_del
-
-
-def instrument_with_radiators(
-    acc: tslib.Accelerator, *, energy
-) -> Sequence[tslib.RadiationDelegate]:
-    """Instrument all resonable elements with a radiation delegate
-
-    Todo:
-        review if a radation delegate should be registered to any
-        element unless it refuses to accept one
-    """
-
-    # I think anything derived from a mpole can tak an radiation delegate
-    ps_zero = tslib.ss_vect_double()
-
-    ## Untested code below
-    ## for type_name in ["Marker"]:
-    ##     elems = [elem for elem in acc.elementsWithNameType(type_name)]
-    ##
-    ## # Markers and similar devices solely store the data ...
-    ## rad_del = [tslib.RadiationDelegate() for elem in elems]
-    ## for a_del, elem in zip(rad_del, elems):
-    ##     elem.setRadiationDelegate(a_del)
-    ##     # Just use that that the marker knows who is calling him
-    ##     a_del.view(elem, ps_zero, tslib.ObservedState.start, 0)
-
-    elems = [elem for elem in acc if isinstance(elem, (tslib.Mpole,))]
-    logger.info(
-        "Radiators added to following elements:'{}'".format(
-            ", ".join([e.name for e in elems])
-        )
-    )
-
-    rad_del_kick = [tslib.RadiationDelegateKick() for elem in elems]
-    for a_del, elem in zip(rad_del_kick, elems):
-        elem.setRadiationDelegate(a_del)
-        a_del.setEnergy(energy)
-        # Just use that that the marker knows who is calling him
-        # a_del.view(elem, ps_zero, tslib.ObservedState.start, 0)
-
-    return rad_del_kick  # , rad_del
-
-logger = logging.getLogger("thor-scsi")
-
-
-## def instrument_sequence_with_standard_radiators(
-##     elems: Sequence[tslib.ElemType]
-## ) -> Sequence[tslib.RadiationDelegate]:
-##     """Instrument a sequence of elements with radiation delegates
-##     """
-##     ps_zero = tslib.ss_vect_double()
-##     rad_del = [tslib.RadiationDelegate() for elem in elems]
-##     for a_del, elem in zip(rad_del, elems):
-##         elem.setRadiationDelegate(a_del)
-##         # Just use that that the marker knows who is calling him
-##         a_del.view(elem, ps_zero, tslib.ObservedState.start, 0)
-##     return rad_del
-
-
-def instrument_with_radiators(
-    acc: tslib.Accelerator, *, energy
-) -> Sequence[tslib.RadiationDelegate]:
-    """Instrument all resonable elements with a radiation delegate
-
-    Todo:
-        review if a radation delegate should be registered to any
-        element unless it refuses to accept one
-    """
-
-    # I think anything derived from a mpole can tak an radiation delegate
-    ps_zero = tslib.ss_vect_double()
-
-    ## Untested code below
-    ## for type_name in ["Marker"]:
-    ##     elems = [elem for elem in acc.elementsWithNameType(type_name)]
-    ##
-    ## # Markers and similar devices solely store the data ...
-    ## rad_del = [tslib.RadiationDelegate() for elem in elems]
-    ## for a_del, elem in zip(rad_del, elems):
-    ##     elem.setRadiationDelegate(a_del)
-    ##     # Just use that that the marker knows who is calling him
-    ##     a_del.view(elem, ps_zero, tslib.ObservedState.start, 0)
-
-    elems = [elem for elem in acc if isinstance(elem, (tslib.Mpole,))]
-    logger.info(
-        "Radiators added to following elements:'{}'".format(
-            ", ".join([e.name for e in elems])
-        )
-    )
-
-    rad_del_kick = [tslib.RadiationDelegateKick() for elem in elems]
-    for a_del, elem in zip(rad_del_kick, elems):
-        elem.setRadiationDelegate(a_del)
-        a_del.setEnergy(energy)
-        # Just use that that the marker knows who is calling him
-        # a_del.view(elem, ps_zero, tslib.ObservedState.start, 0)
-
-    return rad_del_kick  # , rad_del
-
-logger = logging.getLogger("thor-scsi")
-
-
-## def instrument_sequence_with_standard_radiators(
-##     elems: Sequence[tslib.ElemType]
-## ) -> Sequence[tslib.RadiationDelegate]:
-##     """Instrument a sequence of elements with radiation delegates
-##     """
-##     ps_zero = tslib.ss_vect_double()
-##     rad_del = [tslib.RadiationDelegate() for elem in elems]
-##     for a_del, elem in zip(rad_del, elems):
-##         elem.setRadiationDelegate(a_del)
-##         # Just use that that the marker knows who is calling him
-##         a_del.view(elem, ps_zero, tslib.ObservedState.start, 0)
-##     return rad_del
-
-
-def instrument_with_radiators(
-    acc: tslib.Accelerator, *, energy
-) -> Sequence[tslib.RadiationDelegate]:
-    """Instrument all resonable elements with a radiation delegate
-
-    Todo:
-        review if a radation delegate should be registered to any
-        element unless it refuses to accept one
-    """
-
-    # I think anything derived from a mpole can tak an radiation delegate
-    ps_zero = tslib.ss_vect_double()
-
-    ## Untested code below
-    ## for type_name in ["Marker"]:
-    ##     elems = [elem for elem in acc.elementsWithNameType(type_name)]
-    ##
-    ## # Markers and similar devices solely store the data ...
-    ## rad_del = [tslib.RadiationDelegate() for elem in elems]
-    ## for a_del, elem in zip(rad_del, elems):
-    ##     elem.setRadiationDelegate(a_del)
-    ##     # Just use that that the marker knows who is calling him
-    ##     a_del.view(elem, ps_zero, tslib.ObservedState.start, 0)
-
-    elems = [elem for elem in acc if isinstance(elem, (tslib.Mpole,))]
-    logger.info(
-        "\nRadiators added to:\n({})".
-        format(", ".join([e.name for e in elems]))
-    )
-
-    rad_del_kick = [tslib.RadiationDelegateKick() for elem in elems]
-    for a_del, elem in zip(rad_del_kick, elems):
+def _instrument_sequence_with_radiation_delegate(
+    elems: Sequence[tslib.ElemType], *, delegate
+) -> Sequence:
+    """Instrument a sequence of elements with object delegates"""
+    rad_del = [delegate() for elem in elems]
+    for a_del, elem in zip(rad_del, elems):
         elem.set_radiation_delegate(a_del)
-        a_del.set_energy(energy)
-        # Just use that that the marker knows who is calling him
-        # a_del.view(elem, ps_zero, tslib.ObservedState.start, 0)
+    return rad_del
 
-    return rad_del_kick  # , rad_del
+
+def instrument_with_standard_radiators(
+    acc: tslib.Accelerator, *, energy
+) -> Sequence[tslib.RadiationDelegate]:
+    """Instrument a sequence of elements with radiation delegates
+
+    Todo:
+      are these rather observers for curly_H?
+    """
+    rad_del = _instrument_sequence_with_radiation_delegate(
+        acc, delegate=tslib.RadiationDelegate
+    )
+    return rad_del
+
+
+def instrument_with_standard_radiator_kickers(
+    acc: tslib.Accelerator, *, energy
+) -> Sequence[tslib.RadiationDelegate]:
+    """Instrument all resonable elements with a radiation delegate
+
+    Todo:
+        review if a radation delegate should be registered to any
+        element unless it refuses to accept one
+    """
+    elems = [elem for elem in acc if isinstance(elem, (tslib.Mpole,))]
+    logger.info(
+        "\nRadiators added to:\n({})".format(", ".join([e.name for e in elems]))
+    )
+    rad_del_kick = _instrument_sequence_with_radiation_delegate(
+        elems, delegate=tslib.RadiationDelegateKick
+    )
+    for a_del in rad_del_kick:
+        a_del.set_energy(energy)
+    return rad_del_kick
 
 
 def instrument_with_standard_observers(
-        elems: Sequence[tslib.ElemType], *, mapping = None
+    elems: Sequence[tslib.ElemType], *, mapping=None
 ) -> Sequence[tslib.StandardObserver]:
     """Instrument accelerator with observers
 
@@ -245,7 +68,7 @@ def instrument_with_standard_observers(
     """
     # Instrument it with observers ... I guess I have to keep them here so that
     # internally these are not weak references ... to be tested
-    assert(mapping)
+    assert mapping
     observers = [tslib.StandardObserver(mapping) for elem in elems]
     # Register them to the elments
     for ob, elem in zip(observers, elems):
@@ -256,8 +79,7 @@ def instrument_with_standard_observers(
 def extract_orbit_from_standard_observers(
     observers: Sequence[tslib.StandardObserver], info: xr.Dataset
 ) -> xr.Dataset:
-    """
-    """
+    """ """
     observers = np.array(observers)
 
     # Required later to index into the final xarray
@@ -296,10 +118,9 @@ def extract_orbit_from_standard_observers(
 
 
 def extract_orbit_from_accelerator_with_standard_observers(
-    acc: Sequence[tslib.ElemType]
+    acc: Sequence[tslib.ElemType],
 ) -> xr.Dataset:
-    """
-    """
+    """ """
 
     observers = [elem.get_observer() for elem in acc]
     info = accelerator_info(acc)

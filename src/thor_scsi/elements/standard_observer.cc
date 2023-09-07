@@ -27,10 +27,6 @@ void tse::StandardObserver::view(std::shared_ptr<const tsc::CellVoid> elem, cons
 	_view(elem, ps, state, cnt);
 }
 
-void tse::StandardObserver::view(std::shared_ptr<const tsc::CellVoid> elem, const gtpsa::ss_vect<tps> &ps, const enum tsc::ObservedState state, const int cnt)
-{
-	_view(elem, ps, state, cnt);
-}
 void tse::StandardObserver::view(std::shared_ptr<const tsc::CellVoid> elem, const gtpsa::ss_vect<gtpsa::tpsa> &ps, const enum tsc::ObservedState state, const int cnt)
 {
 	_view(elem, ps, state, cnt);
@@ -44,9 +40,7 @@ void tse::StandardObserver::show(std::ostream& strm, const int level) const
 	     << "\", observed_index=" << this->m_observed_index
 	     << ", has_ps=" << this->m_has_ps <<", ps=";
 	this->m_ps.show(strm, 4, false);
-		strm << ", has_tps=" << this->m_has_tps
-		     << ", has_tpsa=" << this->m_has_tpsa;
-	this->m_tps.show(strm, 4, false);
+	strm <<  ", has_tpsa=" << this->m_has_tpsa;
 	strm << ")";
 }
 

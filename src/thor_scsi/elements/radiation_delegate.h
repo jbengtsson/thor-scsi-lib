@@ -2,7 +2,6 @@
 #define _THOR_SCSI_RADIATION_DELEGATE_H_ 1
 #include <thor_scsi/elements/radiation_delegate_api.h>
 #include <thor_scsi/elements/constants.h>
-#include <tps/tpsa_lin.h>
 #include <array>
 
 namespace thor_scsi::elements {
@@ -29,7 +28,6 @@ namespace thor_scsi::elements {
 		 * Used for computing curly_dHx
 		 */
 		virtual void view(const EC& kick, const gtpsa::ss_vect<double>      &ps, const enum ObservedState state, const int cnt) override;
-		// virtual void view(const ElemType& kick, const gtpsa::ss_vect<tps>         &ps, const enum ObservedState state, const int cnt) override;
 		virtual void view(const EC& kick, const gtpsa::ss_vect<gtpsa::tpsa> &ps, const enum ObservedState state, const int cnt) override;
 
 		virtual void show(std::ostream& strm, int level) const override final;
@@ -113,12 +111,9 @@ namespace thor_scsi::elements {
 		 * Used for computing synchrotron integrals
 		 */
 		virtual void view(const FC& kick, const gtpsa::ss_vect<double>      &ps, const enum ObservedState state, const int cnt) override;
-		// virtual void view(const FieldKickAPI& kick, const gtpsa::ss_vect<tps>         &ps, const enum ObservedState state, const int cnt) override;
 		virtual void view(const FC& kick, const gtpsa::ss_vect<gtpsa::tpsa> &ps, const enum ObservedState state, const int cnt) override;
 
 		virtual void show(std::ostream& strm, int level) const override final;
-		//virtual void view(const ElemType& kick, const gtpsa::ss_vect<double> &ps, const enum ObservedState state, const int cnt) override final;
-		//virtual void view(const ElemType& kick, const gtpsa::ss_vect<tps> &ps, const enum ObservedState state, const int cnt) override final;
 		/**
 		 * @brief Radiation effect due to local field
 		 *

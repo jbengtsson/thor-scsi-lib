@@ -8,8 +8,6 @@
 
 #include <flame/core/config.h>
 // #include <flame/core/util.h>
-// #include <tps/ss_vect.h>
-// #include <tps/tps_type.h>
 #include <thor_scsi/core/cell_void.h>
 #include <thor_scsi/core/elements_basis.h>
 #include <thor_scsi/core/config.h>

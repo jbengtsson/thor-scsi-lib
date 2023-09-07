@@ -8,20 +8,15 @@
  */
 #include <vector>
 #include <string>
-// #include <tps/ss_vect.h>
-// #include <tps/ss_vect_utils.h>
-#include <tps/tps_type.h>
 #include <gtpsa/ss_vect.h>
+#include <gtpsa/utils.hpp>
 #include <thor_scsi/core/config.h>
+#include <thor_scsi/core/constants.h>
 #include <thor_scsi/core/exceptions.h>
 
 #include <exception>
 #include <iostream>
 #include <string>
-
-// #include <tps/tpsa_lin.h>
-// #include <thor_scsi/process/t2ring_common.h>
-
 
 extern double q_fluct; /// < Track down if it is a constant or a global variable reflecting current status
 
@@ -103,11 +98,11 @@ inline T get_p_s(const thor_scsi::core::ConfigType &conf, const gtpsa::ss_vect<T
 
 	if (!conf.H_exact) {
 		// Small angle axproximation.
-		p_s = 1e0 + ps[delta_];
+		p_s = 1e0 + ps[thor_scsi::core::delta_];
 	} else {
-		p_s2 = sqr(1e0+ps[delta_]) - sqr(ps[px_]) - sqr(ps[py_]);
+		p_s2 = gtpsa::sqr(1e0+ps[thor_scsi::core::delta_]) - gtpsa::sqr(ps[thor_scsi::core::px_]) - gtpsa::sqr(ps[thor_scsi::core::py_]);
 		if (p_s2 >= 0e0){
-			p_s = sqrt(p_s2);
+			p_s = gtpsa::sqrt(p_s2);
 		}  else {
 			throw PhysicsViolation("Speed of light exceeded");
 			p_s = NAN;
@@ -119,7 +114,6 @@ inline T get_p_s(const thor_scsi::core::ConfigType &conf, const gtpsa::ss_vect<T
 
 	template<typename T>
 	double get_curly_H(const gtpsa::ss_vect<T>      &A);
-	double get_curly_H(const gtpsa::ss_vect<tps>    &A);
 	double get_curly_H(const gtpsa::ss_vect<double> &A);
 
 
@@ -128,16 +122,12 @@ inline T get_p_s(const thor_scsi::core::ConfigType &conf, const gtpsa::ss_vect<T
 	static inline double get_dI_eta(const gtpsa::ss_vect<T> &A){
 #warning "optimise dI eta"
 		arma::mat jac = A.jacobian();
-		return jac(x_, delta_);
-	}
-
-	static inline double get_dI_eta(const gtpsa::ss_vect<tps> &A){
-		return A[x_][delta_];
+		return jac(thor_scsi::core::x_, thor_scsi::core::delta_);
 	}
 
 	static inline double get_dI_eta(const gtpsa::ss_vect<double> &A){
 		std::cout << "get_dI_eta: operation not defined for double" << std::endl;
-		throw std::domain_error("get_dI_eta: operation not defined for tps");
+		throw std::domain_error("get_dI_eta: operation not defined for gtpsa::ss_vect<double");
 		return 0e0;
 	}
 
@@ -171,11 +161,6 @@ public:
 	 *
 	 * Todo: Check which one
 	 */
-	static inline double get_dI_eta(const gtpsa::ss_vect<tps> &A){
-		std::cout << "get_dI_eta: operation not defined for double" << std::endl;
-		throw std::domain_error("get_dI_eta: operation not defined for tps");
-		return 0e0;
-	}
 	static inline double get_dI_eta(const gtpsa::ss_vect<gtpsa::tpsa> &A){
 		std::cout << "get_dI_eta: operation not defined for gtpsa::tpsa" << std::endl;
 		throw std::domain_error("get_dI_eta: operation not defined for gtpsa::tpsa");
@@ -188,6 +173,7 @@ public:
 
 };
 
+#if 0
 // partial specialization
 template<>
 class is_tps<tps> {
@@ -228,6 +214,7 @@ public:
 
 
 };
+#endif
 		/**
 		 * @brief forward a phase space with a drift
 		 *

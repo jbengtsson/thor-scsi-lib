@@ -374,15 +374,6 @@ namespace thor_scsi::elements {
 		virtual void localPropagate
 		(thor_scsi::core::ConfigType &conf, gtpsa::ss_vect<gtpsa::tpsa> &ps) override final
 			{ _localPropagate(conf, ps);}
-		/*
-		virtual void localPropagate
-		(thor_scsi::core::ConfigType &conf, gtpsa::ss_vect<tps> &ps) override final {
-			// _localPropagate(conf, ps);
-			throw std::runtime_error
-				("field kick local propagate not implemented for ss_vect<tps> ");
-		}
-		*/
-
 		// Required as radiation is now handled by a delegate
 		template<typename T>
 		inline void thinKickAndRadiate

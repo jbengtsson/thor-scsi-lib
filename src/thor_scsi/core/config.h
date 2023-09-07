@@ -65,64 +65,6 @@ namespace thor_scsi {
 				beta_z = 0e0,
 				beta0 = 0e0,                        //< Relativistic factors.
 				gamma0 = 0e0;
-			std::vector<double>
-			TotalTune{0e0, 0e0, 0e0},     //< Transverse tunes.
-				Chrom{0e0, 0e0},              //< Linear chromaticities.
-				alpha_rad{0e0, 0e0, 0e0},     //< Damping coeffs.
-				D_rad{0e0, 0e0, 0e0},         //< Diffusion coeffs (Floquet space).
-				J{0e0, 0e0, 0e0},             //< Partition numbers.
-				tau{0e0, 0e0, 0e0},           //< Damping times.
-				D_IBS{0e0, 0e0, 0e0},         //< Diffusion matrix (Floquet space).
-				eps{0e0, 0e0, 0e0},           //< Eigenemittances.
-				epsp{0e0, 0e0, 0e0},          //< Trans. & Long. projected emittances.
-				CODvect                       //< Closed orbit.
-				{0e0, 0e0, 0e0, 0e0, 0e0, 0e0, 0e0},
-				wr                            //< Eigenvalues Re & Im part.
-				{0e0, 0e0, 0e0, 0e0, 0e0, 0e0, 0e0},
-				wi
-				{0e0, 0e0, 0e0, 0e0, 0e0, 0e0, 0e0};
-			std::vector< std::vector<double> >
-			OneTurnMat
-			{{0e0, 0e0, 0e0, 0e0, 0e0, 0e0, 0e0},
-			 {0e0, 0e0, 0e0, 0e0, 0e0, 0e0, 0e0},
-			 {0e0, 0e0, 0e0, 0e0, 0e0, 0e0, 0e0},
-			 {0e0, 0e0, 0e0, 0e0, 0e0, 0e0, 0e0},
-			 {0e0, 0e0, 0e0, 0e0, 0e0, 0e0, 0e0},
-			 {0e0, 0e0, 0e0, 0e0, 0e0, 0e0, 0e0},
-			 {0e0, 0e0, 0e0, 0e0, 0e0, 0e0, 0e0}},
-				Ascr
-				{{0e0, 0e0, 0e0, 0e0, 0e0, 0e0, 0e0},
-					{0e0, 0e0, 0e0, 0e0, 0e0, 0e0, 0e0},
-					{0e0, 0e0, 0e0, 0e0, 0e0, 0e0, 0e0},
-					{0e0, 0e0, 0e0, 0e0, 0e0, 0e0, 0e0},
-					{0e0, 0e0, 0e0, 0e0, 0e0, 0e0, 0e0},
-					{0e0, 0e0, 0e0, 0e0, 0e0, 0e0, 0e0},
-					{0e0, 0e0, 0e0, 0e0, 0e0, 0e0, 0e0}},
-				Ascrinv
-				{{0e0, 0e0, 0e0, 0e0, 0e0, 0e0, 0e0},
-					{0e0, 0e0, 0e0, 0e0, 0e0, 0e0, 0e0},
-					{0e0, 0e0, 0e0, 0e0, 0e0, 0e0, 0e0},
-					{0e0, 0e0, 0e0, 0e0, 0e0, 0e0, 0e0},
-					{0e0, 0e0, 0e0, 0e0, 0e0, 0e0, 0e0},
-					{0e0, 0e0, 0e0, 0e0, 0e0, 0e0, 0e0},
-					{0e0, 0e0, 0e0, 0e0, 0e0, 0e0, 0e0}},
-				Vr                            //< Eigenvectors: Real part,
-				{{0e0, 0e0, 0e0, 0e0, 0e0, 0e0, 0e0},
-					{0e0, 0e0, 0e0, 0e0, 0e0, 0e0, 0e0},
-					{0e0, 0e0, 0e0, 0e0, 0e0, 0e0, 0e0},
-					{0e0, 0e0, 0e0, 0e0, 0e0, 0e0, 0e0},
-					{0e0, 0e0, 0e0, 0e0, 0e0, 0e0, 0e0},
-					{0e0, 0e0, 0e0, 0e0, 0e0, 0e0, 0e0},
-					{0e0, 0e0, 0e0, 0e0, 0e0, 0e0, 0e0}},
-
-				Vi                            //<               Imaginary part.
-				{{0e0, 0e0, 0e0, 0e0, 0e0, 0e0, 0e0},
-					{0e0, 0e0, 0e0, 0e0, 0e0, 0e0, 0e0},
-					{0e0, 0e0, 0e0, 0e0, 0e0, 0e0, 0e0},
-					{0e0, 0e0, 0e0, 0e0, 0e0, 0e0, 0e0},
-					{0e0, 0e0, 0e0, 0e0, 0e0, 0e0, 0e0},
-					{0e0, 0e0, 0e0, 0e0, 0e0, 0e0, 0e0},
-					{0e0, 0e0, 0e0, 0e0, 0e0, 0e0, 0e0}};
 		};
 	}
 }

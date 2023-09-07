@@ -35,20 +35,6 @@ public:
 	virtual void field_py    (const py::array_t<double>  &t_pos, py::array_t<double> &t_field) const {
 		PYBIND11_OVERRIDE(void, PyField2DInterpolation, field_py, t_pos, t_field);
 	}
-	virtual void field_py    (const std::array<tps    , 2>  &t_pos, std::array<tps   , 2> &t_field) const {
-		PYBIND11_OVERRIDE(void, PyField2DInterpolation, field_py   , t_pos, t_field);
-	}
-#if 0
-	virtual void gradient_py (const std::array<double&, 2> &t_pos, std::array<double& , 2> &t_field) const {
-		PYBIND11_OVERRIDE(void, PyField2DInterpolation, gradient_py, t_pos, t_field);
-	}
-	virtual void gradient_py (const std::array<tps&   , 2>  &t_pos, std::array<tps&   , 2> &t_field) const {
-		PYBIND11_OVERRIDE(void, PyField2DInterpolation, gradient_py, t_pos, t_field);
-	}
-	virtual void gradient_py (const std::array<tps&   , 2>  &t_pos, std::array<double&, 2> &t_field) const {
-		PYBIND11_OVERRIDE(void, PyField2DInterpolation, gradient_py, t_pos, t_field);
-	}
-#endif
 private:
 
 	template<typename T>
@@ -75,16 +61,7 @@ public:
 		*/
 	}
 
-	void field(const tps& x, const tps& y, tps *Bx, tps *By) const override {
-		//this->_field(x, y, Bx, By);
-		std::array<tps, 2> pos = {x, y};
-		std::array<tps, 2> t_field;
-		this->field_py(pos, t_field);
-		*Bx = t_field[0];
-		*By = t_field[1];
-
-	}
-	void field(const gtpsa::tpsa& x, const gtpsa::tpsa& y, gtpsa::tpsa *Bx, gtpsa::tpsa *By) const override {
+        void field(const gtpsa::tpsa& x, const gtpsa::tpsa& y, gtpsa::tpsa *Bx, gtpsa::tpsa *By) const override {
 		//this->_field(x, y, Bx, By);
 		std::array<gtpsa::tpsa, 2> pos = {x, y};
 		std::array<gtpsa::tpsa*, 2> t_field = {Bx, By};
@@ -94,12 +71,6 @@ public:
 
 	}
 	void gradient(const double& x, const double& y, double *Gx, double *Gy) const  override{
-		PYBIND11_OVERRIDE_PURE(void, base, gradient, x, y, Gx, Gy);
-	}
-	void gradient(const tps& x, const tps& y, tps *Gx, tps *Gy) const   override {
-		PYBIND11_OVERRIDE_PURE(void, base, gradient, x, y, Gx, Gy);
-	}
-	void gradient(const tps& x, const tps& y, double *Gx, double *Gy) const  override{
 		PYBIND11_OVERRIDE_PURE(void, base, gradient, x, y, Gx, Gy);
 	}
 	void gradient(const gtpsa::tpsa& x, const gtpsa::tpsa& y, gtpsa::tpsa *Gx, gtpsa::tpsa *Gy) const   override {
@@ -146,12 +117,14 @@ void add_methods_multipoles(py::class_<Class> t_mapper)
 		.def("get_coefficients", &Class::getCoeffsConst)
 		.def(py::self += py::self)
 		.def(py::self + py::self)
-	    #if 0
 		.def(py::self += std::complex<double>())
-		.def(py::self + std::complex<double>())
+	        .def(py::self += double())
 		.def(py::self *= std::complex<double>())
+	        .def(py::self *= double())
+		.def(py::self + std::complex<double>())
+	        .def(py::self + double())
 		.def(py::self * std::complex<double>())
-	    #endif
+	        .def(py::self * double())
 		.def(std::complex<double>() * py::self)
 		.def(std::complex<double>() + py::self)
 		.def(py::self *= std::vector<typename Types::complex_type>())
@@ -221,49 +194,41 @@ void py_thor_scsi_init_field_interpolation(py::module &m) {
 		    // std::cerr << "Returning field " << field_p[0] << ", " << field_p[1] << "\n";
 		    return t_field;
 		})
-            .def("field", [](tsc::Field2DInterpolation &intp, const std::array<tps, 2> t_pos,
-                             std::array<tps, 2> t_field) -> void {
-		tps Bx, By;
-		intp.field(t_pos[0], t_pos[1], &Bx, &By);
-		t_field[0] = Bx;
-		t_field[1] = By;
-	    }
-		)
             .def(py::init<>());
 
-	/*
-	  py::class_<PyField2DInterpolation, std::shared_ptr<PyField2DInterpolation>> field2dintp(m, "Field2DInterpolation", _field2dintp);
-	  field2dintp
-	  .def("field", static_cast<void (PyField2DInterpolation::*)(const std::array<double, 2>&,  std::array<double, 2>&) const>(&PyField2DInterpolation::field_py))
-	  .def("field", static_cast<void (PyField2DInterpolation::*)(const std::array<tps, 2>&, std::array<tps, 2>&) const>(&PyField2DInterpolation::field_py))
-	  .def(py::init<>());
-	*/
-	py::class_<
-	    tsc::TwoDimensionalMultipolesKnobbed<tsc::StandardDoubleType>,
-	    std::shared_ptr<tsc::TwoDimensionalMultipolesKnobbed<tsc::StandardDoubleType>>
-	    >
-	    multipoles_knobbed(m, "_TwoDimensionalMultipolesKnobbedDouble", field2dintp //, py::buffer_protocol()
-		);
-	add_methods_multipoles<tsc::StandardDoubleType, tsc::TwoDimensionalMultipolesKnobbed<tsc::StandardDoubleType>>(multipoles_knobbed);
-	py::class_<tsc::TwoDimensionalMultipoles, std::shared_ptr<tsc::TwoDimensionalMultipoles>>
-	    multipole(m, "TwoDimensionalMultipoles", multipoles_knobbed //, py::buffer_protocol()
-		);
+        /*
+          py::class_<PyField2DInterpolation, std::shared_ptr<PyField2DInterpolation>> field2dintp(m, "Field2DInterpolation", _field2dintp);
+          field2dintp
+          .def("field", static_cast<void (PyField2DInterpolation::*)(const std::array<double, 2>&,  std::array<double, 2>&) const>(&PyField2DInterpolation::field_py))
+          .def("field", static_cast<void (PyField2DInterpolation::*)(const std::array<tps, 2>&, std::array<tps, 2>&) const>(&PyField2DInterpolation::field_py))
+          .def(py::init<>());
+        */
+        py::class_<
+            tsc::TwoDimensionalMultipolesKnobbed<tsc::StandardDoubleType>,
+            std::shared_ptr<tsc::TwoDimensionalMultipolesKnobbed<tsc::StandardDoubleType>>
+            >
+            multipoles_knobbed(m, "_TwoDimensionalMultipolesKnobbedDouble", field2dintp //, py::buffer_protocol()
+                );
+        add_methods_multipoles<tsc::StandardDoubleType, tsc::TwoDimensionalMultipolesKnobbed<tsc::StandardDoubleType>>(multipoles_knobbed);
+        py::class_<tsc::TwoDimensionalMultipoles, std::shared_ptr<tsc::TwoDimensionalMultipoles>>
+            multipole(m, "TwoDimensionalMultipoles", multipoles_knobbed //, py::buffer_protocol()
+                );
 
-	add_methods_multipoles<tsc::StandardDoubleType, tsc::TwoDimensionalMultipoles>(multipole);
-	multipole
-	    //.def("field", static_cast<void (tsc::Field2DInterpolation::*)(const double, const double, double *, double *) const>(&tsc::TwoDimensionalMultipolesKnobbed::field))
-	    //.def("field", static_cast<void (tsc::Field2DInterpolation::*)(const tps, const tps, tps *, tps *) const>(&tsc::TwoDimensionalMultipolesKnobbed::field))
-	    .def("apply_translation", py::overload_cast<const cdbl>(&tsc::TwoDimensionalMultipoles::applyTranslation))
-	    .def("apply_translation",
-		 py::overload_cast<const double, const double>(&tsc::TwoDimensionalMultipoles::applyTranslation))
-	    .def(py::init<std::vector<cdbl_intern>>())
-	    .def(py::init<const std::complex<double>, const unsigned int>(), "initalise multipoles",
-		     py::arg("default_value"), py::arg("h_max") = tsc::max_multipole);
+        add_methods_multipoles<tsc::StandardDoubleType, tsc::TwoDimensionalMultipoles>(multipole);
+        multipole
+            //.def("field", static_cast<void (tsc::Field2DInterpolation::*)(const double, const double, double *, double *) const>(&tsc::TwoDimensionalMultipolesKnobbed::field))
+            //.def("field", static_cast<void (tsc::Field2DInterpolation::*)(const tps, const tps, tps *, tps *) const>(&tsc::TwoDimensionalMultipolesKnobbed::field))
+            .def("apply_translation", py::overload_cast<const cdbl>(&tsc::TwoDimensionalMultipoles::applyTranslation))
+            .def("apply_translation",
+                 py::overload_cast<const double, const double>(&tsc::TwoDimensionalMultipoles::applyTranslation))
+            .def(py::init<std::vector<cdbl_intern>>())
+            .def(py::init<const std::complex<double>, const unsigned int>(), "initalise multipoles",
+                     py::arg("default_value"), py::arg("h_max") = tsc::max_multipole);
 #if 0
-	.def_buffer([](tsc::TwoDimensionalMultipoles &muls) -> py::buffer_info {
-	    std::vector<cdbl_intern> coeffs = muls.getCoeffs();
-	    size_t n = coeffs.size();
-	    py::buffer_info r;
+        .def_buffer([](tsc::TwoDimensionalMultipoles &muls) -> py::buffer_info {
+            std::vector<cdbl_intern> coeffs = muls.getCoeffs();
+            size_t n = coeffs.size();
+            py::buffer_info r;
                 r.ptr = coeffs.data();         /* Pointer to buffer */
                 r.itemsize = sizeof(cdbl_intern); /* Size of one scalar */
                 r.format = py::format_descriptor<cdbl_intern>::format(); /* Python struct-style format descriptor */
@@ -275,7 +240,7 @@ void py_thor_scsi_init_field_interpolation(py::module &m) {
                 };
                 return r;
             })
-	    .def(py::init([](py::array_t<cdbl_intern, py::array::c_style|py::array::forcecast> b) {
+            .def(py::init([](py::array_t<cdbl_intern, py::array::c_style|py::array::forcecast> b) {
                                   /* Request a buffer descriptor from Python */
                                   py::buffer_info info = b.request();
 

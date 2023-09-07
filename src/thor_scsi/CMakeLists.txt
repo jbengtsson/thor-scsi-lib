@@ -1,6 +1,6 @@
 include(../../cmake/gpp_warnings.cmake)
 
-add_subdirectory(core)
+# add_subdirectory(core)
 
 add_compile_definitions(
   #   GTSPA_ONLY_OPTIMISED_OPS
@@ -27,6 +27,7 @@ set(thor_scsi_HEADERS
 set(thor_scsi_core_HEADERS
   core/exceptions.h
   core/config.h
+  core/constants.h
   core/machine.h
   core/cell_void.h
   core/aperture.h
@@ -106,8 +107,6 @@ set(thor_scsi_core_FILES
   custom/aircoil_interpolation.cc
   custom/nonlinear_kicker_interpolation.cc
 
-  # to be removed as soon as tps is removed ...
-  ss_vect_tps.cc
   )
 
 add_library(thor_scsi_core SHARED
@@ -123,13 +122,11 @@ target_include_directories(thor_scsi_core
     "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )
 
-
 target_link_libraries(thor_scsi_core
   # Todo: need to learn how to instruct cmake that this
   # dependency will be exported properly
-  gtpsa-c++
-  gtpsa
-  tpsa_lin
+  gtpsa::gtpsa-c++
+  gtpsa::gtpsa
   flame::core
   # ${flame_CORE_LIBRARY}
   ${ARMADILLO_LIBRARIES}
@@ -172,9 +169,8 @@ add_executable(test_transform_phase_space
 target_link_libraries(test_transform_phase_space
   thor_scsi
   thor_scsi_core
-  tpsa_lin
-  gtpsa-c++
-  gtpsa
+  gtpsa::gtpsa-c++
+  gtpsa::gtpsa
   # PRIVATE Boost::boost
   #  quadmath
     ${Boost_PRG_EXEC_MONITOR_LIBRARY}

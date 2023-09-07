@@ -4,7 +4,6 @@
 #include <thor_scsi/core/elements_basis.h>
 #include <thor_scsi/core/config.h>
 #include <thor_scsi/core/transform_phase_space.h>
-#include <tps/tps_type.h>
 
 namespace thor_scsi::elements {
 	using thor_scsi::core::ElemTypeKnobbed;
@@ -30,40 +29,19 @@ namespace thor_scsi::elements {
 			*/
 		}
 
-		// inline virtual void global2Local(ss_vect<double>             &ps) = 0;
-		// inline virtual void local2Global(ss_vect<double>             &ps) = 0;
-		// inline virtual void global2Local(ss_vect<tps>                &ps) = 0;
-		// inline virtual void local2Global(ss_vect<tps>                &ps) = 0;
-
 		inline virtual void global2Local(gtpsa::ss_vect<double>      &ps) = 0;
 		inline virtual void global2Local(gtpsa::ss_vect<gtpsa::tpsa> &ps) = 0;
-		 // inline virtual void global2Local(gtpsa::ss_vect<tps>         &ps) = 0;
 
 		inline virtual void local2Global(gtpsa::ss_vect<double>      &ps) = 0;
 		inline virtual void local2Global(gtpsa::ss_vect<gtpsa::tpsa> &ps) = 0;
-		 // inline virtual void local2Global(gtpsa::ss_vect<tps>         &ps) = 0;
-
-		// virtual void localPropagate(ConfigType &conf, ss_vect<double>             &ps)  = 0;
-		// virtual void localPropagate(ConfigType &conf, ss_vect<tps>                &ps)  = 0;
 
 		virtual void localPropagate(ConfigType &conf, gtpsa::ss_vect<double>      &ps)  = 0;
 		virtual void localPropagate(ConfigType &conf, gtpsa::ss_vect<gtpsa::tpsa> &ps)  = 0;
-		 // virtual void localPropagate(ConfigType &conf, gtpsa::ss_vect<tps>         &ps)  = 0;
 
-		// inline void propagate(ConfigType &conf, ss_vect<double>             &ps) override final { _propagate(conf, ps); };
-		// inline void propagate(ConfigType &conf, ss_vect<tps>                &ps) override final { _propagate(conf, ps); };
 		virtual inline void propagate(ConfigType &conf, gtpsa::ss_vect<double>      &ps) override final { _propagate(conf, ps); };
 		virtual inline void propagate(ConfigType &conf, gtpsa::ss_vect<gtpsa::tpsa> &ps) override final { _propagate(conf, ps); };
-		 // virtual inline void propagate(ConfigType &conf, gtpsa::ss_vect<tps>         &ps) override final { _propagate(conf, ps); };
 
 	private:
-		// template<typename T>
-		// void _propagate(thor_scsi::core::ConfigType &conf, ss_vect<T> &ps){
-		//	this->global2Local(ps);
-		//	this->localPropagate(conf, ps);
-		//	this->local2Global(ps);
-		// }
-
 		template<typename T>
 		void _propagate(thor_scsi::core::ConfigType &conf, gtpsa::ss_vect<T> &ps){
 			this->global2Local(ps);
@@ -93,18 +71,11 @@ namespace thor_scsi::elements {
 
 			}
 
-		// inline virtual void global2Local(ss_vect<double>             &ps) override { this->_global2Local(ps); }
-		// inline virtual void global2Local(ss_vect<tps>                &ps) override { this->_global2Local(ps); }
-		// inline virtual void local2Global(ss_vect<tps>                &ps) override { this->_local2Global(ps); }
-		// inline virtual void local2Global(ss_vect<double>             &ps) override { this->_local2Global(ps); }
-
 		inline virtual void global2Local(gtpsa::ss_vect<double>      &ps) override { this->_global2Local(ps); }
 	        inline virtual void global2Local(gtpsa::ss_vect<gtpsa::tpsa> &ps) override { this->_global2Local(ps); }
-	        // inline virtual void global2Local(gtpsa::ss_vect<tps>         &ps) override { this->_global2Local(ps); }
 
 		inline virtual void local2Global(gtpsa::ss_vect<double>      &ps) override { this->_local2Global(ps); }
 		inline virtual void local2Global(gtpsa::ss_vect<gtpsa::tpsa> &ps) override { this->_local2Global(ps); }
-	        // inline virtual void local2Global(gtpsa::ss_vect<tps>         &ps) override { this->_local2Global(ps); }
 
 
 		inline auto* getTransform(void){
@@ -113,8 +84,6 @@ namespace thor_scsi::elements {
 		thor_scsi::core::PhaseSpaceGalilean2DTransformKnobbed<C> transform;
 
 	private:
-		// template<typename T> void _global2Local(ss_vect<T>        &ps){ this->transform.forward(ps);	}
-		// template<typename T> void _local2Global(ss_vect<T>        &ps){ this->transform.backward(ps);	}
 		template<typename T> void _global2Local(gtpsa::ss_vect<T> &ps){	this->transform.forward(ps);	}
 		template<typename T> void _local2Global(gtpsa::ss_vect<T> &ps){	this->transform.backward(ps);	}
 	};
@@ -142,16 +111,9 @@ namespace thor_scsi::elements {
 				//transform(std::move(o.transform));
 			}
 
-		// inline virtual void global2Local(ss_vect<double> &ps) override final { this->_global2Local(ps);  }
-		// inline virtual void global2Local(ss_vect<tps>    &ps) override final { this->_global2Local(ps);  }
-		// inline virtual void local2Global(ss_vect<double> &ps) override final { this->_local2Global(ps);  }
-		// inline virtual void local2Global(ss_vect<tps>    &ps) override final { this->_local2Global(ps);  }
-
 		inline virtual void global2Local(gtpsa::ss_vect<double>      &ps) override final { this->_global2Local(ps);  }
-	    // inline virtual void global2Local(gtpsa::ss_vect<tps>         &ps) override final { this->_global2Local(ps);  }
 		inline virtual void global2Local(gtpsa::ss_vect<gtpsa::tpsa> &ps) override final { this->_global2Local(ps);  }
 		inline virtual void local2Global(gtpsa::ss_vect<double>      &ps) override final { this->_local2Global(ps);  }
-	    // inline virtual void local2Global(gtpsa::ss_vect<tps>         &ps) override final { this->_local2Global(ps);  }
 		inline virtual void local2Global(gtpsa::ss_vect<gtpsa::tpsa> &ps) override final { this->_local2Global(ps);  }
 
 
@@ -160,8 +122,6 @@ namespace thor_scsi::elements {
 		thor_scsi::core::PhaseSpaceGalileanPRot2DTransformKnobbed<C> transform;
 
 	private:
-		// template<typename T> void _global2Local(ss_vect<T> &ps){ this->transform.forward(ps);  }
-		// template<typename T> void _local2Global(ss_vect<T> &ps){ this->transform.backward(ps); }
 		template<typename T> void _global2Local(gtpsa::ss_vect<T> &ps){ this->transform.forward(ps);  }
 		template<typename T> void _local2Global(gtpsa::ss_vect<T> &ps){ this->transform.backward(ps); }
 	};

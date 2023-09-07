@@ -4,7 +4,6 @@
 #include <boost/test/tools/output_test_stream.hpp>
 #include <thor_scsi/core/multipoles.h>
 #include <gtpsa/utils_tps.hpp>
-#include <tps/tps_type.h>
 #include <cmath>
 #include <array>
 

@@ -7,7 +7,6 @@
 #include <thor_scsi/elements/radiation_delegate.h>
 #include <thor_scsi/std_machine/accelerator.h>
 #include <thor_scsi/std_machine/std_machine.h>
-#include <tps/enums.h>
 
 namespace ts = thor_scsi;
 namespace tsc = thor_scsi::core;

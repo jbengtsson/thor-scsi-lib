@@ -1,9 +1,9 @@
 #ifndef _THOR_SCSI_CORE_TRANSFORM_PHASE_SPACE_H_
 #define _THOR_SCSI_CORE_TRANSFORM_PHASE_SPACE_H_ 1
 
-#include <tps/enums.h>
 #include <gtpsa/utils.hpp>
 #include <thor_scsi/core/transform.h>
+#include <thor_scsi/core/constants.h>
 #include <gtpsa/ss_vect.h>
 
 namespace thor_scsi::core {

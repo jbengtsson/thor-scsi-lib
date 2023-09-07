@@ -1,0 +1,86 @@
+# This starter workflow is for a CMake project running on a single platform. There is a different starter workflow if you need cross-platform coverage.
+# See: https://github.com/actions/starter-workflows/blob/main/ci/cmake-multi-platform.yml
+name: build and test, c++ and python part
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+env:
+  # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
+  BUILD_TYPE: Release
+  # cmake is used to install file ... defaults to /usr/local
+  LD_LIBRARY_PATH: /usr/local/lib
+
+jobs:
+  build:
+    # The CMake configure and build commands are platform agnostic and should work equally well on Windows or Mac.
+    # You can convert this to a matrix build if you need cross-platform coverage.
+    # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: checkout thor-scsi-lib code
+      uses: actions/checkout@v3
+      with:
+        submodules: True
+
+
+    - name: checkout gtpsa-cpp repo
+      uses: actions/checkout@v4
+      with:
+        repository: hz-b/gtpsa-cpp
+        path: gtpsa-cpp
+        ref: main
+        submodules: True
+
+    - name: install apt dependencies
+      run: |
+         sudo apt update
+         # gfortran ... currently for mad-ng gtpsa library
+         sudo apt install g++ gfortran cmake make bison flex libarmadillo-dev
+         # deliberatly only installing a subset of boost
+         sudo apt install  libboost-chrono-dev libboost-thread-dev libboost-filesystem-dev libboost-program-options-dev libboost-regex-dev libboost-test-dev
+         # for building the python interface ... hopefully python3-xarray is not needed this rather heavy
+         sudo apt install pybind11-dev python3-pytest python3-pip python3-pybind11 # python3-xarray
+
+    - name: Configure cmake for gtpsa-cpp
+      run: cmake gtpsa-cpp -B ${{github.workspace}}/gtpsa-cpp/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+
+    - name: Build gtpsa-cpp
+      run: cmake --build ${{github.workspace}}/gtpsa-cpp/build --config ${{env.BUILD_TYPE}}
+
+    - name: Install gtpsa-cpp
+      # need to be root to install ?
+      run: sudo cmake --install ${{github.workspace}}/gtpsa-cpp/build
+
+    - name: Configure CMake
+      # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
+      # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
+      run: CMAKE_PREFIX_PATH=/usr/local/lib/cmake/ cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+
+    - name: Build with cmake
+      # Build your program with the given configuration
+      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+
+    - name: Test cpp part
+      working-directory: ${{github.workspace}}/build
+      # Execute tests defined by the CMake configuration.
+      # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
+      run: ctest -C ${{env.BUILD_TYPE}}
+
+    - name: Install thor-scsi-lib
+      # need to be root to install ?
+      run: sudo cmake --install ${{github.workspace}}/build
+
+    - name : gtpsa build and install python package
+      # need to do that here as it is not yet a python wheel
+      run: gtpsa_PREFIX=/usr/local pip3 install -v gtpsa-cpp/python
+
+    - name : thor-scsi-lib build and install python package
+      run: gtpsa_PREFIX=/usr/local thor_scsi_PREFIX=/usr/local pip3 install -v ./python/
+
+    - name : thor-scsi-lib test python package
+      run: pytest-3 python

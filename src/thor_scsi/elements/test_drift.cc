@@ -11,7 +11,7 @@ namespace tse = thor_scsi::elements;
 
 /* angle indices not defined, lets compiler check if parameters are consistent. */
 enum {
-	xi = X_, yi = Y_, zi = Z_, pxi = 3, pyi = 4, pzi=5
+    xi = tsc::X_, yi = tsc::Y_, zi = tsc::Z_, pxi = 3, pyi = 4, pzi=5
 };
 
 static void
@@ -20,8 +20,8 @@ diff_position_direction(const gtpsa::ss_vect<double>& start, const gtpsa::ss_vec
 {
 	const gtpsa::ss_vect<double> d = end - start;
 
-	*dpos = sqrt(sqr(d[xi]) + sqr(d[yi]) + sqr(d[zi]));
-	*ddir = sqrt(sqr(d[pxi]) + sqr(d[pyi]) + sqr(d[pzi]));
+	*dpos = sqrt(gtpsa::sqr(d[xi]) + gtpsa::sqr(d[yi]) + gtpsa::sqr(d[zi]));
+	*ddir = sqrt(gtpsa::sqr(d[pxi]) + gtpsa::sqr(d[pyi]) + gtpsa::sqr(d[pzi]));
 }
 
 
