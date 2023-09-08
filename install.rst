@@ -10,6 +10,8 @@ python wrapper.
 Dependencies
 ------------
 
+- `gtpsa-cpp` provided by https://github.com/hz-b/gtpsa-cpp.git
+
 - modern c++ compiler C++17 or better
 
     - std::shared_ptr
@@ -25,6 +27,7 @@ Dependencies
 - dependencies for building flame library:
 
    - flex and bison
+
 
 - modern python3
 
@@ -52,7 +55,7 @@ First clone the repository using
 
 .. code:: shell
 
-   git clone https://github.com/jbengtsson/thor-scsi-lib.git
+   git clone https://github.com/hz-b/thor-scsi-lib.git
 
 
 change to the directory (persumably) `thor-scsi-lib`.
@@ -61,18 +64,16 @@ Then initialise submodules using the following command
 
 .. code:: shell
 
-   git submodule update --init --recursive
-
-*NB*: this command currently will pull a subrepository (`cmake4epics`).
-This repository currently does not support (llvm/clang). Thus build on
-MAC currently fails. A fix is currently worked on.
-
+   git submodule update --init
 
 
 Getting ready to build
 ----------------------
 
-create a directory "build"
+Please install first gtpsa-cpp. Have a look to the installation
+instructions provided there.
+
+Create a directory "build"
 
 .. code:: shell
 
@@ -144,20 +145,6 @@ python install procedure.
 Before you can use this script, you need to build the c++ library and install it
  to some path (called `/path/to/install/to` above).
 
-Directories with python modules
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Two python modules are provided
-
-* gtpsa: directory src/gtpsa/python
-* thor_scsi: directory python/
-
-Recommandation is to first build gtpsa and then thor scsi.
-The description below refers to both of them. Both directories are 
-refered to as `python` directory below.
-
-Installation instruction for one of the packages
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The process of building the python package depends on the C++ headers and libraries.
 Thus it needs to know where these are installed. The process described below will
