@@ -89,4 +89,7 @@ jobs:
         sudo apt-get install python3-pandas python3-scipy python3-xarray
 
     - name : thor-scsi-lib test python package
-      run: pytest-3 python
+      # consider removing tests ....
+      # so more tests will be run
+      # bba_test needs scikit-learn ... don't want to blow that image
+      run: pytest-3 python/tests/
