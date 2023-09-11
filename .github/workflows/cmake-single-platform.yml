@@ -43,8 +43,8 @@ jobs:
          sudo apt install g++ gfortran cmake make bison flex libarmadillo-dev
          # deliberatly only installing a subset of boost
          sudo apt install  libboost-chrono-dev libboost-thread-dev libboost-filesystem-dev libboost-program-options-dev libboost-regex-dev libboost-test-dev
-         # for building the python interface ... hopefully python3-xarray is not needed this rather heavy
-         sudo apt install pybind11-dev python3-pytest python3-pip python3-pybind11 # python3-xarray
+         # for building the python interface ... hopefully python3-xarray is not needed this is rather heavy
+         sudo apt install pybind11-dev python3-pytest python3-pip python3-pybind11
 
     - name: Configure cmake for gtpsa-cpp
       run: cmake gtpsa-cpp -B ${{github.workspace}}/gtpsa-cpp/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
@@ -81,6 +81,12 @@ jobs:
 
     - name : thor-scsi-lib build and install python package
       run: gtpsa_PREFIX=/usr/local thor_scsi_PREFIX=/usr/local pip3 install -v ./python/
+
+    - name: install apt test dependencies
+      run: |
+        # xarray are heavy packages ... deliberatley only installed here
+        # as required for the tests
+        apt install python3-pandas python3-scipy python3-xarray
 
     - name : thor-scsi-lib test python package
       run: pytest-3 python

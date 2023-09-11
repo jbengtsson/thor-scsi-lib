@@ -1,2 +1,4 @@
 # Using PyBind11Extension
 pybind11>=2.6.0
+gtpsa
+pandas

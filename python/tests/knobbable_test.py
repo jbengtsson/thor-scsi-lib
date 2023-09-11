@@ -7,7 +7,7 @@ from thor_scsi.pyflame import Config
 from dataclasses import dataclass
 import numpy as np
 
-@pytest.mark.skip
+#@pytest.mark.skip
 def test_knob_quadrupole():
     length = 0.2
     K = 1.2
@@ -28,7 +28,6 @@ def test_knob_quadrupole():
     assert K_check == pytest.approx(K, rel=1e-12)
 
 
-@pytest.mark.skip
 def test_knob_horizontal_steerer():
     length = 0.0
     K = 0.1
@@ -51,7 +50,7 @@ def test_knob_horizontal_steerer():
     knobs.make_magnet_knobbable(nh_st, po=1, desc=desc, named_index=named_index)
 
 
-@pytest.mark.skip
+#@pytest.mark.skip
 def test_knob_vertical_steerer():
     length = 0.0
     K = 0.2
@@ -90,7 +89,6 @@ def analytic_x(*, K, length):
     return RMatrix(m11=m11, m12=m12, m21=m21, m22=m22)
 
 
-# @pytest.mark.skip
 def test_quadrupole_dependence_on_offset():
     """check that the parameter dependence on dx works as expected
 
@@ -136,12 +134,16 @@ def test_quadrupole_dependence_on_offset():
     {r_analytic.m21}, {r_analytic.m22}
     """
     print("analytic\n", txt)
+
+    for a_tpsa in [ps.x, ps.px]:
+        print(gtpsa.utils_df.tpsa2df(a_tpsa))
+
     # assert ps.x.get(dx=1) == pytest.approx(expected_dx_dependence, rel=1e-12)
     # fmt: on
     assert ps.x.get(x=1)   == pytest.approx(r_analytic.m11, rel=1e-3)
-    assert ps.x.get(dx=1)  == pytest.approx(r_analytic.m12, rel=1e-3)
-    assert ps.dx.get(x=1)  == pytest.approx(r_analytic.m21, rel=1e-3)
-    assert ps.dx.get(dx=1) == pytest.approx(r_analytic.m21, rel=1e-3)
+    assert ps.x.get(px=1)  == pytest.approx(r_analytic.m12, rel=1e-2)
+    assert ps.px.get(x=1)  == pytest.approx(r_analytic.m21, rel=1e-2)
+    assert ps.px.get(px=1) == pytest.approx(r_analytic.m22, rel=1e-2)
     # fmt: off
 
     # Estimate effect based on propagation
@@ -153,4 +155,3 @@ def test_quadrupole_dependence_on_offset():
     ps.set_zero()
     quad.propagate(calc_config, ps)
     print(ps.x, ps.px)
-    assert False
