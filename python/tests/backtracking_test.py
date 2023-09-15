@@ -17,6 +17,11 @@ path = (
     / "lattices/b2_stduser_beamports_blm_tracy_corr.lat"
 )
 
+path = (
+    Path(os.path.dirname(__file__))
+    / "lattices"
+    / "b2_stduser_beamports_blm_tracy_corr.lat"
+)
 
 def create_acc():
     return accelerator_from_config(path)

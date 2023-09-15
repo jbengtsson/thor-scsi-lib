@@ -6,9 +6,571 @@ dP = 1e-8; CODeps = 1e-14;
 
 Meth = 4; Nbend = 10; Nquad = 10; Nsext = 2;
 Ncorr = 1;
-sxt_scl = 2.0;
 
 pi = 4.0*arctan(1.0); c0 = 2.99792458e8;
+
+#------------------------------------------------------------------------------
+# Sextupole strenghes derived from power converter settings and
+# transfer functions for standard optics
+
+# scale all sextupole values if required.
+# Use case here: I, Pierre, assume that the  sextupole values given here are
+# the ones used for Elegant:
+#       I assume Elegant scales  all multipoles by 1/n!. Tracy uses a multipole
+#       expansion with the cofficients of dimension [T/m^(n-1)],
+#       with n = 1 (dipole), 2, 3
+scl_sxt = 1e0/2e0;
+
+# For info: Johan scaled the values which were obtained from the power
+# converter and a known C3 = t_f * I
+# to obtain Michael' values. Left here in place for documentation
+# purposes
+# scale focusing sextupoles
+scl_sf = 0.73;
+# scale defocusing sextupoles
+scl_sd = 0.957;
+
+# Support for adjusting a total family ...
+# not so much necessary for s1 but for s2, s3 and s4
+adjust_s1 = 1.0;
+adjust_s2 = 1.0;
+
+adjust_s3 = 1.0;
+adjust_s4 = 1.0;
+
+
+# Family 1
+# all sextupole 1 are all on the same line
+# s1pr_k2  = 67.93881599999997;
+# Thx to Michael
+# S1: KSEXT, L=0.105, K2=53.71159807
+s1pr_k2    =  53.71159807 * scl_sxt * adjust_s1;
+
+
+
+# Family 2: sd
+# s2 sextupoles are split up in the D and P family
+# Thx to Michael S2: KSEXT, L=0.16, K2=-44.96887307
+s2pdr_k2   = -44.96887307 * scl_sxt * adjust_s2;
+s2ptr_k2   = -44.96887307 * scl_sxt * adjust_s2;
+
+
+
+# Family 3
+# Some S3 and S4 sextupoles are powered separately: see below
+# Doublets
+# Thx to Michael
+# S3D: KSEXT, L=0.16, K2=-42.735
+s3pdr_k2   = - 42.735 * scl_sxt * adjust_s3;
+# Doublets: in injection straight:  sextupoles powered separately
+# S3D1: KSEXT, L=0.16, K2=-39.96
+s3pd1r_k2  = - 39.96 * scl_sxt * adjust_s3;
+
+# Tripletts
+# S3T: KSEXT, L=0.16, K2=-43.8795
+s3ptr_k2   =  - 43.8795 * scl_sxt * adjust_s3;
+# Sextupoles are singled powered in straight 6
+# S3P1T6: KSEXT, L=0.16, K2=-43.8795
+s3p1t6r_k2 =  - 43.8795  * scl_sxt * adjust_s3;
+# S3P2T6: KSEXT, L=0.16, K2=-43.8795
+s3p2t6r_k2 =  - 43.8795  * scl_sxt * adjust_s3;
+
+# Family 4
+
+# Dp
+# S4D: KSEXT, L=0.16, K2=38.2185
+s4pdr_k2   = 38.2185  * scl_sxt * adjust_s4;
+# In injection straight:  sextupoles powered separately
+# S4D1: KSEXT, L=0.16, K2=27.0435
+s4pd1r_k2  = 27.0435  * scl_sxt * adjust_s4;
+
+# S4T: KSEXT, L=0.16, K2=55.0
+s4ptr_k2   = 55.0  * scl_sxt * adjust_s4;
+
+# S4P1T6: KSEXT, L=0.16, K2=41.25
+s4p1t6r_k2 = 41.25 * scl_sxt * adjust_s4;
+# S4P2T6: KSEXT, L=0.16, K2=41.25
+s4p2t6r_k2 = 41.25 * scl_sxt * adjust_s4;
+
+#----------------------------------------
+# Sextupoles
+
+# Family 1 ... all sextupoles connected to a single power converter
+# Doublett straights
+
+ s1md1rl : Sextupole,         L = 0.105 , K = s1pr_k2,  N = Nsext, Method = 4;
+hs1md1r  : HorizontalSteerer, L = 0.0   ,               N = Ncorr            ;
+ s1md1rr : Sextupole,         L = 0.105 , K = s1pr_k2,  N = Nsext, Method = 4;
+
+ s1md2rl : Sextupole,         L = 0.105 , K = s1pr_k2,  N = Nsext, Method = 4;
+hs1md2r  : HorizontalSteerer, L = 0.0   ,               N = Ncorr            ;
+ s1md2rr : Sextupole,         L = 0.105 , K = s1pr_k2,  N = Nsext, Method = 4;
+
+ s1md3rl : Sextupole,         L = 0.105 , K = s1pr_k2,  N = Nsext, Method = 4;
+hs1md3r  : HorizontalSteerer, L = 0.0   ,               N = Ncorr            ;
+ s1md3rr : Sextupole,         L = 0.105 , K = s1pr_k2,  N = Nsext, Method = 4;
+
+ s1md4rl : Sextupole,         L = 0.105 , K = s1pr_k2,  N = Nsext, Method = 4;
+hs1md4r  : HorizontalSteerer, L = 0.0   ,               N = Ncorr            ;
+ s1md4rr : Sextupole,         L = 0.105 , K = s1pr_k2,  N = Nsext, Method = 4;
+
+ s1md5rl : Sextupole,         L = 0.105 , K = s1pr_k2,  N = Nsext, Method = 4;
+hs1md5r  : HorizontalSteerer, L = 0.0   ,               N = Ncorr            ;
+ s1md5rr : Sextupole,         L = 0.105 , K = s1pr_k2,  N = Nsext, Method = 4;
+
+ s1md6rl : Sextupole,         L = 0.105 , K = s1pr_k2,  N = Nsext, Method = 4;
+hs1md6r  : HorizontalSteerer, L = 0.0   ,               N = Ncorr            ;
+ s1md6rr : Sextupole,         L = 0.105 , K = s1pr_k2,  N = Nsext, Method = 4;
+
+ s1md7rl : Sextupole,         L = 0.105 , K = s1pr_k2,  N = Nsext, Method = 4;
+hs1md7r  : HorizontalSteerer, L = 0.0   ,               N = Ncorr            ;
+ s1md7rr : Sextupole,         L = 0.105 , K = s1pr_k2,  N = Nsext, Method = 4;
+
+ s1md8rl : Sextupole,         L = 0.105 , K = s1pr_k2,  N = Nsext, Method = 4;
+hs1md8r  : HorizontalSteerer, L = 0.0   ,               N = Ncorr            ;
+ s1md8rr : Sextupole,         L = 0.105 , K = s1pr_k2,  N = Nsext, Method = 4;
+
+
+# Triplets straights
+ s1mt1rl : Sextupole,         L = 0.105 , K = s1pr_k2,  N = Nsext, Method = 4;
+hs1mt1r  : HorizontalSteerer, L = 0.0   ,               N = Ncorr            ;
+ s1mt1rr : Sextupole,         L = 0.105 , K = s1pr_k2,  N = Nsext, Method = 4;
+
+ s1mt2rl : Sextupole,         L = 0.105 , K = s1pr_k2,  N = Nsext, Method = 4;
+hs1mt2r  : HorizontalSteerer, L = 0.0   ,               N = Ncorr            ;
+ s1mt2rr : Sextupole,         L = 0.105 , K = s1pr_k2,  N = Nsext, Method = 4;
+
+ s1mt3rl : Sextupole,         L = 0.105 , K = s1pr_k2,  N = Nsext, Method = 4;
+hs1mt3r  : HorizontalSteerer, L = 0.0   ,               N = Ncorr            ;
+ s1mt3rr : Sextupole,         L = 0.105 , K = s1pr_k2,  N = Nsext, Method = 4;
+
+ s1mt4rl : Sextupole,         L = 0.105 , K = s1pr_k2,  N = Nsext, Method = 4;
+hs1mt4r  : HorizontalSteerer, L = 0.0   ,               N = Ncorr            ;
+ s1mt4rr : Sextupole,         L = 0.105 , K = s1pr_k2,  N = Nsext, Method = 4;
+
+ s1mt5rl : Sextupole,         L = 0.105 , K = s1pr_k2,  N = Nsext, Method = 4;
+hs1mt5r  : HorizontalSteerer, L = 0.0   ,               N = Ncorr            ;
+ s1mt5rr : Sextupole,         L = 0.105 , K = s1pr_k2,  N = Nsext, Method = 4;
+
+ s1mt6rl : Sextupole,         L = 0.105 , K = s1pr_k2,  N = Nsext, Method = 4;
+hs1mt6r  : HorizontalSteerer, L = 0.0   ,               N = Ncorr            ;
+ s1mt6rr : Sextupole,         L = 0.105 , K = s1pr_k2,  N = Nsext, Method = 4;
+
+ s1mt7rl : Sextupole,         L = 0.105 , K = s1pr_k2,  N = Nsext, Method = 4;
+hs1mt7r  : HorizontalSteerer, L = 0.0   ,               N = Ncorr            ;
+ s1mt7rr : Sextupole,         L = 0.105 , K = s1pr_k2,  N = Nsext, Method = 4;
+
+ s1mt8rl : Sextupole,         L = 0.105 , K = s1pr_k2,  N = Nsext, Method = 4;
+hs1mt8r  : HorizontalSteerer, L = 0.0   ,               N = Ncorr            ;
+ s1mt8rr : Sextupole,         L = 0.105 , K = s1pr_k2,  N = Nsext, Method = 4;
+
+
+# Family 2: separate power supplies for doublett and triplett straights
+# Doublett straights
+ s2m1d1rl: Sextupole        , L = 0.08  , K = s2pdr_k2, N = Nsext, Method = 4;
+vs2m1d1r : VerticalSteerer  , L = 0.0   ,               N = Ncorr            ;
+ s2m1d1rr: Sextupole        , L = 0.08  , K = s2pdr_k2, N = Nsext, Method = 4;
+
+ s2m2d1rl: Sextupole        , L = 0.08  , K = s2pdr_k2, N = Nsext, Method = 4;
+vs2m2d1r : VerticalSteerer ,  L = 0.0   ,               N = Ncorr            ;
+ s2m2d1rr: Sextupole        , L = 0.08  , K = s2pdr_k2, N = Nsext, Method = 4;
+
+ s2m1d2rl: Sextupole        , L = 0.08  , K = s2pdr_k2, N = Nsext, Method = 4;
+vs2m1d2r : VerticalSteerer  , L = 0.0   ,               N = Ncorr            ;
+ s2m1d2rr: Sextupole        , L = 0.08  , K = s2pdr_k2, N = Nsext, Method = 4;
+
+ s2m2d2rl: Sextupole        , L = 0.08  , K = s2pdr_k2, N = Nsext, Method = 4;
+vs2m2d2r : VerticalSteerer  , L = 0.0   ,               N = Ncorr           ;
+ s2m2d2rr: Sextupole        , L = 0.08  , K = s2pdr_k2, N = Nsext, Method = 4;
+
+ s2m1d3rl: Sextupole        , L = 0.08  , K = s2pdr_k2, N = Nsext, Method = 4;
+vs2m1d3r : VerticalSteerer  , L = 0.0   ,               N = Ncorr            ;
+ s2m1d3rr: Sextupole        , L = 0.08  , K = s2pdr_k2, N = Nsext, Method = 4;
+
+ s2m2d3rl: Sextupole        , L = 0.08  , K = s2pdr_k2, N = Nsext, Method = 4;
+vs2m2d3r : VerticalSteerer  , L = 0.0   ,               N = Ncorr            ;
+ s2m2d3rr: Sextupole        , L = 0.08  , K = s2pdr_k2, N = Nsext, Method = 4;
+
+ s2m1d4rl: Sextupole        , L = 0.08  , K = s2pdr_k2, N = Nsext, Method = 4;
+vs2m1d4r : VerticalSteerer  , L = 0.0   ,               N = Ncorr            ;
+ s2m1d4rr: Sextupole        , L = 0.08  , K = s2pdr_k2, N = Nsext, Method = 4;
+
+ s2m2d4rl: Sextupole        , L = 0.08  , K = s2pdr_k2, N = Nsext, Method = 4;
+vs2m2d4r : VerticalSteerer  , L = 0.0   ,               N = Ncorr            ;
+ s2m2d4rr: Sextupole        , L = 0.08  , K = s2pdr_k2, N = Nsext, Method = 4;
+
+ s2m1d5rl: Sextupole        , L = 0.08  , K = s2pdr_k2, N = Nsext, Method = 4;
+vs2m1d5r : VerticalSteerer  , L = 0.0   ,               N = Ncorr            ;
+ s2m1d5rr: Sextupole        , L = 0.08  , K = s2pdr_k2, N = Nsext, Method = 4;
+
+ s2m2d5rl: Sextupole        , L = 0.08  , K = s2pdr_k2, N = Nsext, Method = 4;
+vs2m2d5r : VerticalSteerer  , L = 0.0   ,               N = Ncorr             ;
+ s2m2d5rr: Sextupole        , L = 0.08  , K = s2pdr_k2, N = Nsext, Method = 4;
+
+ s2m1d6rl: Sextupole        , L = 0.08  , K = s2pdr_k2, N = Nsext, Method = 4;
+vs2m1d6r : VerticalSteerer  , L = 0.0   ,               N = Ncorr             ;
+ s2m1d6rr: Sextupole        , L = 0.08  , K = s2pdr_k2, N = Nsext, Method = 4;
+
+ s2m2d6rl: Sextupole        , L = 0.08  , K = s2pdr_k2, N = Nsext, Method = 4;
+vs2m2d6r : VerticalSteerer  , L = 0.0   ,               N = Ncorr             ;
+ s2m2d6rr: Sextupole        , L = 0.08  , K = s2pdr_k2, N = Nsext, Method = 4;
+
+ s2m1d7rl: Sextupole        , L = 0.08  , K = s2pdr_k2, N = Nsext, Method = 4;
+vs2m1d7r : VerticalSteerer  , L = 0.0   ,               N = Ncorr            ;
+ s2m1d7rr: Sextupole        , L = 0.08  , K = s2pdr_k2, N = Nsext, Method = 4;
+
+ s2m2d7rl: Sextupole        , L = 0.08  , K = s2pdr_k2, N = Nsext, Method = 4;
+vs2m2d7r : VerticalSteerer  , L = 0.0   ,               N = Ncorr            ;
+ s2m2d7rr: Sextupole        , L = 0.08  , K = s2pdr_k2, N = Nsext, Method = 4;
+
+ s2m1d8rl: Sextupole        , L = 0.08  , K = s2pdr_k2, N = Nsext, Method = 4;
+vs2m1d8r : VerticalSteerer  , L = 0.0   ,               N = Ncorr            ;
+ s2m1d8rr: Sextupole        , L = 0.08  , K = s2pdr_k2, N = Nsext, Method = 4;
+
+ s2m2d8rl: Sextupole        , L = 0.08  , K = s2pdr_k2, N = Nsext, Method = 4;
+vs2m2d8r : VerticalSteerer  , L = 0.0   ,               N = Ncorr            ;
+ s2m2d8rr: Sextupole        , L = 0.08  , K = s2pdr_k2, N = Nsext, Method = 4;
+
+# Triplett straights
+
+ s2m1t1rl: Sextupole        , L = 0.08  , K = s2ptr_k2, N = Nsext, Method = 4;
+vs2m1t1r : VerticalSteerer  , L = 0.0   ,               N = Ncorr            ;
+ s2m1t1rr: Sextupole        , L = 0.08  , K = s2ptr_k2, N = Nsext, Method = 4;
+
+ s2m2t1rl: Sextupole        , L = 0.08  , K = s2ptr_k2, N = Nsext, Method = 4;
+vs2m2t1r : VerticalSteerer  , L = 0.0   ,               N = Ncorr;
+ s2m2t1rr: Sextupole        , L = 0.08  , K = s2ptr_k2, N = Nsext, Method = 4;
+
+ s2m1t2rl: Sextupole        , L = 0.08  , K = s2ptr_k2, N = Nsext, Method = 4;
+vs2m1t2r : VerticalSteerer  , L = 0.0   ,               N = Ncorr            ;
+ s2m1t2rr: Sextupole        , L = 0.08  , K = s2ptr_k2, N = Nsext, Method = 4;
+
+ s2m2t2rl: Sextupole        , L = 0.08  , K = s2ptr_k2, N = Nsext, Method = 4;
+vs2m2t2r : VerticalSteerer  , L = 0.0   ,               N = Ncorr            ;
+ s2m2t2rr: Sextupole        , L = 0.08  , K = s2ptr_k2, N = Nsext, Method = 4;
+
+ s2m1t3rl: Sextupole        , L = 0.08  , K = s2ptr_k2, N = Nsext, Method = 4;
+vs2m1t3r : VerticalSteerer  , L = 0.0   ,               N = Ncorr            ;
+ s2m1t3rr: Sextupole        , L = 0.08  , K = s2ptr_k2, N = Nsext, Method = 4;
+
+ s2m2t3rl: Sextupole        , L = 0.08  , K = s2ptr_k2, N = Nsext, Method = 4;
+vs2m2t3r : VerticalSteerer  , L = 0.0   ,               N = Ncorr            ;
+ s2m2t3rr: Sextupole        , L = 0.08  , K = s2ptr_k2, N = Nsext, Method = 4;
+
+ s2m1t4rl: Sextupole        , L = 0.08  , K = s2ptr_k2, N = Nsext, Method = 4;
+vs2m1t4r : VerticalSteerer  , L = 0.0   ,               N = Ncorr            ;
+ s2m1t4rr: Sextupole        , L = 0.08  , K = s2ptr_k2, N = Nsext, Method = 4;
+
+ s2m2t4rl: Sextupole        , L = 0.08  , K = s2ptr_k2, N = Nsext, Method = 4;
+vs2m2t4r : VerticalSteerer  , L = 0.0   ,               N = Ncorr            ;
+ s2m2t4rr: Sextupole        , L = 0.08  , K = s2ptr_k2, N = Nsext, Method = 4;
+
+ s2m1t5rl: Sextupole        , L = 0.08  , K = s2ptr_k2, N = Nsext, Method = 4;
+vs2m1t5r : VerticalSteerer  , L = 0.0   ,               N = Ncorr             ;
+ s2m1t5rr: Sextupole        , L = 0.08  , K = s2ptr_k2, N = Nsext, Method = 4;
+
+ s2m2t5rl: Sextupole        , L = 0.08  , K = s2ptr_k2, N = Nsext, Method = 4;
+vs2m2t5r : VerticalSteerer  , L = 0.0   ,               N = Ncorr             ;
+ s2m2t5rr: Sextupole        , L = 0.08  , K = s2ptr_k2, N = Nsext, Method = 4;
+
+ s2m1t6rl: Sextupole        , L = 0.08  , K = s2ptr_k2, N = Nsext, Method = 4;
+vs2m1t6r : VerticalSteerer  , L = 0.0   ,               N = Ncorr             ;
+ s2m1t6rr: Sextupole        , L = 0.08  , K = s2ptr_k2, N = Nsext, Method = 4;
+
+ s2m2t6rl: Sextupole        , L = 0.08  , K = s2ptr_k2, N = Nsext, Method = 4;
+vs2m2t6r : VerticalSteerer  , L = 0.0   ,               N = Ncorr             ;
+ s2m2t6rr: Sextupole        , L = 0.08  , K = s2ptr_k2, N = Nsext, Method = 4;
+
+ s2m1t7rl: Sextupole        , L = 0.08  , K = s2ptr_k2, N = Nsext, Method = 4;
+vs2m1t7r : VerticalSteerer  , L = 0.0   ,               N = Ncorr            ;
+ s2m1t7rr: Sextupole        , L = 0.08  , K = s2ptr_k2, N = Nsext, Method = 4;
+
+ s2m2t7rl: Sextupole        , L = 0.08  , K = s2ptr_k2, N = Nsext, Method = 4;
+vs2m2t7r : VerticalSteerer  , L = 0.0   ,               N = Ncorr            ;
+ s2m2t7rr: Sextupole        , L = 0.08  , K = s2ptr_k2, N = Nsext, Method = 4;
+
+ s2m1t8rl: Sextupole        , L = 0.08  , K = s2ptr_k2, N = Nsext, Method = 4;
+vs2m1t8r : VerticalSteerer  , L = 0.0   ,               N = Ncorr            ;
+ s2m1t8rr: Sextupole        , L = 0.08  , K = s2ptr_k2, N = Nsext, Method = 4;
+
+ s2m2t8rl: Sextupole        , L = 0.08  , K = s2ptr_k2, N = Nsext, Method = 4;
+vs2m2t8r : VerticalSteerer  , L = 0.0   ,               N = Ncorr            ;
+ s2m2t8rr: Sextupole        , L = 0.08  , K = s2ptr_k2, N = Nsext, Method = 4;
+
+# Family 3
+
+# Doublet  straights: sextupoles in injection straight powered separately
+ s3m1d2rl: Sextupole        , L = 0.08  , K = s3pdr_k2, N = Nsext, Method = 4;
+vs3m1d2r : VerticalSteerer  , L = 0.0   ,               N = Ncorr            ;
+ s3m1d2rr: Sextupole        , L = 0.08  , K = s3pdr_k2, N = Nsext, Method = 4;
+
+ s3m2d2rl: Sextupole        , L = 0.08  , K = s3pdr_k2, N = Nsext, Method = 4;
+vs3m2d2r : VerticalSteerer  , L = 0.0   ,               N = Ncorr            ;
+ s3m2d2rr: Sextupole        , L = 0.08  , K = s3pdr_k2, N = Nsext, Method = 4;
+
+ s3m1d3rl: Sextupole        , L = 0.08  , K = s3pdr_k2, N = Nsext, Method = 4;
+vs3m1d3r : VerticalSteerer  , L = 0.0   ,               N = Ncorr            ;
+ s3m1d3rr: Sextupole        , L = 0.08  , K = s3pdr_k2, N = Nsext, Method = 4;
+
+ s3m2d3rl: Sextupole        , L = 0.08  , K = s3pdr_k2, N = Nsext, Method = 4;
+vs3m2d3r : VerticalSteerer  , L = 0.0   ,               N = Ncorr            ;
+ s3m2d3rr: Sextupole        , L = 0.08  , K = s3pdr_k2, N = Nsext, Method = 4;
+
+ s3m1d4rl: Sextupole        , L = 0.08  , K = s3pdr_k2, N = Nsext, Method = 4;
+vs3m1d4r : VerticalSteerer  , L = 0.0   ,               N = Ncorr            ;
+ s3m1d4rr: Sextupole        , L = 0.08  , K = s3pdr_k2, N = Nsext, Method = 4;
+
+ s3m2d4rl: Sextupole        , L = 0.08  , K = s3pdr_k2, N = Nsext, Method = 4;
+vs3m2d4r : VerticalSteerer  , L = 0.0   ,               N = Ncorr            ;
+ s3m2d4rr: Sextupole        , L = 0.08  , K = s3pdr_k2, N = Nsext, Method = 4;
+
+ s3m1d5rl: Sextupole        , L = 0.08  , K = s3pdr_k2, N = Nsext, Method = 4;
+vs3m1d5r : VerticalSteerer  , L = 0.0   ,               N = Ncorr            ;
+ s3m1d5rr: Sextupole        , L = 0.08  , K = s3pdr_k2, N = Nsext, Method = 4;
+
+ s3m2d5rl: Sextupole        , L = 0.08  , K = s3pdr_k2, N = Nsext, Method = 4;
+vs3m2d5r : VerticalSteerer  , L = 0.0   ,               N = Ncorr            ;
+ s3m2d5rr: Sextupole        , L = 0.08  , K = s3pdr_k2, N = Nsext, Method = 4;
+
+ s3m1d6rl: Sextupole        , L = 0.08  , K = s3pdr_k2, N = Nsext, Method = 4;
+vs3m1d6r : VerticalSteerer  , L = 0.0   ,               N = Ncorr            ;
+ s3m1d6rr: Sextupole        , L = 0.08  , K = s3pdr_k2, N = Nsext, Method = 4;
+
+ s3m2d6rl: Sextupole        , L = 0.08  , K = s3pdr_k2, N = Nsext, Method = 4;
+vs3m2d6r : VerticalSteerer  , L = 0.0   ,               N = Ncorr            ;
+ s3m2d6rr: Sextupole        , L = 0.08  , K = s3pdr_k2, N = Nsext, Method = 4;
+
+ s3m1d7rl: Sextupole        , L = 0.08  , K = s3pdr_k2, N = Nsext, Method = 4;
+vs3m1d7r : VerticalSteerer  , L = 0.0   ,               N = Ncorr            ;
+ s3m1d7rr: Sextupole        , L = 0.08  , K = s3pdr_k2, N = Nsext, Method = 4;
+
+ s3m2d7rl: Sextupole        , L = 0.08  , K = s3pdr_k2, N = Nsext, Method = 4;
+vs3m2d7r : VerticalSteerer  , L = 0.0   ,               N = Ncorr            ;
+ s3m2d7rr: Sextupole        , L = 0.08  , K = s3pdr_k2, N = Nsext, Method = 4;
+
+ s3m1d8rl: Sextupole        , L = 0.08  , K = s3pdr_k2, N = Nsext, Method = 4;
+vs3m1d8r : VerticalSteerer  , L = 0.0   ,               N = Ncorr            ;
+ s3m1d8rr: Sextupole        , L = 0.08  , K = s3pdr_k2, N = Nsext, Method = 4;
+
+ s3m2d8rl: Sextupole        , L = 0.08  , K = s3pdr_k2, N = Nsext, Method = 4;
+vs3m2d8r : VerticalSteerer  , L = 0.0   ,               N = Ncorr            ;
+ s3m2d8rr: Sextupole        , L = 0.08  , K = s3pdr_k2, N = Nsext, Method = 4;
+
+
+# Injection straight magnets ... separate control on these
+ s3m1d1rl: Sextupole        , L = 0.08  , K = s3pd1r_k2, N = Nsext, Method = 4;
+vs3m1d1r : VerticalSteerer  , L = 0.0   ,                N = Ncorr            ;
+ s3m1d1rr: Sextupole        , L = 0.08  , K = s3pd1r_k2, N = Nsext, Method = 4;
+
+ s3m2d1rl: Sextupole        , L = 0.08  , K = s3pd1r_k2, N = Nsext, Method = 4;
+vs3m2d1r : VerticalSteerer  , L = 0.0   ,                N = Ncorr            ;
+ s3m2d1rr: Sextupole        , L = 0.08  , K = s3pd1r_k2, N = Nsext, Method = 4;
+
+
+
+# Triplett straights
+ s3m1t1rl: Sextupole        , L = 0.08  , K = s3ptr_k2, N = Nsext, Method = 4;
+vs3m1t1r : VerticalSteerer  , L = 0.0   ,               N = Ncorr            ;
+ s3m1t1rr: Sextupole        , L = 0.08  , K = s3ptr_k2, N = Nsext, Method = 4;
+
+ s3m2t1rl: Sextupole        , L = 0.08  , K = s3ptr_k2, N = Nsext, Method = 4;
+vs3m2t1r : VerticalSteerer  , L = 0.0   ,               N = Ncorr            ;
+ s3m2t1rr: Sextupole        , L = 0.08  , K = s3ptr_k2, N = Nsext, Method = 4;
+
+ s3m1t2rl: Sextupole        , L = 0.08  , K = s3ptr_k2, N = Nsext, Method = 4;
+vs3m1t2r : VerticalSteerer  , L = 0.0   ,               N = Ncorr            ;
+ s3m1t2rr: Sextupole        , L = 0.08  , K = s3ptr_k2, N = Nsext, Method = 4;
+
+ s3m2t2rl: Sextupole        , L = 0.08  , K = s3ptr_k2, N = Nsext, Method = 4;
+vs3m2t2r : VerticalSteerer  , L = 0.0   ,               N = Ncorr            ;
+ s3m2t2rr: Sextupole        , L = 0.08  , K = s3ptr_k2, N = Nsext, Method = 4;
+
+ s3m1t3rl: Sextupole        , L = 0.08  , K = s3ptr_k2, N = Nsext, Method = 4;
+vs3m1t3r : VerticalSteerer  , L = 0.0   ,                       N = Ncorr            ;
+ s3m1t3rr: Sextupole        , L = 0.08  , K = s3ptr_k2, N = Nsext, Method = 4;
+
+ s3m2t3rl: Sextupole        , L = 0.08  , K = s3ptr_k2, N = Nsext, Method = 4;
+vs3m2t3r : VerticalSteerer  , L = 0.0   ,               N = Ncorr            ;
+ s3m2t3rr: Sextupole        , L = 0.08  , K = s3ptr_k2, N = Nsext, Method = 4;
+
+ s3m1t4rl: Sextupole        , L = 0.08  , K = s3ptr_k2, N = Nsext, Method = 4;
+vs3m1t4r : VerticalSteerer  , L = 0.0   ,               N = Ncorr            ;
+ s3m1t4rr: Sextupole        , L = 0.08  , K = s3ptr_k2, N = Nsext, Method = 4;
+
+ s3m2t4rl: Sextupole        , L = 0.08  , K = s3ptr_k2, N = Nsext, Method = 4;
+vs3m2t4r : VerticalSteerer  , L = 0.0   ,               N = Ncorr            ;
+ s3m2t4rr: Sextupole        , L = 0.08  , K = s3ptr_k2, N = Nsext, Method = 4;
+
+ s3m1t5rl: Sextupole        , L = 0.08  , K = s3ptr_k2, N = Nsext, Method = 4;
+vs3m1t5r : VerticalSteerer  , L = 0.0   ,               N = Ncorr            ;
+ s3m1t5rr: Sextupole        , L = 0.08  , K = s3ptr_k2, N = Nsext, Method = 4;
+
+ s3m2t5rl: Sextupole        , L = 0.08  , K = s3ptr_k2, N = Nsext, Method = 4;
+vs3m2t5r : VerticalSteerer  , L = 0.0   ,               N = Ncorr            ;
+ s3m2t5rr: Sextupole        , L = 0.08  , K = s3ptr_k2, N = Nsext, Method = 4;
+
+ s3m1t7rl: Sextupole        , L = 0.08  , K = s3ptr_k2, N = Nsext, Method = 4;
+vs3m1t7r : VerticalSteerer  , L = 0.0   ,               N = Ncorr            ;
+ s3m1t7rr: Sextupole        , L = 0.08  , K = s3ptr_k2, N = Nsext, Method = 4;
+
+ s3m2t7rl: Sextupole        , L = 0.08  , K = s3ptr_k2, N = Nsext, Method = 4;
+vs3m2t7r : VerticalSteerer  , L = 0.0   ,               N = Ncorr            ;
+ s3m2t7rr: Sextupole        , L = 0.08  , K = s3ptr_k2, N = Nsext, Method = 4;
+
+ s3m1t8rl: Sextupole        , L = 0.08  , K = s3ptr_k2, N = Nsext, Method = 4;
+vs3m1t8r : VerticalSteerer  , L = 0.0   ,               N = Ncorr            ;
+ s3m1t8rr: Sextupole        , L = 0.08  , K = s3ptr_k2, N = Nsext, Method = 4;
+
+ s3m2t8rl: Sextupole        , L = 0.08  , K = s3ptr_k2, N = Nsext, Method = 4;
+vs3m2t8r : VerticalSteerer  , L = 0.0   ,               N = Ncorr            ;
+ s3m2t8rr: Sextupole        , L = 0.08  , K = s3ptr_k2, N = Nsext, Method = 4;
+
+# Family 3 ... triplett straight: indivudually powered magnest
+ s3m1t6rl: Sextupole        , L = 0.08  ,  K = s3p1t6r_k2, N = Nsext, Method = 4;
+vs3m1t6r : VerticalSteerer  , L = 0.0   ,                  N = Ncorr            ;
+ s3m1t6rr: Sextupole        , L = 0.08  ,  K = s3p1t6r_k2, N = Nsext, Method = 4;
+
+ s3m2t6rl: Sextupole        , L = 0.08  ,  K = s3p2t6r_k2, N = Nsext, Method = 4;
+vs3m2t6r : VerticalSteerer  , L = 0.0   ,                   N = Ncorr            ;
+ s3m2t6rr: Sextupole        , L = 0.08  ,  K = s3p2t6r_k2, N = Nsext, Method = 4;
+
+# Family 4
+# duobulett straights
+ s4m1d2rl: Sextupole        , L = 0.08  ,  K = s4pdr_k2, N = Nsext, Method = 4;
+hs4m1d2r : HorizontalSteerer, L = 0.0   ,                N = Ncorr            ;
+ s4m1d2rr: Sextupole        , L = 0.08  ,  K = s4pdr_k2, N = Nsext, Method = 4;
+
+ s4m2d2rl: Sextupole        , L = 0.08  ,  K = s4pdr_k2, N = Nsext, Method = 4;
+hs4m2d2r : HorizontalSteerer, L = 0.0   ,                N = Ncorr            ;
+ s4m2d2rr: Sextupole        , L = 0.08  ,  K = s4pdr_k2, N = Nsext, Method = 4;
+
+ s4m1d3rl: Sextupole        , L = 0.08  ,  K = s4pdr_k2, N = Nsext, Method = 4;
+hs4m1d3r : HorizontalSteerer, L = 0.0   ,                N = Ncorr            ;
+ s4m1d3rr: Sextupole        , L = 0.08  ,  K = s4pdr_k2, N = Nsext, Method = 4;
+
+ s4m2d3rl: Sextupole        , L = 0.08  ,  K = s4pdr_k2, N = Nsext, Method = 4;
+hs4m2d3r : HorizontalSteerer, L = 0.0   ,                N = Ncorr            ;
+ s4m2d3rr: Sextupole        , L = 0.08  ,  K = s4pdr_k2, N = Nsext, Method = 4;
+
+ s4m1d4rl: Sextupole        , L = 0.08  ,  K = s4pdr_k2, N = Nsext, Method = 4;
+hs4m1d4r : HorizontalSteerer, L = 0.0   ,                N = Ncorr            ;
+ s4m1d4rr: Sextupole        , L = 0.08  ,  K = s4pdr_k2, N = Nsext, Method = 4;
+
+ s4m2d4rl: Sextupole        , L = 0.08  ,  K = s4pdr_k2, N = Nsext, Method = 4;
+hs4m2d4r : HorizontalSteerer, L = 0.0   ,                N = Ncorr            ;
+ s4m2d4rr: Sextupole        , L = 0.08  ,  K = s4pdr_k2, N = Nsext, Method = 4;
+
+ s4m1d6rl: Sextupole        , L = 0.08  ,  K = s4pdr_k2, N = Nsext, Method = 4;
+hs4m1d6r : HorizontalSteerer, L = 0.0   ,                N = Ncorr            ;
+ s4m1d6rr: Sextupole        , L = 0.08  ,  K = s4pdr_k2, N = Nsext, Method = 4;
+
+ s4m2d6rl: Sextupole        , L = 0.08  ,  K = s4pdr_k2, N = Nsext, Method = 4;
+hs4m2d6r : HorizontalSteerer, L = 0.0   ,                N = Ncorr            ;
+ s4m2d6rr: Sextupole        , L = 0.08  ,  K = s4pdr_k2, N = Nsext, Method = 4;
+
+ s4m1d7rl: Sextupole        , L = 0.08  ,  K = s4pdr_k2, N = Nsext, Method = 4;
+hs4m1d7r : HorizontalSteerer, L = 0.0   ,                N = Ncorr            ;
+ s4m1d7rr: Sextupole        , L = 0.08  ,  K = s4pdr_k2, N = Nsext, Method = 4;
+
+ s4m2d7rl: Sextupole        , L = 0.08  ,  K = s4pdr_k2, N = Nsext, Method = 4;
+hs4m2d7r : HorizontalSteerer, L = 0.0   ,                N = Ncorr            ;
+ s4m2d7rr: Sextupole        , L = 0.08  ,  K = s4pdr_k2, N = Nsext, Method = 4;
+
+ s4m1d8rl: Sextupole        , L = 0.08  ,  K = s4pdr_k2, N = Nsext, Method = 4;
+hs4m1d8r : HorizontalSteerer, L = 0.0   ,                N = Ncorr            ;
+ s4m1d8rr: Sextupole        , L = 0.08  ,  K = s4pdr_k2, N = Nsext, Method = 4;
+
+ s4m2d8rl: Sextupole        , L = 0.08  ,  K = s4pdr_k2, N = Nsext, Method = 4;
+hs4m2d8r : HorizontalSteerer, L = 0.0   ,                N = Ncorr            ;
+ s4m2d8rr: Sextupole        , L = 0.08  ,  K = s4pdr_k2, N = Nsext, Method = 4;
+
+# Faomily 4 insertion straight: separate powered sextupoles
+ s4m1d1rl: Sextupole        , L = 0.08  ,  K = s4pd1r_k2, N = Nsext, Method = 4;
+hs4m1d1r : HorizontalSteerer, L = 0.0   ,                 N = Ncorr            ;
+ s4m1d1rr: Sextupole        , L = 0.08  ,  K = s4pd1r_k2, N = Nsext, Method = 4;
+
+ s4m2d1rl: Sextupole        , L = 0.08  ,  K = s4pd1r_k2, N = Nsext, Method = 4;
+hs4m2d1r : HorizontalSteerer, L = 0.0   ,                 N = Ncorr            ;
+ s4m2d1rr: Sextupole        , L = 0.08  ,  K = s4pd1r_k2, N = Nsext, Method = 4;
+
+
+# Family 4 ... triplett straights ... sextupoles in straight 6 powered individually
+
+ s4m1t1rl: Sextupole        , L = 0.08  ,  K = s4ptr_k2, N = Nsext, Method = 4;
+hs4m1t1r : HorizontalSteerer, L = 0.0   ,                N = Ncorr            ;
+ s4m1t1rr: Sextupole        , L = 0.08  ,  K = s4ptr_k2, N = Nsext, Method = 4;
+
+ s4m2t1rl: Sextupole        , L = 0.08  ,  K = s4ptr_k2, N = Nsext, Method = 4;
+hs4m2t1r : HorizontalSteerer, L = 0.0   ,                N = Ncorr            ;
+ s4m2t1rr: Sextupole        , L = 0.08  ,  K = s4ptr_k2, N = Nsext, Method = 4;
+
+ s4m1t2rl: Sextupole        , L = 0.08  ,  K = s4ptr_k2, N = Nsext, Method = 4;
+hs4m1t2r : HorizontalSteerer, L = 0.0   ,                N = Ncorr            ;
+ s4m1t2rr: Sextupole        , L = 0.08  ,  K = s4ptr_k2, N = Nsext, Method = 4;
+
+ s4m2t2rl: Sextupole        , L = 0.08  ,  K = s4ptr_k2, N = Nsext, Method = 4;
+hs4m2t2r : HorizontalSteerer, L = 0.0   ,                N = Ncorr            ;
+ s4m2t2rr: Sextupole        , L = 0.08  ,  K = s4ptr_k2, N = Nsext, Method = 4;
+
+ s4m1t4rl: Sextupole        , L = 0.08  ,  K = s4ptr_k2, N = Nsext, Method = 4;
+hs4m1t4r : HorizontalSteerer, L = 0.0   ,                N = Ncorr            ;
+ s4m1t4rr: Sextupole        , L = 0.08  ,  K = s4ptr_k2, N = Nsext, Method = 4;
+
+ s4m2t4rl: Sextupole        , L = 0.08  ,  K = s4ptr_k2, N = Nsext, Method = 4;
+hs4m2t4r : HorizontalSteerer, L = 0.0   ,                N = Ncorr            ;
+ s4m2t4rr: Sextupole        , L = 0.08  ,  K = s4ptr_k2, N = Nsext, Method = 4;
+
+ s4m1d5rl: Sextupole        , L = 0.08  ,  K = s4pdr_k2, N = Nsext, Method = 4;
+hs4m1d5r : HorizontalSteerer, L = 0.0   ,                N = Ncorr            ;
+ s4m1d5rr: Sextupole        , L = 0.08  ,  K = s4pdr_k2, N = Nsext, Method = 4;
+
+ s4m2d5rl: Sextupole        , L = 0.08  ,  K = s4pdr_k2, N = Nsext, Method = 4;
+hs4m2d5r : HorizontalSteerer, L = 0.0   ,                N = Ncorr            ;
+ s4m2d5rr: Sextupole        , L = 0.08  ,  K = s4pdr_k2, N = Nsext, Method = 4;
+
+ s4m1t3rl: Sextupole        , L = 0.08  ,  K = s4ptr_k2, N = Nsext, Method = 4;
+hs4m1t3r : HorizontalSteerer, L = 0.0   ,                N = Ncorr            ;
+ s4m1t3rr: Sextupole        , L = 0.08  ,  K = s4ptr_k2, N = Nsext, Method = 4;
+
+ s4m2t3rl: Sextupole        , L = 0.08  ,  K = s4ptr_k2, N = Nsext, Method = 4;
+hs4m2t3r : HorizontalSteerer, L = 0.0   ,                N = Ncorr            ;
+ s4m2t3rr: Sextupole        , L = 0.08  ,  K = s4ptr_k2, N = Nsext, Method = 4;
+
+ s4m1t5rl: Sextupole        , L = 0.08  ,  K = s4ptr_k2, N = Nsext, Method = 4;
+hs4m1t5r : HorizontalSteerer, L = 0.0   ,                N = Ncorr            ;
+ s4m1t5rr: Sextupole        , L = 0.08  ,  K = s4ptr_k2, N = Nsext, Method = 4;
+
+ s4m2t5rl: Sextupole        , L = 0.08  ,  K = s4ptr_k2, N = Nsext, Method = 4;
+hs4m2t5r : HorizontalSteerer, L = 0.0   ,                N = Ncorr            ;
+ s4m2t5rr: Sextupole        , L = 0.08  ,  K = s4ptr_k2, N = Nsext, Method = 4;
+
+ s4m1t7rl: Sextupole        , L = 0.08  ,  K = s4ptr_k2, N = Nsext, Method = 4;
+hs4m1t7r : HorizontalSteerer, L = 0.0   ,                N = Ncorr            ;
+ s4m1t7rr: Sextupole        , L = 0.08  ,  K = s4ptr_k2, N = Nsext, Method = 4;
+
+ s4m2t7rl: Sextupole        , L = 0.08  ,  K = s4ptr_k2, N = Nsext, Method = 4;
+hs4m2t7r : HorizontalSteerer, L = 0.0   ,                N = Ncorr            ;
+ s4m2t7rr: Sextupole        , L = 0.08  ,  K = s4ptr_k2, N = Nsext, Method = 4;
+
+ s4m1t8rl: Sextupole        , L = 0.08  ,  K = s4ptr_k2, N = Nsext, Method = 4;
+hs4m1t8r : HorizontalSteerer, L = 0.0   ,                N = Ncorr            ;
+ s4m1t8rr: Sextupole        , L = 0.08  ,  K = s4ptr_k2, N = Nsext, Method = 4;
+
+ s4m2t8rl: Sextupole        , L = 0.08  ,  K = s4ptr_k2, N = Nsext, Method = 4;
+hs4m2t8r : HorizontalSteerer, L = 0.0   ,                N = Ncorr            ;
+ s4m2t8rr: Sextupole        , L = 0.08  ,  K = s4ptr_k2, N = Nsext, Method = 4;
+
+# Family 4 individually powered sextupoles in straight 6tr
+ s4m1t6rl: Sextupole        , L = 0.08  ,  K = s4p1t6r_k2, N = Nsext, Method = 4;
+hs4m1t6r : HorizontalSteerer, L = 0.0   ,                  N = Ncorr            ;
+ s4m1t6rr: Sextupole        , L = 0.08  ,  K = s4p1t6r_k2, N = Nsext, Method = 4;
+
+ s4m2t6rl: Sextupole        , L = 0.08  ,  K = s4p2t6r_k2, N = Nsext, Method = 4;
+hs4m2t6r : HorizontalSteerer, L = 0.0   ,                  N = Ncorr            ;
+ s4m2t6rr: Sextupole        , L = 0.08  ,  K = s4p2t6r_k2, N = Nsext, Method = 4;
+
+
+#------------------------------------------------------------------------------
 
 
 start: Marker;
@@ -22,15 +584,9 @@ bpmz44d1r: Marker;
 db9l2d1r: Drift, L = 0.5485;
 bpmz5d1r: Marker;
 da9l2d1r: Drift, L = 0.07;
-s4m2d1rl: Sextupole, L = 0.08, K = 27.0435/sxt_scl, N = Nsext, Method = 4;
-hs4m2d1r: HorizontalSteerer, L = 0.0, N = Ncorr;
-s4m2d1rr: Sextupole, L = 0.08, K = 27.0435/sxt_scl, N = Nsext, Method = 4;
 d08l2d1r: Drift, L = 0.153;
 q4m2d1r: Quadrupole, L = 0.5, K = 1.40046286, N = Nquad, Method = 4;
 d07l2d1r: Drift, L = 0.153;
-s3m2d1rl: Sextupole, L = 0.08, K = -39.96/sxt_scl, N = Nsext, Method = 4;
-vs3m2d1r: VerticalSteerer, L = 0.0, N = Ncorr;
-s3m2d1rr: Sextupole, L = 0.08, K = -39.96/sxt_scl, N = Nsext, Method = 4;
 db6l2d1r: Drift, L = 0.063;
 bpmz6d1r: BPM;
 da6l2d1r: Drift, L = 0.09;
@@ -48,25 +604,16 @@ q2m2d1r: Quadrupole, L = 0.2, K = -1.8536747, N = Nquad, Method = 4;
 db3l2d1r: Drift, L = 0.244;
 bpmz7d1r: BPM;
 da3l2d1r: Drift, L = 0.063;
-s2m2d1rl: Sextupole, L = 0.08, K = 44.96887307/sxt_scl, N = Nsext, Method = 4;
-vs2m2d1r: VerticalSteerer, L = 0.0, N = Ncorr;
-s2m2d1rr: Sextupole, L = 0.08, K = 44.96887307/sxt_scl, N = Nsext, Method = 4;
 d02l2d1r: Drift, L = 0.28800000000000003;
 q1m2d1r: Quadrupole, L = 0.25, K = 2.44045585, N = Nquad, Method = 4;
 d01l2d1r_1: Drift, L = 0.105;
 blm_s1mt1r: Marker;
 d01l2d1r_2: Drift, L = 0.05500000000000001;
-s1mt1rl: Sextupole, L = 0.105, K = 53.71159807/sxt_scl, N = Nsext, Method = 4;
-hs1mt1r: HorizontalSteerer, L = 0.0, N = Ncorr;
-s1mt1rr: Sextupole, L = 0.105, K = 53.71159807/sxt_scl, N = Nsext, Method = 4;
 da1l1t1r: Drift, L = 0.07;
 bpmz1t1r: BPM;
 db1l1t1r: Drift, L = 0.09;
 q1m1t1r: Quadrupole, L = 0.25, K = 2.44045585, N = Nquad, Method = 4;
 d02l1t1r: Drift, L = 0.28800000000000003;
-s2m1t1rl: Sextupole, L = 0.08, K = 44.96887307/sxt_scl, N = Nsext, Method = 4;
-vs2m1t1r: VerticalSteerer, L = 0.0,  N = Ncorr;
-s2m1t1rr: Sextupole, L = 0.08, K = 44.96887307/sxt_scl, N = Nsext, Method = 4;
 da3l1t1r: Drift, L = 0.128;
 bpmz2t1r: BPM;
 db3l1t1r: Drift, L = 0.179;
@@ -86,15 +633,9 @@ da6l1t1r: Drift, L = 0.09;
 bpmz3t1r: BPM;
 db6l1t1r: Drift, L = 0.063;
 cqs3m1t1: Quadrupole, L = 0.0, K = 0.0, N = Nquad, Method = 4;
-s3m1t1rl: Sextupole, L = 0.08, K = -43.8795/sxt_scl, N = Nsext, Method = 4;
-vs3m1t1r: VerticalSteerer, L = 0.0, N = Ncorr;
-s3m1t1rr: Sextupole, L = 0.08, K = -43.8795/sxt_scl, N = Nsext, Method = 4;
 d07l1t1r: Drift, L = 0.153;
 q4m1t1r: Quadrupole, L = 0.5, K = 2.63205252, N = Nquad, Method = 4;
 d08l1t1r: Drift, L = 0.153;
-s4m1t1rl: Sextupole, L = 0.08, K = 55.0/sxt_scl, N = Nsext, Method = 4;
-hs4m1t1r: HorizontalSteerer, L = 0.0, N = Ncorr;
-s4m1t1rr: Sextupole, L = 0.08, K = 55.0/sxt_scl, N = Nsext, Method = 4;
 d09l1t1r: Drift, L = 0.153;
 q5m1t1r: Quadrupole, L = 0.2, K = -2.52154146, N = Nquad, Method = 4;
 da10l1t1r: Drift, L = 0.092;
@@ -108,16 +649,10 @@ bpmz5t1r: BPM;
 da10l2t1r: Drift, L = 0.092;
 q5m2t1r: Quadrupole, L = 0.2, K = -2.51058167, N = Nquad, Method = 4;
 d09l2t1r: Drift, L = 0.153;
-s4m2t1rl: Sextupole, L = 0.08, K = 55.0/sxt_scl, N = Nsext, Method = 4;
-hs4m2t1r: HorizontalSteerer, L = 0.0, N = Ncorr;
-s4m2t1rr: Sextupole, L = 0.08, K = 55.0/sxt_scl, N = Nsext, Method = 4;
 d08l2t1r: Drift, L = 0.153;
 q4m2t1r: Quadrupole, L = 0.5, K = 2.56505973, N = Nquad, Method = 4;
 d07l2t1r: Drift, L = 0.153;
 cqs3m2t1: Quadrupole, L = 0.0, K = 0.0, N = Nquad, Method = 4;
-s3m2t1rl: Sextupole, L = 0.08, K = -43.8795/sxt_scl, N = Nsext, Method = 4;
-vs3m2t1r: VerticalSteerer, L = 0.0, N = Ncorr;
-s3m2t1rr: Sextupole, L = 0.08, K = -43.8795/sxt_scl, N = Nsext, Method = 4;
 db6l2t1r: Drift, L = 0.063;
 bpmz6t1r: BPM;
 da6l2t1r: Drift, L = 0.09;
@@ -134,17 +669,11 @@ q2m2t1r: Quadrupole, L = 0.2, K = -1.8536747, N = Nquad, Method = 4;
 db3l2t1r: Drift, L = 0.244;
 bpmz7t1r: BPM;
 da3l2t1r: Drift, L = 0.063;
-s2m2t1rl: Sextupole, L = 0.08, K = 44.96887307/sxt_scl, N = Nsext, Method = 4;
-vs2m2t1r: VerticalSteerer, L = 0.0, N = Ncorr;
-s2m2t1rr: Sextupole, L = 0.08, K = 44.96887307/sxt_scl, N = Nsext, Method = 4;
 d02l2t1r: Drift, L = 0.28800000000000003;
 q1m2t1r: Quadrupole, L = 0.25, K = 2.44045585, N = Nquad, Method = 4;
 d01l2t1r_1: Drift, L = 0.085;
 blm_s1md2r: Marker;
 d01l2t1r_2: Drift, L = 0.075;
-s1md2rl: Sextupole, L = 0.105, K = 53.71159807/sxt_scl, N = Nsext, Method = 4;
-hs1md2r: HorizontalSteerer, L = 0.0, N = Ncorr;
-s1md2rr: Sextupole, L = 0.105, K = 53.71159807/sxt_scl, N = Nsext, Method = 4;
 da1l1d2r: Drift, L = 0.07;
 bpmz1d2r: BPM;
 db1l1d2r: Drift, L = 0.09;
@@ -152,9 +681,6 @@ q1m1d2r: Quadrupole, L = 0.25, K = 2.44045585, N = Nquad, Method = 4;
 d02l1d2r_1: Drift, L = 0.12800000000000006;
 blm_s2m1d2r: Marker;
 d02l1d2r_2: Drift, L = 0.15999999999999998;
-s2m1d2rl: Sextupole, L = 0.08, K = 44.96887307/sxt_scl, N = Nsext, Method = 4;
-vs2m1d2r: VerticalSteerer, L = 0.0, N = Ncorr;
-s2m1d2rr: Sextupole, L = 0.08, K = 44.96887307/sxt_scl, N = Nsext, Method = 4;
 da3l1d2r: Drift, L = 0.128;
 bpmz2d2r: BPM;
 db3l1d2r: Drift, L = 0.179;
@@ -172,15 +698,9 @@ q3m1d2r: Quadrupole, L = 0.25, K = -2.12441276, N = Nquad, Method = 4;
 da6l1d2r: Drift, L = 0.09;
 bpmz3d2r: BPM;
 db6l1d2r: Drift, L = 0.063;
-s3m1d2rl: Sextupole, L = 0.08, K = -42.735/sxt_scl, N = Nsext, Method = 4;
-vs3m1d2r: VerticalSteerer, L = 0.0, N = Ncorr;
-s3m1d2rr: Sextupole, L = 0.08, K = -42.735/sxt_scl, N = Nsext, Method = 4;
 d07l1d2r: Drift, L = 0.153;
 q4m1d2r: Quadrupole, L = 0.5, K = 1.4802205, N = Nquad, Method = 4;
 d08l1d2r: Drift, L = 0.153;
-s4m1d2rl: Sextupole, L = 0.08, K = 38.2185/sxt_scl, N = Nsext, Method = 4;
-hs4m1d2r: HorizontalSteerer, L = 0.0, N = Ncorr;
-s4m1d2rr: Sextupole, L = 0.08, K = 38.2185/sxt_scl, N = Nsext, Method = 4;
 da9l1d2r: Drift, L = 0.07;
 bpmz4d2r: BPM;
 db9l1d2r: Drift, L = 0.198;
@@ -192,15 +712,9 @@ m_fomz1d2r: Marker;
 db9l2d2r: Drift, L = 0.344;
 bpmz5d2r: BPM;
 da9l2d2r: Drift, L = 0.07;
-s4m2d2rl: Sextupole, L = 0.08, K = 38.2185/sxt_scl, N = Nsext, Method = 4;
-hs4m2d2r: HorizontalSteerer, L = 0.0, N = Ncorr;
-s4m2d2rr: Sextupole, L = 0.08, K = 38.2185/sxt_scl, N = Nsext, Method = 4;
 d08l2d2r: Drift, L = 0.153;
 q4m2d2r: Quadrupole, L = 0.5, K = 1.4802205, N = Nquad, Method = 4;
 d07l2d2r: Drift, L = 0.153;
-s3m2d2rl: Sextupole, L = 0.08, K = -42.735/sxt_scl, N = Nsext, Method = 4;
-vs3m2d2r: VerticalSteerer, L = 0.0, N = Ncorr;
-s3m2d2rr: Sextupole, L = 0.08, K = -42.735/sxt_scl, N = Nsext, Method = 4;
 db6l2d2r: Drift, L = 0.063;
 bpmz6d2r: BPM;
 da6l2d2r: Drift, L = 0.09;
@@ -225,25 +739,18 @@ db3l2d2r: Drift, L = 0.244;
 bpmz7d2r: BPM;
 da3l2d2r: Drift, L = 0.063;
 cqs2m2d2: Quadrupole, L = 0.0, K = 0.0, N = Nquad, Method = 4;
-s2m2d2rl: Sextupole, L = 0.08, K = 44.96887307/sxt_scl, N = Nsext, Method = 4;
-vs2m2d2r: VerticalSteerer, L = 0.0, N = Ncorr;
-s2m2d2rr: Sextupole, L = 0.08, K = 44.96887307/sxt_scl, N = Nsext, Method = 4;
 d02l2d2r: Drift, L = 0.28800000000000003;
 q1m2d2r: Quadrupole, L = 0.25, K = 2.44045585, N = Nquad, Method = 4;
 d01l2d2r_1: Drift, L = 0.105;
 blm_s1mt2r: Marker;
 d01l2d2r_2: Drift, L = 0.05500000000000001;
-s1mt2rl: Sextupole, L = 0.105, K = 53.71159807/sxt_scl, N = Nsext, Method = 4;
-hs1mt2r: HorizontalSteerer, L = 0.0, N = Ncorr;
-s1mt2rr: Sextupole, L = 0.105, K = 53.71159807/sxt_scl, N = Nsext, Method = 4;
+# s1mt2r
 da1l1t2r: Drift, L = 0.07;
 bpmz1t2r: BPM;
 db1l1t2r: Drift, L = 0.09;
 q1m1t2r: Quadrupole, L = 0.25, K = 2.44045585, N = Nquad, Method = 4;
 d02l1t2r: Drift, L = 0.28800000000000003;
-s2m1t2rl: Sextupole, L = 0.08, K = 44.96887307/sxt_scl, N = Nsext, Method = 4;
-vs2m1t2r: VerticalSteerer, L = 0.0, N = Ncorr;
-s2m1t2rr: Sextupole, L = 0.08, K = 44.96887307/sxt_scl, N = Nsext, Method = 4;
+# s2m1t2r
 da3l1t2r: Drift, L = 0.128;
 bpmz2t2r: BPM;
 db3l1t2r: Drift, L = 0.179;
@@ -264,15 +771,11 @@ da6l1t2r: Drift, L = 0.09;
 bpmz3t2r: BPM;
 db6l1t2r: Drift, L = 0.063;
 cqs3m1t2: Quadrupole, L = 0.0, K = 0.0, N = Nquad, Method = 4;
-s3m1t2rl: Sextupole, L = 0.08, K = -43.8795/sxt_scl, N = Nsext, Method = 4;
-vs3m1t2r: VerticalSteerer, L = 0.0, N = Ncorr;
-s3m1t2rr: Sextupole, L = 0.08, K = -43.8795/sxt_scl, N = Nsext, Method = 4;
+# s3m1t2r
 d07l1t2r: Drift, L = 0.153;
 q4m1t2r: Quadrupole, L = 0.5, K = 2.57722952, N = Nquad, Method = 4;
 d08l1t2r: Drift, L = 0.153;
-s4m1t2rl: Sextupole, L = 0.08, K = 55.0/sxt_scl, N = Nsext, Method = 4;
-hs4m1t2r: HorizontalSteerer, L = 0.0, N = Ncorr;
-s4m1t2rr: Sextupole, L = 0.08, K = 55.0/sxt_scl, N = Nsext, Method = 4;
+# s4m1t2r
 d09l1t2r: Drift, L = 0.153;
 q5m1t2r: Quadrupole, L = 0.2, K = -2.5831049, N = Nquad, Method = 4;
 da10l1t2r: Drift, L = 0.092;
@@ -285,15 +788,11 @@ bpmz5t2r: BPM;
 da10l2t2r: Drift, L = 0.092;
 q5m2t2r: Quadrupole, L = 0.2, K = -2.5831049, N = Nquad, Method = 4;
 d09l2t2r: Drift, L = 0.153;
-s4m2t2rl: Sextupole, L = 0.08, K = 55.0/sxt_scl, N = Nsext, Method = 4;
-hs4m2t2r: HorizontalSteerer, L = 0.0, N = Ncorr;
-s4m2t2rr: Sextupole, L = 0.08, K = 55.0/sxt_scl, N = Nsext, Method = 4;
+# s4m2t2r
 d08l2t2r: Drift, L = 0.153;
 q4m2t2r: Quadrupole, L = 0.5, K = 2.57722952, N = Nquad, Method = 4;
 d07l2t2r: Drift, L = 0.153;
-s3m2t2rl: Sextupole, L = 0.08, K = -43.8795/sxt_scl, N = Nsext, Method = 4;
-vs3m2t2r: VerticalSteerer, L = 0.0, N = Ncorr;
-s3m2t2rr: Sextupole, L = 0.08, K = -43.8795/sxt_scl, N = Nsext, Method = 4;
+# s3m2t2rl
 db6l2t2r: Drift, L = 0.063;
 bpmz6t2r: BPM;
 da6l2t2r: Drift, L = 0.09;
@@ -310,17 +809,13 @@ q2m2t2r: Quadrupole, L = 0.2, K = -1.8536747, N = Nquad, Method = 4;
 db3l2t2r: Drift, L = 0.244;
 bpmz7t2r: BPM;
 da3l2t2r: Drift, L = 0.063;
-s2m2t2rl: Sextupole, L = 0.08, K = 44.96887307/sxt_scl, N = Nsext, Method = 4;
-vs2m2t2r: VerticalSteerer, L = 0.0, N = Ncorr;
-s2m2t2rr: Sextupole, L = 0.08, K = 44.96887307/sxt_scl, N = Nsext, Method = 4;
+# s2m2t2r
 d02l2t2r: Drift, L = 0.28800000000000003;
 q1m2t2r: Quadrupole, L = 0.25, K = 2.44045585, N = Nquad, Method = 4;
 d01l2t2r_1: Drift, L = 0.105;
 blm_s1md3r: Marker;
 d01l2t2r_2: Drift, L = 0.05500000000000001;
-s1md3rl: Sextupole, L = 0.105, K = 53.71159807/sxt_scl, N = Nsext, Method = 4;
-hs1md3r: HorizontalSteerer, L = 0.0, N = Ncorr;
-s1md3rr: Sextupole, L = 0.105, K = 53.71159807/sxt_scl, N = Nsext, Method = 4;
+# s1md3r
 da1l1d3r: Drift, L = 0.07;
 bpmz1d3r: BPM;
 db1l1d3r: Drift, L = 0.09;
@@ -328,9 +823,7 @@ q1m1d3r: Quadrupole, L = 0.25, K = 2.44045585, N = Nquad, Method = 4;
 d02l1d3r_1: Drift, L = 0.11800000000000005;
 blm_s2m1d3r: Marker;
 d02l1d3r_2: Drift, L = 0.16999999999999998;
-s2m1d3rl: Sextupole, L = 0.08, K = 44.96887307/sxt_scl, N = Nsext, Method = 4;
-vs2m1d3r: VerticalSteerer, L = 0.0, N = Ncorr;
-s2m1d3rr: Sextupole, L = 0.08, K = 44.96887307/sxt_scl, N = Nsext, Method = 4;
+# s2m13rl
 da3l1d3r: Drift, L = 0.128;
 bpmz2d3r: BPM;
 db3l1d3r: Drift, L = 0.179;
@@ -349,15 +842,11 @@ q3m1d3r: Quadrupole, L = 0.25, K = -2.12608143, N = Nquad, Method = 4;
 da6l1d3r: Drift, L = 0.09;
 bpmz3d3r: BPM;
 db6l1d3r: Drift, L = 0.063;
-s3m1d3rl: Sextupole, L = 0.08, K = -42.735/sxt_scl, N = Nsext, Method = 4;
-vs3m1d3r: VerticalSteerer, L = 0.0, N = Ncorr;
-s3m1d3rr: Sextupole, L = 0.08, K = -42.735/sxt_scl, N = Nsext, Method = 4;
+# s3m1d3rl
 d07l1d3r: Drift, L = 0.153;
 q4m1d3r: Quadrupole, L = 0.5, K = 1.48692991, N = Nquad, Method = 4;
 d08l1d3r: Drift, L = 0.153;
-s4m1d3rl: Sextupole, L = 0.08, K = 38.2185/sxt_scl, N = Nsext, Method = 4;
-hs4m1d3r: HorizontalSteerer, L = 0.0, N = Ncorr;
-s4m1d3rr: Sextupole, L = 0.08, K = 38.2185/sxt_scl, N = Nsext, Method = 4;
+# s3m1d3r
 da9l1d3r: Drift, L = 0.07;
 bpmz4d3r: BPM;
 db9l1d3r: Drift, L = 0.469;
@@ -370,15 +859,11 @@ due56i2d3r1: Drift, L = 0.8959999999999999;
 db9l2d3r: Drift, L = 0.469;
 bpmz5d3r: BPM;
 da9l2d3r: Drift, L = 0.07;
-s4m2d3rl: Sextupole, L = 0.08, K = 38.2185/sxt_scl, N = Nsext, Method = 4;
-hs4m2d3r: HorizontalSteerer, L = 0.0, N = Ncorr;
-s4m2d3rr: Sextupole, L = 0.08, K = 38.2185/sxt_scl, N = Nsext, Method = 4;
+#s4m2d3r
 d08l2d3r: Drift, L = 0.153;
 q4m2d3r: Quadrupole, L = 0.5, K = 1.48692991, N = Nquad, Method = 4;
 d07l2d3r: Drift, L = 0.153;
-s3m2d3rl: Sextupole, L = 0.08, K = -42.735/sxt_scl, N = Nsext, Method = 4;
-vs3m2d3r: VerticalSteerer, L = 0.0, N = Ncorr;
-s3m2d3rr: Sextupole, L = 0.08, K = -42.735/sxt_scl, N = Nsext, Method = 4;
+# s3m2d3r
 db6l2d3r: Drift, L = 0.063;
 bpmz6d3r: BPM;
 da6l2d3r: Drift, L = 0.09;
@@ -395,25 +880,19 @@ q2m2d3r: Quadrupole, L = 0.2, K = -1.8536747, N = Nquad, Method = 4;
 db3l2d3r: Drift, L = 0.244;
 bpmz7d3r: BPM;
 da3l2d3r: Drift, L = 0.063;
-s2m2d3rl: Sextupole, L = 0.08, K = 44.96887307/sxt_scl, N = Nsext, Method = 4;
-vs2m2d3r: VerticalSteerer, L = 0.0, N = Ncorr;
-s2m2d3rr: Sextupole, L = 0.08, K = 44.96887307/sxt_scl, N = Nsext, Method = 4;
+# s2m2d3r
 d02l2d3r: Drift, L = 0.28800000000000003;
 q1m2d3r: Quadrupole, L = 0.25, K = 2.44045585, N = Nquad, Method = 4;
 d01l2d3r_1: Drift, L = 0.105;
 blm_s1mt3r: Marker;
 d01l2d3r_2: Drift, L = 0.05500000000000001;
-s1mt3rl: Sextupole, L = 0.105, K = 53.71159807/sxt_scl, N = Nsext, Method = 4;
-hs1mt3r: HorizontalSteerer, L = 0.0, N = Ncorr;
-s1mt3rr: Sextupole, L = 0.105, K = 53.71159807/sxt_scl, N = Nsext, Method = 4;
+# s1mt3r
 da1l1t3r: Drift, L = 0.07;
 bpmz1t3r: BPM;
 db1l1t3r: Drift, L = 0.09;
 q1m1t3r: Quadrupole, L = 0.25, K = 2.44045585, N = Nquad, Method = 4;
 d02l1t3r: Drift, L = 0.28800000000000003;
-s2m1t3rl: Sextupole, L = 0.08, K = 44.96887307/sxt_scl, N = Nsext, Method = 4;
-vs2m1t3r: VerticalSteerer, L = 0.0, N = Ncorr;
-s2m1t3rr: Sextupole, L = 0.08, K = 44.96887307/sxt_scl, N = Nsext, Method = 4;
+# s2m1t3l
 da3l1t3r: Drift, L = 0.128;
 bpmz2t3r: Marker;
 db3l1t3r: Drift, L = 0.179;
@@ -434,15 +913,11 @@ da6l1t3r: Drift, L = 0.09;
 bpmz3t3r: BPM;
 db6l1t3r: Drift, L = 0.063;
 cqs3m1t3: Quadrupole, L = 0.0, K = 0.0, N = Nquad, Method = 4;
-s3m1t3rl: Sextupole, L = 0.08, K = -43.8795/sxt_scl, N = Nsext, Method = 4;
-vs3m1t3r: VerticalSteerer, L = 0.0, N = Ncorr;
-s3m1t3rr: Sextupole, L = 0.08, K = -43.8795/sxt_scl, N = Nsext, Method = 4;
+# s3m1t3r
 d07l1t3r: Drift, L = 0.153;
 q4m1t3r: Quadrupole, L = 0.5, K = 2.57917393, N = Nquad, Method = 4;
 d08l1t3r: Drift, L = 0.153;
-s4m1t3rl: Sextupole, L = 0.08, K = 55.0/sxt_scl, N = Nsext, Method = 4;
-hs4m1t3r: HorizontalSteerer, L = 0.0, N = Ncorr;
-s4m1t3rr: Sextupole, L = 0.08, K = 55.0/sxt_scl, N = Nsext, Method = 4;
+# s4m1t3r
 d09l1t3r: Drift, L = 0.153;
 q5m1t3r: Quadrupole, L = 0.2, K = -2.62044465, N = Nquad, Method = 4;
 da10l1t3r: Drift, L = 0.092;
@@ -463,16 +938,12 @@ bpmz5t3r: BPM;
 da10l2t3r: Drift, L = 0.092;
 q5m2t3r: Quadrupole, L = 0.2, K = -2.62044465, N = Nquad, Method = 4;
 d09l2t3r: Drift, L = 0.153;
-s4m2t3rl: Sextupole, L = 0.08, K = 55.0/sxt_scl, N = Nsext, Method = 4;
-hs4m2t3r: HorizontalSteerer, L = 0.0, N = Ncorr;
-s4m2t3rr: Sextupole, L = 0.08, K = 55.0/sxt_scl, N = Nsext, Method = 4;
+# s4m2t3r
 d08l2t3r: Drift, L = 0.153;
 q4m2t3r: Quadrupole, L = 0.5, K = 2.57917393, N = Nquad, Method = 4;
 d07l2t3r: Drift, L = 0.153;
 cqs3m2t3: Quadrupole, L = 0.0, K = 0.0, N = Nquad, Method = 4;
-s3m2t3rl: Sextupole, L = 0.08, K = -43.8795/sxt_scl, N = Nsext, Method = 4;
-vs3m2t3r: VerticalSteerer, L = 0.0, N = Ncorr;
-s3m2t3rr: Sextupole, L = 0.08, K = -43.8795/sxt_scl, N = Nsext, Method = 4;
+# s3m2t3r
 db6l2t3r: Drift, L = 0.063;
 bpmz6t3r: BPM;
 da6l2t3r: Drift, L = 0.09;
@@ -490,25 +961,19 @@ q2m2t3r: Quadrupole, L = 0.2, K = -1.8536747, N = Nquad, Method = 4;
 db3l2t3r: Drift, L = 0.244;
 bpmz7t3r: BPM;
 da3l2t3r: Drift, L = 0.063;
-s2m2t3rl: Sextupole, L = 0.08, K = 44.96887307/sxt_scl, N = Nsext, Method = 4;
-vs2m2t3r: VerticalSteerer, L = 0.0, N = Ncorr;
-s2m2t3rr: Sextupole, L = 0.08, K = 44.96887307/sxt_scl, N = Nsext, Method = 4;
+# s2m2t3r
 d02l2t3r: Drift, L = 0.28800000000000003;
 q1m2t3r: Quadrupole, L = 0.25, K = 2.44045585, N = Nquad, Method = 4;
 d01l2t3r_1: Drift, L = 0.09499999999999999;
 blm_s1md4r: Marker;
 d01l2t3r_2: Drift, L = 0.06500000000000002;
-s1md4rl: Sextupole, L = 0.105, K = 53.71159807/sxt_scl, N = Nsext, Method = 4;
-hs1md4r: HorizontalSteerer, L = 0.0, N = Ncorr;
-s1md4rr: Sextupole, L = 0.105, K = 53.71159807/sxt_scl, N = Nsext, Method = 4;
+# s1md4r
 da1l1d4r: Drift, L = 0.07;
 bpmz1d4r: BPM;
 db1l1d4r: Drift, L = 0.09;
 q1m1d4r: Quadrupole, L = 0.25, K = 2.44045585, N = Nquad, Method = 4;
 d02l1d4r: Drift, L = 0.28800000000000003;
-s2m1d4rl: Sextupole, L = 0.08, K = 44.96887307/sxt_scl, N = Nsext, Method = 4;
-vs2m1d4r: VerticalSteerer, L = 0.0, N = Ncorr;
-s2m1d4rr: Sextupole, L = 0.08, K = 44.96887307/sxt_scl, N = Nsext, Method = 4;
+# s2m1d4r
 da3l1d4r: Drift, L = 0.128;
 bpmz2d4r: BPM;
 db3l1d4r: Drift, L = 0.179;
@@ -528,15 +993,11 @@ q3m1d4r: Quadrupole, L = 0.25, K = -2.1282793, N = Nquad, Method = 4;
 da6l1d4r: Drift, L = 0.09;
 bpmz3d4r: BPM;
 db6l1d4r: Drift, L = 0.063;
-s3m1d4rl: Sextupole, L = 0.08, K = -42.735/sxt_scl, N = Nsext, Method = 4;
-vs3m1d4r: VerticalSteerer, L = 0.0, N = Ncorr;
-s3m1d4rr: Sextupole, L = 0.08, K = -42.735/sxt_scl, N = Nsext, Method = 4;
+# s3m1d4r
 d07l1d4r: Drift, L = 0.153;
 q4m1d4r: Quadrupole, L = 0.5, K = 1.4883633, N = Nquad, Method = 4;
 d08l1d4r: Drift, L = 0.153;
-s4m1d4rl: Sextupole, L = 0.08, K = 38.2185/sxt_scl, N = Nsext, Method = 4;
-hs4m1d4r: HorizontalSteerer, L = 0.0, N = Ncorr;
-s4m1d4rr: Sextupole, L = 0.08, K = 38.2185/sxt_scl, N = Nsext, Method = 4;
+# s4m1d4rl
 da9l1d4r: Drift, L = 0.07;
 bpmz4d4r: BPM;
 db9l1d4r: Drift, L = 0.335;
@@ -549,15 +1010,11 @@ dc9l2d4r: Drift, L = 0.25;
 db9l2d4r: Drift, L = 0.345;
 bpmz5d4r: BPM;
 da9l2d4r: Drift, L = 0.07;
-s4m2d4rl: Sextupole, L = 0.08, K = 38.2185/sxt_scl, N = Nsext, Method = 4;
-hs4m2d4r: HorizontalSteerer, L = 0.0, N = Ncorr;
-s4m2d4rr: Sextupole, L = 0.08, K = 38.2185/sxt_scl, N = Nsext, Method = 4;
+# s4m2d4rl
 d08l2d4r: Drift, L = 0.153;
 q4m2d4r: Quadrupole, L = 0.5, K = 1.4883633, N = Nquad, Method = 4;
 d07l2d4r: Drift, L = 0.153;
-s3m2d4rl: Sextupole, L = 0.08, K = -42.735/sxt_scl, N = Nsext, Method = 4;
-vs3m2d4r: VerticalSteerer, L = 0.0, N = Ncorr;
-s3m2d4rr: Sextupole, L = 0.08, K = -42.735/sxt_scl, N = Nsext, Method = 4;
+# s3m2d4rl
 db6l2d4r: Drift, L = 0.063;
 bpmz6d4r: BPM;
 da6l2d4r: Drift, L = 0.09;
@@ -574,25 +1031,19 @@ q2m2d4r: Quadrupole, L = 0.2, K = -1.8536747, N = Nquad, Method = 4;
 db3l2d4r: Drift, L = 0.244;
 bpmz7d4r: Marker;
 da3l2d4r: Drift, L = 0.063;
-s2m2d4rl: Sextupole, L = 0.08, K = 44.96887307/sxt_scl, N = Nsext, Method = 4;
-vs2m2d4r: VerticalSteerer, L = 0.0, N = Ncorr;
-s2m2d4rr: Sextupole, L = 0.08, K = 44.96887307/sxt_scl, N = Nsext, Method = 4;
+# s2m2d4rl
 d02l2d4r: Drift, L = 0.28800000000000003;
 q1m2d4r: Quadrupole, L = 0.25, K = 2.44045585, N = Nquad, Method = 4;
 d01l2d4r_1: Drift, L = 0.09499999999999999;
 blm_s1mt4r: Marker;
 d01l2d4r_2: Drift, L = 0.06500000000000002;
-s1mt4rl: Sextupole, L = 0.105, K = 53.71159807/sxt_scl, N = Nsext, Method = 4;
-hs1mt4r: HorizontalSteerer, L = 0.0, N = Ncorr;
-s1mt4rr: Sextupole, L = 0.105, K = 53.71159807/sxt_scl, N = Nsext, Method = 4;
+# s1mt4rl
 da1l1t4r: Drift, L = 0.07;
 bpmz1t4r: BPM;
 db1l1t4r: Drift, L = 0.09;
 q1m1t4r: Quadrupole, L = 0.25, K = 2.44045585, N = Nquad, Method = 4;
 d02l1t4r: Drift, L = 0.28800000000000003;
-s2m1t4rl: Sextupole, L = 0.08, K = 44.96887307/sxt_scl, N = Nsext, Method = 4;
-vs2m1t4r: VerticalSteerer, L = 0.0, N = Ncorr;
-s2m1t4rr: Sextupole, L = 0.08, K = 44.96887307/sxt_scl, N = Nsext, Method = 4;
+# s2m1t4rl
 da3l1t4r: Drift, L = 0.128;
 bpmz2t4r: BPM;
 db3l1t4r: Drift, L = 0.179;
@@ -611,15 +1062,11 @@ q3m1t4r: Quadrupole, L = 0.25, K = -2.44037407, N = Nquad, Method = 4;
 da6l1t4r: Drift, L = 0.09;
 bpmz3t4r: BPM;
 db6l1t4r: Drift, L = 0.063;
-s3m1t4rl: Sextupole, L = 0.08, K = -43.8795/sxt_scl, N = Nsext, Method = 4;
-vs3m1t4r: VerticalSteerer, L = 0.0, N = Ncorr;
-s3m1t4rr: Sextupole, L = 0.08, K = -43.8795/sxt_scl, N = Nsext, Method = 4;
+# s3m1t4rl
 d07l1t4r: Drift, L = 0.153;
 q4m1t4r: Quadrupole, L = 0.5, K = 2.58038995, N = Nquad, Method = 4;
 d08l1t4r: Drift, L = 0.153;
-s4m1t4rl: Sextupole, L = 0.08, K = 55.0/sxt_scl, N = Nsext, Method = 4;
-hs4m1t4r: HorizontalSteerer, L = 0.0, N = Ncorr;
-s4m1t4rr: Sextupole, L = 0.08, K = 55.0/sxt_scl, N = Nsext, Method = 4;
+# s4m1t4rl
 d09l1t4r: Drift, L = 0.153;
 q5m1t4r: Quadrupole, L = 0.2, K = -2.59546801, N = Nquad, Method = 4;
 da10l1t4r: Drift, L = 0.092;
@@ -635,16 +1082,12 @@ bpmz5t4r: BPM;
 da10l2t4r: Drift, L = 0.092;
 q5m2t4r: Quadrupole, L = 0.2, K = -2.59546801, N = Nquad, Method = 4;
 d09l2t4r: Drift, L = 0.153;
-s4m2t4rl: Sextupole, L = 0.08, K = 55.0/sxt_scl, N = Nsext, Method = 4;
-hs4m2t4r: HorizontalSteerer, L = 0.0, N = Ncorr;
-s4m2t4rr: Sextupole, L = 0.08, K = 55.0/sxt_scl, N = Nsext, Method = 4;
+# s4m2t4rl
 d08l2t4r: Drift, L = 0.153;
 q4m2t4r: Quadrupole, L = 0.5, K = 2.58038995, N = Nquad, Method = 4;
 d07l2t4r: Drift, L = 0.153;
 cqs3m2t4: Quadrupole, L = 0.0, K = 0.0, N = Nquad, Method = 4;
-s3m2t4rl: Sextupole, L = 0.08, K = -43.8795/sxt_scl, N = Nsext, Method = 4;
-vs3m2t4r: VerticalSteerer, L = 0.0, N = Ncorr;
-s3m2t4rr: Sextupole, L = 0.08, K = -43.8795/sxt_scl, N = Nsext, Method = 4;
+# s3m2t4r
 db6l2t4r: Drift, L = 0.063;
 bpmz6t4r: BPM;
 da6l2t4r: Drift, L = 0.09;
@@ -664,25 +1107,19 @@ q2m2t4r: Quadrupole, L = 0.2, K = -1.8536747, N = Nquad, Method = 4;
 db3l2t4r: Drift, L = 0.244;
 bpmz7t4r: BPM;
 da3l2t4r: Drift, L = 0.063;
-s2m2t4rl: Sextupole, L = 0.08, K = 44.96887307/sxt_scl, N = Nsext, Method = 4;
-vs2m2t4r: VerticalSteerer, L = 0.0, N = Ncorr;
-s2m2t4rr: Sextupole, L = 0.08, K = 44.96887307/sxt_scl, N = Nsext, Method = 4;
+# s2m2t4rl
 d02l2t4r: Drift, L = 0.28800000000000003;
 q1m2t4r: Quadrupole, L = 0.25, K = 2.44045585, N = Nquad, Method = 4;
 d01l2t4r_1: Drift, L = 0.105;
 blm_s1md5r: Marker;
 d01l2t4r_2: Drift, L = 0.05500000000000001;
-s1md5rl: Sextupole, L = 0.105, K = 53.71159807/sxt_scl, N = Nsext, Method = 4;
-hs1md5r: HorizontalSteerer, L = 0.0, N = Ncorr;
-s1md5rr: Sextupole, L = 0.105, K = 53.71159807/sxt_scl, N = Nsext, Method = 4;
+# s1md5rl
 da1l1d5r: Drift, L = 0.07;
 bpmz1d5r: BPM;
 db1l1d5r: Drift, L = 0.09;
 q1m1d5r: Quadrupole, L = 0.25, K = 2.44045585, N = Nquad, Method = 4;
 d02l1d5r: Drift, L = 0.28800000000000003;
-s2m1d5rl: Sextupole, L = 0.08, K = 44.96887307/sxt_scl, N = Nsext, Method = 4;
-vs2m1d5r: VerticalSteerer, L = 0.0, N = Ncorr;
-s2m1d5rr: Sextupole, L = 0.08, K = 44.96887307/sxt_scl, N = Nsext, Method = 4;
+# s2m1d5rl
 da3l1d5r: Drift, L = 0.128;
 bpmz2d5r: BPM;
 db3l1d5r: Drift, L = 0.179;
@@ -701,31 +1138,23 @@ q3m1d5r: Quadrupole, L = 0.25, K = -2.1211438, N = Nquad, Method = 4;
 da6l1d5r: Drift, L = 0.09;
 bpmz3d5r: BPM;
 db6l1d5r: Drift, L = 0.063;
-s3m1d5rl: Sextupole, L = 0.08, K = -42.735/sxt_scl, N = Nsext, Method = 4;
-vs3m1d5r: VerticalSteerer, L = 0.0, N = Ncorr;
-s3m1d5rr: Sextupole, L = 0.08, K = -42.735/sxt_scl, N = Nsext, Method = 4;
+# s3m1d5rl
 d07l1d5r: Drift, L = 0.153;
 q4m1d5r: Quadrupole, L = 0.5, K = 1.48010676, N = Nquad, Method = 4;
 d08l1d5r: Drift, L = 0.153;
-s4m1d5rl: Sextupole, L = 0.08, K = 38.2185/sxt_scl, N = Nsext, Method = 4;
-hs4m1d5r: HorizontalSteerer, L = 0.0, N = Ncorr;
-s4m1d5rr: Sextupole, L = 0.08, K = 38.2185/sxt_scl, N = Nsext, Method = 4;
+# s4m1d5rl
 da9l1d5r: Drift, L = 0.579363;
 bpmz4d5r: BPM;
 db9l1d5r: Drift, L = 2.306701;
 db9l2d5r: Drift, L = 2.306701;
 bpmz5d5r: BPM;
 da9l2d5r: Drift, L = 0.419235;
-s4m2d5rl: Sextupole, L = 0.08, K = 38.2185/sxt_scl, N = Nsext, Method = 4;
-hs4m2d5r: HorizontalSteerer, L = 0.0, N = Ncorr;
-s4m2d5rr: Sextupole, L = 0.08, K = 38.2185/sxt_scl, N = Nsext, Method = 4;
+# s4m2d5rl
 d08l2d5r: Drift, L = 0.153;
 q4m2d5r: Quadrupole, L = 0.5, K = 1.48010676, N = Nquad, Method = 4;
 d07l2d5r: Drift, L = 0.153;
 cqs3m2d5: Quadrupole, L = 0.0, K = 0.0, N = Nquad, Method = 4;
-s3m2d5rl: Sextupole, L = 0.08, K = -42.735/sxt_scl, N = Nsext, Method = 4;
-vs3m2d5r: VerticalSteerer, L = 0.0, N = Ncorr;
-s3m2d5rr: Sextupole, L = 0.08, K = -42.735/sxt_scl, N = Nsext, Method = 4;
+# s3m2d5rl
 db6l2d5r: Drift, L = 0.063;
 bpmz6d5r: BPM;
 da6l2d5r: Drift, L = 0.09;
@@ -745,17 +1174,13 @@ q2m2d5r: Quadrupole, L = 0.2, K = -1.8536747, N = Nquad, Method = 4;
 db3l2d5r: Drift, L = 0.244;
 bpmz7d5r: BPM;
 da3l2d5r: Drift, L = 0.063;
-s2m2d5rl: Sextupole, L = 0.08, K = 44.96887307/sxt_scl, N = Nsext, Method = 4;
-vs2m2d5r: VerticalSteerer, L = 0.0, N = Ncorr;
-s2m2d5rr: Sextupole, L = 0.08, K = 44.96887307/sxt_scl, N = Nsext, Method = 4;
+# s2m2d5rl
 d02l2d5r: Drift, L = 0.28800000000000003;
 q1m2d5r: Quadrupole, L = 0.25, K = 2.44045585, N = Nquad, Method = 4;
 d01al2d5r: Drift, L = 0.15;
 marker_vsr_aperturetest_01: Marker;
 d01bl2d5r: Drift, L = 0.010000000000000009;
-s1mt5rl: Sextupole, L = 0.105, K = 53.71159807/sxt_scl, N = Nsext, Method = 4;
-hs1mt5r: HorizontalSteerer, L = 0.0, N = Ncorr;
-s1mt5rr: Sextupole, L = 0.105, K = 53.71159807/sxt_scl, N = Nsext, Method = 4;
+# s1mt5r
 da1l1t5r: Drift, L = 0.07;
 bpmz1t5r: BPM;
 db1l1t5r: Drift, L = 0.09;
@@ -763,9 +1188,7 @@ q1m1t5r: Quadrupole, L = 0.25, K = 2.44045585, N = Nquad, Method = 4;
 d02l1t5r_1: Drift, L = 0.05800000000000005;
 blm_s2m1t5r: Marker;
 d02l1t5r_2: Drift, L = 0.22999999999999998;
-s2m1t5rl: Sextupole, L = 0.08, K = 44.96887307/sxt_scl, N = Nsext, Method = 4;
-vs2m1t5r: VerticalSteerer, L = 0.0, N = Ncorr;
-s2m1t5rr: Sextupole, L = 0.08, K = 44.96887307/sxt_scl, N = Nsext, Method = 4;
+# s2m1t5r
 da3l1t5r: Drift, L = 0.128;
 bpmz2t5r: BPM;
 db3l1t5r: Drift, L = 0.179;
@@ -784,15 +1207,11 @@ q3m1t5r: Quadrupole, L = 0.25, K = -2.44818682, N = Nquad, Method = 4;
 da6l1t5r: Drift, L = 0.09;
 bpmz3t5r: BPM;
 db6l1t5r: Drift, L = 0.063;
-s3m1t5rl: Sextupole, L = 0.08, K = -43.8795/sxt_scl, N = Nsext, Method = 4;
-vs3m1t5r: VerticalSteerer, L = 0.0, N = Ncorr;
-s3m1t5rr: Sextupole, L = 0.08, K = -43.8795/sxt_scl, N = Nsext, Method = 4;
+# s3m1t5r
 d07l1t5r: Drift, L = 0.153;
 q4m1t5r: Quadrupole, L = 0.5, K = 2.57768425, N = Nquad, Method = 4;
 d08l1t5r: Drift, L = 0.153;
-s4m1t5rl: Sextupole, L = 0.08, K = 55.0/sxt_scl, N = Nsext, Method = 4;
-hs4m1t5r: HorizontalSteerer, L = 0.0, N = Ncorr;
-s4m1t5rr: Sextupole, L = 0.08, K = 55.0/sxt_scl, N = Nsext, Method = 4;
+# s4m1t5r
 d09l1t5r: Drift, L = 0.153;
 q5m1t5r: Quadrupole, L = 0.2, K = -2.58439541, N = Nquad, Method = 4;
 da10l1t5r: Drift, L = 0.092;
@@ -807,15 +1226,11 @@ bpmz5t5r: BPM;
 da10l2t5r: Drift, L = 0.092;
 q5m2t5r: Quadrupole, L = 0.2, K = -2.58439541, N = Nquad, Method = 4;
 d09l2t5r: Drift, L = 0.153;
-s4m2t5rl: Sextupole, L = 0.08, K = 55.0/sxt_scl, N = Nsext, Method = 4;
-hs4m2t5r: HorizontalSteerer, L = 0.0, N = Ncorr;
-s4m2t5rr: Sextupole, L = 0.08, K = 55.0/sxt_scl, N = Nsext, Method = 4;
+# s4m2t5r
 d08l2t5r: Drift, L = 0.153;
 q4m2t5r: Quadrupole, L = 0.5, K = 2.57768425, N = Nquad, Method = 4;
 d07l2t5r: Drift, L = 0.153;
-s3m2t5rl: Sextupole, L = 0.08, K = -43.8795/sxt_scl, N = Nsext, Method = 4;
-vs3m2t5r: VerticalSteerer, L = 0.0, N = Ncorr;
-s3m2t5rr: Sextupole, L = 0.08, K = -43.8795/sxt_scl, N = Nsext, Method = 4;
+#s3m2t5r
 db6l2t5r: Drift, L = 0.063;
 bpmz6t5r: BPM;
 da6l2t5r: Drift, L = 0.09;
@@ -833,25 +1248,19 @@ db3l2t5r: Drift, L = 0.244;
 bpmz7t5r: BPM;
 da3l2t5r: Drift, L = 0.063;
 cqs2m2t5: Quadrupole, L = 0.0, K = 0.0, N = Nquad, Method = 4;
-s2m2t5rl: Sextupole, L = 0.08, K = 44.96887307/sxt_scl, N = Nsext, Method = 4;
-vs2m2t5r: VerticalSteerer, L = 0.0, N = Ncorr;
-s2m2t5rr: Sextupole, L = 0.08, K = 44.96887307/sxt_scl, N = Nsext, Method = 4;
+# s2m2t5r
 d02l2t5r: Drift, L = 0.28800000000000003;
 q1m2t5r: Quadrupole, L = 0.25, K = 2.44045585, N = Nquad, Method = 4;
 d01l2t5r_1: Drift, L = 0.105;
 blm_s1md6r: Marker;
 d01l2t5r_2: Drift, L = 0.05500000000000001;
-s1md6rl: Sextupole, L = 0.105, K = 53.71159807/sxt_scl, N = Nsext, Method = 4;
-hs1md6r: HorizontalSteerer, L = 0.0, N = Ncorr;
-s1md6rr: Sextupole, L = 0.105, K = 53.71159807/sxt_scl, N = Nsext, Method = 4;
+# s1md6r
 da1l1d6r: Drift, L = 0.07;
 bpmz1d6r: BPM;
 db1l1d6r: Drift, L = 0.09;
 q1m1d6r: Quadrupole, L = 0.25, K = 2.44045585, N = Nquad, Method = 4;
 d02l1d6r: Drift, L = 0.28800000000000003;
-s2m1d6rl: Sextupole, L = 0.08, K = 44.96887307/sxt_scl, N = Nsext, Method = 4;
-vs2m1d6r: VerticalSteerer, L = 0.0, N = Ncorr;
-s2m1d6rr: Sextupole, L = 0.08, K = 44.96887307/sxt_scl, N = Nsext, Method = 4;
+# s2m1d6r
 da3l1d6r: Drift, L = 0.128;
 bpmz2d6r: BPM;
 db3l1d6r: Drift, L = 0.179;
@@ -871,15 +1280,11 @@ da6l1d6r: Drift, L = 0.09;
 bpmz3d6r: BPM;
 db6l1d6r: Drift, L = 0.063;
 cqs3m1d6: Quadrupole, L = 0.0, K = 0.0, N = Nquad, Method = 4;
-s3m1d6rl: Sextupole, L = 0.08, K = -42.735/sxt_scl, N = Nsext, Method = 4;
-vs3m1d6r: VerticalSteerer, L = 0.0, N = Ncorr;
-s3m1d6rr: Sextupole, L = 0.08, K = -42.735/sxt_scl, N = Nsext, Method = 4;
+# s3m1d6r
 d07l1d6r: Drift, L = 0.153;
 q4m1d6r: Quadrupole, L = 0.5, K = 1.48545637, N = Nquad, Method = 4;
 d08l1d6r: Drift, L = 0.153;
-s4m1d6rl: Sextupole, L = 0.08, K = 38.2185/sxt_scl, N = Nsext, Method = 4;
-hs4m1d6r: HorizontalSteerer, L = 0.0, N = Ncorr;
-s4m1d6rr: Sextupole, L = 0.08, K = 38.2185/sxt_scl, N = Nsext, Method = 4;
+# s4m1d6rl
 da9l1d6r: Drift, L = 0.07;
 bpmz4d6r: BPM;
 db9l1d6r: Drift, L = 0.094;
@@ -908,16 +1313,12 @@ db9l2d6r: Drift, L = 0.10935999999999998;
 b3id6r1: Bending, L = 0.14, T = 1.541891999417851, T1 = 3.083783998835703, T2 = 0.000000000000000, K = 0.0, N = Nbend, Method = 4;
 b3id6r2: Bending, L = 0.14, T = 1.541891999417851, T1 = 0.000000000000000, T2 = 0.000000000000000, K = 0.0, N = Nbend, Method = 4;
 da9l2d6r: Drift, L = 0.1;
-s4m2d6rl: Sextupole, L = 0.08, K = 38.2185/sxt_scl, N = Nsext, Method = 4;
-hs4m2d6r: HorizontalSteerer, L = 0.0, N = Ncorr;
-s4m2d6rr: Sextupole, L = 0.08, K = 38.2185/sxt_scl, N = Nsext, Method = 4;
+# s4m2d6r
 d08l2d6r: Drift, L = 0.153;
 q4m2d6r: Quadrupole, L = 0.5, K = 1.48545637, N = Nquad, Method = 4;
 d07l2d6r: Drift, L = 0.153;
 cqs3m2d6: Quadrupole, L = 0.0, K = 0.0, N = Nquad, Method = 4;
-s3m2d6rl: Sextupole, L = 0.08, K = -42.735/sxt_scl, N = Nsext, Method = 4;
-vs3m2d6r: VerticalSteerer, L = 0.0, N = Ncorr;
-s3m2d6rr: Sextupole, L = 0.08, K = -42.735/sxt_scl, N = Nsext, Method = 4;
+# s3m2d6rl
 db6l2d6r: Drift, L = 0.063;
 bpmz6d6r: BPM;
 da6l2d6r: Drift, L = 0.09;
@@ -936,25 +1337,19 @@ db3l2d6r: Drift, L = 0.244;
 bpmz7d6r: BPM;
 da3l2d6r: Drift, L = 0.063;
 cqs2m2d6: Quadrupole, L = 0.0, K = 0.0, N = Nquad, Method = 4;
-s2m2d6rl: Sextupole, L = 0.08, K = 44.96887307/sxt_scl, N = Nsext, Method = 4;
-vs2m2d6r: VerticalSteerer, L = 0.0, N = Ncorr;
-s2m2d6rr: Sextupole, L = 0.08, K = 44.96887307/sxt_scl, N = Nsext, Method = 4;
+# s2m2d6rl
 d02l2d6r: Drift, L = 0.28800000000000003;
 q1m2d6r: Quadrupole, L = 0.25, K = 2.44045585, N = Nquad, Method = 4;
 d01l2d6r_1: Drift, L = 0.105;
 blm_s1mt6r: Marker;
 d01l2d6r_2: Drift, L = 0.05500000000000001;
-s1mt6rl: Sextupole, L = 0.105, K = 53.71159807/sxt_scl, N = Nsext, Method = 4;
-hs1mt6r: HorizontalSteerer, L = 0.0, N = Ncorr;
-s1mt6rr: Sextupole, L = 0.105, K = 53.71159807/sxt_scl, N = Nsext, Method = 4;
+# s1mt6rl
 da1l1t6r: Drift, L = 0.07;
 bpmz1t6r: BPM;
 db1l1t6r: Drift, L = 0.09;
 q1m1t6r: Quadrupole, L = 0.25, K = 2.44045585, N = Nquad, Method = 4;
 d02l1t6r: Drift, L = 0.28800000000000003;
-s2m1t6rl: Sextupole, L = 0.08, K = 44.96887307/sxt_scl, N = Nsext, Method = 4;
-vs2m1t6r: VerticalSteerer, L = 0.0, N = Ncorr;
-s2m1t6rr: Sextupole, L = 0.08, K = 44.96887307/sxt_scl, N = Nsext, Method = 4;
+# s2m1t6rl
 da3l1t6r: Drift, L = 0.128;
 bpmz2t6r: BPM;
 db3l1t6r: Drift, L = 0.179;
@@ -974,15 +1369,11 @@ q3m1t6r: Quadrupole, L = 0.25, K = -2.69386876, N = Nquad, Method = 4;
 da6l1t6r: Drift, L = 0.09;
 bpmz3t6r: BPM;
 db6l1t6r: Drift, L = 0.063;
-s3m1t6rl: Sextupole, L = 0.08, K = -43.8795/sxt_scl, N = Nsext, Method = 4;
-vs3m1t6r: VerticalSteerer, L = 0.0, N = Ncorr;
-s3m1t6rr: Sextupole, L = 0.08, K = -43.8795/sxt_scl, N = Nsext, Method = 4;
+# s3m1t6r
 d07l1t6r: Drift, L = 0.153;
 q4m1t6r: Quadrupole, L = 0.5, K = 2.25837798, N = Nquad, Method = 4;
 d08l1t6r: Drift, L = 0.153;
-s4m1t6rl: Sextupole, L = 0.08, K = 41.25/sxt_scl, N = Nsext, Method = 4;
-hs4m1t6r: HorizontalSteerer, L = 0.0, N = Ncorr;
-s4m1t6rr: Sextupole, L = 0.08, K = 41.25/sxt_scl, N = Nsext, Method = 4;
+# s4m1t6rl
 d09l1t6r: Drift, L = 0.153;
 q5m1t6r: Quadrupole, L = 0.2, K = -1.09078314, N = Nquad, Method = 4;
 da10l1t6r: Drift, L = 0.092;
@@ -997,16 +1388,12 @@ bpmz5t6r: BPM;
 da10l2t6r: Drift, L = 0.092;
 q5m2t6r: Quadrupole, L = 0.2, K = -2.42521942, N = Nquad, Method = 4;
 d09l2t6r: Drift, L = 0.153;
-s4m2t6rl: Sextupole, L = 0.08, K = 41.25/sxt_scl, N = Nsext, Method = 4;
-hs4m2t6r: HorizontalSteerer, L = 0.0, N = Ncorr;
-s4m2t6rr: Sextupole, L = 0.08, K = 41.25/sxt_scl, N = Nsext, Method = 4;
+# s4m2t6rl
 d08l2t6r: Drift, L = 0.153;
 q4m2t6r: Quadrupole, L = 0.5, K = 2.55873747, N = Nquad, Method = 4;
 d07l2t6r: Drift, L = 0.153;
 cqs3m2t6: Quadrupole, L = 0.0, K = 0.0, N = Nquad, Method = 4;
-s3m2t6rl: Sextupole, L = 0.08, K = -43.8795/sxt_scl, N = Nsext, Method = 4;
-vs3m2t6r: VerticalSteerer, L = 0.0, N = Ncorr;
-s3m2t6rr: Sextupole, L = 0.08, K = -43.8795/sxt_scl, N = Nsext, Method = 4;
+# s3m2t6rl
 db6l2t6r: Drift, L = 0.063;
 bpmz6t6r: BPM;
 da6l2t6r: Drift, L = 0.09;
@@ -1024,25 +1411,19 @@ q2m2t6r: Quadrupole, L = 0.2, K = -1.8536747, N = Nquad, Method = 4;
 db3l2t6r: Drift, L = 0.244;
 bpmz7t6r: BPM;
 da3l2t6r: Drift, L = 0.063;
-s2m2t6rl: Sextupole, L = 0.08, K = 44.96887307/sxt_scl, N = Nsext, Method = 4;
-vs2m2t6r: VerticalSteerer, L = 0.0, N = Ncorr;
-s2m2t6rr: Sextupole, L = 0.08, K = 44.96887307/sxt_scl, N = Nsext, Method = 4;
+# s2m2t6rl
 d02l2t6r: Drift, L = 0.28800000000000003;
 q1m2t6r: Quadrupole, L = 0.25, K = 2.44045585, N = Nquad, Method = 4;
 d01l2t6r_1: Drift, L = 0.105;
 blm_s1md7r: Marker;
 d01l2t6r_2: Drift, L = 0.05500000000000001;
-s1md7rl: Sextupole, L = 0.105, K = 53.71159807/sxt_scl, N = Nsext, Method = 4;
-hs1md7r: HorizontalSteerer, L = 0.0, N = Ncorr;
-s1md7rr: Sextupole, L = 0.105, K = 53.71159807/sxt_scl, N = Nsext, Method = 4;
+# s1md7rl
 da1l1d7r: Drift, L = 0.07;
 bpmz1d7r: BPM;
 db1l1d7r: Drift, L = 0.09;
 q1m1d7r: Quadrupole, L = 0.25, K = 2.44045585, N = Nquad, Method = 4;
 d02l1d7r: Drift, L = 0.28800000000000003;
-s2m1d7rl: Sextupole, L = 0.08, K = 44.96887307/sxt_scl, N = Nsext, Method = 4;
-vs2m1d7r: VerticalSteerer, L = 0.0, N = Ncorr;
-s2m1d7rr: Sextupole, L = 0.08, K = 44.96887307/sxt_scl, N = Nsext, Method = 4;
+# s2m1d7rl
 da3l1d7r: Drift, L = 0.128;
 bpmz2d7r: BPM;
 db3l1d7r: Drift, L = 0.179;
@@ -1061,15 +1442,11 @@ q3m1d7r: Quadrupole, L = 0.25, K = -2.11883984, N = Nquad, Method = 4;
 da6l1d7r: Drift, L = 0.09;
 bpmz3d7r: BPM;
 db6l1d7r: Drift, L = 0.063;
-s3m1d7rl: Sextupole, L = 0.08, K = -42.735/sxt_scl, N = Nsext, Method = 4;
-vs3m1d7r: VerticalSteerer, L = 0.0, N = Ncorr;
-s3m1d7rr: Sextupole, L = 0.08, K = -42.735/sxt_scl, N = Nsext, Method = 4;
+# s3m1d7rl
 d07l1d7r: Drift, L = 0.153;
 q4m1d7r: Quadrupole, L = 0.5, K = 1.47643621, N = Nquad, Method = 4;
 d08l1d7r: Drift, L = 0.153;
-s4m1d7rl: Sextupole, L = 0.08, K = 38.2185/sxt_scl, N = Nsext, Method = 4;
-hs4m1d7r: HorizontalSteerer, L = 0.0, N = Ncorr;
-s4m1d7rr: Sextupole, L = 0.08, K = 38.2185/sxt_scl, N = Nsext, Method = 4;
+# s4m1d7rl
 da9l1d7r: Drift, L = 0.07;
 bpmz4d7r: BPM;
 db9l1d7r: Drift, L = 0.35100000000000003;
@@ -1081,15 +1458,11 @@ dc9l2d7r: Drift, L = 0.37200000000000005;
 db9l2d7r: Drift, L = 0.221;
 bpmz5d7r: BPM;
 da9l2d7r: Drift, L = 0.07;
-s4m2d7rl: Sextupole, L = 0.08, K = 38.2185/sxt_scl, N = Nsext, Method = 4;
-hs4m2d7r: HorizontalSteerer, L = 0.0, N = Ncorr;
-s4m2d7rr: Sextupole, L = 0.08, K = 38.2185/sxt_scl, N = Nsext, Method = 4;
+# s4m2d7r
 d08l2d7r: Drift, L = 0.153;
 q4m2d7r: Quadrupole, L = 0.5, K = 1.47643621, N = Nquad, Method = 4;
 d07l2d7r: Drift, L = 0.153;
-s3m2d7rl: Sextupole, L = 0.08, K = -42.735/sxt_scl, N = Nsext, Method = 4;
-vs3m2d7r: VerticalSteerer, L = 0.0, N = Ncorr;
-s3m2d7rr: Sextupole, L = 0.08, K = -42.735/sxt_scl, N = Nsext, Method = 4;
+# s3m2d7r
 db6l2d7r: Drift, L = 0.063;
 bpmz6d7r: BPM;
 da6l2d7r: Drift, L = 0.09;
@@ -1106,25 +1479,19 @@ q2m2d7r: Quadrupole, L = 0.2, K = -1.8536747, N = Nquad, Method = 4;
 db3l2d7r: Drift, L = 0.244;
 bpmz7d7r: BPM;
 da3l2d7r: Drift, L = 0.063;
-s2m2d7rl: Sextupole, L = 0.08, K = 44.96887307/sxt_scl, N = Nsext, Method = 4;
-vs2m2d7r: VerticalSteerer, L = 0.0, N = Ncorr;
-s2m2d7rr: Sextupole, L = 0.08, K = 44.96887307/sxt_scl, N = Nsext, Method = 4;
+# s2m2d7r
 d02l2d7r: Drift, L = 0.28800000000000003;
 q1m2d7r: Quadrupole, L = 0.25, K = 2.44045585, N = Nquad, Method = 4;
 d01l2d7r_1: Drift, L = 0.09499999999999999;
 blm_s1mt7r: Marker;
 d01l2d7r_2: Drift, L = 0.06500000000000002;
-s1mt7rl: Sextupole, L = 0.105, K = 53.71159807/sxt_scl, N = Nsext, Method = 4;
-hs1mt7r: HorizontalSteerer, L = 0.0, N = Ncorr;
-s1mt7rr: Sextupole, L = 0.105, K = 53.71159807/sxt_scl, N = Nsext, Method = 4;
+# s1mt7r
 da1l1t7r: Drift, L = 0.07;
 bpmz1t7r: BPM;
 db1l1t7r: Drift, L = 0.09;
 q1m1t7r: Quadrupole, L = 0.25, K = 2.44045585, N = Nquad, Method = 4;
 d02l1t7r: Drift, L = 0.28800000000000003;
-s2m1t7rl: Sextupole, L = 0.08, K = 44.96887307/sxt_scl, N = Nsext, Method = 4;
-vs2m1t7r: VerticalSteerer, L = 0.0, N = Ncorr;
-s2m1t7rr: Sextupole, L = 0.08, K = 44.96887307/sxt_scl, N = Nsext, Method = 4;
+# s2m1t7r
 da3l1t7r: Drift, L = 0.128;
 bpmz2t7r: BPM;
 db3l1t7r: Drift, L = 0.179;
@@ -1143,15 +1510,11 @@ da6l1t7r: Drift, L = 0.09;
 bpmz3t7r: BPM;
 db6l1t7r: Drift, L = 0.063;
 cqs3m1t7: Quadrupole, L = 0.0, K = 0.0, N = Nquad, Method = 4;
-s3m1t7rl: Sextupole, L = 0.08, K = -43.8795/sxt_scl, N = Nsext, Method = 4;
-vs3m1t7r: VerticalSteerer, L = 0.0, N = Ncorr;
-s3m1t7rr: Sextupole, L = 0.08, K = -43.8795/sxt_scl, N = Nsext, Method = 4;
+# s3m1t7rl
 d07l1t7r: Drift, L = 0.153;
 q4m1t7r: Quadrupole, L = 0.5, K = 2.58020271, N = Nquad, Method = 4;
 d08l1t7r: Drift, L = 0.153;
-s4m1t7rl: Sextupole, L = 0.08, K = 55.0/sxt_scl, N = Nsext, Method = 4;
-hs4m1t7r: HorizontalSteerer, L = 0.0, N = Ncorr;
-s4m1t7rr: Sextupole, L = 0.08, K = 55.0/sxt_scl, N = Nsext, Method = 4;
+# s4m1t7rl
 d09l1t7r: Drift, L = 0.153;
 q5m1t7r: Quadrupole, L = 0.2, K = -2.60426005, N = Nquad, Method = 4;
 da10l1t7r: Drift, L = 0.092;
@@ -1164,16 +1527,12 @@ bpmz5t7r: BPM;
 da10l2t7r: Drift, L = 0.092;
 q5m2t7r: Quadrupole, L = 0.2, K = -2.60426005, N = Nquad, Method = 4;
 d09l2t7r: Drift, L = 0.153;
-s4m2t7rl: Sextupole, L = 0.08, K = 55.0/sxt_scl, N = Nsext, Method = 4;
-hs4m2t7r: HorizontalSteerer, L = 0.0, N = Ncorr;
-s4m2t7rr: Sextupole, L = 0.08, K = 55.0/sxt_scl, N = Nsext, Method = 4;
+# s4m2t7rl
 d08l2t7r: Drift, L = 0.153;
 q4m2t7r: Quadrupole, L = 0.5, K = 2.58020271, N = Nquad, Method = 4;
 d07l2t7r: Drift, L = 0.153;
 cqs3m2t7: Quadrupole, L = 0.0, K = 0.0, N = Nquad, Method = 4;
-s3m2t7rl: Sextupole, L = 0.08, K = -43.8795/sxt_scl, N = Nsext, Method = 4;
-vs3m2t7r: VerticalSteerer, L = 0.0, N = Ncorr;
-s3m2t7rr: Sextupole, L = 0.08, K = -43.8795/sxt_scl, N = Nsext, Method = 4;
+# s3m2t7rl
 db6l2t7r: Drift, L = 0.063;
 bpmz6t7r: BPM;
 da6l2t7r: Drift, L = 0.09;
@@ -1190,25 +1549,19 @@ q2m2t7r: Quadrupole, L = 0.2, K = -1.8536747, N = Nquad, Method = 4;
 db3l2t7r: Drift, L = 0.244;
 bpmz7t7r: BPM;
 da3l2t7r: Drift, L = 0.063;
-s2m2t7rl: Sextupole, L = 0.08, K = 44.96887307/sxt_scl, N = Nsext, Method = 4;
-vs2m2t7r: VerticalSteerer, L = 0.0, N = Ncorr;
-s2m2t7rr: Sextupole, L = 0.08, K = 44.96887307/sxt_scl, N = Nsext, Method = 4;
+# s2m2t7rl
 d02l2t7r: Drift, L = 0.28800000000000003;
 q1m2t7r: Quadrupole, L = 0.25, K = 2.44045585, N = Nquad, Method = 4;
 d01l2t7r_1: Drift, L = 0.105;
 blm_s1md8r: Marker;
 d01l2t7r_2: Drift, L = 0.05500000000000001;
-s1md8rl: Sextupole, L = 0.105, K = 53.71159807/sxt_scl, N = Nsext, Method = 4;
-hs1md8r: HorizontalSteerer, L = 0.0, N = Ncorr;
-s1md8rr: Sextupole, L = 0.105, K = 53.71159807/sxt_scl, N = Nsext, Method = 4;
+# s1md8rl
 da1l1d8r: Drift, L = 0.07;
 bpmz1d8r: BPM;
 db1l1d8r: Drift, L = 0.09;
 q1m1d8r: Quadrupole, L = 0.25, K = 2.44045585, N = Nquad, Method = 4;
 d02l1d8r: Drift, L = 0.28800000000000003;
-s2m1d8rl: Sextupole, L = 0.08, K = 44.96887307/sxt_scl, N = Nsext, Method = 4;
-vs2m1d8r: VerticalSteerer, L = 0.0, N = Ncorr;
-s2m1d8rr: Sextupole, L = 0.08, K = 44.96887307/sxt_scl, N = Nsext, Method = 4;
+# s2m1d8r
 da3l1d8r: Drift, L = 0.128;
 bpmz2d8r: BPM;
 db3l1d8r: Drift, L = 0.179;
@@ -1228,15 +1581,11 @@ q3m1d8r: Quadrupole, L = 0.25, K = -2.13404738, N = Nquad, Method = 4;
 da6l1d8r: Drift, L = 0.09;
 bpmz3d8r: BPM;
 db6l1d8r: Drift, L = 0.063;
-s3m1d8rl: Sextupole, L = 0.08, K = -42.735/sxt_scl, N = Nsext, Method = 4;
-vs3m1d8r: VerticalSteerer, L = 0.0, N = Ncorr;
-s3m1d8rr: Sextupole, L = 0.08, K = -42.735/sxt_scl, N = Nsext, Method = 4;
+# s3m1d8rl
 d07l1d8r: Drift, L = 0.153;
 q4m1d8r: Quadrupole, L = 0.5, K = 1.49055699, N = Nquad, Method = 4;
 d08l1d8r: Drift, L = 0.153;
-s4m1d8rl: Sextupole, L = 0.08, K = 38.2185/sxt_scl, N = Nsext, Method = 4;
-hs4m1d8r: HorizontalSteerer, L = 0.0, N = Ncorr;
-s4m1d8rr: Sextupole, L = 0.08, K = 38.2185/sxt_scl, N = Nsext, Method = 4;
+# s4m1d8r
 da9l1d8r: Drift, L = 0.07;
 bpmz4d8r: BPM;
 db9l1d8r: Drift, L = 0.35100000000000003;
@@ -1248,15 +1597,11 @@ dc9l2d8r: Drift, L = 0.413;
 db9l2d8r: Drift, L = 0.221;
 bpmz5d8r: BPM;
 da9l2d8r: Drift, L = 0.07;
-s4m2d8rl: Sextupole, L = 0.08, K = 38.2185/sxt_scl, N = Nsext, Method = 4;
-hs4m2d8r: HorizontalSteerer, L = 0.0, N = Ncorr;
-s4m2d8rr: Sextupole, L = 0.08, K = 38.2185/sxt_scl, N = Nsext, Method = 4;
+# s4m2d8rl
 d08l2d8r: Drift, L = 0.153;
 q4m2d8r: Quadrupole, L = 0.5, K = 1.49055699, N = Nquad, Method = 4;
 d07l2d8r: Drift, L = 0.153;
-s3m2d8rl: Sextupole, L = 0.08, K = -42.735/sxt_scl, N = Nsext, Method = 4;
-vs3m2d8r: VerticalSteerer, L = 0.0, N = Ncorr;
-s3m2d8rr: Sextupole, L = 0.08, K = -42.735/sxt_scl, N = Nsext, Method = 4;
+# s3m2d8rl
 db6l2d8r: Drift, L = 0.063;
 bpmz6d8r: BPM;
 da6l2d8r: Drift, L = 0.09;
@@ -1273,25 +1618,19 @@ q2m2d8r: Quadrupole, L = 0.2, K = -1.8536747, N = Nquad, Method = 4;
 db3l2d8r: Drift, L = 0.244;
 bpmz7d8r: BPM;
 da3l2d8r: Drift, L = 0.063;
-s2m2d8rl: Sextupole, L = 0.08, K = 44.96887307/sxt_scl, N = Nsext, Method = 4;
-vs2m2d8r: VerticalSteerer, L = 0.0, N = Ncorr;
-s2m2d8rr: Sextupole, L = 0.08, K = 44.96887307/sxt_scl, N = Nsext, Method = 4;
+# s2m2d8rl
 d02l2d8r: Drift, L = 0.28800000000000003;
 q1m2d8r: Quadrupole, L = 0.25, K = 2.44045585, N = Nquad, Method = 4;
 d01l2d8r_1: Drift, L = 0.105;
 blm_s1mt8r: Marker;
 d01l2d8r_2: Drift, L = 0.05500000000000001;
-s1mt8rl: Sextupole, L = 0.105, K = 53.71159807/sxt_scl, N = Nsext, Method = 4;
-hs1mt8r: HorizontalSteerer, L = 0.0, N = Ncorr;
-s1mt8rr: Sextupole, L = 0.105, K = 53.71159807/sxt_scl, N = Nsext, Method = 4;
+# s1mt8rl
 da1l1t8r: Drift, L = 0.07;
 bpmz1t8r: BPM;
 db1l1t8r: Drift, L = 0.09;
 q1m1t8r: Quadrupole, L = 0.25, K = 2.44045585, N = Nquad, Method = 4;
 d02l1t8r: Drift, L = 0.28800000000000003;
-s2m1t8rl: Sextupole, L = 0.08, K = 44.96887307/sxt_scl, N = Nsext, Method = 4;
-vs2m1t8r: VerticalSteerer, L = 0.0, N = Ncorr;
-s2m1t8rr: Sextupole, L = 0.08, K = 44.96887307/sxt_scl, N = Nsext, Method = 4;
+# s2m1t8rl
 da3l1t8r: Drift, L = 0.128;
 bpmz2t8r: BPM;
 db3l1t8r: Drift, L = 0.179;
@@ -1311,42 +1650,34 @@ q3m1t8r: Quadrupole, L = 0.25, K = -2.47132446, N = Nquad, Method = 4;
 da6l1t8r: Drift, L = 0.09;
 bpmz3t8r: BPM;
 db6l1t8r: Drift, L = 0.063;
-s3m1t8rl: Sextupole, L = 0.08, K = -43.8795/sxt_scl, N = Nsext, Method = 4;
-vs3m1t8r: VerticalSteerer, L = 0.0, N = Ncorr;
-s3m1t8rr: Sextupole, L = 0.08, K = -43.8795/sxt_scl, N = Nsext, Method = 4;
+# s3m1t8rl
 d07l1t8r: Drift, L = 0.153;
 q4m1t8r: Quadrupole, L = 0.5, K = 2.56384946, N = Nquad, Method = 4;
 d08l1t8r: Drift, L = 0.153;
-s4m1t8rl: Sextupole, L = 0.08, K = 55.0/sxt_scl, N = Nsext, Method = 4;
-hs4m1t8r: HorizontalSteerer, L = 0.0, N = Ncorr;
-s4m1t8rr: Sextupole, L = 0.08, K = 55.0/sxt_scl, N = Nsext, Method = 4;
+# s4m1t8rl
 d09l1t8r: Drift, L = 0.153;
 q5m1t8r: Quadrupole, L = 0.2, K = -2.50807154, N = Nquad, Method = 4;
 da10l1t8r: Drift, L = 0.092;
 bpmz4t8r: BPM;
 db10l1t8r: Drift, L = 1.115;
-cavh1t8r: Cavity, Frequency = 499636630.2, Voltage = 500000, harnum = 400;
+cavh1t8r: Cavity, Frequency = 499636630.2, Voltage = 500000, HarmonicNumber = 400;
 dc10l1t8r: Drift, L = 0.9155;
-cavh2t8r: Cavity, Frequency = 499636630.2, Voltage = 500000, harnum = 400;
+cavh2t8r: Cavity, Frequency = 499636630.2, Voltage = 500000, HarmonicNumber = 400;
 dd10l1t8r: Drift, L = 0.3305;
 dd10l2t8r: Drift, L = 0.5855;
-cavh3t8r: Cavity, Frequency = 499636630.2, Voltage = 500000, harnum = 400;
+cavh3t8r: Cavity, Frequency = 499636630.2, Voltage = 500000, HarmonicNumber = 400;
 dc10l2t8r: Drift, L = 0.9155;
-cavh4t8r: Cavity, Frequency = 499636630.2, Voltage = 500000, harnum = 400;
+cavh4t8r: Cavity, Frequency = 499636630.2, Voltage = 500000, HarmonicNumber = 400;
 db10l2t8r: Drift, L = 0.86;
 bpmz5t8r: BPM;
 da10l2t8r: Drift, L = 0.092;
 q5m2t8r: Quadrupole, L = 0.2, K = -2.50807154, N = Nquad, Method = 4;
 d09l2t8r: Drift, L = 0.153;
-s4m2t8rl: Sextupole, L = 0.08, K = 55.0/sxt_scl, N = Nsext, Method = 4;
-hs4m2t8r: HorizontalSteerer, L = 0.0, N = Ncorr;
-s4m2t8rr: Sextupole, L = 0.08, K = 55.0/sxt_scl, N = Nsext, Method = 4;
+# s4m2t8rl
 d08l2t8r: Drift, L = 0.153;
 q4m2t8r: Quadrupole, L = 0.5, K = 2.64079373, N = Nquad, Method = 4;
 d07l2t8r: Drift, L = 0.153;
-s3m2t8rl: Sextupole, L = 0.08, K = -43.8795/sxt_scl, N = Nsext, Method = 4;
-vs3m2t8r: VerticalSteerer, L = 0.0, N = Ncorr;
-s3m2t8rr: Sextupole, L = 0.08, K = -43.8795/sxt_scl, N = Nsext, Method = 4;
+# s3m2t8rl
 db6l2t8r: Drift, L = 0.063;
 bpmz6t8r: BPM;
 da6l2t8r: Drift, L = 0.09;
@@ -1365,25 +1696,19 @@ q2m2t8r: Quadrupole, L = 0.2, K = -1.8536747, N = Nquad, Method = 4;
 db3l2t8r: Drift, L = 0.244;
 bpmz7t8r: BPM;
 da3l2t8r: Drift, L = 0.063;
-s2m2t8rl: Sextupole, L = 0.08, K = 44.96887307/sxt_scl, N = Nsext, Method = 4;
-vs2m2t8r: VerticalSteerer, L = 0.0, N = Ncorr;
-s2m2t8rr: Sextupole, L = 0.08, K = 44.96887307/sxt_scl, N = Nsext, Method = 4;
+# s2m2t8rl
 d02l2t8r: Drift, L = 0.28800000000000003;
 q1m2t8r: Quadrupole, L = 0.25, K = 2.44045585, N = Nquad, Method = 4;
 d01l2t8r_1: Drift, L = 0.09499999999999999;
 blm_s1md1r: Marker;
 d01l2t8r_2: Drift, L = 0.06500000000000002;
-s1md1rl: Sextupole, L = 0.105, K = 53.71159807/sxt_scl, N = Nsext, Method = 4;
-hs1md1r: HorizontalSteerer, L = 0.0, N = Ncorr;
-s1md1rr: Sextupole, L = 0.105, K = 53.71159807/sxt_scl, N = Nsext, Method = 4;
+# s1md1rl
 da1l1d1r: Drift, L = 0.07;
 bpmz1d1r: BPM;
 db1l1d1r: Drift, L = 0.09;
 q1m1d1r: Quadrupole, L = 0.25, K = 2.44045585, N = Nquad, Method = 4;
 d02l1d1r: Drift, L = 0.28800000000000003;
-s2m1d1rl: Sextupole, L = 0.08, K = 44.96887307/sxt_scl, N = Nsext, Method = 4;
-vs2m1d1r: VerticalSteerer, L = 0.0, N = Ncorr;
-s2m1d1rr: Sextupole, L = 0.08, K = 44.96887307/sxt_scl, N = Nsext, Method = 4;
+# s2m1d1r
 da3l1d1r: Drift, L = 0.128;
 bpmz2d1r: BPM;
 db3l1d1r: Drift, L = 0.179;
@@ -1403,15 +1728,11 @@ q3m1d1r: Quadrupole, L = 0.25, K = -2.02322285, N = Nquad, Method = 4;
 da6l1d1r: Drift, L = 0.09;
 bpmz3d1r: BPM;
 db6l1d1r: Drift, L = 0.063;
-s3m1d1rl: Sextupole, L = 0.08, K = -39.96/sxt_scl, N = Nsext, Method = 4;
-vs3m1d1r: VerticalSteerer, L = 0.0, N = Ncorr;
-s3m1d1rr: Sextupole, L = 0.08, K = -39.96/sxt_scl, N = Nsext, Method = 4;
+# s3m1d1rl
 d07l1d1r: Drift, L = 0.153;
 q4m1d1r: Quadrupole, L = 0.5, K = 1.40046286, N = Nquad, Method = 4;
 d08l1d1r: Drift, L = 0.153;
-s4m1d1rl: Sextupole, L = 0.08, K = 27.0435/sxt_scl, N = Nsext, Method = 4;
-hs4m1d1r: HorizontalSteerer, L = 0.0, N = Ncorr;
-s4m1d1rr: Sextupole, L = 0.08, K = 27.0435/sxt_scl, N = Nsext, Method = 4;
+# s4m1d1rl
 da9l1d1r: Drift, L = 0.07;
 bpmz4d1r: BPM;
 db9l1d1r: Drift, L = 0.5055;
