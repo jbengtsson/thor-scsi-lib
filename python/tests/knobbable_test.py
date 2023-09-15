@@ -155,3 +155,61 @@ def test_quadrupole_dependence_on_offset():
     ps.set_zero()
     quad.propagate(calc_config, ps)
     print(ps.x, ps.px)
+
+
+def test_knobbable_dx_set_from_float():
+    C = Config()
+    C.setAny("L", .5)
+    C.setAny("name", "q1")
+    C.setAny("K", 1.2)
+    C.setAny("N", 4)
+    quad = tslib.QuadrupoleTpsa(C)
+
+
+    quad.set_dx(1e-3)
+    quad.set_dy(.5e-3)
+    quad.set_roll(5e-4)
+
+    desc = gtpsa.desc(6, 2, 3, 1)
+    keys = dict(x=0, px=1, y=2, py=3, delta=4, ct=5, dx=6,dy=7,roll=8)
+    mapping = gtpsa.IndexMapping(keys)
+    dx = gtpsa.tpsa(desc, 1, mapping=mapping)
+    dx.set_knob(1e-3, "dx")
+    dy = gtpsa.tpsa(desc, 1, mapping=mapping)
+    dy.set_knob(1e-3, "dy")
+    roll = gtpsa.tpsa(desc, 1, mapping=mapping)
+    roll.set_knob(1e-3, "roll")
+    quad.set_dx(dx)
+    quad.set_dy(dy)
+
+    # roll crashes the process ...
+    rollk = gtpsa.TpsaOrDouble(roll)
+    quad.set_roll(rollk)
+
+    print(type(quad.get_dx()))
+
+
+def test_knobbalbe_muls_set_from_float():
+    from thor_scsi.lib import TwoDimensionalMultipolesTpsa as Mul2DTpsa
+    m = Mul2DTpsa(0)
+    m.set_multipole(3, 1e-3+1e-2j)
+
+
+def test_knobbalbe_muls_set_from_tpsa():
+    from thor_scsi.lib import TwoDimensionalMultipolesTpsa as Mul2DTpsa
+    import gtpsa
+
+    desc = gtpsa.desc(6, 2, 1, 2)
+    c3 = gtpsa.ctpsa(desc, 1)
+    c3.set_knob(1e-3+1e-2j, 6)
+    m = Mul2DTpsa(0)
+    m.set_multipole(3, c3)
+
+    c3_check = m.get_multipole(3)
+
+
+if __name__ == "__main__":
+    test_knobbable_dx_set_from_float()
+
+    # test_knobbalbe_muls_set_from_float()
+    # test_knobbalbe_muls_set_from_tpsa()

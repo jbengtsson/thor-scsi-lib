@@ -132,30 +132,41 @@ class PyFieldKick: public tse::FieldKick {
 #endif
 
 
-template<typename Types, typename Class>
-void add_methods_field_kick(py::class_<Class> t_mapper)
+// not using the wrapper but directly the double type:
+// TpsaOrComplex  also understands of double of gtpsa::tpsa objects are passed
+template<typename double_type, typename Class>
+void field_kick_add_set_methods(py::class_<Class> t_mapper)
+{
+	t_mapper
+		.def("set_dx", [](Class &kick, const double_type& dx)
+			     {kick.getTransform()->setDx(dx);})
+		.def("set_dy", [](Class &kick, const double_type& dy)
+			     {kick.getTransform()->setDy(dy);})
+		/*
+		 * Todo: seems to crash the interpreter
+		*/
+		.def("set_roll", [](Class &kick, const double_type& roll)
+			{kick.getTransform()->setRoll(roll);},
+			py::keep_alive<1, 2>())
+		;
+}
+
+template<typename double_type, typename Class>
+void field_kick_add_methods(py::class_<Class> t_mapper)
 {
 
-	using double_type = typename Types::double_type;
-
+	//using double_type;
+	field_kick_add_set_methods<double_type, Class>(t_mapper);
 	t_mapper
-		.def("set_dx",
-		     [](Class &kick, const double_type dx)
-			     {kick.getTransform()->setDx(dx);})
-		.def("set_dy",
-		     [](Class &kick, const double_type dy)
-			     {kick.getTransform()->setDy(dy);})
-		.def("set_roll",
-		     [](Class &kick, const double_type roll)
-			     {kick.getTransform()->setRoll(roll);})
+
 		.def("get_dx",
 		     [](Class &kick)
 			     {return kick.getTransform()->getDx();})
 		.def("get_dy",
 		     [](Class &kick)
 			     {return kick.getTransform()->getDy();})
-		// .def("get_roll",
-		//      [](Class &kick){kick.getTransform()->getRoll();})
+		.def("get_roll",
+		     [](Class &kick){kick.getTransform()->getRoll();})
 		.def("is_thick",
 		     &Class::isThick)
 		.def("as_thick",
@@ -196,12 +207,22 @@ void add_methods_field_kick(py::class_<Class> t_mapper)
 }
 
 
-template<typename Types, typename Class>
-void add_methods_classical_magnet(py::class_<Class> t_mapper)
+template<typename complex_type, typename Class>
+void classical_magnet_add_set_methods(py::class_<Class> t_mapper)
 {
-	using double_type = typename Types::double_type;
+	t_mapper
+		.def("set_main_multipole_strength",
+		     [](Class &inst, const complex_type v)
+			     {inst.setMainMultipoleStrength(v);})
+		;
+}
+template<typename Types, typename Class>
+void classical_magnet_add_methods(py::class_<Class> t_mapper)
+{
+	// using double_type = typename Types::double_type;
 	using complex_type = typename Types::complex_type;
 
+	classical_magnet_add_set_methods<complex_type, Class>(t_mapper);
 	t_mapper
 		.def("get_multipoles",
 		     &Class::getMultipoles)
@@ -221,9 +242,6 @@ void add_methods_classical_magnet(py::class_<Class> t_mapper)
 		// .def("set_main_multipole_strength",
 		//      [](Class &inst, const double_type v)
 		// 	     {inst.setMainMultipoleStrength(v);})
-		.def("set_main_multipole_strength",
-		     [](Class &inst, const complex_type v)
-			     {inst.setMainMultipoleStrength(v);})
 		.def("propagate",
 		     py::overload_cast<tsc::ConfigType&,
 		     gtpsa::ss_vect<double>&>(&Class::propagate), pass_d_doc)
@@ -255,9 +273,11 @@ struct TemplatedClasses
 	// auto buildClasses
 	// (py::class_<tsc::CellVoid,
 	//  std::shared_ptr<tsc::CellVoid>>& cell_void)
+	typedef tse::FieldKickKnobbed<C> FieldKickK;
+
 	auto buildClasses
-	(py::class_<tsc::ElemType, PyElemType,
-	 std::shared_ptr<tsc::ElemType>>& elem_type){
+	(py::class_<tsc::ElemType, PyElemType, std::shared_ptr<tsc::ElemType>>& elem_type,
+	 py::class_<FieldKickK, std::shared_ptr<FieldKickK>>& field_kick){
 
 		typedef tse::DriftTypeWithKnob<C> DriftTypeK;
 		std::string drift_type_name = "Drift" + this->m_suffix;
@@ -266,11 +286,7 @@ struct TemplatedClasses
 		drift
 			.def(py::init<const Config &>());
 
-		typedef tse::FieldKickKnobbed<C> FieldKickK;
-		std::string field_kick_name = "FieldKick" + this->m_suffix;
-		py::class_<FieldKickK, std::shared_ptr<FieldKickK>> field_kick
-			(this->m_module, field_kick_name.c_str(), elem_type);
-		add_methods_field_kick<C, FieldKickK>(field_kick);
+		field_kick_add_methods<typename C::double_type, FieldKickK>(field_kick);
 		field_kick
 			/*
 			.def("getTransform",
@@ -294,8 +310,7 @@ struct TemplatedClasses
 			PyClassicalMagnet<C>,
 			std::shared_ptr<tse::ClassicalMagnetWithKnob<C>>
 			> cm(this->m_module, cm_name.c_str(), mpole_type);
-		add_methods_classical_magnet
-			<C, tse::ClassicalMagnetWithKnob<C>>(cm);
+		classical_magnet_add_methods<C, tse::ClassicalMagnetWithKnob<C>>(cm);
 		cm
 			.def(py::init<const Config &>());
 
@@ -340,7 +355,7 @@ struct TemplatedClasses
 			.def(py::init<const Config &>());
 
 
-		return elem_type;
+		return cm;
 	}
 };
 
@@ -390,16 +405,31 @@ void py_thor_scsi_init_elements(py::module &m)
 		//      (&tse::ElemType::propagate), pass_tpsa_doc)
                 ;
 
+	typedef tse::FieldKickKnobbed<tsc::StandardDoubleType> FieldKickKD;
+	py::class_<FieldKickKD, std::shared_ptr<FieldKickKD>> field_kick
+		(m, "FieldKick", elem_type);
+
+	typedef tse::FieldKickKnobbed<tsc::TpsaVariantType> FieldKickKT;
+	py::class_<FieldKickKT, std::shared_ptr<FieldKickKT>> field_kick_tpsa
+		(m, "FieldKickTpsa", elem_type);
+
+	// make it directly callable by doubles
+	field_kick_add_set_methods<double, FieldKickKT>(field_kick_tpsa);
+	// and gtpsa::tpsa objects
+	field_kick_add_set_methods<gtpsa::tpsa, FieldKickKT>(field_kick_tpsa);
 
 	TemplatedClasses<tsc::StandardDoubleType> templated_classes_std(m, "");
 	// required as marker and bpm are not knobbed yet
-	// auto elem_type =
-	templated_classes_std.buildClasses(elem_type);
+	auto classical_magnet =	templated_classes_std.buildClasses(elem_type, field_kick);
 
 	// Device classes / types with knobs ... handled by these two lines
 	TemplatedClasses<tsc::TpsaVariantType> templated_classes_tpsa
 		(m, "Tpsa");
-	templated_classes_tpsa.buildClasses(elem_type);
+	auto classical_magnet_tpsa = templated_classes_tpsa.buildClasses(elem_type, field_kick_tpsa);
+	classical_magnet_add_set_methods<double, tse::ClassicalMagnetWithKnob<tsc::StandardDoubleType>> (classical_magnet_tpsa);
+	classical_magnet_add_set_methods<gtpsa::tpsa, tse::ClassicalMagnetWithKnob<tsc::TpsaVariantType>> (classical_magnet_tpsa);
+
+
 
 	// classes without knobs follow
 
