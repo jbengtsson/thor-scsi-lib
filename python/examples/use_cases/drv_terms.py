@@ -134,8 +134,10 @@ def compute_periodic_solution(lat, model_state, named_index, desc, no):
     model_state.radiation = False
     model_state.Cavity_on = False
 
-    stable, M, A = lo.compute_map_and_diag(n_dof, lat, model_state, desc=desc,
-                                           tpsa_order=no)
+    stable, M, A = \
+        lo.compute_map_and_diag(
+            n_dof, lat, model_state, desc=desc, tpsa_order=no
+        )
     print("\nM:\n", M)
     res = cs.compute_Twiss_A(A)
     Twiss = res[:3]
@@ -167,7 +169,7 @@ def prt_twiss_sxt(lat, data, fam_name):
 
     
 # Number of phase-space coordinates.
-nv = 6
+nv = 7
 # Variables max order.
 no = 3
 # Number of parameters.
@@ -186,12 +188,14 @@ if not False:
     desc = gtpsa.desc(nv, no, nv_prm, no_prm)
     M, A, data = \
         compute_periodic_solution(lat, model_state, named_index, desc, no)
+    print("\nM:\n", mat2txt(M.jacobian()))
+    print("\nA:\n", mat2txt(A))
     print("\nR:\n", mat2txt(np.linalg.inv(A) @ M.jacobian() @ A))
 
 if not True:
     prt_map("\nM:", M)
 
-h = tslib.M_to_h_DF(M)
+h = -1e0*tslib.M_to_h_DF(M)
 print("\nh:")
 h.print()
 

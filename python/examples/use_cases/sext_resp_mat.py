@@ -78,8 +78,10 @@ def compute_periodic_solution(lat, model_state, named_index, desc, no):
     model_state.radiation = False
     model_state.Cavity_on = False
 
-    stable, M, A = lo.compute_map_and_diag(n_dof, lat, model_state, desc=desc,
-                                           tpsa_order=no)
+    stable, M, A = \
+        lo.compute_map_and_diag(
+            n_dof, lat, model_state, desc=desc, tpsa_order=no
+        )
     print("\nM:\n", M)
     res = cs.compute_Twiss_A(A)
     Twiss = res[:3]

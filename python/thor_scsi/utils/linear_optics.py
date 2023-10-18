@@ -397,7 +397,7 @@ def compute_M_diag(
                                  @ A[:n, :n], 1e-13))
         )
 
-        R = A_inv @ M @ A
+        R = A_inv @ M[:6, :6] @ A
 
         nu = np.zeros(3, float)
         alpha_rad = np.zeros(3, float)
@@ -535,6 +535,10 @@ def compute_map_and_diag(
     logger.info("\ncompute_map_and_diag\nM:\n" + mat2txt(M))
 
     stable, A, A_inv, alpha_rad = compute_M_diag(n_dof, M)
+    print("\nA:\n", mat2txt(A))
+    A = np.pad(A, (0, 1))
+    A[6, 6] = 1
+    print("\nA:\n", mat2txt(A))
     if stable:
         Atest = gtpsa.ss_vect_tpsa(desc, 1)
         Atest.set_zero()
@@ -617,8 +621,11 @@ def compute_Twiss_along_lattice(
         # Zero the phase advance so that the fraction tune change is not
         # exceeding two pi
         Aj = A.jacobian()
-        rjac, _ = compute_A_CS(2, Aj)
+        rjac, _ = compute_A_CS(2, Aj[:6, :6])
+        rjac = np.pad(rjac, (0, 1))
+        rjac[6, 6 ] = 1
         A.set_jacobian(rjac)
+        print("\nA:\n", A)
 
     logger.debug("\ncompute_Twiss_along_lattice A:\n%s" + prt2txt(A))
 
