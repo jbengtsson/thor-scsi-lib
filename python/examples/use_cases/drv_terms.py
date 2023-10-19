@@ -198,6 +198,13 @@ if not True:
 h = -1e0*tslib.M_to_h_DF(M)
 print("\nh:")
 h.print()
+h_re = gtpsa.tpsa(desc, no)
+h_im = gtpsa.tpsa(desc, no)
+tslib.CtoR(h, h_re, h_im)
+print("\nh_re:")
+h_re.print()
+print("\nh_im:")
+h_im.print()
 
 if not True:
     plt_Twiss(data, "lin_opt.png", "Linear Optics")
