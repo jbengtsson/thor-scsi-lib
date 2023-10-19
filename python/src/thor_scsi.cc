@@ -46,4 +46,5 @@ PYBIND11_MODULE(lib, m) {
     m.def("compose", &gtpsa::compose);
     // m.def("integ", &gtpsa::integ);
     m.def("M_to_h_DF", &gtpsa::M_to_h_DF);
+    m.def("CtoR", &gtpsa::CtoR);
 }
