@@ -205,6 +205,7 @@ print("\nh_re:")
 h_re.print()
 print("\nh_im:")
 h_im.print()
+(h-tslib.RtoC(h_re, h_im)).print()
 
 if not True:
     plt_Twiss(data, "lin_opt.png", "Linear Optics")

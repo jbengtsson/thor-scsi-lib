@@ -217,7 +217,7 @@ def propagate(lat, model_state, desc, no, nv, named_index):
 # Number of phase-space coordinates.
 nv = 6
 # Variables max order.
-no = 5
+no = 4
 # Number of parameters.
 nv_prm = 0
 # Parameters max order.
@@ -297,3 +297,10 @@ if False:
 h = tslib.M_to_h_DF(M)
 print("\nh:")
 h.print()
+h_re = gtpsa.tpsa(desc, no)
+h_im = gtpsa.tpsa(desc, no)
+tslib.CtoR(h, h_re, h_im)
+print("\nh_re:")
+h_re.print()
+print("\nh_im:")
+h_im.print()
