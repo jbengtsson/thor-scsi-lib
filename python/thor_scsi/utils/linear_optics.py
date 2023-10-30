@@ -38,13 +38,12 @@ X_, Y_, Z_ = [
 
 
 def compute_map(
-    acc: tslib.Accelerator,
-    calc_config: tslib.ConfigType,
-    *,
-    delta: float = 0e0,
-    t_map: gtpsa.ss_vect_tpsa = None,
-    desc: gtpsa.desc = None,
-    tpsa_order: int = 1
+        lat: tslib.Accelerator,
+        model_state: tslib.ConfigType,
+        *,
+        t_map: gtpsa.ss_vect_tpsa = None,
+        desc: gtpsa.desc = None,
+        tpsa_order: int = 1
 ) -> gtpsa.ss_vect_tpsa:
     """Propagate an identity map through the accelerator
     """
@@ -53,8 +52,7 @@ def compute_map(
         t_map = gtpsa.ss_vect_tpsa(desc, tpsa_order)
         t_map.set_identity()
 
-    t_map.delta += delta
-    acc.propagate(calc_config, t_map)
+    lat.propagate(model_state, t_map)
     return t_map
 
 
@@ -520,30 +518,29 @@ def tps2twiss(tpsa: gtpsa.ss_vect_tpsa) -> (np.ndarray, np.ndarray):
 
 def compute_map_and_diag(
         n_dof: int,
-        acc: tslib.Accelerator,
-        calc_config: tslib.ConfigType,
+        lat: tslib.Accelerator,
+        model_state: tslib.ConfigType,
         *,
-        desc: gtpsa.desc,
-        tpsa_order: int = 1):
+        desc: gtpsa.desc
+):
     """propagate once around ring. use this map to find phase space origin
 
     Todo:
          Rename phase space origin fix point
     """
-    t_map = compute_map(acc, calc_config, desc=desc, tpsa_order=tpsa_order)
+    t_map = \
+        compute_map(lat, model_state, desc=desc, tpsa_order=1)
     M = np.array(t_map.jacobian())
     logger.info("\ncompute_map_and_diag\nM:\n" + mat2txt(M))
 
     stable, A, A_inv, alpha_rad = compute_M_diag(n_dof, M)
-    print("\nA:\n", mat2txt(A))
     A = np.pad(A, (0, 1))
     A[6, 6] = 1
-    print("\nA:\n", mat2txt(A))
     if stable:
         Atest = gtpsa.ss_vect_tpsa(desc, 1)
         Atest.set_zero()
         Atest.set_jacobian(A)
-        acc.propagate(calc_config, Atest)
+        lat.propagate(model_state, Atest)
     else:
         print("\ncompute_map_and_diag: unstable")
     return stable, t_map, A
@@ -573,19 +570,18 @@ def compute_A(
 
 def compute_Twiss_along_lattice(
     n_dof: int,
-    acc: tslib.Accelerator,
-    calc_config: tslib.ConfigType = None,
+    lat: tslib.Accelerator,
+    model_state: tslib.ConfigType = None,
     *,
     mapping : gtpsa.IndexMapping,
     A: gtpsa.ss_vect_tpsa = None,
-    desc: gtpsa.desc = None,
-    tpsa_order: int = 1
+    desc: gtpsa.desc = None
 ) -> xr.Dataset:
     """
 
     Args:
-        acc :         an :class:`tlib.Accelerator` instance
-        calc_config : an :class:`tlib.Config` instance
+        lat :         an :class:`tlib.Accelerator` instance
+        model_state : an :class:`tlib.Config` instance
         A : see :func:`compute_ring_twiss` for output
 
     returns xr.Dataset
@@ -596,13 +592,13 @@ def compute_Twiss_along_lattice(
         xarrays. But what then to use?)
 
     """
-    if calc_config is None:
-        calc_config = tslib.ConfigType()
+    if model_state is None:
+        model_state = tslib.ConfigType()
 
     if A is None:
         stable, _, A_mat = \
             compute_map_and_diag(
-                n_dof, acc, calc_config, desc=desc, tpsa_order=tpsa_order
+                n_dof, lat, model_state, desc=desc, tpsa_order=1
             )
         A = gtpsa.ss_vect_tpsa(desc, 1)
         A.set_jacobian(A_mat)
@@ -611,13 +607,13 @@ def compute_Twiss_along_lattice(
         logger.info("\ncompute_Twiss_along_lattice\nA:\n" + prt2txt(A))
 
     # Not really required ... but used for convenience
-    observers = instrument_with_standard_observers(acc, mapping=mapping)
+    observers = instrument_with_standard_observers(lat, mapping=mapping)
 
     # Propagate through the accelerator
     logger.debug("\ncompute_Twiss_along_lattice\nA:\n" + prt2txt(A))
 
-    for k in range(len(acc)):
-        acc.propagate(calc_config, A, k, 1)
+    for k in range(len(lat)):
+        lat.propagate(model_state, A, k, 1)
         # Zero the phase advance so that the fraction tune change is not
         # exceeding two pi
         Aj = A.jacobian()
@@ -625,12 +621,11 @@ def compute_Twiss_along_lattice(
         rjac = np.pad(rjac, (0, 1))
         rjac[6, 6 ] = 1
         A.set_jacobian(rjac)
-        print("\nA:\n", A)
 
     logger.debug("\ncompute_Twiss_along_lattice A:\n%s" + prt2txt(A))
 
-    indices = [elem.index for elem in acc]
-    tps_tmp = [_extract_tps(elem) for elem in acc]
+    indices = [elem.index for elem in lat]
+    tps_tmp = [_extract_tps(elem) for elem in lat]
     data = [tps2twiss(t) for t in tps_tmp]
     # print(type(tps_tmp), type(tps_tmp[0]))
     twiss_pars = [d[1] for d in data]
@@ -657,7 +652,7 @@ def compute_Twiss_along_lattice(
     #    dims=["index", "phase_coordinate"],
     #    coords=[indices, phase_space_coords_names],
     # )
-    info = accelerator_info(acc)
+    info = accelerator_info(lat)
     res = \
         info.merge(dict(twiss=twiss_parameters, dispersion=dispersion,
                         #tps=tps

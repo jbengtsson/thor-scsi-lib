@@ -79,13 +79,13 @@ def partial_inverse(mat, selected_dimensions: List[bool]):
 
 
 def compute_closed_orbit(
-        acc: tslib.Accelerator,
-        conf: tslib.ConfigType,
+        lat: tslib.Accelerator,
+        model_state: tslib.ConfigType,
         *,
         delta: float = None,
         x0: tslib.ss_vect_double = None,
         max_iter: int = 10,
-        eps: float = 1e-6,
+        eps: float = 1e-10,
         desc: gtpsa.desc = None,
 ) -> ClosedOrbitResult:
     """searches for the closed orbit
@@ -112,7 +112,7 @@ def compute_closed_orbit(
     if x0 is not None and not np.isfinite(x0.iloc).all():
         raise AssertionError(f"given start {x0} is not finite!")
 
-    if conf.Cavity_on:
+    if model_state.Cavity_on:
         n = 6
     else:
         n = 4
@@ -120,11 +120,11 @@ def compute_closed_orbit(
     if desc is None:
         desc = gtpsa.desc(7, 1)
 
-    logger.debug(f" Cavity on ? {conf.Cavity_on} {n=}")
+    logger.debug(f" Cavity on ? {model_state.Cavity_on} {n=}")
 
     if x0 is None:
         assert delta is not None
-        conf.dPparticle = delta
+        model_state.dPparticle = delta
         x0 = gtpsa.ss_vect_double(0e0)
         if n == 4:
             x0.set_zero()
@@ -139,7 +139,7 @@ def compute_closed_orbit(
     else:
         if delta is not None:
             raise AssertionError("if x0 is given delta must be None")
-        conf.dPparticle = x0.delta
+        model_state.dPparticle = x0.delta
 
     # create weighting matrix for inverse calculation
     # J.B. 20/02/23:
@@ -158,7 +158,7 @@ def compute_closed_orbit(
     dx_abs = 1e30
 
     closed_orbit = False
-    n_elements = len(acc)
+    n_elements = len(lat)
     # Newton's method for root finding
     logger.debug("start     , dx_abs %7.1e, eps  %7.1e, x0 %s", dx_abs, eps, x0)
 
@@ -171,7 +171,7 @@ def compute_closed_orbit(
         M.set_identity()
         M += x0
         logger.debug(f"{n_iter=},  Start propagation at \n {M.cst()}\n")
-        next_element = acc.propagate(conf, M)
+        next_element = lat.propagate(model_state, M)
         logger.debug(f"{n_iter=},  End propagation at \n {M.cst()}\n {M}")
 
         if next_element == n_elements:
@@ -208,7 +208,8 @@ def compute_closed_orbit(
             break
 
         logger.info(
-            "n_iter %3d, dx_abs %7.1e, eps  %7.1e, x0 %s", n_iter + 1, dx_abs, eps, x0
+            "n_iter %3d, dx_abs %7.1e, eps  %7.1e, x0 %s", n_iter + 1, dx_abs,
+            eps, x0
         )
 
     else:
@@ -228,7 +229,7 @@ def compute_closed_orbit(
             f" Fixed point check propagate again start : x0\n{M.cst()}\nMat {M}"
         )
         Mref = copy.copy(M)
-        acc.propagate(conf, M)
+        lat.propagate(model_state, M)
         logger.debug(
             f" Fixed point check propagate returned    : x0\n{M.cst()}\nMat {M}"
         )
@@ -245,7 +246,7 @@ def compute_closed_orbit(
 
         # Propagate with the fixed point around the lattice
         # so that observers can memorize this orbit
-        acc.propagate(conf, M)
+        lat.propagate(model_state, M)
 
     else:
         result = ClosedOrbitResult(
@@ -254,7 +255,7 @@ def compute_closed_orbit(
             one_turn_map=t_map,
             last_element=next_element,
         )
-        elem = acc[next_element]
+        elem = lat[next_element]
         ob = elem.observer()
         xkm1 = None
         if ob:

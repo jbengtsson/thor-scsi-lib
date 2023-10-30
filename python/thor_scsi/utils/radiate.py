@@ -41,8 +41,8 @@ class RadiationResult:
     fractional_tunes: np.ndarray
 
 
-def compute_circ(acc):
-    return np.sum([elem.get_length() for elem in acc])
+def compute_circ(lat):
+    return np.sum([elem.get_length() for elem in lat])
 
 
 def compute_diffusion_coefficients(rad_del_kicks):
@@ -53,21 +53,21 @@ def compute_diffusion_coefficients(rad_del_kicks):
     return D_rad
 
 
-def compute_rad_prop(acc, calc_config, x0, dE, alpha_rad, D_rad):
+def compute_rad_prop(lat, model_state, x0, dE, alpha_rad, D_rad):
     dof = 3
     J = np.zeros(dof)
     tau = np.zeros(dof)
     eps = np.zeros(dof)
-    C = compute_circ(acc)
+    C = compute_circ(lat)
     logger.info("\nC = %5.3f", C)
-    U_0 = calc_config.Energy*dE
+    U_0 = model_state.Energy*dE
     for k in range(dof):
         J[k] = 2e0*(1e0+x0.delta)*alpha_rad[k]/dE
         tau[k] = -C/(c0*alpha_rad[k])
         eps[k] = -D_rad[k]/(2e0*alpha_rad[k])
 
     logger.info("\nE [GeV]     = {:3.1f}\nU0 [keV]    = {:3.1f}\neps         = {:12.6e} {:12.6e} {:12.6e}\ntau [msec]  = {:8.6f} {:8.6f} {:8.6f}\nJ           = {:8.6f} {:8.6f} {:8.6f}\nalpha_rad   = {:13.6e} {:13.6e} {:13.6e}\nD_rad       = {:12.6e} {:12.6e} {:12.6e}".
-                format(1e-9*calc_config.Energy,
+                format(1e-9*model_state.Energy,
                        1e-3*U_0,
                        eps[X_], eps[Y_], eps[Z_],
                        1e3*tau[X_], 1e3*tau[Y_], 1e3*tau[Z_],
@@ -80,8 +80,8 @@ def compute_rad_prop(acc, calc_config, x0, dE, alpha_rad, D_rad):
 
 
 def compute_radiation(
-    acc: tslib.Accelerator,
-    calc_config: tslib.ConfigType,
+    lat: tslib.Accelerator,
+    model_state: tslib.ConfigType,
     E,
     eps,
     *, desc
@@ -89,15 +89,15 @@ def compute_radiation(
 
     dof = 3
 
-    calc_config.Energy    = E
-    calc_config.radiation = True
-    calc_config.emittance = False
-    calc_config.Cavity_on = True
+    model_state.Energy    = E
+    model_state.radiation = True
+    model_state.emittance = False
+    model_state.Cavity_on = True
 
     # Install radiators that radiation is calculated
-    rad_del_kicks = instrument_with_radiators(acc, energy=E)
+    rad_del_kicks = instrument_with_radiators(lat, energy=E)
 
-    r = compute_closed_orbit(acc, calc_config, delta=0e0, eps=eps)
+    r = compute_closed_orbit(lat, model_state, delta=0e0, eps=eps)
     #print("M:\n" + mat2txt(map2numpy(r.one_turn_map)))
     M = r.one_turn_map[:6, :6]
 
@@ -108,10 +108,10 @@ def compute_radiation(
             [r.x0.x, r.x0.px, r.x0.y, r.x0.py, r.x0.delta, r.x0.ct]))
     )
 
-    calc_config.dE = 0e0
+    model_state.dE = 0e0
     ps = r.x0
-    acc.propagate(calc_config, ps)
-    dE = calc_config.dE
+    lat.propagate(model_state, ps)
+    dE = model_state.dE
 
     stable, A, A_inv, alpha_rad = compute_M_diag(dof, M)
 
@@ -119,18 +119,18 @@ def compute_radiation(
     A_7x7[:6, :6] = A
     A_7x7[6, 6] = 1e0
     if stable:
-        calc_config.emittance = True
+        model_state.emittance = True
 
         #A_cpy = vec_mat2ss_vect_tps(r.x0, A)
         A_cpy  = gtpsa.ss_vect_tpsa(desc, 1)
         A_cpy += r.x0
         A_cpy.set_jacobian(A_7x7)
-        acc.propagate(calc_config, A_cpy)
+        lat.propagate(model_state, A_cpy)
 
         D_rad = compute_diffusion_coefficients(rad_del_kicks)
 
         U_0, J, tau, eps = \
-            compute_rad_prop(acc, calc_config, r.x0, dE, alpha_rad, D_rad)
+            compute_rad_prop(lat, model_state, r.x0, dE, alpha_rad, D_rad)
     else:
         U_0 = np.nan
         J = np.zeros(3, float)
@@ -143,10 +143,10 @@ def compute_radiation(
 
 
 # def calculate_radiation(
-#     acc: tslib.Accelerator,
+#     lat: tslib.Accelerator,
 #     *,
 #     energy,
-#     calc_config: tslib.ConfigType = None,
+#     model_state: tslib.ConfigType = None,
 #     install_radiators: bool = True,
 #     dof=3
 # ):
@@ -176,24 +176,24 @@ def compute_radiation(
 #     if install_radiators:
 #         logger.debug("Installing radiators")
 #         # keep variable as long as you need to do calculations
-#         rad_del = instrument_with_radiators(acc, energy=energy)
+#         rad_del = instrument_with_radiators(lat, energy=energy)
 
-#     if calc_config is None:
+#     if model_state is None:
 #         raise AssertionError
-#         calc_config = tslib.ConfigType()
-#         calc_config.radiation = True
+#         model_state = tslib.ConfigType()
+#         model_state.radiation = True
 #         # is this used anywhere?
-#         calc_config.emittance = False
-#         calc_config.Cavity_on = True
+#         model_state.emittance = False
+#         model_state.Cavity_on = True
 
-#     calc_config.Energy = energy
+#     model_state.Energy = energy
 #     logger.debug(
-#         f"calc_config radiation { calc_config.radiation} emmittance {calc_config.emittance} Cavity on {calc_config.Cavity_on}"
+#         f"model_state radiation { model_state.radiation} emmittance {model_state.emittance} Cavity on {model_state.Cavity_on}"
 #     )
 
 
 #     # Diffusion coefficients
-#     acc.propagate(calc_config, Ap)
+#     lat.propagate(model_state, Ap)
 #     print("Ap after calc")
 #     print(Ap)
 
