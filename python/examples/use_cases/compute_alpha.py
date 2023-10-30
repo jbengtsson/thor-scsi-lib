@@ -1,25 +1,18 @@
 """Use Case:
-     Minimise the driving terms.
-     See SLS Tech Note 09/97
-
-     https://ados.web.psi.ch/slsnotes/sls0997.pdf
+     Compute the momentum compaction, alpha, to arbitrary order.
 """
+
 
 import enum
 import logging
 
 # Levels: DEBUG, INFO, WARNING, ERROR, and CRITICAL.
-logging.basicConfig(level="INFO")
+logging.basicConfig(level="ERROR")
 logger = logging.getLogger("thor_scsi")
 
 
-from scipy import optimize
-
-import copy as _copy
-from dataclasses import dataclass
 import math
 import os
-from typing import Tuple
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -28,9 +21,9 @@ import gtpsa
 import thor_scsi.lib as tslib
 
 from thor_scsi.factory import accelerator_from_config
-from thor_scsi.utils.twiss_output import twiss_ds_to_df, df_to_tsv
 
-from thor_scsi.utils import linear_optics as lo, courant_snyder as cs
+from thor_scsi.utils import linear_optics as lo, courant_snyder as cs, \
+    radiate as rad
 
 # from thor_scsi.utils.phase_space_vector import map2numpy
 from thor_scsi.utils.output import prt2txt, mat2txt, vec2txt
@@ -57,14 +50,8 @@ X_, Y_, Z_ = [
 ]
 
 
-class MultipoleIndex(enum.IntEnum):
-    quadrupole = 2
-    sextupole = 3
-
-
 def read_lattice(t_file):
     # Read in & parse lattice file.
-    print("\nread_lattice ->")
     lat = accelerator_from_config(t_file)
 
     # Set lattice state (Rf cavity on/off, etc.)
@@ -74,7 +61,6 @@ def read_lattice(t_file):
     model_state.radiation = False
     model_state.Cavity_on = False
 
-    print("-> read_lattice")
     return n_dof, lat, model_state
 
 
@@ -131,10 +117,10 @@ def compute_periodic_solution(lat, model_state, named_index, desc, no):
         lo.compute_map_and_diag(
             n_dof, lat, model_state, desc=desc, tpsa_order=no
         )
-    print("\nM:\n", M)
+    print("\nM:", M)
     res = cs.compute_Twiss_A(A)
     Twiss = res[:3]
-    prt_Twiss("\nTwiss:\n", Twiss)
+    prt_Twiss("Twiss:\n", Twiss)
     A_map = gtpsa.ss_vect_tpsa(desc, no)
     A_map.set_jacobian(A)
     ds = \
@@ -151,16 +137,6 @@ def prt_map(str, map):
         map.iloc[k].print()
 
 
-def prt_twiss_sxt(lat, data, fam_name):
-    print("\n  name        s    beta_x beta_y")
-    for k in range(len(lat)):
-        if (lat[k].name == fam_name):
-            print("  {:8s} {:6.3f} {:6.3f} {:6.3f}".
-                  format(lat[k].name, data.s.values[k],
-                         data.twiss.values[k, 0, 1],
-                         data.twiss.values[k, 1, 1]))
-
-    
 # Number of phase-space coordinates.
 nv = 7
 # Variables max order.
@@ -176,23 +152,11 @@ t_file = os.path.join(t_dir, "b3_cf425cf_thor_scsi.lat")
 
 n_dof, lat, model_state = read_lattice(t_file)
 
-if not False:
+if True:
     named_index = gtpsa.IndexMapping(dict(x=0, px=1, y=2, py=3, delta=4, ct=5))
     desc = gtpsa.desc(nv, no, nv_prm, no_prm)
     M, A, data = \
         compute_periodic_solution(lat, model_state, named_index, desc, no)
-    print("\nM:\n", mat2txt(M.jacobian()))
-    print("\nA:\n", mat2txt(A))
-    print("\nR:\n", mat2txt(np.linalg.inv(A) @ M.jacobian() @ A))
-
-if not True:
-    prt_map("\nM:", M)
-
-h = -1e0*tslib.M_to_h_DF(M)
-h_re = gtpsa.tpsa(desc, no)
-h_im = gtpsa.tpsa(desc, no)
-tslib.CtoR(h, h_re, h_im)
-(h-tslib.RtoC(h_re, h_im)).print()
 
 if not True:
     plt_Twiss(data, "lin_opt.png", "Linear Optics")
@@ -200,5 +164,13 @@ if not True:
     print("\nPlots saved as: before.png & after.png")
 
 if not True:
-    prt_twiss_sxt(lat, data, "om_sf")
-    prt_twiss_sxt(lat, data, "om_sd")
+    print("\nM[ct]:\n")
+    M.ct.print()
+
+C = rad.compute_circ(lat)
+print("\nC = ", C)
+ind = np.zeros(6, int)
+print("\nalpha:")
+for k in range(1, no+1):
+    ind[delta_] = k
+    print("  {:1d} {:10.3e}".format(k, M.ct.get(ind)/C))

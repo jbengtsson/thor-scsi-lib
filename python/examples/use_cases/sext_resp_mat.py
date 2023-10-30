@@ -119,13 +119,10 @@ def print_map(str, map):
     """
     # 
     """
+    n_dof = 3
     print(str)
-    map.x.print()
-    map.px.print()
-    map.y.print()
-    map.py.print()
-    map.delta.print()
-    map.ct.print()
+    for k in range(2*n_dof):
+        map.iloc[k].print()
 
 
 def read_lattice(t_file):
