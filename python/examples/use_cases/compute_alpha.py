@@ -124,49 +124,57 @@ def compute_periodic_solution(lat, model_state, named_index, desc):
     return M, A, ds
 
 
-def compute_disp(map, no, nv, desc):
-    n = 4
+def compute_alpha(map):
+    if not True:
+        print("\nmap[ct]:\n")
+        map.ct.print()
 
-    ind = np.zeros(nv, dtype=int)
-    Id = gtpsa.ss_vect_tpsa(desc, 1)
-    D = gtpsa.ss_vect_double(0e0)
-    M = gtpsa.ss_vect_tpsa(desc, 1)
+    C = rad.compute_circ(lat)
+    print(f"\nC [m] = {C:5.3f}")
+    ind = np.zeros(nv, int)
+    print("\nalpha:")
+    for k in range(1, no+1):
+        ind[delta_] = k
+        print("  {:1d} {:10.3e}".format(k, map.ct.get(ind)/C))
 
-    Id.set_identity()
-    ind[delta_] = 1
+
+def compute_disp(map):
+    A0 = gtpsa.ss_vect_tpsa(desc, no)
+    ts.GoFix(map, A0)
+    ind = np.zeros(nv, int)
+    print("\ndispersion:")
+    for k in range(1, no+1):
+        ind[delta_] = k
+        print("  {:1d} {:10.3e} {:10.3e}".
+              format(k, A0.x.get(ind), A0.px.get(ind)))
+    return A0
+
+
+def print_disp_along_lattice(lat, eta):
+    s = 0e0
+    print("\n                      eta_0,x   eta_0,p_x   eta_1,x   eta_1,p_x")
+    for k in range(len(eta[1])):
+        print("{:3d} {:6.3f} {:8s} {:10.3e} {:10.3e} {:10.3e} {:10.3e}".
+              format(k+1, s, lat[k].name, eta[1, k, x_], eta[1, k, px_],
+                     eta[2, k, x_], eta[2, k, px_]))
+        s += lat[k].get_length()
+
+
+def compute_disp_along_lattice(lat, model_state, A0):
+    A = A0
+    ind1 = np.zeros(nv, int)
+    ind1[delta_] = 1
+    ind2 = np.zeros(nv, int)
+    ind2[delta_] = 2
+    n = len(lat)
+    eta = np.zeros((3, n, 2))
     for k in range(n):
-        D.iloc[k] = map.iloc[k].get(ind)
-
-    M.set_jacobian(map.jacobian())
-    M.x.set(ind, 0e0, 0e0)
-    M.px.set(ind, 0e0, 0e0)
-    M.ct.set(ind, 0e0, 0e0)
-    ind[delta_] = 0
-    ind[x_] = 1
-    M.ct.set(ind, 0e0, 0e0)
-    ind[x_] = 0
-    ind[px_] = 1
-    M.ct.set(ind, 0e0, 0e0)
-    space_sel = np.array([1, 1, 1, 1, 0, 0, 0], dtype=int)
-    tmp = Id - M
-    tmp.delta = Id.delta
-    tmp.ct = Id.ct
-    tmp.iloc[6] = Id.iloc[6]
-    print("\ntmp:", tmp)
-    print("\ninv:", ts.inv(tmp))
-    assert False
-
-    print("\nD:\n", D)
-    print("map:", map)
-    print("M:\n", M)
-
-    # id_mat = np.identity(n)
-    # disp = np.linalg.inv(id_mat - M[:n, :n]) @ D[:n]
-
-    # print("\neta:\n", mat2txt(disp))
-
-    # disp = np.append(disp, [1e0, 0e0, 0e0])
-    # print("eta:\n", mat2txt(map.jacobian() @ disp))
+        lat.propagate(model_state, A0, k, 1)
+        eta[1, k, x_] = A0.x.get(ind1)
+        eta[1, k, px_] = A0.px.get(ind1)
+        eta[2, k, x_] = A0.x.get(ind2)
+        eta[2, k, px_] = A0.px.get(ind2)
+    return eta
 
 
 def print_cod(str, cod):
@@ -224,16 +232,7 @@ map += r.x0
 lat.propagate(model_state, map)
 print("\nmap:", map)
 
-if not True:
-    print("\nmap[ct]:\n")
-    map.ct.print()
-
-C = rad.compute_circ(lat)
-print(f"\nC [m] = {C:5.3f}")
-ind = np.zeros(nv, int)
-print("\nalpha:")
-for k in range(1, no+1):
-    ind[delta_] = k
-    print("  {:1d} {:10.3e}".format(k, map.ct.get(ind)/C))
-
-compute_disp(map, no, nv, desc)
+compute_alpha(map)
+A0 = compute_disp(map)
+eta = compute_disp_along_lattice(lat, model_state, A0)
+print_disp_along_lattice(lat, eta)
