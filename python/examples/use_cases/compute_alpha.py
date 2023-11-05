@@ -61,7 +61,7 @@ def read_lattice(t_file):
     return n_dof, lat, model_state
 
 
-def plt_Twiss(ds, file_name, title):
+def plot_Twiss(ds, file_name, title):
     # Turn interactive mode off.
     plt.ioff()
 
@@ -150,14 +150,12 @@ def compute_disp(map):
     return A0
 
 
-def print_disp_along_lattice(lat, eta):
-    s = 0e0
+def print_disp_along_lattice(lat, s, disp):
     print("\n                      eta_0,x   eta_0,p_x   eta_1,x   eta_1,p_x")
-    for k in range(len(eta[1])):
+    for k in range(len(disp[1])):
         print("{:3d} {:6.3f} {:8s} {:10.3e} {:10.3e} {:10.3e} {:10.3e}".
-              format(k+1, s, lat[k].name, eta[1, k, x_], eta[1, k, px_],
-                     eta[2, k, x_], eta[2, k, px_]))
-        s += lat[k].get_length()
+              format(k+1, s[k], lat[k].name, disp[1, k, x_], disp[1, k, px_],
+                     disp[2, k, x_], disp[2, k, px_]))
 
 
 def compute_disp_along_lattice(lat, model_state, A0):
@@ -167,25 +165,39 @@ def compute_disp_along_lattice(lat, model_state, A0):
     ind2 = np.zeros(nv, int)
     ind2[delta_] = 2
     n = len(lat)
-    eta = np.zeros((3, n, 2))
-    for k in range(n):
+    s = np.zeros(n)
+    disp = np.zeros((3, n, 2))
+    s[0] = 0e0
+    disp[1, 0, x_] = A0.x.get(ind1)
+    disp[1, 0, px_] = A0.px.get(ind1)
+    disp[2, 0, x_] = A0.x.get(ind2)
+    disp[2, 0, px_] = A0.px.get(ind2)
+    for k in range(n-1):
         lat.propagate(model_state, A0, k, 1)
-        eta[1, k, x_] = A0.x.get(ind1)
-        eta[1, k, px_] = A0.px.get(ind1)
-        eta[2, k, x_] = A0.x.get(ind2)
-        eta[2, k, px_] = A0.px.get(ind2)
-    return eta
+        s[k+1] = s[k]+ lat[k].get_length()
+        disp[1, k+1, x_] = A0.x.get(ind1)
+        disp[1, k+1, px_] = A0.px.get(ind1)
+        disp[2, k+1, x_] = A0.x.get(ind2)
+        disp[2, k+1, px_] = A0.px.get(ind2)
+    return s, disp
 
 
-def print_cod(str, cod):
-    n_dof = 3
-    ind = np.zeros(nv, int)
-    print(str, end="")
-    for k in range(2*n_dof):
-        print(" {:10.3e}".format(cod.iloc[k]), end="")
-    print()
+def plot_disp(s, disp, file_name, title):
+    # Turn interactive mode off.
+    plt.ioff()
 
-    
+    fig, gr_1 = plt.subplots(1)
+
+    gr_1.set_title(title)
+    gr_1.set_xlabel("s [m]")
+    gr_1.set_ylabel(r"$\eta_{x}$ [m]")
+    gr_1.plot(s, disp[2, :, x_], "b-")
+    gr_1.legend()
+
+    fig.tight_layout()
+    plt.savefig(file_name)
+
+
 def print_map(str, map):
     n_dof = 3
     print(str)
@@ -218,10 +230,10 @@ n_dof, lat, model_state = read_lattice(t_file)
 M, A, data = \
     compute_periodic_solution(lat, model_state, named_index, desc)
 
-if not True:
-    plt_Twiss(data, "lin_opt.png", "Linear Optics")
+if True:
+    plot_Twiss(data, "lin_opt.png", "Linear Optics")
     plt.show()
-    print("\nPlots saved as: before.png & after.png")
+    print("\nPlots saved as: lin_opt.png")
 
 r = co.compute_closed_orbit(lat, model_state, delta=0e0, eps=1e-10, desc=desc)
 
@@ -234,5 +246,11 @@ print("\nmap:", map)
 
 compute_alpha(map)
 A0 = compute_disp(map)
-eta = compute_disp_along_lattice(lat, model_state, A0)
-print_disp_along_lattice(lat, eta)
+s, disp = compute_disp_along_lattice(lat, model_state, A0)
+
+if not True:
+    print_disp_along_lattice(lat, s, disp)
+    
+plot_disp(s, disp, "disp_2.png", "2nd Order Dispersion")
+plt.show()
+print("\nPlots saved as: disp_2.png")
