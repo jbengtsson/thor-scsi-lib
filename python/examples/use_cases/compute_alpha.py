@@ -1,5 +1,5 @@
 """Use Case:
-     Compute the momentum compaction, alpha, to arbitrary order.
+     Compute the momentum compaction, alpha_c, to arbitrary order.
 """
 
 
@@ -13,6 +13,7 @@ logger = logging.getLogger("thor_scsi")
 
 import math
 import os
+import sys
 
 import copy
 
@@ -124,7 +125,7 @@ def compute_periodic_solution(lat, model_state, named_index, desc):
     return M, A, ds
 
 
-def compute_alpha(map):
+def compute_alpha_c(map):
     if not True:
         print("\nmap[ct]:\n")
         map.ct.print()
@@ -132,14 +133,32 @@ def compute_alpha(map):
     C = rad.compute_circ(lat)
     print(f"\nC [m] = {C:5.3f}")
     ind = np.zeros(nv, int)
-    print("\nalpha:")
+    alpha_c = np.zeros(no+1)
+
+    print("\nalpha_c:")
     for k in range(1, no+1):
         ind[delta_] = k
-        print("  {:1d} {:10.3e}".format(k, map.ct.get(ind)/C))
+        alpha_c[k] = map.ct.get(ind)/C
+        print("  {:1d} {:10.3e}".format(k, alpha_c[k]))
+
+    n_alpha_c = len(alpha_c)
+    if n_alpha_c >= 3:
+        print("\nFixed points to O(3) [%]: {:5.2f}, {:5.2f}".
+              format(0e0, -1e2*alpha_c[1]/alpha_c[2]))
+
+    if n_alpha_c >= 4:
+        po2 = alpha_c[2]/(2e0*alpha_c[3])
+        q = alpha_c[1]/alpha_c[3]
+        pm = np.sqrt(po2**2-q)
+        print("Fixed points to O(4) [%]: {:5.2f}, {:5.2f}, {:5.2f}".
+              format(0e0, -1e2*(po2+pm), -1e2*(po2-pm)))
+
+    return alpha_c
 
 
 def compute_disp(map):
     A0 = gtpsa.ss_vect_tpsa(desc, no)
+    # Compute canonical transformation to delta-dependent fixed point.
     ts.GoFix(map, A0)
     ind = np.zeros(nv, int)
     print("\ndispersion:")
@@ -205,14 +224,92 @@ def print_map(str, map):
         map.iloc[k].print()
 
 
+def H_long(E0, phi, delta, h_rf, V_rf, phi0, alpha_c):
+    H = V_rf/E0*(np.cos(phi+phi0)+phi*np.sin(phi0))
+    for k in range(1, len(alpha_c)):
+        H += 2e0*np.pi*h_rf*alpha_c[k]*delta**(k+1)/(k+1)
+    return H
+
+
+def compute_H_long(lat, E0, alpha_c, n, phi_max, delta_max, U0, neg_alpha_c):
+    cav = lat.find("cav", 0)
+    h_rf = cav.get_harmonic_number()
+    V_rf = cav.get_voltage()
+    f_rf = cav.get_frequency()
+
+    phi0 = - abs(np.arcsin(U0/V_rf))
+    if neg_alpha_c:
+        phi0 += pi
+
+    delta_rf = \
+        np.sqrt(-V_rf*np.cos(np.pi+phi0)
+                *(2e0-(np.pi-2e0*(np.pi+phi0))*np.tan(np.pi+phi0))
+                /(alpha_c[1]*np.pi*h_rf*E0))
+
+    print("\nh_rf                 = {:1d}".format(h_rf))
+    print("V_rf [MV]            = {:3.1f}".format(1e-6*V_rf))
+    print("f_rf [MHz]           = {:3.1f}".format(1e-6*f_rf))
+    print("U0 [keV]             = {:3.1f}".format(1e-3*U0))
+
+    if not neg_alpha_c:
+        print("phi0 [deg]           = {:4.2f}".
+              format(abs(phi0)*180e0/np.pi-180e0))
+    else:
+        print("phi0 [deg]           = 180 - {:4.2f}".
+              format(abs(phi0)*180e0/np.py-180e0))
+
+    print("RF bucket height [%] = {:3.1f}".format(1e2*delta_rf))
+
+    phi = np.zeros(2*n+1)
+    delta = np.zeros(2*n+1)
+    H = np.zeros((2*n+1, 2*n+1))
+    for i in range(-n, n+1):
+        for j in range(-n, n+1):
+            phi1 = i*phi_max*np.pi/(180e0*n)
+            delta[j+n] = j*delta_max/n
+            H[j+n, i+n] = \
+                H_long(E0, phi1, delta[j+n], h_rf, V_rf, np.pi+phi0, alpha_c)
+            phi[i+n] = (phi0+phi1)*180e0/np.pi
+
+    return phi, delta, H
+
+
+def print_H_long(file_name, phi, delta, H):
+    with open(file_name, "w") as sys.stdout:
+        for i in range(len(phi)):
+            for j in range(len(delta)):
+                print(" {:7.2f} {:7.3f} {:12.5e}".
+                  format(phi[i], 1e2*delta[j], H[j, i]))
+            print()
+
+
+def plot_H_long(phi, delta, H, file_name, title):
+    # Turn interactive mode off.
+    plt.ioff()
+
+    fig, gr_1 = plt.subplots(1)
+
+    gr_1.set_title(title)
+    gr_1.set_xlabel("phi [$^\circ$]")
+    gr_1.set_ylabel(r"$\delta$ [%]")
+    gr_1.contour(phi, 1e2*delta, H, 30)
+    gr_1.legend()
+
+    fig.tight_layout()
+    plt.savefig(file_name)
+
+
 # Number of phase-space coordinates.
 nv = 7
 # Variables max order.
-no = 2
+no = 3
 # Number of parameters.
 nv_prm = 0
 # Parameters max order.
 no_prm = 0
+
+E0 = 2.5e9
+U0 = 22.4e3
 
 named_index = gtpsa.IndexMapping(dict(x=0, px=1, y=2, py=3, delta=4, ct=5))
 
@@ -230,12 +327,14 @@ n_dof, lat, model_state = read_lattice(t_file)
 M, A, data = \
     compute_periodic_solution(lat, model_state, named_index, desc)
 
-if True:
+if not True:
     plot_Twiss(data, "lin_opt.png", "Linear Optics")
     plt.show()
-    print("\nPlots saved as: lin_opt.png")
+    print("\nPlot saved as: lin_opt.png")
 
 r = co.compute_closed_orbit(lat, model_state, delta=0e0, eps=1e-10, desc=desc)
+
+# Compute the Taylor map.
 
 map = gtpsa.ss_vect_tpsa(desc, no)
 map.set_identity()
@@ -244,13 +343,24 @@ map += r.x0
 lat.propagate(model_state, map)
 print("\nmap:", map)
 
-compute_alpha(map)
+alpha_c = compute_alpha_c(map)
 A0 = compute_disp(map)
 s, disp = compute_disp_along_lattice(lat, model_state, A0)
 
 if not True:
     print_disp_along_lattice(lat, s, disp)
     
-plot_disp(s, disp, "disp_2.png", "2nd Order Dispersion")
-plt.show()
-print("\nPlots saved as: disp_2.png")
+if not True:
+    plot_disp(s, disp, "disp_2.png", "2nd Order Dispersion")
+    plt.show()
+    print("\nPlot saved as: disp_2.png")
+
+phi, delta, H = compute_H_long(lat, E0, alpha_c, 10, 180e0, 20e-2, U0, False)
+
+if not True:
+    print_H_long("H_long.dat", phi, delta, H)
+
+if True:
+    plot_H_long(phi, delta, H, "H_long.png", "H_Long")
+    plt.show()
+    print("\nPlot saved as: H_long.png")
