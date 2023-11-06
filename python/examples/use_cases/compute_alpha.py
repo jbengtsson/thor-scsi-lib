@@ -1,5 +1,18 @@
 """Use Case:
-     Compute the momentum compaction, alpha_c, to arbitrary order.
+     Compute the:
+
+       momentum compaction, alpha_c, to arbitrary order
+
+       fixed points.
+
+     Compute & graph the:
+
+       linear optics
+
+       2nd order dispersion.
+
+       longitudinal phase-space portrait
+
 """
 
 
