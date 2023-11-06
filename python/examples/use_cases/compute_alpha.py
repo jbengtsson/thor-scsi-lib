@@ -327,7 +327,7 @@ n_dof, lat, model_state = read_lattice(t_file)
 M, A, data = \
     compute_periodic_solution(lat, model_state, named_index, desc)
 
-if not True:
+if True:
     plot_Twiss(data, "lin_opt.png", "Linear Optics")
     plt.show()
     print("\nPlot saved as: lin_opt.png")
@@ -350,7 +350,7 @@ s, disp = compute_disp_along_lattice(lat, model_state, A0)
 if not True:
     print_disp_along_lattice(lat, s, disp)
     
-if not True:
+if True:
     plot_disp(s, disp, "disp_2.png", "2nd Order Dispersion")
     plt.show()
     print("\nPlot saved as: disp_2.png")
