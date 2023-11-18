@@ -216,4 +216,3 @@ print("\nnu = [{:7.5f}, {:7.5f}]".format(nu[X_], nu[Y_]))
 
 plt.ioff()
 plt.show()
-nu
