@@ -130,12 +130,12 @@ def tweak_nu(fam_names, dnu_x, dnu_y):
     dnu_db_2L = np.zeros((2, n), dtype='float')
     for k in range(n):
         dnu_db_2L[:, k] = \
-            compute_dnu_db_2L(lat, model_state, fam_names[k],   1e-4)
-    print("\ndnu_db_2L:\n", mat2txt(dnu_db_2L))
+            compute_dnu_db_2L(lat, model_state, fam_names[k], 1e-4)
+    print("\ndnu_db_2L:\n" + mat2txt(dnu_db_2L))
     u, s, v_t = np.linalg.svd(dnu_db_2L, full_matrices=False)
     dnu_db_2L_inv = (v_t.T @ np.diag(s**-1) @ u.T)
     db_2L = dnu_db_2L_inv @ dnu
-    print("\ndb_2L = ", vec2txt(db_2L))
+    print("\ndb_2L:\n" + vec2txt(db_2L))
     for k in range(n):
         set_db_2L_fam(lat, fam_names[k], db_2L[k])
 
@@ -223,8 +223,8 @@ M, A, data = \
 M = lo.compute_map(lat, model_state, desc=desc, tpsa_order=2)
 stable, nu, xi = lo.compute_nu_xi(desc, no, M)
 
-print("\nM:\n", mat2txt(M.jacobian()[:6, :6]), "\n")
-print("  nu = [{:7.5f}, {:7.5f}]".format(nu[X_], nu[Y_]))
+print("\nM:\n" + mat2txt(M.jacobian()[:6, :6]))
+print("\n  nu = [{:7.5f}, {:7.5f}]".format(nu[X_], nu[Y_]))
 print("  xi = [{:7.5f}, {:7.5f}]".format(xi[X_], xi[Y_]))
 
 stable, A, A_inv, _ = lo.compute_M_diag(n_dof, M.jacobian())
