@@ -125,10 +125,10 @@ def compute_periodic_solution(lat, model_state, named_index, desc):
     model_state.Cavity_on = False
 
     stable, M, A = lo.compute_map_and_diag(n_dof, lat, model_state, desc=desc)
-    print("\nM:", M)
+    print("\nM:\n" + mat2txt(M.jacobian()[:6, :6]))
     res = cs.compute_Twiss_A(A)
     Twiss = res[:3]
-    print_Twiss("Twiss:\n", Twiss)
+    print_Twiss("\nTwiss:\n", Twiss)
     A_map = gtpsa.ss_vect_tpsa(desc, no)
     A_map.set_jacobian(A)
     ds = \
@@ -354,7 +354,7 @@ map.set_identity()
 r.x0.ct = 0e0
 map += r.x0
 lat.propagate(model_state, map)
-print("\nmap:", map)
+print("\nmap:\n" + mat2txt(map.jacobian()[:6, :6]))
 
 alpha_c = compute_alpha_c(map)
 A0 = compute_disp(map)
