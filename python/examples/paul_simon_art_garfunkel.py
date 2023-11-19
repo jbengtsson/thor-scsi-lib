@@ -140,6 +140,46 @@ def tweak_nu(fam_names, dnu_x, dnu_y):
         set_db_2L_fam(lat, fam_names[k], db_2L[k])
 
 
+def print_Twiss(str, Twiss):
+    """
+
+    todo:
+        rename str e.g. header? prefix?
+
+    """
+    # eta, alpha, beta = Twiss[0], Twiss[1], Twiss[2]
+    # that way I also check that Twiss has exactly three parameters
+    eta, alpha, beta = Twiss
+    print(str, end="")
+    print(f"  eta    = [{eta[X_]:9.3e}, {eta[Y_]:9.3e}]")
+    print(f"  alpha  = [{alpha[X_]:9.3e}, {alpha[Y_]:9.3e}]")
+    print(f"  beta   = [{beta[X_]:5.3f}, {beta[Y_]:5.3f}]")
+
+
+def compute_periodic_solution(lat, model_state, named_index, desc):
+    """
+    Todo:
+        model_state: rename to calculation_configuration or calc_config
+    """
+    # Compute the periodic solution for a super period.
+    # Degrees of freedom - RF cavity is off; i.e., coasting beam.
+    n_dof = 2
+    model_state.radiation = False
+    model_state.Cavity_on = False
+
+    stable, M, A = lo.compute_map_and_diag(n_dof, lat, model_state, desc=desc)
+    res = cs.compute_Twiss_A(A)
+    Twiss = res[:3]
+    print_Twiss("Twiss:\n", Twiss)
+    A_map = gtpsa.ss_vect_tpsa(desc, no)
+    A_map.set_jacobian(A)
+    ds = \
+        lo.compute_Twiss_along_lattice(
+            n_dof, lat, model_state, A=A_map, desc=desc, mapping=named_index)
+
+    return M, A, ds
+
+
 t_dir = os.path.join(
     os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "BESSY-III")
 t_file = os.path.join(t_dir, "alsu-7ba-20180503c.lat")
@@ -175,13 +215,17 @@ named_index = gtpsa.IndexMapping(dict(x=0, px=1, y=2, py=3, delta=4, ct=5))
 
 desc = gtpsa.desc(nv, no)
 
-# Compute linear chromaticity.
-M = lo.compute_map(lat, model_state, desc=desc, tpsa_order=no)
+# Compute linear map & diagonalise.
+M, A, data = \
+    compute_periodic_solution(lat, model_state, named_index, desc)
+
+# Compute linear chromaticity from trace of 2nd order map.
+M = lo.compute_map(lat, model_state, desc=desc, tpsa_order=2)
 stable, nu, xi = lo.compute_nu_xi(desc, no, M)
 
-print("\nM:\n", M)
-print("  nu        = [{:7.5f}, {:7.5f}]".format(nu[X_], nu[Y_]))
-print("  xi        = [{:7.5f}, {:7.5f}]".format(xi[X_], xi[Y_]))
+print("\nM:\n", mat2txt(M.jacobian()[:6, :6]), "\n")
+print("  nu = [{:7.5f}, {:7.5f}]".format(nu[X_], nu[Y_]))
+print("  xi = [{:7.5f}, {:7.5f}]".format(xi[X_], xi[Y_]))
 
 stable, A, A_inv, _ = lo.compute_M_diag(n_dof, M.jacobian())
 
@@ -209,7 +253,7 @@ model_state.Cavity_on = False
 b_2 = ['q1', 'q2', 'q3', 'q4', 'mb3h', 'qfh', 'mqfh']
 tweak_nu(b_2, 0.00501, -0.00670)
 a_map = lo.compute_map(lat, model_state, desc=desc)
-M = a_map.jacobian()
+M = a_map.jacobian()[:6, :6]
 nu = lo.compute_nu_symp(n_dof, M)
 print("\nM:\n" + mat2txt(M))
 print("\nnu = [{:7.5f}, {:7.5f}]".format(nu[X_], nu[Y_]))
