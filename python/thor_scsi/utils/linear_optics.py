@@ -598,7 +598,7 @@ def compute_Twiss_along_lattice(
     if A is None:
         stable, _, A_mat = \
             compute_map_and_diag(
-                n_dof, lat, model_state, desc=desc, tpsa_order=1
+                n_dof, lat, model_state, desc=desc
             )
         A = gtpsa.ss_vect_tpsa(desc, 1)
         A.set_jacobian(A_mat)

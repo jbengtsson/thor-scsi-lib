@@ -25,7 +25,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 import gtpsa
-import thor_scsi.lib as tslib
+import thor_scsi.lib as ts
 
 from thor_scsi.factory import accelerator_from_config
 from thor_scsi.utils.twiss_output import twiss_ds_to_df, df_to_tsv
@@ -42,18 +42,18 @@ desc = gtpsa.desc(6, tpsa_order)
 
 # Configuration space coordinates.
 X_, Y_, Z_ = [
-    tslib.spatial_index.X,
-    tslib.spatial_index.Y,
-    tslib.spatial_index.Z
+    ts.spatial_index.X,
+    ts.spatial_index.Y,
+    ts.spatial_index.Z
 ]
 # Phase-space coordinates.
 [x_, px_, y_, py_, ct_, delta_] = [
-    tslib.phase_space_index_internal.x,
-    tslib.phase_space_index_internal.px,
-    tslib.phase_space_index_internal.y,
-    tslib.phase_space_index_internal.py,
-    tslib.phase_space_index_internal.ct,
-    tslib.phase_space_index_internal.delta,
+    ts.phase_space_index_internal.x,
+    ts.phase_space_index_internal.px,
+    ts.phase_space_index_internal.y,
+    ts.phase_space_index_internal.py,
+    ts.phase_space_index_internal.ct,
+    ts.phase_space_index_internal.delta,
 ]
 
 
@@ -68,7 +68,7 @@ def read_lattice(t_file):
     lat = accelerator_from_config(t_file)
 
     # Set lattice state (Rf cavity on/off, etc.)
-    model_state = tslib.ConfigType()
+    model_state = ts.ConfigType()
 
     n_dof = 2
     model_state.radiation = False
@@ -188,11 +188,11 @@ if not False:
 if not True:
     prt_map("\nM:", M)
 
-h = -1e0*tslib.M_to_h_DF(M)
+h = -1e0*ts.M_to_h_DF(M)
 h_re = gtpsa.tpsa(desc, no)
 h_im = gtpsa.tpsa(desc, no)
-tslib.CtoR(h, h_re, h_im)
-(h-tslib.RtoC(h_re, h_im)).print()
+ts.CtoR(h, h_re, h_im)
+(h-ts.RtoC(h_re, h_im)).print()
 
 if not True:
     plt_Twiss(data, "lin_opt.png", "Linear Optics")

@@ -31,7 +31,7 @@ import matplotlib.pyplot as plt
 from thor_scsi.pyflame import Config
 
 import gtpsa
-import thor_scsi.lib as tslib
+import thor_scsi.lib as ts
 
 from thor_scsi.utils import knobs
 from thor_scsi.factory import accelerator_from_config
@@ -49,9 +49,9 @@ from thor_scsi.utils.output import prt2txt, mat2txt, vec2txt
 
 # Configuration space coordinates.
 X_, Y_, Z_ = [
-    tslib.spatial_index.X,
-    tslib.spatial_index.Y,
-    tslib.spatial_index.Z
+    ts.spatial_index.X,
+    ts.spatial_index.Y,
+    ts.spatial_index.Z
 ]
 
 
@@ -106,7 +106,7 @@ def compute_phi(lat):
     prt = False
     phi = 0e0
     for k in range(len(lat)):
-        if type(lat[k]) == tslib.Bending:
+        if type(lat[k]) == ts.Bending:
             dphi = get_phi_elem(lat, lat[k].name, 0)
             phi += dphi
             if prt:
@@ -131,7 +131,7 @@ def read_lattice(t_file):
     lat = accelerator_from_config(t_file)
 
     # Set lattice state (Rf cavity on/off, etc.)
-    model_state = tslib.ConfigType()
+    model_state = ts.ConfigType()
 
     n_dof = 2
     energy = 2.5e9
@@ -154,14 +154,14 @@ def set_b_n_fam(lat, fam_name, n, b_n):
 
 
 corresponding_types = {
-    tslib.Sextupole:         tslib.SextupoleTpsa,
-    tslib.Quadrupole:        tslib.QuadrupoleTpsa,
-    tslib.HorizontalSteerer: tslib.HorizontalSteererTpsa,
-    tslib.VerticalSteerer:   tslib.VerticalSteererTpsa,
+    ts.Sextupole:         ts.SextupoleTpsa,
+    ts.Quadrupole:        ts.QuadrupoleTpsa,
+    ts.HorizontalSteerer: ts.HorizontalSteererTpsa,
+    ts.VerticalSteerer:   ts.VerticalSteererTpsa,
 }
 
 
-def convert_magnet_to_knobbable(a_magnet: tslib.Mpole) -> tslib.MpoleTpsa:
+def convert_magnet_to_knobbable(a_magnet: ts.Mpole) -> ts.MpoleTpsa:
     config = a_magnet.config()
     corresponding_type = corresponding_types[type(a_magnet)]
     return corresponding_type(config)
@@ -197,7 +197,7 @@ def lat_mult_prm(mult_prm_name, lat, n, desc):
     elems = [elem for elem in lat]
     mult_family = lat.elements_with_name(mult_prm_name)
     elems = mult_prm(elems, mult_family, n, desc)
-    return tslib.AcceleratorTpsa(elems)
+    return ts.AcceleratorTpsa(elems)
 
 
 # Work-around for C++ virtual function -> Python mapping issue.
@@ -281,22 +281,25 @@ if False:
     M2.getOrder(M2, 2)
     print("\n:\n", M2)
 
-if False:
-    M_inv = tslib.inv(M)
+if not False:
+    M_inv = ts.inv(M)
 
     M_M_inv = gtpsa.ss_vect_tpsa(desc, no, nv, index_mapping=named_index)
-    M_M_inv = tslib.compose(M, M_inv)
+    M_M_inv.rcompose(M, M_inv)
     print("\nM:", M)
     print("\nM^-1:", M_inv)
     print("\nM*M^-1:", M_M_inv)
+    print("\nM.x:\n", M.x)
+    print("\nM_M_inv.x:\n", M_M_inv.x)
     # print("\nM*M^-1:", M_M_inv[0])
+    assert False
 
-h = tslib.M_to_h_DF(M)
+h = ts.M_to_h_DF(M)
 print("\nh:")
 h.print()
 h_re = gtpsa.tpsa(desc, no)
 h_im = gtpsa.tpsa(desc, no)
-tslib.CtoR(h, h_re, h_im)
+ts.CtoR(h, h_re, h_im)
 print("\nh_re:")
 h_re.print()
 print("\nh_im:")
