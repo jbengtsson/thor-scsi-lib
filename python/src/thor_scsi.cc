@@ -47,5 +47,5 @@ PYBIND11_MODULE(lib, m) {
     m.def("M_to_h_DF", &gtpsa::M_to_h_DF);
     m.def("CtoR", &gtpsa::CtoR);
     m.def("RtoC", &gtpsa::RtoC);
-    // m.def("GoFix", &gtpsa::GoFix);
+    m.def("GoFix", &gtpsa::GoFix);
 }
