@@ -75,7 +75,7 @@ def read_lattice(t_file):
     return n_dof, lat, model_state
 
 
-def plot_Twiss(ds, file_name):
+def plot_Twiss(ds, types, file_name):
     # Turn interactive mode off.
     plt.ioff()
 
@@ -84,15 +84,24 @@ def plot_Twiss(ds, file_name):
     gr_1.set_title("Linear Optics")
     gr_1.set_xlabel("s [m]")
     gr_1.set_ylabel(r"$\beta_{x,y}$ [m]")
-    gr_1.plot(ds.s, ds.twiss.sel(plane="x", par="beta"), "b-",
+    gr_1_r = gr_1.twinx()
+    gr_1_r.set_ylim([-2.0, 20.0])
+    gr_1_r.set_yticks([])
+    gr_1_r.step(ds.s, types, "k")
+    gr_1.plot(ds.s, ds.twiss.sel(plane="x", par="beta"), "b",
               label=r"$\beta_x$")
-    gr_1.plot(ds.s, ds.twiss.sel(plane="y", par="beta"), "r-",
+    gr_1.plot(ds.s, ds.twiss.sel(plane="y", par="beta"), "r",
               label=r"$\beta_y$")
     gr_1.legend()
 
     gr_2.set_xlabel("s [m]")
     gr_2.set_ylabel(r"$\eta_x$ [m]")
-    gr_2.plot(ds.s, ds.dispersion.sel(phase_coordinate="x"), label=r"$\eta_x$")
+    gr_2_r = gr_2.twinx()
+    gr_2_r.set_ylim([-2.0, 20.0])
+    gr_2_r.set_yticks([])
+    gr_2_r.step(ds.s, types, "k")
+    gr_2.plot(ds.s, ds.dispersion.sel(phase_coordinate="x"), "b")
+    gr_2.legend()
 
     fig.tight_layout()
 
@@ -102,7 +111,7 @@ def plot_Twiss(ds, file_name):
     plt.show()
 
 
-def plot_D(s, disp, file_name):
+def plot_D(s, disp, types, file_name):
     # Turn interactive mode off.
     plt.ioff()
 
@@ -111,9 +120,13 @@ def plot_D(s, disp, file_name):
     gr_1.set_title("Dispersion")
     gr_1.set_xlabel("s [m]")
     gr_1.set_ylabel("")
-    gr_1.plot(s, disp[1, :, x_], "g-", label=r"$\eta_x$")
-    gr_1.plot(s, disp[1, :, px_], "r-", label=r"$\eta'_x$")
-    gr_1.plot(s, disp[2, :, x_], "b-", label=r"$\eta^{(2)}_x$")
+    gr_1_r = gr_1.twinx()
+    gr_1_r.set_ylim([-2.0, 20.0])
+    gr_1_r.set_yticks([])
+    gr_1_r.step(s, types, "k")
+    gr_1.plot(s, disp[1, :, x_], "g", label=r"$\eta_x$")
+    gr_1.plot(s, disp[1, :, px_], "r", label=r"$\eta'_x$")
+    gr_1.plot(s, disp[2, :, x_], "b", label=r"$\eta^{(2)}_x$")
     gr_1.legend()
 
     fig.tight_layout()
@@ -124,7 +137,7 @@ def plot_D(s, disp, file_name):
     plt.show()
 
 
-def plot_D_alpha_1(s, disp, file_name):
+def plot_D_alpha_1(s, disp, types, file_name):
     D_over_rho = compute_D_over_rho(lat, disp)
 
     # Turn interactive mode off.
@@ -135,7 +148,11 @@ def plot_D_alpha_1(s, disp, file_name):
     gr_1.set_title(r"Contribution to $\alpha^{(1)}_{\mathrm {c}}$")
     gr_1.set_xlabel("s [m]")
     gr_1.set_ylabel(r"$\eta^{(1)}_x/\rho$")
-    gr_1.step(s, D_over_rho, "b-")
+    gr_1_r = gr_1.twinx()
+    gr_1_r.set_ylim([-2.0, 20.0])
+    gr_1_r.set_yticks([])
+    gr_1_r.step(s, types, "k")
+    gr_1.step(s, D_over_rho, "b")
     gr_1.legend()
 
     fig.tight_layout()
@@ -146,7 +163,7 @@ def plot_D_alpha_1(s, disp, file_name):
     plt.show()
 
 
-def plot_D_alpha_2(s, disp, file_name):
+def plot_D_alpha_2(s, disp, types, file_name):
     D_der_sqr_over_2 = compute_D_der_sqr_over_2(disp)
     D_2_over_rho = compute_D_2_over_rho(lat, disp)
 
@@ -158,8 +175,12 @@ def plot_D_alpha_2(s, disp, file_name):
     gr_1.set_title(r"Contribution to $\alpha^{(2)}_{\mathrm {c}}$")
     gr_1.set_xlabel("s [m]")
     gr_1.set_ylabel("")
-    gr_1.plot(s, D_der_sqr_over_2, "r-", label=r"$(\eta'^{(1)})^2_x/2$")
-    gr_1.plot(s, D_2_over_rho, "b-", label=r"$\eta^{(2)}/\rho_x$")
+    gr_1_r = gr_1.twinx()
+    gr_1_r.set_ylim([-2.0, 20.0])
+    gr_1_r.set_yticks([])
+    gr_1_r.step(s, types, "k")
+    gr_1.plot(s, D_der_sqr_over_2, "r", label=r"$(\eta'^{(1)})^2_x/2$")
+    gr_1.plot(s, D_2_over_rho, "b", label=r"$\eta^{(2)}/\rho_x$")
     gr_1.legend()
 
     fig.tight_layout()
@@ -200,21 +221,54 @@ def print_Twiss_param(str, Twiss):
     print(f"  beta   = [{beta[X_]:5.3f}, {beta[Y_]:5.3f}]")
 
 
+def get_type(elem):
+    match type(elem):
+        case ts.Marker:
+            type_code = 0.0
+        case ts.Drift:
+            type_code = 0.0
+        case ts.Bending:
+            if elem.get_multipoles().get_multipole(2).real == 0e0:
+                type_code = np.sign(elem.get_curvature())*0.5
+            else:
+                type_code = \
+                    np.sign(elem.get_multipoles().get_multipole(2).real)*0.75
+        case ts.Quadrupole:
+            type_code = \
+                np.sign(elem.get_multipoles().get_multipole(2).real)*1.0
+        case ts.Sextupole:
+            type_code = \
+                np.sign(elem.get_multipoles().get_multipole(3).real)*1.25
+        case ts.Octupole:
+            type_code = np.sign(elem.get_multipoles().get_multipole(4).real)*1.5
+        case _:
+            type_code = np.nan
+    return type_code
+
+
+def get_types(lat):
+    n = len(lat)
+    types = np.zeros(n)
+    for k in range(n):
+        types[k] = get_type(lat[k])
+    return types
+
+
 def print_Twiss(lat, data):
     """
     Print Twiss parameters along the lattice.
     """
-    L = 0e0
+    s = 0e0
     nu = np.zeros(2, dtype=float)
-    print("\n    Name         s     alpha_x   beta_x   nu_x      eta_x"
+    print("\n    Name         s    type  alpha_x   beta_x   nu_x      eta_x"
           "        eta'_x     alpha_y   beta_y   nu_y      eta_y        eta'_y")
     for k in range(len(data.index)):
-        L += lat[k].get_length()
+        s += lat[k].get_length()
         nu[X_] += data.twiss.sel(plane="x", par="dnu").values[k]
         nu[Y_] += data.twiss.sel(plane="y", par="dnu").values[k]
-        print("{:3d} {:8s} {:7.3f} {:9.5f} {:8.5f} {:7.5f} {:12.5e} {:12.5e}"
-              " {:9.5f} {:8.5f} {:7.5f} {:12.5e} {:12.5e}".
-              format(k, lat[k].name, L,
+        print("{:3d} {:8s} {:7.3f} {:4.1f} {:9.5f} {:8.5f} {:7.5f} {:12.5e}"
+              " {:12.5e} {:9.5f} {:8.5f} {:7.5f} {:12.5e} {:12.5e}".
+              format(k, lat[k].name, s, get_type(lat[k]),
                      data.twiss.sel(plane="x", par="alpha").values[k],
                      data.twiss.sel(plane="x", par="beta").values[k],
                      nu[X_],
@@ -475,11 +529,13 @@ n_dof, lat, model_state = read_lattice(t_file)
 M, A, data = \
     compute_periodic_solution(lat, model_state, named_index, desc)
 
+types = get_types(lat)
+
 if not True:
     print_Twiss(lat, data)
 
 if True:
-    plot_Twiss(data, "lin_opt.png")
+    plot_Twiss(data, types, "lin_opt.png")
 
 r = co.compute_closed_orbit(lat, model_state, delta=0e0, eps=1e-10, desc=desc)
 
@@ -497,12 +553,12 @@ A0 = compute_D(map)
 s, disp = compute_D_along_lattice(lat, model_state, A0)
 
 if not True:
-    print_D_along_lattice(lat, s, disp)
+    print_D_along_lattice(lat, s, disp, types)
     
 if True:
-    plot_D(s, disp, "D.png")
-    plot_D_alpha_1(s, disp, "D_alpha.png")
-    plot_D_alpha_2(s, disp, "D_alpha.png")
+    plot_D(s, disp, types, "D.png")
+    plot_D_alpha_1(s, disp, types, "D_alpha.png")
+    plot_D_alpha_2(s, disp, types, "D_alpha.png")
 
 phi, delta, H = compute_H_long(lat, E0, alpha_c, 10, 180e0, 20e-2, U0, False)
 
