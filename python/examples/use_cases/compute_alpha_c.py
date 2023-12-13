@@ -75,13 +75,13 @@ def read_lattice(t_file):
     return n_dof, lat, model_state
 
 
-def plot_Twiss(ds, file_name, title):
+def plot_Twiss(ds, file_name):
     # Turn interactive mode off.
     plt.ioff()
 
     fig, (gr_1, gr_2) = plt.subplots(2)
 
-    gr_1.set_title(title)
+    gr_1.set_title("Linear Optics")
     gr_1.set_xlabel("s [m]")
     gr_1.set_ylabel(r"$\beta_{x,y}$ [m]")
     gr_1.plot(ds.s, ds.twiss.sel(plane="x", par="beta"), "b-",
@@ -93,17 +93,104 @@ def plot_Twiss(ds, file_name, title):
     gr_2.set_xlabel("s [m]")
     gr_2.set_ylabel(r"$\eta_x$ [m]")
     gr_2.plot(ds.s, ds.dispersion.sel(phase_coordinate="x"), label=r"$\eta_x$")
+
     fig.tight_layout()
+
     plt.savefig(file_name)
+    print("\nPlot saved as:", file_name)
+
+    plt.show()
 
 
-def print_Twiss(str, Twiss):
-    """
+def plot_D(s, disp, file_name):
+    # Turn interactive mode off.
+    plt.ioff()
 
-    todo:
-        rename str e.g. header? prefix?
+    fig, gr_1 = plt.subplots(1)
 
-    """
+    gr_1.set_title("Dispersion")
+    gr_1.set_xlabel("s [m]")
+    gr_1.set_ylabel("")
+    gr_1.plot(s, disp[1, :, x_], "g-", label=r"$\eta_x$")
+    gr_1.plot(s, disp[1, :, px_], "r-", label=r"$\eta'_x$")
+    gr_1.plot(s, disp[2, :, x_], "b-", label=r"$\eta^{(2)}_x$")
+    gr_1.legend()
+
+    fig.tight_layout()
+
+    plt.savefig(file_name)
+    print("\nPlot saved as:", file_name)
+
+    plt.show()
+
+
+def plot_D_alpha_1(s, disp, file_name):
+    D_over_rho = compute_D_over_rho(lat, disp)
+
+    # Turn interactive mode off.
+    plt.ioff()
+
+    fig, gr_1 = plt.subplots(1)
+
+    gr_1.set_title(r"Contribution to $\alpha^{(1)}_{\mathrm {c}}$")
+    gr_1.set_xlabel("s [m]")
+    gr_1.set_ylabel(r"$\eta^{(1)}_x/\rho$")
+    gr_1.step(s, D_over_rho, "b-")
+    gr_1.legend()
+
+    fig.tight_layout()
+
+    plt.savefig(file_name)
+    print("\nPlot saved as:", file_name)
+
+    plt.show()
+
+
+def plot_D_alpha_2(s, disp, file_name):
+    D_der_sqr_over_2 = compute_D_der_sqr_over_2(disp)
+    D_2_over_rho = compute_D_2_over_rho(lat, disp)
+
+    # Turn interactive mode off.
+    plt.ioff()
+
+    fig, gr_1 = plt.subplots(1)
+
+    gr_1.set_title(r"Contribution to $\alpha^{(2)}_{\mathrm {c}}$")
+    gr_1.set_xlabel("s [m]")
+    gr_1.set_ylabel("")
+    gr_1.plot(s, D_der_sqr_over_2, "r-", label=r"$(\eta'^{(1)})^2_x/2$")
+    gr_1.plot(s, D_2_over_rho, "b-", label=r"$\eta^{(2)}/\rho_x$")
+    gr_1.legend()
+
+    fig.tight_layout()
+
+    plt.savefig(file_name)
+    print("\nPlot saved as:", file_name)
+
+    plt.show()
+
+
+def plot_H_long(phi, delta, H, file_name, title):
+    # Turn interactive mode off.
+    plt.ioff()
+
+    fig, gr_1 = plt.subplots(1)
+
+    gr_1.set_title(title)
+    gr_1.set_xlabel("phi [$^\circ$]")
+    gr_1.set_ylabel(r"$\delta$ [%]")
+    gr_1.contour(phi, 1e2*delta, H, 30)
+    gr_1.legend()
+
+    fig.tight_layout()
+
+    plt.savefig(file_name)
+    print("\nPlot saved as:", file_name)
+
+    plt.show()
+
+
+def print_Twiss_param(str, Twiss):
     # eta, alpha, beta = Twiss[0], Twiss[1], Twiss[2]
     # that way I also check that Twiss has exactly three parameters
     eta, alpha, beta = Twiss
@@ -111,6 +198,33 @@ def print_Twiss(str, Twiss):
     print(f"  eta    = [{eta[X_]:9.3e}, {eta[Y_]:9.3e}]")
     print(f"  alpha  = [{alpha[X_]:9.3e}, {alpha[Y_]:9.3e}]")
     print(f"  beta   = [{beta[X_]:5.3f}, {beta[Y_]:5.3f}]")
+
+
+def print_Twiss(lat, data):
+    """
+    Print Twiss parameters along the lattice.
+    """
+    L = 0e0
+    nu = np.zeros(2, dtype=float)
+    print("\n    Name         s     alpha_x   beta_x   nu_x      eta_x"
+          "        eta'_x     alpha_y   beta_y   nu_y      eta_y        eta'_y")
+    for k in range(len(data.index)):
+        L += lat[k].get_length()
+        nu[X_] += data.twiss.sel(plane="x", par="dnu").values[k]
+        nu[Y_] += data.twiss.sel(plane="y", par="dnu").values[k]
+        print("{:3d} {:8s} {:7.3f} {:9.5f} {:8.5f} {:7.5f} {:12.5e} {:12.5e}"
+              " {:9.5f} {:8.5f} {:7.5f} {:12.5e} {:12.5e}".
+              format(k, lat[k].name, L,
+                     data.twiss.sel(plane="x", par="alpha").values[k],
+                     data.twiss.sel(plane="x", par="beta").values[k],
+                     nu[X_],
+                     data.dispersion.sel(phase_coordinate="x").values[k],
+                     data.dispersion.sel(phase_coordinate="px").values[k],
+                     data.twiss.sel(plane="y", par="alpha").values[k],
+                     data.twiss.sel(plane="y", par="beta").values[k],
+                     nu[Y_],
+                     data.dispersion.sel(phase_coordinate="y").values[k],
+                     data.dispersion.sel(phase_coordinate="py").values[k]))
 
 
 def compute_periodic_solution(lat, model_state, named_index, desc):
@@ -128,7 +242,7 @@ def compute_periodic_solution(lat, model_state, named_index, desc):
     print("\nM:\n" + mat2txt(M.jacobian()[:6, :6]))
     res = cs.compute_Twiss_A(A)
     Twiss = res[:3]
-    print_Twiss("\nTwiss:\n", Twiss)
+    print_Twiss_param("\nTwiss:\n", Twiss)
     A_map = gtpsa.ss_vect_tpsa(desc, no)
     A_map.set_jacobian(A)
     ds = \
@@ -169,7 +283,7 @@ def compute_alpha_c(map):
     return alpha_c
 
 
-def compute_disp(map):
+def compute_D(map):
     A0 = gtpsa.ss_vect_tpsa(desc, no)
     # Compute canonical transformation to delta-dependent fixed point.
     ts.GoFix(map, A0)
@@ -182,15 +296,7 @@ def compute_disp(map):
     return A0
 
 
-def print_disp_along_lattice(lat, s, disp):
-    print("\n                      eta_0,x   eta_0,p_x   eta_1,x   eta_1,p_x")
-    for k in range(len(disp[1])):
-        print("{:3d} {:6.3f} {:8s} {:10.3e} {:10.3e} {:10.3e} {:10.3e}".
-              format(k+1, s[k], lat[k].name, disp[1, k, x_], disp[1, k, px_],
-                     disp[2, k, x_], disp[2, k, px_]))
-
-
-def compute_disp_along_lattice(lat, model_state, A0):
+def compute_D_along_lattice(lat, model_state, A0):
     A = A0
     ind1 = np.zeros(nv, int)
     ind1[delta_] = 1
@@ -205,8 +311,8 @@ def compute_disp_along_lattice(lat, model_state, A0):
     disp[2, 0, x_] = A0.x.get(ind2)
     disp[2, 0, px_] = A0.px.get(ind2)
     for k in range(n-1):
-        lat.propagate(model_state, A0, k, 1)
-        s[k+1] = s[k]+ lat[k].get_length()
+        lat.propagate(model_state, A0, k+1, 1)
+        s[k+1] = s[k]+ lat[k+1].get_length()
         disp[1, k+1, x_] = A0.x.get(ind1)
         disp[1, k+1, px_] = A0.px.get(ind1)
         disp[2, k+1, x_] = A0.x.get(ind2)
@@ -214,20 +320,65 @@ def compute_disp_along_lattice(lat, model_state, A0):
     return s, disp
 
 
-def plot_disp(s, disp, file_name, title):
-    # Turn interactive mode off.
-    plt.ioff()
+def print_D_along_lattice(lat, s, disp):
+    print("\n                      eta_0,x   eta_0,p_x   eta_1,x   eta_1,p_x")
+    for k in range(len(disp[1])):
+        print("{:3d} {:6.3f} {:8s} {:10.3e} {:10.3e} {:10.3e} {:10.3e}".
+              format(k+1, s[k], lat[k].name, disp[1, k, x_], disp[1, k, px_],
+                     disp[2, k, x_], disp[2, k, px_]))
 
-    fig, gr_1 = plt.subplots(1)
 
-    gr_1.set_title(title)
-    gr_1.set_xlabel("s [m]")
-    gr_1.set_ylabel(r"$\eta_{x}$ [m]")
-    gr_1.plot(s, disp[2, :, x_], "b-")
-    gr_1.legend()
+def compute_D_over_rho(lat, disp):
+    n = len(lat)
+    D_over_rho = np.zeros(n)
+    for k in range(n):
+        # Compute average across element.
+        if k > 0:
+            D_avg = (disp[1, k, x_]+disp[1, k-1, x_])/2e0
+        else:
+            D_avg = disp[1, k, x_]
+        if type(lat[k]) == ts.Bending:
+            rho_inv = lat[k].get_curvature()
+            D_over_rho[k] = D_avg*rho_inv
+            # print("  {:3d} {:10s} {:5.3f} {:7.3f} {:10.3e} {:10.3e} {:10.3e}".
+            #       format(k, lat[k].name, lat[k].get_length(), rho_inv,
+            #              disp[1, k, x_], D_avg, D_over_rho[k]))
+        else:
+            D_over_rho[k] = 0e0
+    return D_over_rho
 
-    fig.tight_layout()
-    plt.savefig(file_name)
+
+def compute_D_der_sqr_over_2(disp):
+    n = len(lat)
+    D_der_sqr_over_2 = np.zeros(n)
+    for k in range(n):
+        # Compute average across element.
+        if k > 0:
+            D_der_avg = (disp[1, k, px_]+disp[1, k-1, px_])/2e0
+        else:
+            D_der_avg = disp[1, k, px_]
+        D_der_sqr_over_2[k] = D_der_avg**2/2e0
+    return D_der_sqr_over_2
+
+
+def compute_D_2_over_rho(lat, disp):
+    n = len(lat)
+    D_2_over_rho = np.zeros(n)
+    for k in range(n):
+        # Compute average across element.
+        if k > 0:
+            D_2_avg = (disp[2, k, x_]+disp[2, k-1, x_])/2e0
+        else:
+            D_2_avg = disp[1, k, x_]
+        if type(lat[k]) == ts.Bending:
+            rho_inv = lat[k].get_curvature()
+            D_2_over_rho[k] = D_2_avg*rho_inv
+            # print("  {:3d} {:10s} {:5.3f} {:7.3f} {:10.3e} {:10.3e} {:10.3e}".
+            #       format(k, lat[k].name, lat[k].get_length(), rho_inv,
+            #              disp[1, k, x_], D_2_avg, D_2_over_rho[k]))
+        else:
+            D_2_over_rho[k] = 0e0
+    return D_2_over_rho
 
 
 def print_map(str, map):
@@ -296,22 +447,6 @@ def print_H_long(file_name, phi, delta, H):
             print()
 
 
-def plot_H_long(phi, delta, H, file_name, title):
-    # Turn interactive mode off.
-    plt.ioff()
-
-    fig, gr_1 = plt.subplots(1)
-
-    gr_1.set_title(title)
-    gr_1.set_xlabel("phi [$^\circ$]")
-    gr_1.set_ylabel(r"$\delta$ [%]")
-    gr_1.contour(phi, 1e2*delta, H, 30)
-    gr_1.legend()
-
-    fig.tight_layout()
-    plt.savefig(file_name)
-
-
 # Number of phase-space coordinates.
 nv = 7
 # Variables max order.
@@ -340,10 +475,11 @@ n_dof, lat, model_state = read_lattice(t_file)
 M, A, data = \
     compute_periodic_solution(lat, model_state, named_index, desc)
 
+if not True:
+    print_Twiss(lat, data)
+
 if True:
-    plot_Twiss(data, "lin_opt.png", "Linear Optics")
-    plt.show()
-    print("\nPlot saved as: lin_opt.png")
+    plot_Twiss(data, "lin_opt.png")
 
 r = co.compute_closed_orbit(lat, model_state, delta=0e0, eps=1e-10, desc=desc)
 
@@ -357,16 +493,16 @@ lat.propagate(model_state, map)
 print("\nmap:\n" + mat2txt(map.jacobian()[:6, :6]))
 
 alpha_c = compute_alpha_c(map)
-A0 = compute_disp(map)
-s, disp = compute_disp_along_lattice(lat, model_state, A0)
+A0 = compute_D(map)
+s, disp = compute_D_along_lattice(lat, model_state, A0)
 
 if not True:
-    print_disp_along_lattice(lat, s, disp)
+    print_D_along_lattice(lat, s, disp)
     
 if True:
-    plot_disp(s, disp, "disp_2.png", "2nd Order Dispersion")
-    plt.show()
-    print("\nPlot saved as: disp_2.png")
+    plot_D(s, disp, "D.png")
+    plot_D_alpha_1(s, disp, "D_alpha.png")
+    plot_D_alpha_2(s, disp, "D_alpha.png")
 
 phi, delta, H = compute_H_long(lat, E0, alpha_c, 10, 180e0, 20e-2, U0, False)
 
@@ -374,6 +510,4 @@ if not True:
     print_H_long("H_long.dat", phi, delta, H)
 
 if True:
-    plot_H_long(phi, delta, H, "H_long.png", "H_Long")
-    plt.show()
-    print("\nPlot saved as: H_long.png")
+    plot_H_long(phi, delta, H, "H_long.png", "$H_\parallel$")
