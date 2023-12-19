@@ -84,24 +84,25 @@ def plot_Twiss(ds, types, file_name):
     gr_1.set_title("Linear Optics")
     gr_1.set_xlabel("s [m]")
     gr_1.set_ylabel(r"$\beta_{x,y}$ [m]")
-    gr_1_r = gr_1.twinx()
-    gr_1_r.set_ylim([-2.0, 20.0])
-    gr_1_r.set_yticks([])
-    gr_1_r.step(ds.s, types, "k")
     gr_1.plot(ds.s, ds.twiss.sel(plane="x", par="beta"), "b",
               label=r"$\beta_x$")
     gr_1.plot(ds.s, ds.twiss.sel(plane="y", par="beta"), "r",
               label=r"$\beta_y$")
     gr_1.legend()
 
+    gr_1_r = gr_1.twinx()
+    gr_1_r.set_ylim([-2.0, 20.0])
+    gr_1_r.set_yticks([])
+    gr_1_r.step(ds.s, types, "k")
+
     gr_2.set_xlabel("s [m]")
     gr_2.set_ylabel(r"$\eta_x$ [m]")
+    gr_2.plot(ds.s, ds.dispersion.sel(phase_coordinate="x"), "b")
+
     gr_2_r = gr_2.twinx()
     gr_2_r.set_ylim([-2.0, 20.0])
     gr_2_r.set_yticks([])
     gr_2_r.step(ds.s, types, "k")
-    gr_2.plot(ds.s, ds.dispersion.sel(phase_coordinate="x"), "b")
-    gr_2.legend()
 
     fig.tight_layout()
 
@@ -120,14 +121,16 @@ def plot_D(s, disp, types, file_name):
     gr_1.set_title("Dispersion")
     gr_1.set_xlabel("s [m]")
     gr_1.set_ylabel("")
-    gr_1_r = gr_1.twinx()
-    gr_1_r.set_ylim([-2.0, 20.0])
-    gr_1_r.set_yticks([])
-    gr_1_r.step(s, types, "k")
+
     gr_1.plot(s, disp[1, :, x_], "g", label=r"$\eta_x$")
     gr_1.plot(s, disp[1, :, px_], "r", label=r"$\eta'_x$")
     gr_1.plot(s, disp[2, :, x_], "b", label=r"$\eta^{(2)}_x$")
     gr_1.legend()
+
+    gr_1_r = gr_1.twinx()
+    gr_1_r.set_ylim([-2.0, 20.0])
+    gr_1_r.set_yticks([])
+    gr_1_r.step(s, types, "k")
 
     fig.tight_layout()
 
@@ -148,12 +151,12 @@ def plot_D_alpha_1(s, disp, types, file_name):
     gr_1.set_title(r"Contribution to $\alpha^{(1)}_{\mathrm {c}}$")
     gr_1.set_xlabel("s [m]")
     gr_1.set_ylabel(r"$\eta^{(1)}_x/\rho$")
+    gr_1.step(s, D_over_rho, "b")
+
     gr_1_r = gr_1.twinx()
     gr_1_r.set_ylim([-2.0, 20.0])
     gr_1_r.set_yticks([])
     gr_1_r.step(s, types, "k")
-    gr_1.step(s, D_over_rho, "b")
-    gr_1.legend()
 
     fig.tight_layout()
 
@@ -175,13 +178,16 @@ def plot_D_alpha_2(s, disp, types, file_name):
     gr_1.set_title(r"Contribution to $\alpha^{(2)}_{\mathrm {c}}$")
     gr_1.set_xlabel("s [m]")
     gr_1.set_ylabel("")
-    gr_1_r = gr_1.twinx()
-    gr_1_r.set_ylim([-2.0, 20.0])
-    gr_1_r.set_yticks([])
-    gr_1_r.step(s, types, "k")
     gr_1.plot(s, D_der_sqr_over_2, "r", label=r"$(\eta'^{(1)})^2_x/2$")
-    gr_1.plot(s, D_2_over_rho, "b", label=r"$\eta^{(2)}/\rho_x$")
-    gr_1.legend()
+    gr_1.legend(loc="upper left")
+
+    y_min, y_max = gr_1.get_ylim();
+    y_scl = (y_max-y_min)/20.0
+    gr_1.step(s, y_scl*(types), "k")
+
+    gr_1_r = gr_1.twinx()
+    gr_1_r.step(s, D_2_over_rho, "b", label=r"$\eta^{(2)}/\rho_x$")
+    gr_1_r.legend(loc="upper right")
 
     fig.tight_layout()
 
@@ -201,7 +207,6 @@ def plot_H_long(phi, delta, H, file_name, title):
     gr_1.set_xlabel("phi [$^\circ$]")
     gr_1.set_ylabel(r"$\delta$ [%]")
     gr_1.contour(phi, 1e2*delta, H, 30)
-    gr_1.legend()
 
     fig.tight_layout()
 
