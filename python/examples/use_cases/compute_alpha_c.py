@@ -186,7 +186,7 @@ def plot_D_alpha_2(s, disp, types, file_name):
     gr_1.step(s, y_scl*(types), "k")
 
     gr_1_r = gr_1.twinx()
-    gr_1_r.step(s, D_2_over_rho, "b", label=r"$\eta^{(2)}/\rho_x$")
+    gr_1_r.plot(s, D_2_over_rho, "b", label=r"$\eta^{(2)}/\rho_x$")
     gr_1_r.legend(loc="upper right")
 
     fig.tight_layout()
