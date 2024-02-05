@@ -2,7 +2,6 @@
 import os
 import numpy as np
 import scipy as sp
-import NAFFlib
 import matplotlib.pyplot as plt
 
 from thor_scsi.utils.fft import get_peak_sin, get_phase

@@ -19,6 +19,8 @@ import numpy as np
 # NumPy has also an implementation of FFT but the SciPy is more efficient.
 import scipy as sp
 
+import NAFFlib
+
 
 def get_ind(n, k):
     prt = False
@@ -269,9 +271,10 @@ def get_f_naff(x):
 
     Documentation: https://pypi.org/project/NAFFlib.
     '''
-    nu, A_pos, A_neg = NAFFlib.get_tunes(x, 1)
+    f, A_pos, A_neg = NAFFlib.get_tunes(x, 1)
     A_pos, A_neg = np.absolute([A_pos, A_neg])
-    return nu, A_pos
+    # f & A_pos are arrays.
+    return f, A_pos
 
 
 __all__ = ["get_peak_sin", "get_peak_sin_cmplx", "get_phase", "get_f_naff"]
