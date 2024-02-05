@@ -254,4 +254,24 @@ def get_peak_sin_cmplx(x, n_peaks):
             x1[k-1] = x1[ind_3-1]
     return nu, A, k
 
-__all__ = ["get_peak_sin", "get_peak_sin_cmplx", "get_phase"]
+
+def get_f_naff(x):
+    '''
+    Extract f & amplitude from turn-by-turn BPM data with NAFF-lib.
+    However, somehow, the phase is not being provided (Sigh!).
+
+    (By maximising the Fourier integral numerically:
+    J. Bengtsson, Y. Hidaka
+    𝑁𝑆𝐿𝑆-𝐼𝐼: 𝑇𝑢𝑟𝑛-𝑏𝑦-𝑇𝑢𝑟𝑛 𝐵𝑃𝑀 𝐷𝑎𝑡𝑎 𝐴𝑛𝑎𝑙𝑦𝑠𝑖𝑠 – 𝐴 𝑈𝑠𝑒 𝐶𝑎𝑠𝑒 𝐴𝑝𝑝𝑟𝑜𝑎𝑐ℎ
+    NSLSII-ASD-TN-125 (2014)
+
+    https://doi.org/10.2172/1480956)
+
+    Documentation: https://pypi.org/project/NAFFlib.
+    '''
+    nu, A_pos, A_neg = NAFFlib.get_tunes(x, 1)
+    A_pos, A_neg = np.absolute([A_pos, A_neg])
+    return nu, A_pos
+
+
+__all__ = ["get_peak_sin", "get_peak_sin_cmplx", "get_phase", "get_f_naff"]
