@@ -39,7 +39,7 @@ def plt_tbt(tbt_data, nu, A, plane):
             (nu[0:n//2+1], A[0:n//2+1], linefmt="b-", markerfmt="",
              basefmt="k-")
     else:
-        file_name = "tbt_hor.png"
+        file_name = "tbt_ver.png"
 
         gr_1.set_title("Vertical Position")
         gr_2.set_title("FFT of Vertical Position")
