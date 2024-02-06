@@ -11,7 +11,7 @@ def rd_tbt(file_name, cut, n_data):
     with open(file_name) as f:
         for line in f:
             tbt_data = line.split()
-    # Unit is microns.
+    # Convert from [nm] to [mm].
     tbt_data = 1e-6*(np.array(tbt_data, dtype='float')[cut:cut+n_data])
     return tbt_data
 
@@ -30,7 +30,7 @@ def plt_tbt(tbt_data, nu, A, plane):
         gr_1.set_title("Horizontal Position")
         gr_2.set_title("FFT of Horizontal Position")
         gr_1.set_xlabel("Turn Number")
-        gr_1.set_ylabel(r"x [mm?]")
+        gr_1.set_ylabel(r"x [mm]")
         gr_1.stem(tbt_data, linefmt="b-", markerfmt="", basefmt="k-")
 
         gr_2.set_xlabel("f")
@@ -44,7 +44,7 @@ def plt_tbt(tbt_data, nu, A, plane):
         gr_1.set_title("Vertical Position")
         gr_2.set_title("FFT of Vertical Position")
         gr_1.set_xlabel("Turn Number")
-        gr_1.set_ylabel(r"y [mm?]")
+        gr_1.set_ylabel(r"y [mm]")
         gr_1.stem(tbt_data, linefmt="r-", markerfmt="", basefmt="k-")
 
         gr_2.set_xlabel("f")
@@ -72,12 +72,13 @@ def analyse_tbt_bpm_data(tbt_data, cut, n_data, plot):
 
     print()
     for j in range(2):
+        # Use [mm].
         tbt_data_fft[j] = sp.fft.fft(tbt_data[j]*sine_window)/n_data
         A_fft[j] = abs(tbt_data_fft[j])
         nu, A, k = get_peak_sin(A_fft[j], 1)
         phi = get_phase(k, nu[0], tbt_data[j])
-        print("nu = {:8.6f} A = {:9.3e} phi = {:5.1f}".
-              format(nu[0], A[0], phi*180e0/sp.pi))
+        print("nu = [{:8.6f}, {:8.6f}] A = {:9.3e} phi = {:5.1f}".
+              format(nu[0], 1e0-nu[0], A[0], phi*180e0/sp.pi))
 
     if plot:
         print()
