@@ -262,7 +262,7 @@ def get_f_naff(x):
     Extract f & amplitude from turn-by-turn BPM data with NAFF-lib.
     However, somehow, the phase is not being provided (Sigh!).
 
-    (By maximising the Fourier integral numerically:
+    (By maximising the Fourier integral by a numerical search:
     J. Bengtsson, Y. Hidaka
     𝑁𝑆𝐿𝑆-𝐼𝐼: 𝑇𝑢𝑟𝑛-𝑏𝑦-𝑇𝑢𝑟𝑛 𝐵𝑃𝑀 𝐷𝑎𝑡𝑎 𝐴𝑛𝑎𝑙𝑦𝑠𝑖𝑠 – 𝐴 𝑈𝑠𝑒 𝐶𝑎𝑠𝑒 𝐴𝑝𝑝𝑟𝑜𝑎𝑐ℎ
     NSLSII-ASD-TN-125 (2014)
