@@ -1,4 +1,5 @@
-"""FFT - Module for Elementary Signal Processing
+"""
+FFT - Module for Elementary Signal Processing
 Originally Pascal code for my thesis work for LEAR, CERN - machine translated
 to C with P2C.
 
