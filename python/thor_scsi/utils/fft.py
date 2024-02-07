@@ -1,5 +1,5 @@
 """
-FFT - Module for Elementary Signal Processing
+FFT - Class for Elementary Signal Processing
 Originally Pascal code for my thesis work for LEAR, CERN - machine translated
 to C with P2C.
 
@@ -23,6 +23,76 @@ import scipy as sp
 import NAFFlib
 
 
+class fft_class:
+    def __init__(self):
+        pass
+
+    def get_phase(self, k, nu, x):
+        '''
+        Extract phase by linear interpolation for rectangular window with:
+          -pi <= phi <= pi
+        '''
+        n = len(x)
+        x_fft = sp.fft.fft(x)
+        phi = np.arctan2(x_fft[k-1].imag, x_fft[k-1].real) - (n*nu-k+1e0)*sp.pi
+        if phi > sp.pi:
+            phi -= 2e0*sp.pi
+        elif phi < -sp.pi:
+            phi += 2e0*sp.pi
+        return phi
+
+
+    def find_harmonic(self, nu_x, nu_y, f):
+        '''
+        Match f by a linear combination of nu_x and nu_y.
+        '''
+        found = False
+        eps = 0.5e-6
+        while True:
+            eps *= 1e1
+            find_harmonic_eps(nu_x, nu_y, f)
+            if found:
+                break
+        return n_x, n_y
+
+
+    def get_peak_sin(self, x, n_peaks):
+        n = len(x)
+        x1 = x
+        nu = np.zeros(n_peaks, dtype="float")
+        A = np.zeros(n_peaks, dtype="float")
+        for j in range(n_peaks):
+            k = get_peak(x1)
+            nu[j] = interpol_sin_nu(x1, k)
+            A[j] = interpol_sin_ampl(x1, nu[j], k)
+            # Flatten peak to enable new call.
+            ind_1, ind_3 = get_ind(n, k)
+            if x1[ind_1-1] > x1[ind_3-1]:
+                x1[k-1] = x1[ind_1-1]
+            else:
+                x1[k-1] = x1[ind_3-1]
+        return nu, A, k
+
+
+    def get_peak_sin_cmplx(self, x, n_peaks):
+        n = len(x)
+        x1 = x
+        nu = np.zeros(n_peaks, dtype="float")
+        A = np.zeros(n_peaks, dtype="float")
+        for j in range(n_peaks):
+            k = get_peak_cmplx(n, x1)
+            nu[j] = interpol_sin_nu_cmplx(x1, k)
+            A[j] = interpol_sin_ampl_cmplx(x1, nu[j], k)
+            # Flatten peak to enable new call.
+            ind_1, ind_3 = get_ind_cmplx(n, k)
+            if x1[ind_1-1] > x1[ind_3-1]:
+                x1[k-1] = x1[ind_1-1]
+            else:
+                x1[k-1] = x1[ind_3-1]
+        return nu, A, k
+
+# ------------------------------------------------------------------------------
+
 def get_ind(n, k):
     prt = False
     if k == 1:
@@ -38,7 +108,7 @@ def get_ind(n, k):
     return ind_1, ind_3
 
 
-def get_ind_cmplx(n, k, ind_1, ind_3):
+def get_ind_cmplx(n, k):
     prt = False
     if k == 1:
         ind_1 = ind_3 = 2
@@ -173,21 +243,6 @@ def interpol_sin_ampl_cmplx(x, nu, k):
     return x[k-1]/corr
 
 
-def get_phase(k, nu, x):
-    '''
-    Extract phase by linear interpolation for rectangular window with:
-      -pi <= phi <= pi
-    '''
-    n = len(x)
-    x_fft = sp.fft.fft(x)
-    phi = np.arctan2(x_fft[k-1].imag, x_fft[k-1].real) - (n*nu-k+1e0)*sp.pi
-    if phi > sp.pi:
-        phi -= 2e0*sp.pi
-    elif phi < -sp.pi:
-        phi += 2e0*sp.pi
-    return phi
-
-
 def find_harmonic_eps(nu_x, nu_y, f, eps):
     n = len(x)
     for j in range(n):
@@ -207,56 +262,7 @@ def find_harmonic_eps(nu_x, nu_y, f, eps):
                     n_y = k
     return n_x, n_y
 
-
-def find_harmonic(nu_x, nu_y, f):
-    '''
-    Match f by a linear combination of nu_x and nu_y.
-    '''
-    found = False
-    eps = 0.5e-6
-    while True:
-        eps *= 1e1
-        find_harmonic_eps(nu_x, nu_y, f)
-        if found:
-            break
-    return n_x, n_y
-
-
-def get_peak_sin(x, n_peaks):
-    n = len(x)
-    x1 = x
-    nu = np.zeros(n_peaks, dtype="float")
-    A = np.zeros(n_peaks, dtype="float")
-    for j in range(n_peaks):
-        k = get_peak(x1)
-        nu[j] = interpol_sin_nu(x1, k)
-        A[j] = interpol_sin_ampl(x1, nu[j], k)
-        # Flatten peak to enable new call.
-        ind_1, ind_3 = get_ind(n, k)
-        if x1[ind_1-1] > x1[ind_3-1]:
-            x1[k-1] = x1[ind_1-1]
-        else:
-            x1[k-1] = x1[ind_3-1]
-    return nu, A, k
-
-
-def get_peak_sin_cmplx(x, n_peaks):
-    n = len(x)
-    x1 = x
-    nu = np.zeros(n_peaks, dtype="float")
-    A = np.zeros(n_peaks, dtype="float")
-    for j in range(n_peaks):
-        k = get_peak_cmplx(n, x1)
-        nu[j] = interpol_sin_nu_cmplx(x1, k)
-        A[j] = interpol_sin_ampl_cmplx(x1, nu[j], k)
-        # Flatten peak to enable new call.
-        ind_1, ind_3 = get_ind_cmplx(n, k)
-        if x1[ind_1-1] > x1[ind_3-1]:
-            x1[k-1] = x1[ind_1-1]
-        else:
-            x1[k-1] = x1[ind_3-1]
-    return nu, A, k
-
+# ------------------------------------------------------------------------------
 
 def get_f_naff(x):
     '''
@@ -277,5 +283,4 @@ def get_f_naff(x):
     # f & A_pos are arrays.
     return f, A_pos
 
-
-__all__ = ["get_peak_sin", "get_peak_sin_cmplx", "get_phase", "get_f_naff"]
+__all__ = ["fft_class", "get_f_naff"]

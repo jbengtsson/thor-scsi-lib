@@ -4,7 +4,7 @@ import numpy as np
 import scipy as sp
 import matplotlib.pyplot as plt
 
-from thor_scsi.utils.fft import get_peak_sin, get_phase
+from thor_scsi.utils.fft import fft_class
 
 
 def rd_tbt(file_name, cut, n_data):
@@ -60,7 +60,9 @@ def plt_tbt(tbt_data, nu, A, plane):
 
 
 def analyse_tbt_bpm_data(tbt_data, cut, n_data, plot):
+    fft = fft_class()
     tbt_data = np.zeros([2, n_data], dtype="float")
+
     for k in range(2):
         tbt_data[k] = rd_tbt(file_name[k], cut, n_data)
         tbt_data[k] -= np.mean(tbt_data[k])
@@ -75,8 +77,8 @@ def analyse_tbt_bpm_data(tbt_data, cut, n_data, plot):
         # Use [mm].
         tbt_data_fft[j] = sp.fft.fft(tbt_data[j]*sine_window)/n_data
         A_fft[j] = abs(tbt_data_fft[j])
-        nu, A, k = get_peak_sin(A_fft[j], 1)
-        phi = get_phase(k, nu[0], tbt_data[j])
+        nu, A, k = fft.get_peak_sin(A_fft[j], 1)
+        phi = fft.get_phase(k, nu[0], tbt_data[j])
         print("nu = [{:8.6f}, {:8.6f}] A = {:9.3e} phi = {:5.1f}".
               format(nu[0], 1e0-nu[0], A[0], phi*180e0/sp.pi))
 
