@@ -472,7 +472,23 @@ class middle_layer:
             if prt:
                 print()
 
-    def get_pv(self, type, fam):
+    def get_pv(self, type, pv):
+        if on_line:
+            val = self.pv_get[type][pv].get()
+            print(f"  {pv:10s} {val:8.5f}")
+        else:
+            val = self.pv_get[type][pv]
+            print(f"  {pv:10s} {val:14s}")
+
+    def put_pv(self, type, pv):
+        if on_line:
+            val = self.pv_put[type][pv].get()
+            print(f"  {pv:10s} {val:8.5f}")
+        else:
+            val = self.pv_put[type][pv]
+            print(f"  {pv:10s} {val:14s}")
+
+    def get_pv_fam(self, type, fam):
         print("\nget_pv -", fam, ":")
         for pwr_supp in self.pwr_supp[type][fam]:
             if on_line:
@@ -482,7 +498,7 @@ class middle_layer:
                 val = self.pv_get[type][pwr_supp]
                 print(f"  {pwr_supp:10s} {val:14s}")
 
-    def put_pv(self, type, fam):
+    def put_pv_fam(self, type, fam):
         print("\nput_pv -", fam, ":")
         for pwr_supp in self.pwr_supp[type][fam]:
             if on_line:
@@ -602,13 +618,18 @@ ml.epics_init("sext")
 
 if False:
     for fam in ml.fam["sext"]:
-        ml.get_pv("sext", fam)
+        ml.get_pv_fam("sext", fam)
 
 if not False:
-    ml.get_pv("sext", "S1PR")
-    ml.put_pv("sext", "S1PR")
-    ml.get_pv("sext", "S1PR")
+    ml.get_pv("sext", "S1MD1R")
+    ml.put_pv("sext", "S1MD1R")
+    ml.get_pv("sext", "S1MD1R")
+
+if False:
+    ml.get_pv_fam("sext", "S1PR")
+    ml.put_pv_fam("sext", "S1PR")
+    ml.get_pv_fam("sext", "S1PR")
 
 if False:
     for fam in ml.fam["sext"]:
-        ml.get_pv("sext", fam)
+        ml.get_pv_fam("sext", fam)
