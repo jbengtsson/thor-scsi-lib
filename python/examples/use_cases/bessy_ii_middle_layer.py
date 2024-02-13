@@ -565,7 +565,7 @@ if False:
     ml.print_pwr_supp("sext", ml.fam["sext"][0])
     ml.print_conv_fact("sext")
 
-# Test EPICS I/O.
+# Test of EPICS I/O.
 
 if on_line:
     pv_get, pv_set = ml.epics_init("sext")
