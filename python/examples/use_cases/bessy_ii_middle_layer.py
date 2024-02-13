@@ -53,6 +53,8 @@ X_, Y_, Z_ = [
     ts.phase_space_index_internal.delta,
 ]
 
+#-------------------------------------------------------------------------------
+
 class middle_layer:
     def __init__(self):
         self.fam = {"quad": [
@@ -508,6 +510,7 @@ class middle_layer:
                 val = self.pv_put[type][pwr_supp]
                 print(f"  {pwr_supp:10s} {val:14s}")
 
+#-------------------------------------------------------------------------------
 
 def read_lattice(file_name):
     # Read in & parse lattice file.
@@ -557,6 +560,7 @@ def compute_periodic_solution(lat, model_state, named_index, desc):
 
     return M, A, ds
 
+#-------------------------------------------------------------------------------
 
 # Main program.
 
@@ -581,24 +585,32 @@ named_index = gtpsa.IndexMapping(dict(x=0, px=1, y=2, py=3, delta=4, ct=5))
 
 home_dir = os.path.join(os.environ["HOME"])
 
+#-------------------------------------------------------------------------------
+#
+# Lattice.
+
 file_name_lat = \
     os.path.join \
     (home_dir, "Nextcloud", "thor_scsi", "JB", "BESSY-II",
      "b2_stduser_beamports_blm_tracy_corr.lat")
 
-file_name_conv_coeff = {}
-file_name_conv_coeff["quad"] = \
-    os.path.join(home_dir, "Teresia/conversion-factors-quadrupoles.csv")
-file_name_conv_coeff["sext"] = \
-    os.path.join(home_dir, "Teresia/conversion-factors-sextupoles.txt")
-
-# Read in lattice and compute linear optics.
+# Read in lattice and compute the linear optics.
 
 n_dof, lat, model_state = read_lattice(file_name_lat)
 
 if False:
     M, A, data = \
         compute_periodic_solution(lat, model_state, named_index, desc)
+
+#-------------------------------------------------------------------------------
+#
+# Middle Layer.
+
+file_name_conv_coeff = {}
+file_name_conv_coeff["quad"] = \
+    os.path.join(home_dir, "Teresia/conversion-factors-quadrupoles.csv")
+file_name_conv_coeff["sext"] = \
+    os.path.join(home_dir, "Teresia/conversion-factors-sextupoles.txt")
 
 # Initialise the Middle Layer.
 
