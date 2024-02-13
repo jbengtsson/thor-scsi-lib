@@ -393,6 +393,9 @@ class middle_layer:
         }
 
         self.conv_fact = {"quad":{}, "sext": {}}
+        self.pv_get = {"quad":{}, "sext": {}}
+        self.pv_put = {"quad":{}, "sext": {}}
+
 
     def middle_layer_init(self, file_name):
         self.rd_conv_fact("sext", file_name["sext"])
@@ -443,23 +446,51 @@ class middle_layer:
         print()
 
     def epics_init(self, type):
-        mpole_get = []
-        mpole_set = []
+        prt = False
+        n_prt = 5
+        if prt:
+            print("\nepics_init")
         for fam in self.fam[type]:
-            mpole_get.append(fam+":get")
-            mpole_set.append(fam+":set")
-        print("\n", mpole_get, "\n", mpole_set)
-        if on_line:
-            pv_get = [epics.PV(pv) for pv in mpole_get]
-            pv_set = [epics.PV(pv) for pv in mpole_set]
-        return pv_get, pv_set
+            if prt:
+                print("  Family -", fam)
+                n = 0
+                print("  ", end="")
+            for pwr_supp in self.pwr_supp[type][fam]:
+                if prt:
+                    print(f"  {pwr_supp:10s}", end="")
+                    n += 1
+                if on_line:
+                    self.pv_get[type][pwr_supp] = epics.PV(pwr_supp+":get")
+                    self.pv_put[type][pwr_supp] = epics.PV(pwr_supp+":set")
+                else:
+                    self.pv_get[type][pwr_supp] = pwr_supp+":get"
+                    self.pv_put[type][pwr_supp] = pwr_supp+":set"
+                if prt and (n % n_prt == 0):
+                    print()
+                    print("  ", end="")
+                    n = 0
+            if prt:
+                print()
 
-    def get_pv(self, pv):
-        print(f"get_pv: {pv:15s} {pv:8.5f}")
-        return pv
+    def get_pv(self, type, fam):
+        print("\nget_pv -", fam, ":")
+        for pwr_supp in self.pwr_supp[type][fam]:
+            if on_line:
+                val = self.pv_get[type][pwr_supp].get()
+                print(f"  {pwr_supp:10s} {val:8.5f}")
+            else:
+                val = self.pv_get[type][pwr_supp]
+                print(f"  {pwr_supp:10s} {val:14s}")
 
-    def put_pv(self, pv):
-        print(f"put_pv: {pv:15s} {pv:8.5f}")
+    def put_pv(self, type, fam):
+        print("\nput_pv -", fam, ":")
+        for pwr_supp in self.pwr_supp[type][fam]:
+            if on_line:
+                val = self.pv_put[type][pwr_supp].get()
+                print(f"  {pwr_supp:10s} {val:8.5f}")
+            else:
+                val = self.pv_put[type][pwr_supp]
+                print(f"  {pwr_supp:10s} {val:14s}")
 
 
 def read_lattice(file_name):
@@ -567,17 +598,17 @@ if False:
 
 # Test of EPICS I/O.
 
-if on_line:
-    pv_get, pv_set = ml.epics_init("sext")
+ml.epics_init("sext")
 
-    for pv in pv_get:
-        get_pv(pv)
+if False:
+    for fam in ml.fam["sext"]:
+        ml.get_pv("sext", fam)
 
-    set_pv(pv_set[0])
-    get_pv(pv_get[0])
+if not False:
+    ml.get_pv("sext", "S1PR")
+    ml.put_pv("sext", "S1PR")
+    ml.get_pv("sext", "S1PR")
 
-    set_pv(pv_set[5])
-    get_pv(pv_get[5])
-
-    for pv in pv_get:
-        get_pv(pv)
+if False:
+    for fam in ml.fam["sext"]:
+        ml.get_pv("sext", fam)
