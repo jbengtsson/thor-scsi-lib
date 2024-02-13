@@ -15,10 +15,12 @@ Interface module for the EPICS Python interface for/to:
 '''
 
 
+on_line = False
+
 import os
 import numpy as np
 
-if not True:
+if on_line:
     from epics import caget, caput, cainfo
 
 import gtpsa
@@ -71,74 +73,124 @@ class middle_layer:
                 "Q1M2D3R", "Q1M1D4R", "Q1M2D4R", "Q1M1D5R", "Q1M2D5R",
                 "Q1M1D6R", "Q1M2D6R", "Q1M1D7R", "Q1M2D7R", "Q1M1D8R",
                 "Q1M2D8R"
-            ], 
+            ],
             "Q1PTR": [
                 "Q1M1T1R", "Q1M2T1R", "Q1M1T2R", "Q1M2T2R", "Q1M1T3R",
                 "Q1M2T3R", "Q1M1T4R", "Q1M2T4R", "Q1M1T5R", "Q1M2T5R",
                 "Q1M1T6R", "Q1M2T6R", "Q1M1T7R", "Q1M2T7R", "Q1M1T8R",
                 "Q1M2T8R"
-            ], 
+            ],
             "Q2PDR": [
                 "Q2M1D1R", "Q2M2D1R", "Q2M1D2R", "Q2M2D2R", "Q2M1D3R",
                 "Q2M2D3R", "Q2M1D4R", "Q2M2D4R", "Q2M1D5R", "Q2M2D5R",
                 "Q2M1D6R", "Q2M2D6R", "Q2M1D7R", "Q2M2D7R", "Q2M1D8R",
                 "Q2M2D8R"
-            ], 
+            ],
             "Q2PTR": [
                 "Q2M1T1R", "Q2M2T1R", "Q2M1T2R", "Q2M2T2R", "Q2M1T3R",
                 "Q2M2T3R", "Q2M1T4R", "Q2M2T4R", "Q2M1T5R", "Q2M2T5R",
                 "Q2M1T6R", "Q2M2T6R", "Q2M1T7R", "Q2M2T7R", "Q2M1T8R",
-                "Q2M2T8R"], 
-            "Q3PD1R":  ["Q3M1D1R", "Q3M2D1R"], 
-            "Q3PD2R":  ["Q3M1D2R", "Q3M2D2R"], 
-            "Q3PD3R":  ["Q3M1D3R", "Q3M2D3R"], 
-            "Q3PD4R":  ["Q3M1D4R", "Q3M2D4R"], 
-            "Q3PD5R":  ["Q3M1D5R", "Q3M2D5R"], 
-            "Q3PD6R":  ["Q3M1D6R", "Q3M2D6R"], 
-            "Q3PD7R":  ["Q3M1D7R", "Q3M2D7R"], 
-            "Q3PD8R":  ["Q3M1D8R", "Q3M2D8R"], 
-            "Q3P1T1R": ["Q3M1T1R"], 
-            "Q3P2T1R": ["Q3M2T1R"], 
-            "Q3PT2R":  ["Q3M1T2R",  "Q3M2T2R"], 
-            "Q3PT3R":  ["Q3M1T3R",  "Q3M2T3R"], 
-            "Q3PT4R":  ["Q3M1T4R",  "Q3M2T4R"], 
-            "Q3PT5R":  ["Q3M1T5R",  "Q3M2T5R"], 
-            "Q3P1T6R": ["Q3M1T6R"], 
-            "Q3P2T6R": ["Q3M2T6R"], 
-            "Q3PT7R":  ["Q3M1T7R",  "Q3M2T7R"], 
-            "Q3P1T8R": ["Q3M1T8R"], 
-            "Q3P2T8R": ["Q3M2T8R"], 
-            "Q4PD1R":  ["Q4M1D1R",  "Q4M2D1R"], 
-            "Q4PD2R":  ["Q4M1D2R",  "Q4M2D2R"], 
-            "Q4PD3R":  ["Q4M1D3R",  "Q4M2D3R"], 
-            "Q4PD4R":  ["Q4M1D4R",  "Q4M2D4R"], 
-            "Q4PD5R":  ["Q4M1D5R",  "Q4M2D5R"], 
-            "Q4PD6R":  ["Q4M1D6R",  "Q4M2D6R"], 
-            "Q4PD7R":  ["Q4M1D7R",  "Q4M2D7R"], 
-            "Q4PD8R":  ["Q4M1D8R",  "Q4M2D8R"], 
-            "Q4P1T1R": ["Q4M1T1R"], 
-            "Q4P2T1R": ["Q4M2T1R"], 
-            "Q4PT2R":  ["Q4M1T2R",  "Q4M2T2R"], 
-            "Q4PT3R":  ["Q4M1T3R",  "Q4M2T3R"], 
-            "Q4PT4R":  ["Q4M1T4R",  "Q4M2T4R"], 
-            "Q4PT5R":  ["Q4M1T5R",  "Q4M2T5R"], 
-            "Q4P1T6R": ["Q4M1T6R"], 
-            "Q4P2T6R": ["Q4M2T6R"], 
-            "Q4PT7R":  ["Q4M1T7R",  "Q4M2T7R"], 
-            "Q4P1T8R": ["Q4M1T8R"], 
-            "Q4P2T8R": ["Q4M2T8R"], 
-            "Q5P1T1R": ["Q5M1T1R"], 
-            "Q5P2T1R": ["Q5M2T1R"], 
-            "Q5PT2R":  ["Q5M1T2R",  "Q5M2T2R"], 
-            "Q5PT3R":  ["Q5M1T3R",  "Q5M2T3R"], 
-            "Q5PT4R":  ["Q5M1T4R",  "Q5M2T4R"], 
-            "Q5PT5R":  ["Q5M1T5R",  "Q5M2T5R"], 
-            "Q5P1T6R": ["Q5M1T6R"], 
-            "Q5P2T6R": ["Q5M2T6R"] , 
-            "Q5PT7R":  ["Q5M1T7R", "Q5M2T7R"], 
-            "Q5P1T8R": ["Q5M1T8R"], 
-            "Q5P2T8R": ["Q5M2T8R"],
-            "PQIPT6":  ["QIT6"]
+                "Q2M2T8R"],
+            "Q3PD1R": [
+                "Q3M1D1R", "Q3M2D1R"],
+            "Q3PD2R": [
+                "Q3M1D2R", "Q3M2D2R"],
+            "Q3PD3R": [
+                "Q3M1D3R", "Q3M2D3R"],
+            "Q3PD4R": [
+                "Q3M1D4R", "Q3M2D4R"],
+            "Q3PD5R": [
+                "Q3M1D5R", "Q3M2D5R"],
+            "Q3PD6R": [
+                "Q3M1D6R", "Q3M2D6R"],
+            "Q3PD7R": [
+                "Q3M1D7R", "Q3M2D7R"],
+            "Q3PD8R": [
+                "Q3M1D8R", "Q3M2D8R"],
+            "Q3P1T1R": [
+                "Q3M1T1R"],
+            "Q3P2T1R": [
+                "Q3M2T1R"],
+            "Q3PT2R": [
+                "Q3M1T2R", "Q3M2T2R"],
+            "Q3PT3R": [
+                "Q3M1T3R", "Q3M2T3R"],
+            "Q3PT4R": [
+                "Q3M1T4R", "Q3M2T4R"],
+            "Q3PT5R": [
+                "Q3M1T5R", "Q3M2T5R"],
+            "Q3P1T6R": [
+                "Q3M1T6R"],
+            "Q3P2T6R": [
+                "Q3M2T6R"],
+            "Q3PT7R": [
+                "Q3M1T7R", "Q3M2T7R"],
+            "Q3P1T8R": [
+                "Q3M1T8R"],
+            "Q3P2T8R": [
+                "Q3M2T8R"],
+            "Q4PD1R": [
+                "Q4M1D1R", "Q4M2D1R"],
+            "Q4PD2R": [
+                "Q4M1D2R", "Q4M2D2R"],
+            "Q4PD3R": [
+                "Q4M1D3R", "Q4M2D3R"],
+            "Q4PD4R": [
+                "Q4M1D4R", "Q4M2D4R"],
+            "Q4PD5R": [
+                "Q4M1D5R", "Q4M2D5R"],
+            "Q4PD6R": [
+                "Q4M1D6R", "Q4M2D6R"],
+            "Q4PD7R": [
+                "Q4M1D7R", "Q4M2D7R"],
+            "Q4PD8R": [
+                "Q4M1D8R", "Q4M2D8R"],
+            "Q4P1T1R": [
+                "Q4M1T1R"],
+            "Q4P2T1R": [
+                "Q4M2T1R"],
+            "Q4PT2R": [
+                "Q4M1T2R", "Q4M2T2R"],
+            "Q4PT3R": [
+                "Q4M1T3R", "Q4M2T3R"],
+            "Q4PT4R": [
+                "Q4M1T4R", "Q4M2T4R"],
+            "Q4PT5R": [
+                "Q4M1T5R", "Q4M2T5R"],
+            "Q4P1T6R": [
+                "Q4M1T6R"],
+            "Q4P2T6R": [
+                "Q4M2T6R"],
+            "Q4PT7R": [
+                "Q4M1T7R", "Q4M2T7R"],
+            "Q4P1T8R": [
+                "Q4M1T8R"],
+            "Q4P2T8R": [
+                "Q4M2T8R"],
+            "Q5P1T1R": [
+                "Q5M1T1R"],
+            "Q5P2T1R": [
+                "Q5M2T1R"],
+            "Q5PT2R": [
+                "Q5M1T2R", "Q5M2T2R"],
+            "Q5PT3R": [
+                "Q5M1T3R", "Q5M2T3R"],
+            "Q5PT4R": [
+                "Q5M1T4R", "Q5M2T4R"],
+            "Q5PT5R": [
+                "Q5M1T5R", "Q5M2T5R"],
+            "Q5P1T6R": [
+                "Q5M1T6R"],
+            "Q5P2T6R": [
+                "Q5M2T6R"] ,
+            "Q5PT7R": [
+                "Q5M1T7R", "Q5M2T7R"],
+            "Q5P1T8R": [
+                "Q5M1T8R"],
+            "Q5P2T8R": [
+                "Q5M2T8R"],
+            "PQIPT6": [
+                "QIT6"]
         }}
 
         self.sp = {"quad_nom": {
@@ -301,12 +353,18 @@ class middle_layer:
                 "S4M1T1R", "S4M2T1R", "S4M1T2R", "S4M2T2R", "S4M1T3R",
                 "S4M2T3R", "S4M1T4R", "S4M2T4R", "S4M1T5R", "S4M2T5R",
                 "S4M1T7R", "S4M2T7R", "S4M1T8R", "S4M2T8R"],
-            "S3PD1R":  ["S3M1D1R",  "S3M2D1R"],
-            "S4PD1R":  ["S4M1D1R",  "S4M2D1R"],
-            "S3P1T6R": ["S3M1T6R"],
-            "S3P2T6R": ["S3M2T6R"],
-            "S4P1T6R": ["S4M1T6R"],
-            "S4P2T6R": ["S4M2T6R"]
+            "S3PD1R": [
+                "S3M1D1R", "S3M2D1R"],
+            "S4PD1R": [
+                "S4M1D1R", "S4M2D1R"],
+            "S3P1T6R": [
+                "S3M1T6R"],
+            "S3P2T6R": [
+                "S3M2T6R"],
+            "S4P1T6R": [
+                "S4M1T6R"],
+            "S4P2T6R": [
+                "S4M2T6R"]
         }
 
         self.sp["sext_nom"] = {
@@ -334,64 +392,79 @@ class middle_layer:
             "S4P2T6R":  64.87/2
         }
 
-        self.conv_facts_quad = {}
-        self.conv_facts_sext = {}
+        self.conv_fact = {"quad":{}, "sext": {}}
 
     def middle_layer_init(self, file_name):
-        self.rd_sext_conv_fact(file_name["sext"])
+        self.rd_conv_fact("sext", file_name["sext"])
 
-    def rd_sext_conv_fact(self, file_name):
+    def rd_conv_fact(self, type, file_name):
         # Unit is [1/A] for thick sextupoles.
         with open(file_name) as f:
             for line in f:
                 if line[0] != "#":
                     token = line.split()
-                    self.conv_facts_sext.update({token[0] : float(token[1])})
+                    self.conv_fact[type].update({token[0] : float(token[1])})
 
     def print_fam(self, type):
         n_prt = 5
-        print(f"\n{type:s}:")
+        print(f"\nFamilies - {type:s}:")
         n = 0
-        for key in self.fam[type]:
-            print(f"{key:10s}", end="")
+        for fam in self.fam[type]:
+            print(f"  {fam:10s}", end="")
             n += 1
             if n % n_prt == 0:
                 print()
                 n = 0
         print()
-
 
     def print_pwr_supp(self, type, fam):
         n_prt = 5
-        print(f"\n{fam:s}:")
+        print(f"\nPower Supplies - {fam:s}:")
         n = 0
-        for key in self.pwr_supp[type][fam]:
-            print(f"{key:10s}", end="")
+        for pwr_supp in self.pwr_supp[type][fam]:
+            print(f"  {pwr_supp:10s}", end="")
             n += 1
             if n % n_prt == 0:
                 print()
                 n = 0
         print()
 
+    def print_conv_fact(self, type):
+        n_prt = 5
+        print(f"\nConversion Factors - {type:s}:")
+        n = 0
+        for pwr_supp in self.conv_fact[type]:
+            print(f"  {pwr_supp:10s} {self.conv_fact[type][pwr_supp]:7.5f}",
+                  end="")
+            n += 1
+            if n % n_prt == 0:
+                print()
+                n = 0
+        print()
 
-    def get_pv(self, pv_name):
-        pv = acget(pv_name+":get")
-        print(f"get_pv: {pv_name:15s} {pv:12.5e}")
+    def epics_init(self, type):
+        mpole_get = []
+        mpole_set = []
+        for fam in self.fam[type]:
+            mpole_get.append(fam+":get")
+            mpole_set.append(fam+":set")
+        print("\n", mpole_get, "\n", mpole_set)
+        if on_line:
+            pv_get = [epics.PV(pv) for pv in mpole_get]
+            pv_set = [epics.PV(pv) for pv in mpole_set]
+        return pv_get, pv_set
+
+    def get_pv(self, pv):
+        print(f"get_pv: {pv:15s} {pv:8.5f}")
         return pv
 
-    def put_pv(self, pv_name, pv):
-        pv = acget(pv_name+":set")
-        print(f"get_pv: {pv_name:15s}")
+    def put_pv(self, pv):
+        print(f"put_pv: {pv:15s} {pv:8.5f}")
 
 
-def setreltivesextupolestrength(x):
-    for actpv, actinital in zip(pvlist, initalValues):
-        actpv.put(actinital*x)
-
-
-def read_lattice(t_file):
+def read_lattice(file_name):
     # Read in & parse lattice file.
-    lat = accelerator_from_config(t_file)
+    lat = accelerator_from_config(file_name)
 
     # Set lattice state (Rf cavity on/off, etc.)
     model_state = ts.ConfigType()
@@ -438,6 +511,8 @@ def compute_periodic_solution(lat, model_state, named_index, desc):
     return M, A, ds
 
 
+# Main program.
+
 # Number of phase-space coordinates.
 nv = 7
 # Variables max order.
@@ -470,23 +545,39 @@ file_name_conv_coeff["quad"] = \
 file_name_conv_coeff["sext"] = \
     os.path.join(home_dir, "Teresia/conversion-factors-sextupoles.txt")
 
+# Read in lattice and compute linear optics.
+
 n_dof, lat, model_state = read_lattice(file_name_lat)
 
 if False:
     M, A, data = \
         compute_periodic_solution(lat, model_state, named_index, desc)
 
+# Initialise the Middle Layer.
 
 ml = middle_layer()
 
 ml.middle_layer_init(file_name_conv_coeff)
 
-ml.print_fam("quad")
-ml.print_fam("sext")
-ml.print_pwr_supp("sext", ml.fam["sext"][0])
+if False:
+    ml.print_fam("quad")
+    ml.print_fam("sext")
+    ml.print_pwr_supp("sext", ml.fam["sext"][0])
+    ml.print_conv_fact("sext")
 
-# Check status.
-# pvlist = [epics.PV(act) for act in sextupole_list]
+# Test EPICS I/O.
 
-# initalValues = [act.get() for act in pvlist]
+if on_line:
+    pv_get, pv_set = ml.epics_init("sext")
 
+    for pv in pv_get:
+        get_pv(pv)
+
+    set_pv(pv_set[0])
+    get_pv(pv_get[0])
+
+    set_pv(pv_set[5])
+    get_pv(pv_get[5])
+
+    for pv in pv_get:
+        get_pv(pv)
