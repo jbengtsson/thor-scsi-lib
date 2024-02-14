@@ -583,7 +583,6 @@ ml.middle_layer_init(file_name_conv_coeff)
 if not False:
     ml.prt_pwr_supp("sext", ml.pwr_supp["sext"])
     # ml.prt_conv_fact("sext")
-    print()
 
 # Test of EPICS I/O.
 
