@@ -474,7 +474,7 @@ class middle_layer:
                 val = self.pv_put[type][pwr_supp]
                 print(f"  {pwr_supp:10s} {val:14s}")
 
-    def print_fam(self, type):
+    def prt_fam(self, type):
         n_prt = 5
         print(f"\nFamilies - {type:s}:")
         n = 0
@@ -486,7 +486,7 @@ class middle_layer:
                 n = 0
         print()
 
-    def print_pwr_supp(self, type, fam):
+    def prt_pwr_supp(self, type, fam):
         n_prt = 5
         print(f"\nPower Supplies - {fam:s}:")
         n = 0
@@ -498,7 +498,7 @@ class middle_layer:
                 n = 0
         print()
 
-    def print_conv_fact(self, type):
+    def prt_conv_fact(self, type):
         n_prt = 5
         print(f"\nConversion Factors - {type:s}:")
         n = 0
@@ -513,7 +513,7 @@ class middle_layer:
 
 #-------------------------------------------------------------------------------
 
-def read_lattice(file_name):
+def rd_lat(file_name):
     # Read in & parse lattice file.
     lat = accelerator_from_config(file_name)
 
@@ -527,7 +527,7 @@ def read_lattice(file_name):
     return n_dof, lat, model_state
 
 
-def print_Twiss_param(str, Twiss):
+def prt_Twiss_param(str, Twiss):
     # eta, alpha, beta = Twiss[0], Twiss[1], Twiss[2]
     # that way I also check that Twiss has exactly three parameters
     eta, alpha, beta = Twiss
@@ -552,7 +552,7 @@ def compute_periodic_solution(lat, model_state, named_index, desc):
     print("\nM:\n" + mat2txt(M.jacobian()[:6, :6]))
     res = cs.compute_Twiss_A(A)
     Twiss = res[:3]
-    print_Twiss_param("\nTwiss:\n", Twiss)
+    prt_Twiss_param("\nTwiss:\n", Twiss)
     A_map = gtpsa.ss_vect_tpsa(desc, no)
     A_map.set_jacobian(A)
     ds = \
@@ -597,7 +597,7 @@ file_name_lat = \
 
 # Read in lattice and compute the linear optics.
 
-n_dof, lat, model_state = read_lattice(file_name_lat)
+n_dof, lat, model_state = rd_lat(file_name_lat)
 
 if False:
     M, A, data = \
@@ -620,10 +620,10 @@ ml = middle_layer()
 ml.middle_layer_init(file_name_conv_coeff)
 
 if not False:
-    ml.print_fam("quad")
-    ml.print_fam("sext")
-    ml.print_pwr_supp("sext", ml.fam["sext"][0])
-    ml.print_conv_fact("sext")
+    ml.prt_fam("quad")
+    ml.prt_fam("sext")
+    ml.prt_pwr_supp("sext", ml.fam["sext"][0])
+    ml.prt_conv_fact("sext")
     print()
 
 # Test of EPICS I/O.
