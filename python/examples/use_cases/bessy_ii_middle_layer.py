@@ -400,6 +400,7 @@ class middle_layer:
 
 
     def middle_layer_init(self, file_name):
+        # self.rd_conv_fact("sext", file_name["quad"])
         self.rd_conv_fact("sext", file_name["sext"])
 
     def rd_conv_fact(self, type, file_name):
@@ -409,43 +410,6 @@ class middle_layer:
                 if line[0] != "#":
                     token = line.split()
                     self.conv_fact[type].update({token[0] : float(token[1])})
-
-    def print_fam(self, type):
-        n_prt = 5
-        print(f"\nFamilies - {type:s}:")
-        n = 0
-        for fam in self.fam[type]:
-            print(f"  {fam:10s}", end="")
-            n += 1
-            if n % n_prt == 0:
-                print()
-                n = 0
-        print()
-
-    def print_pwr_supp(self, type, fam):
-        n_prt = 5
-        print(f"\nPower Supplies - {fam:s}:")
-        n = 0
-        for pwr_supp in self.pwr_supp[type][fam]:
-            print(f"  {pwr_supp:10s}", end="")
-            n += 1
-            if n % n_prt == 0:
-                print()
-                n = 0
-        print()
-
-    def print_conv_fact(self, type):
-        n_prt = 5
-        print(f"\nConversion Factors - {type:s}:")
-        n = 0
-        for pwr_supp in self.conv_fact[type]:
-            print(f"  {pwr_supp:10s} {self.conv_fact[type][pwr_supp]:7.5f}",
-                  end="")
-            n += 1
-            if n % n_prt == 0:
-                print()
-                n = 0
-        print()
 
     def epics_init(self, type):
         prt = False
@@ -509,6 +473,43 @@ class middle_layer:
             else:
                 val = self.pv_put[type][pwr_supp]
                 print(f"  {pwr_supp:10s} {val:14s}")
+
+    def print_fam(self, type):
+        n_prt = 5
+        print(f"\nFamilies - {type:s}:")
+        n = 0
+        for fam in self.fam[type]:
+            print(f"  {fam:10s}", end="")
+            n += 1
+            if n % n_prt == 0:
+                print()
+                n = 0
+        print()
+
+    def print_pwr_supp(self, type, fam):
+        n_prt = 5
+        print(f"\nPower Supplies - {fam:s}:")
+        n = 0
+        for pwr_supp in self.pwr_supp[type][fam]:
+            print(f"  {pwr_supp:10s}", end="")
+            n += 1
+            if n % n_prt == 0:
+                print()
+                n = 0
+        print()
+
+    def print_conv_fact(self, type):
+        n_prt = 5
+        print(f"\nConversion Factors - {type:s}:")
+        n = 0
+        for pwr_supp in self.conv_fact[type]:
+            print(f"  {pwr_supp:10s} {self.conv_fact[type][pwr_supp]:7.5f}",
+                  end="")
+            n += 1
+            if n % n_prt == 0:
+                print()
+                n = 0
+        print()
 
 #-------------------------------------------------------------------------------
 
@@ -618,11 +619,12 @@ ml = middle_layer()
 
 ml.middle_layer_init(file_name_conv_coeff)
 
-if False:
+if not False:
     ml.print_fam("quad")
     ml.print_fam("sext")
     ml.print_pwr_supp("sext", ml.fam["sext"][0])
     ml.print_conv_fact("sext")
+    print()
 
 # Test of EPICS I/O.
 
