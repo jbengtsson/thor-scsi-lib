@@ -60,18 +60,6 @@ if thor_scsi:
 
 class middle_layer:
     def __init__(self):
-        self.fam = {"quad": [
-            "Q1PDR",   "Q1PTR",   "Q2PDR",   "Q2PTR",   "Q3PD1R",  "Q3PD2R",
-            "Q3PD3R",  "Q3PD4R",  "Q3PD5R",  "Q3PD6R",  "Q3PD7R",  "Q3PD8R",
-            "Q3P1T1R", "Q3P2T1R", "Q3PT2R",  "Q3PT3R",  "Q3PT4R",  "Q3PT5R",
-            "Q3P1T6R", "Q3P2T6R", "Q3PT7R",  "Q3P1T8R", "Q3P2T8R", "Q4PD1R",
-            "Q4PD2R",  "Q4PD3R",  "Q4PD4R",  "Q4PD5R",  "Q4PD6R",  "Q4PD7R",
-            "Q4PD8R",  "Q4P1T1R", "Q4P2T1R", "Q4PT2R",  "Q4PT3R",  "Q4PT4R",
-            "Q4PT5R",  "Q4P1T6R", "Q4P2T6R", "Q4PT7R",  "Q4P1T8R", "Q4P2T8R",
-            "Q5P1T1R", "Q5P2T1R", "Q5PT2R",  "Q5PT3R",  "Q5PT4R",  "Q5PT5R",
-            "Q5P1T6R", "Q5P2T6R", "Q5PT7R",  "Q5P1T8R", "Q5P2T8R", "PQIPT6"
-        ]}
-
         self.pwr_supp = {"quad": {
             "Q1PDR": [
                 "Q1M1D1R", "Q1M2D1R", "Q1M1D2R", "Q1M2D2R", "Q1M1D3R",
@@ -316,12 +304,6 @@ class middle_layer:
             "PQIPT6":   0.0
         }
 
-        self.fam["sext"] = [
-            "S1PR",  "S2PDR",  "S2PTR",  "S3PDR",   "S3PTR",   "S4PDR",
-            "S4PTR", "S3PD1R", "S4PD1R", "S3P1T6R", "S3P2T6R", "S4P1T6R",
-            "S4P2T6R"
-        ]
-
         self.pwr_supp["sext"] = {
             "S1PR": [
                 "S1MD1R", "S1MT1R", "S1MD2R", "S1MT2R", "S1MD3R", "S1MT3R",
@@ -415,107 +397,69 @@ class middle_layer:
                     self.conv_fact[type].update({token[0] : float(token[1])})
 
     def epics_init(self, type):
-        prt = False
+        prt = not False
         n_prt = 5
         if prt:
             print("\nepics_init")
-        for fam in self.fam[type]:
+        n = 0
+        for pwr_supp in self.pwr_supp[type]:
             if prt:
-                print("  Family -", fam)
-                n = 0
-                print("  ", end="")
-            for pwr_supp in self.pwr_supp[type][fam]:
-                if prt:
-                    print(f"  {pwr_supp:10s}", end="")
-                    n += 1
-                if on_line:
-                    self.pv_get[type][pwr_supp] = epics.PV(pwr_supp+":get")
-                    self.pv_put[type][pwr_supp] = epics.PV(pwr_supp+":set")
-                else:
-                    self.pv_get[type][pwr_supp] = pwr_supp+":get"
-                    self.pv_put[type][pwr_supp] = pwr_supp+":set"
-                if prt and (n % n_prt == 0):
-                    print()
-                    print("  ", end="")
-                    n = 0
-            if prt:
+                print("  {:10s}".format(pwr_supp), end="")
+                n += 1
+            if on_line:
+                self.pv_get[type][pwr_supp] = epics.PV(pwr_supp+":rdbk")
+                self.pv_put[type][pwr_supp] = epics.PV(pwr_supp+":set")
+            else:
+                self.pv_get[type][pwr_supp] = pwr_supp+":rdbk"
+                self.pv_put[type][pwr_supp] = pwr_supp+":set"
+            if prt and (n % n_prt == 0):
                 print()
+                n = 0
+        if prt:
+            print()
 
     def get_pv(self, type, pv):
         if on_line:
             val = self.pv_get[type][pv].get()
-            print(f"  {pv:10s} {val:8.5f}")
+            print("  {:10s} {:8.5f}".format(pv, val))
         else:
             val = self.pv_get[type][pv]
-            print(f"  {pv:10s} {val:14s}")
+            print("  {:10s} {:14s}".format(pv, val))
 
     def put_pv(self, type, pv):
         if on_line:
             val = self.pv_put[type][pv].get()
-            print(f"  {pv:10s} {val:8.5f}")
+            print("  {:10s} {:8.5f}".format(pv, val))
         else:
             val = self.pv_put[type][pv]
-            print(f"  {pv:10s} {val:14s}")
+            print("  {:10s} {:14s}".format(pv, val))
 
-    def get_pv_fam(self, type, fam):
-        print("\nget_pv -", fam, ":")
-        for pwr_supp in self.pwr_supp[type][fam]:
-            if on_line:
-                val = self.pv_get[type][pwr_supp].get()
-                print(f"  {pwr_supp:10s} {val:8.5f}")
-            else:
-                val = self.pv_get[type][pwr_supp]
-                print(f"  {pwr_supp:10s} {val:14s}")
-
-    def put_pv_fam(self, type, fam):
-        print("\nput_pv -", fam, ":")
-        for pwr_supp in self.pwr_supp[type][fam]:
-            if on_line:
-                val = self.pv_put[type][pwr_supp].get()
-                print(f"  {pwr_supp:10s} {val:8.5f}")
-            else:
-                val = self.pv_put[type][pwr_supp]
-                print(f"  {pwr_supp:10s} {val:14s}")
-
-    def prt_fam(self, type):
+    def prt_pwr_supp(self, type, pwr_supp):
         n_prt = 5
-        print(f"\nFamilies - {type:s}:")
+        print("\nPower Supplies:")
         n = 0
-        for fam in self.fam[type]:
-            print(f"  {fam:10s}", end="")
+        for mag in self.pwr_supp[type]:
+            print("  {:10s}".format(mag), end="")
             n += 1
             if n % n_prt == 0:
                 print()
                 n = 0
         print()
 
-    def prt_pwr_supp(self, type, fam):
-        n_prt = 5
-        print(f"\nPower Supplies - {fam:s}:")
-        n = 0
-        for pwr_supp in self.pwr_supp[type][fam]:
-            print(f"  {pwr_supp:10s}", end="")
-            n += 1
-            if n % n_prt == 0:
-                print()
-                n = 0
-        print()
+    # def prt_conv_fact(self, type):
+    #     n_prt = 5
+    #     print("\nConversion Factors - {type:s}:")
+    #     n = 0
+    #     for pwr_supp in self.conv_fact[type]:
+    #         print("  {pwr_supp:10s} {self.conv_fact[type][pwr_supp]:7.5f}".
+    #               format(),
+    #               end="")
+    #         n += 1
+    #         if n % n_prt == 0:
+    #             print()
+    #             n = 0
+    #     print()
 
-    def prt_conv_fact(self, type):
-        n_prt = 5
-        print(f"\nConversion Factors - {type:s}:")
-        n = 0
-        for pwr_supp in self.conv_fact[type]:
-            print(f"  {pwr_supp:10s} {self.conv_fact[type][pwr_supp]:7.5f}",
-                  end="")
-            n += 1
-            if n % n_prt == 0:
-                print()
-                n = 0
-        print()
-
-
-home_dir = os.path.join(os.environ["HOME"])
 
 #-------------------------------------------------------------------------------
 #
@@ -542,9 +486,9 @@ if thor_scsi:
         # that way I also check that Twiss has exactly three parameters
         eta, alpha, beta = Twiss
         print(str, end="")
-        print(f"  eta    = [{eta[X_]:9.3e}, {eta[Y_]:9.3e}]")
-        print(f"  alpha  = [{alpha[X_]:9.3e}, {alpha[Y_]:9.3e}]")
-        print(f"  beta   = [{beta[X_]:5.3f}, {beta[Y_]:5.3f}]")
+        print("  eta    = [{:9.3e}, {:9.3e}]".format(eta[X_], eta[Y_]))
+        print("  alpha  = [{:9.3e}, {:9.3e}]".format(alpha[X_], alpha[Y_]))
+        print("  beta   = [{:5.3f}, {:5.3f}]".format(beta[X_], beta[Y_]))
 
 
     def compute_periodic_solution(lat, model_state, named_index, desc):
@@ -600,6 +544,8 @@ if thor_scsi:
     #
     # Lattice.
 
+    home_dir = os.path.join(os.environ["HOME"])
+
     file_name_lat = \
         os.path.join \
         (home_dir, "Nextcloud", "thor_scsi", "JB", "BESSY-II",
@@ -617,11 +563,16 @@ if thor_scsi:
 #
 # Middle Layer.
 
+if not on_line:
+    home_dir = os.path.join(os.environ["HOME"], "Teresia")
+else:
+    home_dir = ""
+
 file_name_conv_coeff = {}
 file_name_conv_coeff["quad"] = \
-    os.path.join(home_dir, "Teresia/conversion-factors-quadrupoles.csv")
+    home_dir + "/conversion-factors-quadrupoles.csv"
 file_name_conv_coeff["sext"] = \
-    os.path.join(home_dir, "Teresia/conversion-factors-sextupoles.txt")
+    home_dir + "/conversion-factors-sextupoles.txt"
 
 # Initialise the Middle Layer.
 
@@ -630,30 +581,16 @@ ml = middle_layer()
 ml.middle_layer_init(file_name_conv_coeff)
 
 if not False:
-    ml.prt_fam("quad")
-    ml.prt_fam("sext")
-    ml.prt_pwr_supp("sext", ml.fam["sext"][0])
-    ml.prt_conv_fact("sext")
+    ml.prt_pwr_supp("sext", ml.pwr_supp["sext"])
+    # ml.prt_conv_fact("sext")
     print()
 
 # Test of EPICS I/O.
 
 ml.epics_init("sext")
-
-if False:
-    for fam in ml.fam["sext"]:
-        ml.get_pv_fam("sext", fam)
+print()
 
 if not False:
-    ml.get_pv("sext", "S1MD1R")
-    ml.put_pv("sext", "S1MD1R")
-    ml.get_pv("sext", "S1MD1R")
-
-if False:
-    ml.get_pv_fam("sext", "S1PR")
-    ml.put_pv_fam("sext", "S1PR")
-    ml.get_pv_fam("sext", "S1PR")
-
-if False:
-    for fam in ml.fam["sext"]:
-        ml.get_pv_fam("sext", fam)
+    ml.get_pv("sext", "S1PR")
+    ml.put_pv("sext", "S1PR")
+    ml.get_pv("sext", "S1PR")
