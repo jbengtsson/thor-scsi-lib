@@ -4,11 +4,11 @@ Author:
   Johan Bengtsson
   13/02/24
 
-Interface module for the EPICS Python interface for/to:
+Interface module for the EPICS Python interface for:
 
-  Convert from Engineering to Physics units & vice versa.
+  Converting from Engineering to Physics units & vice versa.
 
-  Map the magnetic/multipole families to the power supply circuits.
+  Mapping the magnetic multipole families to the power supply circuits.
 
   Epics I/O - get/put - to the EPICS control system via the Python object
   interface.
