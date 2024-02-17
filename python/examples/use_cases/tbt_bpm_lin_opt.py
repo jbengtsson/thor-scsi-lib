@@ -205,20 +205,27 @@ if not False:
             phi = -phi
             bpm.update({name : {"nu" : nu, "A" : A, "phi" : phi}})
 
+        print(bpm)
+
         first = True
+        A_k = np.zeros(2, dtype=float)
+        A_rel = np.zeros(2, dtype=float)
         phi_k = np.zeros(2, dtype=float)
         dphi = np.zeros(2, dtype=float)
-        print()
+        print("\n  BPM     Rel. A_x  Rel. A_y  dnu_x  dnu_y");
         for name in bpm:
             if first:
+                A_k = bpm[name]["A"]
                 phi_k = bpm[name]["phi"]
                 first = False
-            else:
-                dphi = bpm[name]["phi"] - phi_k
-                for k in range(2):
-                    if dphi[k] < 0e0:
-                        dphi[k] += 2e0*np.pi
-                phi_k = bpm[name]["phi"]
-            print("{:10s} {:8.3f} {:8.3f}".
-                  format(name, dphi[X_]/(2e0*np.pi), dphi[Y_]/(2e0*np.pi)))
+            A_rel = bpm[name]["A"]/A_k
+            dphi = bpm[name]["phi"] - phi_k
+            for k in range(2):
+                if dphi[k] < 0e0:
+                    dphi[k] += 2e0*np.pi
+            A_k = bpm[name]["A"]
+            phi_k = bpm[name]["phi"]
+            print("{:10s} {:5.3f}     {:5.3f}    {:5.3f}  {:5.3f}".
+                  format(name, A_rel[X_], A_rel[Y_], dphi[X_]/(2e0*np.pi),
+                         dphi[Y_]/(2e0*np.pi)))
             
