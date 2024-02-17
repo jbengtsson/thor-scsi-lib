@@ -21,19 +21,7 @@ from thor_scsi.utils.fft import fft_class
 
 class tbt_bpm:
     def __init__(self):
-        self.n_data   = 0
-        self.cut      = 0
-        self.tbt_data = np.zeros((2, 1))
-
-    def rd_tbt(self, file_name, k):
-        # First number is the number of data.
-        buf = []
-        with open(file_name[k]) as f:
-            for line in f:
-                buf = np.array(line.split())
-        # Apply cut & convert from [nm] to [mm].
-        self.tbt_data[k] = \
-            1e-6*(np.array(buf, dtype='float')[self.cut:self.cut+self.n_data])
+        self.tbt_data = 0
 
     def plt_tbt(self, nu, A, plane):
         # Turn interactive mode off.
@@ -79,16 +67,10 @@ class tbt_bpm:
         plt.savefig(file_name)
         print(f"Plot saved as: {file_name:s}")
 
-    def analyse_tbt_bpm_data(self, file_name, cut, n_data, plot):
+    def analyse_tbt_bpm_data(self, plot):
         fft = fft_class()
 
-        self.n_data = n_data
-        self.cut = cut
-        self.tbt_data = np.zeros([2, n_data], dtype="float")
-
-        for k in range(2):
-            self.rd_tbt(file_name, k)
-            self.tbt_data[k] -= np.mean(self.tbt_data[k])
+        n_data = len(self.tbt_data[0])
 
         tbt_data_fft = np.zeros([2, n_data], dtype="complex")
         A_fft = np.zeros([2, n_data], dtype="float")
@@ -119,6 +101,7 @@ def plt_data(data, file_name):
 
     for bpm, x in zip(data["BPM_name"], data["X"]):
         gr_1.plot(x*1e-6, label=bpm)
+
     gr_1.set_xlim(50, 150)
     gr_1.grid()
     gr_1.legend(
@@ -131,6 +114,7 @@ def plt_data(data, file_name):
 
     for bpm, y in zip(data["BPM_name"], data["Y"]):
         gr_2.plot(y*1e-6, label=bpm)
+
     gr_2.set_xlim(50, 150)
     gr_2.grid()
     gr_2.legend(
@@ -145,26 +129,47 @@ def plt_data(data, file_name):
     print(f"Plot saved as: {file_name:s}")
 
 
-home_dir = os.path.join(os.environ["HOME"])
-file_name = [
-    home_dir+"/Teresia/20240122_TbT_hor.dat",
-    home_dir+"/Teresia/20240122_TbT_ver.dat"
-]
+def rd_tbt_txt(file_name, n_data, cut):
+    # First number is the number of data.
+    buf = []
+    with open(file_name) as f:
+        for line in f:
+            buf = np.array(line.split())
+    # Apply cut & convert from [nm] to [mm].
+    tbt_data = 1e-6*(np.array(buf, dtype='float')[cut:cut+n_data])
+    return tbt_data
+
+def rd_tbt_df(file_name):
+    data = pd.read_hdf(file_name, key="df")
+    return data
+
 
 tbt = tbt_bpm()
 
-file_name = \
-    home_dir+"/Teresia/Markus/20240216_testset_injectionkickers_storedbeam.hdf"
+if not False:
+    home_dir = os.path.join(os.environ["HOME"])
+    file_name = [
+        home_dir+"/Teresia/20240122_TbT_hor.dat",
+        home_dir+"/Teresia/20240122_TbT_ver.dat"
+    ]
 
-data = pd.read_hdf(file_name, key="df")
-
-for bpm in data["BPM_name"]:
-    print(bpm)
-
-plt_data(data, "20240216_firstTbTdata.png")
-plt.show()
-
-if False:
     # Skip initial transient.
-    cut, n_data = [9999, 2**10]
-    tbt.analyse_tbt_bpm_data(file_name, cut, n_data, True)
+    n_data, cut = [2**10, 9999]
+
+    tbt.tbt_data = np.zeros((2, n_data))
+
+    for k in range(2):
+        tbt.tbt_data[k] = rd_tbt_txt(file_name[k], n_data, cut)
+    tbt.analyse_tbt_bpm_data(True)
+    
+if False:
+    file_name = \
+        home_dir \
+        +"/Teresia/Markus/20240216_testset_injectionkickers_storedbeam.hdf"
+
+    data = rd_tbt_df(file_name)
+    for bpm in data["BPM_name"]:
+        print(bpm)
+
+        plt_data(data, "20240216_firstTbTdata.png")
+        plt.show()
