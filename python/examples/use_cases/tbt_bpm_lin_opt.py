@@ -17,11 +17,16 @@ import matplotlib.pyplot as plt
 
 from thor_scsi.utils.fft import fft_class
 
+
+X_, Y_, Z_ = [0, 1, 2]
+
+
 #-------------------------------------------------------------------------------
 
 class tbt_bpm:
     def __init__(self):
-        self.tbt_data = 0
+        self.tbt_data     = 0
+        self.tbt_data_fft = 0
 
     def plt_tbt(self, nu, A, plane):
         # Turn interactive mode off.
@@ -65,27 +70,33 @@ class tbt_bpm:
         fig.tight_layout()
 
         plt.savefig(file_name)
-        print(f"Plot saved as: {file_name:s}")
+        print("Plot saved as: {:s}".format(file_name))
 
-    def analyse_tbt_bpm_data(self, plot):
+    def analyse_tbt_bpm_data(self, tbt_data, plot):
         fft = fft_class()
 
-        n_data = len(self.tbt_data[0])
+        n_data = len(tbt_data[0])
+        self.tbt_data = tbt_data
 
-        tbt_data_fft = np.zeros([2, n_data], dtype="complex")
+        self.tbt_data_fft = np.zeros([2, n_data], dtype="complex")
         A_fft = np.zeros([2, n_data], dtype="float")
         f = np.array(range(n_data))/n_data
         sine_window = sp.signal.windows.cosine(n_data)
 
-        print()
+        nu = np.zeros(2, dtype=float)
+        A = np.zeros(2, dtype=float)
+        phi = np.zeros(2, dtype=float)
         for j in range(2):
             # Use [mm].
-            tbt_data_fft[j] = sp.fft.fft(self.tbt_data[j]*sine_window)/n_data
-            A_fft[j] = abs(tbt_data_fft[j])
-            nu, A, k = fft.get_peak_sin(A_fft[j], 1)
-            phi = fft.get_phase(k, nu[0], self.tbt_data[j])
+            self.tbt_data_fft[j] = \
+                sp.fft.fft(self.tbt_data[j]*sine_window)/n_data
+            A_fft[j] = abs(self.tbt_data_fft[j])
+            nu_buf, A_buf, k = fft.get_peak_sin(A_fft[j], 1)
+            phi[j] = fft.get_phase(k, nu_buf[0], self.tbt_data[j])
+            nu[j], A[j] = nu_buf[0], A_buf[0]
             print("nu = [{:8.6f}, {:8.6f}] A = {:9.3e} phi = {:5.1f}".
-                  format(nu[0], 1e0-nu[0], A[0], phi*180e0/sp.pi))
+                  format(
+                      nu_buf[0], 1e0-nu_buf[0], A_buf[0], np.rad2deg(phi[j])))
 
         if plot:
             print()
@@ -93,14 +104,17 @@ class tbt_bpm:
                 self.plt_tbt(f, A_fft[j], j)
             plt.show()
 
+        return nu, A, phi
+
 #-------------------------------------------------------------------------------
 
 def plt_data(data, file_name):
     fig, (gr_1, gr_2) = plt.subplots(2)
     fig.set_size_inches(16, 10)
 
-    for bpm, x in zip(data["BPM_name"], data["X"]):
+    for bpm, x, y in zip(data["BPM_name"], data["X"], data["Y"]):
         gr_1.plot(x*1e-6, label=bpm)
+        gr_2.plot(y*1e-6, label=bpm)
 
     gr_1.set_xlim(50, 150)
     gr_1.grid()
@@ -111,9 +125,6 @@ def plt_data(data, file_name):
     gr_1.set_ylabel("x [mm]", fontsize="xx-large")
     gr_1.tick_params(axis='x', labelsize="xx-large")
     gr_1.tick_params(axis='y', labelsize="xx-large")
-
-    for bpm, y in zip(data["BPM_name"], data["Y"]):
-        gr_2.plot(y*1e-6, label=bpm)
 
     gr_2.set_xlim(50, 150)
     gr_2.grid()
@@ -126,12 +137,11 @@ def plt_data(data, file_name):
     fig.tight_layout()
 
     plt.savefig(file_name)
-    print(f"Plot saved as: {file_name:s}")
+    print("Plot saved as: {:s}".format(file_name))
 
 
 def rd_tbt_txt(file_name, n_data, cut):
     # First number is the number of data.
-    buf = []
     with open(file_name) as f:
         for line in f:
             buf = np.array(line.split())
@@ -144,10 +154,15 @@ def rd_tbt_df(file_name):
     return data
 
 
+#-------------------------------------------------------------------------------
+
+# Main program.
+
+home_dir = os.path.join(os.environ["HOME"])
+
 tbt = tbt_bpm()
 
-if not False:
-    home_dir = os.path.join(os.environ["HOME"])
+if False:
     file_name = [
         home_dir+"/Teresia/20240122_TbT_hor.dat",
         home_dir+"/Teresia/20240122_TbT_ver.dat"
@@ -156,21 +171,54 @@ if not False:
     # Skip initial transient.
     n_data, cut = [2**10, 9999]
 
-    tbt.tbt_data = np.zeros((2, n_data))
-
+    tbt_data = np.zeros((2, n_data), dtype=float)
     for k in range(2):
-        tbt.tbt_data[k] = rd_tbt_txt(file_name[k], n_data, cut)
-        tbt.tbt_data[k] -= np.mean(tbt.tbt_data[k])
-    tbt.analyse_tbt_bpm_data(True)
+        tbt_data[k] = rd_tbt_txt(file_name[k], n_data, cut)
+        tbt_data[k] -= np.mean(tbt_data[k])
+    tbt.analyse_tbt_bpm_data(tbt_data, True)
     
-if False:
+if not False:
     file_name = \
         home_dir \
         +"/Teresia/Markus/20240216_testset_injectionkickers_storedbeam.hdf"
 
     data = rd_tbt_df(file_name)
-    for bpm in data["BPM_name"]:
-        print(bpm)
 
+    if False:
         plt_data(data, "20240216_firstTbTdata.png")
         plt.show()
+
+    if not False:
+        cut = 107
+
+        bpm = {}
+        for name, x, y in zip(data["BPM_name"], data["X"], data["Y"]):
+            n_data = len(x)
+            tbt_data = \
+                np.array([1e-6*x[cut:cut+n_data], 1e-6*y[cut:cut+n_data]],
+                         dtype=float)
+            print("\n{:10s}".format(name))
+            for k in range(2):
+                tbt_data[k] -= np.mean(tbt_data[k])
+            nu, A, phi = tbt.analyse_tbt_bpm_data(tbt_data, not True)
+            # Bot the horizontal & vertical tunes are > 0.5.
+            phi = -phi
+            bpm.update({name : {"nu" : nu, "A" : A, "phi" : phi}})
+
+        first = True
+        phi_k = np.zeros(2, dtype=float)
+        dphi = np.zeros(2, dtype=float)
+        print()
+        for name in bpm:
+            if first:
+                phi_k = bpm[name]["phi"]
+                first = False
+            else:
+                dphi = bpm[name]["phi"] - phi_k
+                for k in range(2):
+                    if dphi[k] < 0e0:
+                        dphi[k] += 2e0*np.pi
+                phi_k = bpm[name]["phi"]
+            print("{:10s} {:8.3f} {:8.3f}".
+                  format(name, dphi[X_]/(2e0*np.pi), dphi[Y_]/(2e0*np.pi)))
+            
