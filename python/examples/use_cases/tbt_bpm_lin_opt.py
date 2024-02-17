@@ -160,6 +160,7 @@ if not False:
 
     for k in range(2):
         tbt.tbt_data[k] = rd_tbt_txt(file_name[k], n_data, cut)
+        tbt.tbt_data[k] -= np.mean(tbt.tbt_data[k])
     tbt.analyse_tbt_bpm_data(True)
     
 if False:
