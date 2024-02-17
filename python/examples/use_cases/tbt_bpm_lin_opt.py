@@ -1,5 +1,16 @@
+'''
+Author:
+
+  Johan Bengtsson
+  17/02/24
+
+Tbt_bpm class to analyse turn-by-turn BPM data to extract the linear optics -
+beta functions & phase advance at the BPMs.
+'''
+
 
 import os
+import pandas as pd
 import numpy as np
 import scipy as sp
 import matplotlib.pyplot as plt
@@ -66,7 +77,7 @@ class tbt_bpm:
         fig.tight_layout()
 
         plt.savefig(file_name)
-        print(f"File saved as: {file_name:s}")
+        print(f"Plot saved as: {file_name:s}")
 
     def analyse_tbt_bpm_data(self, file_name, cut, n_data, plot):
         fft = fft_class()
@@ -102,6 +113,38 @@ class tbt_bpm:
 
 #-------------------------------------------------------------------------------
 
+def plt_data(data, file_name):
+    fig, (gr_1, gr_2) = plt.subplots(2)
+    fig.set_size_inches(16, 10)
+
+    for bpm, x in zip(data["BPM_name"], data["X"]):
+        gr_1.plot(x*1e-6, label=bpm)
+    gr_1.set_xlim(50, 150)
+    gr_1.grid()
+    gr_1.legend(
+        fontsize="xx-large", bbox_to_anchor=(1.05, 1.0), loc='upper left')
+    gr_1.set_title("Horizontal Displacement", fontsize="xx-large")
+    gr_1.set_xlabel("Turn Number", fontsize="xx-large")
+    gr_1.set_ylabel("x [mm]", fontsize="xx-large")
+    gr_1.tick_params(axis='x', labelsize="xx-large")
+    gr_1.tick_params(axis='y', labelsize="xx-large")
+
+    for bpm, y in zip(data["BPM_name"], data["Y"]):
+        gr_2.plot(y*1e-6, label=bpm)
+    gr_2.set_xlim(50, 150)
+    gr_2.grid()
+    gr_2.legend(
+        fontsize="xx-large", bbox_to_anchor=(1.05, 1.0), loc='upper left')
+    gr_2.set_title("Vertical Displacement", fontsize="xx-large")
+    gr_2.set_xlabel("Turn Number", fontsize="xx-large")
+    gr_2.set_ylabel("y [mm]", fontsize="xx-large")
+
+    fig.tight_layout()
+
+    plt.savefig(file_name)
+    print(f"Plot saved as: {file_name:s}")
+
+
 home_dir = os.path.join(os.environ["HOME"])
 file_name = [
     home_dir+"/Teresia/20240122_TbT_hor.dat",
@@ -110,6 +153,18 @@ file_name = [
 
 tbt = tbt_bpm()
 
-# Skip initial transient.
-cut, n_data = [9999, 2**10]
-tbt.analyse_tbt_bpm_data(file_name, cut, n_data, True)
+file_name = \
+    home_dir+"/Teresia/Markus/20240216_testset_injectionkickers_storedbeam.hdf"
+
+data = pd.read_hdf(file_name, key="df")
+
+for bpm in data["BPM_name"]:
+    print(bpm)
+
+plt_data(data, "20240216_firstTbTdata.png")
+plt.show()
+
+if False:
+    # Skip initial transient.
+    cut, n_data = [9999, 2**10]
+    tbt.analyse_tbt_bpm_data(file_name, cut, n_data, True)
