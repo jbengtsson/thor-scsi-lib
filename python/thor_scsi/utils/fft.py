@@ -1,4 +1,9 @@
 """
+Author:
+
+  Johan Bengtsson
+  02/02/24
+
 FFT - Class for Elementary Signal Processing
 Originally Pascal code for my thesis work for LEAR, CERN - machine translated
 to C with P2C.
@@ -16,6 +21,7 @@ J. Bengtsson 𝑁𝑜𝑛-𝐿𝑖𝑛𝑒𝑎𝑟 𝑇𝑟𝑎𝑛𝑠𝑣𝑒�
 http://dx.doi.org/10.5170/CERN-1988-005
 """
 
+from math import trunc
 import numpy as np
 # NumPy has also an implementation of FFT but the SciPy is more efficient.
 import scipy as sp
@@ -42,7 +48,7 @@ class fft_class:
         return phi
 
 
-    def find_harmonic(self, nu_x, nu_y, f):
+    def find_harmonic(self, n, nu_x, nu_y, f):
         '''
         Match f by a linear combination of nu_x and nu_y.
         '''
@@ -50,23 +56,24 @@ class fft_class:
         eps = 0.5e-6
         while True:
             eps *= 1e1
-            find_harmonic_eps(nu_x, nu_y, f)
+            found, n_x, n_y, delta = find_harmonic_eps(n, nu_x, nu_y, f, eps)
             if found:
                 break
-        return n_x, n_y
+        return n_x, n_y, delta
 
 
     def get_peak_sin(self, x, n_peaks):
         n = len(x)
         x1 = x
-        nu = np.zeros(n_peaks, dtype="float")
-        A = np.zeros(n_peaks, dtype="float")
+        k = np.zeros(n_peaks, dtype=int)
+        nu = np.zeros(n_peaks, dtype=float)
+        A = np.zeros(n_peaks, dtype=float)
         for j in range(n_peaks):
-            k = get_peak(x1)
-            nu[j] = interpol_sin_nu(x1, k)
-            A[j] = interpol_sin_ampl(x1, nu[j], k)
+            k[j] = get_peak(x1)
+            nu[j] = interpol_sin_nu(x1, k[j])
+            A[j] = interpol_sin_ampl(x1, nu[j], k[j])
             # Flatten peak to enable new call.
-            ind_1, ind_3 = get_ind(n, k)
+            ind_1, ind_3 = get_ind(n, k[j])
             if x1[ind_1-1] > x1[ind_3-1]:
                 x1[k-1] = x1[ind_1-1]
             else:
@@ -243,24 +250,30 @@ def interpol_sin_ampl_cmplx(x, nu, k):
     return x[k-1]/corr
 
 
-def find_harmonic_eps(nu_x, nu_y, f, eps):
-    n = len(x)
-    for j in range(n):
+def find_harmonic_eps(n, nu_x, nu_y, f, eps):
+    prt = False
+    if prt:
+        print()
+    for j in range(n+1):
         for k in range(-n, n+1):
             delta = abs(j*nu_x+k*nu_y)
-            delta -= math.trunc(delta)
+            delta -= int(delta)
             if delta > 0.5e0:
                 delta = 1 - delta
             delta = abs(delta-f)
-            delta -= math.trunc(delta)
+            delta -= int(delta)
             if delta > 0.5e0:
                 delta = 1 - delta
+            if prt:
+                print("find_harmonic_eps:"
+                      +" {:9.3e} {:1d} {:2d} {:7.5f} {:7.5f} {:8.1e} {:8.1e}".
+                      format(f, j, k, nu_x, nu_y, delta, eps))
             if delta < eps:
-                if (abs(j) + abs(k) < n) and (j != 0 or k >= 0):
+                if (abs(j)+abs(k) < n) and (j != 0 or k >= 0):
                     found = True
                     n_x = j
                     n_y = k
-    return n_x, n_y
+    return found, n_x, n_y, delta
 
 # ------------------------------------------------------------------------------
 

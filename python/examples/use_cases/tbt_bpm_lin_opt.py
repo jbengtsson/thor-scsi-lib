@@ -24,11 +24,15 @@ X_, Y_, Z_ = [0, 1, 2]
 #-------------------------------------------------------------------------------
 
 class tbt_bpm:
+    # Private.
+
     def __init__(self):
         self._tbt_data     = 0
         self._tbt_data_fft = 0
         self._tbt_data     = 0
         self._bpm          = {}
+
+    # Public.
 
     def plt_data(self, file_name):
         fig, (gr_1, gr_2) = plt.subplots(2)
@@ -64,11 +68,13 @@ class tbt_bpm:
         print("\nPlot saved as: {:s}".format(file_name))
 
     def plt_tbt_fft(self, nu, A):
-        n = len(self._tbt_data[X_])
+        n = len(A[X_])
 
         fig, ((gr_1, gr_2), (gr_3, gr_4)) = plt.subplots(2, 2)
 
         file_name = "tbt_fft.png"
+
+        fig.suptitle("FFT of Turn-by-Turn BPM Data")
 
         gr_1.set_title("Horizontal Position")
         gr_1.set_xlabel("Turn Number")
@@ -80,7 +86,7 @@ class tbt_bpm:
         gr_3.set_xlabel("f")
         gr_3.set_ylabel(r"$A_x$")
         gr_3.stem \
-            (nu[0:n//2+1], A[0:n//2+1], linefmt="b-", markerfmt="",
+            (nu[0:n//2+1], A[X_][0:n//2+1], linefmt="b-", markerfmt="",
              basefmt="k-")
 
         gr_2.set_title("Vertical Position")
@@ -93,7 +99,7 @@ class tbt_bpm:
         gr_4.set_xlabel("f")
         gr_4.set_ylabel(r"$A_y$")
         gr_4.stem \
-            (nu[0:n//2+1], A[0:n//2+1], linefmt="r-", markerfmt="",
+            (nu[0:n//2+1], A[Y_][0:n//2+1], linefmt="r-", markerfmt="",
              basefmt="k-")
 
         fig.tight_layout()
@@ -118,6 +124,8 @@ class tbt_bpm:
     def analyse_tbt_bpm_data(self, rm_avg, prt, plot):
         fft = fft_class()
 
+        n_peak = 3
+        n_max  = 5
         n_data = len(self._tbt_data[0])
 
         if rm_avg:
@@ -130,24 +138,42 @@ class tbt_bpm:
         f = np.array(range(n_data))/n_data
         sine_window = sp.signal.windows.cosine(n_data)
 
-        nu = np.zeros(2, dtype=float)
-        A = np.zeros(2, dtype=float)
-        phi = np.zeros(2, dtype=float)
-        for j in range(2):
+        nu = np.zeros((2, n_peak), dtype=float)
+        A = np.zeros((2, n_peak), dtype=float)
+        j = np.zeros(n_peak, dtype=int)
+        phi = np.zeros((2, n_peak), dtype=float)
+        for i in range(2):
             # Use [mm].
-            self._tbt_data_fft[j] = \
-                sp.fft.fft(self._tbt_data[j]*sine_window)/n_data
-            A_fft[j] = abs(self._tbt_data_fft[j])
-            nu_buf, A_buf, k = fft.get_peak_sin(A_fft[j], 1)
-            phi[j] = fft.get_phase(k, nu_buf[0], self._tbt_data[j])
-            nu[j], A[j] = nu_buf[0], A_buf[0]
-            if prt:
-                print("nu = [{:8.6f}, {:8.6f}] A = {:9.3e} phi = {:5.1f}".
-                      format(nu_buf[0], 1e0-nu_buf[0], A_buf[0],
-                             np.rad2deg(phi[j])))
+            self._tbt_data_fft[i] = \
+                sp.fft.fft(self._tbt_data[i]*sine_window)/n_data
+            A_fft[i] = abs(self._tbt_data_fft[i])
+            nu[i], A[i], j = fft.get_peak_sin(A_fft[i], n_peak)
+            for k in range(n_peak):
+                phi[i][k] = fft.get_phase(j[k], nu[i][k], self._tbt_data[i])
+
+        if prt:
+            print("\nnu = [{:7.5f}/{:7.5f}, {:7.5f}/{:7.5f}]".
+                  format(nu[X_][0], 1e0-nu[X_][0], nu[Y_][0], 1e0-nu[Y_][0]))
+            print("A  = [{:5.3f}, {:5.3f}]".format(A[X_][0], A[Y_][0]))
+            print("\nHorizontal Plane")
+            print("    nu         A        phi   n_x  n_y    eps")
+            for k in range(1, n_peak):
+                n_x, n_y, eps = \
+                    fft.find_harmonic(n_max, nu[X_][k], nu[Y_][k], nu[X_][k])
+                print("  {:7.5f}  {:9.3e}  {:6.1f}   {:1d}    {:1d}   {:7.1e}".
+                      format(nu[X_][k], A[X_][k], np.rad2deg(phi[X_][k]), n_x,
+                             n_y, eps))
+            print("\nVertical Plane")
+            print("    nu         A        phi   n_x  n_y    eps")
+            for k in range(1, n_peak):
+                n_x, n_y, eps = \
+                    fft.find_harmonic(n_max, nu[X_][k], nu[Y_][k], nu[Y_][k])
+                print("  {:7.5f}  {:9.3e}  {:6.1f}   {:1d}    {:1d}   {:7.1e}".
+                      format(nu[Y_][k], A[Y_][k], np.rad2deg(phi[Y_][k]), n_x,
+                             n_y, eps))
 
         if plot:
-            self.plt_tbt_fft(f, A_fft[j])
+            self.plt_tbt_fft(f, A_fft)
             plt.show()
 
         return nu, A, phi
@@ -212,8 +238,8 @@ home_dir = os.path.join(os.environ["HOME"])
 # Allocate the tbt_class.
 tbt = tbt_bpm()
 
-if False:
-    # Analyse a single BPM.
+if not False:
+    # Test case - analyse one BPM.
     file_name = [
         home_dir+"/Teresia/20240122_TbT_hor.dat",
         home_dir+"/Teresia/20240122_TbT_ver.dat"
@@ -225,8 +251,8 @@ if False:
     tbt.rd_tbt_txt(file_name, n_data, cut)
     tbt.analyse_tbt_bpm_data(True, True, True)
     
-if not False:
-    # Compute the linear optics.
+if False:
+    # Extract the linear optics.
     file_name = \
         home_dir \
         +"/Teresia/Markus/20240216_testset_injectionkickers_storedbeam.hdf"
@@ -241,4 +267,4 @@ if not False:
         cut = 108
         # If plot is set to True (last parameter):
         #   plot for first BPM and then terminate. 
-        tbt.compute_lin_opt(cut, True, [True, True], not False, not False)
+        tbt.compute_lin_opt(cut, True, [True, True], not False, False)
