@@ -125,7 +125,7 @@ class tbt_bpm:
         fft = fft_class()
 
         n_peak = 3
-        n_max  = 5
+        n_max  = 4
         n_data = len(self._tbt_data[0])
 
         if rm_avg:
@@ -140,37 +140,35 @@ class tbt_bpm:
 
         nu = np.zeros((2, n_peak), dtype=float)
         A = np.zeros((2, n_peak), dtype=float)
-        j = np.zeros(n_peak, dtype=int)
         phi = np.zeros((2, n_peak), dtype=float)
-        for i in range(2):
+        for k in range(2):
             # Use [mm].
-            self._tbt_data_fft[i] = \
-                sp.fft.fft(self._tbt_data[i]*sine_window)/n_data
-            A_fft[i] = abs(self._tbt_data_fft[i])
-            nu[i], A[i], j = fft.get_peak_sin(A_fft[i], n_peak)
-            for k in range(n_peak):
-                phi[i][k] = fft.get_phase(j[k], nu[i][k], self._tbt_data[i])
+            self._tbt_data_fft[k] = \
+                sp.fft.fft(self._tbt_data[k]*sine_window)/n_data
+            A_fft[k] = abs(self._tbt_data_fft[k])
+            nu[k], A[k], ind_2 = fft.get_peak_sin(A_fft[k], n_peak)
+            print("ind_2 =", ind_2)
+            phi[k] = fft.get_phase(ind_2, nu[k], self._tbt_data[k])
 
         if prt:
-            print("\nnu = [{:7.5f}/{:7.5f}, {:7.5f}/{:7.5f}]".
-                  format(nu[X_][0], 1e0-nu[X_][0], nu[Y_][0], 1e0-nu[Y_][0]))
-            print("A  = [{:5.3f}, {:5.3f}]".format(A[X_][0], A[Y_][0]))
             print("\nHorizontal Plane")
-            print("    nu         A        phi   n_x  n_y    eps")
-            for k in range(1, n_peak):
+            print("     f       1-f        A        phi   n_x  n_y   eps")
+            for k in range(0, n_peak):
                 n_x, n_y, eps = \
-                    fft.find_harmonic(n_max, nu[X_][k], nu[Y_][k], nu[X_][k])
-                print("  {:7.5f}  {:9.3e}  {:6.1f}   {:1d}    {:1d}   {:7.1e}".
-                      format(nu[X_][k], A[X_][k], np.rad2deg(phi[X_][k]), n_x,
-                             n_y, eps))
+                    fft.find_harmonic(n_max, nu[X_][0], nu[Y_][0], nu[X_][k])
+                print("  {:7.5f}  {:7.5f}  {:9.3e}  {:6.1f}   {:1d}   {:2d}"
+                      "   {:7.1e}".
+                      format(nu[X_][k], 1e0-nu[X_][k], A[X_][k],
+                             np.rad2deg(phi[X_][k]), n_x, n_y, eps))
             print("\nVertical Plane")
-            print("    nu         A        phi   n_x  n_y    eps")
-            for k in range(1, n_peak):
+            print("     f       1-f        A        phi   n_x  n_y   eps")
+            for k in range(0, n_peak):
                 n_x, n_y, eps = \
-                    fft.find_harmonic(n_max, nu[X_][k], nu[Y_][k], nu[Y_][k])
-                print("  {:7.5f}  {:9.3e}  {:6.1f}   {:1d}    {:1d}   {:7.1e}".
-                      format(nu[Y_][k], A[Y_][k], np.rad2deg(phi[Y_][k]), n_x,
-                             n_y, eps))
+                    fft.find_harmonic(n_max, nu[X_][0], nu[Y_][0], nu[Y_][k])
+                print("  {:7.5f}  {:7.5f}  {:9.3e}  {:6.1f}   {:1d}   {:2d}"
+                      "   {:7.1e}".
+                      format(nu[Y_][k], 1e0-nu[Y_][k], A[Y_][k],
+                             np.rad2deg(phi[Y_][k]), n_x, n_y, eps))
 
         if plot:
             self.plt_tbt_fft(f, A_fft)

@@ -33,18 +33,23 @@ class fft_class:
     def __init__(self):
         pass
 
-    def get_phase(self, k, nu, x):
+    def get_phase(self, ind_2, nu, x):
         '''
         Extract phase by linear interpolation for rectangular window with:
           -pi <= phi <= pi
         '''
         n = len(x)
+        n_peak = len(ind_2)
+        phi = np.zeros(n_peak)
         x_fft = sp.fft.fft(x)
-        phi = np.arctan2(x_fft[k-1].imag, x_fft[k-1].real) - (n*nu-k+1e0)*sp.pi
-        if phi > sp.pi:
-            phi -= 2e0*sp.pi
-        elif phi < -sp.pi:
-            phi += 2e0*sp.pi
+        for k in range(n_peak):
+            phi[k] = \
+                np.arctan2(x_fft[ind_2[k]-1].imag, x_fft[ind_2[k]-1].real) \
+                - (n*nu[k]-ind_2[k]+1e0)*sp.pi
+            if phi[k] > sp.pi:
+                phi[k] -= 2e0*sp.pi
+            elif phi[k] < -sp.pi:
+                phi[k] += 2e0*sp.pi
         return phi
 
 
@@ -65,68 +70,65 @@ class fft_class:
     def get_peak_sin(self, x, n_peaks):
         n = len(x)
         x1 = x
-        k = np.zeros(n_peaks, dtype=int)
+        ind_2 = np.zeros(n_peaks, dtype=int)
         nu = np.zeros(n_peaks, dtype=float)
         A = np.zeros(n_peaks, dtype=float)
-        for j in range(n_peaks):
-            k[j] = get_peak(x1)
-            nu[j] = interpol_sin_nu(x1, k[j])
-            A[j] = interpol_sin_ampl(x1, nu[j], k[j])
+        for k in range(n_peaks):
+            ind_2[k] = get_peak(x1)
+            nu[k] = interpol_sin_nu(x1, ind_2[k])
+            A[k] = interpol_sin_ampl(x1, nu[k], ind_2[k])
             # Flatten peak to enable new call.
-            ind_1, ind_3 = get_ind(n, k[j])
+            ind_1, ind_3 = get_ind(n, ind_2[k])
             if x1[ind_1-1] > x1[ind_3-1]:
-                x1[k-1] = x1[ind_1-1]
+                x1[ind_2[k]-1] = x1[ind_1-1]
             else:
-                x1[k-1] = x1[ind_3-1]
-        return nu, A, k
+                x1[ind_2[k]-1] = x1[ind_3-1]
+        return nu, A, ind_2
 
 
     def get_peak_sin_cmplx(self, x, n_peaks):
         n = len(x)
         x1 = x
+        ind_2 = np.zeros(n_peaks, dtype=int)
         nu = np.zeros(n_peaks, dtype="float")
         A = np.zeros(n_peaks, dtype="float")
-        for j in range(n_peaks):
-            k = get_peak_cmplx(n, x1)
-            nu[j] = interpol_sin_nu_cmplx(x1, k)
-            A[j] = interpol_sin_ampl_cmplx(x1, nu[j], k)
+        for k in range(n_peaks):
+            ind_2[k] = get_peak_cmplx(n, x1)
+            nu[k] = interpol_sin_nu_cmplx(x1, ind_2)
+            A[k] = interpol_sin_ampl_cmplx(x1, nu[k], ind_2[k])
             # Flatten peak to enable new call.
-            ind_1, ind_3 = get_ind_cmplx(n, k)
+            ind_1, ind_3 = get_ind_cmplx(n, ind_2)
             if x1[ind_1-1] > x1[ind_3-1]:
-                x1[k-1] = x1[ind_1-1]
+                x1[ind_2-1] = x1[ind_1-1]
             else:
-                x1[k-1] = x1[ind_3-1]
-        return nu, A, k
+                x1[ind_2-1] = x1[ind_3-1]
+        return nu, A, ind_2
 
 # ------------------------------------------------------------------------------
 
-def get_ind(n, k):
-    prt = False
-    if k == 1:
+def get_ind(n, ind_2):
+    if ind_2 == 1:
         ind_1 = ind_3 = 2
-    elif k == n//2+1:
+    elif ind_2 == n//2+1:
         ind_1 = ind_3 = n//2
     else:
-        ind_1 = k - 1
-        ind_3 = k + 1
-    if prt:
-        print("get_ind: n = {:d} k = {:d} ind_1 = {:d} ind_3 = {:d}".
-              format(n, k, ind_1, ind_3))
+        ind_1 = ind_2 - 1
+        ind_3 = ind_2 + 1
     return ind_1, ind_3
 
 
-def get_ind_cmplx(n, k):
+def get_ind_cmplx(n, ind_2):
     prt = False
-    if k == 1:
+    if ind_2 == 1:
         ind_1 = ind_3 = 2
-    elif k == n:
+    elif ind_2 == n:
         ind_1 = ind_3 = n - 1
     else:
-        ind_1 = k - 1
-        ind_3 = k + 1
+        ind_1 = ind_2 - 1
+        ind_3 = ind_2 + 1
     if prt:
-        print("get_ind_cmplx: n = {:d} k = {:d} ind_1 = {:d} ind_3 = {:d}".
-              format(n, k, ind_1, ind_3))
+        print("get_ind_cmplx: n = {:d} ind_2 = {:d} ind_1 = {:d} ind_3 = {:d}".
+              format(n, ind_2, ind_1, ind_3))
     return ind_1, ind_3
 
 
@@ -135,15 +137,15 @@ def get_peak(x):
     Locate peak in FFT spectrum.
     '''
     peak = 0e0
-    k = 1;
+    ind_2 = 1;
     n = len(x)
-    for ind_2 in range(1, n//2+2):
-        ind_1, ind_3 = get_ind(n, ind_2)
-        if (x[ind_2-1] > peak) and (x[ind_1-1] < x[ind_2-1]) \
-           and (x[ind_3-1] < x[ind_2-1]):
-            peak = x[ind_2-1]
-            k = ind_2
-    return k
+    for k in range(1, n//2+2):
+        ind_1, ind_3 = get_ind(n, k)
+        if (x[k-1] > peak) and (x[ind_1-1] < x[k-1]) \
+           and (x[ind_3-1] < x[k-1]):
+            peak = x[k-1]
+            ind_2 = k
+    return ind_2
 
 
 def get_peak_cmplx(x):
@@ -151,36 +153,38 @@ def get_peak_cmplx(x):
     Locate peak in FFT spectrum.
     '''
     peak = 0e0
-    k = 1
+    ind_2 = 1
     n = len(x)
-    for ind_2 in range(1, n+1):
-        ind_1, ind_3 = get_ind_cmplx(n, ind_2)
-        if (x[ind_2-1] > peak) and (x[ind_1-1] < x[ind_2-1]) \
-           and (x[ind_3-1] < x[ind_2-1]):
-            peak = x[ind_2-1]
-            k = ind_2
-    return k
+    for k in range(1, n+1):
+        ind_1, ind_3 = get_ind_cmplx(n, k)
+        if (x[k-1] > peak) and (x[ind_1-1] < x[k-1]) \
+           and (x[ind_3-1] < x[k-1]):
+            peak = x[k-1]
+            ind_2 = k
+    return ind_2
 
 
-def interpol_sin_nu(x, k):
+def interpol_sin_nu(x, ind_2):
     '''
     Extract frequency by 2-point nonlinear interpolation with sine window:
 
-            1              2 A(k)       1
-       nu = - [ k - 1 + ------------- - - ] ,    k-1 <= N*nu <= k
-            N           A(k-1) + A(k)   2
+            1                     2 A(ind_2)        1
+       nu = - [ ind_2 - 1 + --------------------- - - ] ,
+            N               A(ind_2-1) + A(ind_2)   2
+
+            ind_2-1 <= N*nu <= ind_2
     '''
     n = len(x)
-    ind_1, ind_3 = get_ind(n, k)
+    ind_1, ind_3 = get_ind(n, ind_2)
     if x[ind_3 - 1] > x[ind_1 - 1]:
-        ampl_1 = x[k - 1]
+        ampl_1 = x[ind_2 - 1]
         ampl_2 = x[ind_3 - 1]
-        ind = k
+        ind = ind_2
     else:
         ampl_1 = x[ind_1 - 1]
-        ampl_2 = x[k - 1]
+        ampl_2 = x[ind_2 - 1]
         # Interpolate in right direction for 0 frequency.
-        if k != 1:
+        if ind_2 != 1:
             ind = ind_1
         else:
             ind = 0
@@ -191,25 +195,27 @@ def interpol_sin_nu(x, k):
         return 0e0
 
 
-def interpol_sin_nu_cmplx(x, k):
+def interpol_sin_nu_cmplx(x, ind_2):
     '''
     Extract frequency by 2-point nonlinear interpolation with sine window:
 
-           1              2 A(k)       1
-      nu = - [ k - 1 + ------------- - - ] ,    k-1 <= N*nu <= k
-           N           A(k-1) + A(k)   2
+           1                    2 A(ind_2)         1
+      nu = - [ ind_2 - 1 + --------------------- - - ] ,
+           N               A(ind_2-1) + A(ind_2)   2
+
+           ind_2-1 <= N*nu <= ind_2
     '''
     n = len(x)
-    ind_1, ind_3 = get_ind_cmplx(n, k)
+    ind_1, ind_3 = get_ind_cmplx(n, ind_2)
     if x[ind_3 - 1] > x[ind_1 - 1]:
-        ampl_1 = x[k - 1]
+        ampl_1 = x[ind_2 - 1]
         ampl_2 = x[ind_3 - 1]
-        ind = k
+        ind = ind_2
     else:
         ampl_1 = x[ind_1 - 1]
-        ampl_2 = x[k - 1]
+        ampl_2 = x[ind_2 - 1]
         # Interpolate in right direction for 0 frequency.
-        if k != 1:
+        if ind_2 != 1:
             ind = ind_1
         else:
             ind = 0
@@ -220,38 +226,42 @@ def interpol_sin_nu_cmplx(x, k):
         return 0e0
 
 
-def interpol_sin_ampl(x, nu, k):
+def interpol_sin_ampl(x, nu, ind_2):
     '''
     Extract amplitude by nonlinear interpolation for sine window.
     The distribution is given by:
 
-              1    sin pi ( k + 1/2 )     sin pi ( k - 1/2 )
-      F(k) =  - ( -------------------- + -------------------- )
-              2      pi ( k + 1/2 )          pi ( k - 1/2 )
+                 1       sin pi ( ind_2 + 1/2 )   sin pi ( ind_2 - 1/2 )
+      F(ind_2) = - ( ---------------------- + ---------------------- )
+                 2         pi ( ind_2 + 1/2 )       pi ( ind_2 - 1/2 )
     '''
     n = len(x)
     corr = \
-        (np.sinc((k-1e0+0.5e0-nu*n))+np.sinc((k-1e0-0.5e0-nu*n)))/2e0
-    return x[k-1]/corr
+        (np.sinc((ind_2-1e0+0.5e0-nu*n))+np.sinc((ind_2-1e0-0.5e0-nu*n)))/2e0
+    return x[ind_2-1]/corr
 
 
-def interpol_sin_ampl_cmplx(x, nu, k):
+def interpol_sin_ampl_cmplx(x, nu, ind_2):
     '''
     Extract amplitude by nonlinear interpolation for sine window.
     The distribution is given by:
 
-              1    sin pi ( k + 1/2 )     sin pi ( k - 1/2 )
-      F(k) =  - ( -------------------- + -------------------- )
-              2      pi ( k + 1/2 )          pi ( k - 1/2 )
+                 1   sin pi ( ind_2 + 1/2 )   sin pi ( ind_2 - 1/2 )
+      F(ind_2) = - ( ---------------------- + ---------------------- )
+                 2     pi ( ind_2 + 1/2 )       pi ( ind_2 - 1/2 )
     '''
     n = len(x)
     corr = \
-        (sinc(sp.pi*(k-1e0+0.5e0-nu*n))+sinc(sp.pi*(k-1e0-0.5e0-nu*n)))/2e0
-    return x[k-1]/corr
+        (sinc(sp.pi*(ind_2-1e0+0.5e0-nu*n))
+         +sinc(sp.pi*(ind_2-1e0-0.5e0-nu*n)))/2e0
+    return x[ind_2-1]/corr
 
 
 def find_harmonic_eps(n, nu_x, nu_y, f, eps):
     prt = False
+    found = False
+    n_x = n_y = 0
+    delta_min = eps
     if prt:
         print()
     for j in range(n+1):
@@ -268,12 +278,13 @@ def find_harmonic_eps(n, nu_x, nu_y, f, eps):
                 print("find_harmonic_eps:"
                       +" {:9.3e} {:1d} {:2d} {:7.5f} {:7.5f} {:8.1e} {:8.1e}".
                       format(f, j, k, nu_x, nu_y, delta, eps))
-            if delta < eps:
-                if (abs(j)+abs(k) < n) and (j != 0 or k >= 0):
-                    found = True
-                    n_x = j
-                    n_y = k
-    return found, n_x, n_y, delta
+            if (delta < delta_min) and (abs(j)+abs(k) <= n) \
+               and (j != 0 or k >= 0):
+                found = True
+                delta_min = min(delta, delta_min)
+                n_x = j
+                n_y = k
+    return found, n_x, n_y, delta_min
 
 # ------------------------------------------------------------------------------
 
