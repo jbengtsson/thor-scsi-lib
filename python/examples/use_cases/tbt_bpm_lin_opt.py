@@ -67,8 +67,10 @@ class tbt_bpm:
         plt.savefig(file_name)
         print("\nPlot saved as: {:s}".format(file_name))
 
-    def plt_tbt_fft(self, nu, A):
+    def plt_tbt_fft(self, A):
         n = len(A[X_])
+
+        f = np.array(range(n))/n
 
         fig, ((gr_1, gr_2), (gr_3, gr_4)) = plt.subplots(2, 2)
 
@@ -86,7 +88,7 @@ class tbt_bpm:
         gr_3.set_xlabel("f")
         gr_3.set_ylabel(r"$A_x$")
         gr_3.stem \
-            (nu[0:n//2+1], A[X_][0:n//2+1], linefmt="b-", markerfmt="",
+            (f[0:n//2+1], A[X_][0:n//2+1], linefmt="b-", markerfmt="",
              basefmt="k-")
 
         gr_2.set_title("Vertical Position")
@@ -99,7 +101,7 @@ class tbt_bpm:
         gr_4.set_xlabel("f")
         gr_4.set_ylabel(r"$A_y$")
         gr_4.stem \
-            (nu[0:n//2+1], A[Y_][0:n//2+1], linefmt="r-", markerfmt="",
+            (f[0:n//2+1], A[Y_][0:n//2+1], linefmt="r-", markerfmt="",
              basefmt="k-")
 
         fig.tight_layout()
@@ -121,10 +123,9 @@ class tbt_bpm:
     def rd_tbt_df(self, file_name):
         self._tbt_data = pd.read_hdf(file_name, key="df")
 
-    def analyse_tbt_bpm_data(self, rm_avg, prt, plot):
+    def analyse_tbt_bpm_data(self, n_peak, rm_avg, prt, plot):
         fft = fft_class()
 
-        n_peak = 3
         n_max  = 4
         n_data = len(self._tbt_data[0])
 
@@ -138,7 +139,7 @@ class tbt_bpm:
         f = np.array(range(n_data))/n_data
         sine_window = sp.signal.windows.cosine(n_data)
 
-        nu = np.zeros((2, n_peak), dtype=float)
+        f = np.zeros((2, n_peak), dtype=float)
         A = np.zeros((2, n_peak), dtype=float)
         phi = np.zeros((2, n_peak), dtype=float)
         for k in range(2):
@@ -146,35 +147,34 @@ class tbt_bpm:
             self._tbt_data_fft[k] = \
                 sp.fft.fft(self._tbt_data[k]*sine_window)/n_data
             A_fft[k] = abs(self._tbt_data_fft[k])
-            nu[k], A[k], ind_2 = fft.get_peak_sin(A_fft[k], n_peak)
-            print("ind_2 =", ind_2)
-            phi[k] = fft.get_phase(ind_2, nu[k], self._tbt_data[k])
+            f[k], A[k], ind_2 = fft.get_peak_sin(A_fft[k], n_peak)
+            phi[k] = fft.get_phase(ind_2, f[k], self._tbt_data[k])
 
         if prt:
             print("\nHorizontal Plane")
             print("     f       1-f        A        phi   n_x  n_y   eps")
             for k in range(0, n_peak):
                 n_x, n_y, eps = \
-                    fft.find_harmonic(n_max, nu[X_][0], nu[Y_][0], nu[X_][k])
+                    fft.find_harmonic(n_max, f[X_][0], f[Y_][0], f[X_][k])
                 print("  {:7.5f}  {:7.5f}  {:9.3e}  {:6.1f}   {:1d}   {:2d}"
                       "   {:7.1e}".
-                      format(nu[X_][k], 1e0-nu[X_][k], A[X_][k],
+                      format(f[X_][k], 1e0-f[X_][k], A[X_][k],
                              np.rad2deg(phi[X_][k]), n_x, n_y, eps))
             print("\nVertical Plane")
             print("     f       1-f        A        phi   n_x  n_y   eps")
             for k in range(0, n_peak):
                 n_x, n_y, eps = \
-                    fft.find_harmonic(n_max, nu[X_][0], nu[Y_][0], nu[Y_][k])
+                    fft.find_harmonic(n_max, f[X_][0], f[Y_][0], f[Y_][k])
                 print("  {:7.5f}  {:7.5f}  {:9.3e}  {:6.1f}   {:1d}   {:2d}"
                       "   {:7.1e}".
-                      format(nu[Y_][k], 1e0-nu[Y_][k], A[Y_][k],
+                      format(f[Y_][k], 1e0-f[Y_][k], A[Y_][k],
                              np.rad2deg(phi[Y_][k]), n_x, n_y, eps))
 
         if plot:
-            self.plt_tbt_fft(f, A_fft)
+            self.plt_tbt_fft(A_fft)
             plt.show()
 
-        return nu, A, phi
+        return f, A, phi
 
     def prt_lin_opt(self):
         # Print the results from compute_lin_opt.
@@ -215,13 +215,15 @@ class tbt_bpm:
             self._tbt_data = \
                 np.array([1e-6*x[cut:cut+n_data], 1e-6*y[cut:cut+n_data]],
                          dtype=float)
-            nu, A, phi = tbt.analyse_tbt_bpm_data(rm_avg, prt, plot)
+            nu, A, phi = tbt.analyse_tbt_bpm_data(1, rm_avg, prt, plot)
             for k in range(2):
                 # Aliasing if the tune is > 0.5.
                 if alias[k]:
-                    phi[k] = -phi[k]
+                    phi[k, 0] = -phi[k, 0]
             # Collect the results.
-            self._bpm.update({name : {"nu" : nu, "A" : A, "phi" : phi}})
+            self._bpm.update({
+                name : {"nu" : nu[:, 0], "A" : A[:, 0], "phi" : phi[:, 0]}
+            })
             if plot:
                 break
 
@@ -236,7 +238,7 @@ home_dir = os.path.join(os.environ["HOME"])
 # Allocate the tbt_class.
 tbt = tbt_bpm()
 
-if not False:
+if False:
     # Test case - analyse one BPM.
     file_name = [
         home_dir+"/Teresia/20240122_TbT_hor.dat",
@@ -247,9 +249,9 @@ if not False:
     n_data, cut = [2**10, 9999]
 
     tbt.rd_tbt_txt(file_name, n_data, cut)
-    tbt.analyse_tbt_bpm_data(True, True, True)
+    tbt.analyse_tbt_bpm_data(3, True, True, True)
     
-if False:
+if not False:
     # Extract the linear optics.
     file_name = \
         home_dir \
@@ -265,4 +267,4 @@ if False:
         cut = 108
         # If plot is set to True (last parameter):
         #   plot for first BPM and then terminate. 
-        tbt.compute_lin_opt(cut, True, [True, True], not False, False)
+        tbt.compute_lin_opt(cut, True, [True, True], False, False)
