@@ -63,15 +63,17 @@ class state_space:
         gr_2.set_title("Vertical")
         gr_2.set_xlabel(r"$\tilde{y}$")
         gr_2.set_ylabel(r"$\tilde{p}_y$")
-        gr_2.plot(self._ps_Fl[x_], self._ps_Fl[px_], "r+")
+        gr_2.plot(self._ps_Fl[y_], self._ps_Fl[py_], "r+")
 
         fig.tight_layout()
 
         plt.savefig(file_name)
         print("\nPlot saved as: {:s}".format(file_name))
 
-    def plt_tbt_fft(self, nu, A):
+    def plt_tbt_fft(self, A):
         n = len(self._twoJ[X_])
+
+        f = np.array(range(n))/n
 
         fig, ((gr_1, gr_2), (gr_3, gr_4)) = plt.subplots(2, 2)
 
@@ -89,7 +91,7 @@ class state_space:
         gr_3.set_xlabel("f")
         gr_3.set_ylabel(r"$A_x$")
         gr_3.stem \
-            (nu[0:n//2+1], A[X_][0:n//2+1], linefmt="b-", markerfmt="",
+            (f[0:n//2+1], A[X_][0:n//2+1], linefmt="b-", markerfmt="",
              basefmt="k-")
 
         gr_2.set_title(r"$2J_y$")
@@ -102,7 +104,7 @@ class state_space:
         gr_4.set_xlabel("f")
         gr_4.set_ylabel(r"$A_y$")
         gr_4.stem \
-            (nu[0:n//2+1], A[Y_][0:n//2+1], linefmt="r-", markerfmt="",
+            (f[0:n//2+1], A[Y_][0:n//2+1], linefmt="r-", markerfmt="",
              basefmt="k-")
 
         fig.tight_layout()
@@ -151,7 +153,8 @@ class state_space:
         self._cos = np.cos(2e0*np.pi*self._dnu)
 
     def state_est(self):
-        print("\n  beta_rel = [{:5.3f}, {:5.3f}] dnu = [{:5.3f}, {:5.3f}]".
+        print("\nstate_est:\n  beta_rel = [{:5.3f}, {:5.3f}]"
+              " dnu = [{:5.3f}, {:5.3f}]".
               format(1e0/self._beta_rel[X_], 1e0/self._beta_rel[Y_],
                      self._dnu[X_], self._dnu[Y_]))
         n = len(self._xy_0[X_])
@@ -167,10 +170,57 @@ class state_space:
                 self._twoJ[k][j] = \
                     self._ps_Fl[2*k][j]**2 + self._ps_Fl[2*k+1][j]**2
 
+    def get_tune(self):
+        '''
+        Extract tune from turn-by-turn data.
+        '''
+        fft = fft_class()
+
+        n_data = len(self._xy_0[X_])
+
+        self._tbt_data_fft = np.zeros([2, n_data], dtype="complex")
+        A_fft = np.zeros([2, n_data], dtype="float")
+        f = np.array(range(n_data))/n_data
+        sine_window = sp.signal.windows.cosine(n_data)
+
+        n_peak = 1
+        f = np.zeros((2, n_peak), dtype=float)
+        A = np.zeros((2, n_peak), dtype=float)
+        phi = np.zeros((2, n_peak), dtype=float)
+        for k in range(2):
+            # Use [mm].
+            self._tbt_data_fft[k] = \
+                sp.fft.fft(self._xy_0[k]*sine_window)/n_data
+            A_fft[k] = abs(self._tbt_data_fft[k])
+            f[k], A[k], ind_2 = fft.get_peak_sin(A_fft[k], n_peak)
+
+        return np.array([f[X_][0], f[Y_][0]])
+
+    def prt_f(self, fft, n_max, n_peak, nu, f, A, phi):
+        print("\nHorizontal Plane")
+        print("     f       1-f        A        phi   n_x  n_y   eps")
+        for k in range(0, n_peak):
+            n_x, n_y, eps = \
+                fft.find_harmonic(n_max, nu[X_], nu[Y_], f[X_][k])
+            print("  {:7.5f}  {:7.5f}  {:9.3e}  {:6.1f}   {:1d}   {:2d}"
+                  "   {:7.1e}".
+                  format(f[X_][k], 1e0-f[X_][k], A[X_][k],
+                         np.rad2deg(phi[X_][k]), n_x, n_y, eps))
+        print("\nVertical Plane")
+        print("     f       1-f        A        phi   n_x  n_y   eps")
+        for k in range(0, n_peak):
+            n_x, n_y, eps = \
+                fft.find_harmonic(n_max, nu[X_], nu[Y_], f[Y_][k])
+            print("  {:7.5f}  {:7.5f}  {:9.3e}  {:6.1f}   {:1d}   {:2d}"
+                  "   {:7.1e}".
+                  format(f[Y_][k], 1e0-f[Y_][k], A[Y_][k],
+                         np.rad2deg(phi[Y_][k]), n_x, n_y, eps))
+
     def analyse_twoJ(self, rm_avg, prt, plot):
         fft = fft_class()
 
-        n_peak = 5
+        n_max  = 4
+        n_peak = 4
         n_data = len(self._twoJ[0])
 
         if rm_avg:
@@ -180,31 +230,26 @@ class state_space:
 
         self._twoJ_fft = np.zeros([2, n_data], dtype="complex")
         A_fft = np.zeros([2, n_data], dtype="float")
-        f = np.array(range(n_data))/n_data
         sine_window = sp.signal.windows.cosine(n_data)
 
-        nu = np.zeros((2, n_peak), dtype=float)
+        f = np.zeros((2, n_peak), dtype=float)
         A = np.zeros((2, n_peak), dtype=float)
-        j = np.zeros((2, n_peak), dtype=int)
-        phi = np.zeros(n_peak, dtype=float)
-        for i in range(2):
+        phi = np.zeros((2, n_peak), dtype=float)
+        for k in range(2):
             # Use [mm].
-            self._twoJ_fft[i] = \
-                sp.fft.fft(self._twoJ[i]*sine_window)/n_data
-            A_fft[i] = abs(self._twoJ_fft[i])
-            nu[i], A[i], j = fft.get_peak_sin(A_fft[i], n_peak)
-            for k in range(n_peak):
-                phi[k] = fft.get_phase(j[k], nu[k], self._twoJ[i])
+            self._twoJ_fft[k] = \
+                sp.fft.fft(self._twoJ[k]*sine_window)/n_data
+            A_fft[k] = abs(self._twoJ_fft[k])
+            f[k], A[k], ind_2 = fft.get_peak_sin(A_fft[k], n_peak)
+            phi[k] = fft.get_phase(ind_2, f[k], self._twoJ[k])
 
         if prt:
-            print()
-            for k in range(n_peak):
-                find_harmonic( nu_x, nu_y, f)
-                print("nu = [{:8.6f}, {:8.6f}] A = {:9.3e} phi = {:5.1f}".
-                      format(nu[k], 1e0-nu[k], A[k], np.rad2deg(phi[k])))
-
+            nu = self.get_tune()
+            print("\nnu = [{:7.5f}, {:7.5f}]".format(nu[X_], nu[Y_]))
+            self.prt_f(fft, n_max, n_peak, nu, f, A, phi)
+            
         if plot:
-            self.plt_tbt_fft(f, A_fft)
+            self.plt_tbt_fft(A_fft)
             plt.show()
 
 #-------------------------------------------------------------------------------
@@ -230,7 +275,7 @@ if False:
 
 ss.state_est()
 
-if False:
+if not False:
     ss.plt_Floquet_space()
 
 ss.analyse_twoJ(True, True, True)

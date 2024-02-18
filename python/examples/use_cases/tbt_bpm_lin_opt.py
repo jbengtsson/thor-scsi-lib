@@ -123,6 +123,26 @@ class tbt_bpm:
     def rd_tbt_df(self, file_name):
         self._tbt_data = pd.read_hdf(file_name, key="df")
 
+    def prt_f(self, fft, n_max, n_peak, nu, f, A, phi):
+        print("\nHorizontal Plane")
+        print("     f       1-f        A        phi   n_x  n_y   eps")
+        for k in range(0, n_peak):
+            n_x, n_y, eps = \
+                fft.find_harmonic(n_max, nu[X_], nu[Y_], f[X_][k])
+            print("  {:7.5f}  {:7.5f}  {:9.3e}  {:6.1f}   {:1d}   {:2d}"
+                  "   {:7.1e}".
+                  format(f[X_][k], 1e0-f[X_][k], A[X_][k],
+                         np.rad2deg(phi[X_][k]), n_x, n_y, eps))
+        print("\nVertical Plane")
+        print("     f       1-f        A        phi   n_x  n_y   eps")
+        for k in range(0, n_peak):
+            n_x, n_y, eps = \
+                fft.find_harmonic(n_max, nu[X_], nu[Y_], f[Y_][k])
+            print("  {:7.5f}  {:7.5f}  {:9.3e}  {:6.1f}   {:1d}   {:2d}"
+                  "   {:7.1e}".
+                  format(f[Y_][k], 1e0-f[Y_][k], A[Y_][k],
+                         np.rad2deg(phi[Y_][k]), n_x, n_y, eps))
+
     def analyse_tbt_bpm_data(self, n_peak, rm_avg, prt, plot):
         fft = fft_class()
 
@@ -151,24 +171,8 @@ class tbt_bpm:
             phi[k] = fft.get_phase(ind_2, f[k], self._tbt_data[k])
 
         if prt:
-            print("\nHorizontal Plane")
-            print("     f       1-f        A        phi   n_x  n_y   eps")
-            for k in range(0, n_peak):
-                n_x, n_y, eps = \
-                    fft.find_harmonic(n_max, f[X_][0], f[Y_][0], f[X_][k])
-                print("  {:7.5f}  {:7.5f}  {:9.3e}  {:6.1f}   {:1d}   {:2d}"
-                      "   {:7.1e}".
-                      format(f[X_][k], 1e0-f[X_][k], A[X_][k],
-                             np.rad2deg(phi[X_][k]), n_x, n_y, eps))
-            print("\nVertical Plane")
-            print("     f       1-f        A        phi   n_x  n_y   eps")
-            for k in range(0, n_peak):
-                n_x, n_y, eps = \
-                    fft.find_harmonic(n_max, f[X_][0], f[Y_][0], f[Y_][k])
-                print("  {:7.5f}  {:7.5f}  {:9.3e}  {:6.1f}   {:1d}   {:2d}"
-                      "   {:7.1e}".
-                      format(f[Y_][k], 1e0-f[Y_][k], A[Y_][k],
-                             np.rad2deg(phi[Y_][k]), n_x, n_y, eps))
+            nu = np.array([f[X_][0], f[Y_][0]])
+            self.prt_f(fft, n_max, n_peak, nu, f, A, phi)
 
         if plot:
             self.plt_tbt_fft(A_fft)
