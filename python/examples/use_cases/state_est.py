@@ -194,11 +194,14 @@ class state_space:
             A_fft[k] = abs(self._tbt_data_fft[k])
             f[k], A[k], ind_2 = fft.get_peak_sin(A_fft[k], n_peak)
 
-        return np.array([f[X_][0], f[Y_][0]])
+        nu = np.array([f[X_][0], f[Y_][0]])
+        A = np.array([A[X_][0], A[Y_][0]])
+        
+        return nu, A
 
     def prt_f(self, fft, n_max, n_peak, nu, f, A, phi):
         print("\nHorizontal Plane")
-        print("     f       1-f        A        phi   n_x  n_y   eps")
+        print("     f       1-f        A        phi   n_x  n_y    eps")
         for k in range(0, n_peak):
             n_x, n_y, eps = \
                 fft.find_harmonic(n_max, nu[X_], nu[Y_], f[X_][k])
@@ -207,7 +210,7 @@ class state_space:
                   format(f[X_][k], 1e0-f[X_][k], A[X_][k],
                          np.rad2deg(phi[X_][k]), n_x, n_y, eps))
         print("\nVertical Plane")
-        print("     f       1-f        A        phi   n_x  n_y   eps")
+        print("     f       1-f        A        phi   n_x  n_y    eps")
         for k in range(0, n_peak):
             n_x, n_y, eps = \
                 fft.find_harmonic(n_max, nu[X_], nu[Y_], f[Y_][k])
@@ -244,8 +247,12 @@ class state_space:
             phi[k] = fft.get_phase(ind_2, f[k], self._twoJ[k])
 
         if prt:
-            nu = self.get_tune()
-            print("\nnu = [{:7.5f}, {:7.5f}]".format(nu[X_], nu[Y_]))
+            nu, A_nu = self.get_tune()
+            print("\nnu\n     f       1-f        A")
+            print("  {:7.5f}  {:7.5f}  {:9.3e}".
+                  format(nu[X_], 1e0-nu[X_], A_nu[X_]))
+            print("  {:7.5f}  {:7.5f}  {:9.3e}".
+                  format(nu[Y_], 1e0-nu[Y_], A_nu[Y_]))
             self.prt_f(fft, n_max, n_peak, nu, f, A, phi)
             
         if plot:
@@ -263,7 +270,7 @@ ss = state_space()
 
 file_name = \
     home_dir \
-    +"/Teresia/Markus/20240216_testset_injectionkickers_storedbeam.hdf"
+    + "/Teresia/Markus/20240216_testset_injectionkickers_storedbeam.hdf"
 
 n_data = 300
 cut    = 108

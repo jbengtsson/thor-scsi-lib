@@ -125,7 +125,7 @@ class tbt_bpm:
 
     def prt_f(self, fft, n_max, n_peak, nu, f, A, phi):
         print("\nHorizontal Plane")
-        print("     f       1-f        A        phi   n_x  n_y   eps")
+        print("     f       1-f        A        phi   n_x  n_y    eps")
         for k in range(0, n_peak):
             n_x, n_y, eps = \
                 fft.find_harmonic(n_max, nu[X_], nu[Y_], f[X_][k])
@@ -134,7 +134,7 @@ class tbt_bpm:
                   format(f[X_][k], 1e0-f[X_][k], A[X_][k],
                          np.rad2deg(phi[X_][k]), n_x, n_y, eps))
         print("\nVertical Plane")
-        print("     f       1-f        A        phi   n_x  n_y   eps")
+        print("     f       1-f        A        phi   n_x  n_y    eps")
         for k in range(0, n_peak):
             n_x, n_y, eps = \
                 fft.find_harmonic(n_max, nu[X_], nu[Y_], f[Y_][k])
