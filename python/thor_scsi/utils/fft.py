@@ -26,10 +26,7 @@ import numpy as np
 # NumPy has also an implementation of FFT but the SciPy is more efficient.
 import scipy as sp
 
-naff_lib = False
-
-if naff_lib:
-    import NAFFlib
+# import NAFFlib
 
 
 class fft_class:
@@ -296,28 +293,26 @@ def find_harmonic_eps(n, nu_x, nu_y, f, eps):
 
 # ------------------------------------------------------------------------------
 
-def get_f_naff(x):
-    '''
-    Extract f & amplitude from turn-by-turn BPM data with NAFF-lib.
-    However, somehow, the phase is not being provided (Sigh!).
+# def get_f_naff(x):
+#     '''
+#     Extract f & amplitude from turn-by-turn BPM data with NAFF-lib.
+#     However, somehow, the phase is not being provided (Sigh!).
 
-    (By maximising the Fourier integral by a numerical search see:
-    J. Bengtsson, Y. Hidaka
-    𝑁𝑆𝐿𝑆-𝐼𝐼: 𝑇𝑢𝑟𝑛-𝑏𝑦-𝑇𝑢𝑟𝑛 𝐵𝑃𝑀 𝐷𝑎𝑡𝑎 𝐴𝑛𝑎𝑙𝑦𝑠𝑖𝑠 – 𝐴 𝑈𝑠𝑒 𝐶𝑎𝑠𝑒 𝐴𝑝𝑝𝑟𝑜𝑎𝑐ℎ
-    NSLSII-ASD-TN-125 (2014)
+#     (By maximising the Fourier integral by a numerical search see:
+#     J. Bengtsson, Y. Hidaka
+#     𝑁𝑆𝐿𝑆-𝐼𝐼: 𝑇𝑢𝑟𝑛-𝑏𝑦-𝑇𝑢𝑟𝑛 𝐵𝑃𝑀 𝐷𝑎𝑡𝑎 𝐴𝑛𝑎𝑙𝑦𝑠𝑖𝑠 – 𝐴 𝑈𝑠𝑒 𝐶𝑎𝑠𝑒 𝐴𝑝𝑝𝑟𝑜𝑎𝑐ℎ
+#     NSLSII-ASD-TN-125 (2014)
 
-    https://doi.org/10.2172/1480956
-    )
+#     https://doi.org/10.2172/1480956
+#     )
 
-    Documentation:
+#     Documentation:
 
-    https://pypi.org/project/NAFFlib
-    '''
-    if not naff_lib:
-        print("\nget_f_naff: enable import NAFF-lib")
-    f, A_pos, A_neg = NAFFlib.get_tunes(x, 1)
-    A_pos, A_neg = np.absolute([A_pos, A_neg])
-    # f & A_pos are arrays.
-    return f, A_pos
+#     https://pypi.org/project/NAFFlib
+#     '''
+#     f, A_pos, A_neg = NAFFlib.get_tunes(x, 1)
+#     A_pos, A_neg = np.absolute([A_pos, A_neg])
+#     # f & A_pos are arrays.
+#     return f, A_pos
 
 __all__ = ["fft_class", "get_f_naff"]
