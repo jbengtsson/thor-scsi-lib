@@ -28,7 +28,6 @@ if not False:
     mml.prt_pwr_supp("sext")
     mml.prt_conv_fact("sext")
 
-
 pwr_supp = "S3P1T6R"
 init_sp = mml.get_pv_sp("sext", pwr_supp)
 
