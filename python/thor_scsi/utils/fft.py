@@ -26,12 +26,19 @@ import numpy as np
 # NumPy has also an implementation of FFT but the SciPy is more efficient.
 import scipy as sp
 
-import NAFFlib
+naff_lib = False
+
+if naff_lib:
+    import NAFFlib
 
 
 class fft_class:
+    # Private
+
     def __init__(self):
         pass
+
+    # Public.
 
     def get_phase(self, ind_2, nu, x):
         '''
@@ -77,7 +84,8 @@ class fft_class:
             ind_2[k] = get_peak(x1)
             nu[k] = interpol_sin_nu(x1, ind_2[k])
             A[k] = interpol_sin_ampl(x1, nu[k], ind_2[k])
-            # Flatten peak to enable new call.
+            # Flatten peak for a recursive approach - i.e., the function can be
+            # called again to obtain the next, etc.
             ind_1, ind_3 = get_ind(n, ind_2[k])
             if x1[ind_1-1] > x1[ind_3-1]:
                 x1[ind_2[k]-1] = x1[ind_1-1]
@@ -293,15 +301,20 @@ def get_f_naff(x):
     Extract f & amplitude from turn-by-turn BPM data with NAFF-lib.
     However, somehow, the phase is not being provided (Sigh!).
 
-    (By maximising the Fourier integral by a numerical search:
+    (By maximising the Fourier integral by a numerical search see:
     J. Bengtsson, Y. Hidaka
     𝑁𝑆𝐿𝑆-𝐼𝐼: 𝑇𝑢𝑟𝑛-𝑏𝑦-𝑇𝑢𝑟𝑛 𝐵𝑃𝑀 𝐷𝑎𝑡𝑎 𝐴𝑛𝑎𝑙𝑦𝑠𝑖𝑠 – 𝐴 𝑈𝑠𝑒 𝐶𝑎𝑠𝑒 𝐴𝑝𝑝𝑟𝑜𝑎𝑐ℎ
     NSLSII-ASD-TN-125 (2014)
 
-    https://doi.org/10.2172/1480956)
+    https://doi.org/10.2172/1480956
+    )
 
-    Documentation: https://pypi.org/project/NAFFlib.
+    Documentation:
+
+    https://pypi.org/project/NAFFlib
     '''
+    if not naff_lib:
+        print("\nget_f_naff: enable import NAFF-lib")
     f, A_pos, A_neg = NAFFlib.get_tunes(x, 1)
     A_pos, A_neg = np.absolute([A_pos, A_neg])
     # f & A_pos are arrays.
