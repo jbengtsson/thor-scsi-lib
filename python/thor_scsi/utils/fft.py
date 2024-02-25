@@ -56,7 +56,6 @@ class fft_class:
                 phi[k] += 2e0*sp.pi
         return phi
 
-
     def find_harmonic(self, n, nu_x, nu_y, f):
         '''
         Match f by a linear combination of nu_x and nu_y.
@@ -69,7 +68,6 @@ class fft_class:
             if found:
                 break
         return n_x, n_y, delta
-
 
     def get_peak_sin(self, x, n_peaks):
         n = len(x)
@@ -89,7 +87,6 @@ class fft_class:
             else:
                 x1[ind_2[k]-1] = x1[ind_3-1]
         return nu, A, ind_2
-
 
     def get_peak_sin_cmplx(self, x, n_peaks):
         n = len(x)

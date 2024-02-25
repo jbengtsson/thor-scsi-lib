@@ -10,6 +10,7 @@ beta functions & phase advance - at the BPMs.
 
 
 import os
+import math
 import pandas as pd
 import numpy as np
 import scipy as sp
@@ -23,13 +24,17 @@ X_, Y_, Z_ = [0, 1, 2]
 
 #-------------------------------------------------------------------------------
 
-class tbt_bpm:
+class tbt_bpm_class:
     # Private.
 
     def __init__(self):
-        self._tbt_data     = 0
-        self._tbt_data_fft = 0
-        self._tbt_data     = 0
+        self._tbt_data     = math.nan
+        self._tbt_data_fft = math.nan
+        self._A_fft        = math.nan
+        self._nu           = np.array((math.nan, math.nan))
+        self._A            = math.nan
+        self._f            = math.nan
+        self._phi          = math.nan
         self._bpm          = {}
 
     # Public.
@@ -123,25 +128,27 @@ class tbt_bpm:
     def rd_tbt_df(self, file_name):
         self._tbt_data = pd.read_hdf(file_name, key="df")
 
-    def prt_f(self, fft, n_max, n_peak, nu, f, A, phi):
+    def prt_f(self, fft, n_max, n_peak):
         print("\nHorizontal Plane")
         print("     f       1-f        A        phi   n_x  n_y    eps")
         for k in range(0, n_peak):
             n_x, n_y, eps = \
-                fft.find_harmonic(n_max, nu[X_], nu[Y_], f[X_][k])
+                fft.find_harmonic(
+                    n_max, self._nu[X_], self._nu[Y_], self._f[X_][k])
             print("  {:7.5f}  {:7.5f}  {:9.3e}  {:6.1f}   {:1d}   {:2d}"
                   "   {:7.1e}".
-                  format(f[X_][k], 1e0-f[X_][k], A[X_][k],
-                         np.rad2deg(phi[X_][k]), n_x, n_y, eps))
+                  format(self._f[X_][k], 1e0-self._f[X_][k], self._A[X_][k],
+                         np.rad2deg(self._phi[X_][k]), n_x, n_y, eps))
         print("\nVertical Plane")
         print("     f       1-f        A        phi   n_x  n_y    eps")
         for k in range(0, n_peak):
             n_x, n_y, eps = \
-                fft.find_harmonic(n_max, nu[X_], nu[Y_], f[Y_][k])
+                fft.find_harmonic(
+                    n_max, self._nu[X_], self._nu[Y_], self._f[Y_][k])
             print("  {:7.5f}  {:7.5f}  {:9.3e}  {:6.1f}   {:1d}   {:2d}"
                   "   {:7.1e}".
-                  format(f[Y_][k], 1e0-f[Y_][k], A[Y_][k],
-                         np.rad2deg(phi[Y_][k]), n_x, n_y, eps))
+                  format(self._f[Y_][k], 1e0-self._f[Y_][k], self._A[Y_][k],
+                         np.rad2deg(self._phi[Y_][k]), n_x, n_y, eps))
 
     def analyse_tbt_bpm_data(self, n_peak, rm_avg, prt, plot):
         fft = fft_class()
@@ -155,30 +162,28 @@ class tbt_bpm:
                 self._tbt_data[k] -= np.mean(self._tbt_data[k])
 
         self._tbt_data_fft = np.zeros([2, n_data], dtype="complex")
-        A_fft = np.zeros([2, n_data], dtype="float")
-        f = np.array(range(n_data))/n_data
+        self._A_fft = np.zeros([2, n_data], dtype="float")
         sine_window = sp.signal.windows.cosine(n_data)
 
-        f = np.zeros((2, n_peak), dtype=float)
-        A = np.zeros((2, n_peak), dtype=float)
-        phi = np.zeros((2, n_peak), dtype=float)
+        self._f = np.zeros((2, n_peak), dtype=float)
+        self._A = np.zeros((2, n_peak), dtype=float)
+        self._phi = np.zeros((2, n_peak), dtype=float)
         for k in range(2):
             # Use [mm].
             self._tbt_data_fft[k] = \
                 sp.fft.fft(self._tbt_data[k]*sine_window)/n_data
-            A_fft[k] = abs(self._tbt_data_fft[k])
-            f[k], A[k], ind_2 = fft.get_peak_sin(A_fft[k], n_peak)
-            phi[k] = fft.get_phase(ind_2, f[k], self._tbt_data[k])
+            self._A_fft[k] = abs(self._tbt_data_fft[k])
+            self._f[k], self._A[k], ind_2 = \
+                fft.get_peak_sin(self._A_fft[k], n_peak)
+            self._phi[k] = fft.get_phase(ind_2, self._f[k], self._tbt_data[k])
 
         if prt:
-            nu = np.array([f[X_][0], f[Y_][0]])
-            self.prt_f(fft, n_max, n_peak, nu, f, A, phi)
+            self._nu = np.array([self._f[X_][0], self._f[Y_][0]])
+            self.prt_f(fft, n_max, n_peak)
 
         if plot:
-            self.plt_tbt_fft(A_fft)
+            self.plt_tbt_fft(self._A_fft)
             plt.show()
-
-        return f, A, phi
 
     def prt_lin_opt(self):
         # Print the results from compute_lin_opt.
@@ -204,7 +209,6 @@ class tbt_bpm:
                   format(name, beta_rel[X_], beta_rel[Y_],
                          dphi[X_]/(2e0*np.pi), dphi[Y_]/(2e0*np.pi)))
 
-
     def compute_lin_opt(self, cut, rm_avg, alias, prt, plot):
         self._bpm = {}
 
@@ -219,56 +223,22 @@ class tbt_bpm:
             self._tbt_data = \
                 np.array([1e-6*x[cut:cut+n_data], 1e-6*y[cut:cut+n_data]],
                          dtype=float)
-            nu, A, phi = tbt.analyse_tbt_bpm_data(1, rm_avg, prt, plot)
+            self.analyse_tbt_bpm_data(1, rm_avg, prt, plot)
             for k in range(2):
                 # Aliasing if the tune is > 0.5.
                 if alias[k]:
-                    phi[k, 0] = -phi[k, 0]
+                    self._phi[k, 0] = -self._phi[k, 0]
             # Collect the results.
             self._bpm.update({
-                name : {"nu" : nu[:, 0], "A" : A[:, 0], "phi" : phi[:, 0]}
+                name : {
+                    "nu" :self._f[:, 0], "A" : self._A[:, 0],
+                    "phi" : self._phi[:, 0]
+                }
             })
             if plot:
                 break
 
         self.prt_lin_opt()
 
-#-------------------------------------------------------------------------------
-
-# Main program.
-
-home_dir = os.path.join(os.environ["HOME"])
-
-# Allocate the tbt_class.
-tbt = tbt_bpm()
-
-if False:
-    # Test case - analyse one BPM.
-    file_name = [
-        home_dir+"/Teresia/20240122_TbT_hor.dat",
-        home_dir+"/Teresia/20240122_TbT_ver.dat"
-    ]
-
-    # Skip initial transient.
-    n_data, cut = [2**10, 9999]
-
-    tbt.rd_tbt_txt(file_name, n_data, cut)
-    tbt.analyse_tbt_bpm_data(3, True, True, True)
-    
-if not False:
-    # Extract the linear optics.
-    file_name = \
-        home_dir \
-        +"/Teresia/Markus/20240216_testset_injectionkickers_storedbeam.hdf"
-
-    tbt.rd_tbt_df(file_name)
-
-    if False:
-        tbt.plt_data("20240216_firstTbTdata.png")
-        plt.show()
-
-    if not False:
-        cut = 108
-        # If plot is set to True (last parameter):
-        #   plot for first BPM and then terminate. 
-        tbt.compute_lin_opt(cut, True, [True, True], False, False)
+       
+__all__ = ["tbt_bpm_class"]
