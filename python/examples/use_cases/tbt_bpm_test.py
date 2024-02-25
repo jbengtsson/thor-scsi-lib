@@ -16,16 +16,15 @@ import numpy as np
 import scipy as sp
 import matplotlib.pyplot as plt
 
-from thor_scsi.utils.fft import fft_class
 from thor_scsi.utils.tbt_bpm import tbt_bpm_class
 
 
 home_dir = os.path.join(os.environ["HOME"])
 
 # Allocate the tbt_class.
-tbt = tbt_bpm()
+tbt = tbt_bpm_class()
 
-if not False:
+if False:
     # Test case - analyse one BPM.
     file_name = [
         home_dir+"/Teresia/20240122_TbT_hor.dat",
