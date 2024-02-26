@@ -19,4 +19,4 @@ cut, n_data = [9999, 2**10]
 
 tbt.rd_tbt_txt(file_name, n_data, cut)
 
-tbt.analyse_tbt_bpm_data(1, cut, n_data, True)
+tbt.analyse_tbt_bpm_data(1, True, True, True)
