@@ -115,7 +115,8 @@ def print_Twiss(lat, data):
         L += lat[k].get_length()
         nu[X_] += data.twiss.sel(plane="x", par="dnu").values[k]
         nu[Y_] += data.twiss.sel(plane="y", par="dnu").values[k]
-        print("{:3d} {:8s} {:7.3f} {:8.5f} {:8.5f} {:7.5f} {:8.5f} {:8.5f} {:8.5f} {:7.5f} {:8.5f}".
+        print("{:3d} {:8s} {:7.3f} {:9.5f} {:8.5f} {:7.5f} {:8.5f} {:8.5f}"
+              " {:8.5f} {:7.5f} {:8.5f}".
               format(k, lat[k].name, L,
                      data.twiss.sel(plane="x", par="alpha").values[k],
                      data.twiss.sel(plane="x", par="beta").values[k],
@@ -148,7 +149,8 @@ def compute_periodic_solution(lat, model_state, named_index, desc, prt):
         A_map.set_jacobian(A)
         ds = \
             lo.compute_Twiss_along_lattice(
-                n_dof, lat, model_state, A=A_map, desc=desc, mapping=named_index)
+                n_dof, lat, model_state, A=A_map, desc=desc,
+                mapping=named_index)
     else:
         ds = np.nan
         print("\ncompute_periodic_solution: unstable")
