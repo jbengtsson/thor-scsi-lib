@@ -49,11 +49,11 @@ class fft_class:
         for k in range(n_peak):
             phi[k] = \
                 np.arctan2(x_fft[ind_2[k]-1].imag, x_fft[ind_2[k]-1].real) \
-                - (n*nu[k]-ind_2[k]+1e0)*sp.pi
-            if phi[k] > sp.pi:
-                phi[k] -= 2e0*sp.pi
-            elif phi[k] < -sp.pi:
-                phi[k] += 2e0*sp.pi
+                - (n*nu[k]-ind_2[k]+1e0)*sp.constants.pi
+            if phi[k] > sp.constants.pi:
+                phi[k] -= 2e0*sp.constants.pi
+            elif phi[k] < -sp.constants.pi:
+                phi[k] += 2e0*sp.constants.pi
         return phi
 
     def find_harmonic(self, n, nu_x, nu_y, f):
@@ -254,8 +254,8 @@ def interpol_sin_ampl_cmplx(x, nu, ind_2):
     '''
     n = len(x)
     corr = \
-        (sinc(sp.pi*(ind_2-1e0+0.5e0-nu*n))
-         +sinc(sp.pi*(ind_2-1e0-0.5e0-nu*n)))/2e0
+        (sinc(sp.constants.pi*(ind_2-1e0+0.5e0-nu*n))
+         +sinc(sp.constants.pi*(ind_2-1e0-0.5e0-nu*n)))/2e0
     return x[ind_2-1]/corr
 
 
