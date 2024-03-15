@@ -231,8 +231,12 @@ class lin_opt_class:
             print("\ncomp_per_sol: unstable")
 
     def prt_M(self):
-        print("\nM:\n"+mat2txt(self._M.jacobian()))
-        
+        n_dof = 3
+        print("\nM:\ntpsa cst:")
+        for k in range(2*n_dof):
+            print(" {:13.6e}".format(self._M.cst().iloc[k]), end="")
+        print("\ntpsa linear:\n"+mat2txt(self._M.jacobian()[:6, :6]))
+
     def comp_rad(self):
         stable, self._M, self._cod, self._A, self._U_0, self._J, self._tau, \
             self._eps, self._D_rad = \
