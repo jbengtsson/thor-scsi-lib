@@ -16,6 +16,8 @@ import gtpsa
 
 from thor_scsi.utils import periodic_structure as ps
 
+from thor_scsi.utils.output import vec2txt
+
 
 # from thor_scsi.utils.phase_space_vector import map2numpy
 
@@ -40,12 +42,15 @@ lin_opt = ps.lin_opt_class(nv, no, nv_prm, no_prm, file_name, E_0, cod_eps)
 
 # Compute Twiss parameters along lattice.
 lin_opt.comp_per_sol()
-
 lin_opt.prt_M()
 lin_opt.prt_Twiss_param()
 
+# Compute radiation properties.
 lin_opt.comp_rad()
 lin_opt.prt_rad()
+
+lin_opt.prt_M()
+print("\nClosed Orbit:\n"+vec2txt(lin_opt._cod))
 
 types = lin_opt.get_types()
 
