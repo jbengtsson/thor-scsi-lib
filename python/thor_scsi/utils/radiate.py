@@ -98,8 +98,8 @@ def compute_radiation(
     rad_del_kicks = instrument_with_radiators(lat, energy=E)
 
     r = compute_closed_orbit(lat, model_state, delta=0e0, eps=eps)
-    #print("M:\n" + mat2txt(map2numpy(r.one_turn_map)))
-    M = r.one_turn_map[:6, :6]
+    # M = r.one_turn_map[:6, :6]
+    M = r.one_turn_map.jacobian()[:6, :6]
 
     logger.info(
         "\nM:\n" + mat2txt(M)
@@ -139,7 +139,8 @@ def compute_radiation(
 
     cod = np.array([r.x0.x, r.x0.px, r.x0.y, r.x0.py, r.x0.delta, r.x0.ct])
 
-    return stable, M, cod, A, U_0, J, tau, eps, D_rad
+    # return stable, M, cod, A, U_0, J, tau, eps, D_rad
+    return stable, r.one_turn_map, cod, A, U_0, J, tau, eps, D_rad
 
 
 # def calculate_radiation(

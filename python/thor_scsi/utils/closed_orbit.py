@@ -235,8 +235,9 @@ def compute_closed_orbit(
         )
 
     if closed_orbit:
-        t_map = M.jacobian()
-        logger.debug(f"Poincaré Map\n {M}")
+        # t_map = M.jacobian()
+        t_map = M
+        logger.debug(f"Poincaré Map\n {t_map}")
         result = ClosedOrbitResult(
             found_closed_orbit=closed_orbit,
             x0=x0,
@@ -246,9 +247,12 @@ def compute_closed_orbit(
 
         # Propagate with the fixed point around the lattice
         # so that observers can memorize this orbit
+        M.set_identity()
+        M += x0
         lat.propagate(model_state, M)
 
     else:
+        print("\ncompute_closed_orbit: failed")
         result = ClosedOrbitResult(
             found_closed_orbit=False,
             x0=x0,
