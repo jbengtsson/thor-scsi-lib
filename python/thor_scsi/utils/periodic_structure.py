@@ -31,6 +31,7 @@ X_, Y_, Z_ = [
     ts.phase_space_index_internal.delta,
 ]
 
+
 class lin_opt_class:
     # Private
 
@@ -44,7 +45,6 @@ class lin_opt_class:
         self._lattice     = []
         self._model_state = []
         self._no          = no
-        self._E_0         = E_0
         self._n_dof       = np.nan
         self._cod_eps     = cod_eps
 
@@ -55,14 +55,7 @@ class lin_opt_class:
         self._data        = []
         
         self._nu          = np.nan
-
-        self._cod         = np.nan
-        self._U_0         = np.nan
-        self._J           = np.nan
-        self._tau         = np.nan
-        self._eps         = np.nan
-        self._D_rad       = np.nan
-        
+      
         self._named_index = \
             gtpsa.IndexMapping(dict(x=0, px=1, y=2, py=3, delta=4, ct=5))
 
@@ -73,6 +66,7 @@ class lin_opt_class:
         self._lattice = accelerator_from_config(file_name)
         # Set lattice state (Rf cavity on/off, etc.).
         self._model_state = ts.ConfigType()
+        self._model_state.Energy = E_0
 
         # D.O.F. (Degrees-Of-Freedom) - coasting beam.
         self._n_dof = 2
@@ -80,6 +74,12 @@ class lin_opt_class:
         self._model_state.Cavity_on = False
 
     # Public.
+
+    def compute_circ(self):
+        return np.sum([elem.get_length() for elem in self._lattice])
+
+    def compute_alpha_c(self):
+        return self._M.iloc[ct_].getv(1)[delta_]/self.compute_circ()
 
     def get_type(self, elem):
         match type(elem):
@@ -236,24 +236,6 @@ class lin_opt_class:
         for k in range(2*n_dof):
             print(" {:13.6e}".format(self._M.cst().iloc[k]), end="")
         print("\ntpsa linear:\n"+mat2txt(self._M.jacobian()[:6, :6]))
-
-    def comp_rad(self):
-        stable, self._M, self._cod, self._A, self._U_0, self._J, self._tau, \
-            self._eps, self._D_rad = \
-                rad.compute_radiation(
-                    self._lattice, self._model_state, self._E_0, self._cod_eps,
-                    desc=self._desc)
-
-    def prt_rad(self):
-        print("\nRadiation Properties:")
-        print("  eps_x [m.rad] = [{:9.3e}, {:9.3e}, {:9.3e}]".format(
-            self._eps[X_], self._eps[Y_], self._eps[Z_]))
-        print("  J             = [{:5.3f}, {:5.3f}, {:5.3f}]".format(
-            self._J[X_], self._J[Y_], self._J[Z_]))
-        print("  tau [msec]    = [{:5.3f}, {:5.3f}, {:5.3f}]".format(
-            1e3*self._tau[X_], 1e3*self._tau[Y_], 1e3*self._tau[Z_]))
-        print("  D             = [{:11.5e}, {:11.5e}, {:11.5e}]".format(
-            self._D_rad[X_], self._D_rad[Y_], self._D_rad[Z_]))
 
 
 __all__ = [lin_opt_class]

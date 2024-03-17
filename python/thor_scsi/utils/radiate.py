@@ -41,106 +41,137 @@ class RadiationResult:
     fractional_tunes: np.ndarray
 
 
-def compute_circ(lat):
-    return np.sum([elem.get_length() for elem in lat])
+class rad_prop_class:
+    # Private
 
+    def __init__(self):
+        self._rad_del_kicks = []
+        self._M             = []       # ss_vect_tpsa.
+        self._A             = np.nan
+        self._dE            = np.nan
+        self._U_0           = np.nan
+        self._J             = np.nan
+        self._alpha_rad     = np.nan
+        self._tau           = np.nan
+        self._eps           = np.nan
+        self._D_rad         = np.nan
 
-def compute_diffusion_coefficients(rad_del_kicks):
-    dD_rad = \
-        np.array([rk.get_diffusion_coefficients_increments()
-                  for rk in rad_del_kicks])
-    D_rad = np.sum(dD_rad, axis=0)
-    return D_rad
+    # Public.
 
+    def compute_circ(self, lat):
+        return np.sum([elem.get_length() for elem in lat])
 
-def compute_rad_prop(lat, model_state, x0, dE, alpha_rad, D_rad):
-    dof = 3
-    J = np.zeros(dof)
-    tau = np.zeros(dof)
-    eps = np.zeros(dof)
-    C = compute_circ(lat)
-    logger.info("\nC = %5.3f", C)
-    U_0 = model_state.Energy*dE
-    for k in range(dof):
-        J[k] = 2e0*(1e0+x0.delta)*alpha_rad[k]/dE
-        tau[k] = -C/(c0*alpha_rad[k])
-        eps[k] = -D_rad[k]/(2e0*alpha_rad[k])
+    def compute_diffusion_coefficients(self):
+        dD_rad = \
+            np.array([rk.get_diffusion_coefficients_increments()
+                      for rk in self._rad_del_kicks])
+        self._D_rad = np.sum(dD_rad, axis=0)
 
-    logger.info("\nE [GeV]     = {:3.1f}\nU0 [keV]    = {:3.1f}\neps         = {:12.6e} {:12.6e} {:12.6e}\ntau [msec]  = {:8.6f} {:8.6f} {:8.6f}\nJ           = {:8.6f} {:8.6f} {:8.6f}\nalpha_rad   = {:13.6e} {:13.6e} {:13.6e}\nD_rad       = {:12.6e} {:12.6e} {:12.6e}".
-                format(1e-9*model_state.Energy,
-                       1e-3*U_0,
-                       eps[X_], eps[Y_], eps[Z_],
-                       1e3*tau[X_], 1e3*tau[Y_], 1e3*tau[Z_],
-                       J[X_], J[Y_], J[Z_],
-                       alpha_rad[X_], alpha_rad[Y_], alpha_rad[Z_],
-                       D_rad[X_], D_rad[Y_], D_rad[Z_]))
+    def compute_rad_prop(self, lin_opt):
+        dof = 3
+        self._J = np.zeros(dof)
+        self._tau = np.zeros(dof)
+        self._eps = np.zeros(dof)
+        C = self.compute_circ(lin_opt._lattice)
+        logger.info("\nC = %5.3f", C)
+        self._U_0 = lin_opt._model_state.Energy*self._dE
+        for k in range(dof):
+            self._J[k] = \
+                2e0*(1e0+self._M.cst().delta)*self._alpha_rad[k]/self._dE
+            self._tau[k] = -C/(c0*self._alpha_rad[k])
+            self._eps[k] = -self._D_rad[k]/(2e0*self._alpha_rad[k])
 
-    return U_0, J, tau, eps
+        logger.info(
+            "\nE [GeV]     = {:3.1f}\nU0 [keV]    = {:3.1f}\neps         ="
+            " {:12.6e} {:12.6e} {:12.6e}\ntau [msec]  = {:8.6f} {:8.6f} {:8.6f}"
+            "\nJ           = {:8.6f} {:8.6f} {:8.6f}\nalpha_rad   = {:13.6e}"
+            " {:13.6e} {:13.6e}\nD_rad       = {:12.6e} {:12.6e} {:12.6e}".
+            format(1e-9*lin_opt._model_state.Energy, 1e-3*self._U_0,
+                   self._eps[X_], self._eps[Y_], self._eps[Z_],
+                   1e3*self._tau[X_], 1e3*self._tau[Y_], 1e3*self._tau[Z_],
+                   self._J[X_], self._J[Y_], self._J[Z_], self._alpha_rad[X_],
+                   self._alpha_rad[Y_], self._alpha_rad[Z_], self._D_rad[X_],
+                   self._D_rad[Y_], self._D_rad[Z_]))
 
+    def compute_radiation(self, lin_opt):
+        dof = 3
 
+        lin_opt._model_state.radiation = True
+        lin_opt._model_state.emittance = False
+        lin_opt._model_state.Cavity_on = True
 
-def compute_radiation(
-    lat: tslib.Accelerator,
-    model_state: tslib.ConfigType,
-    E,
-    eps,
-    *, desc
-):
+        # Install radiators that radiation is calculated
+        self._rad_del_kicks = \
+            instrument_with_radiators(
+                lin_opt._lattice, energy=lin_opt._model_state.Energy)
 
-    dof = 3
+        r = \
+            compute_closed_orbit(
+                lin_opt._lattice, lin_opt._model_state, delta=0e0,
+                eps=lin_opt._cod_eps)
+        # self._M = r.one_turn_map[:6, :6]
+        self._M = r.one_turn_map
 
-    model_state.Energy    = E
-    model_state.radiation = True
-    model_state.emittance = False
-    model_state.Cavity_on = True
+        logger.info(
+            "\nM:\n" + mat2txt(self._M.jacobian())
+            + "\n\ncod ="
+            + vec2txt(np.array(
+                [self._M.cst().x, self._M.cst().px, self._M.cst().y,
+                 self._M.cst().py, self._M.cst().delta, self._M.cst().ct]))
+        )
 
-    # Install radiators that radiation is calculated
-    rad_del_kicks = instrument_with_radiators(lat, energy=E)
+        lin_opt._model_state.dE = 0e0
+        ps = self._M.cst()
+        # dE is computed by the RF cavity propagator.
+        lin_opt._lattice.propagate(lin_opt._model_state, ps)
+        self._dE = lin_opt._model_state.dE
 
-    r = compute_closed_orbit(lat, model_state, delta=0e0, eps=eps)
-    # M = r.one_turn_map[:6, :6]
-    M = r.one_turn_map.jacobian()[:6, :6]
+        stable, self._A, A_inv, self._alpha_rad = \
+            compute_M_diag(dof, self._M.jacobian())
 
-    logger.info(
-        "\nM:\n" + mat2txt(M)
-        + "\n\nx0 ="
-        + vec2txt(np.array(
-            [r.x0.x, r.x0.px, r.x0.y, r.x0.py, r.x0.delta, r.x0.ct]))
-    )
+        A_7x7 = np.zeros((7, 7))
+        A_7x7[:6, :6] = self._A
+        A_7x7[6, 6] = 1e0
+        if stable:
+            lin_opt._model_state.emittance = True
 
-    model_state.dE = 0e0
-    ps = r.x0
-    lat.propagate(model_state, ps)
-    dE = model_state.dE
+            A_cpy  = gtpsa.ss_vect_tpsa(lin_opt._desc, 1)
+            A_cpy += self._M.cst()
+            A_cpy.set_jacobian(A_7x7)
+            lin_opt._lattice.propagate(lin_opt._model_state, A_cpy)
 
-    stable, A, A_inv, alpha_rad = compute_M_diag(dof, M)
+            self.compute_diffusion_coefficients()
 
-    A_7x7 = np.zeros((7, 7))
-    A_7x7[:6, :6] = A
-    A_7x7[6, 6] = 1e0
-    if stable:
-        model_state.emittance = True
+            self.compute_rad_prop(lin_opt)
+        else:
+            self._U_0 = np.nan
+            self._J = np.zeros(3, float)
+            self._tau = np.zeros(3, float)
+            self._eps = np.zeros(3, float)
 
-        #A_cpy = vec_mat2ss_vect_tps(r.x0, A)
-        A_cpy  = gtpsa.ss_vect_tpsa(desc, 1)
-        A_cpy += r.x0
-        A_cpy.set_jacobian(A_7x7)
-        lat.propagate(model_state, A_cpy)
+        return stable
 
-        D_rad = compute_diffusion_coefficients(rad_del_kicks)
+    def prt_rad(self, lin_opt):
+        print("\nRadiation Properties:")
+        print("  E [GeV]       = {:5.3f}".
+              format(1e-9*lin_opt._model_state.Energy))
+        print("  U_0 [keV]     = {:5.1f}".
+              format(1e-3*self._U_0))
+        print("  eps_x [m.rad] = [{:9.3e}, {:9.3e}, {:9.3e}]".format(
+            self._eps[X_], self._eps[Y_], self._eps[Z_]))
+        print("  J             = [{:5.3f}, {:5.3f}, {:5.3f}]".format(
+            self._J[X_], self._J[Y_], self._J[Z_]))
+        print("  tau [msec]    = [{:5.3f}, {:5.3f}, {:5.3f}]".format(
+            1e3*self._tau[X_], 1e3*self._tau[Y_], 1e3*self._tau[Z_]))
+        print("  D             = [{:11.5e}, {:11.5e}, {:11.5e}]".format(
+            self._D_rad[X_], self._D_rad[Y_], self._D_rad[Z_]))
 
-        U_0, J, tau, eps = \
-            compute_rad_prop(lat, model_state, r.x0, dE, alpha_rad, D_rad)
-    else:
-        U_0 = np.nan
-        J = np.zeros(3, float)
-        tau = np.zeros(3, float)
-        eps = np.zeros(3, float)
-
-    cod = np.array([r.x0.x, r.x0.px, r.x0.y, r.x0.py, r.x0.delta, r.x0.ct])
-
-    # return stable, M, cod, A, U_0, J, tau, eps, D_rad
-    return stable, r.one_turn_map, cod, A, U_0, J, tau, eps, D_rad
+    def prt_M(self):
+        n_dof = 3
+        print("\nM:\ntpsa cst:")
+        for k in range(2*n_dof):
+            print(" {:13.6e}".format(self._M.cst().iloc[k]), end="")
+        print("\ntpsa linear:\n"+mat2txt(self._M.jacobian()[:6, :6]))
 
 
 # def calculate_radiation(
@@ -199,3 +230,6 @@ def compute_radiation(
 #     print(Ap)
 
 #     r = RadiationResult(relaxation_constants=w.real, fractional_tunes=w.imag)
+
+
+__all__ = [rad_prop_class]

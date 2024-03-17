@@ -481,7 +481,7 @@ def _extract_tps(elem: tslib.Observer) -> tslib.ss_vect_tps:
         logger.error(msg)
         raise AssertionError(msg)
     else:
-        logger.debug("Data available for eleeent index %5d name %s",
+        logger.debug("Data available for element index %5d name %s",
                      ob.get_observed_index(), ob.get_observed_name())
     return ob.get_truncated_power_series_a()
 
