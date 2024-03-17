@@ -35,7 +35,7 @@ X_, Y_, Z_ = [
 class lin_opt_class:
     # Private
 
-    def __init__(self, nv, no, nv_prm, no_prm, file_name, E_0, cod_eps):
+    def __init__(self, nv, no, nv_prm, no_prm, file_name, E_0):
         self._prt_Twiss_file_name = "twiss.txt"
         self._plt_Twiss_file_name = "twiss.png"
 
@@ -46,16 +46,15 @@ class lin_opt_class:
         self._model_state = []
         self._no          = no
         self._n_dof       = np.nan
-        self._cod_eps     = cod_eps
 
         self._M           = np.nan
+        self._alpha_c     = np.nan
         self._A           = np.nan
 
+        self._nu          = np.nan
         self._Twiss       = np.nan
         self._data        = []
-        
-        self._nu          = np.nan
-      
+              
         self._named_index = \
             gtpsa.IndexMapping(dict(x=0, px=1, y=2, py=3, delta=4, ct=5))
 
@@ -66,10 +65,10 @@ class lin_opt_class:
         self._lattice = accelerator_from_config(file_name)
         # Set lattice state (Rf cavity on/off, etc.).
         self._model_state = ts.ConfigType()
-        self._model_state.Energy = E_0
 
         # D.O.F. (Degrees-Of-Freedom) - coasting beam.
         self._n_dof = 2
+        self._model_state.Energy = E_0
         self._model_state.radiation = False
         self._model_state.Cavity_on = False
 
@@ -79,7 +78,7 @@ class lin_opt_class:
         return np.sum([elem.get_length() for elem in self._lattice])
 
     def compute_alpha_c(self):
-        return self._M.iloc[ct_].getv(1)[delta_]/self.compute_circ()
+        self._alpha_c = self._M.iloc[ct_].getv(1)[delta_]/self.compute_circ()
 
     def get_type(self, elem):
         match type(elem):
@@ -158,12 +157,13 @@ class lin_opt_class:
         """
         """
         eta, alpha, beta = self._Twiss
-        self._nu = lo.compute_nu_symp(2, self._M.jacobian())
+        self.compute_alpha_c()
         print("\nTwiss:")
-        print(f"  eta   = [{eta[X_]:9.3e}, {eta[Y_]:9.3e}]")
-        print(f"  alpha = [{alpha[X_]:9.3e}, {alpha[Y_]:9.3e}]")
-        print(f"  beta  = [{beta[X_]:5.3f}, {beta[Y_]:5.3f}]")
-        print(f"  nu    = [{self._nu[X_]:7.5f}, {self._nu[Y_]:7.5f}]")
+        print(f"  eta     = [{eta[X_]:9.3e}, {eta[Y_]:9.3e}]")
+        print(f"  alpha   = [{alpha[X_]:9.3e}, {alpha[Y_]:9.3e}]")
+        print(f"  beta    = [{beta[X_]:5.3f}, {beta[Y_]:5.3f}]")
+        print(f"  nu      = [{self._nu[X_]:7.5f}, {self._nu[Y_]:7.5f}]")
+        print(f"  alpha_c = {self._alpha_c:10.3e}")
 
     def prt_Twiss(self, types):
         """
@@ -214,7 +214,7 @@ class lin_opt_class:
         self._model_state.radiation = False
         self._model_state.Cavity_on = False
 
-        stable, self._M, self._A = \
+        stable, self._M, self._nu, self._A = \
             lo.compute_map_and_diag(
                 self._n_dof, self._lattice, self._model_state, desc=self._desc)
         if stable:
@@ -229,6 +229,8 @@ class lin_opt_class:
         else:
             self._data = np.nan
             print("\ncomp_per_sol: unstable")
+
+        return stable
 
     def prt_M(self):
         n_dof = 3

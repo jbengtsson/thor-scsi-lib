@@ -337,7 +337,7 @@ def compute_M_diag(
         for k in range(n):
             if abs(w[k].real) > 1e0:
                 print("\ncompute_M_diag: |arg| for acos2 > 1 ", w[k])
-                return False, np.nan, np.nan, np.nan
+                return False, np.nan, np.nan, np.nan, np.nan
 
             nu_eig[k] = acos2(w[k].imag, w[k].real) / (2e0 * np.pi)
 
@@ -426,11 +426,12 @@ def compute_M_diag(
                 )
             )
     else:
+        nu        = np.nan
         A         = np.nan
         A_inv     = np.nan
         alpha_rad = np.nan
 
-    return stable, A, A_inv, alpha_rad
+    return stable, nu, A, A_inv, alpha_rad
 
 
 #: scale arctan2 (a12/a11) to Floquet coordinates (correct?)
@@ -533,7 +534,7 @@ def compute_map_and_diag(
     M = np.array(t_map.jacobian())
     logger.info("\ncompute_map_and_diag\nM:\n" + mat2txt(M))
 
-    stable, A, A_inv, alpha_rad = compute_M_diag(n_dof, M)
+    stable, nu, A, A_inv, alpha_rad = compute_M_diag(n_dof, M)
     A = np.pad(A, (0, 1))
     A[6, 6] = 1
     if stable:
@@ -543,7 +544,7 @@ def compute_map_and_diag(
         lat.propagate(model_state, Atest)
     else:
         print("\ncompute_map_and_diag: unstable")
-    return stable, t_map, A
+    return stable, t_map, nu, A
 
 
 def compute_A(

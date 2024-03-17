@@ -44,9 +44,11 @@ class RadiationResult:
 class rad_prop_class:
     # Private
 
-    def __init__(self):
+    def __init__(self, lin_opt, cod_eps):
+        self._cod_eps       = cod_eps
         self._rad_del_kicks = []
         self._M             = []       # ss_vect_tpsa.
+        self._nu            = np.nan
         self._A             = np.nan
         self._dE            = np.nan
         self._U_0           = np.nan
@@ -108,7 +110,7 @@ class rad_prop_class:
         r = \
             compute_closed_orbit(
                 lin_opt._lattice, lin_opt._model_state, delta=0e0,
-                eps=lin_opt._cod_eps)
+                eps=self._cod_eps)
         # self._M = r.one_turn_map[:6, :6]
         self._M = r.one_turn_map
 
@@ -126,7 +128,7 @@ class rad_prop_class:
         lin_opt._lattice.propagate(lin_opt._model_state, ps)
         self._dE = lin_opt._model_state.dE
 
-        stable, self._A, A_inv, self._alpha_rad = \
+        stable, self._nu, self._A, A_inv, self._alpha_rad = \
             compute_M_diag(dof, self._M.jacobian())
 
         A_7x7 = np.zeros((7, 7))
