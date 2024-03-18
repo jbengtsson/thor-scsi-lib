@@ -40,12 +40,12 @@ X_, Y_, Z_ = [
 ]
 
 
-def plt_eps_x_alpha_c(file_name, phi, eps_x, alpha_c, plot):
-    fig, gr_1 = plt.subplots(1)
+def plt_scan_phi_rb(file_name, phi, eps_x, J_x, J_z, alpha_c, plot):
+    fig, (gr_1, gr_2) = plt.subplots(2)
 
-    # fig.suptitle("Linear Optics")
+    fig.suptitle("Lattice Trade-Offs vs. Reverse Bend Angle")
 
-    gr_1.set_title(r"$\epsilon_x$ & $\alpha_c$ vs. Reverse Bend Angle")
+    gr_1.set_title(r"$[\epsilon_x, \alpha_c]$ vs. Reverse Bend Angle")
     gr_1.set_xlabel(r"$\phi_{RB}$ [$\degree$]")
     gr_1.set_ylabel(r"$\epsilon_x$ [pm$\cdot$rad]")
     gr_1.plot(
@@ -57,6 +57,19 @@ def plt_eps_x_alpha_c(file_name, phi, eps_x, alpha_c, plot):
     gr_1_r.plot(
         phi, 1e4*alpha_c, color="g", label=r"$\alpha_c$")
     gr_1_r.legend(loc="upper right")
+
+    gr_2.set_title(r"$[J_x, J_z]$ vs. Reverse Bend Angle")
+    gr_2.set_xlabel(r"$\phi_{RB}$ [$\degree$]")
+    gr_2.set_ylabel(r"$J_x$")
+    gr_2.plot(
+        phi, J_x, color="b", label=r"$J_x$")
+    gr_2.legend(loc="upper left")
+
+    gr_2_r = gr_2.twinx()
+    gr_2_r.set_ylabel(r"$J_z$")
+    gr_2_r.plot(
+        phi, J_z, color="g", label=r"$J_z$")
+    gr_2_r.legend(loc="upper right")
 
     fig.tight_layout()
 
@@ -128,7 +141,9 @@ def unit_cell_rev_bend(lin_opt, rad_prop, n_step, phi_0, phi_1):
     phi_rb_buf = []
     eps_x_buf = []
     alpha_c_buf = []
-    print("\n   phi   phi_tot  eps_x     alpha_c   J_x   J_z     eta_x"
+    J_x_buf = []
+    J_z_buf = []
+    print("\n   phi   phi_tot  eps_x    J_x   J_z    alpha_c     eta_x"
           "     nu_x     nu_y"
           "\n  [deg]   [deg]  [nm.rad]                            [m]")
     for k in range(n_step):
@@ -145,19 +160,23 @@ def unit_cell_rev_bend(lin_opt, rad_prop, n_step, phi_0, phi_1):
         if stable:
             phi_rb_buf.append(abs(phi_rb))
             eps_x_buf.append(rad_prop._eps[X_])
+            J_x_buf.append(rad_prop._J[X_])
+            J_z_buf.append(rad_prop._J[Z_])
             alpha_c_buf.append(lin_opt._alpha_c)
-            print("{:7.3f}  {:5.3f}    {:5.1f}   {:10.3e}  {:4.2f} {:5.2f}"
+            print("{:7.3f}  {:5.3f}    {:5.1f}    {:4.2f} {:5.2f} {:10.3e}"
                   " {:10.3e}  {:7.5f}  {:7.5f}".
                   format(
                       phi_rb, compute_phi(lin_opt._lattice),
-                      1e12*rad_prop._eps[X_], lin_opt._alpha_c, rad_prop._J[X_],
-                      rad_prop._J[Z_], eta_x, rad_prop._nu[X_],
+                      1e12*rad_prop._eps[X_], rad_prop._J[X_], rad_prop._J[Z_],
+                      lin_opt._alpha_c, eta_x, rad_prop._nu[X_],
                       rad_prop._nu[Y_]))
         else:
             print("  unstable")
         # lin_opt.prt_Twiss_param()
         phi_rb += dphi
-    return np.array(phi_rb_buf), np.array(eps_x_buf), np.array(alpha_c_buf)
+    return \
+        np.array(phi_rb_buf), np.array(eps_x_buf), np.array(J_x_buf), \
+        np.array(J_z_buf), np.array(alpha_c_buf)
 
 
 def prt_default_mapping():
@@ -178,18 +197,13 @@ nv_prm = 0
 # Parameters max order.
 no_prm = 0
 
-E_0     = 3.0e9
 cod_eps = 1e-15
+E_0     = 2.5e9
 
-if True:
-    home_dir = os.path.join(
-        os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "BESSY-III",
-        "ipac_2024")
-    file_name = os.path.join(home_dir, "2024Mar.lat")
-else:
-    home_dir = os.path.join(
-        os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "MAX_4U")
-    file_name = os.path.join(home_dir, "max_4u.lat")
+home_dir = os.path.join(
+    os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "BESSY-III",
+    "ipac_2024")
+file_name = os.path.join(home_dir, "2024Mar.lat")
 
 prt_default_mapping()
 
@@ -197,10 +211,13 @@ lin_opt = ps.lin_opt_class(nv, no, nv_prm, no_prm, file_name, E_0)
 rad_prop = rp.rad_prop_class(lin_opt, cod_eps)
 
 # Compute Twiss parameters along lattice.
-lin_opt.comp_per_sol()
+stable = lin_opt.comp_per_sol()
 print("\nCircumference [m] = {:7.5f}".format(lin_opt.compute_circ()))
 lin_opt.prt_M()
-lin_opt.prt_Twiss_param()
+if stable:
+    lin_opt.prt_Twiss_param()
+else:
+    assert False
 
 # Compute radiation properties.
 stable = rad_prop.compute_radiation(lin_opt)
@@ -212,10 +229,11 @@ types = lin_opt.get_types()
 lin_opt.prt_Twiss(types)
 
 if False:
-    lin_opt.plt_Twiss(types, False)
+    lin_opt.plt_Twiss(types, not False)
 
 if not False:
     # BESSY III unit cell.
-    phi, eps_x, alpha_c = \
+    phi, eps_x, J_x, J_z, alpha_c = \
         unit_cell_rev_bend(lin_opt, rad_prop, 15, -0.075, -0.97)
-    plt_eps_x_alpha_c("plt_eps_x_alpha_c.png", phi, eps_x, alpha_c, True)
+    plt_scan_phi_rb(
+        "plt_scan_phi_rb.png", phi, eps_x, J_x, J_z, alpha_c, True)

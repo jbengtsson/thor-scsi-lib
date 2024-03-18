@@ -535,9 +535,9 @@ def compute_map_and_diag(
     logger.info("\ncompute_map_and_diag\nM:\n" + mat2txt(M))
 
     stable, nu, A, A_inv, alpha_rad = compute_M_diag(n_dof, M)
-    A = np.pad(A, (0, 1))
-    A[6, 6] = 1
     if stable:
+        A = np.pad(A, (0, 1))
+        A[6, 6] = 1
         Atest = gtpsa.ss_vect_tpsa(desc, 1)
         Atest.set_zero()
         Atest.set_jacobian(A)

@@ -172,16 +172,16 @@ class lin_opt_class:
         file = open(self._prt_Twiss_file_name, 'w')
         s = 0e0
         nu = np.zeros(2, dtype=float)
-        print("\n    Name         s    type  alpha_x   beta_x  nu_x    eta_x"
+        print("\n     Name          s    type  alpha_x   beta_x  nu_x    eta_x"
               "   eta'_x    alpha_y   beta_y  nu_y    eta_y   eta'_y",
               file=file)
-        print("                [m]                    [m]             [m]"
+        print("                  [m]                    [m]             [m]"
               "     [m]                 [m]             [m]", file=file)
         for k in range(len(self._data.index)):
             s += self._lattice[k].get_length()
             nu[X_] += self._data.twiss.sel(plane="x", par="dnu").values[k]
             nu[Y_] += self._data.twiss.sel(plane="y", par="dnu").values[k]
-            print("{:3d} {:8s} {:7.3f} {:4.1f} {:9.5f} {:8.5f} {:7.5f} {:7.5f}"
+            print("{:3d} {:10s} {:7.3f} {:4.1f} {:9.5f} {:8.5f} {:7.5f} {:7.5f}"
                   " {:8.5f} {:9.5f} {:8.5f} {:7.5f} {:7.5f} {:8.5f}".
                   format(k, self._lattice[k].name, s,
                          self.get_type(self._lattice[k]),
