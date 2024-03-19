@@ -18,8 +18,8 @@ from dataclasses import dataclass
 import gtpsa
 import thor_scsi.lib as ts
 
-from thor_scsi.utils import periodic_structure as ps, radiate as rp, \
-    get_set_mpole as gs, linear_optics as lo
+from thor_scsi.utils import periodic_structure as ps, \
+    lattice_properties as lp, get_set_mpole as gs, linear_optics as lo
 
 from thor_scsi.utils.output import vec2txt
 
@@ -179,7 +179,8 @@ set_phi_rb = set_phi_rb_bessy_iii
 
 prt_default_mapping()
 
-lat_prop = rp.lat_prop_class(nv, no, nv_prm, no_prm, file_name, E_0, cod_eps)
+lat_prop = \
+    lp.lattice_properties_class(nv, no, nv_prm, no_prm, file_name, E_0, cod_eps)
 get_set = gs.get_set_mpole_class()
 
 # Compute Twiss parameters along lattice.

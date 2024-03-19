@@ -29,11 +29,10 @@ X_, Y_, Z_ = [
 ]
 
 
-class lin_opt_class:
+class periodic_structure_class:
     # Private
 
     def __init__(self, nv, no, nv_prm, no_prm, file_name, E_0):
-        print("\nlin_opt_class - __init__")
         self._prt_Twiss_file_name = "twiss.txt"
         self._plt_Twiss_file_name = "twiss.png"
 
@@ -238,4 +237,4 @@ class lin_opt_class:
         print("\ntpsa linear:\n"+mat2txt(self._M.jacobian()[:6, :6]))
 
 
-__all__ = [lin_opt_class]
+__all__ = [periodic_structure_class]

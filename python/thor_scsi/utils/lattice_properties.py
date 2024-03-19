@@ -42,11 +42,10 @@ class RadiationResult:
     fractional_tunes: np.ndarray
 
 
-class lat_prop_class(ps.lin_opt_class):
+class lattice_properties_class(ps.periodic_structure_class):
     # Private
 
     def __init__(self, nv, no, nv_prm, no_prm, file_name, E_0, cod_eps):
-        print("\nlat_prop_class - __init__")
         super().__init__(nv, no, nv_prm, no_prm, file_name, E_0)
         self._cod_eps       = cod_eps
         self._rad_del_kicks = []
@@ -237,4 +236,4 @@ class lat_prop_class(ps.lin_opt_class):
 #     r = RadiationResult(relaxation_constants=w.real, fractional_tunes=w.imag)
 
 
-__all__ = [lat_prop_class]
+__all__ = [lattice_properties_class]
