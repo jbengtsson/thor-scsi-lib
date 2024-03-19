@@ -19,7 +19,7 @@ import gtpsa
 import thor_scsi.lib as ts
 
 from thor_scsi.utils import periodic_structure as ps, radiate as rp, \
-    get_set_mpole as gs
+    get_set_mpole as gs, linear_optics as lo
 
 from thor_scsi.utils.output import vec2txt
 
@@ -96,7 +96,7 @@ def plt_scan_phi_rb(file_name, phi, eps_x, J_x, J_z, alpha_c, plot):
         plt.show()
 
 
-def unit_cell_rev_bend(lin_opt, rad_prop, get_set, n_step, phi_min, set_phi):
+def unit_cell_rev_bend(lat_prop, get_set, n_step, phi_min, set_phi):
     phi_rb = 0e0
     phi_step = phi_min/n_step
     phi_rb_buf = []
@@ -109,30 +109,30 @@ def unit_cell_rev_bend(lin_opt, rad_prop, get_set, n_step, phi_min, set_phi):
           "\n  [deg]   [deg]  [nm.rad]                            [m]")
     for k in range(n_step):
         set_phi(get_set, phi_rb)
-        stable = lin_opt.comp_per_sol()
-        eta_x = lin_opt._Twiss[0][ind.x]
-        lin_opt.compute_alpha_c()
-        if lin_opt._alpha_c > 0e0:
-            get_set.set_RF_cav_phase(lin_opt._lattice, "cav", 0.0)
+        stable = lat_prop.comp_per_sol()
+        eta_x = lat_prop._Twiss[0][ind.x]
+        lat_prop.compute_alpha_c()
+        if lat_prop._alpha_c > 0e0:
+            get_set.set_RF_cav_phase(lat_prop._lattice, "cav", 0.0)
         else:
-            get_set.set_RF_cav_phase(lin_opt._lattice, "cav", 180.0)
-        stable = rad_prop.compute_radiation(lin_opt)
+            get_set.set_RF_cav_phase(lat_prop._lattice, "cav", 180.0)
+        stable = lat_prop.compute_radiation()
         if stable:
             phi_rb_buf.append(abs(phi_rb))
-            eps_x_buf.append(rad_prop._eps[ind.X])
-            J_x_buf.append(rad_prop._J[ind.X])
-            J_z_buf.append(rad_prop._J[ind.Z_])
-            alpha_c_buf.append(lin_opt._alpha_c)
+            eps_x_buf.append(lat_prop._eps[ind.X])
+            J_x_buf.append(lat_prop._J[ind.X])
+            J_z_buf.append(lat_prop._J[ind.Z_])
+            alpha_c_buf.append(lat_prop._alpha_c)
             print("{:7.3f}  {:5.3f}    {:5.1f}    {:4.2f} {:5.2f} {:10.3e}"
                   " {:10.3e}  {:7.5f}  {:7.5f}".
                   format(
-                      phi_rb, get_set.compute_phi(lin_opt._lattice),
-                      1e12*rad_prop._eps[ind.X], rad_prop._J[ind.X],
-                      rad_prop._J[ind.Z_], lin_opt._alpha_c, eta_x,
-                      rad_prop._nu[ind.X], rad_prop._nu[ind.Y_]))
+                      phi_rb, get_set.compute_phi(lat_prop._lattice),
+                      1e12*lat_prop._eps[ind.X], lat_prop._J[ind.X],
+                      lat_prop._J[ind.Z_], lat_prop._alpha_c, eta_x,
+                      lat_prop._nu[ind.X], lat_prop._nu[ind.Y_]))
         else:
             print("  unstable")
-        # lin_opt.prt_Twiss_param()
+        # lat_prop.prt_Twiss_param()
         phi_rb += phi_step
     return \
         np.array(phi_rb_buf), np.array(eps_x_buf), np.array(J_x_buf), \
@@ -148,8 +148,8 @@ def set_phi_rb_bessy_iii(get_set, phi_rb):
     #   b1a  = 4.25-2.0*rba;
     #   mwba = 0.2;
     #   mb1a = 2.75-mwba;
-    get_set.set_phi_fam(lin_opt._lattice, "rb", phi_rb, True)
-    get_set.set_phi_fam(lin_opt._lattice, "b1", 4.25-2.0*phi_rb, True)
+    get_set.set_phi_fam(lat_prop._lattice, "rb", phi_rb, True)
+    get_set.set_phi_fam(lat_prop._lattice, "b1", 4.25-2.0*phi_rb, True)
 
 
 # Number of phase-space coordinates.
@@ -179,36 +179,35 @@ set_phi_rb = set_phi_rb_bessy_iii
 
 prt_default_mapping()
 
-lin_opt = ps.lin_opt_class(nv, no, nv_prm, no_prm, file_name, E_0)
-rad_prop = rp.rad_prop_class(lin_opt, cod_eps)
+lat_prop = rp.lat_prop_class(nv, no, nv_prm, no_prm, file_name, E_0, cod_eps)
 get_set = gs.get_set_mpole_class()
 
 # Compute Twiss parameters along lattice.
-stable = lin_opt.comp_per_sol()
-print("\nCircumference [m]      = {:7.5f}".format(lin_opt.compute_circ()))
+stable = lat_prop.comp_per_sol()
+print("\nCircumference [m]      = {:7.5f}".format(lat_prop.compute_circ()))
 print("Total bend angle [deg] = {:7.5f}".
-      format(get_set.compute_phi(lin_opt._lattice)))
-lin_opt.prt_M()
+      format(get_set.compute_phi(lat_prop._lattice)))
+lat_prop.prt_M()
 if stable:
-    lin_opt.prt_Twiss_param()
+    lat_prop.prt_Twiss_param()
 else:
     assert False
 
 # Compute radiation properties.
-stable = rad_prop.compute_radiation(lin_opt)
-rad_prop.prt_rad(lin_opt)
-rad_prop.prt_M()
+stable = lat_prop.compute_radiation()
+lat_prop.prt_rad()
+lat_prop.prt_M()
 
-types = lin_opt.get_types()
+types = lat_prop.get_types()
 
-lin_opt.prt_Twiss(types)
+lat_prop.prt_Twiss(types)
 
 if False:
-    lin_opt.plt_Twiss(types, not False)
+    lat_prop.plt_Twiss(types, not False)
 
 if not False:
     phi, eps_x, J_x, J_z, alpha_c = \
-        unit_cell_rev_bend(lin_opt, rad_prop, get_set, 15, -0.97, set_phi_rb)
+        unit_cell_rev_bend(lat_prop, get_set, 15, -0.97, set_phi_rb)
 
     plt_scan_phi_rb(
         "plt_scan_phi_rb.png", phi, eps_x, J_x, J_z, alpha_c, True)

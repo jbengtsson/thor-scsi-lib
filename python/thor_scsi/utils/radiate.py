@@ -8,9 +8,10 @@ import numpy as np
 from scipy.constants import c as c0
 from dataclasses import dataclass
 
-from thor_scsi.utils.closed_orbit import compute_closed_orbit
-from thor_scsi.utils.linear_optics import compute_M_diag
-from thor_scsi.utils.output import mat2txt, vec2txt
+from . import periodic_structure as ps
+from .closed_orbit import compute_closed_orbit
+from .linear_optics import compute_M_diag
+from .output import mat2txt, vec2txt
 
 import logging
 logger = logging.getLogger("thor-scsi")
@@ -41,10 +42,12 @@ class RadiationResult:
     fractional_tunes: np.ndarray
 
 
-class rad_prop_class:
+class lat_prop_class(ps.lin_opt_class):
     # Private
 
-    def __init__(self, lin_opt, cod_eps):
+    def __init__(self, nv, no, nv_prm, no_prm, file_name, E_0, cod_eps):
+        print("\nlat_prop_class - __init__")
+        super().__init__(nv, no, nv_prm, no_prm, file_name, E_0)
         self._cod_eps       = cod_eps
         self._rad_del_kicks = []
         self._M             = []       # ss_vect_tpsa.
@@ -60,8 +63,8 @@ class rad_prop_class:
 
     # Public.
 
-    def compute_circ(self, lat):
-        return np.sum([elem.get_length() for elem in lat])
+    def compute_circ(self):
+        return np.sum([elem.get_length() for elem in self._lattice])
 
     def compute_diffusion_coefficients(self):
         dD_rad = \
@@ -69,14 +72,14 @@ class rad_prop_class:
                       for rk in self._rad_del_kicks])
         self._D_rad = np.sum(dD_rad, axis=0)
 
-    def compute_rad_prop(self, lin_opt):
+    def compute_rad_prop(self):
         dof = 3
         self._J = np.zeros(dof)
         self._tau = np.zeros(dof)
         self._eps = np.zeros(dof)
-        C = self.compute_circ(lin_opt._lattice)
+        C = self.compute_circ()
         logger.info("\nC = %5.3f", C)
-        self._U_0 = lin_opt._model_state.Energy*self._dE
+        self._U_0 = self._model_state.Energy*self._dE
         for k in range(dof):
             self._J[k] = \
                 2e0*(1e0+self._M.cst().delta)*self._alpha_rad[k]/self._dE
@@ -88,28 +91,28 @@ class rad_prop_class:
             " {:12.6e} {:12.6e} {:12.6e}\ntau [msec]  = {:8.6f} {:8.6f} {:8.6f}"
             "\nJ           = {:8.6f} {:8.6f} {:8.6f}\nalpha_rad   = {:13.6e}"
             " {:13.6e} {:13.6e}\nD_rad       = {:12.6e} {:12.6e} {:12.6e}".
-            format(1e-9*lin_opt._model_state.Energy, 1e-3*self._U_0,
+            format(1e-9*self._model_state.Energy, 1e-3*self._U_0,
                    self._eps[X_], self._eps[Y_], self._eps[Z_],
                    1e3*self._tau[X_], 1e3*self._tau[Y_], 1e3*self._tau[Z_],
                    self._J[X_], self._J[Y_], self._J[Z_], self._alpha_rad[X_],
                    self._alpha_rad[Y_], self._alpha_rad[Z_], self._D_rad[X_],
                    self._D_rad[Y_], self._D_rad[Z_]))
 
-    def compute_radiation(self, lin_opt):
+    def compute_radiation(self):
         dof = 3
 
-        lin_opt._model_state.radiation = True
-        lin_opt._model_state.emittance = False
-        lin_opt._model_state.Cavity_on = True
+        self._model_state.radiation = True
+        self._model_state.emittance = False
+        self._model_state.Cavity_on = True
 
         # Install radiators that radiation is calculated
         self._rad_del_kicks = \
             instrument_with_radiators(
-                lin_opt._lattice, energy=lin_opt._model_state.Energy)
+                self._lattice, energy=self._model_state.Energy)
 
         r = \
             compute_closed_orbit(
-                lin_opt._lattice, lin_opt._model_state, delta=0e0,
+                self._lattice, self._model_state, delta=0e0,
                 eps=self._cod_eps)
         # self._M = r.one_turn_map[:6, :6]
         self._M = r.one_turn_map
@@ -122,11 +125,11 @@ class rad_prop_class:
                  self._M.cst().py, self._M.cst().delta, self._M.cst().ct]))
         )
 
-        lin_opt._model_state.dE = 0e0
+        self._model_state.dE = 0e0
         ps = self._M.cst()
         # dE is computed by the RF cavity propagator.
-        lin_opt._lattice.propagate(lin_opt._model_state, ps)
-        self._dE = lin_opt._model_state.dE
+        self._lattice.propagate(self._model_state, ps)
+        self._dE = self._model_state.dE
 
         stable, self._nu, self._A, A_inv, self._alpha_rad = \
             compute_M_diag(dof, self._M.jacobian())
@@ -135,16 +138,16 @@ class rad_prop_class:
         A_7x7[:6, :6] = self._A
         A_7x7[6, 6] = 1e0
         if stable:
-            lin_opt._model_state.emittance = True
+            self._model_state.emittance = True
 
-            A_cpy  = gtpsa.ss_vect_tpsa(lin_opt._desc, 1)
+            A_cpy  = gtpsa.ss_vect_tpsa(self._desc, 1)
             A_cpy += self._M.cst()
             A_cpy.set_jacobian(A_7x7)
-            lin_opt._lattice.propagate(lin_opt._model_state, A_cpy)
+            self._lattice.propagate(self._model_state, A_cpy)
 
             self.compute_diffusion_coefficients()
 
-            self.compute_rad_prop(lin_opt)
+            self.compute_rad_prop()
         else:
             self._U_0 = np.nan
             self._J = np.zeros(3, float)
@@ -153,10 +156,10 @@ class rad_prop_class:
 
         return stable
 
-    def prt_rad(self, lin_opt):
+    def prt_rad(self):
         print("\nRadiation Properties:")
         print("  E [GeV]       = {:5.3f}".
-              format(1e-9*lin_opt._model_state.Energy))
+              format(1e-9*self._model_state.Energy))
         print("  U_0 [keV]     = {:5.1f}".
               format(1e-3*self._U_0))
         print("  eps_x [m.rad] = [{:9.3e}, {:9.3e}, {:9.3e}]".format(
@@ -234,4 +237,4 @@ class rad_prop_class:
 #     r = RadiationResult(relaxation_constants=w.real, fractional_tunes=w.imag)
 
 
-__all__ = [rad_prop_class]
+__all__ = [lat_prop_class]

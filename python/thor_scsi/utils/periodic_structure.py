@@ -33,6 +33,7 @@ class lin_opt_class:
     # Private
 
     def __init__(self, nv, no, nv_prm, no_prm, file_name, E_0):
+        print("\nlin_opt_class - __init__")
         self._prt_Twiss_file_name = "twiss.txt"
         self._plt_Twiss_file_name = "twiss.png"
 
