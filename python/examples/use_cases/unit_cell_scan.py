@@ -18,7 +18,8 @@ from dataclasses import dataclass
 import gtpsa
 import thor_scsi.lib as ts
 
-from thor_scsi.utils import radiate as rp, get_set_mpole as gs
+from thor_scsi.utils import periodic_structure as ps, radiate as rp, \
+    get_set_mpole as gs
 
 from thor_scsi.utils.output import vec2txt
 
