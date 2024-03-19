@@ -13,7 +13,6 @@ logger = logging.getLogger("thor_scsi")
 import os
 import numpy as np
 import matplotlib.pyplot as plt
-from dataclasses import dataclass
 
 import gtpsa
 import thor_scsi.lib as ts
@@ -22,121 +21,6 @@ from thor_scsi.utils import periodic_structure as ps, \
     lattice_properties as lp, get_set_mpole as gs, linear_optics as lo
 
 from thor_scsi.utils.output import vec2txt
-
-
-@dataclass
-class ind_class:
-    # Configuration space coordinates.
-    X, Y_, Z_ = [
-        ts.spatial_index.X,
-        ts.spatial_index.Y,
-        ts.spatial_index.Z
-    ]
-
-    # Phase-space coordinates.
-    [x, px, y_, py_, ct_, delta_] = [
-        ts.phase_space_index_internal.x,
-        ts.phase_space_index_internal.px,
-        ts.phase_space_index_internal.y,
-        ts.phase_space_index_internal.py,
-        ts.phase_space_index_internal.ct,
-        ts.phase_space_index_internal.delta,
-    ]
-
-
-ind = ind_class()
-
-def prt_default_mapping():
-    index_map = gtpsa.default_mapping()
-    print("\nIndex Mapping:\n"
-          "  x     = {:1d}\n  p_x   = {:1d}\n  y     = {:1d}\n  p_y   = {:1d}\n"
-          "  delta = {:1d}\n  ct    = {:1d}".
-          format(index_map.x, index_map.px, index_map.y, index_map.py,
-                 index_map.delta, index_map.ct))
-    
-
-def plt_scan_phi_rb(file_name, phi, eps_x, J_x, J_z, alpha_c, plot):
-    fig, (gr_1, gr_2) = plt.subplots(2)
-
-    fig.suptitle("Lattice Trade-Offs vs. Reverse Bend Angle")
-
-    gr_1.set_title(
-        r"$[\epsilon_x\left(\phi_{RB}\right), \alpha_c\left(\phi_{RB}\right)]$")
-    gr_1.set_xlabel(r"$\phi_{RB}$ [$\degree$]")
-    gr_1.set_ylabel(r"$\epsilon_x$ [pm$\cdot$rad]")
-    gr_1.yaxis.label.set_color("b")
-    gr_1.tick_params(axis="y", colors="b")
-    gr_1.plot(phi, 1e12*eps_x, color="b")
-
-    gr_1_r = gr_1.twinx()
-    gr_1_r.set_ylabel(r"$\alpha_c$ [$10^{-4}$]")
-    gr_1_r.yaxis.label.set_color("g")
-    gr_1_r.tick_params(axis="y", colors="g")
-    gr_1_r.plot(phi, 1e4*alpha_c, color="g", label=r"$\alpha_c$")
-
-    gr_2.set_title(r"$[J_x\left(\phi_{RB}\right), J_z\left(\phi_{RB}\right)]$")
-    gr_2.set_xlabel(r"$\phi_{RB}$ [$\degree$]")
-    gr_2.set_ylabel(r"$J_x$")
-    gr_2.yaxis.label.set_color("b")
-    gr_2.tick_params(axis="y", colors="b")
-    gr_2.plot(phi, J_x, color="b")
-
-    gr_2_r = gr_2.twinx()
-    gr_2_r.set_ylabel(r"$J_z$")
-    gr_2_r.yaxis.label.set_color("g")
-    gr_2_r.tick_params(axis="y", colors="g")
-    gr_2_r.plot(phi, J_z, color="g")
-
-    fig.tight_layout()
-
-    plt.savefig(file_name)
-    print("\n - plot saved as:", file_name)
-
-    if plot:
-        plt.show()
-
-
-def unit_cell_rev_bend(lat_prop, get_set, n_step, phi_min, set_phi):
-    phi_rb = 0e0
-    phi_step = phi_min/n_step
-    phi_rb_buf = []
-    eps_x_buf = []
-    alpha_c_buf = []
-    J_x_buf = []
-    J_z_buf = []
-    print("\n   phi   phi_tot  eps_x    J_x   J_z    alpha_c     eta_x"
-          "     nu_x     nu_y"
-          "\n  [deg]   [deg]  [nm.rad]                            [m]")
-    for k in range(n_step):
-        set_phi(get_set, phi_rb)
-        stable = lat_prop.comp_per_sol()
-        eta_x = lat_prop._Twiss[0][ind.x]
-        lat_prop.compute_alpha_c()
-        if lat_prop._alpha_c > 0e0:
-            get_set.set_RF_cav_phase(lat_prop._lattice, "cav", 0.0)
-        else:
-            get_set.set_RF_cav_phase(lat_prop._lattice, "cav", 180.0)
-        stable = lat_prop.compute_radiation()
-        if stable:
-            phi_rb_buf.append(abs(phi_rb))
-            eps_x_buf.append(lat_prop._eps[ind.X])
-            J_x_buf.append(lat_prop._J[ind.X])
-            J_z_buf.append(lat_prop._J[ind.Z_])
-            alpha_c_buf.append(lat_prop._alpha_c)
-            print("{:7.3f}  {:5.3f}    {:5.1f}    {:4.2f} {:5.2f} {:10.3e}"
-                  " {:10.3e}  {:7.5f}  {:7.5f}".
-                  format(
-                      phi_rb, get_set.compute_phi(lat_prop._lattice),
-                      1e12*lat_prop._eps[ind.X], lat_prop._J[ind.X],
-                      lat_prop._J[ind.Z_], lat_prop._alpha_c, eta_x,
-                      lat_prop._nu[ind.X], lat_prop._nu[ind.Y_]))
-        else:
-            print("  unstable")
-        # lat_prop.prt_Twiss_param()
-        phi_rb += phi_step
-    return \
-        np.array(phi_rb_buf), np.array(eps_x_buf), np.array(J_x_buf), \
-        np.array(J_z_buf), np.array(alpha_c_buf)
 
 
 def set_phi_rb_bessy_iii(get_set, phi_rb):
@@ -175,10 +59,6 @@ else:
         "lattices")
     file_name = os.path.join(home_dir, "2024Mar.lat")
 
-set_phi_rb = set_phi_rb_bessy_iii
-
-prt_default_mapping()
-
 lat_prop = \
     lp.lattice_properties_class(nv, no, nv_prm, no_prm, file_name, E_0, cod_eps)
 get_set = gs.get_set_mpole_class()
@@ -208,7 +88,7 @@ if False:
 
 if not False:
     phi, eps_x, J_x, J_z, alpha_c = \
-        unit_cell_rev_bend(lat_prop, get_set, 15, -0.97, set_phi_rb)
+        lat_prop.unit_cell_rev_bend(get_set, 15, -0.97, set_phi_rb_bessy_iii)
 
-    plt_scan_phi_rb(
+    lat_prop.plt_scan_phi_rb(
         "plt_scan_phi_rb.png", phi, eps_x, J_x, J_z, alpha_c, True)
