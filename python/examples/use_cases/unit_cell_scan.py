@@ -11,16 +11,8 @@ logger = logging.getLogger("thor_scsi")
 
 
 import os
-import numpy as np
-import matplotlib.pyplot as plt
 
-import gtpsa
-import thor_scsi.lib as ts
-
-from thor_scsi.utils import periodic_structure as ps, \
-    lattice_properties as lp, get_set_mpole as gs, linear_optics as lo
-
-from thor_scsi.utils.output import vec2txt
+from thor_scsi.utils import lattice_properties as lp, get_set_mpole as gs
 
 
 def set_phi_rb_bessy_iii(get_set, phi_rb):

@@ -12,6 +12,11 @@ from thor_scsi.factory import accelerator_from_config
 from . import linear_optics as lo, courant_snyder as cs
 from .output import mat2txt, vec2txt
 
+from thor_scsi.utils import periodic_structure as ps, \
+    lattice_properties as lp, linear_optics as lo
+
+# from thor_scsi.utils.output import vec2txt
+
 
 @dataclass
 class ind_class:
