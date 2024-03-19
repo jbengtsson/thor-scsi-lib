@@ -58,12 +58,13 @@ tracy_lib.lo
 # Fortran modules
 TPSA/*.mod
 
-# Command, data and graphics files.
+# Command, data, text, and graphics files.
 in
 out
 bin
 max_iv
 sls-2
+*.txt
 *.out
 *.dat
 *.eps
