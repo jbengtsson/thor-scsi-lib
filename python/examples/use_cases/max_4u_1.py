@@ -133,19 +133,6 @@ def unit_cell_rev_bend(lin_opt, rad_prop, get_set, n_step, phi_min, set_phi):
         np.array(J_z_buf), np.array(alpha_c_buf)
 
 
-def set_phi_rb_bessy_iii(get_set, phi_rb):
-    # BESSY III.
-    # Dipoles:
-    #   [b1(b1a), rb(rba), mb1(mb1a), mqd(mwba)]
-    # Dipole bend angles:
-    #   rba  = -0.28;
-    #   b1a  = 4.25-2.0*rba;
-    #   mwba = 0.2;
-    #   mb1a = 2.75-mwba;
-    get_set.set_phi_fam(lin_opt._lattice, "rb", phi_rb, True)
-    get_set.set_phi_fam(lin_opt._lattice, "b1", 4.25-2.0*phi_rb, True)
-
-
 def set_phi_rb_max_4u(get_set, phi_rb):
     # MAX 4U.
     # Optimum reverse bend angle is:
@@ -179,20 +166,12 @@ nv_prm = 0
 no_prm = 0
 
 cod_eps = 1e-15
+E_0     = 3.0e9
 
-if not True:
-    E_0 = 2.5e9
-    home_dir = os.path.join(
-        os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "BESSY-III",
-        "ipac_2024")
-    file_name = os.path.join(home_dir, "2024Mar.lat")
-    set_phi_rb = set_phi_rb_bessy_iii
-else:
-    E_0 = 3.0e9
-    home_dir = os.path.join(
-        os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "MAX_4U")
-    file_name = os.path.join(home_dir, "max_4u.lat")
-    set_phi_rb = set_phi_rb_max_4u
+home_dir = os.path.join(
+    os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "MAX_4U")
+file_name = os.path.join(home_dir, "max_4u.lat")
+set_phi_rb = set_phi_rb_max_4u
 
 prt_default_mapping()
 
