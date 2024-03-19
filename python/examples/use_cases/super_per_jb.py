@@ -549,7 +549,7 @@ if False:
 if False:
     plt.show()
 
-# Zero sextopoles.
+# Zero sextupoles.
 print("\nZeroing sextupoles.")
 set_b_n_fam(lat, "sf", MultipoleIndex.sextupole, 0e0)
 set_b_n_fam(lat, "sd", MultipoleIndex.sextupole, 0e0)
