@@ -163,10 +163,17 @@ no_prm = 0
 cod_eps = 1e-15
 E_0     = 2.5e9
 
-home_dir = os.path.join(
-    os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "BESSY-III",
-    "ipac_2024")
-file_name = os.path.join(home_dir, "2024Mar.lat")
+if True:
+    home_dir = os.path.join(
+        os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "BESSY-III",
+        "ipac_2024")
+    file_name = os.path.join(home_dir, "2024Mar.lat")
+else:
+    home_dir = os.path.join(
+        os.environ["HOME"], "accSoft", "thor_scsi-lib", "python", "examples",
+        "lattices")
+    file_name = os.path.join(home_dir, "2024Mar.lat")
+
 set_phi_rb = set_phi_rb_bessy_iii
 
 prt_default_mapping()
