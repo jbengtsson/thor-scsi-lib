@@ -13,32 +13,37 @@ logger = logging.getLogger("thor_scsi")
 import os
 import numpy as np
 import matplotlib.pyplot as plt
+from dataclasses import dataclass
 
 import gtpsa
 import thor_scsi.lib as ts
 
-from thor_scsi.utils import periodic_structure as ps, radiate as rp, \
-    get_set_mpole as gs
+from thor_scsi.utils import radiate as rp, get_set_mpole as gs
 
 from thor_scsi.utils.output import vec2txt
 
 
-# Configuration space coordinates.
-X_, Y_, Z_ = [
-    ts.spatial_index.X,
-    ts.spatial_index.Y,
-    ts.spatial_index.Z
-]
-# Phase-space coordinates.
-[x_, px_, y_, py_, ct_, delta_] = [
-    ts.phase_space_index_internal.x,
-    ts.phase_space_index_internal.px,
-    ts.phase_space_index_internal.y,
-    ts.phase_space_index_internal.py,
-    ts.phase_space_index_internal.ct,
-    ts.phase_space_index_internal.delta,
-]
+@dataclass
+class ind_class:
+    # Configuration space coordinates.
+    X, Y_, Z_ = [
+        ts.spatial_index.X,
+        ts.spatial_index.Y,
+        ts.spatial_index.Z
+    ]
 
+    # Phase-space coordinates.
+    [x, px, y_, py_, ct_, delta_] = [
+        ts.phase_space_index_internal.x,
+        ts.phase_space_index_internal.px,
+        ts.phase_space_index_internal.y,
+        ts.phase_space_index_internal.py,
+        ts.phase_space_index_internal.ct,
+        ts.phase_space_index_internal.delta,
+    ]
+
+
+ind = ind_class()
 
 def prt_default_mapping():
     index_map = gtpsa.default_mapping()
@@ -104,7 +109,7 @@ def unit_cell_rev_bend(lin_opt, rad_prop, get_set, n_step, phi_min, set_phi):
     for k in range(n_step):
         set_phi(get_set, phi_rb)
         stable = lin_opt.comp_per_sol()
-        eta_x = lin_opt._Twiss[0][x_]
+        eta_x = lin_opt._Twiss[0][ind.x]
         lin_opt.compute_alpha_c()
         if lin_opt._alpha_c > 0e0:
             get_set.set_RF_cav_phase(lin_opt._lattice, "cav", 0.0)
@@ -113,17 +118,17 @@ def unit_cell_rev_bend(lin_opt, rad_prop, get_set, n_step, phi_min, set_phi):
         stable = rad_prop.compute_radiation(lin_opt)
         if stable:
             phi_rb_buf.append(abs(phi_rb))
-            eps_x_buf.append(rad_prop._eps[X_])
-            J_x_buf.append(rad_prop._J[X_])
-            J_z_buf.append(rad_prop._J[Z_])
+            eps_x_buf.append(rad_prop._eps[ind.X])
+            J_x_buf.append(rad_prop._J[ind.X])
+            J_z_buf.append(rad_prop._J[ind.Z_])
             alpha_c_buf.append(lin_opt._alpha_c)
             print("{:7.3f}  {:5.3f}    {:5.1f}    {:4.2f} {:5.2f} {:10.3e}"
                   " {:10.3e}  {:7.5f}  {:7.5f}".
                   format(
                       phi_rb, get_set.compute_phi(lin_opt._lattice),
-                      1e12*rad_prop._eps[X_], rad_prop._J[X_], rad_prop._J[Z_],
-                      lin_opt._alpha_c, eta_x, rad_prop._nu[X_],
-                      rad_prop._nu[Y_]))
+                      1e12*rad_prop._eps[ind.X], rad_prop._J[ind.X],
+                      rad_prop._J[ind.Z_], lin_opt._alpha_c, eta_x,
+                      rad_prop._nu[ind.X], rad_prop._nu[ind.Y_]))
         else:
             print("  unstable")
         # lin_opt.prt_Twiss_param()
@@ -144,29 +149,6 @@ def set_phi_rb_bessy_iii(get_set, phi_rb):
     #   mb1a = 2.75-mwba;
     get_set.set_phi_fam(lin_opt._lattice, "rb", phi_rb, True)
     get_set.set_phi_fam(lin_opt._lattice, "b1", 4.25-2.0*phi_rb, True)
-
-
-def set_phi_rb_max_4u(get_set, phi_rb):
-    # MAX 4U.
-    # Optimum reverse bend angle is:
-    #   phi_rb = -0.37
-    phi_b  = 3.0
-    b0_scl = 1.094181/phi_b
-    b1_scl = 0.151199/phi_b
-    b2_scl = 0.151101/phi_b
-    b3_scl = 0.101861/phi_b
-    b4_scl = 0.001569/phi_b
-    b5_scl = 0.000089/phi_b
-
-    dphi = 3.0 - 2.0*phi_rb
-
-    get_set.set_phi_fam(lin_opt._lattice, "qf", phi_rb, True)
-    get_set.set_phi_fam(lin_opt._lattice, "b0", b0_scl*dphi, True)
-    get_set.set_phi_fam(lin_opt._lattice, "b1", b1_scl*dphi, True)
-    get_set.set_phi_fam(lin_opt._lattice, "b2", b2_scl*dphi, True)
-    get_set.set_phi_fam(lin_opt._lattice, "b3", b3_scl*dphi, True)
-    get_set.set_phi_fam(lin_opt._lattice, "b4", b4_scl*dphi, True)
-    get_set.set_phi_fam(lin_opt._lattice, "b5", b5_scl*dphi, True)
 
 
 # Number of phase-space coordinates.
