@@ -8,11 +8,8 @@ import gtpsa
 import thor_scsi.lib as ts
 
 from thor_scsi.factory import accelerator_from_config
-
-from thor_scsi.utils import linear_optics as lo, courant_snyder as cs, \
-     radiate as rad
-
-from thor_scsi.utils.output import mat2txt, vec2txt
+from . import linear_optics as lo, courant_snyder as cs
+from .output import mat2txt, vec2txt
 
 
 # Configuration space coordinates.
@@ -35,42 +32,42 @@ X_, Y_, Z_ = [
 class lin_opt_class:
     # Private
 
-    def __init__(self, nv, no, nv_prm, no_prm, file_name, E_0):
-        self._prt_Twiss_file_name = "twiss.txt"
-        self._plt_Twiss_file_name = "twiss.png"
+    # def __init__(self, nv, no, nv_prm, no_prm, file_name, E_0):
+    #     self._prt_Twiss_file_name = "twiss.txt"
+    #     self._plt_Twiss_file_name = "twiss.png"
 
-        self._named_index = []
-        self._desc        = []
+    #     self._named_index = []
+    #     self._desc        = []
 
-        self._lattice     = []
-        self._model_state = []
-        self._no          = no
-        self._n_dof       = np.nan
+    #     self._lattice     = []
+    #     self._model_state = []
+    #     self._no          = no
+    #     self._n_dof       = np.nan
 
-        self._M           = np.nan
-        self._alpha_c     = np.nan
-        self._A           = np.nan
+    #     self._M           = np.nan
+    #     self._alpha_c     = np.nan
+    #     self._A           = np.nan
 
-        self._nu          = np.nan
-        self._Twiss       = np.nan
-        self._data        = []
+    #     self._nu          = np.nan
+    #     self._Twiss       = np.nan
+    #     self._data        = []
               
-        self._named_index = \
-            gtpsa.IndexMapping(dict(x=0, px=1, y=2, py=3, delta=4, ct=5))
+    #     self._named_index = \
+    #         gtpsa.IndexMapping(dict(x=0, px=1, y=2, py=3, delta=4, ct=5))
 
-        # Descriptor for Truncated Power Series Algebra variables.
-        self._desc = gtpsa.desc(nv, no, nv_prm, no_prm)
+    #     # Descriptor for Truncated Power Series Algebra variables.
+    #     self._desc = gtpsa.desc(nv, no, nv_prm, no_prm)
 
-        # Read in & parse lattice file.
-        self._lattice = accelerator_from_config(file_name)
-        # Set lattice state (Rf cavity on/off, etc.).
-        self._model_state = ts.ConfigType()
+    #     # Read in & parse lattice file.
+    #     self._lattice = accelerator_from_config(file_name)
+    #     # Set lattice state (Rf cavity on/off, etc.).
+    #     self._model_state = ts.ConfigType()
 
-        # D.O.F. (Degrees-Of-Freedom) - coasting beam.
-        self._n_dof = 2
-        self._model_state.Energy = E_0
-        self._model_state.radiation = False
-        self._model_state.Cavity_on = False
+    #     # D.O.F. (Degrees-Of-Freedom) - coasting beam.
+    #     self._n_dof = 2
+    #     self._model_state.Energy = E_0
+    #     self._model_state.radiation = False
+    #     self._model_state.Cavity_on = False
 
     # Public.
 
