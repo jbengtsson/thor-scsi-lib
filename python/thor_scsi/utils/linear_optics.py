@@ -238,8 +238,11 @@ def sort_eigen_vec(n_dof, nu, w):
     """
     order = np.zeros(2 * n_dof, int)
     for k in range(n_dof):
-        order[2 * k] = find_closest_nu(nu[k], w)
-        order[2 * k + 1] = find_closest_nu(1e0 - nu[k], w)
+        if nu[k] != np.nan:
+            order[2 * k] = find_closest_nu(nu[k], w)
+            order[2 * k + 1] = find_closest_nu(1e0 - nu[k], w)
+        else:
+            print("\nsort_eigen_vec: w =", w[k])
     return order
 
 
@@ -335,11 +338,12 @@ def compute_M_diag(
         # nu_eig = acos2(w.imag, w.real) / (2e0 * np.pi)
         nu_eig = np.zeros(n)
         for k in range(n):
-            if abs(w[k].real) > 1e0:
-                print("\ncompute_M_diag: |arg| for acos2 > 1 ", w[k])
+            if abs(w[k].real) <= 1e0:
+                nu_eig[k] = acos2(w[k].imag, w[k].real) / (2e0 * np.pi)
+            else:
+                # Unstable.
+                print("\ncompute_M_diag: |arg| for acos2 > 1", w[k])
                 return False, np.nan, np.nan, np.nan, np.nan
-
-            nu_eig[k] = acos2(w[k].imag, w[k].real) / (2e0 * np.pi)
 
         logger.debug(
             "\nu:\n"

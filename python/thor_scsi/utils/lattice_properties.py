@@ -49,9 +49,9 @@ class lattice_properties_class(ps.periodic_structure_class):
         super().__init__(nv, no, nv_prm, no_prm, file_name, E_0)
         self._cod_eps       = cod_eps
         self._rad_del_kicks = []
-        self._M             = []       # ss_vect_tpsa.
-        self._nu            = np.nan
-        self._A             = np.nan
+        self._M_rad         = []       # ss_vect_tpsa.
+        self._nu_rad        = np.nan
+        self._A_rad         = np.nan
         self._dE            = np.nan
         self._U_0           = np.nan
         self._J             = np.nan
@@ -81,7 +81,7 @@ class lattice_properties_class(ps.periodic_structure_class):
         self._U_0 = self._model_state.Energy*self._dE
         for k in range(dof):
             self._J[k] = \
-                2e0*(1e0+self._M.cst().delta)*self._alpha_rad[k]/self._dE
+                2e0*(1e0+self._M_rad.cst().delta)*self._alpha_rad[k]/self._dE
             self._tau[k] = -C/(c0*self._alpha_rad[k])
             self._eps[k] = -self._D_rad[k]/(2e0*self._alpha_rad[k])
 
@@ -113,34 +113,34 @@ class lattice_properties_class(ps.periodic_structure_class):
             compute_closed_orbit(
                 self._lattice, self._model_state, delta=0e0,
                 eps=self._cod_eps)
-        # self._M = r.one_turn_map[:6, :6]
-        self._M = r.one_turn_map
+        self._M_rad = r.one_turn_map
 
         logger.info(
-            "\nM:\n" + mat2txt(self._M.jacobian())
+            "\nM_rad:\n" + mat2txt(self._M_rad.jacobian())
             + "\n\ncod ="
             + vec2txt(np.array(
-                [self._M.cst().x, self._M.cst().px, self._M.cst().y,
-                 self._M.cst().py, self._M.cst().delta, self._M.cst().ct]))
+                [self._M_rad.cst().x, self._M_rad.cst().px, self._M_rad.cst().y,
+                 self._M_rad.cst().py, self._M_rad.cst().delta,
+                 self._M_rad.cst().ct]))
         )
 
         self._model_state.dE = 0e0
-        ps = self._M.cst()
+        ps = self._M_rad.cst()
         # dE is computed by the RF cavity propagator.
         self._lattice.propagate(self._model_state, ps)
         self._dE = self._model_state.dE
 
-        stable, self._nu, self._A, A_inv, self._alpha_rad = \
-            compute_M_diag(dof, self._M.jacobian())
+        stable, self._nu_rad, self._A_rad, A_inv, self._alpha_rad = \
+            compute_M_diag(dof, self._M_rad.jacobian())
 
         A_7x7 = np.zeros((7, 7))
-        A_7x7[:6, :6] = self._A
+        A_7x7[:6, :6] = self._A_rad
         A_7x7[6, 6] = 1e0
         if stable:
             self._model_state.emittance = True
 
             A_cpy  = gtpsa.ss_vect_tpsa(self._desc, 1)
-            A_cpy += self._M.cst()
+            A_cpy += self._M_rad.cst()
             A_cpy.set_jacobian(A_7x7)
             self._lattice.propagate(self._model_state, A_cpy)
 
@@ -170,12 +170,12 @@ class lattice_properties_class(ps.periodic_structure_class):
         print("  D             = [{:11.5e}, {:11.5e}, {:11.5e}]".format(
             self._D_rad[X_], self._D_rad[Y_], self._D_rad[Z_]))
 
-    def prt_M(self):
+    def prt_M_rad(self):
         n_dof = 3
         print("\nM:\ntpsa cst:")
         for k in range(2*n_dof):
-            print(" {:13.6e}".format(self._M.cst().iloc[k]), end="")
-        print("\ntpsa linear:\n"+mat2txt(self._M.jacobian()[:6, :6]))
+            print(" {:13.6e}".format(self._M_rad.cst().iloc[k]), end="")
+        print("\ntpsa linear:\n"+mat2txt(self._M_rad.jacobian()[:6, :6]))
 
 
 # def calculate_radiation(

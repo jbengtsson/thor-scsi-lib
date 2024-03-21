@@ -41,7 +41,7 @@ class ind_class:
 ind = ind_class()
 
 class periodic_structure_class:
-    # Private
+    # Private.
 
     def __init__(self, nv, no, nv_prm, no_prm, file_name, E_0):
         self._prt_Twiss_file_name = "twiss.txt"
@@ -55,7 +55,7 @@ class periodic_structure_class:
         self._no          = no
         self._n_dof       = np.nan
 
-        self._M           = np.nan
+        self._M_rad       = np.nan
         self._alpha_c     = np.nan
         self._A           = np.nan
 
@@ -168,7 +168,8 @@ class periodic_structure_class:
         fig.suptitle("Lattice Trade-Offs vs. Reverse Bend Angle")
 
         gr_1.set_title(
-            r"$[\epsilon_x\left(\phi_{RB}\right), \alpha_c\left(\phi_{RB}\right)]$")
+            r"$[\epsilon_x\left(\phi_{RB}\right)$"
+            r"$, \alpha_c\left(\phi_{RB}\right)]$")
         gr_1.set_xlabel(r"$\phi_{RB}$ [$\degree$]")
         gr_1.set_ylabel(r"$\epsilon_x$ [pm$\cdot$rad]")
         gr_1.yaxis.label.set_color("b")
@@ -181,7 +182,8 @@ class periodic_structure_class:
         gr_1_r.tick_params(axis="y", colors="g")
         gr_1_r.plot(phi, 1e4*alpha_c, color="g", label=r"$\alpha_c$")
 
-        gr_2.set_title(r"$[J_x\left(\phi_{RB}\right), J_z\left(\phi_{RB}\right)]$")
+        gr_2.set_title(
+            r"$[J_x\left(\phi_{RB}\right), J_z\left(\phi_{RB}\right)]$")
         gr_2.set_xlabel(r"$\phi_{RB}$ [$\degree$]")
         gr_2.set_ylabel(r"$J_x$")
         gr_2.yaxis.label.set_color("b")
@@ -209,7 +211,6 @@ class periodic_structure_class:
               "\n  p_y   = {:1d}\n  delta = {:1d}\n  ct    = {:1d}".
               format(index_map.x, index_map.px, index_map.y, index_map.py,
                      index_map.delta, index_map.ct))
-
     
     def prt_M(self):
         n_dof = 3
@@ -332,7 +333,9 @@ class periodic_structure_class:
                           self._J[ind.Z], self._alpha_c, eta_x,
                           self._nu[ind.X], self._nu[ind.Y]))
             else:
-                print("  unstable")
+                self.compute_alpha_c()
+                print("unit_cell_rev_bend: unstable alpha_c = {:10.3e}".
+                      format(self._alpha_c))
             phi_rb += phi_step
         return \
             np.array(phi_rb_buf), np.array(eps_x_buf), np.array(J_x_buf), \
