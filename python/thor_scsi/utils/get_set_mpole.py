@@ -1,5 +1,4 @@
-"""
-Class to get/set parameters for multipole magnets.
+"""Class to get/set multipole magnet parameters.
 """
 
 
@@ -57,6 +56,32 @@ class get_set_mpole_class:
                     print("{:8s} {:5.3f} {:6.3f}".
                           format(lat[k].name, lat[k].get_length(), dphi))
         return phi
+
+    def get_b_n_elem(self, lat, fam_name, kid_num, n):
+        mp = lat.find(fam_name, kid_num)
+        return mp.get_multipoles().get_multipole(n).real
+
+    def set_b_n_elem(self, lat, fam_name, kid_num, n, b_n):
+        mp = lat.find(fam_name, kid_num)
+        mp.get_multipoles().set_multipole(n, b_n)
+
+    def set_b_n_fam(self, lat, fam_name, n, b_n):
+        for mp in lat.elements_with_name(fam_name):
+            mp.get_multipoles().set_multipole(n, b_n)
+
+    def get_L_elem(self, lat, fam_name, n_kid):
+        elem = lat.find(fam_name, n_kid)
+        return elem.get_length()
+
+    def set_L_fam(self, lat, fam_name, L):
+        for elem in lat.elements_with_name(fam_name):
+            elem.set_length(L)
+
+    def get_b_2_elem(self, lat, fam_name, kid_num):
+        return get_b_n_elem(lat, fam_name, kid_num, MultipoleIndex.quadrupole)
+
+    def set_b_2_fam(self, lat, fam_name, b_2):
+        set_b_n_fam(lat, fam_name, MultipoleIndex.quadrupole, b_2)
 
 
 __all__ = [get_set_mpole_class]

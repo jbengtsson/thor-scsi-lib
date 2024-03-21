@@ -17,22 +17,6 @@ import logging
 logger = logging.getLogger("thor-scsi")
 
 
-X_, Y_, Z_ = [
-    tslib.spatial_index.X,
-    tslib.spatial_index.Y,
-    tslib.spatial_index.Z
-]
-
-x_, px_, y_, py_, ct_, delta_ = [
-    tslib.phase_space_index_internal.x,
-    tslib.phase_space_index_internal.px,
-    tslib.phase_space_index_internal.y,
-    tslib.phase_space_index_internal.py,
-    tslib.phase_space_index_internal.ct,
-    tslib.phase_space_index_internal.delta
-]
-
-
 @dataclass
 class RadiationResult:
     #: the different taus

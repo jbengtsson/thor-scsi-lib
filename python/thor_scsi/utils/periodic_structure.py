@@ -9,36 +9,15 @@ import gtpsa
 import thor_scsi.lib as ts
 
 from thor_scsi.factory import accelerator_from_config
-from . import linear_optics as lo, courant_snyder as cs
-from .output import mat2txt, vec2txt
 
-from thor_scsi.utils import periodic_structure as ps, \
-    lattice_properties as lp, linear_optics as lo
+from . import linear_optics as lo, courant_snyder as cs, index_class as ind
+from .output import mat2txt, vec2txt
 
 # from thor_scsi.utils.output import vec2txt
 
 
-@dataclass
-class ind_class:
-    # Configuration space coordinates.
-    X, Y, Z = [
-        ts.spatial_index.X,
-        ts.spatial_index.Y,
-        ts.spatial_index.Z
-    ]
+ind = ind.index_class()
 
-    # Phase-space coordinates.
-    [x, px, y, py, ct, delta] = [
-        ts.phase_space_index_internal.x,
-        ts.phase_space_index_internal.px,
-        ts.phase_space_index_internal.y,
-        ts.phase_space_index_internal.py,
-        ts.phase_space_index_internal.ct,
-        ts.phase_space_index_internal.delta,
-    ]
-
-
-ind = ind_class()
 
 class periodic_structure_class:
     # Private.
@@ -55,7 +34,7 @@ class periodic_structure_class:
         self._no          = no
         self._n_dof       = np.nan
 
-        self._M_rad       = np.nan
+        self._M           = np.nan
         self._alpha_c     = np.nan
         self._A           = np.nan
 
@@ -63,6 +42,8 @@ class periodic_structure_class:
         self._Twiss       = np.nan
         self._data        = []
               
+        # Initialise.
+
         self._named_index = \
             gtpsa.IndexMapping(dict(x=0, px=1, y=2, py=3, delta=4, ct=5))
 
@@ -117,12 +98,11 @@ class periodic_structure_class:
 
     def get_types(self):
         n = len(self._lattice)
-        types = np.zeros(n)
+        self._types = np.zeros(n)
         for k in range(n):
-            types[k] = self.get_type(self._lattice[k])
-        return types
+            self._types[k] = self.get_type(self._lattice[k])
 
-    def plt_Twiss(self, types, plot):
+    def plt_Twiss(self, file_name, plot):
         fig, (gr_1, gr_2) = plt.subplots(2)
 
         fig.suptitle("Linear Optics")
@@ -141,7 +121,7 @@ class periodic_structure_class:
         gr_1_r = gr_1.twinx()
         gr_1_r.set_ylim([-2.0, 20.0])
         gr_1_r.set_yticks([])
-        gr_1_r.step(self._data.s, types, "k")
+        gr_1_r.step(self._data.s, self._types, "k")
 
         gr_2.set_title("Dispersion")
         gr_2.set_xlabel("s [m]")
@@ -152,12 +132,12 @@ class periodic_structure_class:
         gr_2_r = gr_2.twinx()
         gr_2_r.set_ylim([-2.0, 20.0])
         gr_2_r.set_yticks([])
-        gr_2_r.step(self._data.s, types, "k")
+        gr_2_r.step(self._data.s, self._types, "k")
 
         fig.tight_layout()
 
-        plt.savefig(self._plt_Twiss_file_name)
-        print("\nplt_Twiss - plot saved as:", self._plt_Twiss_file_name)
+        plt.savefig(file_name)
+        print("\nplt_Twiss - plot saved as:", file_name)
 
         if plot:
             plt.show()
@@ -270,10 +250,31 @@ class periodic_structure_class:
         print("\nprt_Twiss - Linear optics saved as:",
               self._prt_Twiss_file_name)
 
+    def get_Twiss(self, loc):
+        eta = np.array(
+            [
+                self._data.dispersion.sel(phase_coordinate="x").values[loc],
+                self._data.dispersion.sel(phase_coordinate="px").values[loc],
+                self._data.dispersion.sel(phase_coordinate="y").values[loc],
+                self._data.dispersion.sel(phase_coordinate="py").values[loc],
+            ]
+        )
+        alpha = np.array(
+            [
+                self._data.twiss.sel(plane="x", par="alpha").values[loc],
+                self._data.twiss.sel(plane="y", par="alpha").values[loc],
+            ]
+        )
+        beta = np.array(
+            [
+                self._data.twiss.sel(plane="x", par="beta").values[loc],
+                self._data.twiss.sel(plane="y", par="beta").values[loc],
+            ]
+        )
+        return eta, alpha, beta
 
     def comp_per_sol(self):
-        """
-        Compute the periodic solution for a super period.
+        """Compute the periodic solution for a super period.
         Degrees of freedom - RF cavity is off; i.e., coasting beam.
         """
         self._n_dof = 2
