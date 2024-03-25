@@ -24,7 +24,6 @@ class periodic_structure_class:
 
     def __init__(self, nv, no, nv_prm, no_prm, file_name, E_0):
         self._prt_Twiss_file_name = "twiss.txt"
-        self._plt_Twiss_file_name = "twiss.png"
 
         self._named_index = []
         self._desc        = []
@@ -38,8 +37,6 @@ class periodic_structure_class:
         self._alpha_c     = np.nan
         self._A           = np.nan
 
-        self._nu          = np.nan
-        self._Twiss       = np.nan
         self._data        = []
               
         # Initialise.
@@ -92,7 +89,10 @@ class periodic_structure_class:
             case ts.Octupole:
                 type_code = \
                     np.sign(elem.get_multipoles().get_multipole(4).real)*1.5
+            case ts.Cavity:
+                type_code = 0.0 
             case _:
+                print("\nget_type - undefined type:", elem.name)
                 type_code = np.nan
         return type_code
 
@@ -199,24 +199,43 @@ class periodic_structure_class:
             print(" {:13.6e}".format(self._M.cst().iloc[k]), end="")
         print("\ntpsa linear:\n"+mat2txt(self._M.jacobian()[:6, :6]))
 
-    def prt_Twiss_param(self):
+    def prt_Twiss_param(self, Twiss):
         """
         """
-        eta, alpha, beta = self._Twiss
-        self.compute_alpha_c()
+        eta, alpha, beta, nu = Twiss
+        print("\nTwiss:")
+        print(f"  eta   = [{eta[ind.X]:9.3e}, {eta[ind.Y]:9.3e}]")
+        print(f"  alpha = [{alpha[ind.X]:9.3e}, {alpha[ind.Y]:9.3e}]")
+        print(f"  beta  = [{beta[ind.X]:5.3f}, {beta[ind.Y]:5.3f}]")
+
+
+    def prt_lat_param(self):
+        eta = np.zeros(2)
+        alpha = np.zeros(2)
+        beta = np.zeros(2)
+        nu = np.zeros(2)
+        loc = len(self._lattice)-1
+        eta[ind.X] = self._data.dispersion.sel(phase_coordinate="x").values[loc]
+        eta[ind.Y] = self._data.dispersion.sel(phase_coordinate="y").values[loc]
+        alpha[ind.X] = self._data.twiss.sel(plane="x", par="alpha").values[loc]
+        alpha[ind.Y] = self._data.twiss.sel(plane="y", par="alpha").values[loc]
+        beta[ind.X] = self._data.twiss.sel(plane="x", par="beta").values[loc]
+        beta[ind.Y] = self._data.twiss.sel(plane="y", par="beta").values[loc]
+        nu[ind.X] = self._data.twiss.sel(plane="x", par="nu").values[loc]
+        nu[ind.Y] = self._data.twiss.sel(plane="y", par="nu").values[loc]
         print("\nTwiss:")
         print(f"  eta     = [{eta[ind.X]:9.3e}, {eta[ind.Y]:9.3e}]")
         print(f"  alpha   = [{alpha[ind.X]:9.3e}, {alpha[ind.Y]:9.3e}]")
         print(f"  beta    = [{beta[ind.X]:5.3f}, {beta[ind.Y]:5.3f}]")
-        print(f"  nu      = [{self._nu[ind.X]:7.5f}, {self._nu[ind.Y]:7.5f}]")
+        print(f"  nu      = [{nu[ind.X]:7.5f}, {nu[ind.Y]:7.5f}]")
         print(f"  alpha_c = {self._alpha_c:10.3e}")
+
 
     def prt_Twiss(self, types):
         """
         Print Twiss parameters along the lattice.
         """
         file = open(self._prt_Twiss_file_name, 'w')
-        s = 0e0
         nu = np.zeros(2, dtype=float)
         print("\n     Name          s    type  alpha_x   beta_x  nu_x    eta_x"
               "   eta'_x    alpha_y   beta_y  nu_y    eta_y   eta'_y",
@@ -224,23 +243,20 @@ class periodic_structure_class:
         print("                  [m]                    [m]             [m]"
               "     [m]                 [m]             [m]", file=file)
         for k in range(len(self._data.index)):
-            s += self._lattice[k].get_length()
-            nu[ind.X] += self._data.twiss.sel(plane="x", par="dnu").values[k]
-            nu[ind.Y] += self._data.twiss.sel(plane="y", par="dnu").values[k]
             print("{:3d} {:10s} {:7.3f} {:4.1f} {:9.5f} {:8.5f} {:7.5f} {:7.5f}"
                   " {:8.5f} {:9.5f} {:8.5f} {:7.5f} {:7.5f} {:8.5f}".
-                  format(k, self._lattice[k].name, s,
+                  format(k, self._lattice[k].name,  self._data.s[k],
                          self.get_type(self._lattice[k]),
                          self._data.twiss.sel(plane="x", par="alpha").values[k],
                          self._data.twiss.sel(plane="x", par="beta").values[k],
-                         nu[ind.X],
+                         self._data.twiss.sel(plane="x", par="nu").values[k],
                          self._data.dispersion.sel(
                              phase_coordinate="x").values[k],
                          self._data.dispersion.sel(
                              phase_coordinate="px").values[k],
                          self._data.twiss.sel(plane="y", par="alpha").values[k],
                          self._data.twiss.sel(plane="y", par="beta").values[k],
-                         nu[ind.Y],
+                         self._data.twiss.sel(plane="y", par="nu").values[k],
                          self._data.dispersion.sel(
                              phase_coordinate="y").values[k],
                          self._data.dispersion.sel(
@@ -251,27 +267,25 @@ class periodic_structure_class:
               self._prt_Twiss_file_name)
 
     def get_Twiss(self, loc):
-        eta = np.array(
-            [
-                self._data.dispersion.sel(phase_coordinate="x").values[loc],
-                self._data.dispersion.sel(phase_coordinate="px").values[loc],
-                self._data.dispersion.sel(phase_coordinate="y").values[loc],
-                self._data.dispersion.sel(phase_coordinate="py").values[loc],
-            ]
-        )
-        alpha = np.array(
-            [
+        eta = np.array([
+            self._data.dispersion.sel(phase_coordinate="x").values[loc],
+            self._data.dispersion.sel(phase_coordinate="px").values[loc],
+            self._data.dispersion.sel(phase_coordinate="y").values[loc],
+            self._data.dispersion.sel(phase_coordinate="py").values[loc],
+        ])
+        alpha = np.array([
                 self._data.twiss.sel(plane="x", par="alpha").values[loc],
                 self._data.twiss.sel(plane="y", par="alpha").values[loc],
-            ]
-        )
-        beta = np.array(
-            [
+            ])
+        beta = np.array([
                 self._data.twiss.sel(plane="x", par="beta").values[loc],
                 self._data.twiss.sel(plane="y", par="beta").values[loc],
-            ]
-        )
-        return eta, alpha, beta
+            ])
+        nu = np.array([
+                self._data.twiss.sel(plane="x", par="nu").values[loc],
+                self._data.twiss.sel(plane="y", par="nu").values[loc],
+            ])
+        return eta, alpha, beta, nu,
 
     def comp_per_sol(self):
         """Compute the periodic solution for a super period.
@@ -285,8 +299,7 @@ class periodic_structure_class:
             lo.compute_map_and_diag(
                 self._n_dof, self._lattice, self._model_state, desc=self._desc)
         if stable:
-            res = cs.compute_Twiss_A(self._A)
-            self._Twiss = res[:3]
+            self.compute_alpha_c()
             A_map = gtpsa.ss_vect_tpsa(self._desc, self._no)
             A_map.set_jacobian(self._A)
             self._data = \
@@ -299,7 +312,7 @@ class periodic_structure_class:
 
         return stable
 
-    def unit_cell_rev_bend(self, get_set, n_step, phi_min, set_phi):
+    def unit_cell_rev_bend(self, n_step, phi_min, set_phi):
         phi_rb = 0e0
         phi_step = phi_min/n_step
         phi_rb_buf = []
@@ -311,14 +324,15 @@ class periodic_structure_class:
               "     nu_x     nu_y"
               "\n  [deg]   [deg]  [nm.rad]                            [m]")
         for k in range(n_step):
-            set_phi(get_set, phi_rb)
+            set_phi(self, phi_rb)
             stable = self.comp_per_sol()
-            eta_x = self._Twiss[0][ind.x]
+            Twiss = self.get_Twiss(len(self._lattice)-1)
+            eta_x = Twiss[0][ind.x]
             self.compute_alpha_c()
             if self._alpha_c > 0e0:
-                get_set.set_RF_cav_phase(self._lattice, "cav", 0.0)
+                self.set_RF_cav_phase("cav", 0.0)
             else:
-                get_set.set_RF_cav_phase(self._lattice, "cav", 180.0)
+                self.set_RF_cav_phase("cav", 180.0)
             stable = self.compute_radiation()
             if stable:
                 phi_rb_buf.append(abs(phi_rb))
@@ -329,7 +343,7 @@ class periodic_structure_class:
                 print("{:7.3f}  {:5.3f}    {:5.1f}    {:4.2f} {:5.2f} {:10.3e}"
                       " {:10.3e}  {:7.5f}  {:7.5f}".
                       format(
-                          phi_rb, get_set.compute_phi(self._lattice),
+                          phi_rb, self.compute_phi(self._lattice),
                           1e12*self._eps[ind.X], self._J[ind.X],
                           self._J[ind.Z], self._alpha_c, eta_x,
                           self._nu[ind.X], self._nu[ind.Y]))

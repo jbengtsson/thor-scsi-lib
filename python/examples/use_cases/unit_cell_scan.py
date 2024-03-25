@@ -12,10 +12,10 @@ logger = logging.getLogger("thor_scsi")
 
 import os
 
-from thor_scsi.utils import lattice_properties as lp, get_set_mpole as gs
+from thor_scsi.utils import lattice_properties as lp
 
 
-def set_phi_rb_bessy_iii(get_set, phi_rb):
+def set_phi_rb_bessy_iii(lat_prop, phi_rb):
     # BESSY III.
     # Dipoles:
     #   [b1(b1a), rb(rba), mb1(mb1a), mqd(mwba)]
@@ -24,8 +24,8 @@ def set_phi_rb_bessy_iii(get_set, phi_rb):
     #   b1a  = 4.25-2.0*rba;
     #   mwba = 0.2;
     #   mb1a = 2.75-mwba;
-    get_set.set_phi_fam(lat_prop._lattice, "rb", phi_rb, True)
-    get_set.set_phi_fam(lat_prop._lattice, "b1", 4.25-2.0*phi_rb, True)
+    lat_prop.set_phi_fam("rb", phi_rb, True)
+    lat_prop.set_phi_fam("b1", 4.25-2.0*phi_rb, True)
 
 
 # Number of phase-space coordinates.
@@ -53,18 +53,17 @@ else:
 
 lat_prop = \
     lp.lattice_properties_class(nv, no, nv_prm, no_prm, file_name, E_0, cod_eps)
-get_set = gs.get_set_mpole_class()
 
 # Compute Twiss parameters along lattice.
 stable = lat_prop.comp_per_sol()
 print("\nCircumference [m]      = {:7.5f}".format(lat_prop.compute_circ()))
 print("Total bend angle [deg] = {:7.5f}".
-      format(get_set.compute_phi(lat_prop._lattice)))
+      format(lat_prop.compute_phi(lat_prop._lattice)))
 lat_prop.prt_M()
-if stable:
-    lat_prop.prt_Twiss_param()
-else:
+if not stable:
     assert False
+Twiss = lat_prop.get_Twiss(len(lat_prop._lattice)-1)
+lat_prop.prt_Twiss_param(Twiss)
 
 # Compute radiation properties.
 stable = lat_prop.compute_radiation()
@@ -76,11 +75,11 @@ types = lat_prop.get_types()
 lat_prop.prt_Twiss(types)
 
 if False:
-    lat_prop.plt_Twiss(types, not False)
+    lat_prop.plt_Twiss("twiss.png", not False)
 
 if not False:
     phi, eps_x, J_x, J_z, alpha_c = \
-        lat_prop.unit_cell_rev_bend(get_set, 15, -0.97, set_phi_rb_bessy_iii)
+        lat_prop.unit_cell_rev_bend(15, -0.97, set_phi_rb_bessy_iii)
 
     lat_prop.plt_scan_phi_rb(
         "plt_scan_phi_rb.png", phi, eps_x, J_x, J_z, alpha_c, True)

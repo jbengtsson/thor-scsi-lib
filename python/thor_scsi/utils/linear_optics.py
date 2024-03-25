@@ -632,8 +632,11 @@ def compute_Twiss_along_lattice(
     indices = [elem.index for elem in lat]
     tps_tmp = [_extract_tps(elem) for elem in lat]
     data = [tps2twiss(t) for t in tps_tmp]
-    # print(type(tps_tmp), type(tps_tmp[0]))
     twiss_pars = [d[1] for d in data]
+    # Compute incremental normalised phase advance.
+    for j in range(1, len(twiss_pars)):
+        for k in range(2):
+            twiss_pars[j][k][2] += twiss_pars[j-1][k][2]
     disp = [d[0] for d in data]
 
     # Stuff information into xarrays ..
@@ -647,7 +650,7 @@ def compute_Twiss_along_lattice(
         twiss_pars,
         name="twiss",
         dims=["index", "plane", "par"],
-        coords=[indices, ["x", "y"], ["alpha", "beta", "dnu"]],
+        coords=[indices, ["x", "y"], ["alpha", "beta", "nu"]],
     )
     phase_space_coords_names = ["x", "px", "y", "py", "ct", "delta"]
     # tps_tmp = np.array(tps_tmp.iloc, dtype=object)
@@ -660,7 +663,7 @@ def compute_Twiss_along_lattice(
     info = accelerator_info(lat)
     res = \
         info.merge(dict(twiss=twiss_parameters, dispersion=dispersion,
-                        #tps=tps
+                        #M=tps
                         ))
     return res
 

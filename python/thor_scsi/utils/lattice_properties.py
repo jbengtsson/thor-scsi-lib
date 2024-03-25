@@ -8,13 +8,16 @@ import numpy as np
 from scipy.constants import c as c0
 from dataclasses import dataclass
 
-from . import periodic_structure as ps
+from . import periodic_structure as ps, get_set_mpole as gs, index_class as ind
 from .closed_orbit import compute_closed_orbit
 from .linear_optics import compute_M_diag
 from .output import mat2txt, vec2txt
 
 import logging
 logger = logging.getLogger("thor-scsi")
+
+
+ind = ind.index_class()
 
 
 @dataclass
@@ -26,7 +29,8 @@ class RadiationResult:
     fractional_tunes: np.ndarray
 
 
-class lattice_properties_class(ps.periodic_structure_class):
+class lattice_properties_class(
+        ps.periodic_structure_class, gs.get_set_mpole_class):
     # Private
 
     def __init__(self, nv, no, nv_prm, no_prm, file_name, E_0, cod_eps):
@@ -75,11 +79,12 @@ class lattice_properties_class(ps.periodic_structure_class):
             "\nJ           = {:8.6f} {:8.6f} {:8.6f}\nalpha_rad   = {:13.6e}"
             " {:13.6e} {:13.6e}\nD_rad       = {:12.6e} {:12.6e} {:12.6e}".
             format(1e-9*self._model_state.Energy, 1e-3*self._U_0,
-                   self._eps[X_], self._eps[Y_], self._eps[Z_],
-                   1e3*self._tau[X_], 1e3*self._tau[Y_], 1e3*self._tau[Z_],
-                   self._J[X_], self._J[Y_], self._J[Z_], self._alpha_rad[X_],
-                   self._alpha_rad[Y_], self._alpha_rad[Z_], self._D_rad[X_],
-                   self._D_rad[Y_], self._D_rad[Z_]))
+                   self._eps[ind.X], self._eps[ind.Y], self._eps[ind.Z],
+                   1e3*self._tau[ind.X], 1e3*self._tau[ind.Y],
+                   1e3*self._tau[ind.Z], self._J[ind.X], self._J[ind.Y],
+                   self._J[ind.Z], self._alpha_rad[ind.X],
+                   self._alpha_rad[ind.Y], self._alpha_rad[ind.Z],
+                   self._D_rad[ind.X], self._D_rad[ind.Y], self._D_rad[ind.Z]))
 
     def compute_radiation(self):
         dof = 3
@@ -103,9 +108,9 @@ class lattice_properties_class(ps.periodic_structure_class):
             "\nM_rad:\n" + mat2txt(self._M_rad.jacobian())
             + "\n\ncod ="
             + vec2txt(np.array(
-                [self._M_rad.cst().x, self._M_rad.cst().px, self._M_rad.cst().y,
-                 self._M_rad.cst().py, self._M_rad.cst().delta,
-                 self._M_rad.cst().ct]))
+                [self._M_rad.cst().x, self._M_rad.cst().px,
+                 self._M_rad.cst().y, self._M_rad.cst().py,
+                 self._M_rad.cst().delta, self._M_rad.cst().ct]))
         )
 
         self._model_state.dE = 0e0
@@ -146,13 +151,13 @@ class lattice_properties_class(ps.periodic_structure_class):
         print("  U_0 [keV]     = {:5.1f}".
               format(1e-3*self._U_0))
         print("  eps_x [m.rad] = [{:9.3e}, {:9.3e}, {:9.3e}]".format(
-            self._eps[X_], self._eps[Y_], self._eps[Z_]))
+            self._eps[ind.X], self._eps[ind.Y], self._eps[ind.Z]))
         print("  J             = [{:5.3f}, {:5.3f}, {:5.3f}]".format(
-            self._J[X_], self._J[Y_], self._J[Z_]))
+            self._J[ind.X], self._J[ind.Y], self._J[ind.Z]))
         print("  tau [msec]    = [{:5.3f}, {:5.3f}, {:5.3f}]".format(
-            1e3*self._tau[X_], 1e3*self._tau[Y_], 1e3*self._tau[Z_]))
+            1e3*self._tau[ind.X], 1e3*self._tau[ind.Y], 1e3*self._tau[ind.Z]))
         print("  D             = [{:11.5e}, {:11.5e}, {:11.5e}]".format(
-            self._D_rad[X_], self._D_rad[Y_], self._D_rad[Z_]))
+            self._D_rad[ind.X], self._D_rad[ind.Y], self._D_rad[ind.Z]))
 
     def prt_M_rad(self):
         n_dof = 3
