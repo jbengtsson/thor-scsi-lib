@@ -40,27 +40,28 @@ class get_set_mpole_class:
             b.set_exit_angle(phi/2e0)
 
     def set_phi_fam(self, fam_name, phi, rect_bend):
-        prt = False
-        b = self._lattice.find(fam_name, 0)
-        L = b.get_length()
-        h = phi * np.pi / (L * 180e0)
-        if prt:
-            print("set_phi_fam: {:8s} {:5.3f} {:6.3f}".format(b.name, L, phi))
-        for b in self._lattice.elements_with_name(fam_name):
-            b.set_curvature(h)
+        n = len(self._lattice.elements_with_name(fam_name))
+        for k in range(n):
+            self.set_phi_elem(fam_name, k, phi, rect_bend)
 
-    def compute_phi(self, lat):
+    def set_dphi_elem(self, fam_name, kid_num, dphi, rect_bend):
+        phi = self.get_phi_elem(fam_name, kid_num) + dphi
+        self.set_phi_elem(fam_name, kid_num, phi, rect_bend)
+
+    def set_dphi_fam(self, fam_name, phi, rect_bend):
+        n = len(self._lattice.elements_with_name(fam_name))
+        for k in range(n):
+            self.set_dphi_elem(fam_name, k, phi, rect_bend)
+
+    def compute_phi(self):
         """Compute the total bend angle.
         """
-        prt = False
         phi = 0e0
-        for k in range(len(lat)):
-            if (type(lat[k]) == ts.Bending) or (type(lat[k]) == ts.Quadrupole):
-                dphi = self.get_phi_elem(lat[k].name, 0)
+        for k in range(len(self._lattice)):
+            if (type(self._lattice[k]) == ts.Bending) \
+               or (type(self._lattice[k]) == ts.Quadrupole):
+                dphi = self.get_phi_elem(self._lattice[k].name, 0)
                 phi += dphi
-                if prt:
-                    print("{:8s} {:5.3f} {:6.3f}".
-                          format(lat[k].name, lat[k].get_length(), dphi))
         return phi
 
     def get_b_n_elem(self, fam_name, kid_num, n):
@@ -72,23 +73,30 @@ class get_set_mpole_class:
         mp.get_multipoles().set_multipole(n, b_n)
 
     def set_b_n_fam(self, fam_name, n, b_n):
-        for mp in self._lattice.elements_with_name(fam_name):
-            mp.get_multipoles().set_multipole(n, b_n)
+        n = len(self._lattice.elements_with_name(fam_name))
+        for k in range(n):
+            self.set_b_n_elem(fam_name, k, b_n)
 
     def get_L_elem(self, fam_name, n_kid):
         elem = self._lattice.find(fam_name, n_kid)
         return elem.get_length()
 
+    def set_L_elem(self, fam_name, kid_num, L):
+        elem = self._lattice.find(fam_name, kid_num)
+        elem.set_length(L)
+
     def set_L_fam(self, fam_name, L):
-        for elem in self._lattice.elements_with_name(fam_name):
-            elem.set_length(L)
+        n = len(self._lattice.elements_with_name(fam_name))
+        for k in range(n):
+            self.set_L_elem(fam_name, n, L)
 
     def get_b_2_elem(self, fam_name, kid_num):
         return self.get_b_n_elem(
             fam_name, kid_num, MultipoleIndex.quadrupole)
 
     def set_b_2_fam(self, fam_name, b_2):
-        self.set_b_n_fam(fam_name, MultipoleIndex.quadrupole, b_2)
+        n = len(self._lattice.elements_with_name(fam_name))
+        self.set_b_n_(fam_name, 2, b_2)
 
 
 __all__ = [get_set_mpole_class]

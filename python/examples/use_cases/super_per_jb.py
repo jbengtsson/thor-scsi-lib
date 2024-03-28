@@ -296,7 +296,7 @@ def opt_super_period(no, lat, param_list, C, bounds, phi_des, eps_x_des, nu_des,
             eps_x_des: float,
             nu_des, prms
     ) -> Tuple[float, float]:
-        """Computes weightsed sum square
+        """Computes weighted sum square.
         """
 
         global n_iter

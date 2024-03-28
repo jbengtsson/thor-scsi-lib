@@ -231,7 +231,7 @@ class periodic_structure_class:
         print(f"  alpha_c = {self._alpha_c:10.3e}")
 
 
-    def prt_Twiss(self, types):
+    def prt_Twiss(self):
         """
         Print Twiss parameters along the lattice.
         """
@@ -246,7 +246,7 @@ class periodic_structure_class:
             print("{:3d} {:10s} {:7.3f} {:4.1f} {:9.5f} {:8.5f} {:7.5f} {:7.5f}"
                   " {:8.5f} {:9.5f} {:8.5f} {:7.5f} {:7.5f} {:8.5f}".
                   format(k, self._lattice[k].name,  self._data.s[k],
-                         self.get_type(self._lattice[k]),
+                         self._types[k],
                          self._data.twiss.sel(plane="x", par="alpha").values[k],
                          self._data.twiss.sel(plane="x", par="beta").values[k],
                          self._data.twiss.sel(plane="x", par="nu").values[k],
