@@ -235,7 +235,7 @@ class periodic_structure_class:
         """
         Print Twiss parameters along the lattice.
         """
-        file = open(self._prt_Twiss_file_name, 'w')
+        file = open(self._prt_Twiss_file_name, "w")
         nu = np.zeros(2, dtype=float)
         print("\n     Name          s    type  alpha_x   beta_x  nu_x    eta_x"
               "   eta'_x    alpha_y   beta_y  nu_y    eta_y   eta'_y",
