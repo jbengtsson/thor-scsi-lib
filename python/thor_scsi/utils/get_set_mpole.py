@@ -21,6 +21,9 @@ class get_set_mpole_class:
 
     # Public.
 
+    def get_n_kid(self, fam_name):
+        return len(self._lattice.elements_with_name(fam_name))
+
     def set_RF_cav_phase(self, fam_name, phi):
         # Set RF cavity phase for negative alpha_c.
         cav = self._lattice.find(fam_name, 0)
