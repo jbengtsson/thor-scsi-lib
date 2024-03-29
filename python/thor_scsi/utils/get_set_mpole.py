@@ -21,9 +21,9 @@ class get_set_mpole_class:
 
     # Public.
 
-    def set_RF_cav_phase(self, name, phi):
+    def set_RF_cav_phase(self, fam_name, phi):
         # Set RF cavity phase for negative alpha_c.
-        cav = self._lattice.find(name, 0)
+        cav = self._lattice.find(fam_name, 0)
         cav.set_phase(phi)
 
     def get_phi_elem(self, fam_name, n_kid):
@@ -56,12 +56,17 @@ class get_set_mpole_class:
     def compute_phi(self):
         """Compute the total bend angle.
         """
+        prt = False
         phi = 0e0
         for k in range(len(self._lattice)):
             if (type(self._lattice[k]) == ts.Bending) \
                or (type(self._lattice[k]) == ts.Quadrupole):
                 dphi = self.get_phi_elem(self._lattice[k].name, 0)
                 phi += dphi
+                if prt:
+                    print("{:8s} {:5.3f} {:6.3f}".
+                          format(self._lattice[k].name,
+                                 self._lattice[k].get_length(), dphi))
         return phi
 
     def get_b_n_elem(self, fam_name, kid_num, n):

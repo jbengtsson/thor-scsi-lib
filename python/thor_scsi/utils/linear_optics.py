@@ -270,6 +270,8 @@ def compute_A_from_eigenvec(n_dof, eta, u):
         sgn_im = sign(z)
         scl = np.sqrt(np.abs(z))
         sgn_vec = sign(u1[2 * i][2 * i].real)
+        if sgn_vec == 0e0:
+            sgn_vec = 1
         [u1[:, 2 * i], u1[:, 2 * i + 1]] = [
             sgn_vec * (u1[:, 2 * i].real + sgn_im * u1[:, 2 * i].imag * 1j)
             / scl,
