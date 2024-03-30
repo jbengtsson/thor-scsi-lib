@@ -50,7 +50,7 @@ E_0     = 3.0e9
 
 home_dir = os.path.join(
     os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "MAX_4U")
-lat_name = "max_4u_2"
+lat_name = "max_4u_uc"
 file_name = os.path.join(home_dir, lat_name+".lat")
 
 lat_prop = \
@@ -70,11 +70,11 @@ stable = lat_prop.compute_radiation()
 lat_prop.prt_rad()
 lat_prop.prt_M_rad()
 
-types = lat_prop.get_types()
+lat_prop.get_types()
 lat_prop.prt_Twiss()
 
 if False:
-    lat_prop.plt_Twiss(lat_name+"_twiss.png", False)
+    lat_prop.plt_Twiss(lat_name+"_twiss.png", not False)
 
 if not False:
     phi_uc    = 3.0

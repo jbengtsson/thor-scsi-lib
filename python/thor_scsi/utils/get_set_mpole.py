@@ -98,13 +98,5 @@ class get_set_mpole_class:
         for k in range(n):
             self.set_L_elem(fam_name, n, L)
 
-    def get_b_2_elem(self, fam_name, kid_num):
-        return self.get_b_n_elem(
-            fam_name, kid_num, MultipoleIndex.quadrupole)
-
-    def set_b_2_fam(self, fam_name, b_2):
-        n = len(self._lattice.elements_with_name(fam_name))
-        self.set_b_n_(fam_name, 2, b_2)
-
 
 __all__ = [get_set_mpole_class]
