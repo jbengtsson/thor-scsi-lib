@@ -43,8 +43,8 @@ class get_set_mpole_class:
             b.set_exit_angle(phi/2e0)
 
     def set_phi_fam(self, fam_name, phi, rect_bend):
-        n = len(self._lattice.elements_with_name(fam_name))
-        for k in range(n):
+        n_kid = len(self._lattice.elements_with_name(fam_name))
+        for k in range(n_kid):
             self.set_phi_elem(fam_name, k, phi, rect_bend)
 
     def set_dphi_elem(self, fam_name, kid_num, dphi, rect_bend):
@@ -52,8 +52,8 @@ class get_set_mpole_class:
         self.set_phi_elem(fam_name, kid_num, phi, rect_bend)
 
     def set_dphi_fam(self, fam_name, phi, rect_bend):
-        n = len(self._lattice.elements_with_name(fam_name))
-        for k in range(n):
+        n_kid = len(self._lattice.elements_with_name(fam_name))
+        for k in range(n_kid):
             self.set_dphi_elem(fam_name, k, phi, rect_bend)
 
     def compute_phi(self):
@@ -81,9 +81,9 @@ class get_set_mpole_class:
         mp.get_multipoles().set_multipole(n, b_n)
 
     def set_b_n_fam(self, fam_name, n, b_n):
-        n = len(self._lattice.elements_with_name(fam_name))
-        for k in range(n):
-            self.set_b_n_elem(fam_name, k, b_n)
+        n_kid = len(self._lattice.elements_with_name(fam_name))
+        for k in range(n_kid):
+            self.set_b_n_elem(fam_name, k, n, b_n)
 
     def get_L_elem(self, fam_name, n_kid):
         elem = self._lattice.find(fam_name, n_kid)
@@ -94,9 +94,16 @@ class get_set_mpole_class:
         elem.set_length(L)
 
     def set_L_fam(self, fam_name, L):
-        n = len(self._lattice.elements_with_name(fam_name))
-        for k in range(n):
-            self.set_L_elem(fam_name, n, L)
+        n_kid = len(self._lattice.elements_with_name(fam_name))
+        for k in range(n_kid):
+            self.set_L_elem(fam_name, k, L)
+
+    def get_b_2_elem(self, fam_name, kid_num):
+        return self.get_b_n_elem(fam_name, kid_num, 2)
+
+    def set_b_2_fam(self, fam_name, b_n):
+        self.set_b_n_fam(fam_name, 2, b_n)
+
 
 
 __all__ = [get_set_mpole_class]

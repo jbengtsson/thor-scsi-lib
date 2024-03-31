@@ -32,11 +32,6 @@ from thor_scsi.utils import lattice_properties as lp, linear_optics as lo, \
 from thor_scsi.utils.output import vec2txt
 
 
-class MultipoleIndex(enum.IntEnum):
-    quadrupole = 2
-    sextupole = 3
-
-
 # check that a is a vector, as an example
 # _, = a.shape
 # compare to
@@ -95,7 +90,7 @@ def match_straight(
         chi_2 = 0e0
 
         # returns Twiss parameters [alpha, beta, eta] and dnu
-        Twiss_k = cs.compute_Twiss_A(A0.jacobian())[:3]
+        Twiss_k = cs.compute_Twiss_A(A0.jacobian())
         # todo: sum to twiis
         for k in range(3):
             chi_2 += weight[k] * np.sum((Twiss_k[k] - Twiss_1_design[k]) ** 2)
@@ -117,7 +112,7 @@ def match_straight(
             chi_2_min = chi_2
             print(f"\n{n_iter:4d} chi_2 = {chi_2:9.3e}\n\n  prms   ="
                   + vec2txt(prms))
-            lat_prop.prt_Twiss(Twiss_k)
+            lat_prop.prt_Twiss_param(Twiss_k)
             if weight[3] != 0e0:
                 print(f"\n  xi     = [{xi[ind.X]:5.3f}, {xi[ind.Y]:5.3f}]")
                 print(f"  dchi_2 = {dchi_2:9.3e}")
@@ -205,10 +200,17 @@ E_0     = 3.0e9
 
 ind = ind.index_class()
 
-t_dir = \
-    os.path.join(os.environ["HOME"], "Nextcloud", "thor_scsi", "JB",
-                 "BESSY-III", "ipac_2024")
-file_name = os.path.join(t_dir, "2024Mar.lat")
+if not True:
+    home_dir = os.path.join(
+        os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "BESSY-III",
+        "ipac_2024")
+    lat_name = "2024Mar"
+else:
+    home_dir = \
+        os.path.join(
+            os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "MAX_4U")
+    lat_name = "max_4u_sup_per"
+file_name = os.path.join(home_dir, lat_name+".lat")
 
 lat_prop = \
     lp.lattice_properties_class(nv, no, nv_prm, no_prm, file_name, E_0, cod_eps)
@@ -220,16 +222,16 @@ if not stable:
 
 print("\nCircumference [m]      = {:7.5f}".format(lat_prop.compute_circ()))
 print("Total bend angle [deg] = {:7.5f}".
-      format(lat_prop.compute_phi(lat_prop._lattice)))
+      format(lat_prop.compute_phi()))
 lat_prop.prt_M()
 lat_prop.prt_lat_param()
 
 types = lat_prop.get_types()
-lat_prop.prt_Twiss(types)
+lat_prop.prt_Twiss()
 lat_prop.plt_Twiss("before.png", False)
 
 # Get dispersion & Twiss parameters at centre of the last unit cell.
-loc = lat_prop._lattice.find("om_sf", 8).index
+loc = lat_prop._lattice.find("sf_h", 10).index
 print(f"\nCentre of super period: {loc:1d} {lat_prop._lattice[loc].name:s}")
 Twiss_0 = lat_prop.get_Twiss(loc)
 lat_prop.prt_Twiss_param(Twiss_0)
@@ -250,20 +252,18 @@ Twiss_1_design = eta, alpha, beta, nu
 
 # Weights: eta, alpha, beta, xi.
 weight = np.array([
-    1e0,
-    1e3,
-    1e0,                     # xi.
-    1e-5
+    1e0,  # eta.
+    1e3,  # alpha.
+    1e-5, # beta.
+    1e-10 # xi.
 ])
 
 # Triplet parameter family names & type.
 prm_list = [
-    ("uq1", "b_2"),
-    ("uq2", "b_2"),
-    ("uq3", "b_2"),
-    ("ul1", "L"),
-    ("ul2", "L"),
-    ("ul3", "L"),
+    ("qd",  "b_2"),
+    ("qf2", "b_2"),
+    ("d5", "L"),
+    ("d6", "L"),
 ]
 
 # Max parameter range.
@@ -271,27 +271,18 @@ b_2_max = 10.0
 L_min   = 0.1
 
 bounds = [
-    (-b_2_max, 0.0),          # uq1 b_2.
-    ( 0.0,     b_2_max),      # uq2 b_2.
-    (-b_2_max, 0.0),          # uq3 b_2.
-    ( L_min,   0.25),         # ul1 L.
-    ( L_min,   0.3),          # ul2 L.
-    ( L_min,   0.25)          # ul3 L.
+    (-b_2_max, 0.0),     # qd b_2.
+    ( 0.0,     b_2_max), # qf2 b_2.
+    ( L_min,   0.25),    # d5 L.
+    ( L_min,   0.25)     # d6 L.
 ]
 
 # Zero sextopoles.
 # Compute linear chromaticity.
 
-lat_prop.set_b_n_fam("sh_x", MultipoleIndex.sextupole, 0e0)
-lat_prop.set_b_n_fam("sh_y", MultipoleIndex.sextupole, 0e0)
-lat_prop.set_b_n_fam("sf1", MultipoleIndex.sextupole, 0e0)
-lat_prop.set_b_n_fam("sf2", MultipoleIndex.sextupole, 0e0)
-lat_prop.set_b_n_fam("sf3", MultipoleIndex.sextupole, 0e0)
-lat_prop.set_b_n_fam("sd1", MultipoleIndex.sextupole, 0e0)
-lat_prop.set_b_n_fam("sd2", MultipoleIndex.sextupole, 0e0)
-lat_prop.set_b_n_fam("sd3", MultipoleIndex.sextupole, 0e0)
-lat_prop.set_b_n_fam("sd4", MultipoleIndex.sextupole, 0e0)
-lat_prop.set_b_n_fam("sd5", MultipoleIndex.sextupole, 0e0)
+lat_prop.set_b_n_fam("sf_h", 3, 0e0)
+lat_prop.set_b_n_fam("sd1",  3, 0e0)
+lat_prop.set_b_n_fam("sd2",  3, 0e0)
 
 M = \
     lo.compute_map(

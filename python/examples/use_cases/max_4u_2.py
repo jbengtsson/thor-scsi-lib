@@ -166,7 +166,9 @@ E_0     = 3.0e9
 
 home_dir = os.path.join(
     os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "MAX_4U")
-file_name = os.path.join(home_dir, "max_4u_uc.lat")
+# lat_name = "max_4u_uc"
+lat_name = "max_4u_sup_per"
+file_name = os.path.join(home_dir, lat_name+".lat")
 
 lat_prop = \
     lp.lattice_properties_class(nv, no, nv_prm, no_prm, file_name, E_0, cod_eps)
@@ -192,13 +194,13 @@ bend_list  = ["b1", "b2", "b3", "b4", "b5"]
 rbend_name = "qf"
 phi_uc     = 3.0
 
-if False:
-    lat_prop.plt_Twiss("unit_cell.png", False)
+if not False:
+    lat_prop.plt_Twiss(lat_name+".png", not False)
 
 if False:
     opt_var_bend_radius(lat_prop, bend_list, rbend_name, phi_uc, not False)
 
-if not False:
+if False:
     dip_list = ["b0"]
     dip_list.extend(bend_list)
     prt_bend_lat \
