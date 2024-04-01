@@ -203,7 +203,6 @@ class periodic_structure_class:
         """
         """
         eta, alpha, beta, nu = Twiss
-        print("\nTwiss:")
         print(f"  eta   = [{eta[ind.X]:9.3e}, {eta[ind.Y]:9.3e}]")
         print(f"  alpha = [{alpha[ind.X]:9.3e}, {alpha[ind.Y]:9.3e}]")
         print(f"  beta  = [{beta[ind.X]:5.3f}, {beta[ind.Y]:5.3f}]")
@@ -223,7 +222,7 @@ class periodic_structure_class:
         beta[ind.Y] = self._data.twiss.sel(plane="y", par="beta").values[loc]
         nu[ind.X] = self._data.twiss.sel(plane="x", par="nu").values[loc]
         nu[ind.Y] = self._data.twiss.sel(plane="y", par="nu").values[loc]
-        print("\nTwiss:")
+        print("\nDispersion & Twiss Functions:")
         print(f"  eta     = [{eta[ind.X]:9.3e}, {eta[ind.Y]:9.3e}]")
         print(f"  alpha   = [{alpha[ind.X]:9.3e}, {alpha[ind.Y]:9.3e}]")
         print(f"  beta    = [{beta[ind.X]:5.3f}, {beta[ind.Y]:5.3f}]")

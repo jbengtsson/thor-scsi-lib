@@ -38,11 +38,6 @@ from thor_scsi.utils.output import vec2txt
 # np.atleast_2d
 
 
-# Global variables.
-n_iter    = 0
-chi_2_min = 1e30
-
-
 def get_prm(lat_prop, prm_list):
     # Dictionary of parameter types and corresponding get functions.
     how_to_get_prm = {"b_2": lat_prop.get_b_2_elem, "L": lat_prop.get_L_elem}
@@ -68,9 +63,12 @@ class MatchingState:
     chi_2: float = np.nan
 
 
+# Global variables.
+n_iter    = 0
+chi_2_min = 1e30
+
 def match_straight(
-        lat_prop, loc, prm_list, bounds, Twiss_0, Twiss_1, Twiss_1_design,
-        weight):
+        lat_prop, prm_list, bounds, Twiss_0, Twiss_1, Twiss_1_design, weight):
     """ """
 
     def compute_chi_2(
@@ -85,7 +83,7 @@ def match_straight(
             A0 = _copy.copy(A0)
 
         lat_prop._lattice.propagate(
-            lat_prop._model_state, A0, loc, len(lat_prop._lattice) - loc)
+            lat_prop._model_state, A0, 0, len(lat_prop._lattice))
 
         chi_2 = 0e0
 
@@ -153,7 +151,7 @@ def match_straight(
     f_tol = 1e-4
     x_tol = 1e-4
 
-    print("\nmatch_straight:\n\nloc = ", loc)
+    print("\nmatch_straight:\n")
     print("\nTwiss parameters at centre of super period:")
     lat_prop.prt_Twiss_param(Twiss_0)
     print("\nTwiss parameters at centre of straight:")
@@ -163,7 +161,7 @@ def match_straight(
 
     A0 = gtpsa.ss_vect_tpsa(lat_prop._desc, 1)
     A0.set_zero()
-    # Use *-operator to unpack the arguments from a list.
+    # Use *-operator to unpack the list of arguments.
     A_7x7 = np.zeros((7, 7))
     A_7x7[:6, :6] = cs.compute_A(*Twiss_0[:3])
     A0.set_jacobian(A_7x7)
@@ -184,6 +182,29 @@ def match_straight(
     )
 
     prt_result(f_match, prms0, minimum)
+
+
+def chk_lat(lat_name, lat_prop, Twiss_0):
+    n_dof = 2
+    A0 = gtpsa.ss_vect_tpsa(lat_prop._desc, 1)
+    A0.set_zero()
+    # Use *-operator to unpack the list of arguments.
+    A_7x7 = np.zeros((7, 7))
+    A_7x7[:6, :6] = cs.compute_A(*Twiss_0[:3])
+    A0.set_jacobian(A_7x7)
+
+    A1 = A0
+    lat_prop._lattice.propagate(
+        lat_prop._model_state, A1, 0, len(lat_prop._lattice))
+    lat_prop._data = \
+        lo.compute_Twiss_along_lattice(
+            n_dof, lat_prop._lattice, lat_prop._model_state, A=A1,
+            desc=lat_prop._desc, mapping=lat_prop._named_index)
+
+    Twiss_k = cs.compute_Twiss_A(A1.jacobian())
+    print("\nchk_lat - Exit:")
+    lat_prop.prt_Twiss()
+    lat_prop.plt_Twiss(lat_name+".png", not False)
 
 
 # Number of phase-space coordinates.
@@ -209,44 +230,43 @@ else:
     home_dir = \
         os.path.join(
             os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "MAX_4U")
-    lat_name = "max_4u_sup_per"
+    lat_name = "max_4u_match"
 file_name = os.path.join(home_dir, lat_name+".lat")
 
 lat_prop = \
     lp.lattice_properties_class(nv, no, nv_prm, no_prm, file_name, E_0, cod_eps)
 
-# Compute Twiss parameters along lattice.
-stable = lat_prop.comp_per_sol()
-if not stable:
-    assert False
-
 print("\nCircumference [m]      = {:7.5f}".format(lat_prop.compute_circ()))
 print("Total bend angle [deg] = {:7.5f}".
       format(lat_prop.compute_phi()))
-lat_prop.prt_M()
-lat_prop.prt_lat_param()
 
-types = lat_prop.get_types()
-lat_prop.prt_Twiss()
-lat_prop.plt_Twiss("before.png", False)
+eta   = np.array([0.02273, 0.0])
+alpha = np.array([0.0, 0.0])
+beta  = np.array([0.92011, 9.72555])
+nu    = np.array([np.nan, np.nan])
+Twiss_0 = eta, alpha, beta, nu
 
-# Get dispersion & Twiss parameters at centre of the last unit cell.
-loc = lat_prop._lattice.find("sf_h", 10).index
-print(f"\nCentre of super period: {loc:1d} {lat_prop._lattice[loc].name:s}")
-Twiss_0 = lat_prop.get_Twiss(loc)
+print("\nEntrance:")
 lat_prop.prt_Twiss_param(Twiss_0)
 
-# Get dispersion & Twiss parameters at centre of straight.
-# Last element is the RF cavity.
-loc = len(lat_prop._lattice) - 2
-Twiss_1 = lat_prop.get_Twiss(loc)
-print(f"\nCentre of straight: {loc:1d} {lat_prop._lattice[loc].name:s}")
+types = lat_prop.get_types()
+
+if not False:
+    chk_lat(lat_name, lat_prop, Twiss_0)
+
+eta   = np.array([0e0, 0e0, 0e0, 0e0])
+alpha = np.array([0e0, 0e0])
+beta  = np.array([9.2, 2.0])
+nu    = np.array([0e0, 0e0])
+Twiss_1 = eta, alpha, beta, nu
+
+print("\nExit:")
 lat_prop.prt_Twiss_param(Twiss_1)
 
 # Desired dispersion & Twiss parameters at centre of straight.
 eta   = np.array([0e0, 0e0, 0e0, 0e0])
 alpha = np.array([0e0, 0e0])
-beta  = np.array([2.5, 2.5])
+beta  = np.array([9.2, 2.0])
 nu    = np.array([0e0, 0e0])
 Twiss_1_design = eta, alpha, beta, nu
 
@@ -254,7 +274,7 @@ Twiss_1_design = eta, alpha, beta, nu
 weight = np.array([
     1e0,  # eta.
     1e3,  # alpha.
-    1e-5, # beta.
+    1e0, # beta.
     1e-10 # xi.
 ])
 
@@ -278,22 +298,22 @@ bounds = [
 ]
 
 # Zero sextopoles.
-# Compute linear chromaticity.
-
 lat_prop.set_b_n_fam("sf_h", 3, 0e0)
 lat_prop.set_b_n_fam("sd1",  3, 0e0)
 lat_prop.set_b_n_fam("sd2",  3, 0e0)
 
+# Compute linear chromaticity.
 M = \
     lo.compute_map(
         lat_prop._lattice, lat_prop._model_state, desc=lat_prop._desc,
         tpsa_order=no)
 stable, nu, xi = lo.compute_nu_xi(lat_prop._desc, no, M)
+
 print("\n  nu = [{:7.5f}, {:7.5f}]".format(nu[ind.X], nu[ind.Y]))
 print("  xi = [{:7.5}, {:7.5}]".format(xi[ind.X], xi[ind.Y]))
 
 match_straight(
-    lat_prop, loc, prm_list, bounds, Twiss_0, Twiss_1, Twiss_1_design, weight)
+    lat_prop, prm_list, bounds, Twiss_0, Twiss_1, Twiss_1_design, weight)
 
 if not False:
     plt.show()
