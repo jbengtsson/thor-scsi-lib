@@ -140,7 +140,7 @@ def opt_var_bend_radius(lat_prop, bend_list, rbend_name, phi_uc, rbend):
     #   Nelder-Mead, Powell, CG, BFGS, Newton-CG, L-BFGS-B, TNC, COBYLA,
     #   SLSQP, trust-constr, dogleg, truct-ncg, trust-exact, trust-krylov.
 
-    # Powell ftol
+    # Powell ftol, xtol
     # CG     gtol
     minimum = opt.minimize(
         f_super_per,
@@ -175,6 +175,8 @@ file_name = os.path.join(home_dir, lat_name+".lat")
 lat_prop = \
     lp.lattice_properties_class(nv, no, nv_prm, no_prm, file_name, E_0, cod_eps)
 
+lat_prop.get_types()
+
 # Compute Twiss parameters along lattice.
 stable = lat_prop.comp_per_sol()
 print("\nCircumference [m]      = {:7.5f}".format(lat_prop.compute_circ()))
@@ -189,7 +191,6 @@ stable = lat_prop.compute_radiation()
 lat_prop.prt_rad()
 lat_prop.prt_M_rad()
 
-lat_prop.get_types()
 lat_prop.prt_Twiss()
 
 bend_list  = ["b1", "b2", "b3", "b4", "b5"]

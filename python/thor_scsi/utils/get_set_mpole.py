@@ -29,34 +29,46 @@ class get_set_mpole_class:
         cav = self._lattice.find(fam_name, 0)
         cav.set_phase(phi)
 
-    def get_phi_elem(self, fam_name, n_kid):
+    def get_L_elem(self, fam_name, n_kid):
         elem = self._lattice.find(fam_name, n_kid)
+        return elem.get_length()
+
+    def set_L_elem(self, fam_name, kid_num, L):
+        elem = self._lattice.find(fam_name, kid_num)
+        elem.set_length(L)
+
+    def set_L_fam(self, fam_name, L):
+        n_kid = len(self._lattice.elements_with_name(fam_name))
+        for k in range(n_kid):
+            self.set_L_elem(fam_name, k, L)
+
+    def get_phi_elem(self, fam_name, kid_num):
+        elem = self._lattice.find(fam_name, kid_num)
         return elem.get_length() * elem.get_curvature() * 180e0 / np.pi
 
-    def set_phi_elem(self, fam_name, kid_num, phi, rect_bend):
+    def set_phi_elem(self, fam_name, kid_num, phi):
         b = self._lattice.find(fam_name, kid_num)
         L = b.get_length()
         h = phi * np.pi / (L * 180e0)
         b.set_curvature(h)
-        if rect_bend:
-            b.set_entrance_angle(phi/2e0)
-            b.set_exit_angle(phi/2e0)
 
-    def set_phi_fam(self, fam_name, phi, rect_bend):
+    def set_phi_fam(self, fam_name, phi):
+        n_kid = len(self._lattice.elements_with_name(fam_name))
+        for k in range(n_kid):
+            self.set_phi_elem(fam_name, k, phi)
+
+    def set_phi_rect_elem(self, fam_name, kid_num, phi):
+        self.set_phi_elem(fam_name, k, phi)
+        b = self._lattice.find(fam_name, kid_num)
+        b.set_entrance_angle(phi/2e0)
+        b.set_exit_angle(phi/2e0)
+
+    def set_phi_rect_fam(self, fam_name, phi):
         n_kid = len(self._lattice.elements_with_name(fam_name))
         for k in range(n_kid):
             self.set_phi_elem(fam_name, k, phi, rect_bend)
 
-    def set_dphi_elem(self, fam_name, kid_num, dphi, rect_bend):
-        phi = self.get_phi_elem(fam_name, kid_num) + dphi
-        self.set_phi_elem(fam_name, kid_num, phi, rect_bend)
-
-    def set_dphi_fam(self, fam_name, phi, rect_bend):
-        n_kid = len(self._lattice.elements_with_name(fam_name))
-        for k in range(n_kid):
-            self.set_dphi_elem(fam_name, k, phi, rect_bend)
-
-    def compute_phi(self):
+    def compute_phi_lat(self):
         """Compute the total bend angle.
         """
         prt = False
@@ -84,19 +96,6 @@ class get_set_mpole_class:
         n_kid = len(self._lattice.elements_with_name(fam_name))
         for k in range(n_kid):
             self.set_b_n_elem(fam_name, k, n, b_n)
-
-    def get_L_elem(self, fam_name, n_kid):
-        elem = self._lattice.find(fam_name, n_kid)
-        return elem.get_length()
-
-    def set_L_elem(self, fam_name, kid_num, L):
-        elem = self._lattice.find(fam_name, kid_num)
-        elem.set_length(L)
-
-    def set_L_fam(self, fam_name, L):
-        n_kid = len(self._lattice.elements_with_name(fam_name))
-        for k in range(n_kid):
-            self.set_L_elem(fam_name, k, L)
 
     def get_b_2_elem(self, fam_name, kid_num):
         return self.get_b_n_elem(fam_name, kid_num, 2)

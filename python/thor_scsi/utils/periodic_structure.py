@@ -23,7 +23,6 @@ class periodic_structure_class:
     # Private.
 
     def __init__(self, nv, no, nv_prm, no_prm, file_name, E_0):
-        self._prt_Twiss_file_name = "twiss.txt"
 
         self._named_index = []
         self._desc        = []
@@ -202,68 +201,10 @@ class periodic_structure_class:
     def prt_Twiss_param(self, Twiss):
         """
         """
-        eta, alpha, beta, nu = Twiss
-        print(f"  eta   = [{eta[ind.X]:9.3e}, {eta[ind.Y]:9.3e}]")
-        print(f"  alpha = [{alpha[ind.X]:9.3e}, {alpha[ind.Y]:9.3e}]")
-        print(f"  beta  = [{beta[ind.X]:5.3f}, {beta[ind.Y]:5.3f}]")
-
-
-    def prt_lat_param(self):
-        eta = np.zeros(2)
-        alpha = np.zeros(2)
-        beta = np.zeros(2)
-        nu = np.zeros(2)
-        loc = len(self._lattice)-1
-        eta[ind.X] = self._data.dispersion.sel(phase_coordinate="x").values[loc]
-        eta[ind.Y] = self._data.dispersion.sel(phase_coordinate="y").values[loc]
-        alpha[ind.X] = self._data.twiss.sel(plane="x", par="alpha").values[loc]
-        alpha[ind.Y] = self._data.twiss.sel(plane="y", par="alpha").values[loc]
-        beta[ind.X] = self._data.twiss.sel(plane="x", par="beta").values[loc]
-        beta[ind.Y] = self._data.twiss.sel(plane="y", par="beta").values[loc]
-        nu[ind.X] = self._data.twiss.sel(plane="x", par="nu").values[loc]
-        nu[ind.Y] = self._data.twiss.sel(plane="y", par="nu").values[loc]
-        print("\nDispersion & Twiss Functions:")
-        print(f"  eta     = [{eta[ind.X]:9.3e}, {eta[ind.Y]:9.3e}]")
-        print(f"  alpha   = [{alpha[ind.X]:9.3e}, {alpha[ind.Y]:9.3e}]")
-        print(f"  beta    = [{beta[ind.X]:5.3f}, {beta[ind.Y]:5.3f}]")
-        print(f"  nu      = [{nu[ind.X]:7.5f}, {nu[ind.Y]:7.5f}]")
-        print(f"  alpha_c = {self._alpha_c:10.3e}")
-
-
-    def prt_Twiss(self):
-        """
-        Print Twiss parameters along the lattice.
-        """
-        file = open(self._prt_Twiss_file_name, "w")
-        nu = np.zeros(2, dtype=float)
-        print("\n     Name          s    type  alpha_x   beta_x  nu_x     eta_x"
-              "   eta'_x    alpha_y   beta_y  nu_y     eta_y   eta'_y",
-              file=file)
-        print("                  [m]                    [m]             [m]"
-              "     [m]                 [m]             [m]", file=file)
-        for k in range(len(self._data.index)):
-            print("{:3d} {:10s} {:7.3f} {:4.1f} {:9.5f} {:8.5f} {:7.5f} {:8.5f}"
-                  " {:8.5f} {:9.5f} {:8.5f} {:7.5f} {:8.5f} {:8.5f}".
-                  format(k, self._lattice[k].name,  self._data.s[k],
-                         self._types[k],
-                         self._data.twiss.sel(plane="x", par="alpha").values[k],
-                         self._data.twiss.sel(plane="x", par="beta").values[k],
-                         self._data.twiss.sel(plane="x", par="nu").values[k],
-                         self._data.dispersion.sel(
-                             phase_coordinate="x").values[k],
-                         self._data.dispersion.sel(
-                             phase_coordinate="px").values[k],
-                         self._data.twiss.sel(plane="y", par="alpha").values[k],
-                         self._data.twiss.sel(plane="y", par="beta").values[k],
-                         self._data.twiss.sel(plane="y", par="nu").values[k],
-                         self._data.dispersion.sel(
-                             phase_coordinate="y").values[k],
-                         self._data.dispersion.sel(
-                             phase_coordinate="py").values[k]),
-                  file=file)
-
-        print("\nprt_Twiss - Linear optics saved as:",
-              self._prt_Twiss_file_name)
+        eta, alpha, beta = Twiss
+        print("  eta   = [{:9.3e}, {:9.3e}]".format(eta[ind.X], eta[ind.Y]))
+        print("  alpha = [{:9.3e}, {:9.3e}]".format(alpha[ind.X], alpha[ind.Y]))
+        print("  beta  = [{:5.3f}, {:5.3f}]".format(beta[ind.X], beta[ind.Y]))
 
     def get_Twiss(self, loc):
         eta = np.array([
@@ -284,7 +225,46 @@ class periodic_structure_class:
                 self._data.twiss.sel(plane="x", par="nu").values[loc],
                 self._data.twiss.sel(plane="y", par="nu").values[loc],
             ])
-        return eta, alpha, beta, nu,
+        return eta, alpha, beta, nu
+
+    def prt_lat_param(self):
+        eta = np.zeros(2)
+        alpha = np.zeros(2)
+        beta = np.zeros(2)
+        nu = np.zeros(2)
+        loc = len(self._lattice)-1
+        eta, alpha, beta, nu = self.get_Twiss(loc)
+
+        print("\nDispersion & Twiss Functions:")
+        print(f"  eta     = [{eta[ind.x]:9.3e}, {eta[ind.y]:9.3e}]")
+        print(f"  alpha   = [{alpha[ind.X]:9.3e}, {alpha[ind.Y]:9.3e}]")
+        print(f"  beta    = [{beta[ind.X]:5.3f}, {beta[ind.Y]:5.3f}]")
+        print(f"  nu      = [{nu[ind.X]:7.5f}, {nu[ind.Y]:7.5f}]")
+        print(f"  alpha_c = {self._alpha_c:10.3e}")
+
+
+    def prt_Twiss(self, file_name):
+        """
+        Print Twiss parameters along the lattice.
+        """
+        file = open(file_name, "w")
+        nu = np.zeros(2, dtype=float)
+        print("\n     Name          s    type  alpha_x   beta_x  nu_x     eta_x"
+              "   eta'_x    alpha_y   beta_y  nu_y     eta_y   eta'_y",
+              file=file)
+        print("                  [m]                    [m]             [m]"
+              "     [m]                 [m]             [m]", file=file)
+        for k in range(len(self._data.index)):
+            eta, alpha, beta, nu = self.get_Twiss(k)
+
+            print("{:3d} {:10s} {:7.3f} {:4.1f} {:9.5f} {:8.5f} {:7.5f} {:8.5f}"
+                  " {:8.5f} {:9.5f} {:8.5f} {:7.5f} {:8.5f} {:8.5f}".
+                  format(k, self._lattice[k].name,  self._data.s[k],
+                         self._types[k], alpha[ind.X], beta[ind.X], nu[ind.X],
+                         eta[ind.x], eta[ind.px], alpha[ind.Y], beta[ind.Y],
+                         nu[ind.Y], eta[ind.y], eta[ind.py]), file=file)
+
+        print("\nprt_Twiss - Linear optics saved as:", file_name)
 
     def comp_per_sol(self):
         """Compute the periodic solution for a super period.
