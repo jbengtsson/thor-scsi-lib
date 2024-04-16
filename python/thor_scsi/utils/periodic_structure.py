@@ -115,6 +115,7 @@ class periodic_structure_class:
         gr_1.plot(
             self._data.s, self._data.twiss.sel(plane="y", par="beta"), "r",
             label=r"$\beta_y$")
+        gr_1.set_ylim(bottom=0)
         gr_1.legend()
 
         gr_1_r = gr_1.twinx()
@@ -127,6 +128,7 @@ class periodic_structure_class:
         gr_2.set_ylabel(r"$\eta_x$ [m]")
         gr_2.plot(
             self._data.s, self._data.dispersion.sel(phase_coordinate="x"), "b")
+        gr_2.set_ylim(bottom=0)
 
         gr_2_r = gr_2.twinx()
         gr_2_r.set_ylim([-2.0, 20.0])
@@ -323,7 +325,7 @@ class periodic_structure_class:
                 print("{:7.3f}  {:5.3f}    {:5.1f}    {:4.2f} {:5.2f} {:10.3e}"
                       " {:10.3e}  {:7.5f}  {:7.5f}".
                       format(
-                          phi_rb, self.compute_phi(), 1e12*self._eps[ind.X],
+                          phi_rb, self.compute_phi_lat(), 1e12*self._eps[ind.X],
                           self._J[ind.X], self._J[ind.Z], self._alpha_c, eta_x,
                           self._nu[ind.X], self._nu[ind.Y]))
             else:

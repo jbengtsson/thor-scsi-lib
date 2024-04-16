@@ -31,9 +31,9 @@ def compute_scl_fact(lat_prop, bend_list):
 
 def set_phi_rb(lat_prop, phi_uc, bend_list, bend_scl, phi_rb):
     dphi = phi_uc/2e0 - phi_rb
-    lat_prop.set_phi_fam("qf", phi_rb, True)
+    lat_prop.set_phi_fam("qf", phi_rb)
     for k in range(len(bend_scl)):
-        lat_prop.set_phi_fam(bend_list[k], bend_scl[k]*dphi, True)
+        lat_prop.set_phi_fam(bend_list[k], bend_scl[k]*dphi)
 
 
 # Number of phase-space coordinates.
@@ -66,20 +66,23 @@ print("\nCircumference [m]      = {:7.5f}".format(lat_prop.compute_circ()))
 print("Total bend angle [deg] = {:7.5f}".format(lat_prop.compute_phi_lat()))
 lat_prop.prt_M()
 if not stable:
+    print("\ncomp_per_sol - unstable")
     assert False
 lat_prop.prt_lat_param()
-
-# Compute radiation properties.
-# stable = lat_prop.compute_radiation()
-# if not stable:
-#     assert False
-# lat_prop.prt_rad()
-# lat_prop.prt_M_rad()
 
 lat_prop.prt_Twiss("twiss.txt")
 
 if not False:
     lat_prop.plt_Twiss(lat_name+"_twiss.png", not False)
+
+if not False:
+    # Compute radiation properties.
+    stable = lat_prop.compute_radiation()
+    if not stable:
+        print("\ncompute_radiation - unstable")
+        assert False
+    lat_prop.prt_rad()
+    lat_prop.prt_M_rad()
 
 if not False:
     phi_uc    = 3.0
