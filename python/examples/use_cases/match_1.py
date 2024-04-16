@@ -26,6 +26,8 @@ from scipy import optimize
 
 import gtpsa
 
+import thor_scsi.lib as ts
+
 from thor_scsi.utils import lattice_properties as lp, linear_optics as lo, \
     get_set_mpole as gs, index_class as ind, courant_snyder as cs
 
@@ -45,8 +47,12 @@ def compute_phi_bend(lat_prop, bend_list):
     return phi_b
 
 
-def prt_lat(lat_prop, file_name, prm_list):
+def prt_lat(lat_prop, file_name, prm_list, bend):
     outf = open(file_name, 'w')
+
+    def prt_drift(name):
+        L = lat_prop.get_L_elem(name, 0)
+        print(("{:4s}: Drift, L = {:7.5f};").format(name, L), file=outf)
 
     def prt_bend(name):
         L = lat_prop.get_L_elem(name, 0)
@@ -63,10 +69,15 @@ def prt_lat(lat_prop, file_name, prm_list):
               .format(name, L, b_2), file=outf)
 
     for k in range(len(prm_list)):
-        if lat_prop.get_phi_elem(prm_list[k][0], 0) != 0.0:
+        elem = lat_prop._lattice.find(prm_list[k][0], 0)
+        if  type(elem) == ts.Drift:
+            prt_drift(prm_list[k][0])
+        elif  type(elem) == ts.Bending:
             prt_bend(prm_list[k][0])
-        else:
+        elif  type(elem) == ts.Quadrupole:
             prt_quad(prm_list[k][0])
+
+    prt_bend(bend)
 
 
 @dataclass
@@ -128,8 +139,7 @@ def match_straight(
         dchi_2 = 0e0
         for j in range(3):
             for k in range(2):
-                dchi_2 += \
-                    weight[j] * ((Twiss_1[j][k] - Twiss_k[j][k]) ** 2)
+                dchi_2 += weight[j] * ((Twiss_1[j][k] - Twiss_k[j][k]) ** 2)
         return dchi_2
 
     def compute_chi_2(prms):
@@ -151,7 +161,7 @@ def match_straight(
         chi_2, Twiss_1 = compute_chi_2(prms)
         if chi_2 < chi_2_min:
             prt_iter(prms, chi_2, Twiss_1)
-            prt_lat(lat_prop, "match_lat_k.txt", prm_list)
+            prt_lat(lat_prop, "match_lat_k.txt", prm_list, bend)
             chi_2_min = min(chi_2, chi_2_min)
         return chi_2
 
@@ -186,7 +196,7 @@ def match_straight(
         options={"ftol": f_tol, "xtol": x_tol, "maxiter": max_iter}
     )
 
-    print("\n", minimum)
+    print("\n".join(minimum))
 
     prms = minimum["x"]
     set_prm(prms)
@@ -196,7 +206,7 @@ def match_straight(
                       lat_prop._n_dof, lat_prop._lattice, lat_prop._model_state,
                       A=A0, desc=lat_prop._desc, mapping=lat_prop._named_index)
 
-    prt_lat(lat_prop, "match_lat.txt", prm_list)
+    prt_lat(lat_prop, "match_lat.txt", prm_list, bend)
     lat_prop.prt_Twiss("match_twiss.txt")
 
     lat_prop.plt_Twiss("match_twiss.png", True)
@@ -271,6 +281,7 @@ Twiss_0 = eta, alpha, beta
 
 if False:
     chk_lat(lat_name, lat_prop, Twiss_0)
+    assert False
 
 # Desired at exit.
 eta   = np.array([0e0, 0e0, 0e0, 0e0])
@@ -280,9 +291,9 @@ Twiss_1 = eta, alpha, beta
 
 # Weights: eta, alpha, beta.
 weight = np.array([
-    1e7, # eta.
-    1e5, # alpha.
-    1e0  # beta.
+    1e8, # eta.
+    1e4, # alpha.
+    0*1e0  # beta.
 ])
 
 # End dipole.
@@ -304,8 +315,8 @@ print("\nphi_b = {:7.5f}".format(compute_phi_bend(lat_prop, dip_list)))
 prm_list = [
     ("qf1e", "b_2"),
     ("qd",   "b_2"),
-    # ("d5",   "L"),
     ("qf2",  "b_2"),
+    # ("d5",   "L"),
 
     ("ds6",  "b_2"),
     ("ds5",  "b_2"),
@@ -318,32 +329,57 @@ prm_list = [
     ("dm2",  "b_2"),
     ("dm3",  "b_2"),
     ("dm4",  "b_2"),
-    ("dm5",  "b_2")
+    ("dm5",  "b_2"),
+
+    ("ds6",  "phi"),
+    ("ds5",  "phi"),
+    ("ds4",  "phi"),
+    ("ds3",  "phi"),
+    ("ds2",  "phi"),
+    ("ds1",  "phi"),
+    ("dm1",  "phi"),
+    ("dm2",  "phi"),
+    ("dm3",  "phi"),
+    ("dm4",  "phi"),
+    ("dm5",  "phi")
 ]
 
 # Max parameter range.
-L_min       = 0.1
+L_min        = 0.1
+phi_max      = 0.7
 quad_b_2_max = 10.0
-bend_b_2_max = 1.5
+bend_b_2_max = 1.0
 
 bounds = [
-    ( 0.0,     quad_b_2_max), # qf1e b_2.
-    (-quad_b_2_max, 0.0),     # qd   b_2.
-    ( 0.0,     quad_b_2_max), # qf2  b_2.
-    # ( 0.15,    0.30),         # d5 L.
+    ( 0.0,          quad_b_2_max),
+    (-quad_b_2_max, 0.0),
+    ( 0.0,          quad_b_2_max),
+    # ( 0.15,         0.30),
 
-    (-bend_b_2_max, 0.0),     # ds6  b_2.
-    (-bend_b_2_max, 0.0),     # ds5  b_2.
-    (-bend_b_2_max, 0.0),     # ds4  b_2.
-    (-bend_b_2_max, 0.0),     # ds3  b_2.
-    (-bend_b_2_max, 0.0),     # ds2  b_2.
-    (-bend_b_2_max, 0.0),     # ds1  b_2.
-    (-bend_b_2_max, 0.0),     # ds0  b_2.
-    (-bend_b_2_max, 0.0),     # dm1  b_2.
-    (-bend_b_2_max, 0.0),     # dm2  b_2.
-    (-bend_b_2_max, 0.0),     # dm3  b_2.
-    (-bend_b_2_max, 0.0),     # dm4  b_2.
-    (-bend_b_2_max, 0.0)      # dm5  b_2.
+    (-bend_b_2_max, bend_b_2_max),
+    (-bend_b_2_max, bend_b_2_max),
+    (-bend_b_2_max, bend_b_2_max),
+    (-bend_b_2_max, bend_b_2_max),
+    (-bend_b_2_max, bend_b_2_max),
+    (-bend_b_2_max, bend_b_2_max),
+    (-bend_b_2_max, bend_b_2_max),
+    (-bend_b_2_max, bend_b_2_max),
+    (-bend_b_2_max, bend_b_2_max),
+    (-bend_b_2_max, bend_b_2_max),
+    (-bend_b_2_max, bend_b_2_max),
+    (-bend_b_2_max, bend_b_2_max),
+
+    (0.0, phi_max),
+    (0.0, phi_max),
+    (0.0, phi_max),
+    (0.0, phi_max),
+    (0.0, phi_max),
+    (0.0, phi_max),
+    (0.0, phi_max),
+    (0.0, phi_max),
+    (0.0, phi_max),
+    (0.0, phi_max),
+    (0.0, phi_max)
 ]
 
 match_straight(
