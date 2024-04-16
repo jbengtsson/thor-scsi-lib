@@ -99,6 +99,7 @@ def match_straight(
         # Dictionary of parameter types and corresponding get functions.
         how_to_get_prm = \
             {"L":   lat_prop.get_L_elem,
+             "L_b": lat_prop.get_L_elem,
              "phi": lat_prop.get_phi_elem,
              "b_2": lat_prop.get_b_2_elem}
         prms = []
@@ -110,6 +111,7 @@ def match_straight(
         # Dictionary of parameter types and corresponding set functions.
         how_to_set_prm = {
             "L":   lat_prop.set_L_fam,
+            "L_b": lat_prop.set_L_bend_fam,
             "phi": lat_prop.set_phi_fam,
             "b_2": lat_prop.set_b_2_fam}
         for k in range(len(prm_list)):
@@ -238,6 +240,14 @@ def chk_lat(lat_name, lat_prop, Twiss_0):
     lat_prop.plt_Twiss("chk_lat.png", not False)
 
 
+def prt_b(lat_prop, name):
+    L = lat_prop.get_L_elem(name, 0)
+    b_2 = lat_prop.get_b_n_elem(name, 0, 2)
+    print(("{:s}: Bending, L = {:7.5f}, T = {:s}_scl*phi, K = {:8.5f}"
+           ", T1 = 0.0, T2 = 0.0,\n     N = n_bend;")
+          .format(name, L, name, b_2))
+
+
 # Number of phase-space coordinates.
 nv = 7
 # Variables max order.
@@ -298,8 +308,6 @@ weight = np.array([
 
 # End dipole.
 
-phi_b = 1.5
-
 bend = "ds0"
 
 bend_list = [
@@ -308,8 +316,19 @@ bend_list = [
 
 dip_list = [bend]
 dip_list.extend(bend_list)
+phi_b = compute_phi_bend(lat_prop, dip_list)
 
-print("\nphi_b = {:7.5f}".format(compute_phi_bend(lat_prop, dip_list)))
+print("\nphi_dip_list = {:7.5f}".format(phi_b))
+
+if False:
+    dip_scl = phi_b*lat_prop.compute_scl_fact(dip_list)
+    print("\ndip_scl:\n")
+    for k in range(len(dip_list)):
+        print("{:s}_scl = {:7.5f}/phi_b;".format(dip_list[k], dip_scl[k]))
+    print()
+    for k in range(len(dip_list)):
+        prt_b(lat_prop, dip_list[k])
+    assert False
 
 # Parameters: family name & type.
 prm_list = [
@@ -317,6 +336,7 @@ prm_list = [
     ("qd",   "b_2"),
     ("qf2",  "b_2"),
     # ("d5",   "L"),
+    ("ds0",  "L_b"),
 
     ("ds6",  "b_2"),
     ("ds5",  "b_2"),
@@ -348,13 +368,14 @@ prm_list = [
 L_min        = 0.1
 phi_max      = 0.7
 quad_b_2_max = 10.0
-bend_b_2_max = 1.0
+bend_b_2_max = 2.5
 
 bounds = [
     ( 0.0,          quad_b_2_max),
     (-quad_b_2_max, 0.0),
     ( 0.0,          quad_b_2_max),
     # ( 0.15,         0.30),
+     ( 0.10,         0.40),
 
     (-bend_b_2_max, bend_b_2_max),
     (-bend_b_2_max, bend_b_2_max),

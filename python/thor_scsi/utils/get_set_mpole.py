@@ -29,8 +29,8 @@ class get_set_mpole_class:
         cav = self._lattice.find(fam_name, 0)
         cav.set_phase(phi)
 
-    def get_L_elem(self, fam_name, n_kid):
-        elem = self._lattice.find(fam_name, n_kid)
+    def get_L_elem(self, fam_name, kid_num):
+        elem = self._lattice.find(fam_name, kid_num)
         return elem.get_length()
 
     def set_L_elem(self, fam_name, kid_num, L):
@@ -41,6 +41,17 @@ class get_set_mpole_class:
         n_kid = len(self._lattice.elements_with_name(fam_name))
         for k in range(n_kid):
             self.set_L_elem(fam_name, k, L)
+
+    def set_L_bend_elem(self, fam_name, kid_num, L):
+        elem = self._lattice.find(fam_name, kid_num)
+        phi = self.get_phi_elem(fam_name, kid_num)
+        self.set_L_elem(fam_name, kid_num, L)
+        self.set_phi_elem(fam_name, kid_num, phi)
+
+    def set_L_bend_fam(self, fam_name, L):
+        n_kid = len(self._lattice.elements_with_name(fam_name))
+        for k in range(n_kid):
+            self.set_L_bend_elem(fam_name, k, L)
 
     def get_phi_elem(self, fam_name, kid_num):
         elem = self._lattice.find(fam_name, kid_num)
@@ -83,6 +94,17 @@ class get_set_mpole_class:
                           format(self._lattice[k].name,
                                  self._lattice[k].get_length(), dphi))
         return phi
+
+    def compute_scl_fact(self, bend_list):
+        phi_b = 0e0
+        for k in range(len(bend_list)):
+            phi_b += self.get_phi_elem(bend_list[k], 0)
+        print("\ncompute_scl_fact: phi_b = {:7.5f}".format(phi_b))
+        bend_scl = []
+        for k in range(len(bend_list)):
+            phi = self.get_phi_elem(bend_list[k], 0)
+            bend_scl.append(phi/phi_b)
+        return np.array(bend_scl)
 
     def get_b_n_elem(self, fam_name, kid_num, n):
         mp = self._lattice.find(fam_name, kid_num)
