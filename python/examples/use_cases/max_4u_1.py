@@ -31,7 +31,7 @@ def compute_scl_fact(lat_prop, bend_list):
 
 def set_phi_rb(lat_prop, phi_uc, bend_list, bend_scl, phi_rb):
     dphi = phi_uc/2e0 - phi_rb
-    lat_prop.set_phi_fam("qf", phi_rb)
+    lat_prop.set_phi_fam("qf1", phi_rb)
     for k in range(len(bend_scl)):
         lat_prop.set_phi_fam(bend_list[k], bend_scl[k]*dphi)
 
@@ -52,7 +52,7 @@ ind = ind.index_class()
 
 home_dir = os.path.join(
     os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "MAX_4U")
-# lat_name = "max_iv"
+# lat_name = "max_4u_uc"
 lat_name = "max_4u_match"
 file_name = os.path.join(home_dir, lat_name+".lat")
 
@@ -69,12 +69,12 @@ lat_prop.prt_M()
 if not stable:
     print("\ncomp_per_sol - unstable")
     assert False
+if not False:
+    lat_prop.plt_Twiss(lat_name+".png", not False)
+
 lat_prop.prt_lat_param()
 
 lat_prop.prt_Twiss("twiss.txt")
-
-if not False:
-    lat_prop.plt_Twiss(lat_name+"_twiss.png", not False)
 
 if not False:
     # Compute radiation properties.
@@ -85,7 +85,7 @@ if not False:
     lat_prop.prt_rad()
     lat_prop.prt_M_rad()
 
-if False:
+if not False:
     phi_uc    = 3.0
     bend_list = ["b0", "b1", "b2", "b3", "b4", "b5"]
 

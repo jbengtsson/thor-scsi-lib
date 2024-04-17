@@ -23,78 +23,71 @@ from thor_scsi.utils.output import vec2txt
 ind = ind.index_class()
 
 
-def compute_phi_b(bend_list):
+def compute_phi_bend(bend_list):
     phi_b = 0e0
     for k in range(len(bend_list)):
         phi_b += lat_prop.get_phi_elem(bend_list[k], 0)
     return phi_b
 
 
-def prt_bend_lat(lat_prop, file_name, bend_list, rbend_name):
+def prt_lat(lat_prop, file_name, bend_list):
     outf = open(file_name, 'w')
 
-    def prt_b(lat_prop, name):
+    def prt_bend(lat_prop, name):
         L = lat_prop.get_L_elem(name, 0)
+        phi = lat_prop.get_phi_elem(name, 0)
         b_2 = lat_prop.get_b_n_elem(name, 0, 2)
-        print(("{:s}: Bending, L = {:7.5f}, T = {:s}_scl*phi, K = {:8.5f}"
-               ", T1 = 0.0, T2 = 0.0,\n    N = n_bend;")
-              .format(name, L, name, b_2), file=outf)
+        print(("{:s}: Bending, L = {:7.5f}, T = {:8.5f}, K = {:8.5f}"
+               ", T1 = 0.0, T2 = 0.0,\n     N = n_bend;")
+              .format(name, L, phi, b_2), file=outf)
 
-    def prt_rb(lat_prop, name):
-        L = lat_prop.get_L_elem(name, 0)
-        b_2 = lat_prop.get_b_n_elem(name, 0, 2)
-        print(("{:s}: Bending, L = {:7.5f}, T = phi_rb, K = {:8.5f}"
-               ", N = n_bend;").format(name, L, b_2), file=outf)
-
-    print("phi_b  = {:7.5f};\n".
-          format(compute_phi_b(bend_list)), file=outf)
     for k in range(len(bend_list)):
-        phi = lat_prop.get_phi_elem(bend_list[k], 0)
-        print("{:s}_scl = {:7.5f}/phi_b;".format(bend_list[k], phi), file=outf)
-    print("\nphi_rb = 0.0;", file=outf)
-    print("phi    = phi_b - phi_rb;\n", file=outf)
-    for k in range(len(bend_list)):
-        prt_b(lat_prop, bend_list[k])
+        prt_bend(lat_prop, bend_list[k])
     print(file=outf)
-    prt_rb(lat_prop, rbend_name)
 
 
-def opt_var_bend_radius(lat_prop, bend_list, rbend_name, phi_uc, rbend):
-    """Use Case: optimise unit cell.
+def opt_bend(lat_prop, bend, bend_list):
+    """Use Case: optimise matching cell.
     """
 
     chi_2_min = 1e30
     n_iter    = 0
-    file_name = "opt_var_bend_radius.txt"
+    file_name = "opt_bend.txt"
+    dip_list  = [bend]
+    dip_list.extend(bend_list)
+    phi_bend  = compute_phi_bend(dip_list)
 
-    def set_phi_var_bend_rad_rb(phi):
-        dphi = 0e0
+    def set_phi(prm):
+        phi = 0e0
         for k in range(len(bend_list)):
-            lat_prop.set_phi_fam(bend_list[k], phi[k], False)
-            dphi += phi[k]
-        if rbend:
-            lat_prop.set_phi_fam(rbend_name, phi[-1], False)
-            dphi += phi[-1]
-        lat_prop.set_phi_fam("b0", phi_uc/2e0-dphi, False)
+            lat_prop.set_phi_fam(bend_list[k], prm[k])
+            phi += prm[k]
+        lat_prop.set_phi_fam(bend, phi_bend-phi)
 
-    def prt_iter(phi, chi_2):
+    def prt_prms(prm):
+        n_prt = 5
+        print("\n  prm =")
+        for k in range(len(prm)):
+            print(" {:12.5e}".format(prm[k]), end="")
+            if k % n_prt == 4:
+                print()
+        if k % n_prt != 4:
+            print()
+
+    def prt_iter(prm, chi_2):
         nonlocal n_iter
 
-        phi_0 = lat_prop.get_phi_elem("b0", 0)
-        if rbend:
-            phi_rb = lat_prop.get_phi_elem(rbend_name, 0)
+        phi_0 = lat_prop.get_phi_elem(bend, 0)
         print("\n{:3d} chi_2 = {:11.5e}".format(n_iter, chi_2))
-        print("  eps_x [pm.rad] = {:14.10f}".format(1e12*lat_prop._eps[ind.X]))
-        print("  nu             = [{:7.5f}, {:7.5f}]".
-              format(lat_prop._nu[ind.X], lat_prop._nu[ind.Y]))
-        print("  phi_uc         = {:7.5f}".format(lat_prop.compute_phi()))
-        print("  phi            = {:12.5e}".format(phi_0)+vec2txt(phi))
+        print("  eps_x [pm.rad] = {:5.3f}".format(1e12*lat_prop._eps[ind.X]))
+        print("  phi_bend       = {:7.5f}".format(lat_prop.compute_phi_lat()))
+        prt_prms(prm)
 
-    def compute_chi_2(phi):
+    def compute_chi_2(prm):
         nonlocal n_iter
 
         n_iter += 1
-        set_phi_var_bend_rad_rb(phi)
+        set_phi(prm)
         stable = lat_prop.comp_per_sol()
         if stable:
             stable = lat_prop.compute_radiation()
@@ -108,12 +101,13 @@ def opt_var_bend_radius(lat_prop, bend_list, rbend_name, phi_uc, rbend):
             chi_2 = 1e30
         return chi_2
 
-    def f_super_per(phi):
+    def f_super_per(prm):
         nonlocal chi_2_min
 
-        chi_2 = compute_chi_2(phi)
+        chi_2 = compute_chi_2(prm)
         if chi_2 < chi_2_min:
-            prt_iter(phi, chi_2)
+            prt_iter(prm, chi_2)
+            prt_lat(lat_prop, "opt_bend.txt", dip_list)
             chi_2_min = min(chi_2, chi_2_min)
         return chi_2
 
@@ -121,20 +115,13 @@ def opt_var_bend_radius(lat_prop, bend_list, rbend_name, phi_uc, rbend):
     f_tol    = 1e-4
     x_tol    = 1e-4
 
-    print("\nopt_var_bend_radius:")
-
-    phi_b = lat_prop.get_phi_elem("b0", 0)
-    phi = []
+    phi_b = lat_prop.get_phi_elem(bend, 0)
+    prm = []
     for k in range(len(bend_list)):
         dphi = lat_prop.get_phi_elem(bend_list[k], 0)
-        phi.append(dphi)
+        prm.append(dphi)
         phi_b += dphi
-    if rbend:
-        dphi = lat_prop.get_phi_elem(rbend_name, 0)
-        phi.append(dphi)
-    print("\nphi_b  = {:7.5f}".format(phi_b))
-    print("phi_uc = {:7.5f}".format(phi_uc))
-    phi = np.array(phi)
+    prm = np.array(prm)
 
     # Methods:
     #   Nelder-Mead, Powell, CG, BFGS, Newton-CG, L-BFGS-B, TNC, COBYLA,
@@ -144,7 +131,7 @@ def opt_var_bend_radius(lat_prop, bend_list, rbend_name, phi_uc, rbend):
     # CG     gtol
     minimum = opt.minimize(
         f_super_per,
-        phi,
+        prm,
         method="Powell",
         # callback=prt_iter,
         # bounds = opt.Bounds(np.full(n_phi, -dhi_max), np.full(n_phi, dhi_max))
@@ -184,27 +171,28 @@ print("Total bend angle [deg] = {:7.5f}".format(lat_prop.compute_phi_lat()))
 lat_prop.prt_M()
 if not stable:
     assert False
-lat_prop.prt_lat_param()
 
 # Compute radiation properties.
 stable = lat_prop.compute_radiation()
 lat_prop.prt_rad()
 lat_prop.prt_M_rad()
 
-lat_prop.prt_Twiss("max_4u_uc.txt")
-
-bend_list  = ["b1", "b2", "b3", "b4", "b5"]
-rbend_name = "qf1"
-phi_uc     = 3.0
-
 if not False:
+    lat_prop.prt_lat_param()
+    lat_prop.prt_Twiss("max_4u_uc.txt")
+
+bend_list  = [
+    "ds6", "ds5", "ds4", "ds3", "ds2", "ds1", "dm1", "dm2", "dm3", "dm4", "dm5"
+]
+bend = "ds0"
+
+if False:
     lat_prop.plt_Twiss(lat_name+".png", not False)
 
-if False:
-    opt_var_bend_radius(lat_prop, bend_list, rbend_name, phi_uc, not False)
+if not False:
+    opt_bend(lat_prop, bend, bend_list)
 
 if False:
-    dip_list = ["b0"]
+    dip_list = [bend]
     dip_list.extend(bend_list)
-    prt_bend_lat \
-        (lat_prop, "opt_var_bend_radius.txt", dip_list, rbend_name)
+    prt_lat(lat_prop, "opt_bend.txt", dip_list)
