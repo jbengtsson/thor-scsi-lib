@@ -168,8 +168,8 @@ home_dir = os.path.join(
     os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "MAX_4U")
 # lat_name = "max_iv"
 # lat_name = "max_4u_uc"
-lat_name = "max_4u_match"
-# lat_name = "max_4u_sup_per"
+# lat_name = "max_4u_match"
+lat_name = "max_4u_sp"
 file_name = os.path.join(home_dir, lat_name+".lat")
 
 lat_prop = \
@@ -183,6 +183,7 @@ print("\nCircumference [m]      = {:7.5f}".format(lat_prop.compute_circ()))
 print("Total bend angle [deg] = {:7.5f}".format(lat_prop.compute_phi_lat()))
 lat_prop.prt_M()
 if not stable:
+    print("\ncomp_per_sol - unstable")
     assert False
 lat_prop.prt_lat_param()
 
