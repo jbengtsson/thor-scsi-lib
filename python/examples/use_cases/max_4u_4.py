@@ -26,7 +26,7 @@ ind = ind.index_class()
 quad = 2
 
 L_min        = 0.10
-L_max        = 0.60
+L_max        = 0.50
 phi_max      = 0.85
 b_2_bend_max = 1.0
 b_2_max      = 10.0
@@ -86,14 +86,14 @@ class bend_prm_class:
         return prm_ind
 
 
-def prt_lat(lat_prop, file_name, bend):
+def prt_lat(lat_prop, file_name, prm_list):
     outf = open(file_name, 'w')
 
     def prt_drift(name):
         L = lat_prop.get_L_elem(name, 0)
         print(("{:4s}: Drift, L = {:7.5f};").format(name, L), file=outf)
 
-    def prt_bend(lat_prop, name):
+    def prt_dip(name):
         L = lat_prop.get_L_elem(name, 0)
         phi = lat_prop.get_phi_elem(name, 0)
         b_2 = lat_prop.get_b_n_elem(name, 0, 2)
@@ -101,23 +101,41 @@ def prt_lat(lat_prop, file_name, bend):
                ", T1 = 0.0, T2 = 0.0,\n      N = n_bend;")
               .format(name, L, phi, b_2), file=outf)
 
+    def prt_bend(bend):
+        prt_dip(bend._dip_0)
+        for k in range(len(bend._dip_list)):
+            prt_dip(bend._dip_list[k])
+
     def prt_quad(name):
         L = lat_prop.get_L_elem(name, 0)
         b_2 = lat_prop.get_b_n_elem(name, 0, 2)
         print(("{:4s}: Quadrupole, L = {:7.5f}, K = {:8.5f}, N = n_quad;")
               .format(name, L, b_2), file=outf)
 
-    prt_bend(lat_prop, bend._dip_0)
-    for k in range(len(bend._dip_list)):
-        prt_bend(lat_prop, bend._dip_list[k])
+    # Dictionary of parameter types and corresponding print functions.
+    get_prm_func_dict = {
+        "L":   prt_drift,
+        "L_b": prt_dip,
+        "phi": prt_dip,
+        "b_2": prt_dip
+    }
+
+    for k in range(len(prm_list)):
+        if prm_list[k][0] == "bend":
+             prt_bend(prm_list[k][1])
+        else:
+            get_prm_func_dict[prm_list[k][1]](prm_list[k][0])
 
 
 def opt_bend(lat_prop, prm_list, weight):
     """Use Case: optimise super period.
     """
 
-    loc       = lat_prop._lattice.find("sf_h", 0).index
-    eta_x     = 0.06255
+    loc       = lat_prop._lattice.find("sf_h", 2).index
+    # Dispersion at the unit cell end.
+    eta_uc_x  = 0.06255
+    # Beta functions at the unit cell end.
+    beta_uc   = [3.65614, 3.68868]
     eta       = np.nan
     chi_2_min = 1e30
     n_iter    = 0
@@ -157,7 +175,7 @@ def opt_bend(lat_prop, prm_list, weight):
                 bounds.extend(b)
             else:
                 prm.append(get_prm_func_dict[prm_list[k][1]](prm_list[k][0], 0))
-                bounds.append((-self._b_2_max, self._b_2_max))
+                bounds.append((-b_2_max, b_2_max))
         return np.array(prm), bounds
 
     def set_prm(prm):
@@ -166,7 +184,7 @@ def opt_bend(lat_prop, prm_list, weight):
             if prm_list[k][0] == "bend":
                 prm_ind = prm_list[k][1].set_bend(prm, prm_ind)
             else:
-                set_prm_func_dict[prm_list[k][1]](prm_list[k][0], prm[k])
+                set_prm_func_dict[prm_list[k][1]](prm_list[k][0], prm[prm_ind])
                 prm_ind += 1
         
     def prt_prm(prm):
@@ -178,24 +196,29 @@ def opt_bend(lat_prop, prm_list, weight):
         if k % n_prt != n_prt-1:
             print()
 
-    def prt_iter(prm, chi_2, eta, xi):
+    def prt_iter(prm, chi_2, eta, beta, xi):
         nonlocal n_iter
 
-        phi_0 = lat_prop.get_phi_elem(prm_list[0][1]._dip_0, 0)
+        phi = lat_prop.compute_phi_lat()
+        # Twiss functions at end of super period.
+        _, _, beta_id, _ = lat_prop.get_Twiss(-1)
 
         print("\n{:3d} chi_2 = {:11.5e}".format(n_iter, chi_2))
         print("  eps_x [pm.rad] = {:5.3f}".format(1e12*lat_prop._eps[ind.X]))
         print("  eta_x [m]      =  {:10.3e} ({:9.3e})".
-              format(eta[ind.x], eta_x))
-        print("  eta'_x [m]     =  {:10.3e}".format(eta[ind.px]))
-        print("  {:s}_phi        =  {:6.3f}".
-              format(prm_list[0][1]._dip_0, phi_0))
+              format(eta[ind.x], eta_uc_x))
+        print("  beta           =  [{:5.3f}, {:5.3f}] ([{:5.3f}, {:5.3f}])".
+              format(beta[ind.X], beta[ind.Y],
+                     beta_uc[ind.X], beta_uc[ind.Y]))
+        print("  beta_id        =  [{:5.3f}, {:5.3f}]".
+              format(beta_id[ind.X], beta_id[ind.Y]))
         print("  xi             =  [{:5.3f}, {:5.3f}]".
               format(xi[ind.X], xi[ind.Y]))
+        print("  phi_sp         =  {:8.5f}".format(phi))
         prt_prm(prm)
 
     def compute_chi_2():
-        nonlocal loc, eta_x
+        nonlocal loc, eta_uc_x
 
         prt = not False
 
@@ -203,29 +226,10 @@ def opt_bend(lat_prop, prm_list, weight):
             if not lat_prop.comp_per_sol():
                 print("\ncompute_chi_2 - comp_per_sol: unstable")
                 raise ValueError
+
             if not lat_prop.compute_radiation():
                 print("\ncompute_chi_2 - compute_radiation: unstable")
                 raise ValueError
-        except ValueError:
-            chi_2 = 1e30
-            eta = np.nan
-            xi = np.nan
-        else:
-            dchi_2 = weight[0]*lat_prop._eps[ind.X]**2
-            chi_2 = dchi_2
-            if prt:
-                print("\n  dchi2(eps_x)  = {:10.3e}".format(dchi_2))
-
-            eta = lat_prop.get_Twiss(loc)[0]
-            dchi_2 = weight[1]*(eta[ind.x]-eta_x)**2
-            chi_2 += dchi_2
-            if prt:
-                print("  dchi2(eta_x)  = {:10.3e}".format(dchi_2))
-
-            dchi_2 = weight[2]*eta[ind.px]**2
-            chi_2 += dchi_2
-            if prt:
-                print("  dchi2(eta'_x) = {:10.3e}".format(dchi_2))
 
             M = lo.compute_map(
                 lat_prop._lattice, lat_prop._model_state,
@@ -233,24 +237,50 @@ def opt_bend(lat_prop, prm_list, weight):
             stable, nu, xi = \
                 lo.compute_nu_xi(lat_prop._desc, lat_prop._no, M)
             if not stable:
-                xi[ind.X] = 1e30
-                xi[ind.Y] = 1e30
+                print("\ncompute_chi_2 - compute_nu_xi: unstable")
+                raise ValueError
+        except ValueError:
+            chi_2 = 1e30
+            eta = np.nan
+            beta = np.nan
+            xi = np.nan
+        else:
+            dchi_2 = weight[0]*lat_prop._eps[ind.X]**2
+            chi_2 = dchi_2
+            if prt:
+                print("\n  dchi2(eps_x)     = {:10.3e}".format(dchi_2))
+
+            eta, alpha, beta, nu = lat_prop.get_Twiss(loc)
+
+            dchi_2 = weight[1]*(eta[ind.x]-eta_uc_x)**2
+            chi_2 += dchi_2
+            if prt:
+                print("  dchi2(eta_uc_x)  = {:10.3e}".format(dchi_2))
+
+            dchi_2 = \
+                weight[2]*(
+                    (beta[ind.X]-beta_uc[ind.X])**2
+                    +(beta[ind.Y]-beta[ind.Y])**2)
+            chi_2 += dchi_2
+            if prt:
+                print("  dchi2(beta)      = {:10.3e}".format(dchi_2))
+
             dchi_2 = weight[3]*(xi[ind.X]**2+xi[ind.Y]**2)
             chi_2 += dchi_2
             if prt:
-                print("  dchi2(xi)     = {:10.3e}".format(dchi_2))
+                print("  dchi2(xi)        = {:10.3e}".format(dchi_2))
 
-        return chi_2, eta, xi
+        return chi_2, eta, beta, xi
 
     def f_super_per(prm):
         nonlocal chi_2_min, n_iter
 
         n_iter += 1
         set_prm(prm)
-        chi_2, eta, xi = compute_chi_2()
+        chi_2, eta, beta, xi = compute_chi_2()
         if chi_2 < chi_2_min:
-            prt_iter(prm, chi_2, eta, xi)
-            prt_lat(lat_prop, "opt_bend.txt", prm_list[0][1])
+            prt_iter(prm, chi_2, eta, beta, xi)
+            prt_lat(lat_prop, "opt_bend.txt", prm_list)
             chi_2_min = min(chi_2, chi_2_min)
         return chi_2
 
@@ -269,11 +299,13 @@ def opt_bend(lat_prop, prm_list, weight):
     minimum = opt.minimize(
         f_super_per,
         prm,
-        method="Powell",
+        method="CG",
         # callback=prt_iter,
         bounds = bounds,
         options={"ftol": f_tol, "xtol": x_tol, "maxiter": max_iter}
     )
+
+    print("\n".join(minimum))
 
 
 # Number of phase-space coordinates.
@@ -321,10 +353,10 @@ if False:
 
 # Weights.
 weight = np.array([
-    1e14, # eps_x.
-    1e-1, # eta_x.
-    1e0,  # eta'_x.
-    1e-7  # xi.
+    1e16, # eps_x.
+    1e1,  # eta_uc_x.
+    1e-1, # beta_uc.
+    1e-6  # xi.
 ])
 
 dip_list = ["b1", "b2", "b3", "b4", "b5"]
@@ -336,10 +368,11 @@ dip_list  = [
 b2 = bend_prm_class(lat_prop, "ds0", dip_list, True)
 
 prm_list = [
-    # ("qf1e", "b_2"),
-    # ("qd",   "b_2"),
-    # ("qf2",  "b_2"),
-    # ("ds0",  "L_b"),
+    ("qf1e", "b_2"),
+    ("qd",   "b_2"),
+    ("qf2",  "b_2"),
+    ("ds0",  "L_b"),
+    ("bend", b1),
     ("bend", b2)
 ]
 
