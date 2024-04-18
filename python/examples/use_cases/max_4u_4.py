@@ -31,6 +31,7 @@ phi_max      = 0.85
 b_2_bend_max = 1.0
 b_2_max      = 10.0
 
+
 class bend_prm_class:
     # Private
     def __init__(self, lat_prop, dip_0, dip_list, b_2_prm):
@@ -39,10 +40,6 @@ class bend_prm_class:
         self._dip_list     = dip_list
         self._phi          = self.compute_phi_bend()
         self._b_2_prm      = b_2_prm
-
-        print("\n{:s}:".format(dip_0))
-        print("  phi   = {:8.5f}".format(self._phi))
-        print("  phi_0 = {:8.5f}".format(self._phi_0))
 
     # Public.
     def init(self):
@@ -91,14 +88,14 @@ def prt_lat(lat_prop, file_name, prm_list):
 
     def prt_drift(name):
         L = lat_prop.get_L_elem(name, 0)
-        print(("{:4s}: Drift, L = {:7.5f};").format(name, L), file=outf)
+        print(("{:5s}: Drift, L = {:7.5f};").format(name, L), file=outf)
 
     def prt_dip(name):
         L = lat_prop.get_L_elem(name, 0)
         phi = lat_prop.get_phi_elem(name, 0)
         b_2 = lat_prop.get_b_n_elem(name, 0, 2)
-        print(("{:4s}: Bending, L = {:7.5f}, T = {:8.5f}, K = {:8.5f}"
-               ", T1 = 0.0, T2 = 0.0,\n      N = n_bend;")
+        print(("{:5s}: Bending, L = {:7.5f}, T = {:8.5f}, K = {:8.5f}"
+               ", T1 = 0.0, T2 = 0.0,\n       N = n_bend;")
               .format(name, L, phi, b_2), file=outf)
 
     def prt_bend(bend):
@@ -109,7 +106,7 @@ def prt_lat(lat_prop, file_name, prm_list):
     def prt_quad(name):
         L = lat_prop.get_L_elem(name, 0)
         b_2 = lat_prop.get_b_n_elem(name, 0, 2)
-        print(("{:4s}: Quadrupole, L = {:7.5f}, K = {:8.5f}, N = n_quad;")
+        print(("{:5s}: Quadrupole, L = {:7.5f}, K = {:8.5f}, N = n_quad;")
               .format(name, L, b_2), file=outf)
 
     # Dictionary of parameter types and corresponding print functions.
@@ -136,8 +133,9 @@ def opt_bend(lat_prop, prm_list, weight):
     eta_uc_x  = 0.06255
     # Beta functions at the unit cell end.
     beta_uc   = [3.65614, 3.68868]
-    eta       = np.nan
+
     chi_2_min = 1e30
+    eta       = np.nan
     n_iter    = 0
     file_name = "opt_sp.txt"
 
@@ -260,7 +258,7 @@ def opt_bend(lat_prop, prm_list, weight):
             dchi_2 = \
                 weight[2]*(
                     (beta[ind.X]-beta_uc[ind.X])**2
-                    +(beta[ind.Y]-beta[ind.Y])**2)
+                    +(beta[ind.Y]-beta_uc[ind.Y])**2)
             chi_2 += dchi_2
             if prt:
                 print("  dchi2(beta)      = {:10.3e}".format(dchi_2))
@@ -330,22 +328,29 @@ lat_prop = \
 
 lat_prop.get_types()
 
-# Compute Twiss parameters along lattice.
-stable = lat_prop.comp_per_sol()
 print("\nCircumference [m]      = {:7.5f}".format(lat_prop.compute_circ()))
 print("Total bend angle [deg] = {:7.5f}".format(lat_prop.compute_phi_lat()))
-lat_prop.prt_M()
-if not stable:
-    print("\ncomp_per_sol - unstable")
-    assert False
 
-# Compute radiation properties.
-stable = lat_prop.compute_radiation()
-if not stable:
-    print("\ncompute_radiation - unstable")
-    assert False
-lat_prop.prt_rad()
-lat_prop.prt_M_rad()
+try:
+    # Compute Twiss parameters along lattice.
+    if not lat_prop.comp_per_sol():
+        print("\ncompute_chi_2 - comp_per_sol: unstable")
+        raise ValueError
+except ValueError:
+    exit
+finally:
+    lat_prop.prt_M()
+
+try:
+    # Compute radiation properties.
+    if not lat_prop.compute_radiation():
+        print("\ncompute_radiation - unstable")
+        raise ValueError
+except ValueError:
+    exit
+else:
+    lat_prop.prt_rad()
+    lat_prop.prt_M_rad()
 
 if False:
     lat_prop.prt_lat_param()
@@ -353,27 +358,29 @@ if False:
 
 # Weights.
 weight = np.array([
-    1e16, # eps_x.
-    1e1,  # eta_uc_x.
-    1e-1, # beta_uc.
-    1e-6  # xi.
+    1e14,  # eps_x.
+    1e2,   # eta_uc_x.
+    1e-2 , # beta_uc.
+    1e-6   # xi.
 ])
 
-dip_list = ["b1", "b2", "b3", "b4", "b5"]
-b1 = bend_prm_class(lat_prop, "b0", dip_list, False)
+dip_list = ["b1_1", "b1_2", "b1_3", "b1_4", "b1_5"]
+b1 = bend_prm_class(lat_prop, "b1_0", dip_list, False)
 
 dip_list  = [
-    "ds6", "ds5", "ds4", "ds3", "ds2", "ds1", "dm1", "dm2", "dm3", "dm4", "dm5"
+    "b2u_6", "b2u_5", "b2u_4", "b2u_3", "b2u_2", "b2u_1", "b2d_1", "b2d_2",
+    "b2d_3", "b2d_4", "b2d_5"
 ]
-b2 = bend_prm_class(lat_prop, "ds0", dip_list, True)
+b2 = bend_prm_class(lat_prop, "b2_0", dip_list, True)
 
 prm_list = [
-    ("qf1e", "b_2"),
-    ("qd",   "b_2"),
-    ("qf2",  "b_2"),
-    ("ds0",  "L_b"),
-    ("bend", b1),
-    ("bend", b2)
+    ("qf1_e", "b_2"),
+    ("qd",    "b_2"),
+    ("qf2",   "b_2"),
+    ("b1_0",  "L_b"),
+    ("b2_0",  "L_b"),
+    ("bend",  b1),
+    ("bend",  b2)
 ]
 
 if not False:
