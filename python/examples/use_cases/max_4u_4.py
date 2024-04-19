@@ -102,6 +102,7 @@ def opt_sp(Lat_prop, prm_list, weight):
         n_iter += 1
         prm_list.set_prm(lat_prop, prm)
 
+        # Compute the beam dynamics properties.
         try:
             if not lat_prop.comp_per_sol():
                 print("\nf_sp - comp_per_sol: unstable")
@@ -223,14 +224,19 @@ dip_list  = [
 ]
 b2 = pc.bend_prm_class(lat_prop, "b2_0", dip_list, True, phi_max, b_2_bend_max)
 
+rb_list = ["qf1", "qf1_e"]
+dip_list    = ["b1_0", "b2_0"]
+rb = pc.rev_bend_prm_class(lat_prop, rb_list, dip_list, phi_max)
+
 prm_list = [
-    ("qf1_e", "b_2"),
-    ("qd",    "b_2"),
-    ("qf2",   "b_2"),
-    ("b1_0",  "L_b"),
-    ("b2_0",  "L_b"),
-    ("bend",  b1),
-    ("bend",  b2)
+    ("qf1_e",    "b_2"),
+    ("qd",       "b_2"),
+    ("qf2",      "b_2"),
+    ("b1_0",     "L_b"),
+    ("b2_0",     "L_b"),
+    ("bend",     b1),
+    ("bend",     b2),
+    ("rev_bend", rb)
 ]
 
 prm_list = pc.prm_class(lat_prop, prm_list, b_2_max)

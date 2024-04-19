@@ -14,7 +14,7 @@ class MultipoleIndex(enum.IntEnum):
 
 
 class get_set_mpole_class:
-        # Private
+    # Private
 
     def __init__(self):
         pass
@@ -54,8 +54,8 @@ class get_set_mpole_class:
             self.set_L_bend_elem(fam_name, k, L)
 
     def get_phi_elem(self, fam_name, kid_num):
-        elem = self._lattice.find(fam_name, kid_num)
-        return elem.get_length() * elem.get_curvature() * 180e0 / np.pi
+        b = self._lattice.find(fam_name, kid_num)
+        return b.get_length() * b.get_curvature() * 180e0 / np.pi
 
     def set_phi_elem(self, fam_name, kid_num, phi):
         b = self._lattice.find(fam_name, kid_num)
@@ -67,6 +67,18 @@ class get_set_mpole_class:
         n_kid = len(self._lattice.elements_with_name(fam_name))
         for k in range(n_kid):
             self.set_phi_elem(fam_name, k, phi)
+
+    def set_dphi_elem(self, fam_name, kid_num, dphi):
+        b = self._lattice.find(fam_name, kid_num)
+        L = b.get_length()
+        phi = b.get_length() * b.get_curvature() * 180e0 / np.pi
+        h = (phi + dphi) * np.pi / (L * 180e0)
+        b.set_curvature(h)
+
+    def set_dphi_fam(self, fam_name, dphi):
+        n_kid = len(self._lattice.elements_with_name(fam_name))
+        for k in range(n_kid):
+            self.set_dphi_elem(fam_name, k, dphi)
 
     def set_phi_rect_elem(self, fam_name, kid_num, phi):
         self.set_phi_elem(fam_name, k, phi)
