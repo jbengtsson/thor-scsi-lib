@@ -124,7 +124,7 @@ def prt_lat(lat_prop, file_name, prm_list):
             get_prm_func_dict[prm_list[k][1]](prm_list[k][0])
 
 
-def opt_bend(lat_prop, prm_list, weight):
+def opt_sp(Lat_prop, prm_list, weight):
     """Use Case: optimise super period.
     """
 
@@ -133,6 +133,8 @@ def opt_bend(lat_prop, prm_list, weight):
     eta_uc_x  = 0.06255
     # Beta functions at the unit cell end.
     beta_uc   = [3.65614, 3.68868]
+    # Tune for super period.
+    nu_sp     = [2.110, 0.814]
 
     chi_2_min = 1e30
     eta       = np.nan
@@ -194,7 +196,7 @@ def opt_bend(lat_prop, prm_list, weight):
         if k % n_prt != n_prt-1:
             print()
 
-    def prt_iter(prm, chi_2, eta, beta, xi):
+    def prt_iter(prm, chi_2, eta, beta, nu, xi):
         nonlocal n_iter
 
         phi = lat_prop.compute_phi_lat()
@@ -205,82 +207,91 @@ def opt_bend(lat_prop, prm_list, weight):
         print("  eps_x [pm.rad] = {:5.3f}".format(1e12*lat_prop._eps[ind.X]))
         print("  eta_x [m]      =  {:10.3e} ({:9.3e})".
               format(eta[ind.x], eta_uc_x))
-        print("  beta           =  [{:5.3f}, {:5.3f}] ([{:5.3f}, {:5.3f}])".
+        print("  beta_match [m] =  [{:5.3f}, {:5.3f}] ([{:5.3f}, {:5.3f}])".
               format(beta[ind.X], beta[ind.Y],
                      beta_uc[ind.X], beta_uc[ind.Y]))
         print("  beta_id        =  [{:5.3f}, {:5.3f}]".
               format(beta_id[ind.X], beta_id[ind.Y]))
+        print("  nu_sp          =  [{:5.3f}, {:5.3f}] ([{:5.3f}, {:5.3f}])".
+              format(nu[ind.X], nu[ind.Y], nu_sp[ind.X], nu_sp[ind.Y]))
         print("  xi             =  [{:5.3f}, {:5.3f}]".
               format(xi[ind.X], xi[ind.Y]))
         print("  phi_sp         =  {:8.5f}".format(phi))
         prt_prm(prm)
 
-    def compute_chi_2():
+    def compute_chi_2(eta, beta, nu, xi):
         nonlocal loc, eta_uc_x
 
         prt = not False
 
-        try:
-            if not lat_prop.comp_per_sol():
-                print("\ncompute_chi_2 - comp_per_sol: unstable")
-                raise ValueError
+        dchi_2 = weight[0]*lat_prop._eps[ind.X]**2
+        chi_2 = dchi_2
+        if prt:
+            print("\n  dchi2(eps_x)     = {:10.3e}".format(dchi_2))
 
-            if not lat_prop.compute_radiation():
-                print("\ncompute_chi_2 - compute_radiation: unstable")
-                raise ValueError
+        dchi_2 = weight[1]*(eta[ind.x]-eta_uc_x)**2
+        chi_2 += dchi_2
+        if prt:
+            print("  dchi2(eta_uc_x)  = {:10.3e}".format(dchi_2))
 
-            M = lo.compute_map(
-                lat_prop._lattice, lat_prop._model_state,
-                desc=lat_prop._desc, tpsa_order=2)
-            stable, nu, xi = \
-                lo.compute_nu_xi(lat_prop._desc, lat_prop._no, M)
-            if not stable:
-                print("\ncompute_chi_2 - compute_nu_xi: unstable")
-                raise ValueError
-        except ValueError:
-            chi_2 = 1e30
-            eta = np.nan
-            beta = np.nan
-            xi = np.nan
-        else:
-            dchi_2 = weight[0]*lat_prop._eps[ind.X]**2
-            chi_2 = dchi_2
-            if prt:
-                print("\n  dchi2(eps_x)     = {:10.3e}".format(dchi_2))
+        dchi_2 = \
+            weight[2]*(
+                (beta[ind.X]-beta_uc[ind.X])**2
+                +(beta[ind.Y]-beta_uc[ind.Y])**2)
+        chi_2 += dchi_2
+        if prt:
+            print("  dchi2(beta)      = {:10.3e}".format(dchi_2))
 
-            eta, alpha, beta, nu = lat_prop.get_Twiss(loc)
+        dchi_2 = \
+            weight[3]*(
+                (nu[ind.X]-nu_sp[ind.X])**2
+                +(nu[ind.Y]-nu_sp[ind.Y])**2)
+        chi_2 += dchi_2
+        if prt:
+            print("  dchi2(nu_sp)     = {:10.3e}".format(dchi_2))
 
-            dchi_2 = weight[1]*(eta[ind.x]-eta_uc_x)**2
-            chi_2 += dchi_2
-            if prt:
-                print("  dchi2(eta_uc_x)  = {:10.3e}".format(dchi_2))
+        dchi_2 = weight[4]*(xi[ind.X]**2+xi[ind.Y]**2)
+        chi_2 += dchi_2
+        if prt:
+            print("  dchi2(xi)        = {:10.3e}".format(dchi_2))
 
-            dchi_2 = \
-                weight[2]*(
-                    (beta[ind.X]-beta_uc[ind.X])**2
-                    +(beta[ind.Y]-beta_uc[ind.Y])**2)
-            chi_2 += dchi_2
-            if prt:
-                print("  dchi2(beta)      = {:10.3e}".format(dchi_2))
+        return chi_2
 
-            dchi_2 = weight[3]*(xi[ind.X]**2+xi[ind.Y]**2)
-            chi_2 += dchi_2
-            if prt:
-                print("  dchi2(xi)        = {:10.3e}".format(dchi_2))
-
-        return chi_2, eta, beta, xi
-
-    def f_super_per(prm):
+    def f_sp(prm):
         nonlocal chi_2_min, n_iter
 
         n_iter += 1
         set_prm(prm)
-        chi_2, eta, beta, xi = compute_chi_2()
-        if chi_2 < chi_2_min:
-            prt_iter(prm, chi_2, eta, beta, xi)
-            prt_lat(lat_prop, "opt_bend.txt", prm_list)
-            chi_2_min = min(chi_2, chi_2_min)
-        return chi_2
+
+        try:
+            if not lat_prop.comp_per_sol():
+                print("\nf_sp - comp_per_sol: unstable")
+                raise ValueError
+
+            if not lat_prop.compute_radiation():
+                print("\nf_sp - compute_radiation: unstable")
+                raise ValueError
+
+            eta, _, beta, _ = lat_prop.get_Twiss(loc)
+            _, _, _, nu = lat_prop.get_Twiss(-1)
+
+            M = lo.compute_map(
+                lat_prop._lattice, lat_prop._model_state,
+                desc=lat_prop._desc, tpsa_order=2)
+            stable, _, xi = \
+                lo.compute_nu_xi(lat_prop._desc, lat_prop._no, M)
+            if not stable:
+                print("\nf_sp - compute_nu_xi: unstable")
+                raise ValueError
+        except ValueError:
+            return 1e30
+        else:
+            chi_2 = compute_chi_2(eta, beta, nu, xi)
+            if chi_2 < chi_2_min:
+                prt_iter(prm, chi_2, eta, beta, nu, xi)
+                prt_lat(lat_prop, "opt_sp.txt", prm_list)
+                chi_2_min = min(chi_2, chi_2_min)
+            return chi_2
 
     max_iter = 1000
     f_tol    = 1e-4
@@ -295,7 +306,7 @@ def opt_bend(lat_prop, prm_list, weight):
     # Powell ftol, xtol
     # CG     gtol
     minimum = opt.minimize(
-        f_super_per,
+        f_sp,
         prm,
         method="CG",
         # callback=prt_iter,
@@ -361,6 +372,7 @@ weight = np.array([
     1e14,  # eps_x.
     1e2,   # eta_uc_x.
     1e-2 , # beta_uc.
+    1e-2,  # nu_sp.
     1e-6   # xi.
 ])
 
@@ -384,9 +396,9 @@ prm_list = [
 ]
 
 if not False:
-    opt_bend(lat_prop, prm_list, weight)
+    opt_sp(lat_prop, prm_list, weight)
 
 if False:
     dip_list = [bend]
     dip_list.extend(bend_list)
-    prt_lat(lat_prop, "opt_bend.txt", dip_list)
+    prt_lat(lat_prop, "opt_sp.txt", dip_list)

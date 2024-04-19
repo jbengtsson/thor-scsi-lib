@@ -70,12 +70,12 @@ def opt_var_bend_radius(lat_prop, bend_list, rbend_name, phi_uc, rbend):
     def set_phi_var_bend_rad_rb(phi):
         dphi = 0e0
         for k in range(len(bend_list)):
-            lat_prop.set_phi_fam(bend_list[k], phi[k], False)
+            lat_prop.set_phi_fam(bend_list[k], phi[k])
             dphi += phi[k]
         if rbend:
-            lat_prop.set_phi_fam(rbend_name, phi[-1], False)
+            lat_prop.set_phi_fam(rbend_name, phi[-1])
             dphi += phi[-1]
-        lat_prop.set_phi_fam("b0", phi_uc/2e0-dphi, False)
+        lat_prop.set_phi_fam("b0", phi_uc/2e0-dphi)
 
     def prt_iter(phi, chi_2):
         nonlocal n_iter
@@ -123,7 +123,7 @@ def opt_var_bend_radius(lat_prop, bend_list, rbend_name, phi_uc, rbend):
 
     print("\nopt_var_bend_radius:")
 
-    phi_b = lat_prop.get_phi_elem("b0", 0)
+    phi_b = lat_prop.get_phi_elem("b1_0", 0)
     phi = []
     for k in range(len(bend_list)):
         dphi = lat_prop.get_phi_elem(bend_list[k], 0)
@@ -194,7 +194,7 @@ lat_prop.prt_M_rad()
 
 lat_prop.prt_Twiss("max_4u_uc.txt")
 
-bend_list  = ["b1", "b2", "b3", "b4", "b5"]
+bend_list  = ["b1_1", "b1_2", "b1_3", "b1_4", "b1_5"]
 rbend_name = "qf1"
 phi_uc     = 3.0
 
@@ -205,7 +205,7 @@ if False:
     opt_var_bend_radius(lat_prop, bend_list, rbend_name, phi_uc, not False)
 
 if False:
-    dip_list = ["b0"]
+    dip_list = ["b1_0"]
     dip_list.extend(bend_list)
     prt_bend_lat \
         (lat_prop, "opt_var_bend_radius.txt", dip_list, rbend_name)

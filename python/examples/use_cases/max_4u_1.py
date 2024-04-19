@@ -53,7 +53,7 @@ ind = ind.index_class()
 home_dir = os.path.join(
     os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "MAX_4U")
 # lat_name = "max_4u_uc"
-lat_name = "max_4u_match"
+lat_name = "max_4u_sp"
 file_name = os.path.join(home_dir, lat_name+".lat")
 
 lat_prop = \
@@ -87,7 +87,7 @@ if not False:
 
 if not False:
     phi_uc    = 3.0
-    bend_list = ["b0", "b1", "b2", "b3", "b4", "b5"]
+    bend_list = ["b1_0", "b1_1", "b1_2", "b1_3", "b1_4", "b1_5"]
 
     bend_scl = compute_scl_fact(lat_prop, bend_list)
 
