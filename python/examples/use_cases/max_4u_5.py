@@ -39,6 +39,7 @@ def opt_sp(Lat_prop, prm_list, weight):
     eta_uc_x  = 0.06255
     # Beta functions at the unit cell end.
     beta_uc   = [3.65614, 3.68868]
+    nu_sp     = [2.110, 0.814]
 
     chi_2_min = 1e30
     eta       = np.nan
@@ -61,6 +62,8 @@ def opt_sp(Lat_prop, prm_list, weight):
                      beta_uc[ind.X], beta_uc[ind.Y]))
         print("  beta_id        =  [{:5.3f}, {:5.3f}]".
               format(beta_id[ind.X], beta_id[ind.Y]))
+        print("  nu_sp          =  [{:7.5f}, {:7.5f}] ([{:7.5f}, {:7.5f}])".
+              format(nu[ind.X], nu[ind.Y], nu_sp[ind.X], nu_sp[ind.Y]))
         print("  xi             =  [{:5.3f}, {:5.3f}]".
               format(xi[ind.X], xi[ind.Y]))
         print("  phi_sp         =  {:8.5f}".format(phi))
@@ -89,7 +92,15 @@ def opt_sp(Lat_prop, prm_list, weight):
         if prt:
             print("  dchi2(beta)      = {:10.3e}".format(dchi_2))
 
-        dchi_2 = weight[3]*(xi[ind.X]**2+xi[ind.Y]**2)
+        dchi_2 = \
+            weight[3]*(
+                (nu[ind.X]-nu_sp[ind.X])**2
+                +(nu[ind.Y]-nu_sp[ind.Y])**2)
+        chi_2 += dchi_2
+        if prt:
+            print("  dchi2(nu_sp)     = {:10.3e}".format(dchi_2))
+
+        dchi_2 = weight[4]*(xi[ind.X]**2+xi[ind.Y]**2)
         chi_2 += dchi_2
         if prt:
             print("  dchi2(xi)        = {:10.3e}".format(dchi_2))
@@ -210,14 +221,17 @@ if False:
 
 # Weights.
 weight = np.array([
-    1e14,  # eps_x.
-    1e2,   # eta_uc_x.
-    1e-2 , # beta_uc.
-    1e-6   # xi.
+    1e14, # eps_x.
+    1e2,  # eta_uc_x.
+    1e-2, # beta_uc.
+    1e-1, # nu_sp.
+    1e-7  # xi.
 ])
 
 dip_list = ["b1_1", "b1_2", "b1_3", "b1_4", "b1_5"]
-b1 = pc.bend_prm_class(lat_prop, "b1_0", dip_list, False, phi_max, b_2_bend_max)
+b1 = \
+    pc.bend_prm_class(
+        lat_prop, "b1_0", dip_list, not False, phi_max, b_2_bend_max)
 
 dip_list  = [
     "b2u_6", "b2u_5", "b2u_4", "b2u_3", "b2u_2", "b2u_1", "b2d_1", "b2d_2",
@@ -230,6 +244,8 @@ dip_list    = ["b1_0", "b2_0"]
 rb = pc.rev_bend_prm_class(lat_prop, rb_list, dip_list, phi_max)
 
 prm_list = [
+    ("qf1",    "b_2"),
+
     ("qf1_e",    "b_2"),
     ("qd",       "b_2"),
     ("qf2",      "b_2"),
