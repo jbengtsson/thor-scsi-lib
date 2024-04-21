@@ -47,6 +47,8 @@ class lattice_properties_class(
         self._tau           = np.nan
         self._eps           = np.nan
         self._D_rad         = np.nan
+        self._sigma_s       = np.nan
+        self._sigma_delta   = np.nan
 
     # Public.
 
@@ -72,6 +74,18 @@ class lattice_properties_class(
                 2e0*(1e0+self._M_rad.cst().delta)*self._alpha_rad[k]/self._dE
             self._tau[k] = -C/(c0*self._alpha_rad[k])
             self._eps[k] = -self._D_rad[k]/(2e0*self._alpha_rad[k])
+
+        # Longitudinal Twiss parameters.
+        alpha_z = \
+            -self._A_rad[ind.ct][ind.ct]*self._A_rad[ind.delta][ind.ct] \
+            - self._A_rad[ind.ct][ind.delta]*self._A_rad[ind.delta][ind.delta];
+        beta_z = \
+            self._A_rad[ind.ct][ind.ct]**2 + self._A_rad[ind.ct][ind.delta]**2;
+        gamma_z = (1e0+alpha_z**2)/beta_z;
+
+        # Bunch size.
+        self._sigma_s = np.sqrt(beta_z*self._eps[ind.Z]);
+        self._sigma_delta = np.sqrt(gamma_z*self._eps[ind.Z]);
 
         logger.info(
             "\nE [GeV]     = {:3.1f}\nU0 [keV]    = {:3.1f}\neps         ="
@@ -136,6 +150,8 @@ class lattice_properties_class(
             self.compute_diffusion_coefficients()
 
             self.compute_rad_prop()
+
+
         else:
             self._U_0 = np.nan
             self._J = np.zeros(3, float)
@@ -152,6 +168,8 @@ class lattice_properties_class(
               format(1e-3*self._U_0))
         print("  eps_x [m.rad] = [{:9.3e}, {:9.3e}, {:9.3e}]".format(
             self._eps[ind.X], self._eps[ind.Y], self._eps[ind.Z]))
+        print("  sigma_s [mm]  = {:5.3f}".format(1e3*self._sigma_s))
+        print("  sigma_delta]  = {:9.3e}".format(self._sigma_delta))
         print("  J             = [{:5.3f}, {:5.3f}, {:5.3f}]".format(
             self._J[ind.X], self._J[ind.Y], self._J[ind.Z]))
         print("  tau [msec]    = [{:5.3f}, {:5.3f}, {:5.3f}]".format(
