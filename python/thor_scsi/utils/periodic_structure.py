@@ -237,11 +237,22 @@ class periodic_structure_class:
         loc = len(self._lattice)-1
         eta, alpha, beta, nu = self.get_Twiss(loc)
 
+        try:
+            M = lo.compute_map(
+                self._lattice, self._model_state, desc=self._desc, tpsa_order=2)
+            stable, _, xi = \
+                lo.compute_nu_xi(self._desc, self._no, M)
+            if not stable:
+                raise ValueError
+        except ValueError:
+            print("\nf_sp - compute_nu_xi: unstable")
+
         print("\nDispersion & Twiss Functions:")
         print(f"  eta     = [{eta[ind.x]:9.3e}, {eta[ind.y]:9.3e}]")
         print(f"  alpha   = [{alpha[ind.X]:9.3e}, {alpha[ind.Y]:9.3e}]")
         print(f"  beta    = [{beta[ind.X]:5.3f}, {beta[ind.Y]:5.3f}]")
         print(f"  nu      = [{nu[ind.X]:7.5f}, {nu[ind.Y]:7.5f}]")
+        print(f"  xi      = [{xi[ind.X]:5.3f}, {xi[ind.Y]:5.3f}]")
         print(f"  alpha_c = {self._alpha_c:10.3e}")
 
 
