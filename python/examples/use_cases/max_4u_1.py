@@ -53,7 +53,7 @@ ind = ind.index_class()
 home_dir = os.path.join(
     os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "MAX_4U")
 # lat_name = "max_4u_uc"
-lat_name = "max_4u_sp"
+lat_name = "max_4u_sp_1"
 file_name = os.path.join(home_dir, lat_name+".lat")
 
 lat_prop = \

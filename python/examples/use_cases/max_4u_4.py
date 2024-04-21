@@ -121,9 +121,9 @@ def opt_sp(Lat_prop, prm_list, weight):
             stable, _, xi = \
                 lo.compute_nu_xi(lat_prop._desc, lat_prop._no, M)
             if not stable:
-                print("\nf_sp - compute_nu_xi: unstable")
                 raise ValueError
         except ValueError:
+            print("\nf_sp - compute_nu_xi: unstable")
             return 1e30
         else:
             chi_2 = compute_chi_2(eta, beta, nu, xi)

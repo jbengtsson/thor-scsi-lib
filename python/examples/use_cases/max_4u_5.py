@@ -132,9 +132,9 @@ def opt_sp(Lat_prop, prm_list, weight):
             stable, _, xi = \
                 lo.compute_nu_xi(lat_prop._desc, lat_prop._no, M)
             if not stable:
-                print("\nf_sp - compute_nu_xi: unstable")
                 raise ValueError
         except ValueError:
+            print("\nf_sp - compute_nu_xi: unstable")
             return 1e30
         else:
             chi_2 = compute_chi_2(eta, beta, nu, xi)
@@ -182,7 +182,7 @@ E_0     = 3.0e9
 
 home_dir = os.path.join(
     os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "MAX_4U")
-lat_name = "max_4u_sp"
+lat_name = "max_4u_sp_1"
 file_name = os.path.join(home_dir, lat_name+".lat")
 
 lat_prop = \
@@ -239,9 +239,13 @@ dip_list  = [
 ]
 b2 = pc.bend_prm_class(lat_prop, "b2_0", dip_list, True, phi_max, b_2_bend_max)
 
-rb_list = ["qf1", "qf1_e"]
-dip_list    = ["b1_0", "b2_0"]
-rb = pc.rev_bend_prm_class(lat_prop, rb_list, dip_list, phi_max)
+rb_list  = ["qf1"]
+dip_list = ["b1_0"]
+rb1 = pc.rev_bend_prm_class(lat_prop, rb_list, dip_list, phi_max)
+
+rb_list  = ["qf1_e"]
+dip_list = ["b2_0"]
+rb2 = pc.rev_bend_prm_class(lat_prop, rb_list, dip_list, phi_max)
 
 prm_list = [
     ("qf1",    "b_2"),
@@ -253,7 +257,8 @@ prm_list = [
     ("b2_0",     "L_b"),
     ("bend",     b1),
     ("bend",     b2),
-    ("rev_bend", rb)
+    ("rev_bend", rb1),
+    ("rev_bend", rb2)
 ]
 
 prm_list = pc.prm_class(lat_prop, prm_list, b_2_max)
