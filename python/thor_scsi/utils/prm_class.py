@@ -94,7 +94,8 @@ class rev_bend_prm_class:
 
     def get_bend_angles(self, lat_prop):
         # Get bend angles without reverse bends.
-        phi_rb = lat_prop.get_phi_elem(self._rb_list[0], 0)
+        phi_rb = \
+            lat_prop.get_phi_elem(self._rb_list[0], 0)*self._n_rb/self._n_dip
         phi_list = []
         for k in range(len(self._dip_list)):
             phi_list.append(
