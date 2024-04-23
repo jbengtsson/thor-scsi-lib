@@ -55,6 +55,7 @@ def opt_sp(Lat_prop, prm_list, weight):
 
         print("\n{:3d} chi_2 = {:11.5e}".format(n_iter, chi_2))
         print("  eps_x [pm.rad] = {:5.3f}".format(1e12*lat_prop._eps[ind.X]))
+        print("  U_0 [keV]      = {:5.3f}".format(1e-3*lat_prop._U_0))
         print("  eta_x [m]      =  {:10.3e} ({:9.3e})".
               format(eta[ind.x], eta_uc_x))
         print("  beta_match [m] =  [{:5.3f}, {:5.3f}] ([{:5.3f}, {:5.3f}])".
@@ -77,33 +78,38 @@ def opt_sp(Lat_prop, prm_list, weight):
         dchi_2 = weight[0]*lat_prop._eps[ind.X]**2
         chi_2 = dchi_2
         if prt:
-            print("\n  dchi2(eps_x)     = {:10.3e}".format(dchi_2))
+            print("\n  dchi2(eps_x)    = {:10.3e}".format(dchi_2))
 
-        dchi_2 = weight[1]*(eta[ind.x]-eta_uc_x)**2
+        dchi_2 = weight[1]*lat_prop._U_0**2
         chi_2 += dchi_2
         if prt:
-            print("  dchi2(eta_uc_x)  = {:10.3e}".format(dchi_2))
+            print("  dchi2(U_0)      = {:10.3e}".format(dchi_2))
+
+        dchi_2 = weight[2]*(eta[ind.x]-eta_uc_x)**2
+        chi_2 += dchi_2
+        if prt:
+            print("  dchi2(eta_uc_x) = {:10.3e}".format(dchi_2))
 
         dchi_2 = \
-            weight[2]*(
+            weight[3]*(
                 (beta[ind.X]-beta_uc[ind.X])**2
                 +(beta[ind.Y]-beta_uc[ind.Y])**2)
         chi_2 += dchi_2
         if prt:
-            print("  dchi2(beta)      = {:10.3e}".format(dchi_2))
+            print("  dchi2(beta)     = {:10.3e}".format(dchi_2))
 
         dchi_2 = \
-            weight[3]*(
+            weight[4]*(
                 (nu[ind.X]-nu_sp[ind.X])**2
                 +(nu[ind.Y]-nu_sp[ind.Y])**2)
         chi_2 += dchi_2
         if prt:
-            print("  dchi2(nu_sp)     = {:10.3e}".format(dchi_2))
+            print("  dchi2(nu_sp)    = {:10.3e}".format(dchi_2))
 
-        dchi_2 = weight[4]*(xi[ind.X]**2+xi[ind.Y]**2)
+        dchi_2 = weight[5]*(xi[ind.X]**2+xi[ind.Y]**2)
         chi_2 += dchi_2
         if prt:
-            print("  dchi2(xi)        = {:10.3e}".format(dchi_2))
+            print("  dchi2(xi)       = {:10.3e}".format(dchi_2))
 
         return chi_2
 
@@ -221,11 +227,12 @@ if False:
 
 # Weights.
 weight = np.array([
-    1e14, # eps_x.
-    1e2,  # eta_uc_x.
-    1e-2, # beta_uc.
-    1e-1, # nu_sp.
-    1e-7  # xi.
+    1e13,  # eps_x.
+    1e-13, # U_0.
+    1e2,   # eta_uc_x.
+    1e-2,  # beta_uc.
+    0e-1,  # nu_sp.
+    1e-7   # xi.
 ])
 
 dip_list = ["b1_1", "b1_2", "b1_3", "b1_4", "b1_5"]
