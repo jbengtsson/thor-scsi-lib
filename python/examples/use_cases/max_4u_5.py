@@ -30,7 +30,7 @@ b_2_bend_max = 1.0
 b_2_max      = 10.0
 
 
-def opt_sp(Lat_prop, prm_list, weight):
+def opt_sp(lat_prop, prm_list, weight):
     """Use Case: optimise super period.
     """
 
@@ -68,6 +68,7 @@ def opt_sp(Lat_prop, prm_list, weight):
         print("  xi             =  [{:5.3f}, {:5.3f}]".
               format(xi[ind.X], xi[ind.Y]))
         print("  phi_sp         =  {:8.5f}".format(phi))
+        print("  C [n]          =  {:8.5f}".format(lat_prop.compute_circ()))
         prm_list.prt_prm(prm)
 
     def compute_chi_2(eta, beta, nu, xi):
@@ -227,18 +228,18 @@ if False:
 
 # Weights.
 weight = np.array([
-    1e13,  # eps_x.
-    1e-13, # U_0.
+    1e14,  # eps_x.
+    1e-14, # U_0.
     1e2,   # eta_uc_x.
     1e-2,  # beta_uc.
-    0e-1,  # nu_sp.
+    1e-1,  # nu_sp.
     1e-7   # xi.
 ])
 
 dip_list = ["b1_1", "b1_2", "b1_3", "b1_4", "b1_5"]
 b1 = \
     pc.bend_prm_class(
-        lat_prop, "b1_0", dip_list, not False, phi_max, b_2_bend_max)
+        lat_prop, "b1_0", dip_list, True, phi_max, b_2_bend_max)
 
 dip_list  = [
     "b2u_6", "b2u_5", "b2u_4", "b2u_3", "b2u_2", "b2u_1", "b2d_1", "b2d_2",
@@ -254,18 +255,19 @@ rb_list  = ["qf1_e"]
 dip_list = ["b2_0"]
 rb2 = pc.rev_bend_prm_class(lat_prop, rb_list, dip_list, phi_max)
 
+# opt_phi = pc.opt_phi_class()
+
 prm_list = [
     ("qf1",    "b_2"),
 
     ("qf1_e",    "b_2"),
     ("qd",       "b_2"),
     ("qf2",      "b_2"),
-    ("b1_0",     "L_b"),
-    ("b2_0",     "L_b"),
     ("bend",     b1),
     ("bend",     b2),
     ("rev_bend", rb1),
-    ("rev_bend", rb2)
+    ("rev_bend", rb2),
+    # ("opt_phi",  opt_phi)
 ]
 
 prm_list = pc.prm_class(lat_prop, prm_list, b_2_max)

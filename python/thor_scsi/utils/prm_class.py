@@ -7,6 +7,16 @@ import numpy as np
 quad = 2
 
 
+class opt_phi_class:
+    # Private
+
+    def __init__(self, lat_prop, phi_max):
+        self._phi_max = phi_max
+
+    # Public.
+
+
+
 class bend_prm_class:
     # Private
 
@@ -59,10 +69,10 @@ class bend_prm_class:
                 lat_prop.set_b_n_fam(self._dip_list[k], quad, prm[prm_ind])
                 prm_ind += 1
         self._phi_0 = phi_bend - phi
+        lat_prop.set_phi_fam(self._dip_0, self._phi_0)
         if self._b_2_prm:
             lat_prop.set_b_n_fam(self._dip_0, quad, prm[prm_ind])
             prm_ind += 1
-        lat_prop.set_phi_fam(self._dip_0, self._phi_0)
         return prm_ind
 
 

@@ -192,7 +192,7 @@ stable = lat_prop.compute_radiation()
 lat_prop.prt_rad()
 lat_prop.prt_M_rad()
 
-lat_prop.prt_Twiss("max_4u_uc.txt")
+lat_prop.prt_Twiss(lat_name+".txt")
 
 bend_list  = ["b1_1", "b1_2", "b1_3", "b1_4", "b1_5"]
 rbend_name = "qf1"

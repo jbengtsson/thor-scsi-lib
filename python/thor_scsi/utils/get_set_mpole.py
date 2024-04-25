@@ -3,6 +3,7 @@
 
 import enum
 
+import math
 import numpy as np
 
 import thor_scsi.lib as ts
@@ -55,12 +56,12 @@ class get_set_mpole_class:
 
     def get_phi_elem(self, fam_name, kid_num):
         b = self._lattice.find(fam_name, kid_num)
-        return b.get_length() * b.get_curvature() * 180e0 / np.pi
+        return math.degrees(b.get_length() * b.get_curvature())
 
     def set_phi_elem(self, fam_name, kid_num, phi):
         b = self._lattice.find(fam_name, kid_num)
         L = b.get_length()
-        h = phi * np.pi / (L * 180e0)
+        h = math.radians(phi) / L
         b.set_curvature(h)
 
     def set_phi_fam(self, fam_name, phi):
@@ -71,8 +72,9 @@ class get_set_mpole_class:
     def set_dphi_elem(self, fam_name, kid_num, dphi):
         b = self._lattice.find(fam_name, kid_num)
         L = b.get_length()
-        phi = b.get_length() * b.get_curvature() * 180e0 / np.pi
-        h = (phi + dphi) * np.pi / (L * 180e0)
+        # phi [rad].
+        phi = b.get_length() * b.get_curvature()
+        h = (phi + dphi) / L
         b.set_curvature(h)
 
     def set_dphi_fam(self, fam_name, dphi):
