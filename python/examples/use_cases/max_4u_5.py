@@ -49,9 +49,27 @@ def opt_sp(lat_prop, prm_list, weight):
     def prt_iter(prm, chi_2, eta, beta, nu, xi):
         nonlocal n_iter
 
+        def compute_phi_bend(lat_prop, bend_list):
+            phi = 0e0
+            for k in range(len(bend_list)):
+                phi += lat_prop.get_phi_elem(bend_list[k], 0)
+            return phi
+
+        b1_list = [
+            "b1_0", "b1_1", "b1_2", "b1_3", "b1_4", "b1_5"]
+        b2_list = [
+            "b2u_6", "b2u_5", "b2u_4", "b2u_3", "b2u_2", "b2u_1", "b2_0", "b2d_1", "b2d_2",
+            "b2d_3", "b2d_4", "b2d_5"]
+        rb1 = "qf1"
+        rb2 = "qf1_e"
+
         phi = lat_prop.compute_phi_lat()
         # Twiss functions at end of super period.
         _, _, beta_id, _ = lat_prop.get_Twiss(-1)
+        phi_b1 = compute_phi_bend(lat_prop, b1_list)
+        phi_b2 = compute_phi_bend(lat_prop, b2_list)
+        phi_rb1 = lat_prop.get_phi_elem(rb1, 0)
+        phi_rb2 = lat_prop.get_phi_elem(rb2, 0)
 
         print("\n{:3d} chi_2 = {:11.5e}".format(n_iter, chi_2))
         print("  eps_x [pm.rad] = {:5.3f}".format(1e12*lat_prop._eps[ind.X]))
@@ -67,8 +85,12 @@ def opt_sp(lat_prop, prm_list, weight):
               format(nu[ind.X], nu[ind.Y], nu_sp[ind.X], nu_sp[ind.Y]))
         print("  xi             =  [{:5.3f}, {:5.3f}]".
               format(xi[ind.X], xi[ind.Y]))
-        print("  phi_sp         =  {:8.5f}".format(phi))
+        print("\n  phi_sp         =  {:8.5f}".format(phi))
         print("  C [n]          =  {:8.5f}".format(lat_prop.compute_circ()))
+        print("\n  phi_b1         =  {:8.5f}".format(phi_b1))
+        print("  phi_b2         =  {:8.5f}".format(phi_b2))
+        print("  phi_rb1        =  {:8.5f}".format(phi_rb1))
+        print("  phi_rb2        =  {:8.5f}".format(phi_rb2))
         prm_list.prt_prm(prm)
 
     def compute_chi_2(eta, beta, nu, xi):
@@ -236,38 +258,43 @@ weight = np.array([
     1e-7   # xi.
 ])
 
-dip_list = ["b1_1", "b1_2", "b1_3", "b1_4", "b1_5"]
-b1 = \
-    pc.bend_prm_class(
-        lat_prop, "b1_0", dip_list, True, phi_max, b_2_bend_max)
-
-dip_list  = [
+bend_list = [
+    "b1_0", "b1_1", "b1_2", "b1_3", "b1_4", "b1_5",
     "b2u_6", "b2u_5", "b2u_4", "b2u_3", "b2u_2", "b2u_1", "b2d_1", "b2d_2",
-    "b2d_3", "b2d_4", "b2d_5"
-]
-b2 = pc.bend_prm_class(lat_prop, "b2_0", dip_list, True, phi_max, b_2_bend_max)
+    "b2d_3", "b2d_4", "b2d_5",
+    "qf1",
+    "qf1_e"]
 
-rb_list  = ["qf1"]
-dip_list = ["b1_0"]
-rb1 = pc.rev_bend_prm_class(lat_prop, rb_list, dip_list, phi_max)
-
-rb_list  = ["qf1_e"]
-dip_list = ["b2_0"]
-rb2 = pc.rev_bend_prm_class(lat_prop, rb_list, dip_list, phi_max)
-
-# opt_phi = pc.opt_phi_class()
+opt_phi = pc.opt_phi_class(lat_prop, "b2_0", bend_list, phi_max)
 
 prm_list = [
-    ("qf1",    "b_2"),
-
+    ("qf1",      "b_2"),
     ("qf1_e",    "b_2"),
+
     ("qd",       "b_2"),
     ("qf2",      "b_2"),
-    ("bend",     b1),
-    ("bend",     b2),
-    ("rev_bend", rb1),
-    ("rev_bend", rb2),
-    # ("opt_phi",  opt_phi)
+
+    ("b1_0",     "b_2"),
+    ("b1_1",     "b_2"),
+    ("b1_2",     "b_2"),
+    ("b1_3",     "b_2"),
+    ("b1_4",     "b_2"),
+    ("b1_5",     "b_2"),
+
+    ("b2u_6",    "b_2"),
+    ("b2u_5",    "b_2"),
+    ("b2u_4",    "b_2"),
+    ("b2u_3",    "b_2"),
+    ("b2u_2",    "b_2"),
+    ("b2u_1",    "b_2"),
+    ("b2_0",     "b_2"),
+    ("b2d_1",    "b_2"),
+    ("b2d_2",    "b_2"),
+    ("b2d_3",    "b_2"),
+    ("b2d_4",    "b_2"),
+    ("b2d_5",    "b_2"),
+
+    ("opt_phi",  opt_phi)
 ]
 
 prm_list = pc.prm_class(lat_prop, prm_list, b_2_max)

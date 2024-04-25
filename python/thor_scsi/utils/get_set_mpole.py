@@ -140,5 +140,4 @@ class get_set_mpole_class:
         self.set_b_n_fam(fam_name, 2, b_n)
 
 
-
 __all__ = [get_set_mpole_class]
