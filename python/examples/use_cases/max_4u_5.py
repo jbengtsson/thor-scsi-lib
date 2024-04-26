@@ -58,8 +58,8 @@ def opt_sp(lat_prop, prm_list, weight):
         b1_list = [
             "b1_0", "b1_1", "b1_2", "b1_3", "b1_4", "b1_5"]
         b2_list = [
-            "b2u_6", "b2u_5", "b2u_4", "b2u_3", "b2u_2", "b2u_1", "b2_0", "b2d_1", "b2d_2",
-            "b2d_3", "b2d_4", "b2d_5"]
+            "b2u_6", "b2u_5", "b2u_4", "b2u_3", "b2u_2", "b2u_1", "b2_0",
+            "b2d_1", "b2d_2", "b2d_3", "b2d_4", "b2d_5"]
         rb1 = "qf1"
         rb2 = "qf1_e"
 
@@ -86,7 +86,7 @@ def opt_sp(lat_prop, prm_list, weight):
         print("  xi             =  [{:5.3f}, {:5.3f}]".
               format(xi[ind.X], xi[ind.Y]))
         print("\n  phi_sp         =  {:8.5f}".format(phi))
-        print("  C [n]          =  {:8.5f}".format(lat_prop.compute_circ()))
+        print("  C [m]          =  {:8.5f}".format(lat_prop.compute_circ()))
         print("\n  phi_b1         =  {:8.5f}".format(phi_b1))
         print("  phi_b2         =  {:8.5f}".format(phi_b2))
         print("  phi_rb1        =  {:8.5f}".format(phi_rb1))
@@ -250,8 +250,8 @@ if False:
 
 # Weights.
 weight = np.array([
-    1e14,  # eps_x.
-    1e-14, # U_0.
+    10e14,  # eps_x.
+    10e-14, # U_0.
     1e2,   # eta_uc_x.
     1e-2,  # beta_uc.
     1e-1,  # nu_sp.
