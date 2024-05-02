@@ -28,6 +28,7 @@ class periodic_structure_class:
         self._desc        = []
 
         self._lattice     = []
+        self._type_code        = np.nan # Lattice elements type code.
         self._model_state = []
         self._no          = no
         self._n_dof       = np.nan
@@ -36,7 +37,7 @@ class periodic_structure_class:
         self._alpha_c     = np.nan
         self._A           = np.nan
 
-        self._data        = []
+        self._Twiss        = []     # Lattice Twiss parameters.
               
         # Initialise.
 
@@ -48,6 +49,8 @@ class periodic_structure_class:
 
         # Read in & parse lattice file.
         self._lattice = accelerator_from_config(file_name)
+        # Get element type codes.
+        self.get_type_codes()
         # Set lattice state (Rf cavity on/off, etc.).
         self._model_state = ts.ConfigType()
 
@@ -66,19 +69,20 @@ class periodic_structure_class:
         self._alpha_c = \
             self._M.iloc[ind.ct].getv(1)[ind.delta]/self.compute_circ()
 
-    def get_type(self, elem):
+    def get_type_code(self, elem):
         match type(elem):
             case ts.Marker:
                 type_code = 0.0
             case ts.Drift:
                 type_code = 0.0
             case ts.Bending:
-                if elem.get_multipoles().get_multipole(2).real == 0e0:
-                    type_code = np.sign(elem.get_curvature())*0.5
-                else:
-                    type_code = \
-                        np.sign(elem.get_multipoles().get_multipole(2).real) \
-                        *0.75
+                type_code = np.sign(elem.get_curvature())*0.5
+                # if elem.get_multipoles().get_multipole(2).real == 0e0:
+                #     type_code = np.sign(elem.get_curvature())*0.5
+                # else:
+                #     type_code = \
+                #         np.sign(elem.get_multipoles().get_multipole(2).real) \
+                #         *0.75
             case ts.Quadrupole:
                 type_code = \
                     np.sign(elem.get_multipoles().get_multipole(2).real)*1.0
@@ -91,15 +95,15 @@ class periodic_structure_class:
             case ts.Cavity:
                 type_code = 0.0 
             case _:
-                print("\nget_type - undefined type:", elem.name)
+                print("\nget_type_code - undefined type:", elem.name)
                 type_code = np.nan
         return type_code
 
-    def get_types(self):
-        n = len(self._lattice)
-        self._types = np.zeros(n)
-        for k in range(n):
-            self._types[k] = self.get_type(self._lattice[k])
+    def get_type_codes(self):
+        self._type_code = []
+        for k in range(len(self._lattice)):
+            self._type_code.append(self.get_type_code(self._lattice[k]))
+        self._type_code = np.array(self._type_code)
 
     def plt_Twiss(self, file_name, plot):
         fig, (gr_1, gr_2) = plt.subplots(2)
@@ -110,30 +114,31 @@ class periodic_structure_class:
         gr_1.set_xlabel("s [m]")
         gr_1.set_ylabel(r"$\beta_{x,y}$ [m]")
         gr_1.plot(
-            self._data.s, self._data.twiss.sel(plane="x", par="beta"), "b",
+            self._Twiss.s, self._Twiss.twiss.sel(plane="x", par="beta"), "b",
             label=r"$\beta_x$")
         gr_1.plot(
-            self._data.s, self._data.twiss.sel(plane="y", par="beta"), "r",
+            self._Twiss.s, self._Twiss.twiss.sel(plane="y", par="beta"), "r",
             label=r"$\beta_y$")
         gr_1.set_ylim(bottom=0)
         gr_1.legend()
 
         gr_1_r = gr_1.twinx()
-        gr_1_r.set_ylim([-2.0, 20.0])
+        gr_1_r.set_ylim([-2.0, 10.0])
         gr_1_r.set_yticks([])
-        gr_1_r.step(self._data.s, self._types, "k")
+        gr_1_r.step(self._Twiss.s, self._type_code, "k")
 
         gr_2.set_title("Dispersion")
         gr_2.set_xlabel("s [m]")
         gr_2.set_ylabel(r"$\eta_x$ [m]")
         gr_2.plot(
-            self._data.s, self._data.dispersion.sel(phase_coordinate="x"), "b")
-        gr_2.set_ylim(bottom=0)
+            self._Twiss.s, self._Twiss.dispersion.sel(phase_coordinate="x"),
+            "b")
+        # gr_2.set_ylim(bottom=0)
 
         gr_2_r = gr_2.twinx()
-        gr_2_r.set_ylim([-2.0, 20.0])
+        gr_2_r.set_ylim([-2.0, 10.0])
         gr_2_r.set_yticks([])
-        gr_2_r.step(self._data.s, self._types, "k")
+        gr_2_r.step(self._Twiss.s, self._type_code, "k")
 
         fig.tight_layout()
 
@@ -210,22 +215,22 @@ class periodic_structure_class:
 
     def get_Twiss(self, loc):
         eta = np.array([
-            self._data.dispersion.sel(phase_coordinate="x").values[loc],
-            self._data.dispersion.sel(phase_coordinate="px").values[loc],
-            self._data.dispersion.sel(phase_coordinate="y").values[loc],
-            self._data.dispersion.sel(phase_coordinate="py").values[loc],
+            self._Twiss.dispersion.sel(phase_coordinate="x").values[loc],
+            self._Twiss.dispersion.sel(phase_coordinate="px").values[loc],
+            self._Twiss.dispersion.sel(phase_coordinate="y").values[loc],
+            self._Twiss.dispersion.sel(phase_coordinate="py").values[loc],
         ])
         alpha = np.array([
-                self._data.twiss.sel(plane="x", par="alpha").values[loc],
-                self._data.twiss.sel(plane="y", par="alpha").values[loc],
+                self._Twiss.twiss.sel(plane="x", par="alpha").values[loc],
+                self._Twiss.twiss.sel(plane="y", par="alpha").values[loc],
             ])
         beta = np.array([
-                self._data.twiss.sel(plane="x", par="beta").values[loc],
-                self._data.twiss.sel(plane="y", par="beta").values[loc],
+                self._Twiss.twiss.sel(plane="x", par="beta").values[loc],
+                self._Twiss.twiss.sel(plane="y", par="beta").values[loc],
             ])
         nu = np.array([
-                self._data.twiss.sel(plane="x", par="nu").values[loc],
-                self._data.twiss.sel(plane="y", par="nu").values[loc],
+                self._Twiss.twiss.sel(plane="x", par="nu").values[loc],
+                self._Twiss.twiss.sel(plane="y", par="nu").values[loc],
             ])
         return eta, alpha, beta, nu
 
@@ -267,15 +272,16 @@ class periodic_structure_class:
               file=file)
         print("                  [m]                    [m]             [m]"
               "     [m]                 [m]             [m]", file=file)
-        for k in range(len(self._data.index)):
+        for k in range(len(self._Twiss.index)):
             eta, alpha, beta, nu = self.get_Twiss(k)
 
             print("{:3d} {:10s} {:7.3f} {:4.1f} {:9.5f} {:8.5f} {:7.5f} {:8.5f}"
                   " {:8.5f} {:9.5f} {:8.5f} {:7.5f} {:8.5f} {:8.5f}".
-                  format(k, self._lattice[k].name,  self._data.s[k],
-                         self._types[k], alpha[ind.X], beta[ind.X], nu[ind.X],
-                         eta[ind.x], eta[ind.px], alpha[ind.Y], beta[ind.Y],
-                         nu[ind.Y], eta[ind.y], eta[ind.py]), file=file)
+                  format(k, self._lattice[k].name,  self._Twiss.s[k],
+                         self._type_code[k], alpha[ind.X], beta[ind.X],
+                         nu[ind.X], eta[ind.x], eta[ind.px], alpha[ind.Y],
+                         beta[ind.Y], nu[ind.Y], eta[ind.y], eta[ind.py]),
+                  file=file)
 
         print("\nprt_Twiss - Linear optics saved as:", file_name)
 
@@ -294,12 +300,12 @@ class periodic_structure_class:
             self.compute_alpha_c()
             A_map = gtpsa.ss_vect_tpsa(self._desc, self._no)
             A_map.set_jacobian(self._A)
-            self._data = \
+            self._Twiss = \
                 lo.compute_Twiss_along_lattice(
                     self._n_dof, self._lattice, self._model_state, A=A_map,
                     desc=self._desc, mapping=self._named_index)
         else:
-            self._data = np.nan
+            self._Twiss = np.nan
             print("\ncomp_per_sol: unstable")
 
         return stable

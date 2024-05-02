@@ -39,7 +39,8 @@ def opt_sp(lat_prop, prm_list, weight):
     eta_uc_x  = 0.06255
     # Beta functions at the unit cell end.
     beta_uc   = [3.65614, 3.68868]
-    nu_sp     = [2.110, 0.814]
+    nu_uc     = [0.266, 0.0764]
+    nu_sp     = [2.110-4*nu_uc[ind.X], 0.814-4*nu_uc[ind.Y]]
 
     chi_2_min = 1e30
     eta       = np.nan
@@ -58,18 +59,16 @@ def opt_sp(lat_prop, prm_list, weight):
         b1_list = [
             "b1_0", "b1_1", "b1_2", "b1_3", "b1_4", "b1_5"]
         b2_list = [
-            "b2u_6", "b2u_5", "b2u_4", "b2u_3", "b2u_2", "b2u_1", "b2_0",
-            "b2d_1", "b2d_2", "b2d_3", "b2d_4", "b2d_5"]
-        rb1 = "qf1"
-        rb2 = "qf1_e"
+            "b2d_6", "b2d_5", "b2d_4", "b2d_3", "b2d_2", "b2d_1", "b2_0",
+            "b2u_1", "b2u_2", "b2u_3", "b2u_4", "b2u_5"]
+        rb = "qf1"
 
         phi = lat_prop.compute_phi_lat()
         # Twiss functions at end of super period.
         _, _, beta_id, _ = lat_prop.get_Twiss(-1)
         phi_b1 = compute_phi_bend(lat_prop, b1_list)
         phi_b2 = compute_phi_bend(lat_prop, b2_list)
-        phi_rb1 = lat_prop.get_phi_elem(rb1, 0)
-        phi_rb2 = lat_prop.get_phi_elem(rb2, 0)
+        phi_rb = lat_prop.get_phi_elem(rb, 0)
 
         print("\n{:3d} chi_2 = {:11.5e}".format(n_iter, chi_2))
         print("  eps_x [pm.rad] = {:5.3f}".format(1e12*lat_prop._eps[ind.X]))
@@ -89,8 +88,7 @@ def opt_sp(lat_prop, prm_list, weight):
         print("  C [m]          =  {:8.5f}".format(lat_prop.compute_circ()))
         print("\n  phi_b1         =  {:8.5f}".format(phi_b1))
         print("  phi_b2         =  {:8.5f}".format(phi_b2))
-        print("  phi_rb1        =  {:8.5f}".format(phi_rb1))
-        print("  phi_rb2        =  {:8.5f}".format(phi_rb2))
+        print("  phi_rb         =  {:8.5f}".format(phi_rb))
         prm_list.prt_prm(prm)
 
     def compute_chi_2(eta, beta, nu, xi):
@@ -211,13 +209,11 @@ E_0     = 3.0e9
 
 home_dir = os.path.join(
     os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "MAX_4U")
-lat_name = "max_4u_sp_1"
+lat_name = "max_4u_jb_2"
 file_name = os.path.join(home_dir, lat_name+".lat")
 
 lat_prop = \
     lp.lattice_properties_class(nv, no, nv_prm, no_prm, file_name, E_0, cod_eps)
-
-lat_prop.get_types()
 
 print("\nCircumference [m]      = {:7.5f}".format(lat_prop.compute_circ()))
 print("Total bend angle [deg] = {:7.5f}".format(lat_prop.compute_phi_lat()))
@@ -250,7 +246,7 @@ if False:
 
 # Weights.
 weight = np.array([
-    10e14,  # eps_x.
+    1e14,  # eps_x.
     10e-14, # U_0.
     1e2,   # eta_uc_x.
     1e-2,  # beta_uc.
@@ -258,41 +254,40 @@ weight = np.array([
     1e-7   # xi.
 ])
 
-bend_list = [
-    "b1_0", "b1_1", "b1_2", "b1_3", "b1_4", "b1_5",
-    "b2u_6", "b2u_5", "b2u_4", "b2u_3", "b2u_2", "b2u_1", "b2d_1", "b2d_2",
-    "b2d_3", "b2d_4", "b2d_5",
-    "qf1",
-    "qf1_e"]
+b1_list = ["b1_0", "b1_1", "b1_2", "b1_3", "b1_4", "b1_5"]
 
-opt_phi = pc.opt_phi_class(lat_prop, "b2_0", bend_list, phi_max)
+b2_list = [
+    "b2u_5", "b2u_4", "b2u_3", "b2u_2", "b2u_1", "b2_0",
+    "b2d_1", "b2d_2", "b2d_3", "b2d_4", "b2d_5", "b2d_6"
+]
+
+opt_phi = pc.opt_phi_class(lat_prop, bend_list, phi_max)
 
 prm_list = [
-    ("qf1",      "b_2"),
-    ("qf1_e",    "b_2"),
+    ("qf1",   "b_2"),
 
-    ("qd",       "b_2"),
-    ("qf2",      "b_2"),
+    ("qd",    "b_2"),
+    ("qf2",   "b_2"),
 
-    ("b1_0",     "b_2"),
-    ("b1_1",     "b_2"),
-    ("b1_2",     "b_2"),
-    ("b1_3",     "b_2"),
-    ("b1_4",     "b_2"),
-    ("b1_5",     "b_2"),
+    ("b1_0",  "b_2"),
+    ("b1_1",  "b_2"),
+    ("b1_2",  "b_2"),
+    ("b1_3",  "b_2"),
+    ("b1_4",  "b_2"),
+    ("b1_5",  "b_2"),
 
-    ("b2u_6",    "b_2"),
-    ("b2u_5",    "b_2"),
-    ("b2u_4",    "b_2"),
-    ("b2u_3",    "b_2"),
-    ("b2u_2",    "b_2"),
-    ("b2u_1",    "b_2"),
-    ("b2_0",     "b_2"),
-    ("b2d_1",    "b_2"),
-    ("b2d_2",    "b_2"),
-    ("b2d_3",    "b_2"),
-    ("b2d_4",    "b_2"),
-    ("b2d_5",    "b_2"),
+    ("b2u_5", "b_2"),
+    ("b2u_4", "b_2"),
+    ("b2u_3", "b_2"),
+    ("b2u_2", "b_2"),
+    ("b2u_1", "b_2"),
+    ("b2_0",  "b_2"),
+    ("b2d_1", "b_2"),
+    ("b2d_2", "b_2"),
+    ("b2d_3", "b_2"),
+    ("b2d_4", "b_2"),
+    ("b2d_5", "b_2"),
+    ("b2d_6", "b_2"),
 
     ("opt_phi",  opt_phi)
 ]

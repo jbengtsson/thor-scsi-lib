@@ -167,37 +167,43 @@ E_0     = 3.0e9
 home_dir = os.path.join(
     os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "MAX_4U")
 # lat_name = "max_iv"
-lat_name = "max_4u_sp_2"
+lat_name = "max_4u_jb_2"
 file_name = os.path.join(home_dir, lat_name+".lat")
 
 lat_prop = \
     lp.lattice_properties_class(nv, no, nv_prm, no_prm, file_name, E_0, cod_eps)
 
-lat_prop.get_types()
+print("\nTotal bend angle [deg] = {:7.5f}".format(lat_prop.compute_phi_lat()))
+print("Circumference [m]      = {:7.5f}".format(lat_prop.compute_circ()))
 
-# Compute Twiss parameters along lattice.
-stable = lat_prop.comp_per_sol()
-print("\nCircumference [m]      = {:7.5f}".format(lat_prop.compute_circ()))
-print("Total bend angle [deg] = {:7.5f}".format(lat_prop.compute_phi_lat()))
-lat_prop.prt_M()
-if not stable:
-    print("\ncomp_per_sol - unstable")
-    assert False
-lat_prop.prt_lat_param()
+try:
+    # Compute Twiss parameters along lattice.
+    if not lat_prop.comp_per_sol():
+        print("\ncomp_per_sol - unstable")
+        raise ValueError
+except ValueError:
+    exit
+else:
+    lat_prop.prt_lat_param()
+    lat_prop.prt_M()
+    lat_prop.prt_Twiss(lat_name+".txt")
+try:
+    # Compute radiation properties.
+    if not lat_prop.compute_radiation():
+        print("\ncompute_radiation - unstable")
+        raise ValueError
+except ValueError:
+    exit
+else:
+    lat_prop.prt_rad()
+    lat_prop.prt_M_rad()
 
-# Compute radiation properties.
-stable = lat_prop.compute_radiation()
-lat_prop.prt_rad()
-lat_prop.prt_M_rad()
-
-lat_prop.prt_Twiss(lat_name+".txt")
+if not False:
+    lat_prop.plt_Twiss(lat_name+".png", not False)
 
 bend_list  = ["b1_1", "b1_2", "b1_3", "b1_4", "b1_5"]
 rbend_name = "qf1"
 phi_uc     = 3.0
-
-if not False:
-    lat_prop.plt_Twiss(lat_name+".png", not False)
 
 if False:
     opt_var_bend_radius(lat_prop, bend_list, rbend_name, phi_uc, not False)

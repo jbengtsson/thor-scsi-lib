@@ -31,9 +31,14 @@ class opt_phi_class:
         return phi
 
     def get_bend_prm(self, lat_prop):
+        prt = not False
         prm = []
         bounds = []
+        if prt:
+            print("\nget_bend_prm:")
         for k in range(len(self._bend_list)):
+            if prt:
+                print("  {:s}".format(self._bend_list[k]))
             phi = lat_prop.get_phi_elem(self._bend_list[k], 0)
             prm.append(phi)
             bounds.append((-self._phi_max, self._phi_max))
@@ -78,14 +83,22 @@ class prm_class(opt_phi_class):
     # Public.
 
     def get_prm(self, lat_prop):
+        prt = not False
         prm = []
         bounds = []
+        if prt:
+            print("\nget_prm:")
         for k in range(len(self._prm_list)):
             if self._prm_list[k][0] == "opt_phi":
+                if prt:
+                    print("  {:5s}".format(self._prm_list[k][0]))
                 p, b = self._prm_list[k][1].get_bend_prm(lat_prop)
                 prm.extend(p)
                 bounds.extend(b)
             else:
+                if prt:
+                    print("  {:5s} {:5s}".
+                          format(self._prm_list[k][0], self._prm_list[k][1]))
                 prm.append(
                     self._get_prm_func_dict[self._prm_list[k][1]](
                         self._prm_list[k][0], 0))

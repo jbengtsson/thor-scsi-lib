@@ -167,13 +167,11 @@ E_0     = 3.0e9
 
 home_dir = os.path.join(
     os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "MAX_4U")
-lat_name = "max_4u_sp_2"
+lat_name = "max_4u_sp_3"
 file_name = os.path.join(home_dir, lat_name+".lat")
 
 lat_prop = \
     lp.lattice_properties_class(nv, no, nv_prm, no_prm, file_name, E_0, cod_eps)
-
-lat_prop.get_types()
 
 print("\nCircumference [m]      = {:7.5f}".format(lat_prop.compute_circ()))
 print("Total bend angle [deg] = {:7.5f}".format(lat_prop.compute_phi_lat()))
@@ -181,7 +179,7 @@ print("Total bend angle [deg] = {:7.5f}".format(lat_prop.compute_phi_lat()))
 try:
     # Compute Twiss parameters along lattice.
     if not lat_prop.comp_per_sol():
-        print("\ncompute_chi_2 - comp_per_sol: unstable")
+        print("\ncomp_per_sol - unstable")
         raise ValueError
 except ValueError:
     exit
@@ -232,8 +230,7 @@ prm_list = [
 
 prm_list = pc.prm_class(lat_prop, prm_list, b_2_max)
 
-if not False:
-    opt_sp(lat_prop, prm_list, weight)
+opt_sp(lat_prop, prm_list, weight)
 
 if False:
     dip_list = [bend]
