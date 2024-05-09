@@ -175,7 +175,7 @@ def opt_sp(lat_prop, prm_list, weight):
     f_tol    = 1e-4
     x_tol    = 1e-4
 
-    prm, bounds = prm_list.get_prm(lat_prop)
+    prm, bounds = prm_list.get_prm()
 
     # Methods:
     #   Nelder-Mead, Powell, CG, BFGS, Newton-CG, L-BFGS-B, TNC, COBYLA,
@@ -256,40 +256,21 @@ weight = np.array([
 
 b1_list = ["b1_0", "b1_1", "b1_2", "b1_3", "b1_4", "b1_5"]
 
+# b1_phi = pc.phi_bend_class(lat_prop, b1_list, phi_max)
+
 b2_list = [
     "b2u_5", "b2u_4", "b2u_3", "b2u_2", "b2u_1", "b2_0",
     "b2d_1", "b2d_2", "b2d_3", "b2d_4", "b2d_5", "b2d_6"
 ]
 
-opt_phi = pc.opt_phi_class(lat_prop, bend_list, phi_max)
+# b2_phi = pc.phi_bend_class(lat_prop, b1_list, phi_max)
+b2_b_2 = pc.b_2_bend_class(lat_prop, b2_list, b_2_max)
 
 prm_list = [
-    ("qf1",   "b_2"),
-
-    ("qd",    "b_2"),
-    ("qf2",   "b_2"),
-
-    ("b1_0",  "b_2"),
-    ("b1_1",  "b_2"),
-    ("b1_2",  "b_2"),
-    ("b1_3",  "b_2"),
-    ("b1_4",  "b_2"),
-    ("b1_5",  "b_2"),
-
-    ("b2u_5", "b_2"),
-    ("b2u_4", "b_2"),
-    ("b2u_3", "b_2"),
-    ("b2u_2", "b_2"),
-    ("b2u_1", "b_2"),
-    ("b2_0",  "b_2"),
-    ("b2d_1", "b_2"),
-    ("b2d_2", "b_2"),
-    ("b2d_3", "b_2"),
-    ("b2d_4", "b_2"),
-    ("b2d_5", "b_2"),
-    ("b2d_6", "b_2"),
-
-    ("opt_phi",  opt_phi)
+    # ("qf1",      "b_2"),
+    # ("qd",       "b_2"),
+    # ("qf2",      "b_2"),
+    ("b_2_bend", b2_b_2)
 ]
 
 prm_list = pc.prm_class(lat_prop, prm_list, b_2_max)
