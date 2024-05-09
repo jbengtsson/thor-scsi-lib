@@ -111,7 +111,7 @@ def match_straight(lat_prop, prm_list, Twiss_0, Twiss_1, weight):
     A_7x7[:6, :6] = cs.compute_A(*Twiss_0[:3])
     A0.set_jacobian(A_7x7)
 
-    prm, bounds = prm_list.get_prm(lat_prop)
+    prm, bounds = prm_list.get_prm()
 
     # Methods:
     #   Nelder-Mead, Powell, CG, BFGS, Newton-CG, L-BFGS-B, TNC, COBYLA,
@@ -145,16 +145,14 @@ E_0     = 3.0e9
 
 home_dir = os.path.join(
     os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "MAX_4U")
-lat_name = "max_4u_jb_2"
+lat_name = "max_4u_sp_3"
 file_name = os.path.join(home_dir, lat_name+".lat")
 
 lat_prop = \
     lp.lattice_properties_class(nv, no, nv_prm, no_prm, file_name, E_0, cod_eps)
 
-lat_prop.get_types()
-
-print("\nTotal bend angle [deg] = {:7.5f}".format(lat_prop.compute_phi_lat()))
-print("Circumference [m]      = {:7.5f}".format(lat_prop.compute_circ()))
+print("\nCircumference [m]      = {:7.5f}".format(lat_prop.compute_circ()))
+print("Total bend angle [deg] = {:7.5f}".format(lat_prop.compute_phi_lat()))
 
 # Entrance Twiss parameters.
 eta   = np.array([0.03074, 0.0])
@@ -175,19 +173,21 @@ weight = np.array([
     0*1e0 # beta.
 ])
 
-bend_list = [
-    "b1_0", "b1_1", "b1_2", "b1_3", "b1_4", "b1_5",
-    "b2u_6", "b2u_5", "b2u_4", "b2u_3", "b2u_2", "b2u_1", "b2d_1", "b2d_2",
-    "b2d_3", "b2d_4", "b2d_5"
+b2_list = [
+    "b2u_6", "b2u_5", "b2u_4", "b2u_3", "b2u_2", "b2u_1", "b2_0",
+    "b2d_1", "b2d_2", "b2d_3", "b2d_4", "b2d_5"
 ]
 
-opt_phi = pc.opt_phi_class(lat_prop, "b2_0", bend_list, phi_max)
+b2_phi = pc.phi_bend_class(lat_prop, b2_list, phi_max)
+
+b2_b_2 = pc.b_2_bend_class(lat_prop, b2_list, b_2_max)
 
 prm_list = [
-    ("qd",  "b_2"),
-    ("qf2", "b_2"),
-
-    ("opt_phi",  opt_phi)
+    ("qf1",      "b_2"),
+    ("qd",       "b_2"),
+    ("qf2",      "b_2"),
+    ("phi_bend", b2_phi),
+    ("b_2_bend", b2_b_2)
 ]
 
 prm_list = pc.prm_class(lat_prop, prm_list, b_2_max)

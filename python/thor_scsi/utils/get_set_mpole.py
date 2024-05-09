@@ -124,14 +124,29 @@ class get_set_mpole_class:
         mp = self._lattice.find(fam_name, kid_num)
         return mp.get_multipoles().get_multipole(n).real
 
+    def get_b_nxL_elem(self, fam_name, kid_num, n):
+        mp = self._lattice.find(fam_name, kid_num)
+        L = mp.get_length()
+        return L*mp.get_multipoles().get_multipole(n).real
+
     def set_b_n_elem(self, fam_name, kid_num, n, b_n):
         mp = self._lattice.find(fam_name, kid_num)
         mp.get_multipoles().set_multipole(n, b_n)
+
+    def set_b_nxL_elem(self, fam_name, kid_num, n, b_nxL):
+        mp = self._lattice.find(fam_name, kid_num)
+        L = mp.get_length()
+        mp.get_multipoles().set_multipole(n, b_nxL/L)
 
     def set_b_n_fam(self, fam_name, n, b_n):
         n_kid = len(self._lattice.elements_with_name(fam_name))
         for k in range(n_kid):
             self.set_b_n_elem(fam_name, k, n, b_n)
+
+    def set_b_nxL_fam(self, fam_name, n, b_n):
+        n_kid = len(self._lattice.elements_with_name(fam_name))
+        for k in range(n_kid):
+            self.set_b_nxL_elem(fam_name, k, n, b_n)
 
     def get_b_2_elem(self, fam_name, kid_num):
         return self.get_b_n_elem(fam_name, kid_num, 2)
