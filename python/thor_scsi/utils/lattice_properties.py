@@ -34,6 +34,7 @@ class lattice_properties_class(
     # Private
 
     def __init__(self, nv, no, nv_prm, no_prm, file_name, E_0, cod_eps):
+        # Initialise periodic_structure_class.
         super().__init__(nv, no, nv_prm, no_prm, file_name, E_0)
         self._cod_eps       = cod_eps
         self._rad_del_kicks = []
