@@ -67,10 +67,16 @@ def match_straight(lat_prop, prm_list, Twiss_0, Twiss_1, weight):
         prm_list.prt_prm(prm)
 
     def compute_chi_2_Twiss(Twiss_k):
+        prt = False
         chi_2 = 0e0
+        if prt:
+            print()
         for j in range(3):
             for k in range(2):
-                chi_2 += weight[j] * ((Twiss_1[j][k] - Twiss_k[j][k]) ** 2)
+                dchi_2 = weight[j] * ((Twiss_1[j][k] - Twiss_k[j][k]) ** 2)
+                if prt:
+                    print(" dchi_2 = {:9.3e}".format(dchi_2))
+                chi_2 += dchi_2
         return chi_2
 
     def compute_chi_2():
@@ -145,7 +151,7 @@ E_0     = 3.0e9
 
 home_dir = os.path.join(
     os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "MAX_4U")
-lat_name = "max_4u_sp_3"
+lat_name = "max_4u_sp_4"
 file_name = os.path.join(home_dir, lat_name+".lat")
 
 lat_prop = \
@@ -155,9 +161,9 @@ print("\nCircumference [m]      = {:7.5f}".format(lat_prop.compute_circ()))
 print("Total bend angle [deg] = {:7.5f}".format(lat_prop.compute_phi_lat()))
 
 # Entrance Twiss parameters.
-eta   = np.array([0.03074, 0.0])
+eta   = np.array([0.01262, 0.0])
 alpha = np.array([0.0, 0.0])
-beta  = np.array([0.92126, 9.72555])
+beta  = np.array([0.56715, 9.86206])
 Twiss_0 = eta, alpha, beta
 
 # Desired exit Twiss parameters.
@@ -168,7 +174,7 @@ Twiss_1 = eta, alpha, beta
 
 # Weights.
 weight = np.array([
-    1e8,  # eta.
+    1e9,  # eta.
     1e4,  # alpha.
     0*1e0 # beta.
 ])
@@ -191,12 +197,16 @@ phi_list   = [b2_bend, b1_bend]
 
 opt_phi = pc.phi_tot_class(lat_prop, phi_list, phi_n_list, phi_max)
 
+# Remark:
+# Using the bend angles as parameters - maintaining the total - will change the
+# initial conditions for the horizontal dipspersion; i.e., requires an iterative
+# approach.
 prm_list = [
+    ("qf1_e",    "b_2"),
     ("qd",       "b_2"),
     ("qf2",      "b_2"),
-    ("b_2_bend", b2_bend),
-    ("phi_bend", b2_bend),
-    ("phi_tot",  opt_phi)
+    ("phi_tot",  opt_phi),
+    ("b_2_bend", b2_bend)
 ]
 
 prm_list = pc.prm_class(lat_prop, prm_list, b_2_max)
