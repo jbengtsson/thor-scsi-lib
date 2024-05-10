@@ -138,7 +138,7 @@ def opt_sp(lat_prop, prm_list, weight):
         nonlocal chi_2_min, n_iter
 
         n_iter += 1
-        prm_list.set_prm(lat_prop, prm)
+        prm_list.set_prm(prm)
 
         # Compute the beam dynamics properties.
         try:
@@ -209,7 +209,7 @@ E_0     = 3.0e9
 
 home_dir = os.path.join(
     os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "MAX_4U")
-lat_name = "max_4u_jb_2"
+lat_name = "max_4u_sp_jb"
 file_name = os.path.join(home_dir, lat_name+".lat")
 
 lat_prop = \
@@ -256,29 +256,30 @@ weight = np.array([
 
 b1_list = ["b1_0", "b1_1", "b1_2", "b1_3", "b1_4", "b1_5"]
 
-# b1_phi = pc.phi_bend_class(lat_prop, b1_list, phi_max)
-
 b2_list = [
-    "b2u_5", "b2u_4", "b2u_3", "b2u_2", "b2u_1", "b2_0",
-    "b2d_1", "b2d_2", "b2d_3", "b2d_4", "b2d_5", "b2d_6"
+    "b2u_6", "b2u_5", "b2u_4", "b2u_3", "b2u_2", "b2u_1", "b2_0",
+    "b2d_1", "b2d_2", "b2d_3", "b2d_4", "b2d_5"
 ]
 
-# b2_phi = pc.phi_bend_class(lat_prop, b1_list, phi_max)
-b2_b_2 = pc.b_2_bend_class(lat_prop, b2_list, b_2_max)
+b1_bend = pc.bend_class(lat_prop, b1_list, phi_max, b_2_max)
+b2_bend = pc.bend_class(lat_prop, b2_list, phi_max, b_2_max)
+
+# The end dipole bend angle is the parameter whereas the unit cell dipole bend
+# angle is used for maintaining the total bend angle.
+phi_n_list = [2, 10]
+phi_list   = [b2_bend, b1_bend]
+
+opt_phi = pc.phi_tot_class(lat_prop, phi_list, phi_n_list, phi_max)
 
 prm_list = [
-    # ("qf1",      "b_2"),
-    # ("qd",       "b_2"),
-    # ("qf2",      "b_2"),
-    ("b_2_bend", b2_b_2)
+    ("qf1",      "b_2"),
+    ("qf1_e",    "b_2"),
+    ("qd",       "b_2"),
+    ("qf2",      "b_2"),
+    # ("phi_tot",  opt_phi),
+    ("b_2_bend", b2_bend)
 ]
 
 prm_list = pc.prm_class(lat_prop, prm_list, b_2_max)
 
-if not False:
-    opt_sp(lat_prop, prm_list, weight)
-
-if False:
-    dip_list = [bend]
-    dip_list.extend(bend_list)
-    prt_lat(lat_prop, "opt_sp.txt", dip_list)
+opt_sp(lat_prop, prm_list, weight)
