@@ -10,6 +10,11 @@ to C with P2C.
 
 References:
 
+M. Böge, J. Chrin 𝐴 𝐶𝑂𝑅𝐵𝐴 𝐵𝑎𝑠𝑒𝑑 𝐶𝑙𝑖𝑒𝑛𝑡-𝑆𝑒𝑟𝑣𝑒𝑟 𝑀𝑜𝑑𝑒𝑙 𝑓𝑜𝑟 𝐵𝑒𝑎𝑚 𝐷𝑦𝑛𝑎𝑚𝑖𝑐𝑠 𝐴𝑝𝑝𝑙𝑖𝑐𝑎𝑡𝑖𝑜𝑛𝑠 𝑎𝑡
+ 𝑡ℎ𝑒 𝑆𝐿𝑆 ICALEPCS 1999.
+
+https://accelconf.web.cern.ch/ica99/papers/mc1p61.pdf
+
 E. Asséo, J. Bengtsson, M. Chanel 𝐿𝐸𝐴𝑅 𝐵𝑒𝑎𝑚 𝑆𝑡𝑎𝑏𝑖𝑙𝑖𝑡𝑦 𝐼𝑚𝑝𝑟𝑜𝑣𝑒𝑚𝑒𝑛𝑡𝑠 𝑈𝑠𝑖𝑛𝑔 𝐹𝐹𝑇
 𝐴𝑛𝑎𝑙𝑦𝑠𝑖𝑠 EPAC 1988.
 
