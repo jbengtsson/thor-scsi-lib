@@ -6,7 +6,7 @@
 import logging
 
 # Levels: DEBUG, INFO, WARNING, ERROR, and CRITICAL.
-logging.basicConfig(level="WARNING")
+logging.basicConfig(level="DEBUG")
 logger = logging.getLogger("thor_scsi")
 
 import copy as _copy
@@ -24,7 +24,7 @@ import thor_scsi.lib as ts
 from thor_scsi.utils import lattice_properties as lp, get_set_mpole as gs, \
     index_class as ind, linear_optics as lo, prm_class as pc, \
     courant_snyder as cs
-from thor_scsi.utils.output import vec2txt
+from thor_scsi.utils.output import mat2txt, vec2txt
 
 
 ind = ind.index_class()
@@ -34,6 +34,28 @@ L_max        = 0.50
 phi_max      = 0.85
 b_2_bend_max = 1.0
 b_2_max      = 10.0
+
+
+def compute_unit_cell(lat_prop, loc_0, loc_1):
+    M = gtpsa.ss_vect_tpsa(lat_prop._desc, 1)
+    M.set_identity()
+    # The 3rd argument is the 1st element index & the 4th the number of elements
+    # to propagate across.
+    lat_prop._lattice.propagate(
+        lat_prop._model_state, M, loc_0, loc_1-loc_0+1)
+    stable, nu, A, A_inv, _ = lo.compute_M_diag(2, M.jacobian())
+    eta, Twiss = lo.transform_matrix_extract_twiss(A)
+
+    print("\nM:\n"+mat2txt(M.jacobian()[:6, :6]))
+    print("\n", stable, sep="")
+    print(nu)
+    print(mat2txt(A))
+
+    print("\n  eta   = [{:9.3e}, {:9.3e}]".format(eta[ind.x], eta[ind.px]))
+    print("  alpha = [{:9.3e}, {:9.3e}]".
+          format(Twiss[ind.X][0], Twiss[ind.Y][0]))
+    print("  beta  = [{:7.5f}, {:7.5f}]".
+          format(Twiss[ind.X][1], Twiss[ind.Y][1]))
 
 
 def match_straight(lat_prop, prm_list, Twiss_0, Twiss_1, weight):
@@ -151,7 +173,7 @@ E_0     = 3.0e9
 
 home_dir = os.path.join(
     os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "MAX_4U")
-lat_name = "max_4u_sp_4"
+lat_name = "max_4u_sp_jb"
 file_name = os.path.join(home_dir, lat_name+".lat")
 
 lat_prop = \
@@ -160,10 +182,25 @@ lat_prop = \
 print("\nCircumference [m]      = {:7.5f}".format(lat_prop.compute_circ()))
 print("Total bend angle [deg] = {:7.5f}".format(lat_prop.compute_phi_lat()))
 
+uc_0 = lat_prop._lattice.find("b1_0", 7).index
+uc_1 = lat_prop._lattice.find("b1_0", 8).index
+sp_1 = lat_prop._lattice.find("cav", 0).index
+print("\nunit cell entrance {:5s} loc = {:d}".
+      format(lat_prop._lattice[uc_0].name, uc_0))
+print("unit cell exit     {:5s} loc = {:d}".
+      format(lat_prop._lattice[uc_1].name, uc_1))
+print("super perioc exit  {:5s} loc = {:d}".
+      format(lat_prop._lattice[sp_1].name, sp_1))
+compute_unit_cell(lat_prop, uc_0, uc_1)
+assert False
+
 # Entrance Twiss parameters.
-eta   = np.array([0.01262, 0.0])
+# eta   = np.array([0.01262, 0.0])
+# alpha = np.array([0.0, 0.0])
+# beta  = np.array([0.56715, 9.86206])
+eta   = np.array([0.01195, 0.0])
 alpha = np.array([0.0, 0.0])
-beta  = np.array([0.56715, 9.86206])
+beta  = np.array([0.54600, 10.41682])
 Twiss_0 = eta, alpha, beta
 
 # Desired exit Twiss parameters.
@@ -174,7 +211,7 @@ Twiss_1 = eta, alpha, beta
 
 # Weights.
 weight = np.array([
-    1e9,  # eta.
+    1e8,  # eta.
     1e4,  # alpha.
     0*1e0 # beta.
 ])
