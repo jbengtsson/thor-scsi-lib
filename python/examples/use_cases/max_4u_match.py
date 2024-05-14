@@ -52,12 +52,14 @@ def compute_unit_cell(lat_prop, uc_0, uc_1):
     lat_prop.prt_Twiss_param(Twiss)
     return Twiss, A
 
+
 def match_straight(lat_prop, prm_list, uc_0, uc_1, sp_1, beta, weight):
     chi_2_min = 1e30
     n_iter    = 0
     A0        = gtpsa.ss_vect_tpsa(lat_prop._desc, 1)
 
     def prt_iter(prm, chi_2, Twiss_k):
+
         def compute_phi_bend(lat_prop, bend_list):
             phi = 0e0
             for k in range(len(bend_list)):
@@ -246,9 +248,3 @@ prm_list = [
 prm_list = pc.prm_class(lat_prop, prm_list, b_2_max)
 
 match_straight(lat_prop, prm_list, uc_0, uc_1, sp_1, beta, weight)
-
-
-if False:
-    dip_list = [bend]
-    dip_list.extend(bend_list)
-    prt_lat(lat_prop, "opt_sp.txt", dip_list)
