@@ -6,7 +6,7 @@
 import logging
 
 # Levels: DEBUG, INFO, WARNING, ERROR, and CRITICAL.
-logging.basicConfig(level="DEBUG")
+logging.basicConfig(level="WARNING")
 logger = logging.getLogger("thor_scsi")
 
 import copy as _copy
@@ -36,30 +36,23 @@ b_2_bend_max = 1.0
 b_2_max      = 10.0
 
 
-def compute_unit_cell(lat_prop, loc_0, loc_1):
+def compute_unit_cell(lat_prop, uc_0, uc_1):
     M = gtpsa.ss_vect_tpsa(lat_prop._desc, 1)
     M.set_identity()
     # The 3rd argument is the 1st element index & the 4th the number of elements
     # to propagate across.
     lat_prop._lattice.propagate(
-        lat_prop._model_state, M, loc_0, loc_1-loc_0+1)
+        lat_prop._model_state, M, uc_0, uc_1-uc_0+1)
     stable, nu, A, A_inv, _ = lo.compute_M_diag(2, M.jacobian())
     eta, Twiss = lo.transform_matrix_extract_twiss(A)
+    alpha = np.array((Twiss[ind.X][0], Twiss[ind.Y][0]))
+    beta = np.array((Twiss[ind.X][1], Twiss[ind.Y][1]))
+    Twiss = eta, alpha, beta
+    print("\ncompute_unit_cell:")
+    lat_prop.prt_Twiss_param(Twiss)
+    return Twiss, A
 
-    print("\nM:\n"+mat2txt(M.jacobian()[:6, :6]))
-    print("\n", stable, sep="")
-    print(nu)
-    print(mat2txt(A))
-
-    print("\n  eta   = [{:9.3e}, {:9.3e}]".format(eta[ind.x], eta[ind.px]))
-    print("  alpha = [{:9.3e}, {:9.3e}]".
-          format(Twiss[ind.X][0], Twiss[ind.Y][0]))
-    print("  beta  = [{:7.5f}, {:7.5f}]".
-          format(Twiss[ind.X][1], Twiss[ind.Y][1]))
-
-
-def match_straight(lat_prop, prm_list, Twiss_0, Twiss_1, weight):
-
+def match_straight(lat_prop, prm_list, uc_0, uc_1, sp_1, beta, weight):
     chi_2_min = 1e30
     n_iter    = 0
     A0        = gtpsa.ss_vect_tpsa(lat_prop._desc, 1)
@@ -106,7 +99,7 @@ def match_straight(lat_prop, prm_list, Twiss_0, Twiss_1, weight):
 
         A1 = _copy.copy(A0)
         lat_prop._lattice.propagate(
-            lat_prop._model_state, A1, 0, len(lat_prop._lattice))
+            lat_prop._model_state, A1, uc_1+1, sp_1-uc_1)
         Twiss_k = cs.compute_Twiss_A(A1.jacobian())
         chi_2 = compute_chi_2_Twiss(Twiss_k)
         return chi_2, Twiss_k
@@ -122,21 +115,26 @@ def match_straight(lat_prop, prm_list, Twiss_0, Twiss_1, weight):
             prt_iter(prm, chi_2, Twiss_1)
             pc.prt_lat(lat_prop, "match_lat_k.txt", prm_list)
             chi_2_min = min(chi_2, chi_2_min)
+
+            _, A = compute_unit_cell(lat_prop, uc_0, uc_1)
+            A0.set_jacobian(A_7x7)
         return chi_2
 
     max_iter = 1000
     f_tol    = 1e-4
     x_tol    = 1e-4
 
+    Twiss_0, A = compute_unit_cell(lat_prop, uc_0, uc_1)
+    Twiss_1 = np.array([[0e0, 0e0], [0e0, 0e0], beta])
+
     print("\nmatch_straight:\n\nEntrance:")
     lat_prop.prt_Twiss_param(Twiss_0)
-    print("\nDesired:")
+    print("\nExit:")
     lat_prop.prt_Twiss_param(Twiss_1)
 
     A0.set_zero()
-    # Use *-operator to unpack the list of arguments.
     A_7x7 = np.zeros((7, 7))
-    A_7x7[:6, :6] = cs.compute_A(*Twiss_0[:3])
+    A_7x7[:6, :6] = A
     A0.set_jacobian(A_7x7)
 
     prm, bounds = prm_list.get_prm()
@@ -173,7 +171,7 @@ E_0     = 3.0e9
 
 home_dir = os.path.join(
     os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "MAX_4U")
-lat_name = "max_4u_sp_jb"
+lat_name = "max_4u_sp_jb_2"
 file_name = os.path.join(home_dir, lat_name+".lat")
 
 lat_prop = \
@@ -191,27 +189,12 @@ print("unit cell exit     {:5s} loc = {:d}".
       format(lat_prop._lattice[uc_1].name, uc_1))
 print("super perioc exit  {:5s} loc = {:d}".
       format(lat_prop._lattice[sp_1].name, sp_1))
-compute_unit_cell(lat_prop, uc_0, uc_1)
-assert False
 
-# Entrance Twiss parameters.
-# eta   = np.array([0.01262, 0.0])
-# alpha = np.array([0.0, 0.0])
-# beta  = np.array([0.56715, 9.86206])
-eta   = np.array([0.01195, 0.0])
-alpha = np.array([0.0, 0.0])
-beta  = np.array([0.54600, 10.41682])
-Twiss_0 = eta, alpha, beta
-
-# Desired exit Twiss parameters.
-eta   = np.array([0e0, 0e0, 0e0, 0e0])
-alpha = np.array([0e0, 0e0])
-beta  = np.array([9.2, 2.0])
-Twiss_1 = eta, alpha, beta
+beta = np.array([9.2, 2.0])
 
 # Weights.
 weight = np.array([
-    1e8,  # eta.
+    1e9,  # eta.
     1e4,  # alpha.
     0*1e0 # beta.
 ])
@@ -242,13 +225,27 @@ prm_list = [
     ("qf1_e",    "b_2"),
     ("qd",       "b_2"),
     ("qf2",      "b_2"),
+
     ("phi_tot",  opt_phi),
     ("b_2_bend", b2_bend)
+
+    # ("b2u_6",    "b_2"),
+    # ("b2u_5",    "b_2"),
+    # ("b2u_4",    "b_2"),
+    # ("b2u_3",    "b_2"),
+    # ("b2u_2",    "b_2"),
+    # ("b2u_1",    "b_2"),
+    # ("b2_0",     "b_2"),
+    # ("b2d_1",    "b_2"),
+    # ("b2d_2",    "b_2"),
+    # ("b2d_3",    "b_2"),
+    # ("b2d_4",    "b_2"),
+    # ("b2d_5",    "b_2")
 ]
 
 prm_list = pc.prm_class(lat_prop, prm_list, b_2_max)
 
-match_straight(lat_prop, prm_list, Twiss_0, Twiss_1, weight)
+match_straight(lat_prop, prm_list, uc_0, uc_1, sp_1, beta, weight)
 
 
 if False:
