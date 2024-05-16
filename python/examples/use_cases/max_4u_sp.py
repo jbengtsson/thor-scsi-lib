@@ -1,5 +1,5 @@
 """Use Case:
-     Parametric scans/evaluations for a unit cell.
+     Implementation and general optimisation of a higher-order-achromat.
 """
 
 
@@ -309,11 +309,11 @@ print("unit cell exit     {:5s} loc = {:d}".
 weight = np.array([
     1e14,  # eps_x.
     1e-16, # U_0.
-    1e0,  # eta_x_uc.
-    1e0,  # eta'_x_uc.
+    1e0,   # eta_x_uc.
+    1e0,   # eta'_x_uc.
     1e-3,  # alpha_uc.
     1e-2,  # beta_uc.
-    1e3,  # nu_uc.
+    1e3,   # nu_uc.
     1e-8   # xi.
 ])
 
