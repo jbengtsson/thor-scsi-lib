@@ -121,9 +121,6 @@ class bend_class:
 
 
 class phi_tot_class():
-    # The 1st element in the list is the bend angle paramameter whereas the 2nd
-    # on is used for keeping the total bend angle constant.
-
     # Private
 
     def __init__(self, lat_prop, phi_list, phi_n_list, phi_max):
@@ -154,8 +151,6 @@ class phi_tot_class():
         prt = not False
         prm = []
         bounds = []
-        # The 1st element in the list is the bend angle paramameter whereas the
-        # 2nd one is used for maintaining the total bend angle.
         if prt:
             self.print()
         p, b = self._phi_list[0].get_bend_phi_prm()
