@@ -36,7 +36,7 @@ b_2_bend_max = 1.0
 b_2_max      = 10.0
 
 
-def compute_unit_cell(lat_prop, uc_0, uc_1):
+def compute_periodic_cell(lat_prop, uc_0, uc_1):
     M = gtpsa.ss_vect_tpsa(lat_prop._desc, 1)
     M.set_identity()
     # The 3rd argument is the 1st element index & the 4th the number of elements
@@ -48,7 +48,7 @@ def compute_unit_cell(lat_prop, uc_0, uc_1):
     alpha = np.array((Twiss[ind.X][0], Twiss[ind.Y][0]))
     beta = np.array((Twiss[ind.X][1], Twiss[ind.Y][1]))
     Twiss = eta, alpha, beta
-    print("\ncompute_unit_cell:")
+    print("\ncompute_periodic_cell:")
     lat_prop.prt_Twiss_param(Twiss)
     return Twiss, A
 
@@ -118,7 +118,7 @@ def match_straight(lat_prop, prm_list, uc_0, uc_1, sp_1, beta, weight):
             pc.prt_lat(lat_prop, "match_lat_k.txt", prm_list)
             chi_2_min = min(chi_2, chi_2_min)
 
-            _, A = compute_unit_cell(lat_prop, uc_0, uc_1)
+            _, A = compute_periodic_cell(lat_prop, uc_0, uc_1)
             A0.set_jacobian(A_7x7)
         return chi_2
 
@@ -126,7 +126,7 @@ def match_straight(lat_prop, prm_list, uc_0, uc_1, sp_1, beta, weight):
     f_tol    = 1e-4
     x_tol    = 1e-4
 
-    Twiss_0, A = compute_unit_cell(lat_prop, uc_0, uc_1)
+    Twiss_0, A = compute_periodic_cell(lat_prop, uc_0, uc_1)
     Twiss_1 = np.array([[0e0, 0e0], [0e0, 0e0], beta])
 
     print("\nmatch_straight:\n\nEntrance:")
