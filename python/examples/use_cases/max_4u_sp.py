@@ -181,7 +181,7 @@ def opt_sp(lat_prop, prm_list, uc_0, uc_1, weight, b1_list, b2_list):
         except ValueError:
             exit
         else:
-            eta_uc, alpha_uc, beta_uc, nu_0 = lat_prop.get_Twiss(uc_0)
+            eta_uc, alpha_uc, beta_uc, nu_0 = lat_prop.get_Twiss(uc_0-1)
             _, _, _, nu_1 = lat_prop.get_Twiss(uc_1)
             nu_uc = nu_1 - nu_0
             Twiss_uc = eta_uc, alpha_uc, beta_uc, nu_uc
@@ -210,21 +210,29 @@ def opt_sp(lat_prop, prm_list, uc_0, uc_1, weight, b1_list, b2_list):
             print("\nf_sp - compute_nu_xi: unstable")
             return 1e30
         else:
-            chi_2 = compute_chi_2(xi)
-            if chi_2 < chi_2_min:
-                prt_iter(prm, chi_2, xi)
-                pc.prt_lat(lat_prop, file_name, prm_list)
-                chi_2_min = min(chi_2, chi_2_min)
+            pass
 
-                stable, Twiss_uc_ref = \
-                    compute_periodic_cell(lat_prop, uc_0, uc_1)
-            return chi_2
+        chi_2 = compute_chi_2(xi)
+
+        if chi_2 < chi_2_min:
+            prt_iter(prm, chi_2, xi)
+            pc.prt_lat(lat_prop, file_name, prm_list)
+            chi_2_min = min(chi_2, chi_2_min)
+
+            stable, Twiss_uc_ref = \
+                compute_periodic_cell(lat_prop, uc_0, uc_1)
+            Twiss_uc_ref[0][ind.px] = 0e0
+            Twiss_uc_ref[1][ind.X], Twiss_uc_ref[1][ind.Y] = [0e0, 0e0]
+
+        return chi_2
 
     max_iter = 1000
     f_tol    = 1e-4
     x_tol    = 1e-4
 
     stable, Twiss_uc_ref = compute_periodic_cell(lat_prop, uc_0, uc_1)
+    Twiss_uc_ref[0][ind.px] = 0e0
+    Twiss_uc_ref[1][ind.X], Twiss_uc_ref[1][ind.Y] = [0e0, 0e0]
 
     prm, bounds = prm_list.get_prm()
 
@@ -307,14 +315,14 @@ print("unit cell exit     {:5s} loc = {:d}".
 
 # Weights.
 weight = np.array([
-    1e14,  # eps_x.
+    1e15,  # eps_x.
     1e-16, # U_0.
     1e0,   # eta_x_uc.
     1e0,   # eta'_x_uc.
-    1e-3,  # alpha_uc.
-    1e-2,  # beta_uc.
-    1e3,   # nu_uc.
-    1e-8   # xi.
+    1e-5,  # alpha_uc.
+    1e-4,  # beta_uc.
+    1e2,   # nu_uc.
+    1e-7   # xi.
 ])
 
 b1_list = ["b1_0", "b1_1", "b1_2", "b1_3", "b1_4", "b1_5"]
@@ -340,7 +348,28 @@ prm_list = [
     ("qd",       "b_2"),
     ("qf2",      "b_2"),
     # ("b_2_bend", b1_bend),
-    ("b_2_bend", b2_bend),
+    # ("b_2_bend", b2_bend),
+
+    ("b1_0",     "b_2"),
+    ("b1_1",     "b_2"),
+    ("b1_2",     "b_2"),
+    ("b1_3",     "b_2"),
+    ("b1_4",     "b_2"),
+    ("b1_5",     "b_2"),
+
+    # ("b2u_6",    "b_2"),
+    # ("b2u_5",    "b_2"),
+    # ("b2u_4",    "b_2"),
+    # ("b2u_3",    "b_2"),
+    # ("b2u_2",    "b_2"),
+    # ("b2u_1",    "b_2"),
+    # ("b2_0",     "b_2"),
+    # ("b2d_1",    "b_2"),
+    # ("b2d_2",    "b_2"),
+    # ("b2d_3",    "b_2"),
+    # ("b2d_4",    "b_2"),
+    # ("b2d_5",    "b_2")
+
     # ("qf1",      "phi"),
     # ("qf1_e",    "phi"),
     # ("phi_tot",  opt_phi)
