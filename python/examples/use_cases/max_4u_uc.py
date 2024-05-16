@@ -1,5 +1,5 @@
 """Use Case:
-     Parametric scans/evaluations for a unit cell.
+     Module for implementing & optimising a unit cell.
 """
 
 
@@ -34,7 +34,7 @@ def opt_sp(lat_prop, prm_list, weight):
     """Use Case: optimise super period.
     """
 
-    nu_uc     = [2.0/6.0, 1.0/12.0]
+    nu_uc     = [2.0/6.0+0.005, 1.0/12.0]
 
     chi_2_min = 1e30
     eta       = np.nan
@@ -97,7 +97,7 @@ def opt_sp(lat_prop, prm_list, weight):
         nonlocal chi_2_min, n_iter
 
         n_iter += 1
-        prm_list.set_prm(lat_prop, prm)
+        prm_list.set_prm(prm)
 
         # Compute the beam dynamics properties.
         try:
@@ -133,7 +133,7 @@ def opt_sp(lat_prop, prm_list, weight):
     f_tol    = 1e-4
     x_tol    = 1e-4
 
-    prm, bounds = prm_list.get_prm(lat_prop)
+    prm, bounds = prm_list.get_prm()
 
     # Methods:
     #   Nelder-Mead, Powell, CG, BFGS, Newton-CG, L-BFGS-B, TNC, COBYLA,
@@ -167,7 +167,7 @@ E_0     = 3.0e9
 
 home_dir = os.path.join(
     os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "MAX_4U")
-lat_name = "max_4u_sp_3"
+lat_name = "max_4u_sp_jb_2"
 file_name = os.path.join(home_dir, lat_name+".lat")
 
 lat_prop = \
@@ -213,7 +213,7 @@ bend_list = [
     "b1_1", "b1_2", "b1_3", "b1_4", "b1_5",
     "qf1"]
 
-opt_phi = pc.opt_phi_class(lat_prop, "b1_0", bend_list, phi_max)
+# opt_phi = pc.opt_phi_class(lat_prop, "b1_0", bend_list, phi_max)
 
 prm_list = [
     ("qf1",      "b_2"),
@@ -225,7 +225,7 @@ prm_list = [
     ("b1_4",     "b_2"),
     ("b1_5",     "b_2"),
 
-    ("opt_phi",  opt_phi)
+    # ("opt_phi",  opt_phi)
 ]
 
 prm_list = pc.prm_class(lat_prop, prm_list, b_2_max)
