@@ -18,7 +18,7 @@ from scipy import optimize as opt
 
 from thor_scsi.utils import lattice_properties as lp, index_class as ind, \
     linear_optics as lo, prm_class as pc
-from thor_scsi.utils.output import vec2txt
+from thor_scsi.utils.output import mat2txt, vec2txt
 
 import gtpsa
 
@@ -30,6 +30,25 @@ L_max        = 0.50
 phi_max      = 0.85
 b_2_bend_max = 1.0
 b_2_max      = 10.0
+
+
+def compute_periodic_cell(lat_prop, uc_0, uc_1):
+    M = gtpsa.ss_vect_tpsa(lat_prop._desc, 1)
+    M.set_identity()
+    # The 3rd argument is the 1st element index & the 4th the number of elements
+    # to propagate across.
+    lat_prop._lattice.propagate(
+        lat_prop._model_state, M, uc_0, uc_1-uc_0+1)
+    # Problem with nu.
+    stable, nu, A, A_inv, _ = lo.compute_M_diag(2, M.jacobian())
+    eta, Twiss = lo.transform_matrix_extract_twiss(A)
+    alpha = np.array((Twiss[ind.X][0], Twiss[ind.Y][0]))
+    beta = np.array((Twiss[ind.X][1], Twiss[ind.Y][1]))
+    # Problem with nu/1-nu for compute_nus.
+    # nu = lo.compute_nus(2, M.jacobian())
+    nu = lo.compute_nu_symp(2, M.jacobian())
+    Twiss = eta, alpha, beta
+    return stable, Twiss, nu
 
 
 def opt_sp(lat_prop, prm_list, uc_0, uc_1, weight):
@@ -44,8 +63,10 @@ def opt_sp(lat_prop, prm_list, uc_0, uc_1, weight):
     n_iter    = 0
     file_name = "opt_sp.txt"
 
-    def prt_iter(prm, chi_2, eta, beta, nu, xi):
+    def prt_iter(prm, chi_2, Twiss, nu, xi):
         nonlocal n_iter
+
+        eta, alpha, beta = Twiss
 
         def compute_phi_bend(lat_prop, bend_list):
             phi = 0e0
@@ -53,40 +74,47 @@ def opt_sp(lat_prop, prm_list, uc_0, uc_1, weight):
                 phi += lat_prop.get_phi_elem(bend_list[k], 0)
             return phi
 
-        b_list = [
+        b1_list = ["b1_0", "b1_1", "b1_2", "b1_3", "b1_4", "b1_5"]
+        b2_list = [
             "b2u_6", "b2u_5", "b2u_4", "b2u_3", "b2u_2", "b2u_1", "b2_0",
-            "b2d_1", "b2d_2", "b2d_3", "b2d_4", "b2d_5"]
+            "b2d_1", "b2d_2", "b2d_3", "b2d_4", "b2d_5"
+        ]
         rb_1 = "qf1"
         rb_2 = "qf1_e"
 
         phi = lat_prop.compute_phi_lat()
-        phi_b = compute_phi_bend(lat_prop, b_list)
+        phi_b1 = compute_phi_bend(lat_prop, b1_list)
+        phi_b2 = compute_phi_bend(lat_prop, b2_list)
         phi_rb_1 = lat_prop.get_phi_elem(rb_1, 0)
         phi_rb_2 = lat_prop.get_phi_elem(rb_2, 0)
 
-        # Twiss functions at end of super period.
-        _, _, beta_id, _ = lat_prop.get_Twiss(-1)
-
         print("\n{:3d} chi_2 = {:11.5e}".format(n_iter, chi_2))
-        print("  eps_x [pm.rad] = {:5.3f}".format(1e12*lat_prop._eps[ind.X]))
-        print("  U_0 [keV]      = {:5.3f}".format(1e-3*lat_prop._U_0))
-        print("  beta_id        =  [{:5.3f}, {:5.3f}]".
-              format(beta_id[ind.X], beta_id[ind.Y]))
-        print("  nu             =  [{:7.5f}, {:7.5f}] ([{:7.5f}, {:7.5f}])".
+        print("    eps_x [pm.rad] = {:5.3f}".format(1e12*lat_prop._eps[ind.X]))
+        print("    U_0 [keV]      = {:5.3f}".format(1e-3*lat_prop._U_0))
+        print("    eta_x          = [{:9.3e}, {:9.3e}]".
+              format(eta[ind.x], eta[ind.px]))
+        print("    alpha          = [{:9.3e}, {:9.3e}])".
+              format(alpha[ind.X], alpha[ind.Y]))
+        print("    beta           = [{:7.5f}, {:7.5f}])".
+              format(beta[ind.X], beta[ind.Y]))
+        print("    nu             = [{:7.5f}, {:7.5f}] ([{:7.5f}, {:7.5f}])".
               format(nu[ind.X], nu[ind.Y], nu_uc[ind.X], nu_uc[ind.Y]))
-        print("  xi             =  [{:5.3f}, {:5.3f}]".
+        print("    xi             = [{:5.3f}, {:5.3f}]".
               format(xi[ind.X], xi[ind.Y]))
-        print("\n  phi_sp         =  {:8.5f}".format(phi))
-        print("  C [m]          =  {:8.5f}".format(lat_prop.compute_circ()))
-        print("\n  phi_b          =  {:8.5f}".format(phi_b))
-        print("  phi_rb_1       =  {:8.5f}".format(phi_rb_1))
-        print("  phi_rb_2       =  {:8.5f}".format(phi_rb_2))
+        print("\n    phi_sp         = {:8.5f}".format(phi))
+        print("    C [m]          = {:8.5f}".format(lat_prop.compute_circ()))
+        print("\n    phi_b1         = {:8.5f}".format(phi_b1))
+        print("    phi_b2         = {:8.5f}".format(phi_b2))
+        print("    phi_rb_1       = {:8.5f}".format(phi_rb_1))
+        print("    phi_rb_2       = {:8.5f}".format(phi_rb_2))
         prm_list.prt_prm(prm)
 
-    def compute_chi_2(eta, beta, nu, xi):
+    def compute_chi_2(Twiss, nu, xi):
         nonlocal loc
 
         prt = not False
+
+        eta, alpha, beta = Twiss
 
         dchi_2 = weight[0]*lat_prop._eps[ind.X]**2
         chi_2 = dchi_2
@@ -119,30 +147,23 @@ def opt_sp(lat_prop, prm_list, uc_0, uc_1, weight):
         n_iter += 1
         prm_list.set_prm(prm)
 
-        # Compute the beam dynamics properties.
+        stable, Twiss, nu = compute_periodic_cell(lat_prop, uc_0, uc_1)
+        # try:
+        #     stable, Twiss, nu = compute_periodic_cell(lat_prop, uc_0, uc_1)
+        #     if not stable:
+        #         raise ValueError
+        # except ValueError:
+        #     print("\nf_sp - compute_periodic_cell: unstable")
+        #     return 1e30
+        # else:
+        #     pass
+
+        M = lo.compute_map(
+            lat_prop._lattice, lat_prop._model_state, desc=lat_prop._desc,
+            tpsa_order=2)
+
+        # Compute linear chromaticity.
         try:
-            if not lat_prop.comp_per_sol():
-                print("\nf_sp - comp_per_sol: unstable")
-                raise ValueError
-
-            if not lat_prop.compute_radiation():
-                print("\nf_sp - compute_radiation: unstable")
-                raise ValueError
-
-            _, _, beta, _ = lat_prop.get_Twiss(-1)
-
-            M = gtpsa.ss_vect_tpsa(lat_prop._desc, 1)
-            M.set_identity()
-            # The 3rd argument is the 1st element index & the 4th the number of
-            # elements to propagate across.
-            lat_prop._lattice.propagate(
-                lat_prop._model_state, M, uc_0, uc_1-uc_0+1)
-            # nu = lo.compute_nus(2, M.jacobian())
-            nu = lo.compute_nu_symp(2, M.jacobian())
-
-            M = lo.compute_map(
-                lat_prop._lattice, lat_prop._model_state,
-                desc=lat_prop._desc, tpsa_order=2)
             stable, _, xi = \
                 lo.compute_nu_xi(lat_prop._desc, lat_prop._no, M)
             if not stable:
@@ -151,9 +172,9 @@ def opt_sp(lat_prop, prm_list, uc_0, uc_1, weight):
             print("\nf_sp - compute_nu_xi: unstable")
             return 1e30
         else:
-            chi_2 = compute_chi_2(eta, beta, nu, xi)
+            chi_2 = compute_chi_2(Twiss, nu, xi)
             if chi_2 < chi_2_min:
-                prt_iter(prm, chi_2, eta, beta, nu, xi)
+                prt_iter(prm, chi_2, Twiss, nu, xi)
                 pc.prt_lat(lat_prop, "opt_sp.txt", prm_list)
                 chi_2_min = min(chi_2, chi_2_min)
             return chi_2
