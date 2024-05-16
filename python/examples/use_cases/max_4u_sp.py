@@ -47,26 +47,28 @@ def compute_periodic_cell(lat_prop, uc_0, uc_1):
     # Problem with nu/1-nu for compute_nus.
     # nu = lo.compute_nus(2, M.jacobian())
     nu = lo.compute_nu_symp(2, M.jacobian())
-    Twiss = eta, alpha, beta
-    return stable, Twiss, nu
+    Twiss = eta, alpha, beta, nu
+    return stable, Twiss
 
 
-def opt_sp(lat_prop, prm_list, uc_0, uc_1, weight):
+def opt_sp(lat_prop, prm_list, uc_0, uc_1, weight, b1_list, b2_list):
     """Use Case: optimise super period.
     """
 
-    loc       = lat_prop._lattice.find("sf_h", 2).index
-    nu_uc     = [1.0/3.0, 1.0/12.0]
+    nu_uc_des    = [1.0/3.0, 1.0/12.0]
 
-    chi_2_min = 1e30
-    eta       = np.nan
-    n_iter    = 0
-    file_name = "opt_sp.txt"
+    chi_2_min    = 1e30
+    n_iter       = 0
+    file_name    = "opt_sp.txt"
 
-    def prt_iter(prm, chi_2, Twiss, nu, xi):
-        nonlocal n_iter
+    Twiss_uc     = np.nan
+    Twiss_uc_ref = np.nan
 
-        eta, alpha, beta = Twiss
+    def prt_iter(prm, chi_2, xi):
+        nonlocal Twiss_uc, Twiss_uc_ref, nu_uc_des
+
+        eta_uc, alpha_uc, beta_uc, nu_uc = Twiss_uc
+        eta_uc_ref, alpha_uc_ref, beta_uc_ref, nu_uc_ref = Twiss_uc_ref
 
         def compute_phi_bend(lat_prop, bend_list):
             phi = 0e0
@@ -74,11 +76,6 @@ def opt_sp(lat_prop, prm_list, uc_0, uc_1, weight):
                 phi += lat_prop.get_phi_elem(bend_list[k], 0)
             return phi
 
-        b1_list = ["b1_0", "b1_1", "b1_2", "b1_3", "b1_4", "b1_5"]
-        b2_list = [
-            "b2u_6", "b2u_5", "b2u_4", "b2u_3", "b2u_2", "b2u_1", "b2_0",
-            "b2d_1", "b2d_2", "b2d_3", "b2d_4", "b2d_5"
-        ]
         rb_1 = "qf1"
         rb_2 = "qf1_e"
 
@@ -91,14 +88,18 @@ def opt_sp(lat_prop, prm_list, uc_0, uc_1, weight):
         print("\n{:3d} chi_2 = {:11.5e}".format(n_iter, chi_2))
         print("    eps_x [pm.rad] = {:5.3f}".format(1e12*lat_prop._eps[ind.X]))
         print("    U_0 [keV]      = {:5.3f}".format(1e-3*lat_prop._U_0))
-        print("    eta_x          = [{:9.3e}, {:9.3e}]".
-              format(eta[ind.x], eta[ind.px]))
-        print("    alpha          = [{:9.3e}, {:9.3e}])".
-              format(alpha[ind.X], alpha[ind.Y]))
-        print("    beta           = [{:7.5f}, {:7.5f}])".
-              format(beta[ind.X], beta[ind.Y]))
-        print("    nu             = [{:7.5f}, {:7.5f}] ([{:7.5f}, {:7.5f}])".
-              format(nu[ind.X], nu[ind.Y], nu_uc[ind.X], nu_uc[ind.Y]))
+        print("    eta_x_uc       = [{:9.3e}, {:9.3e}] ([{:9.3e}, {:9.3e}])".
+              format(eta_uc[ind.x], eta_uc[ind.px], eta_uc_ref[ind.x],
+                     eta_uc_ref[ind.px]))
+        print("    alpha_uc       = [{:9.3e}, {:9.3e}] ([{:9.3e}, {:9.3e}]))".
+              format(alpha_uc[ind.X], alpha_uc[ind.Y], alpha_uc_ref[ind.X],
+                     alpha_uc_ref[ind.Y]))
+        print("    beta_uc        = [{:7.5f}, {:7.5f}] ([{:7.5f}, {:7.5f}])".
+              format(beta_uc[ind.X], beta_uc[ind.Y], beta_uc_ref[ind.X],
+                     beta_uc_ref[ind.Y]))
+        print("    nu_uc_ref      = [{:7.5f}, {:7.5f}] ([{:7.5f}, {:7.5f}])".
+              format(nu_uc_ref[ind.X], nu_uc_ref[ind.Y], nu_uc_des[ind.X],
+                     nu_uc_des[ind.Y]))
         print("    xi             = [{:5.3f}, {:5.3f}]".
               format(xi[ind.X], xi[ind.Y]))
         print("\n    phi_sp         = {:8.5f}".format(phi))
@@ -109,61 +110,98 @@ def opt_sp(lat_prop, prm_list, uc_0, uc_1, weight):
         print("    phi_rb_2       = {:8.5f}".format(phi_rb_2))
         prm_list.prt_prm(prm)
 
-    def compute_chi_2(Twiss, nu, xi):
-        nonlocal loc
+    def compute_chi_2(xi):
+        nonlocal Twiss_uc, Twiss_uc_ref, nu_uc_des
 
         prt = not False
 
-        eta, alpha, beta = Twiss
+        eta_uc, alpha_uc, beta_uc, nu_uc = Twiss_uc
+        eta_uc_ref, alpha_uc_ref, beta_uc_ref, nu_uc_ref = Twiss_uc_ref
 
         dchi_2 = weight[0]*lat_prop._eps[ind.X]**2
         chi_2 = dchi_2
         if prt:
-            print("\n  dchi2(eps_x)    = {:10.3e}".format(dchi_2))
+            print("\n  dchi2(eps_x)     = {:10.3e}".format(dchi_2))
 
         dchi_2 = weight[1]*lat_prop._U_0**2
         chi_2 += dchi_2
         if prt:
-            print("  dchi2(U_0)      = {:10.3e}".format(dchi_2))
+            print("  dchi2(U_0)       = {:10.3e}".format(dchi_2))
 
         dchi_2 = \
-            weight[2]*(
-                (nu[ind.X]-nu_uc[ind.X])**2
-                +(nu[ind.Y]-nu_uc[ind.Y])**2)
+            weight[2]*((eta_uc[ind.x]-eta_uc_ref[ind.x])**2)
         chi_2 += dchi_2
         if prt:
-            print("  dchi2(nu_uc)    = {:10.3e}".format(dchi_2))
+            print("  dchi2(eta_x_uc)  = {:10.3e}".format(dchi_2))
 
-        dchi_2 = weight[3]*(xi[ind.X]**2+xi[ind.Y]**2)
+        dchi_2 = \
+            weight[3]*((eta_uc[ind.px]-eta_uc_ref[ind.px])**2)
         chi_2 += dchi_2
         if prt:
-            print("  dchi2(xi)       = {:10.3e}".format(dchi_2))
+            print("  dchi2(eta'_x_uc) = {:10.3e}".format(dchi_2))
+
+        dchi_2 = \
+            weight[4]*((alpha_uc[ind.x]-alpha_uc_ref[ind.x])**2)
+        chi_2 += dchi_2
+        if prt:
+            print("  dchi2(alpha_uc)  = {:10.3e}".format(dchi_2))
+
+        dchi_2 = \
+            weight[5]*((beta_uc[ind.x]-beta_uc_ref[ind.x])**2)
+        chi_2 += dchi_2
+        if prt:
+            print("  dchi2(beta_uc)   = {:10.3e}".format(dchi_2))
+
+        dchi_2 = \
+            weight[6]*(
+                (nu_uc_ref[ind.X]-nu_uc_des[ind.X])**2
+                +(nu_uc_ref[ind.Y]-nu_uc_des[ind.Y])**2)
+        chi_2 += dchi_2
+        if prt:
+            print("  dchi2(nu_uc)     = {:10.3e}".format(dchi_2))
+
+        dchi_2 = weight[7]*(xi[ind.X]**2+xi[ind.Y]**2)
+        chi_2 += dchi_2
+        if prt:
+            print("  dchi2(xi)        = {:10.3e}".format(dchi_2))
 
         return chi_2
 
     def f_sp(prm):
-        nonlocal chi_2_min, n_iter
+        nonlocal chi_2_min, n_iter, Twiss_uc, Twiss_uc_ref, file_name
 
         n_iter += 1
         prm_list.set_prm(prm)
 
-        stable, Twiss, nu = compute_periodic_cell(lat_prop, uc_0, uc_1)
-        # try:
-        #     stable, Twiss, nu = compute_periodic_cell(lat_prop, uc_0, uc_1)
-        #     if not stable:
-        #         raise ValueError
-        # except ValueError:
-        #     print("\nf_sp - compute_periodic_cell: unstable")
-        #     return 1e30
-        # else:
-        #     pass
+        try:
+            # Compute Twiss parameters along lattice.
+            if not lat_prop.comp_per_sol():
+                print("\ncomp_per_sol - unstable")
+                raise ValueError
+        except ValueError:
+            exit
+        else:
+            eta_uc, alpha_uc, beta_uc, nu_0 = lat_prop.get_Twiss(uc_0)
+            _, _, _, nu_1 = lat_prop.get_Twiss(uc_1)
+            nu_uc = nu_1 - nu_0
+            Twiss_uc = eta_uc, alpha_uc, beta_uc, nu_uc
 
-        M = lo.compute_map(
-            lat_prop._lattice, lat_prop._model_state, desc=lat_prop._desc,
-            tpsa_order=2)
+        try:
+            # Compute radiation properties.
+            if not lat_prop.compute_radiation():
+                print("\ncompute_radiation - unstable")
+                raise ValueError
+        except ValueError:
+            exit
+        else:
+            pass
 
         # Compute linear chromaticity.
         try:
+            M = lo.compute_map(
+                lat_prop._lattice, lat_prop._model_state, desc=lat_prop._desc,
+                tpsa_order=2)
+
             stable, _, xi = \
                 lo.compute_nu_xi(lat_prop._desc, lat_prop._no, M)
             if not stable:
@@ -172,16 +210,21 @@ def opt_sp(lat_prop, prm_list, uc_0, uc_1, weight):
             print("\nf_sp - compute_nu_xi: unstable")
             return 1e30
         else:
-            chi_2 = compute_chi_2(Twiss, nu, xi)
+            chi_2 = compute_chi_2(xi)
             if chi_2 < chi_2_min:
-                prt_iter(prm, chi_2, Twiss, nu, xi)
-                pc.prt_lat(lat_prop, "opt_sp.txt", prm_list)
+                prt_iter(prm, chi_2, xi)
+                pc.prt_lat(lat_prop, file_name, prm_list)
                 chi_2_min = min(chi_2, chi_2_min)
+
+                stable, Twiss_uc_ref = \
+                    compute_periodic_cell(lat_prop, uc_0, uc_1)
             return chi_2
 
     max_iter = 1000
     f_tol    = 1e-4
     x_tol    = 1e-4
+
+    stable, Twiss_uc_ref = compute_periodic_cell(lat_prop, uc_0, uc_1)
 
     prm, bounds = prm_list.get_prm()
 
@@ -229,13 +272,16 @@ print("Total bend angle [deg] = {:7.5f}".format(lat_prop.compute_phi_lat()))
 try:
     # Compute Twiss parameters along lattice.
     if not lat_prop.comp_per_sol():
-        print("\ncompute_chi_2 - comp_per_sol: unstable")
+        print("\ncomp_per_sol - unstable")
         raise ValueError
 except ValueError:
     exit
 else:
     lat_prop.prt_lat_param()
     lat_prop.prt_M()
+
+    if False:
+        lat_prop.plt_Twiss(lat_name+".png", not False)
 
 try:
     # Compute radiation properties.
@@ -263,8 +309,12 @@ print("unit cell exit     {:5s} loc = {:d}".
 weight = np.array([
     1e14,  # eps_x.
     1e-16, # U_0.
-    1e-1,  # nu_uc.
-    1e-7   # xi.
+    1e0,  # eta_x_uc.
+    1e0,  # eta'_x_uc.
+    1e-3,  # alpha_uc.
+    1e-2,  # beta_uc.
+    1e3,  # nu_uc.
+    1e-8   # xi.
 ])
 
 b1_list = ["b1_0", "b1_1", "b1_2", "b1_3", "b1_4", "b1_5"]
@@ -289,13 +339,13 @@ prm_list = [
     ("qf1_e",    "b_2"),
     ("qd",       "b_2"),
     ("qf2",      "b_2"),
-    ("qf1",      "phi"),
-    ("qf1_e",    "phi"),
-    ("phi_tot",  opt_phi),
-    # ("b_1_bend", b1_bend),
-    ("b_2_bend", b2_bend)
+    # ("b_2_bend", b1_bend),
+    ("b_2_bend", b2_bend),
+    # ("qf1",      "phi"),
+    # ("qf1_e",    "phi"),
+    # ("phi_tot",  opt_phi)
 ]
 
 prm_list = pc.prm_class(lat_prop, prm_list, b_2_max)
 
-opt_sp(lat_prop, prm_list, uc_0, uc_1, weight)
+opt_sp(lat_prop, prm_list, uc_0, uc_1, weight, b1_list, b2_list)
