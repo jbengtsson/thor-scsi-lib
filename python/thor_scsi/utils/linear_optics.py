@@ -210,7 +210,7 @@ def compute_nu_xi(desc, tpsa_order, M):
     else:
         nu = np.nan
         xi = np.nan
-        print("\ncompute_nu_xi: unstable ", stable)
+        print("\ncompute_nu_xi: unstable =", stable)
 
     return stable, nu, xi
 

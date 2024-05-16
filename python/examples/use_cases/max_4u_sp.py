@@ -178,39 +178,28 @@ def opt_sp(lat_prop, prm_list, uc_0, uc_1, weight, b1_list, b2_list):
             if not lat_prop.comp_per_sol():
                 print("\ncomp_per_sol - unstable")
                 raise ValueError
+
+            # Compute radiation properties.
+            if not lat_prop.compute_radiation():
+                print("\ncompute_radiation - unstable")
+                raise ValueError
+
+            # Compute linear chromaticity.
+            M = lo.compute_map(
+                lat_prop._lattice, lat_prop._model_state, desc=lat_prop._desc,
+                tpsa_order=2)
+            stable, _, xi = \
+                lo.compute_nu_xi(lat_prop._desc, lat_prop._no, M)
+            if not stable:
+                print("\ncompute_nu_xi: unstable")
+                raise ValueError
         except ValueError:
-            exit
+            return 1e30
         else:
             eta_uc, alpha_uc, beta_uc, nu_0 = lat_prop.get_Twiss(uc_0-1)
             _, _, _, nu_1 = lat_prop.get_Twiss(uc_1)
             nu_uc = nu_1 - nu_0
             Twiss_uc = eta_uc, alpha_uc, beta_uc, nu_uc
-
-        try:
-            # Compute radiation properties.
-            if not lat_prop.compute_radiation():
-                print("\ncompute_radiation - unstable")
-                raise ValueError
-        except ValueError:
-            exit
-        else:
-            pass
-
-        # Compute linear chromaticity.
-        try:
-            M = lo.compute_map(
-                lat_prop._lattice, lat_prop._model_state, desc=lat_prop._desc,
-                tpsa_order=2)
-
-            stable, _, xi = \
-                lo.compute_nu_xi(lat_prop._desc, lat_prop._no, M)
-            if not stable:
-                raise ValueError
-        except ValueError:
-            print("\nf_sp - compute_nu_xi: unstable")
-            return 1e30
-        else:
-            pass
 
         chi_2 = compute_chi_2(xi)
 
@@ -306,8 +295,8 @@ if False:
     lat_prop.prt_lat_param()
     lat_prop.prt_Twiss(lat_name+".txt")
 
-uc_0 = lat_prop._lattice.find("b1_0", 7).index
-uc_1 = lat_prop._lattice.find("b1_0", 8).index
+uc_0 = lat_prop._lattice.find("sf_h", 1).index
+uc_1 = lat_prop._lattice.find("sf_h", 2).index
 print("\nunit cell entrance {:5s} loc = {:d}".
       format(lat_prop._lattice[uc_0].name, uc_0))
 print("unit cell exit     {:5s} loc = {:d}".
@@ -322,7 +311,7 @@ weight = np.array([
     1e-5,  # alpha_uc.
     1e-4,  # beta_uc.
     1e2,   # nu_uc.
-    1e-7   # xi.
+    1e-6   # xi.
 ])
 
 b1_list = ["b1_0", "b1_1", "b1_2", "b1_3", "b1_4", "b1_5"]
@@ -337,7 +326,7 @@ b2_bend = pc.bend_class(lat_prop, b2_list, phi_max, b_2_max)
 
 # The end dipole bend angle is the parameter whereas the unit cell dipole bend
 # angle is used for maintaining the total bend angle.
-phi_n_list = [2, 10]
+phi_n_list = [2, 2]
 phi_list   = [b2_bend, b1_bend]
 
 opt_phi = pc.phi_tot_class(lat_prop, phi_list, phi_n_list, phi_max)

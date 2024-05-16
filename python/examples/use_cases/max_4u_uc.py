@@ -109,19 +109,20 @@ def opt_sp(lat_prop, prm_list, weight):
                 print("\nf_sp - compute_radiation: unstable")
                 raise ValueError
 
-            _, _, _, nu = lat_prop.get_Twiss(-1)
-
+            # Compute linear chromaticity.
             M = lo.compute_map(
                 lat_prop._lattice, lat_prop._model_state,
                 desc=lat_prop._desc, tpsa_order=2)
             stable, _, xi = \
                 lo.compute_nu_xi(lat_prop._desc, lat_prop._no, M)
             if not stable:
+                print("\nf_sp - compute_nu_xi: unstable")
                 raise ValueError
         except ValueError:
-            print("\nf_sp - compute_nu_xi: unstable")
             return 1e30
         else:
+            _, _, _, nu = lat_prop.get_Twiss(-1)
+
             chi_2 = compute_chi_2(nu, xi)
             if chi_2 < chi_2_min:
                 prt_iter(prm, chi_2, nu, xi)

@@ -188,8 +188,6 @@ else:
     lat_prop.prt_M()
     lat_prop.prt_Twiss(lat_name+".txt")
 
-    if not False:
-        lat_prop.plt_Twiss(lat_name+".png", not False)
 try:
     # Compute radiation properties.
     if not lat_prop.compute_radiation():
@@ -200,6 +198,9 @@ except ValueError:
 else:
     lat_prop.prt_rad()
     lat_prop.prt_M_rad()
+
+if not False:
+    lat_prop.plt_Twiss(lat_name+".png", not False)
 
 bend_list  = ["b1_1", "b1_2", "b1_3", "b1_4", "b1_5"]
 rbend_name = "qf1"
