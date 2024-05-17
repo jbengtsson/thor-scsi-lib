@@ -63,9 +63,10 @@ def opt_sp(lat_prop, prm_list, uc_0, uc_1, weight, b1_list, b2_list):
 
     Twiss_uc     = np.nan
     Twiss_uc_ref = np.nan
+    nu_sp        = np.nan
 
-    def prt_iter(prm, chi_2, xi):
-        nonlocal Twiss_uc, Twiss_uc_ref, nu_uc_des
+    def prt_iter(prm, chi_2, Twiss_uc, nu_sp, xi):
+        nonlocal Twiss_uc_ref, nu_uc_des
 
         eta_uc, alpha_uc, beta_uc, nu_uc = Twiss_uc
         eta_uc_ref, alpha_uc_ref, beta_uc_ref, nu_uc_ref = Twiss_uc_ref
@@ -85,10 +86,10 @@ def opt_sp(lat_prop, prm_list, uc_0, uc_1, weight, b1_list, b2_list):
         phi_rb_1 = lat_prop.get_phi_elem(rb_1, 0)
         phi_rb_2 = lat_prop.get_phi_elem(rb_2, 0)
 
-        print("\n{:3d} chi_2 = {:11.5e}".format(n_iter, chi_2))
+        print("\n{:3d} chi_2 = {:16.10e}".format(n_iter, chi_2))
         print("    eps_x [pm.rad] = {:5.3f}".format(1e12*lat_prop._eps[ind.X]))
         print("    U_0 [keV]      = {:5.3f}".format(1e-3*lat_prop._U_0))
-        print("    eta_x_uc       = [{:9.3e}, {:9.3e}] ([{:9.3e}, {:9.3e}])".
+        print("\n    eta_x_uc       = [{:9.3e}, {:9.3e}] ([{:9.3e}, {:9.3e}])".
               format(eta_uc[ind.x], eta_uc[ind.px], eta_uc_ref[ind.x],
                      eta_uc_ref[ind.px]))
         print("    alpha_uc       = [{:9.3e}, {:9.3e}] ([{:9.3e}, {:9.3e}]))".
@@ -100,6 +101,8 @@ def opt_sp(lat_prop, prm_list, uc_0, uc_1, weight, b1_list, b2_list):
         print("    nu_uc_ref      = [{:7.5f}, {:7.5f}] ([{:7.5f}, {:7.5f}])".
               format(nu_uc_ref[ind.X], nu_uc_ref[ind.Y], nu_uc_des[ind.X],
                      nu_uc_des[ind.Y]))
+        print("\n    nu_sp          = [{:7.5f}, {:7.5f}]".
+              format(nu_sp[ind.X], nu_sp[ind.Y]))
         print("    xi             = [{:5.3f}, {:5.3f}]".
               format(xi[ind.X], xi[ind.Y]))
         print("\n    phi_sp         = {:8.5f}".format(phi))
@@ -110,8 +113,8 @@ def opt_sp(lat_prop, prm_list, uc_0, uc_1, weight, b1_list, b2_list):
         print("    phi_rb_2       = {:8.5f}".format(phi_rb_2))
         prm_list.prt_prm(prm)
 
-    def compute_chi_2(xi):
-        nonlocal Twiss_uc, Twiss_uc_ref, nu_uc_des
+    def compute_chi_2(Twiss_uc, xi):
+        nonlocal Twiss_uc_ref, nu_uc_des
 
         prt = not False
 
@@ -141,13 +144,15 @@ def opt_sp(lat_prop, prm_list, uc_0, uc_1, weight, b1_list, b2_list):
             print("  dchi2(eta'_x_uc) = {:10.3e}".format(dchi_2))
 
         dchi_2 = \
-            weight[4]*((alpha_uc[ind.x]-alpha_uc_ref[ind.x])**2)
+            weight[4]*((alpha_uc[ind.X]-alpha_uc_ref[ind.X])**2
+                       +(alpha_uc[ind.Y]-alpha_uc_ref[ind.Y])**2)
         chi_2 += dchi_2
         if prt:
             print("  dchi2(alpha_uc)  = {:10.3e}".format(dchi_2))
 
         dchi_2 = \
-            weight[5]*((beta_uc[ind.x]-beta_uc_ref[ind.x])**2)
+            weight[5]*((beta_uc[ind.X]-beta_uc_ref[ind.X])**2
+                       +(beta_uc[ind.Y]-beta_uc_ref[ind.Y])**2)
         chi_2 += dchi_2
         if prt:
             print("  dchi2(beta_uc)   = {:10.3e}".format(dchi_2))
@@ -168,7 +173,7 @@ def opt_sp(lat_prop, prm_list, uc_0, uc_1, weight, b1_list, b2_list):
         return chi_2
 
     def f_sp(prm):
-        nonlocal chi_2_min, n_iter, Twiss_uc, Twiss_uc_ref, file_name
+        nonlocal chi_2_min, n_iter, Twiss_uc_ref, file_name
 
         n_iter += 1
         prm_list.set_prm(prm)
@@ -176,42 +181,45 @@ def opt_sp(lat_prop, prm_list, uc_0, uc_1, weight, b1_list, b2_list):
         try:
             # Compute Twiss parameters along lattice.
             if not lat_prop.comp_per_sol():
-                print("\ncomp_per_sol - unstable")
+                print("\ncomp_per_sol : unstable")
                 raise ValueError
 
             # Compute radiation properties.
             if not lat_prop.compute_radiation():
-                print("\ncompute_radiation - unstable")
+                print("\ncompute_radiation : unstable")
                 raise ValueError
 
             # Compute linear chromaticity.
             M = lo.compute_map(
-                lat_prop._lattice, lat_prop._model_state, desc=lat_prop._desc,
-                tpsa_order=2)
+                lat_prop._lattice, lat_prop._model_state,
+                desc=lat_prop._desc, tpsa_order=2)
             stable, _, xi = \
                 lo.compute_nu_xi(lat_prop._desc, lat_prop._no, M)
             if not stable:
                 print("\ncompute_nu_xi: unstable")
                 raise ValueError
         except ValueError:
-            return 1e30
+            chi_2 = 1e30
         else:
             eta_uc, alpha_uc, beta_uc, nu_0 = lat_prop.get_Twiss(uc_0-1)
             _, _, _, nu_1 = lat_prop.get_Twiss(uc_1)
             nu_uc = nu_1 - nu_0
             Twiss_uc = eta_uc, alpha_uc, beta_uc, nu_uc
 
-        chi_2 = compute_chi_2(xi)
+            _, _, _, nu_sp = lat_prop.get_Twiss(-1)
+
+            chi_2 = compute_chi_2(Twiss_uc, xi)
 
         if chi_2 < chi_2_min:
-            prt_iter(prm, chi_2, xi)
+            prt_iter(prm, chi_2, Twiss_uc, nu_sp, xi)
             pc.prt_lat(lat_prop, file_name, prm_list)
             chi_2_min = min(chi_2, chi_2_min)
 
-            stable, Twiss_uc_ref = \
-                compute_periodic_cell(lat_prop, uc_0, uc_1)
-            Twiss_uc_ref[0][ind.px] = 0e0
-            Twiss_uc_ref[1][ind.X], Twiss_uc_ref[1][ind.Y] = [0e0, 0e0]
+            # stable, Twiss_uc_ref = \
+            #     compute_periodic_cell(lat_prop, uc_0, uc_1)
+            # Twiss_uc_ref[0][ind.px] = 0e0
+            # Twiss_uc_ref[1][ind.X], Twiss_uc_ref[1][ind.Y] = \
+            #     [0e0, 0e0]
 
         return chi_2
 
@@ -277,9 +285,6 @@ else:
     lat_prop.prt_lat_param()
     lat_prop.prt_M()
 
-    if False:
-        lat_prop.plt_Twiss(lat_name+".png", not False)
-
 try:
     # Compute radiation properties.
     if not lat_prop.compute_radiation():
@@ -290,10 +295,6 @@ except ValueError:
 else:
     lat_prop.prt_rad()
     lat_prop.prt_M_rad()
-
-if False:
-    lat_prop.prt_lat_param()
-    lat_prop.prt_Twiss(lat_name+".txt")
 
 uc_0 = lat_prop._lattice.find("sf_h", 1).index
 uc_1 = lat_prop._lattice.find("sf_h", 2).index
@@ -306,11 +307,11 @@ print("unit cell exit     {:5s} loc = {:d}".
 weight = np.array([
     1e15,  # eps_x.
     1e-16, # U_0.
-    1e0,   # eta_x_uc.
-    1e0,   # eta'_x_uc.
-    1e-5,  # alpha_uc.
-    1e-4,  # beta_uc.
-    1e2,   # nu_uc.
+    1e-1,  # eta_x_uc.
+    1e-1,  # eta'_x_uc.
+    1e-6,  # alpha_uc.
+    1e-5,  # beta_uc.
+    1e1,   # nu_uc.
     1e-6   # xi.
 ])
 
