@@ -118,6 +118,7 @@ def match_straight(lat_prop, prm_list, uc_0, uc_1, sp_1, beta, weight):
             pc.prt_lat(lat_prop, "match_lat_k.txt", prm_list)
             chi_2_min = min(chi_2, chi_2_min)
 
+            # Problematic => system not time invariant.
             _, A = compute_periodic_cell(lat_prop, uc_0, uc_1)
             A0.set_jacobian(A_7x7)
         return chi_2

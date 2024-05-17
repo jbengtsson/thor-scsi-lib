@@ -181,14 +181,7 @@ try:
     if not lat_prop.comp_per_sol():
         print("\ncomp_per_sol - unstable")
         raise ValueError
-except ValueError:
-    exit
-else:
-    lat_prop.prt_lat_param()
-    lat_prop.prt_M()
-    lat_prop.prt_Twiss(lat_name+".txt")
 
-try:
     # Compute radiation properties.
     if not lat_prop.compute_radiation():
         print("\ncompute_radiation - unstable")
@@ -196,6 +189,9 @@ try:
 except ValueError:
     exit
 else:
+    lat_prop.prt_lat_param()
+    lat_prop.prt_M()
+    lat_prop.prt_Twiss(lat_name+".txt")
     lat_prop.prt_rad()
     lat_prop.prt_M_rad()
 
