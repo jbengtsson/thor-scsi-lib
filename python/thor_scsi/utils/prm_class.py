@@ -261,7 +261,8 @@ class prm_class(bend_class):
         print("\n  prm =")
         for k in range(len(prm)):
             print("  " if k == 0 else "",
-                  "{:12.5e}".format(prm[k]),
+                  # "{:12.5e}".format(prm[k]),
+                  "{:17.10e}".format(prm[k]),
                   "\n  " if (k != 0) and (k % n_prt == n_prt-1) else "",
                   end="")
         if k % n_prt != n_prt-1:
@@ -294,7 +295,7 @@ def prt_lat(lat_prop, file_name, prm_list):
               .format(name, L, b_2), file=outf)
 
     # Dictionary of parameter types and corresponding print functions.
-    get_prm_func_dict = {
+    prt_prm_func_dict = {
         "L":   prt_drift,
         "L_b": prt_dip,
         "phi": prt_dip,
@@ -303,7 +304,7 @@ def prt_lat(lat_prop, file_name, prm_list):
 
     for k in range(len(prm_list._prm_list)):
         if type(prm_list._prm_list[k][1]) == str:
-            get_prm_func_dict[prm_list._prm_list[k][1]](
+            prt_prm_func_dict[prm_list._prm_list[k][1]](
                 prm_list._prm_list[k][0])
         elif isinstance(prm_list._prm_list[k][1], bend_class):
             prt_bend(prm_list._prm_list[k][1])
