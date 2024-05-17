@@ -33,7 +33,7 @@ b_2_bend_max = 1.0
 b_2_max      = 10.0
 
 
-def opt_sp(lat_prop, prm_list, uc_0, uc_1, weight, b1_list, b2_list):
+def opt_sp(lat_prop, prm_list, uc_0, uc_1, weight, b1_list, b2_list, phi_lat):
     """Use Case: optimise super period.
     """
 
@@ -70,7 +70,7 @@ def opt_sp(lat_prop, prm_list, uc_0, uc_1, weight, b1_list, b2_list):
         print("\n{:3d} chi_2 = {:11.5e}".format(n_iter, chi_2))
         print("    eps_x [pm.rad] = {:5.3f}".format(1e12*lat_prop._eps[ind.X]))
         print("    U_0 [keV]      = {:5.3f}".format(1e-3*lat_prop._U_0))
-        print("\n    alpha_uc       = [{:7.5f}, {:7.5f}])".
+        print("\n    alpha_uc       = [{:9.3e}, {:9.3e}])".
               format(alpha_uc[ind.X], alpha_uc[ind.Y]))
         print("    nu_uc          = [{:7.5f}, {:7.5f}] ([{:7.5f}, {:7.5f}])".
               format(nu_uc[ind.X], nu_uc[ind.Y], nu_uc_des[ind.X],
@@ -137,6 +137,7 @@ def opt_sp(lat_prop, prm_list, uc_0, uc_1, weight, b1_list, b2_list):
 
         n_iter += 1
         prm_list.set_prm(prm)
+        phi_lat.set_phi_lat()
 
         try:
             # Compute Twiss parameters along the lattice.
@@ -175,13 +176,13 @@ def opt_sp(lat_prop, prm_list, uc_0, uc_1, weight, b1_list, b2_list):
             if chi_2 < chi_2_min:
                 prt_iter(prm, chi_2, Twiss, alpha_uc, nu_uc, xi)
                 lat_prop.prt_Twiss("twiss.txt")
-                pc.prt_lat(lat_prop, file_name, prm_list)
+                pc.prt_lat(lat_prop, file_name, prm_list, phi_lat)
                 chi_2_min = min(chi_2, chi_2_min)
 
         return chi_2
 
     max_iter = 1000
-    f_tol    = 1e-4
+    f_tol    = 1e-10
     x_tol    = 1e-4
 
     prm, bounds = prm_list.get_prm()
@@ -198,8 +199,9 @@ def opt_sp(lat_prop, prm_list, uc_0, uc_1, weight, b1_list, b2_list):
         prm,
         method="CG",
         # callback=prt_iter,
-        bounds = bounds,
-        options={"ftol": f_tol, "xtol": x_tol, "maxiter": max_iter}
+        # bounds = bounds,
+        # options={"ftol": f_tol, "xtol": x_tol, "maxiter": max_iter}
+        options={"gtol": f_tol, "maxiter": max_iter}
     )
 
     print("\n".join(minimum))
@@ -219,7 +221,7 @@ E_0     = 3.0e9
 
 home_dir = os.path.join(
     os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "MAX_4U")
-lat_name = "max_4u_sp_jb_2"
+lat_name = "max_4u_sp_jb_3"
 file_name = os.path.join(home_dir, lat_name+".lat")
 
 lat_prop = \
@@ -242,8 +244,8 @@ except ValueError:
     exit
 else:
     lat_prop.prt_lat_param()
-    lat_prop.prt_M()
     lat_prop.prt_rad()
+    lat_prop.prt_M()
     lat_prop.prt_M_rad()
 
 uc_0 = lat_prop._lattice.find("sf_h", 1).index
@@ -256,9 +258,9 @@ print("unit cell exit     {:5s} loc = {:d}".
 # Weights.
 weight = np.array([
     1e15,  # eps_x.
-    1e-16, # U_0.
-    1e1,   # alpha_uc.
-    1e1,   # nu_uc.
+    1e-14, # U_0.
+    1e-2,  # alpha_uc.
+    1e2,   # nu_uc.
     1e-1,  # eta_x.
     1e-5   # xi.
 ])
@@ -273,27 +275,42 @@ b2_list = [
 b1_bend = pc.bend_class(lat_prop, b1_list, phi_max, b_2_max)
 b2_bend = pc.bend_class(lat_prop, b2_list, phi_max, b_2_max)
 
-# The end dipole bend angle is the parameter whereas the unit cell dipole bend
-# angle is used for maintaining the total bend angle.
-phi_n_list = [2, 2]
-phi_list   = [b2_bend, b1_bend]
+prms = [
+    # ("phi_bend", b1_bend),
+    # ("phi_bend", b2_bend),
 
-opt_phi = pc.phi_tot_class(lat_prop, phi_list, phi_n_list, phi_max)
+    # ("qf1",      "b_2"),
+    # ("qf1_e",    "b_2"),
+    # ("qd",       "b_2"),
+    # ("qf2",      "b_2"),
+    # ("b_2_bend", b1_bend),
+    # ("b_2_bend", b2_bend)
 
-prm_list = [
-    ("qf1",      "b_2"),
-    ("qf1_e",    "b_2"),
-    ("qd",       "b_2"),
-    ("qf2",      "b_2"),
+    ("b1_0",     "phi"),
+    ("b1_1",     "phi"),
+    ("b1_2",     "phi"),
+    ("b1_3",     "phi"),
+    ("b1_4",     "phi"),
+    ("b1_5",     "phi"),
 
-    ("b_2_bend", b1_bend),
-    ("b_2_bend", b2_bend),
+    ("b2u_6",    "phi"),
+    ("b2u_5",    "phi"),
+    ("b2u_4",    "phi"),
+    ("b2u_3",    "phi"),
+    ("b2u_2",    "phi"),
+    ("b2u_1",    "phi"),
+    ("b2_0",     "phi"),
+    ("b2d_1",    "phi"),
+    ("b2d_2",    "phi"),
+    ("b2d_3",    "phi"),
+    ("b2d_4",    "phi"),
+    ("b2d_5",    "phi"),
 
-    # ("qf1",      "phi"),
-    # ("qf1_e",    "phi"),
-    # ("phi_tot",  opt_phi)
+    ("qf1_e",    "phi")
 ]
 
-prm_list = pc.prm_class(lat_prop, prm_list, b_2_max)
+prm_list = pc.prm_class(lat_prop, prms, b_2_max)
 
-opt_sp(lat_prop, prm_list, uc_0, uc_1, weight, b1_list, b2_list)
+phi_lat = pc.phi_lat_class(lat_prop, "qf1")
+
+opt_sp(lat_prop, prm_list, uc_0, uc_1, weight, b1_list, b2_list, phi_lat)

@@ -283,8 +283,6 @@ class periodic_structure_class:
                          beta[ind.Y], nu[ind.Y], eta[ind.y], eta[ind.py]),
                   file=file)
 
-        print("\nprt_Twiss - Linear optics saved as:", file_name)
-
     def comp_per_sol(self):
         """Compute the periodic solution for a super period.
         Degrees of freedom - RF cavity is off; i.e., coasting beam.

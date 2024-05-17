@@ -120,54 +120,27 @@ class bend_class:
                          self._bend_b_2xL*self._bend_b_2_ratio[k]))
 
 
-class phi_tot_class():
+class phi_lat_class():
     # Private
 
-    def __init__(self, lat_prop, phi_list, phi_n_list, phi_max):
-        self._lat_prop   = lat_prop
-        self._phi_list   = phi_list
-        self._phi_n_list = phi_n_list
-        self._phi        = np.nan
-        self._phi_max    = phi_max
+    def __init__(self, lat_prop, fam_name):
+        self._lat_prop = lat_prop
+        self._fam_name = fam_name
+        self._n_kid    = np.nan
+        self._phi_lat  = np.nan
 
-        self.compute_phi()
+        self._phi_lat = lat_prop.compute_phi_lat()
+        self._n_kid = lat_prop.get_n_kid(fam_name)
+        print("\nphi_lat_class: {:7.5f} {:s} {:d}".
+              format(self._phi_lat, self._fam_name, self._n_kid))
 
     # Public.
 
-    def compute_phi(self):
-        # Compute total bend angle.
-        self._phi = 0e0
-        for k in range(len(self._phi_list)):
-            if type(self._phi_list[k]) == str:
-                self._phi += \
-                    self._phi_n_list[k]*self.get_phi_elem(self._phi_list[k], 0)
-            elif isinstance(self._phi_list[k], bend_class):
-                self._phi += \
-                    self._phi_n_list[k]*self._phi_list[k].get_bend_phi()
-            else:
-                print("\nget_prm - undefined element type:", self._phi_list[k])
-
-    def get_phi_prm(self):
-        prt = not False
-        prm = []
-        bounds = []
-        if prt:
-            self.print()
-        p, b = self._phi_list[0].get_bend_phi_prm()
-        return p, b
-
-    def print(self):
-        print("  phi_tot_class:")
-        print("    phi = {:8.5f}".format(self._phi))
-        print("    phi_list:")
-        for k in range(len(self._phi_list)):
-            if self._phi_list[k] == str:
-                print("      {:s}".format(self._phi_list[k]))
-            elif isinstance(self._phi_list[k], bend_class):
-                print("      bend_class")
-            else:
-                print("\nphi_tot_class::print() - undefined parameter type.")
-                assert False
+    def set_phi_lat(self):
+        dphi = self._lat_prop.compute_phi_lat() - self._phi_lat
+        phi =  self._lat_prop.get_phi_elem(self._fam_name, 0)
+        phi -= dphi/self._n_kid
+        self._lat_prop.set_phi_fam(self._fam_name, phi)
 
 
 class prm_class(bend_class):
@@ -221,15 +194,13 @@ class prm_class(bend_class):
                     print("\nprm_class::get_prm - undefined parameter type:",
                           self._prm_list[k][1])
                     assert False
-            elif isinstance(self._prm_list[k][1], phi_tot_class):
-               p, b = self._prm_list[k][1].get_phi_prm()
             else:
                 print("\nprm_class::get_prm - undefined parameter type:",
                       self._prm_list[k][1])
                 assert False
             prm.append(p)
             bounds.append(b)
-            print("  prm    = ", prm[k])
+            print("  prm    = {:12.5e}".format(prm[k]))
             print("  bounds = ", bounds[k])
         return np.array(prm), bounds
 
@@ -246,15 +217,6 @@ class prm_class(bend_class):
                 else:
                     print("\nprm_class::set_prm - undefined parameter type:",
                           prm_type)
-            elif self._prm_list[k][0] == "phi_tot":
-                # The 1st element in the list is the bend angle paramameter
-                # whereas the 2nd one is used for maintaining the total bend
-                # angle.
-                prm_type._phi_list[0].set_bend_phi(prm[k])
-                phi = \
-                    (prm_type._phi-prm_type._phi_n_list[0]*prm[k]) \
-                    /prm_type._phi_n_list[1]
-                prm_type._phi_list[1].set_bend_phi(phi)
             else:
                 print("\nprm_class::set_prm - undefined parameter:", prm_type)
         
@@ -270,7 +232,7 @@ class prm_class(bend_class):
             print()
 
 
-def prt_lat(lat_prop, file_name, prm_list):
+def prt_lat(lat_prop, file_name, prm_list, phi_lat):
     outf = open(file_name, 'w')
 
     def prt_drift(name):
@@ -309,13 +271,10 @@ def prt_lat(lat_prop, file_name, prm_list):
                 prm_list._prm_list[k][0])
         elif isinstance(prm_list._prm_list[k][1], bend_class):
             prt_bend(prm_list._prm_list[k][1])
-        elif isinstance(prm_list._prm_list[k][1], phi_tot_class):
-            # The 1st element in the list is the bend angle paramameter whereas
-            # the 2nd one is used for maintaining the total bend angle.
-            prt_bend(prm_list._prm_list[k][1]._phi_list[0])
-            prt_bend(prm_list._prm_list[k][1]._phi_list[1])
         else:
             print("\nprt_lat - undefined parameter:", prm_list._prm_list[k][1])
+    prt_prm_func_dict["phi"](phi_lat._fam_name)
 
+    outf.close()
 
-__all__ = [prm_class, prt_lat]
+__all__ = [prm_class, phi_lat_class, prt_lat]
