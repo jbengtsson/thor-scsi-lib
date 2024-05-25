@@ -53,7 +53,7 @@ def compute_periodic_cell(lat_prop, uc_0, uc_1):
     return Twiss, A
 
 
-def match_straight(lat_prop, prm_list, uc_0, uc_1, sp_1, beta, weight):
+def match_straight(lat_prop, prm_list, uc_0, uc_1, sp_1, beta, weight, phi_lat):
     chi_2_min = 1e30
     n_iter    = 0
     A0        = gtpsa.ss_vect_tpsa(lat_prop._desc, 1)
@@ -111,11 +111,12 @@ def match_straight(lat_prop, prm_list, uc_0, uc_1, sp_1, beta, weight):
 
         n_iter += 1
         prm_list.set_prm(prm)
+        phi_lat.set_phi_lat()
 
         chi_2, Twiss_1 = compute_chi_2()
         if chi_2 < chi_2_min:
             prt_iter(prm, chi_2, Twiss_1)
-            pc.prt_lat(lat_prop, "match_lat_k.txt", prm_list)
+            pc.prt_lat(lat_prop, "match_lat_k.txt", prm_list, phi_lat = phi_lat)
             chi_2_min = min(chi_2, chi_2_min)
 
             # Problematic => system not time invariant.
@@ -174,7 +175,9 @@ E_0     = 3.0e9
 
 home_dir = os.path.join(
     os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "MAX_4U")
-lat_name = "max_4u_sp_jb_2"
+lat_name = "max_iv_sp_matched"
+# lat_name = "max_iv_sp_jb_3"
+# lat_name = "max_4u_sp_jb_5"
 file_name = os.path.join(home_dir, lat_name+".lat")
 
 lat_prop = \
@@ -212,40 +215,23 @@ b2_list = [
 b1_bend = pc.bend_class(lat_prop, b1_list, phi_max, b_2_max)
 b2_bend = pc.bend_class(lat_prop, b2_list, phi_max, b_2_max)
 
-# The end dipole bend angle is the parameter whereas the unit cell dipole bend
-# angle is used for maintaining the total bend angle.
-# For 1/2 super period.
-phi_n_list = [1, 5]
-phi_list   = [b2_bend, b1_bend]
-
-opt_phi = pc.phi_tot_class(lat_prop, phi_list, phi_n_list, phi_max)
-
 # Remark:
 # Using the bend angles as parameters - maintaining the total - will change the
 # initial conditions for the horizontal dipspersion; i.e., requires an iterative
 # approach.
+
 prm_list = [
     ("qf1_e",    "b_2"),
     ("qd",       "b_2"),
     ("qf2",      "b_2"),
 
-    ("phi_tot",  opt_phi),
-    ("b_2_bend", b2_bend)
-
-    # ("b2u_6",    "b_2"),
-    # ("b2u_5",    "b_2"),
-    # ("b2u_4",    "b_2"),
-    # ("b2u_3",    "b_2"),
-    # ("b2u_2",    "b_2"),
-    # ("b2u_1",    "b_2"),
-    # ("b2_0",     "b_2"),
-    # ("b2d_1",    "b_2"),
-    # ("b2d_2",    "b_2"),
-    # ("b2d_3",    "b_2"),
-    # ("b2d_4",    "b_2"),
-    # ("b2d_5",    "b_2")
+    ("b_2_bend", b2_bend),
+    ("phi_bend", b1_bend),
+    ("phi_bend", b2_bend)
 ]
 
 prm_list = pc.prm_class(lat_prop, prm_list, b_2_max)
 
-match_straight(lat_prop, prm_list, uc_0, uc_1, sp_1, beta, weight)
+phi_lat = pc.phi_lat_class(lat_prop, "qf1_e")
+
+match_straight(lat_prop, prm_list, uc_0, uc_1, sp_1, beta, weight, phi_lat)

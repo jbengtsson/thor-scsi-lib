@@ -166,8 +166,8 @@ E_0     = 3.0e9
 
 home_dir = os.path.join(
     os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "MAX_4U")
-# lat_name = "max_iv"
-lat_name = "max_4u_sp_jb_3"
+lat_name = "max_iv_sp_matched_2"
+# lat_name = "max_4u_sp_jb_6"
 file_name = os.path.join(home_dir, lat_name+".lat")
 
 lat_prop = \
@@ -193,10 +193,11 @@ else:
     lat_prop.prt_rad()
     lat_prop.prt_M()
     lat_prop.prt_M_rad()
-    lat_prop.prt_Twiss(lat_name+".txt")
+    lat_prop.prt_Twiss(lat_name+"_Twiss.txt")
 
 if not False:
-    lat_prop.plt_Twiss(lat_name+".png", not False)
+    lat_prop.plt_Twiss(lat_name+"_Twiss.png", not False)
+    lat_prop.plt_chrom(lat_name+"_chrom.png", not False)
 
 bend_list  = ["b1_1", "b1_2", "b1_3", "b1_4", "b1_5"]
 rbend_name = "qf1"

@@ -148,10 +148,44 @@ class periodic_structure_class:
         if plot:
             plt.show()
 
+    def plt_chrom(self, file_name, plot):
+        fig, gr = plt.subplots()
+
+        fig.suptitle("Linear Chromaticity")
+
+        gr.set_title(r"$\beta_{x,y} x \eta_x$")
+        gr.set_xlabel("s [m]")
+        gr.set_ylabel(r"$[m^2]$")
+        gr.plot(
+            self._Twiss.s,
+            self._Twiss.twiss.sel(plane="x", par="beta")
+            *self._Twiss.dispersion.sel(phase_coordinate="x"), "b",
+            label=r"$\beta_x x  \eta_x$")
+        gr.plot(
+            self._Twiss.s,
+            self._Twiss.twiss.sel(plane="y", par="beta")
+            *self._Twiss.dispersion.sel(phase_coordinate="x"), "r",
+            label=r"$\beta_y x \eta_x$")
+        gr.set_ylim(bottom=0)
+        gr.legend()
+
+        gr_r = gr.twinx()
+        gr_r.set_ylim([-2.0, 10.0])
+        gr_r.set_yticks([])
+        gr_r.step(self._Twiss.s, self._type_code, "k")
+
+        fig.tight_layout()
+
+        plt.savefig(file_name)
+        print("\nplt_Twiss - plot saved as:", file_name)
+
+        if plot:
+            plt.show()
+
     def plt_scan_phi_rb(self, file_name, phi, eps_x, J_x, J_z, alpha_c, plot):
         fig, (gr_1, gr_2) = plt.subplots(2)
 
-        fig.suptitle("Lattice Trade-Offs vs. Reverse Bend Angle")
+        fig.suptitle(r"Lattice Trade-Offs vs. Reverse Bend Angle")
 
         gr_1.set_title(
             r"$[\epsilon_x\left(\phi_{RB}\right)$"

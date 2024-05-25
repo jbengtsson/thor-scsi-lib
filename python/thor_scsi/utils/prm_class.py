@@ -232,7 +232,13 @@ class prm_class(bend_class):
             print()
 
 
-def prt_lat(lat_prop, file_name, prm_list, phi_lat):
+def prt_lat(
+        lat_prop,
+        file_name,
+        prm_list,
+        *,
+        phi_lat: phi_lat_class = None):
+# def prt_lat(lat_prop, file_name, prm_list):
     outf = open(file_name, 'w')
 
     def prt_drift(name):
@@ -273,7 +279,8 @@ def prt_lat(lat_prop, file_name, prm_list, phi_lat):
             prt_bend(prm_list._prm_list[k][1])
         else:
             print("\nprt_lat - undefined parameter:", prm_list._prm_list[k][1])
-    prt_prm_func_dict["phi"](phi_lat._fam_name)
+    if phi_lat != None:
+        prt_prm_func_dict["phi"](phi_lat._fam_name)
 
     outf.close()
 

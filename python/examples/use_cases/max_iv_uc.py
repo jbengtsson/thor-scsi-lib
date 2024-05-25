@@ -29,16 +29,17 @@ phi_max      = 0.85
 b_2_bend_max = 1.0
 b_2_max      = 10.0
 
-nu_uc        = [2.0/5.0, 1.0/10.0]
 
-
-def opt_sp(lat_prop, prm_list, weight, nu_uc):
+def opt_uc(lat_prop, prm_list, weight):
     """Use Case: optimise super period.
     """
+
+    nu_uc     = [2.0/7.0, 1.0/14.0]
+
     chi_2_min = 1e30
     eta       = np.nan
     n_iter    = 0
-    file_name = "opt_sp.txt"
+    file_name = "opt_uc.txt"
 
     def prt_iter(prm, chi_2, nu, xi):
         nonlocal n_iter
@@ -65,8 +66,8 @@ def opt_sp(lat_prop, prm_list, weight, nu_uc):
               format(xi[ind.X], xi[ind.Y]))
         print("\n  phi_sp         =  {:8.5f}".format(phi))
         print("  C [m]          =  {:8.5f}".format(lat_prop.compute_circ()))
-        print("\n  phi_b         =  {:8.5f}".format(phi_b))
-        print("  phi_rb        =  {:8.5f}".format(phi_rb))
+        print("\n  phi_b          =  {:8.5f}".format(phi_b))
+        print("  phi_rb         =  {:8.5f}".format(phi_rb))
         prm_list.prt_prm(prm)
 
     def compute_chi_2(nu, xi):
@@ -77,15 +78,17 @@ def opt_sp(lat_prop, prm_list, weight, nu_uc):
         if prt:
             print("\n  dchi2(eps_x)    = {:10.3e}".format(dchi_2))
 
-        dchi_2 = \
-            weight[1]*(
-                (nu[ind.X]-nu_uc[ind.X])**2
-                +(nu[ind.Y]-nu_uc[ind.Y])**2)
+        dchi_2 = weight[1]*(nu[ind.X]-nu_uc[ind.X])**2
         chi_2 += dchi_2
         if prt:
-            print("  dchi2(nu_uc)    = {:10.3e}".format(dchi_2))
+            print("  dchi2(nu_uc_x)  = {:10.3e}".format(dchi_2))
 
-        dchi_2 = weight[2]*(xi[ind.X]**2+xi[ind.Y]**2)
+        dchi_2 = weight[2]*(nu[ind.Y]-nu_uc[ind.Y])**2
+        chi_2 += dchi_2
+        if prt:
+            print("  dchi2(nu_uc_y)  = {:10.3e}".format(dchi_2))
+
+        dchi_2 = weight[3]*(xi[ind.X]**2+xi[ind.Y]**2)
         chi_2 += dchi_2
         if prt:
             print("  dchi2(xi)       = {:10.3e}".format(dchi_2))
@@ -125,7 +128,7 @@ def opt_sp(lat_prop, prm_list, weight, nu_uc):
             chi_2 = compute_chi_2(nu, xi)
             if chi_2 < chi_2_min:
                 prt_iter(prm, chi_2, nu, xi)
-                pc.prt_lat(lat_prop, "opt_sp.txt", prm_list)
+                pc.prt_lat(lat_prop, "opt_uc.txt", prm_list)
                 chi_2_min = min(chi_2, chi_2_min)
             return chi_2
 
@@ -167,7 +170,7 @@ E_0     = 3.0e9
 
 home_dir = os.path.join(
     os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "MAX_4U")
-lat_name = "max_4u_sp_jb_5"
+lat_name = "max_iv_sp_jb_3"
 file_name = os.path.join(home_dir, lat_name+".lat")
 
 lat_prop = \
@@ -200,9 +203,10 @@ if False:
 
 # Weights.
 weight = np.array([
-    1e14,  # eps_x.
-    1e2,   # eta_uc_x.
-    1e-7   # xi.
+    1e12,  # eps_x.
+    1e1,   # nu_uc_x.
+    1e0,   # nu_uc_y.
+    1e-2   # xi.
 ])
 
 bend_list = [
@@ -226,9 +230,9 @@ prm_list = [
 
 prm_list = pc.prm_class(lat_prop, prm_list, b_2_max)
 
-opt_sp(lat_prop, prm_list, weight, nu_uc)
+opt_uc(lat_prop, prm_list, weight)
 
 if False:
     dip_list = [bend]
     dip_list.extend(bend_list)
-    prt_lat(lat_prop, "opt_sp.txt", dip_list)
+    prt_lat(lat_prop, "opt_uc.txt", dip_list)
