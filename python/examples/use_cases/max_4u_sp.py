@@ -114,45 +114,49 @@ def opt_sp(lat_prop, prm_list, uc_0, uc_1, weight, b1_list, b2_list, phi_lat,
         if prt:
             print("  dchi2(U_0)      = {:10.3e}".format(dchi_2))
 
-        dchi_2 = weight[5]*eta_uc[ind.px]**2
+        dchi_2 = weight[2]*eta_uc[ind.px]**2
         chi_2 += dchi_2
         if prt:
             print("  dchi2(eta'_uc)  = {:10.3e}".format(dchi_2))
 
-        dchi_2 = weight[2]*(alpha_uc[ind.X]**2+alpha_uc[ind.Y]**2)
+        dchi_2 = weight[3]*(alpha_uc[ind.X]**2+alpha_uc[ind.Y]**2)
         chi_2 += dchi_2
         if prt:
             print("  dchi2(alpha_uc) = {:10.3e}".format(dchi_2))
 
-        dchi_2 = weight[3]*(nu_uc[ind.X]-nu_uc_des[ind.X])**2
+        dchi_2 = weight[4]*(nu_uc[ind.X]-nu_uc_des[ind.X])**2
         chi_2 += dchi_2
         if prt:
             print("  dchi2(nu_uc_x)  = {:10.3e}".format(dchi_2))
 
-        dchi_2 = weight[4]*(nu_uc[ind.Y]-nu_uc_des[ind.Y])**2
+        dchi_2 = weight[5]*(nu_uc[ind.Y]-nu_uc_des[ind.Y])**2
         chi_2 += dchi_2
         if prt:
             print("  dchi2(nu_uc_y)  = {:10.3e}".format(dchi_2))
 
-        dchi_2 = weight[5]*eta[ind.x]**2
+        dchi_2 = weight[6]*eta[ind.x]**2
         chi_2 += dchi_2
         if prt:
             print("  dchi2(eta_x)    = {:10.3e}".format(dchi_2))
 
-        dchi_2 = weight[6]*(nu_sp[ind.X]-nu_sp_des[ind.X])**2
+        dchi_2 = weight[7]*(nu_sp[ind.X]-nu_sp_des[ind.X])**2
         chi_2 += dchi_2
         if prt:
             print("  dchi2(nu_sp_x)  = {:10.3e}".format(dchi_2))
 
-        dchi_2 = weight[7]*(nu_sp[ind.Y]-nu_sp_des[ind.Y])**2
+        dchi_2 = weight[8]*(nu_sp[ind.Y]-nu_sp_des[ind.Y])**2
         chi_2 += dchi_2
         if prt:
             print("  dchi2(nu_sp_y)  = {:10.3e}".format(dchi_2))
 
-        dchi_2 = weight[8]*(xi[ind.X]**2+xi[ind.Y]**2)
+        dchi_2 = weight[9]*xi[ind.X]**2
+        if prt:
+            print("  dchi2(xi_x)     = {:10.3e}".format(dchi_2))
+
+        dchi_2 = weight[10]*xi[ind.Y]**2
         chi_2 += dchi_2
         if prt:
-            print("  dchi2(xi)       = {:10.3e}".format(dchi_2))
+            print("  dchi2(xi_y)     = {:10.3e}".format(dchi_2))
 
         return chi_2
 
@@ -190,8 +194,8 @@ def opt_sp(lat_prop, prm_list, uc_0, uc_1, weight, b1_list, b2_list, phi_lat,
                       format(n_iter, chi_2, chi_2_min))
                 prm_list.prt_prm(prm)
         else:
-            eta_uc, alpha_uc, _, nu_0 = lat_prop.get_Twiss(uc_0-1)
-            _, _, _, nu_1 = lat_prop.get_Twiss(uc_1)
+            _, _, _, nu_0 = lat_prop.get_Twiss(uc_0-1)
+            eta_uc, alpha_uc, _, nu_1 = lat_prop.get_Twiss(uc_1)
             nu_uc = nu_1 - nu_0
             Twiss = lat_prop.get_Twiss(-1)
 
@@ -286,15 +290,17 @@ print("unit cell exit     {:5s} loc = {:d}".
 
 # Weights.
 weight = np.array([
-    1e16,  # eps_x.
+    1e17,  # eps_x.
     1e-17, # U_0.
-    1e-2,  # alpha_uc.
+    1e2,   # etap_x_uc.
+    1e-1,  # alpha_uc.
     1e-2,  # nu_uc_x.
-    1e-1,  # nu_uc_y.
+    1e-2,  # nu_uc_y.
     1e1,   # eta_x.
-    1e-2,  # nu_sp_x.
-    1e-2,  # nu_sp_y.
-    1e-6   # xi.
+    1e-1,  # nu_sp_x.
+    1e-1,  # nu_sp_y.
+    1e-6,  # xi_x.
+    1e-6   # xi_y.
 ])
 
 b1_list = ["b1_0", "b1_1", "b1_2", "b1_3", "b1_4", "b1_5"]
