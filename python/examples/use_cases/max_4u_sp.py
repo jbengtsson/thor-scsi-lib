@@ -32,15 +32,21 @@ phi_max      = 0.85
 b_2_bend_max = 1.0
 b_2_max      = 10.0
 
-eps_x_des    = 325e-12
+eps_x_des    = 0e0
+# eps_x_des    = 325e-12
+
 # nu_uc_des    = [2.0/5.0, 1.0/10.0]
+nu_uc_des    = [2.0/6.0, 1.0/12.0]
 # nu_uc_des    = [2.0/7.0, 1.0/14.0]
-nu_uc_des    = [0.266, 0.0764]
-nu_sp_des    = [2.110, 0.814]
+# nu_uc_des    = [0.266, 0.0764]
+
+# nu_sp_des    = [2.110, 0.814]
+nu_sp_des    = [2.40, 0.90]
 
 
-def opt_sp(lat_prop, prm_list, uc_0, uc_1, weight, b1_list, b2_list, phi_lat,
-           eps_x_des, nu_uc_des, nu_sp_des):
+def opt_sp(
+        lat_prop, prm_list, uc_0, uc_1, uc_2, weight, b1_list, b2_list, phi_lat,
+        eps_x_des, nu_uc_des, nu_sp_des):
     """Use Case: optimise super period.
     """
 
@@ -52,7 +58,9 @@ def opt_sp(lat_prop, prm_list, uc_0, uc_1, weight, b1_list, b2_list, phi_lat,
     Twiss_uc_ref = np.nan
     nu_sp        = np.nan
 
-    def prt_iter(prm, chi_2, Twiss, eta_uc, alpha_uc, nu_uc, xi):
+    def prt_iter(
+            prm, chi_2, Twiss, eta_uc_1, alpha_uc_1, eta_uc_2, alpha_uc_2,
+            nu_uc, xi):
         nonlocal nu_uc_des, nu_sp_des
 
         eta, alpha, beta, nu = Twiss
@@ -76,9 +84,11 @@ def opt_sp(lat_prop, prm_list, uc_0, uc_1, weight, b1_list, b2_list, phi_lat,
         print("    eps_x [pm.rad] = {:5.3f} [{:5.3f}]".
               format(1e12*lat_prop._eps[ind.X], 1e12*eps_x_des))
         print("    U_0 [keV]      = {:5.3f}".format(1e-3*lat_prop._U_0))
-        print("\n    eta'_uc        = {:9.3e}".format(eta_uc[ind.px]))
-        print("    alpha_uc       = [{:9.3e}, {:9.3e}])".
-              format(alpha_uc[ind.X], alpha_uc[ind.Y]))
+        print("\n    eta'_uc        = {:9.3e} {:9.3e}".
+              format(eta_uc_1[ind.px], eta_uc_2[ind.px]))
+        print("    alpha_uc       = [{:9.3e}, {:9.3e}] [{:9.3e}, {:9.3e}])".
+              format(alpha_uc_1[ind.X], alpha_uc_1[ind.Y], alpha_uc_2[ind.X],
+                     alpha_uc_2[ind.Y]))
         print("    nu_uc          = [{:7.5f}, {:7.5f}] ([{:7.5f}, {:7.5f}])".
               format(nu_uc[ind.X], nu_uc[ind.Y], nu_uc_des[ind.X],
                      nu_uc_des[ind.Y]))
@@ -97,7 +107,8 @@ def opt_sp(lat_prop, prm_list, uc_0, uc_1, weight, b1_list, b2_list, phi_lat,
         print("    phi_rb_2       = {:8.5f}".format(phi_rb_2))
         prm_list.prt_prm(prm)
 
-    def compute_chi_2(Twiss, eta_uc, alpha_uc, nu_uc, xi):
+    def compute_chi_2(
+            Twiss, eta_uc_1, alpha_uc_1, eta_uc_2, alpha_uc_2, nu_uc, xi):
         nonlocal nu_uc_des, nu_sp_des
 
         prt = not False
@@ -114,12 +125,14 @@ def opt_sp(lat_prop, prm_list, uc_0, uc_1, weight, b1_list, b2_list, phi_lat,
         if prt:
             print("  dchi2(U_0)      = {:10.3e}".format(dchi_2))
 
-        dchi_2 = weight[2]*eta_uc[ind.px]**2
+        dchi_2 = weight[2]*(eta_uc_1[ind.px]**2+eta_uc_2[ind.px]**2)
         chi_2 += dchi_2
         if prt:
             print("  dchi2(eta'_uc)  = {:10.3e}".format(dchi_2))
 
-        dchi_2 = weight[3]*(alpha_uc[ind.X]**2+alpha_uc[ind.Y]**2)
+        dchi_2 = weight[3]*(
+            alpha_uc_1[ind.X]**2+alpha_uc_2[ind.X]**2+alpha_uc_1[ind.Y]**2
+            +alpha_uc_2[ind.Y]**2)
         chi_2 += dchi_2
         if prt:
             print("  dchi2(alpha_uc) = {:10.3e}".format(dchi_2))
@@ -195,14 +208,18 @@ def opt_sp(lat_prop, prm_list, uc_0, uc_1, weight, b1_list, b2_list, phi_lat,
                 prm_list.prt_prm(prm)
         else:
             _, _, _, nu_0 = lat_prop.get_Twiss(uc_0-1)
-            eta_uc, alpha_uc, _, nu_1 = lat_prop.get_Twiss(uc_1)
+            eta_uc_1, alpha_uc_1, _, nu_1 = lat_prop.get_Twiss(uc_1)
             nu_uc = nu_1 - nu_0
+            eta_uc_2, alpha_uc_2, _, _ = lat_prop.get_Twiss(uc_2)
             Twiss = lat_prop.get_Twiss(-1)
 
-            chi_2 = compute_chi_2(Twiss, eta_uc, alpha_uc, nu_uc, xi)
+            chi_2 = compute_chi_2(
+                Twiss, eta_uc_1, alpha_uc_1, eta_uc_2, alpha_uc_2, nu_uc, xi)
 
             if chi_2 < chi_2_min:
-                prt_iter(prm, chi_2, Twiss, eta_uc, alpha_uc, nu_uc, xi)
+                prt_iter(
+                    prm, chi_2, Twiss, eta_uc_1, alpha_uc_1, eta_uc_2,
+                    alpha_uc_2, nu_uc, xi)
                 lat_prop.prt_Twiss("twiss.txt")
                 pc.prt_lat(lat_prop, file_name, prm_list, phi_lat=phi_lat)
                 chi_2_min = min(chi_2, chi_2_min)
@@ -250,7 +267,8 @@ E_0     = 3.0e9
 home_dir = os.path.join(
     os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "MAX_4U")
 # lat_name = "max_iv_sp_jb_3"
-lat_name = "max_iv_sp_matched_2"
+lat_name = "max_4u_sp_3_2"
+# lat_name = "max_iv_sp_matched_2"
 # lat_name = "max_4u_sp_jb_5"
 file_name = os.path.join(home_dir, lat_name+".lat")
 
@@ -280,27 +298,30 @@ else:
 
 uc_0 = lat_prop._lattice.find("sf_h", 1).index
 uc_1 = lat_prop._lattice.find("sf_h", 2).index
+uc_2 = lat_prop._lattice.find("sf_h", 4).index
 # For 2 sf [sf1, sf2] families.
 # uc_0 = lat_prop._lattice.find("sf_h", 0).index
 # uc_1 = lat_prop._lattice.find("sf_h", 1).index
-print("\nunit cell entrance {:5s} loc = {:d}".
+print("\nunit cell entrance  {:5s} loc = {:d}".
       format(lat_prop._lattice[uc_0].name, uc_0))
-print("unit cell exit     {:5s} loc = {:d}".
+print("unit cell exit      {:5s} loc = {:d}".
       format(lat_prop._lattice[uc_1].name, uc_1))
+print("next unit cell exit {:5s} loc = {:d}".
+      format(lat_prop._lattice[uc_1].name, uc_2))
 
 # Weights.
 weight = np.array([
-    1e17,  # eps_x.
+    1e14,  # eps_x.
     1e-17, # U_0.
     1e2,   # etap_x_uc.
     1e-1,  # alpha_uc.
-    1e-2,  # nu_uc_x.
-    1e-2,  # nu_uc_y.
+    1e0,   # nu_uc_x.
+    1e0,   # nu_uc_y.
     1e1,   # eta_x.
     1e-1,  # nu_sp_x.
     1e-1,  # nu_sp_y.
-    1e-6,  # xi_x.
-    1e-6   # xi_y.
+    1e-7,  # xi_x.
+    1e-7   # xi_y.
 ])
 
 b1_list = ["b1_0", "b1_1", "b1_2", "b1_3", "b1_4", "b1_5"]
@@ -319,33 +340,33 @@ prms = [
     ("qd",       "b_2"),
     ("qf2",      "b_2"),
 
-    # ("b_2_bend", b1_bend),
-    # ("b_2_bend", b2_bend),
+    ("b_2_bend", b1_bend),
+    ("b_2_bend", b2_bend),
 
     ("phi_bend", b1_bend),
     ("phi_bend", b2_bend),
 
-    # ("qf1_e",    "phi"),
+    ("qf1_e",    "phi"),
 
-    ("b1_0",     "b_2"),
-    ("b1_1",     "b_2"),
-    ("b1_2",     "b_2"),
-    ("b1_3",     "b_2"),
-    ("b1_4",     "b_2"),
-    ("b1_5",     "b_2"),
+    # ("b1_0",     "b_2"),
+    # ("b1_1",     "b_2"),
+    # ("b1_2",     "b_2"),
+    # ("b1_3",     "b_2"),
+    # ("b1_4",     "b_2"),
+    # ("b1_5",     "b_2"),
 
-    ("b2u_6",    "b_2"),
-    ("b2u_5",    "b_2"),
-    ("b2u_4",    "b_2"),
-    ("b2u_3",    "b_2"),
-    ("b2u_2",    "b_2"),
-    ("b2u_1",    "b_2"),
-    ("b2_0",     "b_2"),
-    ("b2d_1",    "b_2"),
-    ("b2d_2",    "b_2"),
-    ("b2d_3",    "b_2"),
-    ("b2d_4",    "b_2"),
-    ("b2d_5",    "b_2"),
+    # ("b2u_6",    "b_2"),
+    # ("b2u_5",    "b_2"),
+    # ("b2u_4",    "b_2"),
+    # ("b2u_3",    "b_2"),
+    # ("b2u_2",    "b_2"),
+    # ("b2u_1",    "b_2"),
+    # ("b2_0",     "b_2"),
+    # ("b2d_1",    "b_2"),
+    # ("b2d_2",    "b_2"),
+    # ("b2d_3",    "b_2"),
+    # ("b2d_4",    "b_2"),
+    # ("b2d_5",    "b_2"),
 
     # ("b1_0",     "phi"),
     # ("b1_1",     "phi"),
@@ -372,5 +393,5 @@ prm_list = pc.prm_class(lat_prop, prms, b_2_max)
 
 phi_lat = pc.phi_lat_class(lat_prop, "qf1")
 
-opt_sp(lat_prop, prm_list, uc_0, uc_1, weight, b1_list, b2_list, phi_lat,
+opt_sp(lat_prop, prm_list, uc_0, uc_1, uc_2, weight, b1_list, b2_list, phi_lat,
        eps_x_des, nu_uc_des, nu_sp_des)
