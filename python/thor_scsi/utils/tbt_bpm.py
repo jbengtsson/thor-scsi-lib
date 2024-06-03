@@ -11,6 +11,7 @@ beta functions & phase advance - at the BPMs.
 
 import os
 import math
+import h5py
 import pandas as pd
 import numpy as np
 import scipy as sp
@@ -28,6 +29,8 @@ class tbt_bpm_class:
     # Private.
 
     def __init__(self):
+        self._bpm_status   = math.nan
+        self._tbt_data_buf = math.nan
         self._tbt_data     = math.nan
         self._tbt_data_fft = math.nan
         self._A_fft        = math.nan
@@ -128,6 +131,12 @@ class tbt_bpm_class:
     def rd_tbt_df(self, file_name):
         self._tbt_data = pd.read_hdf(file_name, key="df")
 
+    def rd_tbt_MAX_IV(self, file_name):
+        f = h5py.File(file_name, "r")
+        self._bpm_status = \
+            np.array([f["x"]["BPM_index"][0], f["y"]["BPM_index"][0]])
+        self._tbt_data_buf = np.array([f["x"]["Data"], f["y"]["Data"]])
+
     def prt_f(self, fft, n_max, n_peak):
         print("\nHorizontal Plane")
         print("     f       1-f        A        phi   n_x  n_y    eps")
@@ -205,7 +214,7 @@ class tbt_bpm_class:
                     dphi[k] += 2e0*np.pi
             A_k = self._bpm[name]["A"]
             phi_k = self._bpm[name]["phi"]
-            print("{:10s}   {:5.3f}        {:5.3f}     {:5.3f}  {:5.3f}".
+            print("{:^10s}   {:5.3f}        {:5.3f}     {:5.3f}  {:5.3f}".
                   format(name, beta_rel[X_], beta_rel[Y_],
                          dphi[X_]/(2e0*np.pi), dphi[Y_]/(2e0*np.pi)))
 
