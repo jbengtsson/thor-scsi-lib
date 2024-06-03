@@ -240,5 +240,28 @@ class tbt_bpm_class:
 
         self.prt_lin_opt()
 
+    def compute_lin_opt_MAX_IV(self, cut, rm_avg, alias, prt, plot):
+        self._bpm = {}
+
+        # Loop over BPMs.
+        for bpm in range(len(self._tbt_data_buf[0, 0, :])):
+            self._tbt_data = self._tbt_data_buf[:, :, bpm]
+            self.analyse_tbt_bpm_data(1, rm_avg, prt, plot)
+            for k in range(2):
+                # Aliasing if the tune is > 0.5.
+                if alias[k]:
+                    self._phi[k, 0] = -self._phi[k, 0]
+            # Collect the results.
+            self._bpm.update({
+                str(bpm) : {
+                    "nu" :self._f[:, 0], "A" : self._A[:, 0],
+                    "phi" : self._phi[:, 0]
+                }
+            })
+            if plot:
+                break
+
+        self.prt_lin_opt()
+
        
 __all__ = ["tbt_bpm_class"]
