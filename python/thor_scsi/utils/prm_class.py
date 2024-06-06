@@ -177,7 +177,7 @@ class prm_class(bend_class):
             print("\nprm_class::get_prm:")
         for k in range(len(self._prm_list)):
             if prt:
-                print("\n  {:s}".format(self._prm_list[k][0]))
+                print("  {:10s}".format(self._prm_list[k][0]), end="")
             if type(self._prm_list[k][1]) == str:
                 p = \
                     self._get_prm_func_dict[self._prm_list[k][1]](
@@ -200,8 +200,9 @@ class prm_class(bend_class):
                 assert False
             prm.append(p)
             bounds.append(b)
-            print("  prm    = {:12.5e}".format(prm[k]))
-            print("  bounds = ", bounds[k])
+            if prt:
+                print(" {:12.5e} ({:5.1f}, {:5.1f})".
+                      format(prm[k], bounds[k][0], bounds[k][1]))
         return np.array(prm), bounds
 
     def set_prm(self, prm):
