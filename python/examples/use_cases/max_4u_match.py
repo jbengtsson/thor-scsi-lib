@@ -66,21 +66,23 @@ def match_straight(lat_prop, prm_list, uc_0, uc_1, sp_1, beta, weight, phi_lat):
                 phi += lat_prop.get_phi_elem(bend_list[k], 0)
             return phi
 
-        b_list = [
-            "b2u_6", "b2u_5", "b2u_4", "b2u_3", "b2u_2", "b2u_1", "b2_0",
-            "b2d_1", "b2d_2", "b2d_3", "b2d_4", "b2d_5"]
-        rb = "qf1"
+        rb_1 = "qf1"
+        rb_2 = "qf1_e"
 
         phi = lat_prop.compute_phi_lat()
-        phi_b = compute_phi_bend(lat_prop, b_list)
-        phi_rb = lat_prop.get_phi_elem(rb, 0)
+        phi_b1 = compute_phi_bend(lat_prop, b1_list)
+        phi_b2 = compute_phi_bend(lat_prop, b2_list)
+        phi_rb_1 = lat_prop.get_phi_elem(rb_1, 0)
+        phi_rb_2 = lat_prop.get_phi_elem(rb_2, 0)
 
         print("\n{:4d} chi_2 = {:9.3e}".format(n_iter, chi_2))
         lat_prop.prt_Twiss_param(Twiss_k[:3])
-        print("\n  phi_sp =  {:8.5f}".format(phi))
-        print("  C [m]  =  {:8.5f}".format(lat_prop.compute_circ()))
-        print("\n  phi_b  =  {:8.5f}".format(phi_b))
-        print("  phi_rb =  {:8.5f}".format(phi_rb))
+        print("\n    phi_sp         = {:8.5f}".format(phi))
+        print("    C [m]          = {:8.5f}".format(lat_prop.compute_circ()))
+        print("\n    phi_b1         = {:8.5f}".format(phi_b1))
+        print("    phi_b2         = {:8.5f}".format(phi_b2))
+        print("    phi_rb_1       = {:8.5f}".format(phi_rb_1))
+        print("    phi_rb_2       = {:8.5f}".format(phi_rb_2))
         prm_list.prt_prm(prm)
 
     def compute_chi_2_Twiss(Twiss_k):
@@ -116,7 +118,7 @@ def match_straight(lat_prop, prm_list, uc_0, uc_1, sp_1, beta, weight, phi_lat):
         chi_2, Twiss_1 = compute_chi_2()
         if chi_2 < chi_2_min:
             prt_iter(prm, chi_2, Twiss_1)
-            pc.prt_lat(lat_prop, "match_lat_k.txt", prm_list, phi_lat = phi_lat)
+            pc.prt_lat(lat_prop, "match_lat_k.txt", prm_list, phi_lat=phi_lat)
             chi_2_min = min(chi_2, chi_2_min)
 
             # Problematic => system not time invariant.
@@ -175,9 +177,7 @@ E_0     = 3.0e9
 
 home_dir = os.path.join(
     os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "MAX_4U")
-lat_name = "max_iv_sp_matched"
-# lat_name = "max_iv_sp_jb_3"
-# lat_name = "max_4u_sp_jb_5"
+lat_name = "max_4u_d_0"
 file_name = os.path.join(home_dir, lat_name+".lat")
 
 lat_prop = \
