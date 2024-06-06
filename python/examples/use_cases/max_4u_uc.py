@@ -29,7 +29,7 @@ phi_max      = 0.85
 b_2_bend_max = 1.0
 b_2_max      = 10.0
 
-eps_x_des    = 120e-12
+eps_x_des    = 139e-12
 nu_uc        = [2.0/6.0, 1.0/12.0]
 
 
@@ -223,7 +223,14 @@ prms = [
     ("b1_4",     "b_2"),
     ("b1_5",     "b_2"),
 
-    ("phi_bend", b1_bend),
+    # ("phi_bend", b1_bend),
+
+    ("b1_0",     "phi"),
+    ("b1_1",     "phi"),
+    ("b1_2",     "phi"),
+    ("b1_3",     "phi"),
+    ("b1_4",     "phi"),
+    ("b1_5",     "phi"),
 ]
 
 prm_list = pc.prm_class(lat_prop, prms, b_2_max)
