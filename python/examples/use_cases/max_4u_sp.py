@@ -32,22 +32,15 @@ phi_max      = 0.85
 b_2_bend_max = 1.0
 b_2_max      = 10.0
 
-eps_x_des    = 140e-12
-# eps_x_des    = 325e-12
-
-# nu_uc_des    = [2.0/5.0, 1.0/10.0]
+eps_x_des    = 139e-12
 nu_uc_des    = [2.0/6.0, 1.0/12.0]
-# nu_uc_des    = [2.0/7.0, 1.0/14.0]
-# nu_uc_des    = [0.266, 0.0764]
-
-# nu_sp_des    = [2.110, 0.814]
-# nu_sp_des    = [2.45, 0.80]
-nu_sp_des    = [2.4, 1.20]
+nu_sp_des    = [2.4, 1.15]
+beta_des     = [8.0, 3.0]
 
 
 def opt_sp(
         lat_prop, prm_list, uc_0, uc_1, uc_2, weight, b1_list, b2_list, phi_lat,
-        eps_x_des, nu_uc_des, nu_sp_des):
+        eps_x_des, nu_uc_des, nu_sp_des, beta_des):
     """Use Case: optimise super period.
     """
 
@@ -62,7 +55,7 @@ def opt_sp(
     def prt_iter(
             prm, chi_2, Twiss, eta_uc_1, alpha_uc_1, eta_uc_2, alpha_uc_2,
             nu_uc, xi):
-        nonlocal nu_uc_des, nu_sp_des
+        nonlocal nu_uc_des, nu_sp_des, beta_des
 
         eta, alpha, beta, nu = Twiss
 
@@ -94,10 +87,11 @@ def opt_sp(
               format(nu_uc[ind.X], nu_uc[ind.Y], nu_uc_des[ind.X],
                      nu_uc_des[ind.Y]))
         print("\n    eta_x          = {:9.3e}".format(eta[ind.x]))
-        print("    beta           = [{:7.5f}, {:7.5f}]".
-              format(beta[ind.X], beta[ind.Y]))
         print("\n    nu_sp          = [{:7.5f}, {:7.5f}] ([{:7.5f}, {:7.5f}])".
               format(nu[ind.X], nu[ind.Y], nu_sp_des[ind.X], nu_sp_des[ind.Y]))
+        print("    beta           = [{:7.5f}, {:7.5f}] ([{:7.5f}, {:7.5f}])".
+              format(beta[ind.X], beta[ind.Y], beta_des[ind.X],
+                     beta_des[ind.Y]))
         print("    xi             = [{:5.3f}, {:5.3f}]".
               format(xi[ind.X], xi[ind.Y]))
         print("\n    phi_sp         = {:8.5f}".format(phi))
@@ -110,67 +104,77 @@ def opt_sp(
 
     def compute_chi_2(
             Twiss, eta_uc_1, alpha_uc_1, eta_uc_2, alpha_uc_2, nu_uc, xi):
-        nonlocal nu_uc_des, nu_sp_des
+        nonlocal nu_uc_des, nu_sp_des, beta_des
 
         prt = not False
 
-        eta, alpha, beta, nu_sp = Twiss
+        eta, alpha, nu_sp, beta = Twiss
 
         dchi_2 = weight[0]*(lat_prop._eps[ind.X]-eps_x_des)**2
         chi_2 = dchi_2
         if prt:
-            print("\n  dchi2(eps_x)    = {:10.3e}".format(dchi_2))
+            print("\n  dchi2(eps_x)    = {:9.3e}".format(dchi_2))
 
         dchi_2 = weight[1]*lat_prop._U_0**2
         chi_2 += dchi_2
         if prt:
-            print("  dchi2(U_0)      = {:10.3e}".format(dchi_2))
+            print("  dchi2(U_0)      = {:9.3e}".format(dchi_2))
 
         dchi_2 = weight[2]*(eta_uc_1[ind.px]**2+eta_uc_2[ind.px]**2)
         chi_2 += dchi_2
         if prt:
-            print("  dchi2(eta'_uc)  = {:10.3e}".format(dchi_2))
+            print("  dchi2(eta'_uc)  = {:9.3e}".format(dchi_2))
 
         dchi_2 = weight[3]*(
             alpha_uc_1[ind.X]**2+alpha_uc_2[ind.X]**2+alpha_uc_1[ind.Y]**2
             +alpha_uc_2[ind.Y]**2)
         chi_2 += dchi_2
         if prt:
-            print("  dchi2(alpha_uc) = {:10.3e}".format(dchi_2))
+            print("  dchi2(alpha_uc) = {:9.3e}".format(dchi_2))
 
         dchi_2 = weight[4]*(nu_uc[ind.X]-nu_uc_des[ind.X])**2
         chi_2 += dchi_2
         if prt:
-            print("  dchi2(nu_uc_x)  = {:10.3e}".format(dchi_2))
+            print("  dchi2(nu_uc_x)  = {:9.3e}".format(dchi_2))
 
         dchi_2 = weight[5]*(nu_uc[ind.Y]-nu_uc_des[ind.Y])**2
         chi_2 += dchi_2
         if prt:
-            print("  dchi2(nu_uc_y)  = {:10.3e}".format(dchi_2))
+            print("  dchi2(nu_uc_y)  = {:9.3e}".format(dchi_2))
 
         dchi_2 = weight[6]*eta[ind.x]**2
         chi_2 += dchi_2
         if prt:
-            print("  dchi2(eta_x)    = {:10.3e}".format(dchi_2))
+            print("  dchi2(eta_x)    = {:9.3e}".format(dchi_2))
 
         dchi_2 = weight[7]*(nu_sp[ind.X]-nu_sp_des[ind.X])**2
         chi_2 += dchi_2
         if prt:
-            print("  dchi2(nu_sp_x)  = {:10.3e}".format(dchi_2))
+            print("  dchi2(nu_sp_x)  = {:9.3e}".format(dchi_2))
 
         dchi_2 = weight[8]*(nu_sp[ind.Y]-nu_sp_des[ind.Y])**2
         chi_2 += dchi_2
         if prt:
-            print("  dchi2(nu_sp_y)  = {:10.3e}".format(dchi_2))
+            print("  dchi2(nu_sp_y)  = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[9]*xi[ind.X]**2
-        if prt:
-            print("  dchi2(xi_x)     = {:10.3e}".format(dchi_2))
-
-        dchi_2 = weight[10]*xi[ind.Y]**2
+        dchi_2 = weight[9]*(beta[ind.X]-beta_des[ind.X])**2
         chi_2 += dchi_2
         if prt:
-            print("  dchi2(xi_y)     = {:10.3e}".format(dchi_2))
+            print("  dchi2(beta_x)   = {:9.3e}".format(dchi_2))
+
+        dchi_2 = weight[10]*(beta[ind.Y]-beta_des[ind.Y])**2
+        chi_2 += dchi_2
+        if prt:
+            print("  dchi2(beta_y)   = {:9.3e}".format(dchi_2))
+
+        dchi_2 = weight[11]*xi[ind.X]**2
+        if prt:
+            print("  dchi2(xi_x)     = {:9.3e}".format(dchi_2))
+
+        dchi_2 = weight[12]*xi[ind.Y]**2
+        chi_2 += dchi_2
+        if prt:
+            print("  dchi2(xi_y)     = {:9.3e}".format(dchi_2))
 
         return chi_2
 
@@ -267,6 +271,7 @@ E_0     = 3.0e9
 
 home_dir = os.path.join(
     os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "MAX_4U")
+# lat_name = "max_iv_sp_jb"
 lat_name = "max_4u_d_0"
 file_name = os.path.join(home_dir, lat_name+".lat")
 
@@ -318,8 +323,10 @@ weight = np.array([
     1e1,   # eta_x.
     0e-2,  # nu_sp_x.
     0e-2,  # nu_sp_y.
-    1e-8,  # xi_x.
-    1e-8   # xi_y.
+    1e-6,  # beta_x.
+    1e-6,  # beta_y.
+    1e-7,  # xi_x.
+    1e-7   # xi_y.
 ])
 
 b1_list = ["b1_0", "b1_1", "b1_2", "b1_3", "b1_4", "b1_5"]
@@ -332,64 +339,77 @@ b2_list = [
 b1_bend = pc.bend_class(lat_prop, b1_list, phi_max, b_2_max)
 b2_bend = pc.bend_class(lat_prop, b2_list, phi_max, b_2_max)
 
-prms = [
-    ("qf1",      "b_2"),
-    ("qf1_e",    "b_2"),
-    ("qd",       "b_2"),
-    ("qf2",      "b_2"),
+if not True:
+    prms = [
+        ("qf1",      "b_2"),
+        ("qf1_e",    "b_2"),
+        ("qd",       "b_2"),
+        ("qf2",      "b_2"),
 
-    ("b_2_bend", b1_bend),
-    ("b_2_bend", b2_bend),
+        ("b_2_bend", b1_bend),
+        ("b_2_bend", b2_bend),
 
-    ("phi_bend", b1_bend),
-    ("phi_bend", b2_bend),
+        ("phi_bend", b1_bend),
+        ("phi_bend", b2_bend),
 
-    ("qf1_e",    "phi"),
+        ("qf1",      "phi")
+    ]
 
-    # ("b1_0",     "b_2"),
-    # ("b1_1",     "b_2"),
-    # ("b1_2",     "b_2"),
-    # ("b1_3",     "b_2"),
-    # ("b1_4",     "b_2"),
-    # ("b1_5",     "b_2"),
+    phi_lat = pc.phi_lat_class(lat_prop, "qf1_e")
+else:
+    prms = [
+        ("qf1",      "b_2"),
+        ("qf1_e",    "b_2"),
+        ("qd",       "b_2"),
+        ("qf2",      "b_2"),
 
-    # ("b2u_6",    "b_2"),
-    # ("b2u_5",    "b_2"),
-    # ("b2u_4",    "b_2"),
-    # ("b2u_3",    "b_2"),
-    # ("b2u_2",    "b_2"),
-    # ("b2u_1",    "b_2"),
-    # ("b2_0",     "b_2"),
-    # ("b2d_1",    "b_2"),
-    # ("b2d_2",    "b_2"),
-    # ("b2d_3",    "b_2"),
-    # ("b2d_4",    "b_2"),
-    # ("b2d_5",    "b_2"),
+        ("b1_0",     "b_2"),
+        ("b1_1",     "b_2"),
+        ("b1_2",     "b_2"),
+        ("b1_3",     "b_2"),
+        ("b1_4",     "b_2"),
+        ("b1_5",     "b_2"),
 
-    # ("b1_0",     "phi"),
-    # ("b1_1",     "phi"),
-    # ("b1_2",     "phi"),
-    # ("b1_3",     "phi"),
-    # ("b1_4",     "phi"),
-    # ("b1_5",     "phi"),
+        ("b2u_6",    "b_2"),
+        ("b2u_5",    "b_2"),
+        ("b2u_4",    "b_2"),
+        ("b2u_3",    "b_2"),
+        ("b2u_2",    "b_2"),
+        ("b2u_1",    "b_2"),
+        ("b2_0",     "b_2"),
+        ("b2d_1",    "b_2"),
+        ("b2d_2",    "b_2"),
+        ("b2d_3",    "b_2"),
+        ("b2d_4",    "b_2"),
+        ("b2d_5",    "b_2"),
 
-    # ("b2u_6",    "phi"),
-    # ("b2u_5",    "phi"),
-    # ("b2u_4",    "phi"),
-    # ("b2u_3",    "phi"),
-    # ("b2u_2",    "phi"),
-    # ("b2u_1",    "phi"),
-    # ("b2_0",     "phi"),
-    # ("b2d_1",    "phi"),
-    # ("b2d_2",    "phi"),
-    # ("b2d_3",    "phi"),
-    # ("b2d_4",    "phi"),
-    # ("b2d_5",    "phi")
-]
+        ("qf1",      "phi"),
+        ("qf1_e",    "phi"),
+
+        ("b1_0",     "phi"),
+        ("b1_1",     "phi"),
+        ("b1_2",     "phi"),
+        ("b1_3",     "phi"),
+        ("b1_4",     "phi"),
+        ("b1_5",     "phi"),
+
+        ("b2u_6",    "phi"),
+        ("b2u_5",    "phi"),
+        ("b2u_4",    "phi"),
+        ("b2u_3",    "phi"),
+        ("b2u_2",    "phi"),
+        ("b2u_1",    "phi"),
+        # ("b2_0",     "phi"),
+        ("b2d_1",    "phi"),
+        ("b2d_2",    "phi"),
+        ("b2d_3",    "phi"),
+        ("b2d_4",    "phi"),
+        ("b2d_5",    "phi")
+    ]
+
+    phi_lat = pc.phi_lat_class(lat_prop, "b2_0")
 
 prm_list = pc.prm_class(lat_prop, prms, b_2_max)
 
-phi_lat = pc.phi_lat_class(lat_prop, "qf1")
-
 opt_sp(lat_prop, prm_list, uc_0, uc_1, uc_2, weight, b1_list, b2_list, phi_lat,
-       eps_x_des, nu_uc_des, nu_sp_des)
+       eps_x_des, nu_uc_des, nu_sp_des, beta_des)
