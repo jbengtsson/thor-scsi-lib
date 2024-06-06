@@ -32,7 +32,7 @@ phi_max      = 0.85
 b_2_bend_max = 1.0
 b_2_max      = 10.0
 
-eps_x_des    = 0e0
+eps_x_des    = 140e-12
 # eps_x_des    = 325e-12
 
 # nu_uc_des    = [2.0/5.0, 1.0/10.0]
@@ -41,7 +41,8 @@ nu_uc_des    = [2.0/6.0, 1.0/12.0]
 # nu_uc_des    = [0.266, 0.0764]
 
 # nu_sp_des    = [2.110, 0.814]
-nu_sp_des    = [2.40, 0.90]
+# nu_sp_des    = [2.45, 0.80]
+nu_sp_des    = [2.4, 1.20]
 
 
 def opt_sp(
@@ -266,10 +267,7 @@ E_0     = 3.0e9
 
 home_dir = os.path.join(
     os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "MAX_4U")
-# lat_name = "max_iv_sp_jb_3"
-lat_name = "max_4u_sp_3_2"
-# lat_name = "max_iv_sp_matched_2"
-# lat_name = "max_4u_sp_jb_5"
+lat_name = "max_4u_d_0"
 file_name = os.path.join(home_dir, lat_name+".lat")
 
 lat_prop = \
@@ -311,17 +309,17 @@ print("next unit cell exit {:5s} loc = {:d}".
 
 # Weights.
 weight = np.array([
-    1e14,  # eps_x.
+    1e17,  # eps_x.
     1e-17, # U_0.
     1e2,   # etap_x_uc.
     1e-1,  # alpha_uc.
-    1e0,   # nu_uc_x.
-    1e0,   # nu_uc_y.
+    0e0,   # nu_uc_x.
+    0e0,   # nu_uc_y.
     1e1,   # eta_x.
-    1e-1,  # nu_sp_x.
-    1e-1,  # nu_sp_y.
-    1e-7,  # xi_x.
-    1e-7   # xi_y.
+    0e-2,  # nu_sp_x.
+    0e-2,  # nu_sp_y.
+    1e-8,  # xi_x.
+    1e-8   # xi_y.
 ])
 
 b1_list = ["b1_0", "b1_1", "b1_2", "b1_3", "b1_4", "b1_5"]

@@ -166,8 +166,8 @@ E_0     = 3.0e9
 
 home_dir = os.path.join(
     os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "MAX_4U")
-lat_name = "max_iv_sp_matched_2"
-# lat_name = "max_4u_sp_jb_6"
+# lat_name = "max_iv_sp"
+lat_name = "max_4u_d_0"
 file_name = os.path.join(home_dir, lat_name+".lat")
 
 lat_prop = \
