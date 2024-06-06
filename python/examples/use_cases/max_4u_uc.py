@@ -29,16 +29,17 @@ phi_max      = 0.85
 b_2_bend_max = 1.0
 b_2_max      = 10.0
 
-nu_uc        = [2.0/5.0, 1.0/10.0]
+eps_x_des    = 120e-12
+nu_uc        = [2.0/6.0, 1.0/12.0]
 
 
-def opt_sp(lat_prop, prm_list, weight, nu_uc):
+def opt_uc(lat_prop, prm_list, weight, b1_list, phi_lat, eps_x_des, nu_uc):
     """Use Case: optimise super period.
     """
     chi_2_min = 1e30
     eta       = np.nan
     n_iter    = 0
-    file_name = "opt_sp.txt"
+    file_name = "opt_uc.txt"
 
     def prt_iter(prm, chi_2, nu, xi):
         nonlocal n_iter
@@ -49,30 +50,29 @@ def opt_sp(lat_prop, prm_list, weight, nu_uc):
                 phi += lat_prop.get_phi_elem(bend_list[k], 0)
             return phi
 
-        b_list = [
-            "b1_0", "b1_1", "b1_2", "b1_3", "b1_4", "b1_5"]
-        rb = "qf1"
+        rb_1 = "qf1"
 
         phi = lat_prop.compute_phi_lat()
-        phi_b = compute_phi_bend(lat_prop, b_list)
-        phi_rb = lat_prop.get_phi_elem(rb, 0)
+        phi_b1 = compute_phi_bend(lat_prop, b1_list)
+        phi_rb_1 = lat_prop.get_phi_elem(rb_1, 0)
 
         print("\n{:3d} chi_2 = {:11.5e}".format(n_iter, chi_2))
-        print("  eps_x [pm.rad] = {:5.3f}".format(1e12*lat_prop._eps[ind.X]))
-        print("  nu_uc          =  [{:7.5f}, {:7.5f}] ([{:7.5f}, {:7.5f}])".
+        print("    eps_x [pm.rad] = {:5.3f} [{:5.3f}]".
+              format(1e12*lat_prop._eps[ind.X], 1e12*eps_x_des))
+        print("    nu_uc          =  [{:7.5f}, {:7.5f}] ([{:7.5f}, {:7.5f}])".
               format(nu[ind.X], nu[ind.Y], nu_uc[ind.X], nu_uc[ind.Y]))
-        print("  xi             =  [{:5.3f}, {:5.3f}]".
+        print("    xi             =  [{:5.3f}, {:5.3f}]".
               format(xi[ind.X], xi[ind.Y]))
-        print("\n  phi_sp         =  {:8.5f}".format(phi))
-        print("  C [m]          =  {:8.5f}".format(lat_prop.compute_circ()))
-        print("\n  phi_b         =  {:8.5f}".format(phi_b))
-        print("  phi_rb        =  {:8.5f}".format(phi_rb))
+        print("\n    phi_sp         = {:8.5f}".format(phi))
+        print("    C [m]          = {:8.5f}".format(lat_prop.compute_circ()))
+        print("\n    phi_b1         = {:8.5f}".format(phi_b1))
+        print("    phi_rb_1       = {:8.5f}".format(phi_rb_1))
         prm_list.prt_prm(prm)
 
     def compute_chi_2(nu, xi):
         prt = not False
 
-        dchi_2 = weight[0]*lat_prop._eps[ind.X]**2
+        dchi_2 = weight[0]*(lat_prop._eps[ind.X]-eps_x_des)**2
         chi_2 = dchi_2
         if prt:
             print("\n  dchi2(eps_x)    = {:10.3e}".format(dchi_2))
@@ -97,6 +97,7 @@ def opt_sp(lat_prop, prm_list, weight, nu_uc):
 
         n_iter += 1
         prm_list.set_prm(prm)
+        phi_lat.set_phi_lat()
 
         # Compute the beam dynamics properties.
         try:
@@ -125,13 +126,14 @@ def opt_sp(lat_prop, prm_list, weight, nu_uc):
             chi_2 = compute_chi_2(nu, xi)
             if chi_2 < chi_2_min:
                 prt_iter(prm, chi_2, nu, xi)
-                pc.prt_lat(lat_prop, "opt_sp.txt", prm_list)
+                pc.prt_lat(lat_prop, "opt_uc.txt", prm_list)
                 chi_2_min = min(chi_2, chi_2_min)
             return chi_2
 
     max_iter = 1000
-    f_tol    = 1e-4
-    x_tol    = 1e-4
+    f_tol    = 1e-5
+    x_tol    = 1e-5
+    g_tol    = 1e-6
 
     prm, bounds = prm_list.get_prm()
 
@@ -147,7 +149,8 @@ def opt_sp(lat_prop, prm_list, weight, nu_uc):
         method="CG",
         # callback=prt_iter,
         bounds = bounds,
-        options={"ftol": f_tol, "xtol": x_tol, "maxiter": max_iter}
+        # options={"ftol": f_tol, "xtol": x_tol, "maxiter": max_iter}
+        options={"gtol": g_tol, "maxiter": max_iter}
     )
 
     print("\n".join(minimum))
@@ -167,7 +170,7 @@ E_0     = 3.0e9
 
 home_dir = os.path.join(
     os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "MAX_4U")
-lat_name = "max_4u_sp_jb_5"
+lat_name = "max_4u_d_0"
 file_name = os.path.join(home_dir, lat_name+".lat")
 
 lat_prop = \
@@ -200,18 +203,17 @@ if False:
 
 # Weights.
 weight = np.array([
-    1e14,  # eps_x.
-    1e2,   # eta_uc_x.
-    1e-7   # xi.
+    1e17,  # eps_x.
+    0e2,   # nu_uc.
+    1e-5   # xi.
 ])
 
-bend_list = [
-    "b1_1", "b1_2", "b1_3", "b1_4", "b1_5",
-    "qf1"]
+b1_list = [
+    "b1_0", "b1_1", "b1_2", "b1_3", "b1_4", "b1_5"]
 
-# opt_phi = pc.opt_phi_class(lat_prop, "b1_0", bend_list, phi_max)
+b1_bend = pc.bend_class(lat_prop, b1_list, phi_max, b_2_max)
 
-prm_list = [
+prms = [
     ("qf1",      "b_2"),
 
     ("b1_0",     "b_2"),
@@ -221,14 +223,11 @@ prm_list = [
     ("b1_4",     "b_2"),
     ("b1_5",     "b_2"),
 
-    # ("opt_phi",  opt_phi)
+    ("phi_bend", b1_bend),
 ]
 
-prm_list = pc.prm_class(lat_prop, prm_list, b_2_max)
+prm_list = pc.prm_class(lat_prop, prms, b_2_max)
 
-opt_sp(lat_prop, prm_list, weight, nu_uc)
+phi_lat = pc.phi_lat_class(lat_prop, "qf1")
 
-if False:
-    dip_list = [bend]
-    dip_list.extend(bend_list)
-    prt_lat(lat_prop, "opt_sp.txt", dip_list)
+opt_uc(lat_prop, prm_list, weight, b1_list, phi_lat, eps_x_des, nu_uc)
