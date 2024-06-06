@@ -77,16 +77,25 @@ class lattice_properties_class(
             self._eps[k] = -self._D_rad[k]/(2e0*self._alpha_rad[k])
 
         # Longitudinal Twiss parameters.
-        alpha_z = \
-            -self._A_rad[ind.ct][ind.ct]*self._A_rad[ind.delta][ind.ct] \
-            - self._A_rad[ind.ct][ind.delta]*self._A_rad[ind.delta][ind.delta];
-        beta_z = \
-            self._A_rad[ind.ct][ind.ct]**2 + self._A_rad[ind.ct][ind.delta]**2;
-        gamma_z = (1e0+alpha_z**2)/beta_z;
 
-        # Bunch size.
-        self._sigma_s = np.sqrt(beta_z*self._eps[ind.Z]);
-        self._sigma_delta = np.sqrt(gamma_z*self._eps[ind.Z]);
+        if self._J[ind.Z] > 0e0:
+            alpha_z = \
+                -self._A_rad[ind.ct][ind.ct]*self._A_rad[ind.delta][ind.ct] \
+                - self._A_rad[ind.ct][ind.delta] \
+                *self._A_rad[ind.delta][ind.delta];
+            beta_z = \
+                self._A_rad[ind.ct][ind.ct]**2 \
+                + self._A_rad[ind.ct][ind.delta]**2;
+            gamma_z = (1e0+alpha_z**2)/beta_z;
+
+            # Bunch size.
+            self._sigma_s = np.sqrt(beta_z*self._eps[ind.Z]);
+            self._sigma_delta = np.sqrt(gamma_z*self._eps[ind.Z]);
+        else:
+            self._sigma_s = self._sigma_delta = np.nan;
+            print("\ncompute_rad_prop:")
+            print("  Unstable in the longitudinal plane: J_z = {:9.3e}".
+                  format(self._J[ind.Z]))
 
         logger.info(
             "\nE [GeV]     = {:3.1f}\nU0 [keV]    = {:3.1f}\neps         ="
@@ -151,8 +160,6 @@ class lattice_properties_class(
             self.compute_diffusion_coefficients()
 
             self.compute_rad_prop()
-
-
         else:
             self._U_0 = np.nan
             self._J = np.zeros(3, float)
