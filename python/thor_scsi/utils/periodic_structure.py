@@ -243,9 +243,10 @@ class periodic_structure_class:
         """
         """
         eta, alpha, beta = Twiss
-        print("  eta   = [{:9.3e}, {:9.3e}]".format(eta[ind.X], eta[ind.Y]))
-        print("  alpha = [{:9.3e}, {:9.3e}]".format(alpha[ind.X], alpha[ind.Y]))
-        print("  beta  = [{:5.3f}, {:5.3f}]".format(beta[ind.X], beta[ind.Y]))
+        print("  eta   = [{:10.3e}, {:10.3e}]".format(eta[ind.X], eta[ind.Y]))
+        print("  alpha = [{:10.3e}, {:10.3e}]"
+              .format(alpha[ind.X], alpha[ind.Y]))
+        print("  beta  = [{:6.3f}, {:10.3f}]".format(beta[ind.X], beta[ind.Y]))
 
     def get_Twiss(self, loc):
         eta = np.array([
