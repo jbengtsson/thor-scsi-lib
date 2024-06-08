@@ -59,7 +59,7 @@ def compute_periodic_cell(lat_prop, uc_0, uc_1):
 
 
 def match_straight(
-        lat_prop, prm_list, uc_0, uc_1, sp_1, weight, phi_lat, Twiss_des):
+        lat_prop, prm_list, uc_0, uc_1, sp_1, sp_2, weight, phi_lat, Twiss_des):
     chi_2_min = 1e30
     n_iter    = 0
     A0        = gtpsa.ss_vect_tpsa(lat_prop._desc, 1)
@@ -107,7 +107,7 @@ def match_straight(
         prm_list.prt_prm(prm)
 
     def compute_chi_2_Twiss(Twiss_des, Twiss_k):
-        prt = False
+        prt = not False
 
         dchi_2 = weight[0]*(Twiss_k[0][ind.x]-Twiss_des[0][ind.x])**2
         if prt:
@@ -155,9 +155,18 @@ def match_straight(
 
         A1 = _copy.copy(A0)
         lat_prop._lattice.propagate(
-            lat_prop._model_state, A1, uc_1+1, sp_1-uc_1)
+            lat_prop._model_state, A1, uc_1+1, sp_2-uc_1)
         Twiss_k = cs.compute_Twiss_A(A1.jacobian())
+        print("\ncompute_chi_2:")
+
+        A1 = _copy.copy(A0)
+        lat_prop._lattice.propagate(
+            lat_prop._model_state, A1, uc_1+1, sp_1-uc_1)
+        _, _, _, dnu = cs.compute_Twiss_A(A1.jacobian())
+        Twiss_k[3][:] = 2e0*(Twiss_k[3][:]-dnu[:])
+
         chi_2 = compute_chi_2_Twiss(Twiss_des, Twiss_k)
+
         return chi_2, Twiss_k
 
     def f_match(prm):
@@ -181,6 +190,7 @@ def match_straight(
     max_iter = 1000
     f_tol    = 1e-4
     x_tol    = 1e-4
+    g_tol    = 1e-4
 
     Twiss_0, A = compute_periodic_cell(lat_prop, uc_0, uc_1)
 
@@ -205,8 +215,9 @@ def match_straight(
         prm,
         method="CG",
         # callback=prt_iter,
-        bounds = bounds,
-        options={"ftol": f_tol, "xtol": x_tol, "maxiter": max_iter}
+        # bounds = bounds,
+        # options={"ftol": f_tol, "xtol": x_tol, "maxiter": max_iter}
+        options={"gtol": g_tol, "maxiter": max_iter}
     )
 
     print("\n".join(minimum))
@@ -227,7 +238,7 @@ E_0     = 3.0e9
 home_dir = os.path.join(
     os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "MAX_4U")
 # lat_name = "max_iv_sp_matched"
-lat_name = "max_4u_d_0"
+lat_name = "max_4u_d_2"
 file_name = os.path.join(home_dir, lat_name+".lat")
 
 lat_prop = \
@@ -238,13 +249,16 @@ print("Total bend angle [deg] = {:7.5f}".format(lat_prop.compute_phi_lat()))
 
 uc_0 = lat_prop._lattice.find("b1_0", 7).index
 uc_1 = lat_prop._lattice.find("b1_0", 8).index
-sp_1 = lat_prop._lattice.find("cav", 0).index
-print("\nunit cell entrance {:5s} loc = {:d}".
+sp_1 = lat_prop._lattice.find("sf_h", 10).index
+sp_2 = lat_prop._lattice.find("cav", 0).index
+print("\nunit cell entrance           {:5s} loc = {:d}".
       format(lat_prop._lattice[uc_0].name, uc_0))
-print("unit cell exit     {:5s} loc = {:d}".
+print("unit cell exit               {:5s} loc = {:d}".
       format(lat_prop._lattice[uc_1].name, uc_1))
-print("super perioc exit  {:5s} loc = {:d}".
+print("super period last sextupole  {:5s} loc = {:d}".
       format(lat_prop._lattice[sp_1].name, sp_1))
+print("super period exit            {:5s} loc = {:d}".
+      format(lat_prop._lattice[sp_2].name, sp_2))
 
 Twiss_des = np.array([eta_des, alpha_des, beta_des, dnu_des])
 
@@ -277,15 +291,15 @@ prm_list = [
     ("qf1_e",    "b_2"),
     ("qd",       "b_2"),
     ("qf2",      "b_2"),
-
     ("b_2_bend", b2_bend),
 
     ("phi_bend", b1_bend),
-    ("phi_bend", b2_bend)
+    ("phi_tot", b2_bend)
 ]
 
 prm_list = pc.prm_class(lat_prop, prm_list, b_2_max)
 
 phi_lat = pc.phi_lat_class(lat_prop, "qf1_e")
 
-match_straight(lat_prop, prm_list, uc_0, uc_1, sp_1, weight, phi_lat, Twiss_des)
+match_straight(
+    lat_prop, prm_list, uc_0, uc_1, sp_1, sp_2, weight, phi_lat, Twiss_des)

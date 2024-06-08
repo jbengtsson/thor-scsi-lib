@@ -29,8 +29,8 @@ phi_max      = 0.85
 b_2_bend_max = 1.0
 b_2_max      = 10.0
 
-eps_x_des    = 139e-12
-nu_uc        = [2.0/6.0, 1.0/12.0]
+eps_x_des    = 129e-12
+nu_uc        = [2.0/6.0, 0.15]
 
 
 def opt_uc(lat_prop, prm_list, weight, b1_list, phi_lat, eps_x_des, nu_uc):
@@ -77,15 +77,17 @@ def opt_uc(lat_prop, prm_list, weight, b1_list, phi_lat, eps_x_des, nu_uc):
         if prt:
             print("\n  dchi2(eps_x)    = {:10.3e}".format(dchi_2))
 
-        dchi_2 = \
-            weight[1]*(
-                (nu[ind.X]-nu_uc[ind.X])**2
-                +(nu[ind.Y]-nu_uc[ind.Y])**2)
+        dchi_2 = weight[1]*(nu[ind.X]-nu_uc[ind.X])**2            
         chi_2 += dchi_2
         if prt:
-            print("  dchi2(nu_uc)    = {:10.3e}".format(dchi_2))
+            print("  dchi2(nu_uc_x)  = {:10.3e}".format(dchi_2))
 
-        dchi_2 = weight[2]*(xi[ind.X]**2+xi[ind.Y]**2)
+        dchi_2 = weight[2]*(nu[ind.Y]-nu_uc[ind.Y])**2
+        chi_2 += dchi_2
+        if prt:
+            print("  dchi2(nu_uc_y)  = {:10.3e}".format(dchi_2))
+
+        dchi_2 = weight[3]*(xi[ind.X]**2+xi[ind.Y]**2)
         chi_2 += dchi_2
         if prt:
             print("  dchi2(xi)       = {:10.3e}".format(dchi_2))
@@ -113,7 +115,7 @@ def opt_uc(lat_prop, prm_list, weight, b1_list, phi_lat, eps_x_des, nu_uc):
             M = lo.compute_map(
                 lat_prop._lattice, lat_prop._model_state,
                 desc=lat_prop._desc, tpsa_order=2)
-            stable, _, xi = \
+            stable, nu, xi = \
                 lo.compute_nu_xi(lat_prop._desc, lat_prop._no, M)
             if not stable:
                 print("\nf_sp - compute_nu_xi: unstable")
@@ -121,7 +123,7 @@ def opt_uc(lat_prop, prm_list, weight, b1_list, phi_lat, eps_x_des, nu_uc):
         except ValueError:
             return 1e30
         else:
-            _, _, _, nu = lat_prop.get_Twiss(-1)
+            # _, _, _, nu = lat_prop.get_Twiss(-1)
 
             chi_2 = compute_chi_2(nu, xi)
             if chi_2 < chi_2_min:
@@ -131,9 +133,9 @@ def opt_uc(lat_prop, prm_list, weight, b1_list, phi_lat, eps_x_des, nu_uc):
             return chi_2
 
     max_iter = 1000
-    f_tol    = 1e-5
-    x_tol    = 1e-5
-    g_tol    = 1e-6
+    f_tol    = 1e-4
+    x_tol    = 1e-4
+    g_tol    = 1e-5
 
     prm, bounds = prm_list.get_prm()
 
@@ -170,7 +172,7 @@ E_0     = 3.0e9
 
 home_dir = os.path.join(
     os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "MAX_4U")
-lat_name = "max_4u_d_0"
+lat_name = "max_4u_d_2"
 file_name = os.path.join(home_dir, lat_name+".lat")
 
 lat_prop = \
@@ -204,8 +206,9 @@ if False:
 # Weights.
 weight = np.array([
     1e17,  # eps_x.
-    0e2,   # nu_uc.
-    1e-5   # xi.
+    0e0,   # nu_uc_x.
+    0e-2,   # nu_uc_y.
+    1e-3   # xi.
 ])
 
 b1_list = [

@@ -32,10 +32,10 @@ phi_max      = 0.85
 b_2_bend_max = 1.0
 b_2_max      = 10.0
 
-eps_x_des    = 139e-12
-nu_uc_des    = [2.0/6.0, 1.0/12.0]
-nu_sp_des    = [2.4, 1.15]
-beta_des     = [8.0, 3.0]
+eps_x_des    = 129e-12
+nu_uc_des    = [2.0/6.0, 0.12]
+nu_sp_des    = [2.25, 0.8]
+beta_des     = [5.7, 3.9]
 
 
 def opt_sp(
@@ -80,7 +80,7 @@ def opt_sp(
         print("    U_0 [keV]      = {:5.3f}".format(1e-3*lat_prop._U_0))
         print("\n    eta'_uc        = {:9.3e} {:9.3e}".
               format(eta_uc_1[ind.px], eta_uc_2[ind.px]))
-        print("    alpha_uc       = [{:9.3e}, {:9.3e}] [{:9.3e}, {:9.3e}])".
+        print("    alpha_uc       = [{:9.3e}, {:9.3e}] [{:9.3e}, {:9.3e}]".
               format(alpha_uc_1[ind.X], alpha_uc_1[ind.Y], alpha_uc_2[ind.X],
                      alpha_uc_2[ind.Y]))
         print("    nu_uc          = [{:7.5f}, {:7.5f}] ([{:7.5f}, {:7.5f}])".
@@ -234,6 +234,7 @@ def opt_sp(
     max_iter = 1000
     f_tol    = 1e-10
     x_tol    = 1e-4
+    g_tol    = 1e-4
 
     prm, bounds = prm_list.get_prm()
     f_sp(prm)
@@ -251,7 +252,7 @@ def opt_sp(
         # callback=prt_iter,
         # bounds = bounds,
         # options={"ftol": f_tol, "xtol": x_tol, "maxiter": max_iter}
-        options={"gtol": f_tol, "maxiter": max_iter}
+        options={"gtol": g_tol, "maxiter": max_iter}
     )
 
     print("\n".join(minimum))
@@ -272,7 +273,7 @@ E_0     = 3.0e9
 home_dir = os.path.join(
     os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "MAX_4U")
 # lat_name = "max_iv_sp_jb"
-lat_name = "max_4u_d_0"
+lat_name = "max_4u_d_2"
 file_name = os.path.join(home_dir, lat_name+".lat")
 
 lat_prop = \
@@ -310,7 +311,7 @@ print("\nunit cell entrance  {:5s} loc = {:d}".
 print("unit cell exit      {:5s} loc = {:d}".
       format(lat_prop._lattice[uc_1].name, uc_1))
 print("next unit cell exit {:5s} loc = {:d}".
-      format(lat_prop._lattice[uc_1].name, uc_2))
+      format(lat_prop._lattice[uc_2].name, uc_2))
 
 # Weights.
 weight = np.array([
@@ -321,10 +322,10 @@ weight = np.array([
     0e0,   # nu_uc_x.
     0e0,   # nu_uc_y.
     1e1,   # eta_x.
-    0e-2,  # nu_sp_x.
-    0e-2,  # nu_sp_y.
-    1e-6,  # beta_x.
-    1e-6,  # beta_y.
+    0e-7,  # nu_sp_x.
+    0e-3,  # nu_sp_y.
+    0e-6,  # beta_x.
+    0e-6,  # beta_y.
     1e-7,  # xi_x.
     1e-7   # xi_y.
 ])
@@ -339,7 +340,7 @@ b2_list = [
 b1_bend = pc.bend_class(lat_prop, b1_list, phi_max, b_2_max)
 b2_bend = pc.bend_class(lat_prop, b2_list, phi_max, b_2_max)
 
-if not True:
+if True:
     prms = [
         ("qf1",      "b_2"),
         ("qf1_e",    "b_2"),
@@ -350,12 +351,11 @@ if not True:
         ("b_2_bend", b2_bend),
 
         ("phi_bend", b1_bend),
-        ("phi_bend", b2_bend),
-
         ("qf1",      "phi")
     ]
 
-    phi_lat = pc.phi_lat_class(lat_prop, "qf1_e")
+    # To maintain the total bend angle.
+    phi_lat = pc.phi_lat_class(lat_prop, 2, b2_bend)
 else:
     prms = [
         ("qf1",      "b_2"),

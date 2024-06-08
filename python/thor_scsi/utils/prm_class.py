@@ -32,6 +32,9 @@ class bend_class:
         self.compute_phi_ratios()
         self.compute_b_2_ratios()
 
+    def __str__(self):
+        return "bend"
+
     # Public.
 
     def compute_bend_L_tot(self):
@@ -84,7 +87,7 @@ class bend_class:
 
     def set_bend_phi(self, prm):
         prt = False
-        self._bend_phixL = prm
+        self._bend_phi = prm
         if prt:
             print("\nset_bend_phi\n  prm = {:7.5f}\n".format(prm))
         for k in range(len(self._bend_list)):
@@ -123,25 +126,31 @@ class bend_class:
 class phi_lat_class():
     # Private
 
-    def __init__(self, lat_prop, fam_name):
+    def __init__(self, lat_prop, n_bend, dip_prm):
         self._lat_prop = lat_prop
-        self._fam_name = fam_name
-        self._n_kid    = np.nan
-        self._phi_lat  = np.nan
+        self._dip_prm  = dip_prm
+        self._n_dip    = n_bend
+        self._phi_lat  = lat_prop.compute_phi_lat()
 
-        self._phi_lat = lat_prop.compute_phi_lat()
-        self._n_kid = lat_prop.get_n_kid(fam_name)
-        print("\nphi_lat_class: {:7.5f} {:s} {:d}".
-              format(self._phi_lat, self._fam_name, self._n_kid))
+        print("\nphi_lat_class: {:5.3f}".format(self._phi_lat), self._dip_prm,
+              "{:d}".format(self._n_dip))
 
     # Public.
 
     def set_phi_lat(self):
         dphi = self._lat_prop.compute_phi_lat() - self._phi_lat
-        phi =  self._lat_prop.get_phi_elem(self._fam_name, 0)
-        phi -= dphi/self._n_kid
-        self._lat_prop.set_phi_fam(self._fam_name, phi)
 
+        if type(self._dip_prm) == str:
+            phi = self._lat_prop.get_phi_elem(self._dip_prm, 0)
+            phi -= dphi/self._n_dip
+            self._lat_prop.get_phi_elem(self._dip_prm, 0, phi)
+        elif isinstance(self._dip_prm, bend_class):
+            phi_b = self._dip_prm.get_bend_phi()
+            phi = phi_b - dphi/self._n_dip
+            self._dip_prm.set_bend_phi(phi)
+        else:
+            print("\nset_phi_lat:\n undefined type: ", type(self._dip_prm))
+        
 
 class prm_class(bend_class):
     # Private
@@ -281,7 +290,12 @@ def prt_lat(
         else:
             print("\nprt_lat - undefined parameter:", prm_list._prm_list[k][1])
     if phi_lat != None:
-        prt_prm_func_dict["phi"](phi_lat._fam_name)
+        if type(phi_lat._dip_prm) == str:
+            prt_phi(phi_lat._dip_prm)
+        elif isinstance(phi_lat._dip_prm, bend_class):
+            prt_bend(phi_lat._dip_prm)
+        else:
+            print("\nprt_lat - undefined parameter:", phi_lat._dip_prm)
 
     outf.close()
 
