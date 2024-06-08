@@ -29,7 +29,7 @@ phi_max      = 0.85
 b_2_bend_max = 1.0
 b_2_max      = 10.0
 
-eps_x_des    = 129e-12
+eps_x_des    = 125e-12
 nu_uc        = [2.0/6.0, 0.15]
 
 
@@ -128,7 +128,7 @@ def opt_uc(lat_prop, prm_list, weight, b1_list, phi_lat, eps_x_des, nu_uc):
             chi_2 = compute_chi_2(nu, xi)
             if chi_2 < chi_2_min:
                 prt_iter(prm, chi_2, nu, xi)
-                pc.prt_lat(lat_prop, "opt_uc.txt", prm_list)
+                pc.prt_lat(lat_prop, "opt_uc.txt", prm_list, phi_lat=phi_lat)
                 chi_2_min = min(chi_2, chi_2_min)
             return chi_2
 
@@ -193,22 +193,13 @@ try:
         raise ValueError
 except ValueError:
     exit
-else:
-    lat_prop.prt_lat_param()
-    lat_prop.prt_M()
-    lat_prop.prt_rad()
-    lat_prop.prt_M_rad()
-
-if False:
-    lat_prop.prt_lat_param()
-    lat_prop.prt_Twiss("max_4u_uc.txt")
 
 # Weights.
 weight = np.array([
-    1e17,  # eps_x.
-    0e0,   # nu_uc_x.
-    0e-2,   # nu_uc_y.
-    1e-3   # xi.
+    1e17, # eps_x.
+    0e0,  # nu_uc_x.
+    1e-2, # nu_uc_y.
+    1e-4  # xi.
 ])
 
 b1_list = [
@@ -228,16 +219,17 @@ prms = [
 
     # ("phi_bend", b1_bend),
 
-    ("b1_0",     "phi"),
-    ("b1_1",     "phi"),
-    ("b1_2",     "phi"),
-    ("b1_3",     "phi"),
-    ("b1_4",     "phi"),
-    ("b1_5",     "phi"),
+    # ("b1_0",     "phi"),
+    # ("b1_1",     "phi"),
+    # ("b1_2",     "phi"),
+    # ("b1_3",     "phi"),
+    # ("b1_4",     "phi"),
+    # ("b1_5",     "phi"),
 ]
 
 prm_list = pc.prm_class(lat_prop, prms, b_2_max)
 
-phi_lat = pc.phi_lat_class(lat_prop, "qf1")
+# To maintain the total bend angle.
+phi_lat = pc.phi_lat_class(lat_prop, 2, "qf1")
 
 opt_uc(lat_prop, prm_list, weight, b1_list, phi_lat, eps_x_des, nu_uc)

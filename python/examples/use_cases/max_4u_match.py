@@ -238,7 +238,7 @@ E_0     = 3.0e9
 home_dir = os.path.join(
     os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "MAX_4U")
 # lat_name = "max_iv_sp_matched"
-lat_name = "max_4u_d_2"
+lat_name = "max_4u_d_3"
 file_name = os.path.join(home_dir, lat_name+".lat")
 
 lat_prop = \
@@ -293,13 +293,13 @@ prm_list = [
     ("qf2",      "b_2"),
     ("b_2_bend", b2_bend),
 
-    ("phi_bend", b1_bend),
-    ("phi_tot", b2_bend)
+    ("phi_bend", b1_bend)
 ]
 
 prm_list = pc.prm_class(lat_prop, prm_list, b_2_max)
 
-phi_lat = pc.phi_lat_class(lat_prop, "qf1_e")
+# To maintain the total bend angle.
+phi_lat = pc.phi_lat_class(lat_prop, 2, b2_bend)
 
 match_straight(
     lat_prop, prm_list, uc_0, uc_1, sp_1, sp_2, weight, phi_lat, Twiss_des)

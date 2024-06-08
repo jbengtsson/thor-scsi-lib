@@ -143,14 +143,14 @@ class phi_lat_class():
         if type(self._dip_prm) == str:
             phi = self._lat_prop.get_phi_elem(self._dip_prm, 0)
             phi -= dphi/self._n_dip
-            self._lat_prop.get_phi_elem(self._dip_prm, 0, phi)
+            self._lat_prop.set_phi_elem(self._dip_prm, 0, phi)
         elif isinstance(self._dip_prm, bend_class):
             phi_b = self._dip_prm.get_bend_phi()
             phi = phi_b - dphi/self._n_dip
             self._dip_prm.set_bend_phi(phi)
         else:
             print("\nset_phi_lat:\n undefined type: ", type(self._dip_prm))
-        
+            assert False
 
 class prm_class(bend_class):
     # Private
@@ -291,7 +291,7 @@ def prt_lat(
             print("\nprt_lat - undefined parameter:", prm_list._prm_list[k][1])
     if phi_lat != None:
         if type(phi_lat._dip_prm) == str:
-            prt_phi(phi_lat._dip_prm)
+            prt_dip(phi_lat._dip_prm)
         elif isinstance(phi_lat._dip_prm, bend_class):
             prt_bend(phi_lat._dip_prm)
         else:
