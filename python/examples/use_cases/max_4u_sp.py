@@ -32,7 +32,7 @@ phi_max      = 0.85
 b_2_bend_max = 1.0
 b_2_max      = 10.0
 
-eps_x_des    = 119e-12
+eps_x_des    = 150e-12
 nu_uc_des    = [2.0/6.0, 0.12]
 nu_sp_des    = [2.25, 0.8]
 beta_des     = [5.7, 2.0]
@@ -54,11 +54,11 @@ def opt_sp(
     nu_sp        = np.nan
 
     def prt_iter(
-            prm, chi_2, Twiss, eta_uc_1, alpha_uc_1, eta_uc_2, alpha_uc_2,
+            prm, chi_2, Twiss_sp, eta_uc_1, alpha_uc_1, eta_uc_2, alpha_uc_2,
             nu_uc, dnu, xi):
         nonlocal nu_uc_des, nu_sp_des, beta_des
 
-        eta, alpha, beta, nu = Twiss
+        eta, alpha, beta, nu_sp = Twiss_sp
 
         def compute_phi_bend(lat_prop, bend_list):
             phi = 0e0
@@ -87,7 +87,7 @@ def opt_sp(
                      nu_uc_des[ind.Y]))
         print("\n    eta_x          = {:9.3e}".format(eta[ind.x]))
         print("\n    nu_sp          = [{:7.5f}, {:7.5f}] ([{:7.5f}, {:7.5f}])".
-              format(dnu[ind.X], dnu[ind.Y], nu_sp_des[ind.X],
+              format(nu_sp[ind.X], nu_sp[ind.Y], nu_sp_des[ind.X],
                      nu_sp_des[ind.Y]))
         print("    beta           = [{:7.5f}, {:7.5f}] ([{:7.5f}, {:7.5f}])".
               format(beta[ind.X], beta[ind.Y], beta_des[ind.X],
@@ -104,12 +104,13 @@ def opt_sp(
         prm_list.prt_prm(prm)
 
     def compute_chi_2(
-            Twiss, eta_uc_1, alpha_uc_1, eta_uc_2, alpha_uc_2, nu_uc, dnu, xi):
+            Twiss_sp, eta_uc_1, alpha_uc_1, eta_uc_2, alpha_uc_2, nu_uc, dnu,
+            xi):
         nonlocal nu_uc_des, nu_sp_des, beta_des
 
         prt = not False
 
-        eta, alpha, nu_sp, beta = Twiss
+        eta, alpha, nu_sp, beta = Twiss_sp
 
         dchi_2 = weight[0]*(lat_prop._eps[ind.X]-eps_x_des)**2
         chi_2 = dchi_2
@@ -227,19 +228,19 @@ def opt_sp(
             eta_uc_1, alpha_uc_1, _, nu_1 = lat_prop.get_Twiss(uc_1)
             nu_uc = nu_1 - nu_0
             eta_uc_2, alpha_uc_2, _, _ = lat_prop.get_Twiss(uc_2)
-            Twiss = lat_prop.get_Twiss(-1)
+            Twiss_sp = lat_prop.get_Twiss(-1)
 
             dnu = \
                 lat_prop.get_Twiss(-1)[3][:] - lat_prop.get_Twiss(sp_2)[3][:] \
                 + lat_prop.get_Twiss(sp_1)[3][:]
 
             chi_2 = compute_chi_2(
-                Twiss, eta_uc_1, alpha_uc_1, eta_uc_2, alpha_uc_2, nu_uc, dnu,
-                xi)
+                Twiss_sp, eta_uc_1, alpha_uc_1, eta_uc_2, alpha_uc_2, nu_uc,
+                dnu, xi)
 
             if chi_2 < chi_2_min:
                 prt_iter(
-                    prm, chi_2, Twiss, eta_uc_1, alpha_uc_1, eta_uc_2,
+                    prm, chi_2, Twiss_sp, eta_uc_1, alpha_uc_1, eta_uc_2,
                     alpha_uc_2, nu_uc, dnu, xi)
                 lat_prop.prt_Twiss("twiss.txt")
                 pc.prt_lat(lat_prop, file_name, prm_list, phi_lat=phi_lat)
@@ -289,7 +290,7 @@ E_0     = 3.0e9
 home_dir = os.path.join(
     os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "MAX_4U")
 # lat_name = "max_iv_sp_jb"
-lat_name = "max_4u_d_3"
+lat_name = "max_4u_e_0"
 file_name = os.path.join(home_dir, lat_name+".lat")
 
 lat_prop = \
@@ -348,8 +349,8 @@ weight = np.array([
     0e-3,  # nu_sp_y.
     0e-6,  # beta_x.
     0e-6,  # beta_y.
-    1e-2,  # dnu_x.
-    1e-2,  # dnu_y.
+    1e-2,   # dnu_x.
+    1e-2,   # dnu_y.
     1e-7,  # xi_x.
     1e-7   # xi_y.
 ])

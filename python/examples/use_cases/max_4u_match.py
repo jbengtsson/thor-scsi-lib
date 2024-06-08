@@ -238,7 +238,7 @@ E_0     = 3.0e9
 home_dir = os.path.join(
     os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "MAX_4U")
 # lat_name = "max_iv_sp_matched"
-lat_name = "max_4u_d_3"
+lat_name = "max_4u_e_0"
 file_name = os.path.join(home_dir, lat_name+".lat")
 
 lat_prop = \
@@ -249,7 +249,7 @@ print("Total bend angle [deg] = {:7.5f}".format(lat_prop.compute_phi_lat()))
 
 uc_0 = lat_prop._lattice.find("b1_0", 7).index
 uc_1 = lat_prop._lattice.find("b1_0", 8).index
-sp_1 = lat_prop._lattice.find("sf_h", 10).index
+sp_1 = lat_prop._lattice.find("sd2", 1).index
 sp_2 = lat_prop._lattice.find("cav", 0).index
 print("\nunit cell entrance           {:5s} loc = {:d}".
       format(lat_prop._lattice[uc_0].name, uc_0))
@@ -268,8 +268,8 @@ weight = np.array([
     1e0, # alpha at the centre of the straight.
     0e0, # beta_x at the centre of the straight.
     0e0, # beta_y at the centre of the straight.
-    0e0, # dnu_x across the straight.
-    0e0  # dnu_y across the straight.
+    1e-4, # dnu_x across the straight.
+    1e-4  # dnu_y across the straight.
 ])
 
 b1_list = ["b1_0", "b1_1", "b1_2", "b1_3", "b1_4", "b1_5"]

@@ -30,7 +30,7 @@ b_2_bend_max = 1.0
 b_2_max      = 10.0
 
 eps_x_des    = 125e-12
-nu_uc        = [2.0/6.0, 0.15]
+nu_uc        = [0.265, 0.0816]
 
 
 def opt_uc(lat_prop, prm_list, weight, b1_list, phi_lat, eps_x_des, nu_uc):
@@ -50,11 +50,13 @@ def opt_uc(lat_prop, prm_list, weight, b1_list, phi_lat, eps_x_des, nu_uc):
                 phi += lat_prop.get_phi_elem(bend_list[k], 0)
             return phi
 
-        rb_1 = "qf1"
+        rb_1     = "qf1"
+        phi_bend = "b1_5"
 
         phi = lat_prop.compute_phi_lat()
         phi_b1 = compute_phi_bend(lat_prop, b1_list)
         phi_rb_1 = lat_prop.get_phi_elem(rb_1, 0)
+        phi_bend = lat_prop.get_phi_elem(phi_bend, 0)
 
         print("\n{:3d} chi_2 = {:11.5e}".format(n_iter, chi_2))
         print("    eps_x [pm.rad] = {:5.3f} [{:5.3f}]".
@@ -67,6 +69,7 @@ def opt_uc(lat_prop, prm_list, weight, b1_list, phi_lat, eps_x_des, nu_uc):
         print("    C [m]          = {:8.5f}".format(lat_prop.compute_circ()))
         print("\n    phi_b1         = {:8.5f}".format(phi_b1))
         print("    phi_rb_1       = {:8.5f}".format(phi_rb_1))
+        print("    phi_bend       = {:8.5f}".format(phi_bend))
         prm_list.prt_prm(prm)
 
     def compute_chi_2(nu, xi):
@@ -172,7 +175,7 @@ E_0     = 3.0e9
 
 home_dir = os.path.join(
     os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "MAX_4U")
-lat_name = "max_4u_d_2"
+lat_name = "max_4u_e_0"
 file_name = os.path.join(home_dir, lat_name+".lat")
 
 lat_prop = \
@@ -196,10 +199,10 @@ except ValueError:
 
 # Weights.
 weight = np.array([
-    1e17, # eps_x.
-    0e0,  # nu_uc_x.
+    0e17, # eps_x.
+    1e-2, # nu_uc_x.
     1e-2, # nu_uc_y.
-    1e-4  # xi.
+    1e-7  # xi.
 ])
 
 b1_list = [
@@ -219,17 +222,19 @@ prms = [
 
     # ("phi_bend", b1_bend),
 
-    # ("b1_0",     "phi"),
-    # ("b1_1",     "phi"),
-    # ("b1_2",     "phi"),
-    # ("b1_3",     "phi"),
-    # ("b1_4",     "phi"),
+    ("b1_0",     "phi"),
+    ("b1_1",     "phi"),
+    ("b1_2",     "phi"),
+    ("b1_3",     "phi"),
+    ("b1_4",     "phi"),
     # ("b1_5",     "phi"),
+
+    ("qf1",     "phi"),
 ]
 
 prm_list = pc.prm_class(lat_prop, prms, b_2_max)
 
 # To maintain the total bend angle.
-phi_lat = pc.phi_lat_class(lat_prop, 2, "qf1")
+phi_lat = pc.phi_lat_class(lat_prop, 2, "b1_5")
 
 opt_uc(lat_prop, prm_list, weight, b1_list, phi_lat, eps_x_des, nu_uc)
