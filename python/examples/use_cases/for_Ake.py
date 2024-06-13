@@ -50,7 +50,7 @@ def compute_alpha_c(map):
 # Number of phase-space coordinates.
 nv = 7
 # Variables max order.
-no = 2
+no = 3
 # Number of parameters.
 nv_prm = 0
 # Parameters max order.
@@ -83,6 +83,14 @@ lat_prop._lattice.propagate(lat_prop._model_state, map)
 
 # Print linear part.
 print("\nmap:\n" + mat2txt(map.jacobian()[:6, :6]))
+
+# Print m_56, m_566, m_5666, etc.:
+print("\nm_56, m_566, m_5666,...:")
+print("  no    m_56...")
+index = np.zeros(nv, int)
+for k in range(1, no+1):
+    index[ind.delta] = k
+    print("  {:1d} {:10.3e}".format(k, map.ct.get(index)))
 
 # Print out momentum compaction & fixed points in the longitudinal (aka
 # the "ignored") plane.
