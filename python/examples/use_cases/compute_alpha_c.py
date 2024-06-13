@@ -38,8 +38,8 @@ import thor_scsi.lib as ts
 
 from thor_scsi.factory import accelerator_from_config
 
-from thor_scsi.utils import linear_optics as lo, courant_snyder as cs, \
-    radiate as rad, closed_orbit as co
+from thor_scsi.utils import lattice_properties as lp, linear_optics as lo, \
+    courant_snyder as cs, closed_orbit as co
 
 # from thor_scsi.utils.phase_space_vector import map2numpy
 from thor_scsi.utils.output import prt2txt, mat2txt, vec2txt
@@ -204,7 +204,7 @@ def plot_H_long(phi, delta, H, file_name, title):
     fig, gr_1 = plt.subplots(1)
 
     gr_1.set_title(title)
-    gr_1.set_xlabel("phi [$^\circ$]")
+    gr_1.set_xlabel(r"phi [$^\circ$]")
     gr_1.set_ylabel(r"$\delta$ [%]")
     gr_1.contour(phi, 1e2*delta, H, 30)
 
@@ -286,37 +286,12 @@ def print_Twiss(lat, data):
                      data.dispersion.sel(phase_coordinate="py").values[k]))
 
 
-def compute_periodic_solution(lat, model_state, named_index, desc):
-    """
-    Todo:
-        model_state: rename to calculation_configuration or calc_config
-    """
-    # Compute the periodic solution for a super period.
-    # Degrees of freedom - RF cavity is off; i.e., coasting beam.
-    n_dof = 2
-    model_state.radiation = False
-    model_state.Cavity_on = False
-
-    stable, M, A = lo.compute_map_and_diag(n_dof, lat, model_state, desc=desc)
-    print("\nM:\n" + mat2txt(M.jacobian()[:6, :6]))
-    res = cs.compute_Twiss_A(A)
-    Twiss = res[:3]
-    print_Twiss_param("\nTwiss:\n", Twiss)
-    A_map = gtpsa.ss_vect_tpsa(desc, no)
-    A_map.set_jacobian(A)
-    ds = \
-        lo.compute_Twiss_along_lattice(
-            n_dof, lat, model_state, A=A_map, desc=desc, mapping=named_index)
-
-    return M, A, ds
-
-
 def compute_alpha_c(map):
     if not True:
         print("\nmap[ct]:\n")
         map.ct.print()
 
-    C = rad.compute_circ(lat)
+    C = lat_prop.compute_circ()
     print(f"\nC [m] = {C:5.3f}")
     ind = np.zeros(nv, int)
     alpha_c = np.zeros(no+1)
@@ -454,13 +429,13 @@ def H_long(E0, phi, delta, h_rf, V_rf, phi0, alpha_c):
     return H
 
 
-def compute_H_long(lat, E0, alpha_c, n, phi_max, delta_max, U0, neg_alpha_c):
+def compute_H_long(lat, E0, alpha_c, n, phi_max, delta_max, U_0, neg_alpha_c):
     cav = lat.find("cav", 0)
     h_rf = cav.get_harmonic_number()
     V_rf = cav.get_voltage()
     f_rf = cav.get_frequency()
 
-    phi0 = - abs(np.arcsin(U0/V_rf))
+    phi0 = - abs(np.arcsin(U_0/V_rf))
     if neg_alpha_c:
         phi0 += pi
 
@@ -472,7 +447,7 @@ def compute_H_long(lat, E0, alpha_c, n, phi_max, delta_max, U0, neg_alpha_c):
     print("\nh_rf                 = {:1d}".format(h_rf))
     print("V_rf [MV]            = {:3.1f}".format(1e-6*V_rf))
     print("f_rf [MHz]           = {:3.1f}".format(1e-6*f_rf))
-    print("U0 [keV]             = {:3.1f}".format(1e-3*U0))
+    print("U_0 [keV]            = {:3.1f}".format(1e-3*U_0))
 
     if not neg_alpha_c:
         print("phi0 [deg]           = {:4.2f}".
@@ -515,32 +490,54 @@ nv_prm = 0
 # Parameters max order.
 no_prm = 0
 
-E0 = 2.5e9
-U0 = 22.4e3
+cod_eps = 1e-15
+E_0     = 2.5e9
+U_0     = 22.4e3
 
 named_index = gtpsa.IndexMapping(dict(x=0, px=1, y=2, py=3, delta=4, ct=5))
 
 # Descriptor for Truncated Power Series Algebra variables.
 desc = gtpsa.desc(nv, no, nv_prm, no_prm)
 
-t_dir = os.path.join(os.environ["HOME"], "Nextcloud", "thor_scsi", "JB",
+home_dir = os.path.join(os.environ["HOME"], "Nextcloud", "thor_scsi", "JB",
                      "BESSY-III", "ipac_2023")
-t_file = os.path.join(t_dir, "b3_cf425cf_thor_scsi.lat")
+lat_name = "b3_cf425cf_thor_scsi"
+file_name = os.path.join(home_dir, lat_name+".lat")
 
-print("\nlattice file:  \n", t_file)
+print("\nlattice file:  \n", file_name)
 
-n_dof, lat, model_state = read_lattice(t_file)
+n_dof, lat, model_state = read_lattice(file_name)
 
-M, A, data = \
-    compute_periodic_solution(lat, model_state, named_index, desc)
+lat_prop = \
+    lp.lattice_properties_class(nv, no, nv_prm, no_prm, file_name, E_0, cod_eps)
 
-types = get_types(lat)
+print("\nTotal bend angle [deg] = {:7.5f}".format(lat_prop.compute_phi_lat()))
+print("Circumference [m]      = {:7.5f}".format(lat_prop.compute_circ()))
+
+try:
+    # Compute Twiss parameters along lattice.
+    if not lat_prop.comp_per_sol():
+        print("\ncomp_per_sol - unstable")
+        raise ValueError
+
+    # Compute radiation properties.
+    if not lat_prop.compute_radiation():
+        print("\ncompute_radiation - unstable")
+        raise ValueError
+except ValueError:
+    exit
+else:
+    lat_prop.prt_lat_param()
+    lat_prop.prt_rad()
+    lat_prop.prt_M()
+    lat_prop.prt_M_rad()
+    lat_prop.prt_Twiss(lat_name+"_Twiss.txt")
 
 if not True:
     print_Twiss(lat, data)
 
 if True:
-    plot_Twiss(data, types, "lin_opt.png")
+    lat_prop.plt_Twiss( "lin_opt.png", not False)
 
 r = co.compute_closed_orbit(lat, model_state, delta=0e0, eps=1e-10, desc=desc)
 
@@ -558,17 +555,17 @@ A0 = compute_D(map)
 s, disp = compute_D_along_lattice(lat, model_state, A0)
 
 if not True:
-    print_D_along_lattice(lat, s, disp, types)
+    print_D_along_lattice(lat_prop._lat, s, disp, lat_prop._types)
     
 if True:
-    plot_D(s, disp, types, "D.png")
-    plot_D_alpha_1(s, disp, types, "D_alpha.png")
-    plot_D_alpha_2(s, disp, types, "D_alpha.png")
+    plot_D(s, disp, lat_prop._type_code, "D.png")
+    plot_D_alpha_1(s, disp, lat_prop._type_code, "D_alpha.png")
+    plot_D_alpha_2(s, disp, lat_prop._type_code, "D_alpha.png")
 
-phi, delta, H = compute_H_long(lat, E0, alpha_c, 10, 180e0, 20e-2, U0, False)
+phi, delta, H = compute_H_long(lat, E_0, alpha_c, 10, 180e0, 20e-2, U_0, False)
 
 if not True:
     print_H_long("H_long.dat", phi, delta, H)
 
 if True:
-    plot_H_long(phi, delta, H, "H_long.png", "$H_\parallel$")
+    plot_H_long(phi, delta, H, "H_long.png", r"$H_\parallel$")
