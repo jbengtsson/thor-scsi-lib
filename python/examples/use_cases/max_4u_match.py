@@ -1,5 +1,5 @@
 """Use Case:
-     Parametric scans/evaluations for a unit cell.
+     Module for general linear optics matching to obtain a periodic solution.
 """
 
 
@@ -190,7 +190,7 @@ def match_straight(
     max_iter = 1000
     f_tol    = 1e-4
     x_tol    = 1e-4
-    g_tol    = 1e-4
+    g_tol    = 1e-5
 
     Twiss_0, A = compute_periodic_cell(lat_prop, uc_0, uc_1)
 
@@ -238,7 +238,7 @@ E_0     = 3.0e9
 home_dir = os.path.join(
     os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "MAX_4U")
 # lat_name = "max_iv_sp_matched"
-lat_name = "max_4u_e_0"
+lat_name = "max_4u_f_4"
 file_name = os.path.join(home_dir, lat_name+".lat")
 
 lat_prop = \
