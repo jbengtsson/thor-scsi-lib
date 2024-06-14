@@ -151,16 +151,6 @@ def plot_H_long(phi, delta, H, file_name, title):
     plt.show()
 
 
-def print_Twiss_param(str, Twiss):
-    # eta, alpha, beta = Twiss[0], Twiss[1], Twiss[2]
-    # that way I also check that Twiss has exactly three parameters
-    eta, alpha, beta = Twiss
-    print(str, end="")
-    print(f"  eta    = [{eta[ind.X]:9.3e}, {eta[ind.Y]:9.3e}]")
-    print(f"  alpha  = [{alpha[ind.X]:9.3e}, {alpha[ind.Y]:9.3e}]")
-    print(f"  beta   = [{beta[ind.X]:5.3f}, {beta[ind.Y]:5.3f}]")
-
-
 def compute_alpha_c(map):
     if not True:
         print("\nmap[ct]:\n")
@@ -407,9 +397,6 @@ else:
     lat_prop.prt_M_rad()
     lat_prop.prt_Twiss(lat_name+"_Twiss.txt")
 
-if not True:
-    print_Twiss(lat, data)
-
 if True:
     lat_prop.plt_Twiss( "lin_opt.png", not False)
 
@@ -434,8 +421,8 @@ if not True:
     
 if True:
     plot_D(lat_prop, s, disp, "D.png")
-    plot_D_alpha_1(lat_prop, s, disp, "D_alpha.png")
-    plot_D_alpha_2(lat_prop, s, disp, "D_alpha.png")
+    plot_D_alpha_1(lat_prop, s, disp, "D_alpha_1.png")
+    plot_D_alpha_2(lat_prop, s, disp, "D_alpha_2.png")
 
 phi, delta, H = \
     compute_H_long(lat_prop, E_0, alpha_c, 10, 180e0, 20e-2, U_0, False)

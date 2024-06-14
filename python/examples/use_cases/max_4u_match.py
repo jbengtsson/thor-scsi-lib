@@ -264,10 +264,10 @@ Twiss_des = np.array([eta_des, alpha_des, beta_des, dnu_des])
 
 # Weights.
 weight = np.array([
-    1e1, # eta_x at the centre of the straight.
-    1e0, # alpha at the centre of the straight.
-    0e0, # beta_x at the centre of the straight.
-    0e0, # beta_y at the centre of the straight.
+    1e1,  # eta_x at the centre of the straight.
+    1e0,  # alpha at the centre of the straight.
+    0e0,  # beta_x at the centre of the straight.
+    0e0,  # beta_y at the centre of the straight.
     1e-4, # dnu_x across the straight.
     1e-4  # dnu_y across the straight.
 ])
