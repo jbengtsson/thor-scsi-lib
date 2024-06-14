@@ -317,6 +317,7 @@ class periodic_structure_class:
                          nu[ind.X], eta[ind.x], eta[ind.px], alpha[ind.Y],
                          beta[ind.Y], nu[ind.Y], eta[ind.y], eta[ind.py]),
                   file=file)
+        print("\n - Twiss parameters saved as:", file_name)
 
     def comp_per_sol(self):
         """Compute the periodic solution for a super period.
