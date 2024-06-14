@@ -3,12 +3,6 @@
 """
 
 
-import logging
-
-# Levels: DEBUG, INFO, WARNING, ERROR, and CRITICAL.
-logging.basicConfig(level="WARNING")
-logger = logging.getLogger("thor_scsi")
-
 from dataclasses import dataclass
 import os
 from typing import Tuple
@@ -166,8 +160,9 @@ E_0     = 3.0e9
 
 home_dir = os.path.join(
     os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "MAX_4U")
-# lat_name = "max_iv_sp"
-lat_name = "max_4u_d_0"
+lat_name = "max_iv_sp_matched_3"
+# lat_name = "max_4u_sp_1"
+# lat_name = "max_4u_f_2"
 file_name = os.path.join(home_dir, lat_name+".lat")
 
 lat_prop = \
