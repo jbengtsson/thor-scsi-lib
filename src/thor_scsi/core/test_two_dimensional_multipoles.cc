@@ -527,15 +527,6 @@ BOOST_AUTO_TEST_CASE(test62_rotate_dipole)
     // Check that the positions are rotated backwards
     // when the coordinate system is rotated these will be the cofficients of
     // the original position
-    std::cout << std::scientific << std::setprecision(3)
-	      << "\ntest62_rotate_dipole:"
-	      << "\n  pos0                       = " << pos0
-	      << "\n  rpos0                      = " << rpos0
-	      << "\n  angle                      = " << angle
-	      << "\n  (arg(rpos0)+angle)*rad2deg = "
-	      << (std::arg(rpos0)+angle)*rad2deg
-	      << "\n  arg(pos0)*rad2deg          = " << std::arg(pos0)*rad2deg
-	      << "\n";
     // J.B. 20-06-24: Argument is small => use SMALL vs. CLOSE.
     check_close
       ((std::arg(rpos0) + angle) * rad2deg, std::arg(pos0) * rad2deg, 1e-13,
@@ -549,9 +540,11 @@ BOOST_AUTO_TEST_CASE(test62_rotate_dipole)
 
     // same field in the sense as seens as picture
     // but its coordinates are turned ...
+    // J.B. 20-06-24: Argument is small => use SMALL vs. CLOSE.
     check_close
       ((std::arg(check0) - angle) * rad2deg, std::arg(field0) * rad2deg, 1e-10,
        1e-10);
+    // J.B. 20-06-24: Argument is small => use SMALL vs. CLOSE.
     check_close
       ((std::arg(check1) - angle) * rad2deg, std::arg(field1) * rad2deg, 1e-10,
        1e-10);
