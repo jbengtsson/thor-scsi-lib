@@ -6,9 +6,11 @@
 namespace tse = thor_scsi::elements;
 namespace tsc = thor_scsi::core;
 
+const int nv = 7;
+
 BOOST_AUTO_TEST_CASE(test20_standard_observer_tpsa)
 {
-    auto desc = std::make_shared<gtpsa::desc> (6, 2);
+    auto desc = std::make_shared<gtpsa::desc> (nv, 2);
     gtpsa::ss_vect<gtpsa::tpsa> ps(desc, 2);
     tse::StandardObserver observer;
 
