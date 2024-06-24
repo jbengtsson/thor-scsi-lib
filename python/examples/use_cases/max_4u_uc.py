@@ -30,7 +30,7 @@ b_2_bend_max = 1.0
 b_2_max      = 10.0
 
 eps_x_des    = 125e-12
-nu_uc        = [0.265, 0.0816]
+nu_uc        = [0.29, 0.18]
 
 
 def opt_uc(lat_prop, prm_list, weight, b1_list, phi_lat, eps_x_des, nu_uc):
@@ -175,7 +175,7 @@ E_0     = 3.0e9
 
 home_dir = os.path.join(
     os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "MAX_4U")
-lat_name = "max_4u_e_0"
+lat_name = "max_4u_f_4"
 file_name = os.path.join(home_dir, lat_name+".lat")
 
 lat_prop = \
@@ -199,9 +199,9 @@ except ValueError:
 
 # Weights.
 weight = np.array([
-    0e17, # eps_x.
-    1e-2, # nu_uc_x.
-    1e-2, # nu_uc_y.
+    1e15, # eps_x.
+    1e-1, # nu_uc_x.
+    1e-1, # nu_uc_y.
     1e-7  # xi.
 ])
 
