@@ -32,9 +32,9 @@ phi_max      = 0.85
 b_2_bend_max = 1.0
 b_2_max      = 10.0
 
-eps_x_des    = 150e-12
-nu_uc_des    = [2.0/6.0, 0.12]
-nu_sp_des    = [2.25, 0.8]
+eps_x_des    = 115e-12
+nu_uc_des    = [0.290, 0.180]
+nu_sp_des    = [2.274, 1.403]
 beta_des     = [5.7, 2.0]
 dnu_des      = [0.5, 0.25]     # Phase advance across the straight.
 
@@ -290,7 +290,7 @@ E_0     = 3.0e9
 home_dir = os.path.join(
     os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "MAX_4U")
 # lat_name = "max_iv_sp_jb"
-lat_name = "max_4u_e_0"
+lat_name = "max_4u_f_4"
 file_name = os.path.join(home_dir, lat_name+".lat")
 
 lat_prop = \
@@ -338,21 +338,21 @@ print("super period last sextupole  {:5s} loc = {:d}".
 
 # Weights.
 weight = np.array([
-    1e17,  # eps_x.
+    1e15,  # eps_x.
     1e-17, # U_0.
     1e2,   # etap_x_uc.
     1e-1,  # alpha_uc.
-    0e0,   # nu_uc_x.
-    0e0,   # nu_uc_y.
+    1e-1,  # nu_uc_x.
+    1e-1,  # nu_uc_y.
     1e1,   # eta_x.
-    0e-7,  # nu_sp_x.
-    0e-3,  # nu_sp_y.
+    0e-5,  # nu_sp_x.
+    0e-5,  # nu_sp_y.
     0e-6,  # beta_x.
     0e-6,  # beta_y.
-    1e-2,   # dnu_x.
-    1e-2,   # dnu_y.
-    1e-7,  # xi_x.
-    1e-7   # xi_y.
+    0e-2,  # dnu_x.
+    0e-2,  # dnu_y.
+    1e-6,  # xi_x.
+    1e-6   # xi_y.
 ])
 
 b1_list = ["b1_0", "b1_1", "b1_2", "b1_3", "b1_4", "b1_5"]
