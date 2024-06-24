@@ -41,5 +41,11 @@ PYBIND11_MODULE(lib, m) {
     */
     // Enums.
 
+    m.def("inv", &gtpsa::minv);
+    m.def("pinv", &gtpsa::pminv);
+    // m.def("integ", &gtpsa::integ);
     m.def("M_to_h_DF", &gtpsa::M_to_h_DF);
+    m.def("CtoR", &gtpsa::CtoR);
+    m.def("RtoC", &gtpsa::RtoC);
+    m.def("GoFix", &gtpsa::GoFix);
 }

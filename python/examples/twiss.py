@@ -9,16 +9,25 @@ from thor_scsi.factory import accelerator_from_config
 from thor_scsi.utils.twiss_output import twiss_ds_to_df, df_to_tsv
 from thor_scsi.utils.linear_optics import compute_Twiss_along_lattice
 import thor_scsi.lib as tslib
+from pathlib import Path
 import gtpsa
 
 desc = gtpsa.desc(6, 1)
 
 t_dir = os.path.join(os.environ["HOME"], "Nextcloud", "thor_scsi", "JB")
-# t_file = os.path.join("lattices", "tme_rb.lat")
+t_file = os.path.join("lattices", "tme_rb.lat")
 # t_file = os.path.join("lattices", "tme.lat")
 # t_file = os.path.join(t_dir, "b3_tst.lat")
-t_file = os.path.join(t_dir, "b3_sf(sf)_4Quads_unitcell.lat")
+# t_file = os.path.join(t_dir, "b3_sf(sf)_4Quads_unitcell.lat")
 
+t_file = (
+    Path(os.environ["HOME"])
+    / "cpp"
+    / "dt4acc"
+    / "lattices"
+    / "b2_stduser_beamports_blm_tracy_corr.lat"
+)
+print("twiss from file", t_file)
 acc = accelerator_from_config(t_file)
 calc_config = tslib.ConfigType()
 acc.set_log_level(tslib.accelerator_log_level.warning)
@@ -32,7 +41,7 @@ else:
     calc_config.radiation = True
     calc_config.Cavity_on = True
 
-ds = compute_Twiss_along_lattice(n_dof, acc, calc_config, desc=desc)
+ds = compute_Twiss_along_lattice(n_dof, acc, calc_config, desc=desc, mapping=gtpsa.IndexMapping())
 df = twiss_ds_to_df(ds)
 # print(df)
 # exit()

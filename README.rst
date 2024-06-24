@@ -188,7 +188,7 @@ Malika Meddahi was a postdoc at ALS who did her thesis at CERN (for which she re
 
   *Effets faisceau-faisceau dans le collisionneur protons-antiprotons du SPS* `CERN-SL-91-30-BI (1991)`_
 
-  .. _`CERN-SL-91-30-BI (1991)`: http://cds.cern.ch/record/223301)
+  .. _`CERN-SL-91-30-BI (1991)`: http://cds.cern.ch/record/223301
 
 The resulting C code, see below, has now been re-factored by introducing a C++ *beam line class*; i.e., to recover the transparency & simplicity of the original *beam dynamics model*.
 
@@ -202,7 +202,11 @@ for which the *beam dynamics model* was based on the *linearized quadratic Hamil
 
   .. image:: images/H_2.png
 
-for *linear optics design*. I.e., for a *bare lattice* with *mid-plane symmetry*.
+for *linear optics design*. I.e., for a *bare lattice* with *mid-plane symmetry* - implemented by 2x2 matrices for the horizontal and vertical planes - originating from the model/code:
+
+  A\. Wrülich *Racetrack a Computer Code for the Simulation of Nonlinear Particle Motion in Accelerators* `DESY 84-026 (1984)`_
+
+  .. _`DESY 84-026 (1984)`: https://lib-extopc.kek.jp/preprints/PDF/1985/8501/8501026.pdf
 
 E.g. by not having figured out/mastered how to pass records (structures in C) as function/procedure variables – vs. scalars only – for the Pascal-S compiler/interpreter to the beam dynamics library. The API was rather poor/sloppy. I.e., not scalable and thus ill suited to cope with the complexity of a realistic model. As expressed by Forest in the title of:
 
@@ -216,9 +220,14 @@ Hence, the one thing we did find useful for a realistic on-line model – having
 
   .. _`(Addison-Wesley, 1988).`: https://books.google.com/books?id=hLomAAAAMAAJ
 
-  S\. Pemberton, M\. Daniels *The P4 Compiler and Interpreter* `(1982).`_
+  S\. Pemberton, M\. Daniels *The P4 Compiler and Interpreter* `(Ellis Horwood, 1983).`_
 
-  .. _`(1982).`: https://homepages.cwi.nl/~steven/pascal/book/pascalimplementation.html
+  .. _`(1983).`: https://homepages.cwi.nl/~steven/pascal/book/pascalimplementation.html
+
+
+  R\. Berry *Programming Language Translation* `(Ellis Horwood, 1982)`_
+
+  .. _`(Ellis Horwood, 1982)`: https://archive.org/details/programminglangu0000berr/mode/2up
 
   N\. Wirth *PASCAL-S: A Subset and its Implementation* `Institut für Informatik, ETH, Zürich (1975).`_
 

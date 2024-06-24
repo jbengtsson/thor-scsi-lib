@@ -11,6 +11,7 @@ target_include_directories(test_transform
     PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../../>"
     "$<BUILD_INTERFACE:${gtpsa_cpp_INCLUDE_DIR}>"
+    "$<BUILD_INTERFACE:${gtpsa_mad_ng_INCLUDE_DIR}>"
     "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )
 

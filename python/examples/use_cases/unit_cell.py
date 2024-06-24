@@ -119,12 +119,17 @@ def print_Twiss(lat, data):
         L += lat[k].get_length()
         nu[X_] += data.twiss.sel(plane="x", par="dnu").values[k]
         nu[Y_] += data.twiss.sel(plane="y", par="dnu").values[k]
-        print("{:3d} {:8s} {:7.3f} {:8.5f} {:7.5f} {:7.5f} {:8.5f} {:7.5f} {:7.5f}".
-              format(k, lat[k].name, L,
-                     data.twiss.sel(plane="x", par="alpha").values[k], data.twiss.sel(plane="x", par="beta").values[k],
-                     nu[X_],
-                     data.twiss.sel(plane="y", par="alpha").values[k], data.twiss.sel(plane="y", par="beta").values[k],
-                     nu[Y_]))
+        print(
+            "{:3d} {:8s} {:7.3f} {:8.5f} {:7.5f} {:7.5f} {:8.5f} {:7.5f}"
+            " {:7.5f}".
+            format(
+                k, lat[k].name, L,
+                data.twiss.sel(plane="x", par="alpha").values[k],
+                data.twiss.sel(plane="x", par="beta").values[k],
+                nu[X_],
+                data.twiss.sel(plane="y", par="alpha").values[k],
+                data.twiss.sel(plane="y", par="beta").values[k],
+                nu[Y_]))
 
 
 def compute_periodic_solution(lat, model_state, prt):

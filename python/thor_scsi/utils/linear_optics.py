@@ -38,13 +38,12 @@ X_, Y_, Z_ = [
 
 
 def compute_map(
-    acc: tslib.Accelerator,
-    calc_config: tslib.ConfigType,
-    *,
-    delta: float = 0e0,
-    t_map: gtpsa.ss_vect_tpsa = None,
-    desc: gtpsa.desc = None,
-    tpsa_order: int = 1
+        lat: tslib.Accelerator,
+        model_state: tslib.ConfigType,
+        *,
+        t_map: gtpsa.ss_vect_tpsa = None,
+        desc: gtpsa.desc = None,
+        tpsa_order: int = 1
 ) -> gtpsa.ss_vect_tpsa:
     """Propagate an identity map through the accelerator
     """
@@ -53,8 +52,7 @@ def compute_map(
         t_map = gtpsa.ss_vect_tpsa(desc, tpsa_order)
         t_map.set_identity()
 
-    t_map[delta_] += delta
-    acc.propagate(calc_config, t_map)
+    lat.propagate(model_state, t_map)
     return t_map
 
 
@@ -188,13 +186,23 @@ def compute_nu_xi(desc, tpsa_order, M):
         M_delta = gtpsa.tpsa(desc, tpsa_order)
         for k in range(2):
             M_delta.clear()
+            # J.B. 21/07/23.
+            # Map indexing syntax changed & broken for existing Use Cases;
+            # i.e., transparency for ditto & backwards compatibility
+            # missed/ignored.
             # m_11 + delta * m_16.
-            M_delta += M[2*k].get(ind_1(2*k))
-            # The 2nd argument scales the existing value & the 3rd value is set.
-            M_delta.set(ind_1(delta_), 0e0, M[2*k].get(ind_2(2*k, delta_)))
-            # m_22 + delta * m_26.
-            M_delta += M[2*k+1].get(ind_1(2*k+1))
-            M_delta.set(ind_1(delta_), 1e0, M[2*k+1].get(ind_2(2*k+1, delta_)))
+            if k == 0:
+                M_delta += M.x.get(ind_1(2*k))
+                M_delta.set(ind_1(delta_), 0e0, M.x.get(ind_2(2*k, delta_)))
+                # m_22 + delta * m_26.
+                M_delta += M.px.get(ind_1(2*k+1))
+                M_delta.set(ind_1(delta_), 1e0, M.px.get(ind_2(2*k+1, delta_)))
+            elif k == 1:
+                M_delta += M.y.get(ind_1(2*k))
+                M_delta.set(ind_1(delta_), 0e0, M.y.get(ind_2(2*k, delta_)))
+                # m_22 + delta * m_26.
+                M_delta += M.py.get(ind_1(2*k+1))
+                M_delta.set(ind_1(delta_), 1e0, M.py.get(ind_2(2*k+1, delta_)))
             # M_delta = m_11 + m_22.
             nu_tpsa = \
                 acos2_tpsa(M.jacobian()[2*k][2*k+1], M_delta/2e0)/(2e0*np.pi)
@@ -202,7 +210,7 @@ def compute_nu_xi(desc, tpsa_order, M):
     else:
         nu = np.nan
         xi = np.nan
-        print("\ncompute_nu_xi: unstable ", stable)
+        print("\ncompute_nu_xi: unstable =", stable)
 
     return stable, nu, xi
 
@@ -230,8 +238,11 @@ def sort_eigen_vec(n_dof, nu, w):
     """
     order = np.zeros(2 * n_dof, int)
     for k in range(n_dof):
-        order[2 * k] = find_closest_nu(nu[k], w)
-        order[2 * k + 1] = find_closest_nu(1e0 - nu[k], w)
+        if nu[k] != np.nan:
+            order[2 * k] = find_closest_nu(nu[k], w)
+            order[2 * k + 1] = find_closest_nu(1e0 - nu[k], w)
+        else:
+            print("\nsort_eigen_vec: w =", w[k])
     return order
 
 
@@ -259,6 +270,8 @@ def compute_A_from_eigenvec(n_dof, eta, u):
         sgn_im = sign(z)
         scl = np.sqrt(np.abs(z))
         sgn_vec = sign(u1[2 * i][2 * i].real)
+        if sgn_vec == 0e0:
+            sgn_vec = 1
         [u1[:, 2 * i], u1[:, 2 * i + 1]] = [
             sgn_vec * (u1[:, 2 * i].real + sgn_im * u1[:, 2 * i].imag * 1j)
             / scl,
@@ -327,11 +340,12 @@ def compute_M_diag(
         # nu_eig = acos2(w.imag, w.real) / (2e0 * np.pi)
         nu_eig = np.zeros(n)
         for k in range(n):
-            if abs(w[k].real) > 1e0:
-                print("\ncompute_M_diag: |arg| for acos2 > 1 ", w[k])
-                return False, np.nan, np.nan, np.nan
-
-            nu_eig[k] = acos2(w[k].imag, w[k].real) / (2e0 * np.pi)
+            if abs(w[k].real) <= 1e0:
+                nu_eig[k] = acos2(w[k].imag, w[k].real) / (2e0 * np.pi)
+            else:
+                # Unstable.
+                print("\ncompute_M_diag: |arg| for acos2 > 1", w[k])
+                return False, np.nan, np.nan, np.nan, np.nan
 
         logger.debug(
             "\nu:\n"
@@ -387,7 +401,7 @@ def compute_M_diag(
                                  @ A[:n, :n], 1e-13))
         )
 
-        R = A_inv @ M @ A
+        R = A_inv @ M[:6, :6] @ A
 
         nu = np.zeros(3, float)
         alpha_rad = np.zeros(3, float)
@@ -418,11 +432,12 @@ def compute_M_diag(
                 )
             )
     else:
+        nu        = np.nan
         A         = np.nan
         A_inv     = np.nan
         alpha_rad = np.nan
 
-    return stable, A, A_inv, alpha_rad
+    return stable, nu, A, A_inv, alpha_rad
 
 
 #: scale arctan2 (a12/a11) to Floquet coordinates (correct?)
@@ -473,7 +488,7 @@ def _extract_tps(elem: tslib.Observer) -> tslib.ss_vect_tps:
         logger.error(msg)
         raise AssertionError(msg)
     else:
-        logger.debug("Data available for eleeent index %5d name %s",
+        logger.debug("Data available for element index %5d name %s",
                      ob.get_observed_index(), ob.get_observed_name())
     return ob.get_truncated_power_series_a()
 
@@ -510,32 +525,34 @@ def tps2twiss(tpsa: gtpsa.ss_vect_tpsa) -> (np.ndarray, np.ndarray):
 
 def compute_map_and_diag(
         n_dof: int,
-        acc: tslib.Accelerator,
-        calc_config: tslib.ConfigType,
+        lat: tslib.Accelerator,
+        model_state: tslib.ConfigType,
         *,
-        desc: gtpsa.desc,
-        tpsa_order: int = 1):
+        desc: gtpsa.desc
+):
     """propagate once around ring. use this map to find phase space origin
 
     Todo:
          Rename phase space origin fix point
     """
-    t_map = compute_map(acc, calc_config, desc=desc, tpsa_order=tpsa_order)
+    t_map = \
+        compute_map(lat, model_state, desc=desc, tpsa_order=1)
     M = np.array(t_map.jacobian())
     logger.info("\ncompute_map_and_diag\nM:\n" + mat2txt(M))
 
-    stable, A, A_inv, alpha_rad = compute_M_diag(n_dof, M)
+    stable, nu, A, A_inv, alpha_rad = compute_M_diag(n_dof, M)
     if stable:
+        A = np.pad(A, (0, 1))
+        A[6, 6] = 1
         Atest = gtpsa.ss_vect_tpsa(desc, 1)
         Atest.set_zero()
         Atest.set_jacobian(A)
-        acc.propagate(calc_config, Atest)
+        lat.propagate(model_state, Atest)
     else:
         print("\ncompute_map_and_diag: unstable")
-    return stable, t_map, A
+    return stable, t_map, nu, A
 
 
-# J.B. 03/04/23.
 def compute_A(
         eta: np.ndarray,
         alpha: np.ndarray,
@@ -560,18 +577,18 @@ def compute_A(
 
 def compute_Twiss_along_lattice(
     n_dof: int,
-    acc: tslib.Accelerator,
-    calc_config: tslib.ConfigType = None,
+    lat: tslib.Accelerator,
+    model_state: tslib.ConfigType = None,
     *,
+    mapping : gtpsa.IndexMapping,
     A: gtpsa.ss_vect_tpsa = None,
-    desc: gtpsa.desc = None,
-    tpsa_order: int = 1
+    desc: gtpsa.desc = None
 ) -> xr.Dataset:
     """
 
     Args:
-        acc :         an :class:`tlib.Accelerator` instance
-        calc_config : an :class:`tlib.Config` instance
+        lat :         an :class:`tlib.Accelerator` instance
+        model_state : an :class:`tlib.Config` instance
         A : see :func:`compute_ring_twiss` for output
 
     returns xr.Dataset
@@ -582,42 +599,46 @@ def compute_Twiss_along_lattice(
         xarrays. But what then to use?)
 
     """
-    if calc_config is None:
-        calc_config = tslib.ConfigType()
+    if model_state is None:
+        model_state = tslib.ConfigType()
 
     if A is None:
-        _, A = \
-            compute_map_and_diag(n_dof, acc, calc_config, desc=desc,
-                                 tpsa_order=tpsa_order)
-    logger.info("\ncompute_Twiss_along_lattice\nA:\n" + prt2txt(A))
+        stable, _, A_mat = \
+            compute_map_and_diag(
+                n_dof, lat, model_state, desc=desc
+            )
+        A = gtpsa.ss_vect_tpsa(desc, 1)
+        A.set_jacobian(A_mat)
+        if not stable:
+            raise ValueError("Compute map and diag did not converge")
+        logger.info("\ncompute_Twiss_along_lattice\nA:\n" + prt2txt(A))
 
     # Not really required ... but used for convenience
-    observers = instrument_with_standard_observers(acc)
+    observers = instrument_with_standard_observers(lat, mapping=mapping)
 
     # Propagate through the accelerator
-    A_map = gtpsa.ss_vect_tpsa(desc, 1)
-    # J.B. 03/04/23.
-    # A_map.set_zero()
-    # A_map.set_jacobian(A)
-    A_map = A
-    logger.debug("\ncompute_Twiss_along_lattice\nA:\n" + prt2txt(A_map))
+    logger.debug("\ncompute_Twiss_along_lattice\nA:\n" + prt2txt(A))
 
-    for k in range(len(acc)):
-        acc.propagate(calc_config, A_map, k, 1)
+    for k in range(len(lat)):
+        lat.propagate(model_state, A, k, 1)
         # Zero the phase advance so that the fraction tune change is not
         # exceeding two pi
-        Aj = A_map.jacobian()
-        rjac, _ = compute_A_CS(2, Aj)
-        A_map.set_jacobian(rjac)
+        Aj = A.jacobian()
+        rjac, _ = compute_A_CS(2, Aj[:6, :6])
+        rjac = np.pad(rjac, (0, 1))
+        rjac[6, 6 ] = 1
+        A.set_jacobian(rjac)
 
-    logger.debug("\ncompute_Twiss_along_lattice A:\n%s" + prt2txt(A_map))
+    logger.debug("\ncompute_Twiss_along_lattice A:\n%s" + prt2txt(A))
 
-    indices = [elem.index for elem in acc]
-    tps_tmp = [_extract_tps(elem) for elem in acc]
+    indices = [elem.index for elem in lat]
+    tps_tmp = [_extract_tps(elem) for elem in lat]
     data = [tps2twiss(t) for t in tps_tmp]
-    # print(type(tps_tmp), type(tps_tmp[0]))
-    tps_tmp = np.array(tps_tmp, dtype=object)
     twiss_pars = [d[1] for d in data]
+    # Compute incremental normalised phase advance.
+    for j in range(1, len(twiss_pars)):
+        for k in range(2):
+            twiss_pars[j][k][2] += twiss_pars[j-1][k][2]
     disp = [d[0] for d in data]
 
     # Stuff information into xarrays ..
@@ -631,18 +652,21 @@ def compute_Twiss_along_lattice(
         twiss_pars,
         name="twiss",
         dims=["index", "plane", "par"],
-        coords=[indices, ["x", "y"], ["alpha", "beta", "dnu"]],
+        coords=[indices, ["x", "y"], ["alpha", "beta", "nu"]],
     )
     phase_space_coords_names = ["x", "px", "y", "py", "ct", "delta"]
-    tps = xr.DataArray(
-        data=tps_tmp,
-        name="tps",
-        dims=["index", "phase_coordinate"],
-        coords=[indices, phase_space_coords_names],
-    )
-    info = accelerator_info(acc)
+    # tps_tmp = np.array(tps_tmp.iloc, dtype=object)
+    # tps = xr.DataArray(
+    #    data=tps_tmp,
+    #    name="tps",
+    #    dims=["index", "phase_coordinate"],
+    #    coords=[indices, phase_space_coords_names],
+    # )
+    info = accelerator_info(lat)
     res = \
-        info.merge(dict(twiss=twiss_parameters, dispersion=dispersion, tps=tps))
+        info.merge(dict(twiss=twiss_parameters, dispersion=dispersion,
+                        #M=tps
+                        ))
     return res
 
 

@@ -12,6 +12,7 @@ add_library(lib MODULE
   src/observer.cc
   src/elements.cc
   src/accelerator.cc
+  src/custom.cc
   )
 
 message(STATUS "python wrapper flame include dir ${flame_INCLUDE_DIR}")

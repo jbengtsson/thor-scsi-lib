@@ -27,6 +27,13 @@ from thor_scsi.utils.twiss_output import twiss_ds_to_df, df_to_tsv
 
 tpsa_order = 1
 
+<<<<<<< HEAD
+=======
+named_index = gtpsa.IndexMapping(
+    dict(x=0, px=1, y=2, py=3, delta=4, ct=5)
+)
+
+>>>>>>> thor-scsi-lib_ptc
 # Descriptor for Truncated Power Series Algebra variables.
 desc = gtpsa.desc(6, tpsa_order)
 
@@ -90,7 +97,14 @@ A = lo.compute_A(eta, alpha, beta, desc)
 
 print("\nA:\n", A)
 
+<<<<<<< HEAD
 data = lo.compute_Twiss_along_lattice(n_dof, lat, model_state, A=A, desc=desc)
+=======
+data = \
+    lo.compute_Twiss_along_lattice(
+        n_dof, lat, model_state, A=A, desc=desc, mapping=named_index
+    )
+>>>>>>> thor-scsi-lib_ptc
 
 plot_Twiss(data, "transport_line_twiss.png", "Transport Line")
 df = twiss_ds_to_df(data)

@@ -46,13 +46,10 @@ import matplotlib.pyplot as plt
 import thor_scsi.lib as tslib
 
 from thor_scsi.factory import accelerator_from_config
-from thor_scsi.utils.linear_optics import (
-    compute_map,
-    compute_nu_symp,
-    compute_M_diag,
-    compute_Twiss_along_lattice
-)
-from thor_scsi.utils.radiate import compute_radiation
+
+from thor_scsi.utils import linear_optics as lo, courant_snyder as cs, \
+    radiate as rad
+
 from thor_scsi.utils.phase_space_vector import map2numpy
 from thor_scsi.utils.output import mat2txt, vec2txt
 from thor_scsi.utils.twiss_output import twiss_ds_to_df, df_to_tsv
@@ -92,36 +89,36 @@ def plt_curly_H(ds):
     fig.tight_layout()
 
 
-def prt_fam(acc, fam_name):
+def prt_fam(lat, fam_name):
     print("\nprt_fam:")
-    for q in acc.elementsWithName(fam_name):
+    for q in lat.elementsWithName(fam_name):
         print("  {:4s} {:3d} {:6.3f} {:4.2f}".
               format(q.name, q.index, q.getMultipoles().getMultipole(2).real,
                      q.getLength()))
 
 
-def set_db_2_fam(acc, fam_name, db_2):
-    for q in acc.elements_with_name(fam_name):
+def set_db_2_fam(lat, fam_name, db_2):
+    for q in lat.elements_with_name(fam_name):
         b_2 = q.get_multipoles().get_multipole(2).real
         q.get_multipoles().set_multipole(2, b_2+db_2)
 
 
-def set_db_2L_fam(acc, fam_name, db_2L):
-    q = acc.find(fam_name, 0)
+def set_db_2L_fam(lat, fam_name, db_2L):
+    q = lat.find(fam_name, 0)
     L = q.get_length()
-    set_db_2_fam(acc, q.name, db_2L/L)
+    set_db_2_fam(lat, q.name, db_2L/L)
 
 
-def compute_dnu_db_2L(acc, calc_config, fam_name, db_2L):
-    dof = 2
-    nu = np.zeros([2, dof])
+def compute_dnu_db_2L(lat, model_state, fam_name, db_2L):
+    n_dof = 2
+    nu = np.zeros([2, n_dof])
     for k in range(-1, 2, 2):
-        set_db_2L_fam(acc, fam_name, k*db_2L)
-        #M = map2numpy(compute_map(acc, calc_config))[:6, :6]
-        a_map = compute_map(acc, calc_config, desc=desc)
+        set_db_2L_fam(lat, fam_name, k*db_2L)
+        #M = map2numpy(compute_map(lat, model_state))[:6, :6]
+        a_map = lo.compute_map(lat, model_state, desc=desc)
         M = a_map.jacobian()
-        set_db_2L_fam(acc, fam_name, -k*db_2L)
-        nu[(k+1)//2] = compute_nu_symp(dof, M)
+        set_db_2L_fam(lat, fam_name, -k*db_2L)
+        nu[(k+1)//2] = lo.compute_nu_symp(n_dof, M)
 
     dnu_db_2 = (nu[1]-nu[0])/(2e0*db_2L)
     return dnu_db_2
@@ -133,26 +130,65 @@ def tweak_nu(fam_names, dnu_x, dnu_y):
     dnu_db_2L = np.zeros((2, n), dtype='float')
     for k in range(n):
         dnu_db_2L[:, k] = \
-            compute_dnu_db_2L(acc, calc_config, fam_names[k],   1e-4)
-    print("\ndnu_db_2L:\n", mat2txt(dnu_db_2L))
+            compute_dnu_db_2L(lat, model_state, fam_names[k], 1e-4)
+    print("\ndnu_db_2L:\n" + mat2txt(dnu_db_2L))
     u, s, v_t = np.linalg.svd(dnu_db_2L, full_matrices=False)
     dnu_db_2L_inv = (v_t.T @ np.diag(s**-1) @ u.T)
     db_2L = dnu_db_2L_inv @ dnu
-    print("\ndb_2L = ", vec2txt(db_2L))
+    print("\ndb_2L:\n" + vec2txt(db_2L))
     for k in range(n):
-        set_db_2L_fam(acc, fam_names[k], db_2L[k])
+        set_db_2L_fam(lat, fam_names[k], db_2L[k])
 
 
-t_dir = \
-    os.path.join(os.environ["HOME"], "Nextcloud", "thor_scsi", "JB",
-                 "BESSY-III")
+def print_Twiss(str, Twiss):
+    """
+
+    todo:
+        rename str e.g. header? prefix?
+
+    """
+    # eta, alpha, beta = Twiss[0], Twiss[1], Twiss[2]
+    # that way I also check that Twiss has exactly three parameters
+    eta, alpha, beta = Twiss
+    print(str, end="")
+    print(f"  eta    = [{eta[X_]:9.3e}, {eta[Y_]:9.3e}]")
+    print(f"  alpha  = [{alpha[X_]:9.3e}, {alpha[Y_]:9.3e}]")
+    print(f"  beta   = [{beta[X_]:5.3f}, {beta[Y_]:5.3f}]")
+
+
+def compute_periodic_solution(lat, model_state, named_index, desc):
+    """
+    Todo:
+        model_state: rename to calculation_configuration or calc_config
+    """
+    # Compute the periodic solution for a super period.
+    # Degrees of freedom - RF cavity is off; i.e., coasting beam.
+    n_dof = 2
+    model_state.radiation = False
+    model_state.Cavity_on = False
+
+    stable, M, A = lo.compute_map_and_diag(n_dof, lat, model_state, desc=desc)
+    res = cs.compute_Twiss_A(A)
+    Twiss = res[:3]
+    print_Twiss("Twiss:\n", Twiss)
+    A_map = gtpsa.ss_vect_tpsa(desc, no)
+    A_map.set_jacobian(A)
+    ds = \
+        lo.compute_Twiss_along_lattice(
+            n_dof, lat, model_state, A=A_map, desc=desc, mapping=named_index)
+
+    return M, A, ds
+
+
+t_dir = os.path.join(
+    os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "BESSY-III")
 t_file = os.path.join(t_dir, "alsu-7ba-20180503c.lat")
 # t_file = os.path.join(t_dir, "b3_sf_40Grad_JB.lat")
 
-acc = accelerator_from_config(t_file)
-calc_config = tslib.ConfigType()
+lat = accelerator_from_config(t_file)
+model_state = tslib.ConfigType()
 
-cav = acc.find("cav", 0)
+cav = lat.find("cav", 0)
 cav.set_harmonic_number(327)
 cav.set_phase(180.0)
 print("\nCavity", repr(cav))
@@ -163,26 +199,39 @@ print(f"""\nCavity info:
   phi     {cav.get_phase()}
 """, end="")
 
-dof = 2
+n_dof = 2
+
+# Number of phase-space coordinates.
+nv = 7
+# Variables max order.
+no = 2
 
 E = 2.0e9
-calc_config.radiation = False
-calc_config.Cavity_on = False
 
+model_state.radiation = False
+model_state.Cavity_on = False
 
-desc = gtpsa.desc(6, 2)
+named_index = gtpsa.IndexMapping(dict(x=0, px=1, y=2, py=3, delta=4, ct=5))
 
-M = compute_map(acc, calc_config, desc=desc)
-jac = M.jacobian()
-nu = compute_nu_symp(dof, jac)
-print("\nM:\n" + mat2txt(jac))
-print("\nnu = [{:7.5f}, {:7.5f}]".format(nu[X_], nu[Y_]))
+desc = gtpsa.desc(nv, no)
 
-stable, A_mat, _, _ = compute_M_diag(dof, jac)
-A = gtpsa.ss_vect_tpsa(desc, 1)
-A.set_jacobian(A_mat)
+# Compute linear map & diagonalise.
+M, A, data = \
+    compute_periodic_solution(lat, model_state, named_index, desc)
 
-ds = compute_Twiss_along_lattice(2, acc, calc_config, A=A, desc=desc)
+# Compute linear chromaticity from trace of 2nd order map.
+M = lo.compute_map(lat, model_state, desc=desc, tpsa_order=2)
+stable, nu, xi = lo.compute_nu_xi(desc, no, M)
+
+print("\nM:\n" + mat2txt(M.jacobian()[:6, :6]))
+print("\n  nu = [{:7.5f}, {:7.5f}]".format(nu[X_], nu[Y_]))
+print("  xi = [{:7.5f}, {:7.5f}]".format(xi[X_], xi[Y_]))
+
+stable, A, A_inv, _ = lo.compute_M_diag(n_dof, M.jacobian())
+
+ds = \
+    lo.compute_Twiss_along_lattice(
+        n_dof, lat, model_state, desc=desc, mapping=named_index)
 df = twiss_ds_to_df(ds)
 # print("\nTwiss - ds:\n", ds)
 # print("\nTwiss - df:\n", df)
@@ -195,21 +244,19 @@ if True:
     plt_twiss(ds)
     plt_curly_H(ds)
 
+rad.compute_radiation(lat, model_state, E, 1e-15, desc=desc)
 
-compute_radiation(acc, calc_config, E, 1e-15, desc=desc)
-
-calc_config.radiation = False
-calc_config.Cavity_on = False
+model_state.radiation = False
+model_state.Cavity_on = False
 
 # Tweak the tune using all the quadrupole families.
 b_2 = ['q1', 'q2', 'q3', 'q4', 'mb3h', 'qfh', 'mqfh']
 tweak_nu(b_2, 0.00501, -0.00670)
-a_map = compute_map(acc, calc_config, desc=desc)
-M = a_map.jacobian()
-nu = compute_nu_symp(dof, M)
+a_map = lo.compute_map(lat, model_state, desc=desc)
+M = a_map.jacobian()[:6, :6]
+nu = lo.compute_nu_symp(n_dof, M)
 print("\nM:\n" + mat2txt(M))
 print("\nnu = [{:7.5f}, {:7.5f}]".format(nu[X_], nu[Y_]))
 
 plt.ioff()
 plt.show()
-nu

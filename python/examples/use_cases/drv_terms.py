@@ -5,13 +5,6 @@
      https://ados.web.psi.ch/slsnotes/sls0997.pdf
 """
 
-"""Use Case:
-     Super period straight section matching with a triplet.
-   Constraints:
-    [alpha_x,y, beta_x,y, eta_x, eta'_x] at the centre of the straigth.
-   Parameters:
-     triplet gradients (3) & spacing (3).
-"""
 import enum
 import logging
 
@@ -32,7 +25,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 import gtpsa
-import thor_scsi.lib as tslib
+import thor_scsi.lib as ts
 
 from thor_scsi.factory import accelerator_from_config
 from thor_scsi.utils.twiss_output import twiss_ds_to_df, df_to_tsv
@@ -49,24 +42,40 @@ desc = gtpsa.desc(6, tpsa_order)
 
 # Configuration space coordinates.
 X_, Y_, Z_ = [
-    tslib.spatial_index.X,
-    tslib.spatial_index.Y,
-    tslib.spatial_index.Z
+    ts.spatial_index.X,
+    ts.spatial_index.Y,
+    ts.spatial_index.Z
 ]
 # Phase-space coordinates.
 [x_, px_, y_, py_, ct_, delta_] = [
-    tslib.phase_space_index_internal.x,
-    tslib.phase_space_index_internal.px,
-    tslib.phase_space_index_internal.y,
-    tslib.phase_space_index_internal.py,
-    tslib.phase_space_index_internal.ct,
-    tslib.phase_space_index_internal.delta,
+    ts.phase_space_index_internal.x,
+    ts.phase_space_index_internal.px,
+    ts.phase_space_index_internal.y,
+    ts.phase_space_index_internal.py,
+    ts.phase_space_index_internal.ct,
+    ts.phase_space_index_internal.delta,
 ]
 
 
 class MultipoleIndex(enum.IntEnum):
     quadrupole = 2
     sextupole = 3
+
+
+def read_lattice(t_file):
+    # Read in & parse lattice file.
+    print("\nread_lattice ->")
+    lat = accelerator_from_config(t_file)
+
+    # Set lattice state (Rf cavity on/off, etc.)
+    model_state = ts.ConfigType()
+
+    n_dof = 2
+    model_state.radiation = False
+    model_state.Cavity_on = False
+
+    print("-> read_lattice")
+    return n_dof, lat, model_state
 
 
 def plt_Twiss(ds, file_name, title):
@@ -107,7 +116,7 @@ def prt_Twiss(str, Twiss):
     print(f"  beta   = [{beta[X_]:5.3f}, {beta[Y_]:5.3f}]")
 
 
-def compute_periodic_solution(lat, model_state):
+def compute_periodic_solution(lat, model_state, named_index, desc, no):
     """
     Todo:
         model_state: rename to calculation_configuration or calc_config
@@ -118,26 +127,28 @@ def compute_periodic_solution(lat, model_state):
     model_state.radiation = False
     model_state.Cavity_on = False
 
-    stable, M, A = lo.compute_map_and_diag(n_dof, lat, model_state, desc=desc,
-                                           tpsa_order=tpsa_order)
-    print("\nM:\n", mat2txt(M.jacobian()))
+    stable, M, A = \
+        lo.compute_map_and_diag(
+            n_dof, lat, model_state, desc=desc, tpsa_order=no
+        )
+    print("\nM:\n", M)
     res = cs.compute_Twiss_A(A)
     Twiss = res[:3]
     prt_Twiss("\nTwiss:\n", Twiss)
-    print("\nEnd of twiss\n")
-    A_map = gtpsa.ss_vect_tpsa(desc, 1)
+    A_map = gtpsa.ss_vect_tpsa(desc, no)
     A_map.set_jacobian(A)
-    ds = lo.compute_Twiss_along_lattice(n_dof, lat, model_state, A=A_map,
-                                        desc=desc)
+    ds = \
+        lo.compute_Twiss_along_lattice(
+            n_dof, lat, model_state, A=A_map, desc=desc, mapping=named_index)
 
     return M, A, ds
 
 
 def prt_map(str, map):
-    n_dof = 3;
+    n_dof = 3
     print(str)
     for k in range(2*n_dof):
-        map[k].print()
+        map.iloc[k].print()
 
 
 def prt_twiss_sxt(lat, data, fam_name):
@@ -150,32 +161,38 @@ def prt_twiss_sxt(lat, data, fam_name):
                          data.twiss.values[k, 1, 1]))
 
     
-lat_file = "b3_cf425cf_thor_scsi.lat"
+# Number of phase-space coordinates.
+nv = 7
+# Variables max order.
+no = 3
+# Number of parameters.
+nv_prm = 0
+# Parameters max order.
+no_prm = 0
+
 t_dir = os.path.join(os.environ["HOME"], "Nextcloud", "thor_scsi", "JB",
                      "BESSY-III", "ipac_2023")
-t_file = os.path.join(t_dir, lat_file)
+t_file = os.path.join(t_dir, "b3_cf425cf_thor_scsi.lat")
 
-# Read in & parse lattice file.
-lat = accelerator_from_config(t_file)
-# Set lattice state (Rf cavity on/off, etc.)
-model_state = tslib.ConfigType()
+n_dof, lat, model_state = read_lattice(t_file)
 
-# D.O.F. (Degrees-Of-Freedom) - coasting beam.
-n_dof = 2
-model_state.radiation = False
-model_state.Cavity_on = False
-
-# Compute Twiss parameters along lattice.
-M, A, data = compute_periodic_solution(lat, model_state)
-
-print("\nR:\n", mat2txt(np.linalg.inv(A) @ M.jacobian() @ A))
+if not False:
+    named_index = gtpsa.IndexMapping(dict(x=0, px=1, y=2, py=3, delta=4, ct=5))
+    desc = gtpsa.desc(nv, no, nv_prm, no_prm)
+    M, A, data = \
+        compute_periodic_solution(lat, model_state, named_index, desc, no)
+    print("\nM:\n", mat2txt(M.jacobian()))
+    print("\nA:\n", mat2txt(A))
+    print("\nR:\n", mat2txt(np.linalg.inv(A) @ M.jacobian() @ A))
 
 if not True:
     prt_map("\nM:", M)
 
-h = tslib.M_to_h_DF(M)
-print("\nh:")
-h.print()
+h = -1e0*ts.M_to_h_DF(M)
+h_re = gtpsa.tpsa(desc, no)
+h_im = gtpsa.tpsa(desc, no)
+ts.CtoR(h, h_re, h_im)
+(h-ts.RtoC(h_re, h_im)).print()
 
 if not True:
     plt_Twiss(data, "lin_opt.png", "Linear Optics")

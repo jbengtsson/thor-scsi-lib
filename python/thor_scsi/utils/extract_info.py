@@ -1,8 +1,9 @@
 """
 """
-from thor_scsi.lib import Accelerator
 import xarray as xr
 import numpy as np
+
+from thor_scsi.lib import Accelerator
 
 
 def compute_path_length(acc: Accelerator) -> np.ndarray:
@@ -13,7 +14,8 @@ def compute_path_length(acc: Accelerator) -> np.ndarray:
 
 
 def accelerator_info(acc: Accelerator) -> xr.Dataset:
-    """extra info on accelerator to be combined wit datasets returned by the accelerator
+    """Extra info on accelerator to be combined wit datasets returned by the
+       accelerator
 
     Args:
         acc:         an acccelerator calculation engine
@@ -36,7 +38,8 @@ def accelerator_info(acc: Accelerator) -> xr.Dataset:
     s = compute_path_length(acc)
 
     extra_info = xr.DataArray(data=t_lattice, dims=["index"], coords=[idx])
-    names = xr.DataArray(data=[elem.name for elem in acc], dims=["index"], coords=[idx])
+    names = xr.DataArray(
+        data=[elem.name for elem in acc], dims=["index"], coords=[idx])
     s_da = xr.DataArray(data=s, dims=["index"], coords=[idx])
     res = xr.Dataset(dict(elements=extra_info, names=names, s=s_da))
     return res

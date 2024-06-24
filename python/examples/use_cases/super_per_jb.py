@@ -39,15 +39,10 @@ from thor_scsi.factory import accelerator_from_config
 from thor_scsi.utils.twiss_output import twiss_ds_to_df, df_to_tsv
 
 from thor_scsi.utils import linear_optics as lo, courant_snyder as cs, \
-    radiate as rad
+     radiate as rad
 
 # from thor_scsi.utils.phase_space_vector import map2numpy
 from thor_scsi.utils.output import prt2txt, mat2txt, vec2txt
-
-tpsa_order = 2
-
-# Descriptor for Truncated Power Series Algebra variables.
-desc = gtpsa.desc(6, tpsa_order)
 
 # Configuration space coordinates.
 X_, Y_, Z_ = [
@@ -120,7 +115,8 @@ def print_Twiss(lat, data):
         L += lat[k].get_length()
         nu[X_] += data.twiss.sel(plane="x", par="dnu").values[k]
         nu[Y_] += data.twiss.sel(plane="y", par="dnu").values[k]
-        print("{:3d} {:8s} {:7.3f} {:8.5f} {:8.5f} {:7.5f} {:8.5f} {:8.5f} {:8.5f} {:7.5f} {:8.5f}".
+        print("{:3d} {:8s} {:7.3f} {:9.5f} {:8.5f} {:7.5f} {:8.5f} {:8.5f}"
+              " {:8.5f} {:7.5f} {:8.5f}".
               format(k, lat[k].name, L,
                      data.twiss.sel(plane="x", par="alpha").values[k],
                      data.twiss.sel(plane="x", par="beta").values[k],
@@ -130,7 +126,7 @@ def print_Twiss(lat, data):
                      nu[Y_], data.dispersion.sel(phase_coordinate="y")[k]))
 
 
-def compute_periodic_solution(lat, model_state, prt):
+def compute_periodic_solution(lat, model_state, named_index, desc, prt):
     """
     Todo:
         model_state: rename to calculation_configuration or calc_config
@@ -149,9 +145,12 @@ def compute_periodic_solution(lat, model_state, prt):
         Twiss = res[:3]
         if prt:
              print_Twiss_params("\nTwiss:\n", Twiss)
+        A_map = gtpsa.ss_vect_tpsa(desc, no)
+        A_map.set_jacobian(A)
         ds = \
             lo.compute_Twiss_along_lattice(
-                n_dof, lat, model_state, A=A, desc=desc)
+                n_dof, lat, model_state, A=A_map, desc=desc,
+                mapping=named_index)
     else:
         ds = np.nan
         print("\ncompute_periodic_solution: unstable")
@@ -276,7 +275,7 @@ n_iter_min = 0
 prms_min   = []
 rbend      = ""
 
-def opt_super_period(lat, param_list, C, bounds, phi_des, eps_x_des, nu_des,
+def opt_super_period(no, lat, param_list, C, bounds, phi_des, eps_x_des, nu_des,
                      beta_straight_des, weights, phi):
     """Use Case: optimise unit cell.
     """
@@ -291,10 +290,13 @@ def opt_super_period(lat, param_list, C, bounds, phi_des, eps_x_des, nu_des,
         return nu_cell
 
     def compute_chi_2(
-            lat: tslib.Accelerator, model_state: tslib.ConfigType,
-            eps_x_des: float, nu_des, prms
+            no: int,
+            lat: tslib.Accelerator,
+            model_state: tslib.ConfigType,
+            eps_x_des: float,
+            nu_des, prms
     ) -> Tuple[float, float]:
-        """Computes weightsed sum square
+        """Computes weighted sum square.
         """
 
         global n_iter
@@ -302,14 +304,21 @@ def opt_super_period(lat, param_list, C, bounds, phi_des, eps_x_des, nu_des,
         global n_iter_min
         global prms_min
 
-        M = lo.compute_map(lat, model_state, desc=desc, tpsa_order=tpsa_order)
-        stable = lo.check_if_stable_3D(M.jacobian())
+        M_map = lo.compute_map(lat, model_state, desc=desc, tpsa_order=no)
+        stable = lo.check_if_stable_3D(M_map.jacobian())
 
         if stable[0] and stable[1] and stable[2]:
-            alpha_c = M[ct_].get(lo.ind_1(delta_))/C
-            _, nu, xi = lo.compute_nu_xi(desc, tpsa_order, M)
+            
+            ind = np.zeros(nv, int)
+            ind[delta_] = 1
+            alpha_c_1 = M_map.ct.get(ind)/C
+            ind[delta_] = 2
+            alpha_c_2 = M_map.ct.get(ind)/C
+            _, nu, xi = lo.compute_nu_xi(desc, no, M_map)
 
-            M, A, data = compute_periodic_solution(lat, model_state, False)
+            M, A, data = \
+                compute_periodic_solution(
+                    lat, model_state, named_index, desc, False)
 
             beta_straight = np.zeros(2, dtype=float)
             beta_straight[X_] = data.twiss.sel(plane="x", par="beta").values[0]
@@ -318,7 +327,7 @@ def opt_super_period(lat, param_list, C, bounds, phi_des, eps_x_des, nu_des,
                 data.dispersion.sel(phase_coordinate="x").values[0]
             nu_cell = compute_nu_cell(data)
 
-            stable, U_0, J, tau, eps = \
+            stable, M, cod, A, U_0, J, tau, eps, D_rad = \
                 rad.compute_radiation(lat, model_state, 2.5e9, 1e-15, desc=desc)
 
             if stable:
@@ -332,7 +341,8 @@ def opt_super_period(lat, param_list, C, bounds, phi_des, eps_x_des, nu_des,
                     * np.sum((beta_straight - beta_straight_des) ** 2)
                 dchi_2[3] = weights["eta_straight_x"] * eta_straight_x ** 2
                 dchi_2[4] = weights["xi"] * np.sum(xi ** 2)
-                dchi_2[5] = weights["alpha_c"] / alpha_c ** 2
+                dchi_2[5] = weights["alpha_c_1"] / alpha_c_1 ** 2
+                dchi_2[6] = weights["alpha_c_2"] * alpha_c_2 ** 2
                 chi_2 = 0e0
                 for k in range(n):
                     chi_2 += dchi_2[k]
@@ -372,7 +382,8 @@ def opt_super_period(lat, param_list, C, bounds, phi_des, eps_x_des, nu_des,
                       format(beta_straight[X_], beta_straight[Y_]))
                 print(f"  eta_straight_x = {eta_straight_x:10.3e}")
                 print(f"  xi             = [{xi[X_]:5.3f}, {xi[Y_]:5.3f}]")
-                print(f"  alpha_c        = {alpha_c:9.3e}")
+                print(f"  alpha_c_1      = {alpha_c_1:9.3e}")
+                print(f"  alpha_c_2      = {alpha_c_2:9.3e}")
             else:
                 print("\n Unstable.")
         return chi_2
@@ -391,16 +402,16 @@ def opt_super_period(lat, param_list, C, bounds, phi_des, eps_x_des, nu_des,
              - 2*(prms[3] + prms[4] + prms[5] + prms[6])
              - 2*prms[8])/8e0
         set_phi_fam(lat, rbend, dphi)
-        chi_2 = compute_chi_2(lat, model_state, eps_x_des, nu_des, prms)
+        chi_2 = compute_chi_2(no, lat, model_state, eps_x_des, nu_des, prms)
         return chi_2
 
-    def prt_result(f_unit_cell, param_list, prms0, minimum):
+    def prt_result(no, f_unit_cell, param_list, prms0, minimum):
         global n_iter
         global chi_2_min
         global n_iter_min
         global prms_min
 
-        M = lo.compute_map(lat, model_state, desc=desc, tpsa_order=tpsa_order)
+        M = lo.compute_map(lat, model_state, desc=desc, tpsa_order=no)
         stable = lo.check_if_stable(3, M.jacobian())
         if not stable:
             print("\nCell unstable:")
@@ -408,7 +419,9 @@ def opt_super_period(lat, param_list, C, bounds, phi_des, eps_x_des, nu_des,
             print("  Setting prs_min for plot.")
             set_prm(lat, param_list, prms_min)
         # Compute new Twiss parameters along lattice.
-        M, A, data = compute_periodic_solution(lat, model_state, False)
+        M, A, data = \
+            compute_periodic_solution(
+                lat, model_state, named_index, desc, False)
         plot_Twiss(data, "after.png", "Linear Optics - After")
 
         print("\nInitial parameter values:")
@@ -452,7 +465,7 @@ def opt_super_period(lat, param_list, C, bounds, phi_des, eps_x_des, nu_des,
         options={"gtol": f_tol, "maxiter": max_iter},
     )
 
-    prt_result(f_unit_cell, param_list, prms0, minimum)
+    prt_result(no, f_unit_cell, param_list, prms0, minimum)
 
 
 def get_Twiss(loc):
@@ -479,12 +492,26 @@ def get_Twiss(loc):
     return eta, alpha, beta
 
 
+# Number of phase-space coordinates.
+nv = 7
+# Variables max order.
+no = 2
+# Number of parameters.
+nv_prm = 0
+# Parameters max order.
+no_prm = 0
+
+named_index = gtpsa.IndexMapping(dict(x=0, px=1, y=2, py=3, delta=4, ct=5))
+
+# Descriptor for Truncated Power Series Algebra variables.
+desc = gtpsa.desc(nv, no, nv_prm, no_prm)
+
 t_dir = os.path.join(os.environ["HOME"], "Nextcloud", "thor_scsi", "JB")
 # t_file = os.path.join(t_dir, 'b3_tst.lat')
 # t_file = os.path.join(t_dir, "b3_sf_40Grad_JB.lat")
 # t_file = os.path.join(t_dir, "b3_sfsf_4Quads_unitcell.lat")
-# t_file = os.path.join(t_dir, "b3_sfsf4Q_tracy_jb.lat")
-t_file = os.path.join(t_dir, "b3_sfsf4Q_tracy_jb_2.lat")
+t_file = os.path.join(t_dir, "b3_sfsf4Q_tracy_jb.lat")
+# t_file = os.path.join(t_dir, "b3_sfsf4Q_tracy_jb_2.lat")
 
 # Read in & parse lattice file.
 lat = accelerator_from_config(t_file)
@@ -513,22 +540,24 @@ if False:
     raise Exception("")
 
 # Compute Twiss parameters along lattice.
-M, A, data = compute_periodic_solution(lat, model_state, True)
+M, A, data = \
+    compute_periodic_solution(
+        lat, model_state, named_index, desc, True)
 plot_Twiss(data, "before.png", "Linear Optics - Before")
 if False:
     print_Twiss(lat, data)
 if False:
     plt.show()
 
-# Zero sextopoles.
+# Zero sextupoles.
 print("\nZeroing sextupoles.")
 set_b_n_fam(lat, "sf", MultipoleIndex.sextupole, 0e0)
 set_b_n_fam(lat, "sd", MultipoleIndex.sextupole, 0e0)
 # Compute linear chromaticity.
-M = lo.compute_map(lat, model_state, desc=desc, tpsa_order=tpsa_order)
-stable, nu, xi = lo.compute_nu_xi(desc, tpsa_order, M)
+M = lo.compute_map(lat, model_state, desc=desc, tpsa_order=no)
+stable, nu, xi = lo.compute_nu_xi(desc, no, M)
 # Compute radiation properties.
-stable, U_0, J, tau, eps = \
+stable, M, cod, A, U_0, J, tau, eps, D_rad = \
     rad.compute_radiation(lat, model_state, 2.5e9, 1e-15, desc=desc)
 
 C = rad.compute_circ(lat)
@@ -541,18 +570,19 @@ print("  xi             = [{:7.5f}, {:7.5f}]".format(xi[X_], xi[Y_]))
 
 # Design parameters.
 phi   = 22.5                  # Total bend angle.
-eps_x = 0*100e-12               # Horizontal emittance.
+eps_x = 100e-12               # Horizontal emittance.
 nu    = np.array([0.4, 0.1])  # Cell tune.
 beta  = np.array([3.0, 3.0])  # Beta functions at the centre of the straight.
 
 # Weights.
 weights = {
-    "eps_x":          1e2*1e15,
+    "eps_x":          1e-2*1e15,
     "nu_cell":        1e0,
     "beta_straight":  1e-5,
     "eta_straight_x": 1e3,
-    "xi":             1e-6,
-    "alpha_c":        0*1e-14
+    "xi":             1e-8,
+    "alpha_c_1":      0*1e-14,
+    "alpha_c_2":      1e2
 }
 
 # Parameter family names & type.
@@ -621,7 +651,8 @@ bounds = [
     ( L_min,   0.5)           # ul4 L.
 ]
 
-opt_super_period(lat, param_list, C, bounds, phi, eps_x, nu, beta, weights, phi)
+opt_super_period \
+    (no, lat, param_list, C, bounds, phi, eps_x, nu, beta, weights, phi)
 
 if not False:
     plt.show()
