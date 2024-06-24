@@ -6,7 +6,7 @@ home_dir=`pwd`
 echo "home_dir =" $home_dir
 
 # Clone repository & submodules - clone leaves submodules empty.
-if ! false; then
+if false; then
     git clone --recursive https://github.com/jbengtsson/thor-scsi-lib.git
     git submodule update --init --recursive
 fi
