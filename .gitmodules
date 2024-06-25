@@ -4,3 +4,4 @@
 [submodule "src/gtpsa"]
 	path = src/gtpsa
 	url = https://github.com/jbengtsson/gtpsa.git
+	branch = gtpsa_jb
