@@ -31,7 +31,7 @@ if false; then
 fi
 
 # Make & install the thor-scsi & gtpsa libraries.
-if ! false; then
+if false; then
     cd $home_dir/build
     cmake ..
     make -j8
@@ -39,7 +39,7 @@ if ! false; then
 fi
 
 # Validate the thor-scsi & gtpsa libraries.
-if ! false; then
+if false; then
     cd $home_dir/build
     make test
 fi
