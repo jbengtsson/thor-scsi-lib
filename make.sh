@@ -17,15 +17,16 @@ if false; then
 fi
 
 # Checkout local branches for gtpsa from CERN.
-if ! false; then
-    cd src/gtpsa
+if false; then
+    cd $home_dir/src/gtpsa
     git checkout gtpsa_jb
     cd mad-ng
     git checkout 11fcbfeb
 fi
 
 # Create the build directory.
-if ! false; then
+if false; then
+    cd $home_dir
     mkdir build
 fi
 
@@ -38,7 +39,7 @@ if ! false; then
 fi
 
 # Validate the thor-scsi & gtpsa libraries.
-if false; then
+if ! false; then
     cd $home_dir/build
     make test
 fi
@@ -57,8 +58,25 @@ if ! false; then
     pip install .
 fi
 
+#-------------------------------------------------------------------------------
+
 # Create a local Python environment.
 if false; then
-    python -m venv $home_dir
-    source $home_dir/bin/activate
+    python -m venv $home_dir/..
+    source $home_dir/../bin/activate
 fi
+
+# Install required libraries.
+if false; then
+    # Upgrade to pip-24.1.
+    pip install --upgrade pip
+    pip install wheel setuptools pip --upgrade
+    pip install pybind11
+
+    pip install numpy
+    pip install scipy
+    pip install xarray
+    pip install matplotlib
+fi
+
+#-------------------------------------------------------------------------------
