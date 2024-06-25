@@ -17,7 +17,7 @@ if false; then
 fi
 
 # Checkout local branches for gtpsa from CERN.
-if false; then
+if ! false; then
     cd src/gtpsa
     git checkout gtpsa_jb
     cd mad-ng
@@ -25,17 +25,22 @@ if false; then
 fi
 
 # Create the build directory.
-if false; then
+if ! false; then
     mkdir build
 fi
 
-# Make, test, and install the thor-scsi & gtpsa libraries.
-if false; then
+# Make & install the thor-scsi & gtpsa libraries.
+if ! false; then
     cd $home_dir/build
     cmake ..
     make -j8
-    make test
     cmake --install . --prefix ../local
+fi
+
+# Validate the thor-scsi & gtpsa libraries.
+if false; then
+    cd $home_dir/build
+    make test
 fi
 
 # Build the Python interfaces.
