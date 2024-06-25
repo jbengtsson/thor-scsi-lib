@@ -1,6 +1,6 @@
 [submodule "flame"]
 	path = flame
 	url = https://github.com/PierreSchnizer/FLAME.git
-[submodule "src/gtpsa-cpp"]
+[submodule "src/gtpsa"]
 	path = src/gtpsa
-	url = https://github.com/hz-b/gtpsa-cpp.git
+	url = https://github.com/jbengtsson/gtpsa.git
