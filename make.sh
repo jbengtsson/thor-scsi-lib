@@ -5,23 +5,11 @@
 home_dir=`pwd`
 echo "home_dir =" $home_dir
 
-# Clone repository & submodules - clone leaves submodules empty.
+# Clone repository & submodules - clone by default leaves submodules empty.
 if false; then
     git clone --recursive https://github.com/jbengtsson/thor-scsi-lib.git
-    git submodule update --init --recursive
-fi
-
-# Pull all changes in the repository:
-if false; then
-    git pull --recurse-submodules
-fi
-
-# Checkout local branches for gtpsa from CERN.
-if false; then
-    cd $home_dir/src/gtpsa
-    git checkout gtpsa_jb
-    cd mad-ng
-    git checkout 11fcbfeb
+    # git submodule update --init --recursive
+    # git pull --recurse-submodules
 fi
 
 # Create the build directory.
