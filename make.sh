@@ -2,26 +2,14 @@
 
 # Script to build thor-scsi-lib.
 
-home_dir=`pwd`
+home_dir=`pwd`/thor-scsi-lib
 echo "home_dir =" $home_dir
 
-# Clone repository & submodules - clone leaves submodules empty.
+# Clone repository & submodules - clone by default leaves submodules empty.
 if false; then
     git clone --recursive https://github.com/jbengtsson/thor-scsi-lib.git
-    git submodule update --init --recursive
-fi
-
-# Pull all changes in the repository:
-if false; then
-    git pull --recurse-submodules
-fi
-
-# Checkout local branches for gtpsa from CERN.
-if false; then
-    cd $home_dir/src/gtpsa
-    git checkout gtpsa_jb
-    cd mad-ng
-    git checkout 11fcbfeb
+    # git submodule update --init --recursive
+    # git pull --recurse-submodules
 fi
 
 # Create the build directory.
@@ -44,8 +32,29 @@ if false; then
     make test
 fi
 
+# Create a local Python environment.
+if false; then
+    python3 -m venv $home_dir/venv
+    . $home_dir/venv/bin/activate
+    #source $home_dir/venv/bin/ # source only work for bash and not sh
+fi
+
+# Install required libraries.
+if  false; then
+    # Upgrade from pip-24.0 to pip-24.1.
+    pip install --upgrade pip
+    # Upgrade: wheel, setuptools, and pip.
+    pip install wheel setuptools pip --upgrade
+    pip install pybind11
+
+    pip install numpy
+    pip install scipy
+    pip install xarray
+    pip install matplotlib
+fi
+
 # Build the Python interfaces.
-if ! false; then
+if false; then
     export THOR_SCSI_LIB=$home_dir
     export gtpsa_PREFIX=$THOR_SCSI_LIB/local
     export thor_scsi_PREFIX=$THOR_SCSI_LIB/local
@@ -58,25 +67,8 @@ if ! false; then
     pip install .
 fi
 
-#-------------------------------------------------------------------------------
-
-# Create a local Python environment.
+# Export path for libraries.
 if false; then
-    python -m venv $home_dir/..
-    source $home_dir/../bin/activate
+    echo "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$home_dir/local/lib" \
+	 >> ~/.bashrc
 fi
-
-# Install required libraries.
-if false; then
-    # Upgrade to pip-24.1.
-    pip install --upgrade pip
-    pip install wheel setuptools pip --upgrade
-    pip install pybind11
-
-    pip install numpy
-    pip install scipy
-    pip install xarray
-    pip install matplotlib
-fi
-
-#-------------------------------------------------------------------------------
