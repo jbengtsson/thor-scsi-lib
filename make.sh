@@ -2,7 +2,7 @@
 
 # Script to build thor-scsi-lib.
 
-home_dir=`pwd`
+home_dir=`pwd`/thor-scsi-lib
 echo "home_dir =" $home_dir
 
 # Clone repository & submodules - clone by default leaves submodules empty.
@@ -19,7 +19,7 @@ if false; then
 fi
 
 # Make & install the thor-scsi & gtpsa libraries.
-if ! false; then
+if false; then
     cd $home_dir/build
     cmake ..
     make -j8
@@ -27,13 +27,34 @@ if ! false; then
 fi
 
 # Validate the thor-scsi & gtpsa libraries.
-if ! false; then
+if false; then
     cd $home_dir/build
     make test
 fi
 
+# Create a local Python environment.
+if false; then
+    python3 -m venv $home_dir/venv
+    . $home_dir/venv/bin/activate
+    #source $home_dir/venv/bin/ # source only work for bash and not sh
+fi
+
+# Install required libraries.
+if  false; then
+    # Upgrade from pip-24.0 to pip-24.1.
+    pip install --upgrade pip
+    # Upgrade: wheel, setuptools, and pip.
+    pip install wheel setuptools pip --upgrade
+    pip install pybind11
+
+    pip install numpy
+    pip install scipy
+    pip install xarray
+    pip install matplotlib
+fi
+
 # Build the Python interfaces.
-if ! false; then
+if false; then
     export THOR_SCSI_LIB=$home_dir
     export gtpsa_PREFIX=$THOR_SCSI_LIB/local
     export thor_scsi_PREFIX=$THOR_SCSI_LIB/local
@@ -46,25 +67,8 @@ if ! false; then
     pip install .
 fi
 
-#-------------------------------------------------------------------------------
-
-# Create a local Python environment.
+# Export path for libraries.
 if false; then
-    python -m venv $home_dir/..
-    source $home_dir/../bin/activate
+    echo "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$home_dir/local/lib" \
+	 >> ~/.bashrc
 fi
-
-# Install required libraries.
-if false; then
-    # Upgrade to pip-24.1.
-    pip install --upgrade pip
-    pip install wheel setuptools pip --upgrade
-    pip install pybind11
-
-    pip install numpy
-    pip install scipy
-    pip install xarray
-    pip install matplotlib
-fi
-
-#-------------------------------------------------------------------------------
