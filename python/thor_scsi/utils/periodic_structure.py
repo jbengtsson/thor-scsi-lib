@@ -291,7 +291,7 @@ class periodic_structure_class:
         print(f"  eta     = [{eta[ind.x]:9.3e}, {eta[ind.y]:9.3e}]")
         print(f"  alpha   = [{alpha[ind.X]:9.3e}, {alpha[ind.Y]:9.3e}]")
         print(f"  beta    = [{beta[ind.X]:5.3f}, {beta[ind.Y]:5.3f}]")
-        print(f"  nu      = [{nu[ind.X]:7.5f}, {nu[ind.Y]:7.5f}]")
+        print(f"  nu      = [{nu[ind.X]:18.16f}, {nu[ind.Y]:18.16f}]")
         print(f"  xi      = [{xi[ind.X]:5.3f}, {xi[ind.Y]:5.3f}]")
         print(f"  alpha_c = {self._alpha_c:10.3e}")
 
