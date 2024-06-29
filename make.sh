@@ -1,8 +1,9 @@
 #!/bin/sh
 
 # Script to build thor-scsi-lib.
+# Cd to local directory for repository before running script.
 
-home_dir=`pwd`/thor-scsi-lib
+home_dir=`pwd`
 echo "home_dir =" $home_dir
 
 # Clone repository & submodules - clone by default leaves submodules empty.
@@ -19,7 +20,7 @@ if false; then
 fi
 
 # Make & install the thor-scsi & gtpsa libraries.
-if false; then
+if ! false; then
     cd $home_dir/build
     cmake ..
     make -j8
@@ -35,8 +36,8 @@ fi
 # Create a local Python environment.
 if false; then
     python3 -m venv $home_dir/venv
+    # Source vs. "." source only works for bash and not sh.
     . $home_dir/venv/bin/activate
-    #source $home_dir/venv/bin/ # source only work for bash and not sh
 fi
 
 # Install required libraries.
