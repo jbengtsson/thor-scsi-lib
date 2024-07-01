@@ -349,8 +349,8 @@ weight = np.array([
     0e-3,  # nu_sp_y.
     0e-6,  # beta_x.
     0e-6,  # beta_y.
-    1e-2,   # dnu_x.
-    1e-2,   # dnu_y.
+    1e-2,  # dnu_x.
+    1e-2,  # dnu_y.
     1e-7,  # xi_x.
     1e-7   # xi_y.
 ])
