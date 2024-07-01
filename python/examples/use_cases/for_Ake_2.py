@@ -35,7 +35,7 @@ cod_eps = 1e-15
 E_0     = 3.0e9
 
 home_dir = os.path.join(
-    os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "MAX_4U")
+    os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "MAX_IV", "max_iv")
 lat_name = "max_iv_sp_matched_2"
 file_name = os.path.join(home_dir, lat_name+".lat")
 

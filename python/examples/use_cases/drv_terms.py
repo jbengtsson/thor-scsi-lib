@@ -84,7 +84,7 @@ file_name = os.path.join(home_dir, lat_name+".lat")
 lat_prop = \
     lp.lattice_properties_class(nv, no, nv_prm, no_prm, file_name, E_0, cod_eps)
 
-print("Circumference [m]      = {:7.5f}".format(lat_prop.compute_circ()))
+print("Circumference [m] = {:7.5f}".format(lat_prop.compute_circ()))
 
 try:
     # Compute Twiss parameters along lattice.
@@ -118,7 +118,7 @@ M = lo.compute_map(
 if not False:
     print("\nM:\n"+mat2txt(M.jacobian()))
 
-h = 1e0*ts.M_to_h_DF(M)
+h = ts.M_to_h_DF(M)
 h_re = gtpsa.tpsa(desc, no)
 h_im = gtpsa.tpsa(desc, no)
 ts.CtoR(h, h_re, h_im)
