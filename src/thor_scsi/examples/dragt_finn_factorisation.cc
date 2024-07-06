@@ -93,7 +93,7 @@ void test2(void)
 
 
 gtpsa::ss_vect<gtpsa::tpsa> compute_sext_map
-(const int no, const std::shared_ptr<gtpsa::mad::desc> &desc)
+(const std::shared_ptr<gtpsa::mad::desc> &desc, const int no)
 {
   Config C;
   C.set<std::string>("name", "test");
@@ -122,7 +122,7 @@ void test3(void)
 
   const int nm = desc->maxLen(no);
 
-  M = compute_sext_map(no, desc);
+  M = compute_sext_map(desc, no);
 
   std::cout << "\nM[1].get(8)  = " << std::scientific << std::setprecision(3)
 	    << M[1].get(8) << "\n";
@@ -133,19 +133,44 @@ void test3(void)
   std::cout << "M[1].index() = "
 	    <<  M[1].index(std::vector<ord_t>{2, 0, 0, 0, 0, 0, 0}) << "\n";
 
-  ord_t              err;
+  M[4].print();
+
+  auto n = 11;
   std::vector<ord_t> ind(nv);
-  err = M[4].mono(11, &ind);
-  std::cout << "M[4].mono(11):  \n  " << (int)err << "\n ";
-  for (auto k: ind)
-    std::cout << std::setw(2) << (int)k;
+  auto ord = M[4].mono(n, &ind);
+  std::cout << std::scientific << std::setprecision(16)
+	    << "\nM[4]:\n" << std::setw(6) << n
+	    << std::setw(25) << M[4].get(ind)
+	    << std::setw(5) << (int)ord << "   ";
+  for (auto k = 0; k < ind.size(); k++)
+    std::cout << ((k % 2 == 1)? std::setw(2) : std::setw(3)) << (int)ind[k];
   std::cout << "\n";
 
   if (false) {
+    std::cout << "\n";
     std::vector<num_t> v(nm);
     M[0].getv(0, &v);
     print_vec("\nv:", v);
   }
+}
+
+
+void test4(void)
+{
+  const int no = 3, nv = 6 + 1;
+
+  auto desc = std::make_shared<gtpsa::desc>(nv, no);
+  auto x    = gtpsa::tpsa(desc, no);
+
+  x.setv(0, {-0.123, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0});
+  x.print();
+
+  std::vector<ord_t> exps = {0, 0, 0, 1, 0, 0, 0};
+
+  auto ind = x.index(exps);
+  printf("\n%2d\n", ind);
+  printf("%10.3e\n", x.get(ind));
+  printf("%10.3e\n", x.get(exps));
 }
 
 
@@ -156,7 +181,7 @@ void dragt_finn_fact(void)
   auto desc = std::make_shared<gtpsa::desc>(nv, no);
   auto M    = gtpsa::ss_vect<gtpsa::tpsa>(desc, no);
 
-  M = compute_sext_map(no, desc);
+  M = compute_sext_map(desc, no);
 
   auto h = gtpsa::M_to_h_DF(M);
   h.print("\nh:", 1e-30, 0);
@@ -168,8 +193,24 @@ void setvar(void)
   auto a_desc = std::make_shared<gtpsa::desc>(6, 1);
   auto a      = gtpsa::tpsa(a_desc, mad_tpsa_default);
 
-  a.setVariable(0e0, 2, 0e0);
+  // Parameters: (constant part, monomial index, value).
+  a.setVariable(3.1415, 3, 2.0);
   a.print("\na:");
+}
+
+
+void test_map_norm(void)
+{
+  const int no = 3, nv = 6 + 1;
+
+  auto desc = std::make_shared<gtpsa::desc>(nv, no);
+  auto M    = gtpsa::ss_vect<gtpsa::tpsa>(desc, no);
+
+  MNFType MNF(desc, no);
+
+  M = compute_sext_map(desc, no);
+
+  MNF = map_norm(M);
 }
 
 
@@ -182,11 +223,17 @@ int main(int argc, char *argv[])
   //   test2();
 
   if (false)
+    test3();
+
+  if (false)
+    test4();
+
+  if (false)
     setvar();
 
   if (false)
-    test3();
+    dragt_finn_fact();
 
   if (!false)
-    dragt_finn_fact();
+    test_map_norm();
 }
