@@ -48,4 +48,5 @@ PYBIND11_MODULE(lib, m) {
     m.def("CtoR", &gtpsa::CtoR);
     m.def("RtoC", &gtpsa::RtoC);
     m.def("GoFix", &gtpsa::GoFix);
+    m.def("Map_Norm", &gtpsa::Map_Norm);
 }
