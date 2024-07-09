@@ -10,6 +10,8 @@ logger = logging.getLogger("thor_scsi")
 
 import os
 
+import numpy as np
+
 import gtpsa
 import thor_scsi.lib as ts
 
@@ -19,7 +21,7 @@ from thor_scsi.utils.output import mat2txt
 
 # Number of phase-space coordinates.
 nv = 7
-# Variables max order.
+# Max order for Poincaré map.
 no = 4
 # Number of parameters.
 nv_prm = 0
@@ -44,9 +46,9 @@ lat_prop = \
 print("\nCircumference [m] = {:7.5f}".format(lat_prop.compute_circ()))
 
 M = lo.compute_map(
-    lat_prop._lattice, lat_prop._model_state, desc=desc, tpsa_order=3)
+    lat_prop._lattice, lat_prop._model_state, desc=desc, tpsa_order=no)
 
-print("\nM:\n"+mat2txt(M.jacobian()))
+print("M:\n"+mat2txt(M.jacobian()))
 
 if False:
     h = ts.M_to_h_DF(M)
