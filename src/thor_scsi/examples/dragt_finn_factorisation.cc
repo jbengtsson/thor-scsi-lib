@@ -14,7 +14,7 @@ void test1(void)
   const int
     nv = 6, no = 3, np = 1, po = 2;
 
-  auto desc = std::make_shared<gtpsa::desc>(nv, no, np, po);
+  const auto desc = std::make_shared<gtpsa::desc>(nv, no, np, po);
 
   auto M1   = gtpsa::ss_vect<gtpsa::tpsa>(desc, no);
 
@@ -31,7 +31,7 @@ void test1(void)
       3.14e-3});
   std::cout << "\nM1:" << M1;
 
-  auto desc2 = std::make_shared<gtpsa::desc>(nv+np, no);
+  const auto desc2 = std::make_shared<gtpsa::desc>(nv+np, no);
 
   gtpsa::ss_vect<gtpsa::tpsa> M2(desc2, no);
 
@@ -60,7 +60,7 @@ void test2(void)
 {
   const int mo = 3, nv = 7;
 
-  auto desc = std::make_shared<gtpsa::desc>(nv, mo);
+  const auto desc = std::make_shared<gtpsa::desc>(nv, mo);
   Config C;
   C.set<std::string>("name", "test");
   C.set<double>("K", 3e0);
@@ -117,7 +117,8 @@ void test3(void)
 {
   const int no = 3, nv = 6 + 1;
 
-  auto desc = std::make_shared<gtpsa::desc>(nv, no);
+  const auto desc = std::make_shared<gtpsa::desc>(nv, no);
+
   auto M    = gtpsa::ss_vect<gtpsa::tpsa>(desc, no);
 
   const int nm = desc->maxLen(no);
@@ -159,7 +160,8 @@ void test4(void)
 {
   const int no = 3, nv = 6 + 1;
 
-  auto desc = std::make_shared<gtpsa::desc>(nv, no);
+  const auto desc = std::make_shared<gtpsa::desc>(nv, no);
+
   auto x    = gtpsa::tpsa(desc, no);
 
   x.setv(0, {-0.123, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0});
@@ -178,7 +180,8 @@ void dragt_finn_fact(void)
 {
   const int no = 3, nv = 6 + 1;
 
-  auto desc = std::make_shared<gtpsa::desc>(nv, no);
+  const auto desc = std::make_shared<gtpsa::desc>(nv, no);
+
   auto M    = gtpsa::ss_vect<gtpsa::tpsa>(desc, no);
 
   M = compute_sext_map(desc, no);
@@ -190,7 +193,8 @@ void dragt_finn_fact(void)
 
 void setvar(void)
 {
-  auto a_desc = std::make_shared<gtpsa::desc>(6, 1);
+  const auto a_desc = std::make_shared<gtpsa::desc>(6, 1);
+
   auto a      = gtpsa::tpsa(a_desc, mad_tpsa_default);
 
   // Parameters: (constant part, monomial index, value).
@@ -203,14 +207,16 @@ void test_map_norm(void)
 {
   const int no = 3, nv = 6 + 1;
 
-  auto desc = std::make_shared<gtpsa::desc>(nv, no);
-  auto M    = gtpsa::ss_vect<gtpsa::tpsa>(desc, no);
+  const auto desc = std::make_shared<gtpsa::desc>(nv, no);
+
+  auto M = gtpsa::ss_vect<gtpsa::tpsa>(desc, no);
 
   MNFType MNF(desc, no);
 
   M = compute_sext_map(desc, no);
 
-  MNF = map_norm(M);
+  Map_Norm(M);
+  // MNF = Map_Norm(M);
 }
 
 
