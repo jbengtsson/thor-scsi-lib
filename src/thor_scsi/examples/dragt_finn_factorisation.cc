@@ -202,7 +202,8 @@ void setvar(void)
   a.print("\na:");
 }
 
-
+#define RET_VALUE 0
+#if RET_VALUE
 void test_map_norm(void)
 {
   const int no = 3, nv = 6 + 1;
@@ -218,6 +219,7 @@ void test_map_norm(void)
   Map_Norm(M);
   // MNF = Map_Norm(M);
 }
+#endif
 
 
 int main(int argc, char *argv[])
@@ -240,6 +242,8 @@ int main(int argc, char *argv[])
   if (false)
     dragt_finn_fact();
 
+#if RET_VALUE
   if (!false)
     test_map_norm();
+#endif
 }

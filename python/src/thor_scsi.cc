@@ -25,7 +25,6 @@ PYBIND11_MODULE(lib, m) {
     py_thor_scsi_init_config_type(m);
     // py_thor_scsi_init_lattice(scsi);
 
-
     // Beamline class.
 
     // Constants.
@@ -41,12 +40,11 @@ PYBIND11_MODULE(lib, m) {
     */
     // Enums.
 
-    m.def("inv", &gtpsa::minv);
-    m.def("pinv", &gtpsa::pminv);
-    // m.def("integ", &gtpsa::integ);
     m.def("M_to_h_DF", &gtpsa::M_to_h_DF);
+    m.def("h_DF_to_M", &gtpsa::h_DF_to_M);
     m.def("CtoR", &gtpsa::CtoR);
     m.def("RtoC", &gtpsa::RtoC);
     m.def("GoFix", &gtpsa::GoFix);
     m.def("Map_Norm", &gtpsa::Map_Norm);
+    m.def("get_mns", &gtpsa::get_mns);
 }

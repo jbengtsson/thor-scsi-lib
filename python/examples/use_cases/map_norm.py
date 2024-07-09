@@ -19,6 +19,16 @@ from thor_scsi.utils import lattice_properties as lp, linear_optics as lo
 from thor_scsi.utils.output import mat2txt
 
 
+def prt_map(map, str, eps):
+    print(str)
+    map.x.print("x", eps)
+    map.px.print("p_x", eps)
+    map.y.print("y", eps)
+    map.py.print("p_y", eps)
+    map.delta.print("delta", eps)
+    map.ct.print("ct", eps)
+
+
 # Number of phase-space coordinates.
 nv = 7
 # Max order for Poincaré map.
@@ -58,4 +68,47 @@ if False:
     h_re.print("h_re", 1e-30);
     h_im.print("h_im", 1e-30);
 
-ts.Map_Norm(M)
+A_0 = gtpsa.ss_vect_tpsa(desc, no)
+A_1 = gtpsa.ss_vect_tpsa(desc, no)
+R   = gtpsa.ss_vect_tpsa(desc, no)
+g   = gtpsa.tpsa(desc, no)
+
+K = ts.Map_Norm(M, A_0, A_1, R, g)
+
+print("\nA_0:\n"+mat2txt(A_0.jacobian()))
+print("\nA_1:\n"+mat2txt(A_1.jacobian()))
+print("\nR:\n"+mat2txt(R.jacobian()))
+g.print("g", 1e-10)
+K.print("K", 1e-10)
+
+Id       = gtpsa.ss_vect_tpsa(desc, no)
+A        = gtpsa.ss_vect_tpsa(desc, no)
+A_inv    = gtpsa.ss_vect_tpsa(desc, no)
+t_map    = gtpsa.ss_vect_tpsa(desc, no)
+M_Fl     = gtpsa.ss_vect_tpsa(desc, no)
+A_nl     = gtpsa.ss_vect_tpsa(desc, no)
+A_nl_inv = gtpsa.ss_vect_tpsa(desc, no)
+
+Id.set_identity();
+
+# Prune Poincaré map to no-1.
+ts.get_mns(M, 1, no-1, M)
+
+# M_Fl = (A_0 . A_1)^-1 . M . A_0 . A_1
+A.compose(A_0, A_1)
+A_inv.inv(A)
+t_map.compose(M, A)
+M_Fl.compose(A_inv, t_map)
+print("\nM_Fl:\n"+mat2txt(M_Fl.jacobian()))
+
+if False:
+    prt_map(M_Fl, "M_Fl", 1e-10)
+
+# A_nl = exp(:g:)
+ts.h_DF_to_M(-1.0*g, Id, 3, no, A_nl)
+
+# R = exp(-g) . M_Fl . exp(:g:)
+A_nl_inv.inv(A_nl)
+t_map.compose(M_Fl, A_nl)
+M_Fl.compose(A_nl_inv, t_map)
+prt_map(M_Fl, "M_Fl", 1e-10)
