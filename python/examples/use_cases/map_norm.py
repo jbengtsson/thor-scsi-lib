@@ -10,6 +10,8 @@ logger = logging.getLogger("thor_scsi")
 
 import os
 
+import copy as _copy
+
 import numpy as np
 
 import gtpsa
@@ -29,6 +31,98 @@ def prt_map(map, str, eps):
     map.ct.print("ct", eps)
 
 
+def compute_map(lat_prop, no):
+    M = lo.compute_map(
+        lat_prop._lattice, lat_prop._model_state, desc=lat_prop._desc,
+        tpsa_order=no)
+    return M
+
+
+def compute_h(desc, M):
+    h = ts.M_to_h_DF(M)
+    h_re = gtpsa.tpsa(desc, no)
+    h_im = gtpsa.tpsa(desc, no)
+    ts.CtoR(h, h_re, h_im)
+
+    h.print("h", 1e-30);
+
+
+def compute_map_normal_form(desc, M):
+    A_0 = gtpsa.ss_vect_tpsa(desc, no)
+    A_1 = gtpsa.ss_vect_tpsa(desc, no)
+    R   = gtpsa.ss_vect_tpsa(desc, no)
+    g   = gtpsa.tpsa(desc, no)
+
+    K = ts.Map_Norm(M, A_0, A_1, R, g)
+
+    g.print("g", 1e-30)
+    K.print("K", 1e-30)
+
+    return K, A_0, A_1, g
+
+
+def compute_M(desc, K, A_0, A_1, g, no):
+    Id       = gtpsa.ss_vect_tpsa(desc, no)
+    R        = gtpsa.ss_vect_tpsa(desc, no)
+    A_0_inv  = gtpsa.ss_vect_tpsa(desc, no)
+    A_1_inv  = gtpsa.ss_vect_tpsa(desc, no)
+    A_nl     = gtpsa.ss_vect_tpsa(desc, no)
+    A_nl_inv = gtpsa.ss_vect_tpsa(desc, no)
+    M        = gtpsa.ss_vect_tpsa(desc, no)
+
+    Id.set_identity()
+
+    ts.h_DF_to_M(K, Id, 2, no, R)
+    A_0_inv.inv(A_0)
+    A_1_inv.inv(A_1)
+    ts.h_DF_to_M(g, Id, 3, no, A_nl)
+    A_nl_inv.inv(A_nl)
+
+    M.compose(A_0, A_1)
+    M.compose(M, A_nl)
+    M.compose(M, R)
+    M.compose(M, A_nl_inv)
+    M.compose(M, A_1_inv)
+    M.compose(M, A_0_inv)
+    ts.get_mns(M, 1, no-1, M)
+    
+    print("\nM:", M)
+    prt_map(M, "M:", 1e-30)
+
+
+def compute_R(desc, map, K, A_0, A_1, g, no):
+    Id       = gtpsa.ss_vect_tpsa(desc, no)
+    M        = gtpsa.ss_vect_tpsa(desc, no)
+    R_inv    = gtpsa.ss_vect_tpsa(desc, no)
+    A_0_inv  = gtpsa.ss_vect_tpsa(desc, no)
+    A_1_inv  = gtpsa.ss_vect_tpsa(desc, no)
+    A_nl     = gtpsa.ss_vect_tpsa(desc, no)
+    A_nl_inv = gtpsa.ss_vect_tpsa(desc, no)
+
+    Id.set_identity()
+
+    M = _copy.copy(map)
+
+    ts.h_DF_to_M(-1e0*K, Id, 2, no, R_inv)
+    ts.get_mns(R_inv, 1, no-1, R_inv)
+    A_0_inv.inv(A_0)
+    A_1_inv.inv(A_1)
+    ts.h_DF_to_M(g, Id, 3, no, A_nl)
+    A_nl_inv.inv(A_nl)
+
+    M.compose(M, A_0)
+    M.compose(M, A_1)
+    M.compose(M, A_nl)
+    M.compose(M, R_inv)
+    M.compose(A_0_inv, M)
+    M.compose(A_1_inv, M)
+    M.compose(A_nl_inv, M)
+    ts.get_mns(M, 1, no-1, M)
+   
+    print("\nM:", M)
+    prt_map(M, "M:", 1e-10)
+
+
 # Number of phase-space coordinates.
 nv = 7
 # Max order for Poincaré map.
@@ -38,12 +132,10 @@ nv_prm = 0
 # Parameters max order.
 no_prm = 0
 
-# Descriptor for Truncated Power Series Algebra variables.
 desc = gtpsa.desc(nv, no)
 
 cod_eps = 1e-15
 E_0     = 3.0e9
-
 
 home_dir = os.path.join(
     os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "MAX_IV", "max_4u")
@@ -55,60 +147,16 @@ lat_prop = \
 
 print("\nCircumference [m] = {:7.5f}".format(lat_prop.compute_circ()))
 
-M = lo.compute_map(
-    lat_prop._lattice, lat_prop._model_state, desc=desc, tpsa_order=no)
+M = compute_map(lat_prop, no)
+print("\nM:", M)
 
-print("M:\n"+mat2txt(M.jacobian()))
-
-if False:
-    h = ts.M_to_h_DF(M)
-    h_re = gtpsa.tpsa(desc, no)
-    h_im = gtpsa.tpsa(desc, no)
-    ts.CtoR(h, h_re, h_im)
-    h_re.print("h_re", 1e-30);
-    h_im.print("h_im", 1e-30);
-
-A_0 = gtpsa.ss_vect_tpsa(desc, no)
-A_1 = gtpsa.ss_vect_tpsa(desc, no)
-R   = gtpsa.ss_vect_tpsa(desc, no)
-g   = gtpsa.tpsa(desc, no)
-
-K = ts.Map_Norm(M, A_0, A_1, R, g)
-
-print("\nA_0:\n"+mat2txt(A_0.jacobian()))
-print("\nA_1:\n"+mat2txt(A_1.jacobian()))
-print("\nR:\n"+mat2txt(R.jacobian()))
-g.print("g", 1e-10)
-K.print("K", 1e-10)
-
-Id       = gtpsa.ss_vect_tpsa(desc, no)
-A        = gtpsa.ss_vect_tpsa(desc, no)
-A_inv    = gtpsa.ss_vect_tpsa(desc, no)
-t_map    = gtpsa.ss_vect_tpsa(desc, no)
-M_Fl     = gtpsa.ss_vect_tpsa(desc, no)
-A_nl     = gtpsa.ss_vect_tpsa(desc, no)
-A_nl_inv = gtpsa.ss_vect_tpsa(desc, no)
-
-Id.set_identity();
-
-# Prune Poincaré map to no-1.
-ts.get_mns(M, 1, no-1, M)
-
-# M_Fl = (A_0 . A_1)^-1 . M . A_0 . A_1
-A.compose(A_0, A_1)
-A_inv.inv(A)
-t_map.compose(M, A)
-M_Fl.compose(A_inv, t_map)
-print("\nM_Fl:\n"+mat2txt(M_Fl.jacobian()))
+K, A_0, A_1, g = compute_map_normal_form(desc, M)
 
 if False:
-    prt_map(M_Fl, "M_Fl", 1e-10)
+    compute_h(desc, M)
 
-# A_nl = exp(:g:)
-ts.h_DF_to_M(-1.0*g, Id, 3, no, A_nl)
+if False:
+    compute_M(desc, K, A_0, A_1, g, no)
 
-# R = exp(-g) . M_Fl . exp(:g:)
-A_nl_inv.inv(A_nl)
-t_map.compose(M_Fl, A_nl)
-M_Fl.compose(A_nl_inv, t_map)
-prt_map(M_Fl, "M_Fl", 1e-10)
+if not False:
+    compute_R(desc, M, K, A_0, A_1, g, no)
