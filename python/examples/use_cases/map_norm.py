@@ -21,7 +21,7 @@ from thor_scsi.utils import lattice_properties as lp, linear_optics as lo
 from thor_scsi.utils.output import mat2txt
 
 
-def prt_map(map, str, eps):
+def prt_map(map, str, *, eps):
     print(str)
     map.x.print("x", eps)
     map.px.print("p_x", eps)
@@ -39,11 +39,8 @@ def compute_map(lat_prop, no):
 
 
 def compute_h(desc, M):
-    h = ts.M_to_h_DF(M)
-    h_re = gtpsa.tpsa(desc, no)
-    h_im = gtpsa.tpsa(desc, no)
-    ts.CtoR(h, h_re, h_im)
-
+    h = gtpsa.tpsa(desc, no)
+    M.M_to_h_DF(h)
     h.print("h", 1e-30);
 
 
@@ -52,13 +49,16 @@ def compute_map_normal_form(desc, M):
     A_1 = gtpsa.ss_vect_tpsa(desc, no)
     R   = gtpsa.ss_vect_tpsa(desc, no)
     g   = gtpsa.tpsa(desc, no)
+    g_re = gtpsa.tpsa(desc, no)
+    g_im = gtpsa.tpsa(desc, no)
+    K   = gtpsa.tpsa(desc, no)
 
-    K = ts.Map_Norm(M, A_0, A_1, R, g)
+    M.Map_Norm(A_0, A_1, R, g, K)
 
-    g.print("g", 1e-30)
-    K.print("K", 1e-30)
+    g.print("g", 1e-10)
+    K.print("K", 1e-10)
 
-    return K, A_0, A_1, g
+    return A_0, A_1, R, g, K
 
 
 def compute_M(desc, K, A_0, A_1, g, no):
@@ -70,12 +70,14 @@ def compute_M(desc, K, A_0, A_1, g, no):
     A_nl_inv = gtpsa.ss_vect_tpsa(desc, no)
     M        = gtpsa.ss_vect_tpsa(desc, no)
 
+    prt_map(M, "M:", eps=1e-30)
+
     Id.set_identity()
 
-    ts.h_DF_to_M(K, Id, 2, no, R)
+    K.h_DF_to_M(Id, 2, no, R)
     A_0_inv.inv(A_0)
     A_1_inv.inv(A_1)
-    ts.h_DF_to_M(g, Id, 3, no, A_nl)
+    g.h_DF_to_M(Id, 3, no, A_nl)
     A_nl_inv.inv(A_nl)
 
     M.compose(A_0, A_1)
@@ -84,15 +86,16 @@ def compute_M(desc, K, A_0, A_1, g, no):
     M.compose(M, A_nl_inv)
     M.compose(M, A_1_inv)
     M.compose(M, A_0_inv)
-    ts.get_mns(M, 1, no-1, M)
+    M.get_mns(1, no-1, M)
     
     print("\nM:", M)
-    prt_map(M, "M:", 1e-30)
+    prt_map(M, "M:", eps=1e-30)
 
 
-def compute_R(desc, map, K, A_0, A_1, g, no):
+def compute_R(desc, map, A_0, A_1, g, K, no):
     Id       = gtpsa.ss_vect_tpsa(desc, no)
     M        = gtpsa.ss_vect_tpsa(desc, no)
+    R        = gtpsa.ss_vect_tpsa(desc, no)
     R_inv    = gtpsa.ss_vect_tpsa(desc, no)
     A_0_inv  = gtpsa.ss_vect_tpsa(desc, no)
     A_1_inv  = gtpsa.ss_vect_tpsa(desc, no)
@@ -103,11 +106,12 @@ def compute_R(desc, map, K, A_0, A_1, g, no):
 
     M = _copy.copy(map)
 
-    ts.h_DF_to_M(-1e0*K, Id, 2, no, R_inv)
-    ts.get_mns(R_inv, 1, no-1, R_inv)
+    K.h_DF_to_M(Id, 2, no, R)
+    R_inv.inv(R)
+    R_inv.get_mns(1, no-1, R_inv)
     A_0_inv.inv(A_0)
     A_1_inv.inv(A_1)
-    ts.h_DF_to_M(g, Id, 3, no, A_nl)
+    g.h_DF_to_M(Id, 3, no, A_nl)
     A_nl_inv.inv(A_nl)
 
     M.compose(M, A_0)
@@ -117,10 +121,10 @@ def compute_R(desc, map, K, A_0, A_1, g, no):
     M.compose(A_0_inv, M)
     M.compose(A_1_inv, M)
     M.compose(A_nl_inv, M)
-    ts.get_mns(M, 1, no-1, M)
+    M.get_mns(1, no-1, M)
    
     print("\nM:", M)
-    prt_map(M, "M:", 1e-10)
+    prt_map(M, "M:", eps=1e-10)
 
 
 # Number of phase-space coordinates.
@@ -150,13 +154,14 @@ print("\nCircumference [m] = {:7.5f}".format(lat_prop.compute_circ()))
 M = compute_map(lat_prop, no)
 print("\nM:", M)
 
-K, A_0, A_1, g = compute_map_normal_form(desc, M)
-
 if False:
     compute_h(desc, M)
 
-if False:
-    compute_M(desc, K, A_0, A_1, g, no)
-
 if not False:
-    compute_R(desc, M, K, A_0, A_1, g, no)
+    A_0, A_1, R, g, K = compute_map_normal_form(desc, M)
+
+    if not False:
+        compute_M(desc, K, A_0, A_1, g, no)
+
+    if not False:
+        compute_R(desc, M, A_0, A_1, g, K, no)

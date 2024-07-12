@@ -1,11 +1,31 @@
 #include <gtpsa/ss_vect.h>
-#include <gtpsa/lielib.hpp>
+// #include <gtpsa/lielib.hpp>
 #include <thor_scsi/elements/sextupole.h>
 #include <iostream>
 #include <assert.h>
 
 namespace tsc = thor_scsi::core;
 namespace tse = thor_scsi::elements;
+
+
+void print_vec(const std::string &str, const std::vector<num_t> &v)
+{
+  std::cout << str << "\n";
+  for (auto mn: v)
+    std::cout << std::scientific << std::setprecision(3)
+	      << std::setw(11) << mn;
+  std::cout << "\n";
+}
+
+
+void print_map(const std::string &str, const gtpsa::ss_vect<gtpsa::tpsa> &M)
+{
+  const double eps = 1e-10;
+
+  for (auto k = 0; k < M.size(); k++) 
+    M[k].print(str.c_str(), eps, 0);
+}
+
 
 #if 0
 
@@ -56,11 +76,12 @@ void test1(void)
 
 #endif
 
+
 void test2(void)
 {
-  const int mo = 3, nv = 7;
+  const int no = 3, nv = 7;
 
-  const auto desc = std::make_shared<gtpsa::desc>(nv, mo);
+  const auto desc = std::make_shared<gtpsa::desc>(nv, no);
   Config C;
   C.set<std::string>("name", "test");
   C.set<double>("K", 3e0);
@@ -70,24 +91,26 @@ void test2(void)
   tsc::ConfigType calc_config;
   auto sext = tse::SextupoleType(C);
 
-  auto M = gtpsa::ss_vect<gtpsa::tpsa>(desc, mo);
+  auto h = gtpsa::tpsa(desc, no);
+
+  auto M = gtpsa::ss_vect<gtpsa::tpsa>(desc, no);
   M.set_identity();
   sext.propagate(calc_config, M);
 
-  auto M_inv = gtpsa::ss_vect<gtpsa::tpsa>(desc, mo);
+  auto M_inv = gtpsa::ss_vect<gtpsa::tpsa>(desc, no);
   M_inv = gtpsa::minv(M);
   std::cout << "\nM:\n" << M << "\n";
   print_map("\nM:", M);
   std::cout << "\nM^-1:\n" << M_inv << "\n";
   print_map("\nM^-1:", M_inv);
 
-  auto M_M_inv = gtpsa::ss_vect<gtpsa::tpsa>(desc, mo);
+  auto M_M_inv = gtpsa::ss_vect<gtpsa::tpsa>(desc, no);
   M_M_inv = gtpsa::compose(M, M_inv);
   std::cout << "\nM_M_inv:\n" << M_M_inv << "\n";
   print_map("\nM_M_inv:", M_M_inv);
   assert(false);
 
-  auto h = gtpsa::M_to_h_DF(M);
+  M.M_to_h_DF(h);
   h.print("\nh:", 1e-30, 0);
 }
 
@@ -119,7 +142,7 @@ void test3(void)
 
   const auto desc = std::make_shared<gtpsa::desc>(nv, no);
 
-  auto M    = gtpsa::ss_vect<gtpsa::tpsa>(desc, no);
+  auto M = gtpsa::ss_vect<gtpsa::tpsa>(desc, no);
 
   const int nm = desc->maxLen(no);
 
@@ -162,7 +185,7 @@ void test4(void)
 
   const auto desc = std::make_shared<gtpsa::desc>(nv, no);
 
-  auto x    = gtpsa::tpsa(desc, no);
+  auto x = gtpsa::tpsa(desc, no);
 
   x.setv(0, {-0.123, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0});
   x.print();
@@ -182,11 +205,13 @@ void dragt_finn_fact(void)
 
   const auto desc = std::make_shared<gtpsa::desc>(nv, no);
 
-  auto M    = gtpsa::ss_vect<gtpsa::tpsa>(desc, no);
+  auto h = gtpsa::tpsa(desc, no);
+
+  auto M = gtpsa::ss_vect<gtpsa::tpsa>(desc, no);
 
   M = compute_sext_map(desc, no);
 
-  auto h = gtpsa::M_to_h_DF(M);
+  M.M_to_h_DF(h);
   h.print("\nh:", 1e-30, 0);
 }
 

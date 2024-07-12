@@ -38,6 +38,7 @@ if false; then
     python3 -m venv $home_dir/venv
     # Source vs. "." source only works for bash and not sh.
     . $home_dir/venv/bin/activate
+    # To terminate: deactivate.
 fi
 
 # Install required libraries.
@@ -55,7 +56,7 @@ if  false; then
 fi
 
 # Build the Python interfaces.
-if false; then
+if ! false; then
     export THOR_SCSI_LIB=$home_dir
     export gtpsa_PREFIX=$THOR_SCSI_LIB/local
     export thor_scsi_PREFIX=$THOR_SCSI_LIB/local
