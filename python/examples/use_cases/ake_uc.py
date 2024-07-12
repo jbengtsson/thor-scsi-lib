@@ -29,8 +29,10 @@ phi_max      = 0.85
 b_2_bend_max = 1.0
 b_2_max      = 10.0
 
+eps_x_des    = 95e-12
 
-def opt_uc(lat_prop, prm_list, weight):
+
+def opt_uc(lat_prop, prm_list, weight, eps_x_des):
     """Use Case: optimise super period.
     """
 
@@ -50,16 +52,16 @@ def opt_uc(lat_prop, prm_list, weight):
                 phi += lat_prop.get_phi_elem(bend_list[k], 0)
             return phi
 
-        b_list = [
-            "b1_0", "b1_1", "b1_2", "b1_3", "b1_4", "b1_5"]
-        rb = "qf1"
+        b_list = ["d0b", "df1b", "df2b", "df3b", "df4b", "df5b","dqfb"]
+        rb = "dqfb"
 
         phi = lat_prop.compute_phi_lat()
         phi_b = compute_phi_bend(lat_prop, b_list)
         phi_rb = lat_prop.get_phi_elem(rb, 0)
 
         print("\n{:3d} chi_2 = {:11.5e}".format(n_iter, chi_2))
-        print("  eps_x [pm.rad] = {:5.3f}".format(1e12*lat_prop._eps[ind.X]))
+        print("  eps_x [pm.rad] = {:5.3f} [{:5.3f}]".
+              format(1e12*lat_prop._eps[ind.X], 1e12*eps_x_des))
         print("  nu_uc          =  [{:7.5f}, {:7.5f}] ([{:7.5f}, {:7.5f}])".
               format(nu[ind.X], nu[ind.Y], nu_uc[ind.X], nu_uc[ind.Y]))
         print("  xi             =  [{:5.3f}, {:5.3f}]".
@@ -73,7 +75,7 @@ def opt_uc(lat_prop, prm_list, weight):
     def compute_chi_2(nu, xi):
         prt = not False
 
-        dchi_2 = weight[0]*lat_prop._eps[ind.X]**2
+        dchi_2 = weight[0]*(lat_prop._eps[ind.X]-eps_x_des)**2
         chi_2 = dchi_2
         if prt:
             print("\n  dchi2(eps_x)    = {:10.3e}".format(dchi_2))
@@ -179,6 +181,7 @@ lat_prop = \
 print("\nCircumference [m]      = {:7.5f}".format(lat_prop.compute_circ()))
 print("Total bend angle [deg] = {:7.5f}".format(lat_prop.compute_phi_lat()))
 
+
 try:
     # Compute Twiss parameters along lattice.
     if not lat_prop.comp_per_sol():
@@ -197,40 +200,45 @@ else:
     lat_prop.prt_rad()
     lat_prop.prt_M_rad()
 
-if False:
+if not False:
+    lat_prop.prt_lat(lat_name+"_lat.txt")
     lat_prop.prt_lat_param()
-    lat_prop.prt_Twiss("max_4u_uc.txt")
+    lat_prop.prt_Twiss(lat_name+"_Twiss.txt")
+
+if False:
+    lat_prop.plt_Twiss(lat_name+"_Twiss.png", not False)
+    lat_prop.plt_chrom(lat_name+"_chrom.png", not False)
 
 # Weights.
 weight = np.array([
-    1e12,  # eps_x.
-    1e1,   # nu_uc_x.
-    1e0,   # nu_uc_y.
+    1e20,  # eps_x.
+    0e1,   # nu_uc_x.
+    0e0,   # nu_uc_y.
     1e-2   # xi.
 ])
 
 bend_list = [
-    "b1_1", "b1_2", "b1_3", "b1_4", "b1_5",
-    "qf1"]
+    "d0b", "df1b", "df2b", "df3b", "df4b", "df5b",
+    "dqfb"]
 
-# opt_phi = pc.opt_phi_class(lat_prop, "b1_0", bend_list, phi_max)
+# opt_phi = pc.opt_phi_class(lat_prop, "d0b", bend_list, phi_max)
 
 prm_list = [
-    ("qf1",      "b_2"),
+    ("dqfb", "b_2"),
 
-    ("b1_0",     "b_2"),
-    ("b1_1",     "b_2"),
-    ("b1_2",     "b_2"),
-    ("b1_3",     "b_2"),
-    ("b1_4",     "b_2"),
-    ("b1_5",     "b_2"),
+    ("d0b",  "b_2"),
+    ("df1b", "b_2"),
+    ("df2b", "b_2"),
+    ("df3b", "b_2"),
+    ("df4b", "b_2"),
+    ("df5b", "b_2"),
 
     # ("opt_phi",  opt_phi)
 ]
 
 prm_list = pc.prm_class(lat_prop, prm_list, b_2_max)
 
-opt_uc(lat_prop, prm_list, weight)
+opt_uc(lat_prop, prm_list, weight, eps_x_des)
 
 if False:
     dip_list = [bend]
