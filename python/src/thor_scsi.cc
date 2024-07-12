@@ -3,7 +3,7 @@
 #include <thor_scsi/elements/constants.h>
 
 #include "thor_scsi.h"
-#include <gtpsa/lielib.hpp>
+// #include <gtpsa/lielib.hpp>
 
 #include <string>
 #include <sstream>
@@ -39,12 +39,4 @@ PYBIND11_MODULE(lib, m) {
     /*
     */
     // Enums.
-
-    m.def("M_to_h_DF", &gtpsa::M_to_h_DF);
-    m.def("h_DF_to_M", &gtpsa::h_DF_to_M);
-    m.def("CtoR", &gtpsa::CtoR);
-    m.def("RtoC", &gtpsa::RtoC);
-    m.def("GoFix", &gtpsa::GoFix);
-    m.def("Map_Norm", &gtpsa::Map_Norm);
-    m.def("get_mns", &gtpsa::get_mns);
 }
