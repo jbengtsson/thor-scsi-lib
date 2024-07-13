@@ -232,6 +232,23 @@ class periodic_structure_class:
               format(index_map.x, index_map.px, index_map.y, index_map.py,
                      index_map.delta, index_map.ct))
     
+    def prt_lat(self, file_name):
+        """
+        Print lattice structure.
+        """
+        file = open(file_name, "w")
+        print("\n     Name          s    type", file=file)
+        print("                  [m]", file=file)
+        s = 0e0
+        for k in range(len(self._lattice)):
+            # print("k =", k)
+            print("{:3d} {:10s} {:7.3f} {:4.1f}".
+                  format(k, self._lattice[k].name, s, self._type_code[k]),
+                  file=file)
+            s += self._lattice[k].get_length()
+        file.close()
+        print("\n - Lattice structure saved as:", file_name)
+
     def prt_M(self):
         n_dof = 3
         print("\nM:\ntpsa cst:")
@@ -317,6 +334,7 @@ class periodic_structure_class:
                          nu[ind.X], eta[ind.x], eta[ind.px], alpha[ind.Y],
                          beta[ind.Y], nu[ind.Y], eta[ind.y], eta[ind.py]),
                   file=file)
+        file.close()
         print("\n - Twiss parameters saved as:", file_name)
 
     def comp_per_sol(self):

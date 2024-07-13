@@ -33,7 +33,9 @@ eps_x_des    = 125e-12
 nu_uc        = [0.265, 0.0816]
 
 
-def opt_uc(lat_prop, prm_list, weight, b1_list, phi_lat, eps_x_des, nu_uc):
+def opt_uc \
+        (lat_prop, prm_list, weight, b1_list, phi_lat, rb_1, phi_b, eps_x_des,
+         nu_uc):
     """Use Case: optimise super period.
     """
     chi_2_min = 1e30
@@ -50,13 +52,10 @@ def opt_uc(lat_prop, prm_list, weight, b1_list, phi_lat, eps_x_des, nu_uc):
                 phi += lat_prop.get_phi_elem(bend_list[k], 0)
             return phi
 
-        rb_1     = "qf1"
-        phi_bend = "b1_5"
-
         phi = lat_prop.compute_phi_lat()
         phi_b1 = compute_phi_bend(lat_prop, b1_list)
         phi_rb_1 = lat_prop.get_phi_elem(rb_1, 0)
-        phi_bend = lat_prop.get_phi_elem(phi_bend, 0)
+        phi_bend = lat_prop.get_phi_elem(phi_b, 0)
 
         print("\n{:3d} chi_2 = {:11.5e}".format(n_iter, chi_2))
         print("    eps_x [pm.rad] = {:5.3f} [{:5.3f}]".
@@ -174,12 +173,14 @@ cod_eps = 1e-15
 E_0     = 3.0e9
 
 home_dir = os.path.join(
-    os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "MAX_4U")
+    os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "MAX_IV", "max_4u")
 lat_name = "max_4u_e_0"
 file_name = os.path.join(home_dir, lat_name+".lat")
 
 lat_prop = \
     lp.lattice_properties_class(nv, no, nv_prm, no_prm, file_name, E_0, cod_eps)
+
+lat_prop.prt_lat(lat_name+"_lat.txt")
 
 print("\nCircumference [m]      = {:7.5f}".format(lat_prop.compute_circ()))
 print("Total bend angle [deg] = {:7.5f}".format(lat_prop.compute_phi_lat()))
@@ -205,8 +206,7 @@ weight = np.array([
     1e-7  # xi.
 ])
 
-b1_list = [
-    "b1_0", "b1_1", "b1_2", "b1_3", "b1_4", "b1_5"]
+b1_list = ["b1_0", "b1_1", "b1_2", "b1_3", "b1_4", "b1_5"]
 
 b1_bend = pc.bend_class(lat_prop, b1_list, phi_max, b_2_max)
 
@@ -237,4 +237,9 @@ prm_list = pc.prm_class(lat_prop, prms, b_2_max)
 # To maintain the total bend angle.
 phi_lat = pc.phi_lat_class(lat_prop, 2, "b1_5")
 
-opt_uc(lat_prop, prm_list, weight, b1_list, phi_lat, eps_x_des, nu_uc)
+rb_1     = "qf1"
+phi_b = "b1_5"
+
+opt_uc \
+    (lat_prop, prm_list, weight, b1_list, phi_lat, rb_1, phi_b, eps_x_des,
+     nu_uc)

@@ -30,14 +30,15 @@ b_2_bend_max = 1.0
 b_2_max      = 10.0
 
 eps_x_des    = 95e-12
+nu_uc        = [0.265, 0.0816]
 
 
-def opt_uc(lat_prop, prm_list, weight, eps_x_des):
+def opt_uc \
+        (lat_prop, prm_list, weight, b1_list, phi_lat, rb_1, phi_b,
+         eps_x_des,
+ nu_uc):
     """Use Case: optimise super period.
     """
-
-    nu_uc     = [2.0/7.0, 1.0/14.0]
-
     chi_2_min = 1e30
     eta       = np.nan
     n_iter    = 0
@@ -52,24 +53,23 @@ def opt_uc(lat_prop, prm_list, weight, eps_x_des):
                 phi += lat_prop.get_phi_elem(bend_list[k], 0)
             return phi
 
-        b_list = ["d0b", "df1b", "df2b", "df3b", "df4b", "df5b","dqfb"]
-        rb = "dqfb"
-
         phi = lat_prop.compute_phi_lat()
-        phi_b = compute_phi_bend(lat_prop, b_list)
-        phi_rb = lat_prop.get_phi_elem(rb, 0)
+        phi_b1 = compute_phi_bend(lat_prop, b1_list)
+        phi_rb_1 = lat_prop.get_phi_elem(rb_1, 0)
+        phi_bend = lat_prop.get_phi_elem(phi_b, 0)
 
         print("\n{:3d} chi_2 = {:11.5e}".format(n_iter, chi_2))
-        print("  eps_x [pm.rad] = {:5.3f} [{:5.3f}]".
+        print("    eps_x [pm.rad] = {:5.3f} [{:5.3f}]".
               format(1e12*lat_prop._eps[ind.X], 1e12*eps_x_des))
-        print("  nu_uc          =  [{:7.5f}, {:7.5f}] ([{:7.5f}, {:7.5f}])".
+        print("    nu_uc          =  [{:7.5f}, {:7.5f}] ([{:7.5f}, {:7.5f}])".
               format(nu[ind.X], nu[ind.Y], nu_uc[ind.X], nu_uc[ind.Y]))
-        print("  xi             =  [{:5.3f}, {:5.3f}]".
+        print("    xi             =  [{:5.3f}, {:5.3f}]".
               format(xi[ind.X], xi[ind.Y]))
-        print("\n  phi_sp         =  {:8.5f}".format(phi))
-        print("  C [m]          =  {:8.5f}".format(lat_prop.compute_circ()))
-        print("\n  phi_b          =  {:8.5f}".format(phi_b))
-        print("  phi_rb         =  {:8.5f}".format(phi_rb))
+        print("\n    phi_sp         = {:8.5f}".format(phi))
+        print("    C [m]          = {:8.5f}".format(lat_prop.compute_circ()))
+        print("\n    phi_b1         = {:8.5f}".format(phi_b1))
+        print("    phi_rb_1       = {:8.5f}".format(phi_rb_1))
+        print("    phi_bend       = {:8.5f}".format(phi_bend))
         prm_list.prt_prm(prm)
 
     def compute_chi_2(nu, xi):
@@ -80,7 +80,7 @@ def opt_uc(lat_prop, prm_list, weight, eps_x_des):
         if prt:
             print("\n  dchi2(eps_x)    = {:10.3e}".format(dchi_2))
 
-        dchi_2 = weight[1]*(nu[ind.X]-nu_uc[ind.X])**2
+        dchi_2 = weight[1]*(nu[ind.X]-nu_uc[ind.X])**2            
         chi_2 += dchi_2
         if prt:
             print("  dchi2(nu_uc_x)  = {:10.3e}".format(dchi_2))
@@ -102,6 +102,7 @@ def opt_uc(lat_prop, prm_list, weight, eps_x_des):
 
         n_iter += 1
         prm_list.set_prm(prm)
+        phi_lat.set_phi_lat()
 
         # Compute the beam dynamics properties.
         try:
@@ -117,7 +118,7 @@ def opt_uc(lat_prop, prm_list, weight, eps_x_des):
             M = lo.compute_map(
                 lat_prop._lattice, lat_prop._model_state,
                 desc=lat_prop._desc, tpsa_order=2)
-            stable, _, xi = \
+            stable, nu, xi = \
                 lo.compute_nu_xi(lat_prop._desc, lat_prop._no, M)
             if not stable:
                 print("\nf_sp - compute_nu_xi: unstable")
@@ -125,18 +126,19 @@ def opt_uc(lat_prop, prm_list, weight, eps_x_des):
         except ValueError:
             return 1e30
         else:
-            _, _, _, nu = lat_prop.get_Twiss(-1)
+            # _, _, _, nu = lat_prop.get_Twiss(-1)
 
             chi_2 = compute_chi_2(nu, xi)
             if chi_2 < chi_2_min:
                 prt_iter(prm, chi_2, nu, xi)
-                pc.prt_lat(lat_prop, "opt_uc.txt", prm_list)
+                pc.prt_lat(lat_prop, "opt_uc.txt", prm_list, phi_lat=phi_lat)
                 chi_2_min = min(chi_2, chi_2_min)
             return chi_2
 
     max_iter = 1000
     f_tol    = 1e-4
     x_tol    = 1e-4
+    g_tol    = 1e-5
 
     prm, bounds = prm_list.get_prm()
 
@@ -152,7 +154,8 @@ def opt_uc(lat_prop, prm_list, weight, eps_x_des):
         method="CG",
         # callback=prt_iter,
         bounds = bounds,
-        options={"ftol": f_tol, "xtol": x_tol, "maxiter": max_iter}
+        # options={"ftol": f_tol, "xtol": x_tol, "maxiter": max_iter}
+        options={"gtol": g_tol, "maxiter": max_iter}
     )
 
     print("\n".join(minimum))
@@ -172,7 +175,7 @@ E_0     = 3.0e9
 
 home_dir = os.path.join(
     os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "MAX_IV", "max_iv")
-lat_name = "ake_0"
+lat_name = "ake_2"
 file_name = os.path.join(home_dir, lat_name+".lat")
 
 lat_prop = \
@@ -217,30 +220,53 @@ weight = np.array([
     1e-2   # xi.
 ])
 
-bend_list = [
-    "d0b", "df1b", "df2b", "df3b", "df4b", "df5b",
-    "dqfb"]
+b1_list = ["d0b", "df1b", "df2b", "df3b", "df4b", "df5b"]
 
-# opt_phi = pc.opt_phi_class(lat_prop, "d0b", bend_list, phi_max)
+b1_bend = pc.bend_class(lat_prop, b1_list, phi_max, b_2_max)
 
-prm_list = [
-    ("dqfb", "b_2"),
+if True:
+    prm_list = [
+        ("dqfb",    "b_2"),
 
-    ("d0b",  "b_2"),
-    ("df1b", "b_2"),
-    ("df2b", "b_2"),
-    ("df3b", "b_2"),
-    ("df4b", "b_2"),
-    ("df5b", "b_2"),
+        ("d0b",     "b_2"),
+        ("df1b",    "b_2"),
+        ("df2b",    "b_2"),
+        ("df3b",    "b_2"),
+        ("df4b",    "b_2"),
+        ("df5b",    "b_2"),
 
-    # ("opt_phi",  opt_phi)
-]
+        ("phi_bend", b1_bend),
+        ("dqfb",     "phi"),
+    ]
+else:
+    prm_list = [
+        ("dqfb", "b_2"),
+
+        ("d0b",  "b_2"),
+        ("df1b", "b_2"),
+        ("df2b", "b_2"),
+        ("df3b", "b_2"),
+        ("df4b", "b_2"),
+        ("df5b", "b_2"),
+
+        ("d0b",  "phi"),
+        ("df1b", "phi"),
+        ("df2b", "phi"),
+        ("df3b", "phi"),
+        ("df4b", "phi"),
+        # ("df5b", "phi"),
+
+        ("dqfb", "phi"),
+    ]
 
 prm_list = pc.prm_class(lat_prop, prm_list, b_2_max)
 
-opt_uc(lat_prop, prm_list, weight, eps_x_des)
+rb_1  = "dqfb"
+phi_b = "df5b"
 
-if False:
-    dip_list = [bend]
-    dip_list.extend(bend_list)
-    prt_lat(lat_prop, "opt_uc.txt", dip_list)
+# To maintain the total bend angle.
+phi_lat = pc.phi_lat_class(lat_prop, 2, phi_b)
+
+opt_uc \
+    (lat_prop, prm_list, weight, b1_list, phi_lat, rb_1, phi_b, eps_x_des,
+     nu_uc)
