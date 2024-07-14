@@ -17,11 +17,15 @@ import numpy as np
 import gtpsa
 import thor_scsi.lib as ts
 
-from thor_scsi.utils import lattice_properties as lp, linear_optics as lo
+from thor_scsi.utils import lattice_properties as lp, linear_optics as lo, \
+    index_class as ind
 from thor_scsi.utils.output import mat2txt
 
 
-def prt_map(map, str, *, eps):
+ind = ind.index_class()
+
+
+def prt_map(map, str, *, eps: float=1e-30):
     print(str)
     map.x.print("x", eps)
     map.px.print("p_x", eps)
@@ -38,27 +42,59 @@ def compute_map(lat_prop, no):
     return M
 
 
+def compute_twoJ(A_max, beta_inj):
+    twoJ = \
+        np.array(
+            [A_max[ind.X]**2/beta_inj[ind.X], A_max[ind.Y]**2/beta_inj[ind.Y]])
+    return twoJ
+
+
+def compute_Id_scl(lat_prop, twoJ):
+    Id_scl = \
+        gtpsa.ss_vect_tpsa(
+            lat_prop._desc, lat_prop._no, index_mapping=lat_prop._named_index)
+    Id_scl.set_identity()
+    for k in range(4):
+        Id_scl.iloc[k].set_variable(0e0, k+1, np.sqrt(twoJ[k//2]))
+    Id_scl.delta.set_variable(0e0, 5, delta_max)
+    return Id_scl
+
+
+def compose_bs(h, map):
+    Id = \
+        gtpsa.ss_vect_tpsa(
+        lat_prop._desc, lat_prop._no, index_mapping=lat_prop._named_index)
+    t_map = \
+        gtpsa.ss_vect_tpsa(
+        lat_prop._desc, lat_prop._no, index_mapping=lat_prop._named_index)
+    t_map.x = h
+    t_map.compose(t_map, map)
+    return t_map.x 
+
+
 def compute_h(desc, M):
-    h = gtpsa.tpsa(desc, no)
+    h    = gtpsa.tpsa(desc, no)
+    h_re = gtpsa.tpsa(lat_prop._desc, lat_prop._no)
+    h_im = gtpsa.tpsa(lat_prop._desc, lat_prop._no)
     M.M_to_h_DF(h)
-    h.print("h", 1e-30);
+    h.CtoR(h_re, h_im)
+    return h_re, h_im
 
 
 def compute_map_normal_form(desc, M):
-    A_0 = gtpsa.ss_vect_tpsa(desc, no)
-    A_1 = gtpsa.ss_vect_tpsa(desc, no)
-    R   = gtpsa.ss_vect_tpsa(desc, no)
-    g   = gtpsa.tpsa(desc, no)
+    A_0  = gtpsa.ss_vect_tpsa(desc, no)
+    A_1  = gtpsa.ss_vect_tpsa(desc, no)
+    R    = gtpsa.ss_vect_tpsa(desc, no)
+    g    = gtpsa.tpsa(desc, no)
     g_re = gtpsa.tpsa(desc, no)
     g_im = gtpsa.tpsa(desc, no)
-    K   = gtpsa.tpsa(desc, no)
+    K    = gtpsa.tpsa(desc, no)
+    K_re = gtpsa.tpsa(lat_prop._desc, lat_prop._no)
+    K_im = gtpsa.tpsa(lat_prop._desc, lat_prop._no)
 
     M.Map_Norm(A_0, A_1, R, g, K)
-
-    g.print("g", 1e-10)
-    K.print("K", 1e-10)
-
-    return A_0, A_1, R, g, K
+    K.CtoR(K_re, K_im)
+    return A_0, A_1, R, g_re, g_im, K_re, K_im
 
 
 def compute_M(desc, K, A_0, A_1, g, no):
@@ -141,9 +177,13 @@ desc = gtpsa.desc(nv, no)
 cod_eps = 1e-15
 E_0     = 3.0e9
 
+A_max     = np.array([6e-3, 3e-3])
+beta_inj  = np.array([3.0, 3.0])
+delta_max = 3e-2
+
 home_dir = os.path.join(
     os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "MAX_IV", "max_4u")
-lat_name = "max_4u_uc"
+lat_name = "max_4u_g_1"
 file_name = os.path.join(home_dir, lat_name+".lat")
 
 lat_prop = \
@@ -151,17 +191,23 @@ lat_prop = \
 
 print("\nCircumference [m] = {:7.5f}".format(lat_prop.compute_circ()))
 
+twoJ = compute_twoJ(A_max, beta_inj)
+Id_scl = compute_Id_scl(lat_prop, twoJ)
+
 M = compute_map(lat_prop, no)
 print("\nM:", M)
 
+h_re, h_im = compute_h(desc, M)
+A_0, A_1, R, g_re, g_im, K_re, K_im = compute_map_normal_form(desc, M)
+
+h_im = compose_bs(h_im, Id_scl)
+K_re = compose_bs(K_re, Id_scl)
+
+h_im.print("h_im")
+K_re.print("K_re")
+
 if False:
-    compute_h(desc, M)
+    compute_M(desc, K, A_0, A_1, g, no)
 
-if not False:
-    A_0, A_1, R, g, K = compute_map_normal_form(desc, M)
-
-    if not False:
-        compute_M(desc, K, A_0, A_1, g, no)
-
-    if not False:
-        compute_R(desc, M, A_0, A_1, g, K, no)
+if False:
+    compute_R(desc, M, A_0, A_1, g, K, no)
