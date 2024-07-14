@@ -28,9 +28,10 @@ class periodic_structure_class:
         self._desc        = []
 
         self._lattice     = []
-        self._type_code        = np.nan # Lattice elements type code.
+        self._type_code   = np.nan # Lattice elements type code.
         self._model_state = []
         self._no          = no
+        self._nv          = nv
         self._n_dof       = np.nan
 
         self._M           = np.nan
