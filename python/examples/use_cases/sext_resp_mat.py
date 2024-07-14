@@ -168,9 +168,13 @@ def prt_nl(h_im, K_re):
     print()
     for key in h_dict:
         print("  {:s} = {:10.3e}".format(key, h_im.get(h_dict[key])))
+        if key == "h_00201":
+            print()
     print()
     for key in K_dict:
         print("  {:s} = {:10.3e}".format(key, K_re.get(K_dict[key])))
+        if key == "K_00220":
+            print()
 
 
 def get_phi_elem(lat, fam_name, n_kid):
