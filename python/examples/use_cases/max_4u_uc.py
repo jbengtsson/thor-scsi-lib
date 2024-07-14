@@ -16,6 +16,8 @@ from typing import Tuple
 import numpy as np
 from scipy import optimize as opt
 
+import gtpsa
+
 from thor_scsi.utils import lattice_properties as lp, index_class as ind, \
     linear_optics as lo, prm_class as pc
 from thor_scsi.utils.output import vec2txt
@@ -29,8 +31,135 @@ phi_max      = 0.85
 b_2_bend_max = 1.0
 b_2_max      = 10.0
 
-eps_x_des    = 125e-12
+eps_x_des    = 139e-12
 nu_uc        = [0.265, 0.0816]
+
+
+def compute_optics(lat_prop):
+    try:
+        # Compute Twiss parameters along lattice.
+        if not lat_prop.comp_per_sol():
+            print("\ncomp_per_sol: unstable")
+            raise ValueError
+
+        # Compute radiation properties.
+        if not lat_prop.compute_radiation():
+            print("\ncompute_radiation: unstable")
+            raise ValueError
+    except ValueError:
+        assert False
+
+    lat_prop.prt_lat_param()
+    lat_prop.prt_rad()
+    lat_prop.prt_M()
+    lat_prop.prt_M_rad()
+
+
+def prt_map(map, str, *, eps: float=1e-30):
+    print(str)
+    map.x.print("x", eps)
+    map.px.print("p_x", eps)
+    map.y.print("y", eps)
+    map.py.print("p_y", eps)
+    map.delta.print("delta", eps)
+    map.ct.print("ct", eps)
+
+
+def compute_map(lat_prop, no):
+    M = lo.compute_map(
+        lat_prop._lattice, lat_prop._model_state, desc=lat_prop._desc,
+        tpsa_order=no)
+    return M
+
+
+def compute_h(lat_prop, M):
+    h    = gtpsa.tpsa(lat_prop._desc, lat_prop._no)
+    h_re = gtpsa.tpsa(lat_prop._desc, lat_prop._no)
+    h_im = gtpsa.tpsa(lat_prop._desc, lat_prop._no)
+
+    M.M_to_h_DF(h)
+    h.CtoR(h_re, h_im)
+    return h_re, h_im
+
+
+def compute_map_normal_form(lat_prop, M):
+    A_0  = gtpsa.ss_vect_tpsa(lat_prop._desc, lat_prop._no)
+    A_1  = gtpsa.ss_vect_tpsa(lat_prop._desc, lat_prop._no)
+    R    = gtpsa.ss_vect_tpsa(lat_prop._desc, lat_prop._no)
+    g    = gtpsa.tpsa(lat_prop._desc, lat_prop._no)
+    g_re = gtpsa.tpsa(lat_prop._desc, lat_prop._no)
+    g_im = gtpsa.tpsa(lat_prop._desc, lat_prop._no)
+    K    = gtpsa.tpsa(lat_prop._desc, lat_prop._no)
+    K_re = gtpsa.tpsa(lat_prop._desc, lat_prop._no)
+    K_im = gtpsa.tpsa(lat_prop._desc, lat_prop._no)
+
+    M.Map_Norm(A_0, A_1, R, g, K)
+    K.CtoR(K_re, K_im)
+    return A_0, A_1, R, g_re, g_im, K_re, K_im
+
+
+h_dict = {
+    "  h_10002" : [1, 0, 0, 0, 2, 0, 0],
+    "  h_20001" : [2, 0, 0, 0, 1, 0, 0],
+    "  h_00201" : [0, 0, 2, 0, 1, 0, 0],
+
+    "  h_30000" : [3, 0, 0, 0, 0, 0, 0],
+    "  h_21000" : [2, 1, 0, 0, 0, 0, 0],
+    "  h_11100" : [1, 1, 1, 0, 0, 0, 0],
+    "  h_10200" : [1, 0, 2, 0, 0, 0, 0],
+    "  h_10020" : [1, 0, 0, 2, 0, 0, 0]
+}
+
+K_dict = {
+    "  K_22000" : [2, 2, 0, 0, 0, 0, 0],
+    "  K_11110" : [1, 1, 1, 1, 0, 0, 0],
+    "  K_00220" : [0, 0, 2, 2, 0, 0, 0],
+
+    "  K_11002" : [1, 1, 0, 0, 2, 0, 0],
+    "  K_00112" : [0, 0, 1, 1, 2, 0, 0]
+}
+
+
+def compute_rms(h, dict):
+    var = 0e0
+    for key in dict:
+        var += h.get(dict[key])**2
+    return np.sqrt(var)
+
+
+def prt_nl(h_im, K_re):
+    print()
+    for key in h_dict:
+        print("  {:s} = {:10.3e}".format(key, h_im.get(h_dict[key])))
+    print()
+    for key in K_dict:
+        print("  {:s} = {:10.3e}".format(key, K_re.get(K_dict[key])))
+
+
+def compute_linear_optics():
+    # Compute the beam dynamics properties.
+    try:
+        if not lat_prop.comp_per_sol():
+            print("\nf_sp - comp_per_sol: unstable")
+            raise ValueError
+
+        if not lat_prop.compute_radiation():
+            print("\nf_sp - compute_radiation: unstable")
+            raise ValueError
+
+        # Compute linear chromaticity.
+        M = lo.compute_map(
+            lat_prop._lattice, lat_prop._model_state,
+            desc=lat_prop._desc, tpsa_order=2)
+        stable, nu, xi = \
+            lo.compute_nu_xi(lat_prop._desc, lat_prop._no, M)
+        if not stable:
+            print("\nf_sp - compute_nu_xi: unstable")
+            raise ValueError
+    except ValueError:
+        return False, np.nan, np.nan
+    else:
+        return True, nu, xi
 
 
 def opt_uc \
@@ -43,7 +172,7 @@ def opt_uc \
     n_iter    = 0
     file_name = "opt_uc.txt"
 
-    def prt_iter(prm, chi_2, nu, xi):
+    def prt_iter(prm, chi_2, nu, xi, h_im, K_re, h_rms, K_rms):
         nonlocal n_iter
 
         def compute_phi_bend(lat_prop, bend_list):
@@ -64,14 +193,17 @@ def opt_uc \
               format(nu[ind.X], nu[ind.Y], nu_uc[ind.X], nu_uc[ind.Y]))
         print("    xi             =  [{:5.3f}, {:5.3f}]".
               format(xi[ind.X], xi[ind.Y]))
+        print("    h_im rms       =  {:9.3e}".format(h_rms))
+        print("    K_re rms       =  {:9.3e}".format(K_rms))
         print("\n    phi_sp         = {:8.5f}".format(phi))
         print("    C [m]          = {:8.5f}".format(lat_prop.compute_circ()))
         print("\n    phi_b1         = {:8.5f}".format(phi_b1))
         print("    phi_rb_1       = {:8.5f}".format(phi_rb_1))
         print("    phi_bend       = {:8.5f}".format(phi_bend))
+        prt_nl(h_im, K_re)
         prm_list.prt_prm(prm)
 
-    def compute_chi_2(nu, xi):
+    def compute_chi_2(nu, xi, h_rms, K_rms):
         prt = not False
 
         dchi_2 = weight[0]*(lat_prop._eps[ind.X]-eps_x_des)**2
@@ -94,6 +226,16 @@ def opt_uc \
         if prt:
             print("  dchi2(xi)       = {:10.3e}".format(dchi_2))
 
+        dchi_2 = weight[4]*h_rms**2
+        chi_2 += dchi_2
+        if prt:
+            print("  dchi2(h_rms)    = {:10.3e}".format(dchi_2))
+
+        dchi_2 = weight[5]*K_rms**2
+        chi_2 += dchi_2
+        if prt:
+            print("  dchi2(K_rms)    = {:10.3e}".format(dchi_2))
+
         return chi_2
 
     def f_sp(prm):
@@ -103,36 +245,27 @@ def opt_uc \
         prm_list.set_prm(prm)
         phi_lat.set_phi_lat()
 
-        # Compute the beam dynamics properties.
-        try:
-            if not lat_prop.comp_per_sol():
-                print("\nf_sp - comp_per_sol: unstable")
-                raise ValueError
+        stable, nu, xi = compute_linear_optics()
 
-            if not lat_prop.compute_radiation():
-                print("\nf_sp - compute_radiation: unstable")
-                raise ValueError
+        if stable:
+            M = compute_map(lat_prop, no)
 
-            # Compute linear chromaticity.
-            M = lo.compute_map(
-                lat_prop._lattice, lat_prop._model_state,
-                desc=lat_prop._desc, tpsa_order=2)
-            stable, nu, xi = \
-                lo.compute_nu_xi(lat_prop._desc, lat_prop._no, M)
-            if not stable:
-                print("\nf_sp - compute_nu_xi: unstable")
-                raise ValueError
-        except ValueError:
-            return 1e30
-        else:
-            # _, _, _, nu = lat_prop.get_Twiss(-1)
+            h_re, h_im = compute_h(lat_prop, M)
+            A_0, A_1, R, g_re, g_im, K_re, K_im = \
+                compute_map_normal_form(lat_prop, M)
 
-            chi_2 = compute_chi_2(nu, xi)
+            h_rms = compute_rms(h_im, h_dict)
+            K_rms = compute_rms(K_re, K_dict)
+
+            chi_2 = compute_chi_2(nu, xi, h_rms, K_rms)
             if chi_2 < chi_2_min:
-                prt_iter(prm, chi_2, nu, xi)
+                prt_iter(prm, chi_2, nu, xi, h_im, K_re, h_rms, K_rms)
                 pc.prt_lat(lat_prop, "opt_uc.txt", prm_list, phi_lat=phi_lat)
                 chi_2_min = min(chi_2, chi_2_min)
             return chi_2
+        else:
+            return 1e30
+
 
     max_iter = 1000
     f_tol    = 1e-4
@@ -163,18 +296,22 @@ def opt_uc \
 # Number of phase-space coordinates.
 nv = 7
 # Variables max order.
-no = 2
+no = 4
 # Number of parameters.
 nv_prm = 0
 # Parameters max order.
 no_prm = 0
 
-cod_eps = 1e-15
-E_0     = 3.0e9
+cod_eps   = 1e-15
+E_0       = 3.0e9
+
+A_max     = np.array([6e-3, 3e-3])
+beta_inj  = np.array([3.0, 3.0])
+delta_max = 3e-2
 
 home_dir = os.path.join(
     os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "MAX_IV", "max_4u")
-lat_name = "max_4u_e_0"
+lat_name = "max_4u_g_0"
 file_name = os.path.join(home_dir, lat_name+".lat")
 
 lat_prop = \
@@ -185,59 +322,65 @@ lat_prop.prt_lat(lat_name+"_lat.txt")
 print("\nCircumference [m]      = {:7.5f}".format(lat_prop.compute_circ()))
 print("Total bend angle [deg] = {:7.5f}".format(lat_prop.compute_phi_lat()))
 
-try:
-    # Compute Twiss parameters along lattice.
-    if not lat_prop.comp_per_sol():
-        print("\ncomp_per_sol - unstable")
-        raise ValueError
-
-    # Compute radiation properties.
-    if not lat_prop.compute_radiation():
-        print("\ncompute_radiation - unstable")
-        raise ValueError
-except ValueError:
-    exit
+if not False:
+          compute_optics(lat_prop)
 
 # Weights.
 weight = np.array([
-    0e17, # eps_x.
-    1e-2, # nu_uc_x.
-    1e-2, # nu_uc_y.
-    1e-7  # xi.
+    1e20, # eps_x.
+    0e-2, # nu_uc_x.
+    0e-2, # nu_uc_y.
+    0e-7, # xi.
+    1e-10, # h rms.
+    1e-10  # K rms.
 ])
 
 b1_list = ["b1_0", "b1_1", "b1_2", "b1_3", "b1_4", "b1_5"]
 
 b1_bend = pc.bend_class(lat_prop, b1_list, phi_max, b_2_max)
 
-prms = [
-    ("qf1",      "b_2"),
+if True:
+    prms = [
+        ("qf1",      "b_2"),
 
-    ("b1_0",     "b_2"),
-    ("b1_1",     "b_2"),
-    ("b1_2",     "b_2"),
-    ("b1_3",     "b_2"),
-    ("b1_4",     "b_2"),
-    ("b1_5",     "b_2"),
+        ("b1_0",     "b_2"),
+        ("b1_1",     "b_2"),
+        ("b1_2",     "b_2"),
+        ("b1_3",     "b_2"),
+        ("b1_4",     "b_2"),
+        ("b1_5",     "b_2"),
 
-    # ("phi_bend", b1_bend),
+        ("phi_bend", b1_bend),
+        ("qf1",     "phi"),
+    ]
+else:
+    prms = [
+        ("qf1",      "b_2"),
 
-    ("b1_0",     "phi"),
-    ("b1_1",     "phi"),
-    ("b1_2",     "phi"),
-    ("b1_3",     "phi"),
-    ("b1_4",     "phi"),
-    # ("b1_5",     "phi"),
+        ("b1_0",     "b_2"),
+        ("b1_1",     "b_2"),
+        ("b1_2",     "b_2"),
+        ("b1_3",     "b_2"),
+        ("b1_4",     "b_2"),
+        ("b1_5",     "b_2"),
 
-    ("qf1",     "phi"),
-]
+        ("b1_0",     "phi"),
+        ("b1_1",     "phi"),
+        ("b1_2",     "phi"),
+        ("b1_3",     "phi"),
+        ("b1_4",     "phi"),
+        # ("b1_5",     "phi"),
+
+        ("qf1",     "phi"),
+    ]
+
 
 prm_list = pc.prm_class(lat_prop, prms, b_2_max)
 
 # To maintain the total bend angle.
 phi_lat = pc.phi_lat_class(lat_prop, 2, "b1_5")
 
-rb_1     = "qf1"
+rb_1  = "qf1"
 phi_b = "b1_5"
 
 opt_uc \
