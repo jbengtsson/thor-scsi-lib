@@ -99,7 +99,7 @@ def compute_map(lat_prop, no):
     return M
 
 
-def compute_twoJ(A_max, beta_inv):
+def compute_twoJ(A_max, beta_inj):
     twoJ = \
         np.array(
             [A_max[ind.X]**2/beta_inj[ind.X], A_max[ind.Y]**2/beta_inj[ind.Y]])
