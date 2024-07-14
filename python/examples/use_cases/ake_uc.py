@@ -175,7 +175,7 @@ E_0     = 3.0e9
 
 home_dir = os.path.join(
     os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "MAX_IV", "max_iv")
-lat_name = "ake_2"
+lat_name = "ake_1"
 file_name = os.path.join(home_dir, lat_name+".lat")
 
 lat_prop = \
@@ -225,7 +225,7 @@ b1_list = ["d0b", "df1b", "df2b", "df3b", "df4b", "df5b"]
 b1_bend = pc.bend_class(lat_prop, b1_list, phi_max, b_2_max)
 
 if True:
-    prm_list = [
+    prms = [
         ("dqfb",    "b_2"),
 
         ("d0b",     "b_2"),
@@ -239,7 +239,7 @@ if True:
         ("dqfb",     "phi"),
     ]
 else:
-    prm_list = [
+    prms = [
         ("dqfb", "b_2"),
 
         ("d0b",  "b_2"),
@@ -259,13 +259,14 @@ else:
         ("dqfb", "phi"),
     ]
 
-prm_list = pc.prm_class(lat_prop, prm_list, b_2_max)
+prm_list = pc.prm_class(lat_prop, prms, b_2_max)
 
-rb_1  = "dqfb"
-phi_b = "df5b"
+rb_1    = "dqfb"
+phi_b   = "df5b"
+n_phi_b = 2
 
 # To maintain the total bend angle.
-phi_lat = pc.phi_lat_class(lat_prop, 2, phi_b)
+phi_lat = pc.phi_lat_class(lat_prop, n_phi_b, phi_b)
 
 opt_uc \
     (lat_prop, prm_list, weight, b1_list, phi_lat, rb_1, phi_b, eps_x_des,
