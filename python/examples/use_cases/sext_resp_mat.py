@@ -26,33 +26,23 @@ from typing import Tuple
 
 import numpy as np
 import xarray as xr
-import matplotlib.pyplot as plt
-
-from thor_scsi.pyflame import Config
 
 import gtpsa
 import thor_scsi.lib as ts
 
-from thor_scsi.utils import knobs
-from thor_scsi.factory import accelerator_from_config
-from thor_scsi.utils.accelerator import instrument_with_standard_observers
+from thor_scsi.utils import lattice_properties as lp, linear_optics as lo, \
+    index_class as ind, knobs
+
 from thor_scsi.utils.twiss_output import twiss_ds_to_df, df_to_tsv
 
 from thor_scsi.utils.extract_info import accelerator_info
-from thor_scsi.utils import linear_optics as lo, courant_snyder as cs, \
-     radiate as rad
 
 
 # from thor_scsi.utils.phase_space_vector import map2numpy
 from thor_scsi.utils.output import prt2txt, mat2txt, vec2txt
 
 
-# Configuration space coordinates.
-X_, Y_, Z_ = [
-    ts.spatial_index.X,
-    ts.spatial_index.Y,
-    ts.spatial_index.Z
-]
+ind = ind.index_class()
 
 
 class MultipoleIndex(enum.IntEnum):
@@ -60,39 +50,127 @@ class MultipoleIndex(enum.IntEnum):
     sextupole  = 3
 
 
-def prt_Twiss(str, Twiss):
-    """
-    """
-    eta, alpha, beta = Twiss[0], Twiss[1], Twiss[2]
-    print(str, end="")
-    print(f"  eta    = [{eta[X_]:9.3e}, {eta[Y_]:9.3e}]")
-    print(f"  alpha  = [{alpha[X_]:9.3e}, {alpha[Y_]:9.3e}]")
-    print(f"  beta   = [{beta[X_]:5.3f}, {beta[Y_]:5.3f}]")
+def compute_optics(lat_prop):
+    try:
+        # Compute Twiss parameters along lattice.
+        if not lat_prop.comp_per_sol():
+            print("\ncomp_per_sol: unstable")
+            raise ValueError
+
+        # Compute radiation properties.
+        if not lat_prop.compute_radiation():
+            print("\ncompute_radiation: unstable")
+            raise ValueError
+    except ValueError:
+        assert False
+
+    lat_prop.prt_lat_param()
+    lat_prop.prt_rad()
+    lat_prop.prt_M()
+    lat_prop.prt_M_rad()
 
 
-def compute_periodic_solution(lat, model_state, named_index, desc, no):
-    """
-    """
-    # Deegrees of freedom.
-    n_dof = 2
-    model_state.radiation = False
-    model_state.Cavity_on = False
+def compose_bs(h, map):
+    Id = \
+        gtpsa.ss_vect_tpsa(
+        lat_prop._desc, lat_prop._no, index_mapping=lat_prop._named_index)
+    t_map = \
+        gtpsa.ss_vect_tpsa(
+        lat_prop._desc, lat_prop._no, index_mapping=lat_prop._named_index)
+    t_map.x = h
+    t_map.compose(t_map, map)
+    return t_map.x 
 
-    stable, M, A = \
-        lo.compute_map_and_diag(
-            n_dof, lat, model_state, desc=desc, tpsa_order=no
-        )
-    print("\nM:\n", M)
-    res = cs.compute_Twiss_A(A)
-    Twiss = res[:3]
-    prt_Twiss("\nTwiss:\n", Twiss)
-    A_map = gtpsa.ss_vect_tpsa(desc, no)
-    A_map.set_jacobian(A)
-    ds = \
-        lo.compute_Twiss_along_lattice(
-            n_dof, lat, model_state, A=A_map, desc=desc, mapping=named_index)
 
-    return M, A, ds
+def prt_map(map, str, *, eps: float=1e-30):
+    print(str)
+    map.x.print("x", eps)
+    map.px.print("p_x", eps)
+    map.y.print("y", eps)
+    map.py.print("p_y", eps)
+    map.delta.print("delta", eps)
+    map.ct.print("ct", eps)
+
+
+def compute_map(lat_prop, no):
+    M = lo.compute_map(
+        lat_prop._lattice, lat_prop._model_state, desc=lat_prop._desc,
+        tpsa_order=no)
+    return M
+
+
+def compute_twoJ(A_max, beta_inv):
+    twoJ = \
+        np.array(
+            [A_max[ind.X]**2/beta_inj[ind.X], A_max[ind.Y]**2/beta_inj[ind.Y]])
+    return twoJ
+
+
+def compute_Id_scl(lat_prop, twoJ):
+    Id_scl = \
+        gtpsa.ss_vect_tpsa(
+            lat_prop._desc, lat_prop._no, index_mapping=lat_prop._named_index)
+    Id_scl.set_identity()
+    for k in range(4):
+        Id_scl.iloc[k].set_variable(0e0, k+1, np.sqrt(twoJ[k//2]))
+    Id_scl.delta.set_variable(0e0, 5, delta_max)
+    return Id_scl
+
+
+def compute_h(lat_prop, M):
+    h    = gtpsa.tpsa(lat_prop._desc, lat_prop._no)
+    h_re = gtpsa.tpsa(lat_prop._desc, lat_prop._no)
+    h_im = gtpsa.tpsa(lat_prop._desc, lat_prop._no)
+
+    M.M_to_h_DF(h)
+    h.CtoR(h_re, h_im)
+    return h_re, h_im
+
+
+def compute_map_normal_form(lat_prop, M):
+    A_0  = gtpsa.ss_vect_tpsa(lat_prop._desc, lat_prop._no)
+    A_1  = gtpsa.ss_vect_tpsa(lat_prop._desc, lat_prop._no)
+    R    = gtpsa.ss_vect_tpsa(lat_prop._desc, lat_prop._no)
+    g    = gtpsa.tpsa(lat_prop._desc, lat_prop._no)
+    g_re = gtpsa.tpsa(lat_prop._desc, lat_prop._no)
+    g_im = gtpsa.tpsa(lat_prop._desc, lat_prop._no)
+    K    = gtpsa.tpsa(lat_prop._desc, lat_prop._no)
+    K_re = gtpsa.tpsa(lat_prop._desc, lat_prop._no)
+    K_im = gtpsa.tpsa(lat_prop._desc, lat_prop._no)
+
+    M.Map_Norm(A_0, A_1, R, g, K)
+    K.CtoR(K_re, K_im)
+    return A_0, A_1, R, g_re, g_im, K_re, K_im
+
+
+def prt_nl(h_im, K_re):
+    h_dict = {
+        "h_10002" : [1, 0, 0, 0, 2, 0, 0],
+        "h_20001" : [2, 0, 0, 0, 1, 0, 0],
+        "h_00201" : [0, 0, 2, 0, 1, 0, 0],
+
+        "h_30000" : [3, 0, 0, 0, 0, 0, 0],
+        "h_21000" : [2, 1, 0, 0, 0, 0, 0],
+        "h_11100" : [1, 1, 1, 0, 0, 0, 0],
+        "h_10200" : [1, 0, 2, 0, 0, 0, 0],
+        "h_10020" : [1, 0, 0, 2, 0, 0, 0]
+    }
+
+    K_dict = {
+        "K_22000" : [2, 2, 0, 0, 0, 0, 0],
+        "K_11110" : [1, 1, 1, 1, 0, 0, 0],
+        "K_00220" : [0, 0, 2, 2, 0, 0, 0],
+
+        "K_11002" : [1, 1, 0, 0, 2, 0, 0],
+        "K_00112" : [0, 0, 1, 1, 2, 0, 0]
+    }
+
+    print()
+    for key in h_dict:
+        print("  {:s} = {:10.3e}".format(key, h_im.get(h_dict[key])))
+    print()
+    for key in K_dict:
+        print("  {:s} = {:10.3e}".format(key, K_re.get(K_dict[key])))
 
 
 def get_phi_elem(lat, fam_name, n_kid):
@@ -113,34 +191,6 @@ def compute_phi(lat):
                 print("{:8s} {:5.3f} {:6.3f}".
                       format(lat[k].name, lat[k].get_length(), dphi))
     return phi
-
-
-def print_map(str, map):
-    """
-    # 
-    """
-    n_dof = 3
-    print(str)
-    for k in range(2*n_dof):
-        map.iloc[k].print()
-
-
-def read_lattice(t_file):
-    # Read in & parse lattice file.
-    print("\nread_lattice ->")
-    lat = accelerator_from_config(t_file)
-
-    # Set lattice state (Rf cavity on/off, etc.)
-    model_state = ts.ConfigType()
-
-    n_dof = 2
-    energy = 2.5e9
-    model_state.Energy    = energy
-    model_state.radiation = False
-    model_state.Cavity_on = False
-
-    print("-> read_lattice")
-    return n_dof, lat, model_state
 
 
 def set_b_n_elem(lat, fam_name, kid_num, n, b_n):
@@ -203,16 +253,79 @@ def lat_mult_prm(mult_prm_name, lat, n, desc):
 # Work-around for C++ virtual function -> Python mapping issue.
 # See function above:
 #   mult_prm
-def propagate(lat, model_state, desc, no, nv, named_index):
-    M = gtpsa.ss_vect_tpsa(desc, no, nv, index_mapping=named_index)
+def propagate(lat_prop, named_index):
+    M = gtpsa.ss_vect_tpsa \
+        (lat_prop._desc, lat_prop._no, lat_prop._nv, lat_prop._named_index)
     M.set_identity()
-    for k in range(len(lat)):
-        lat[k].propagate(model_state, M)
+    for k in range(len(lat_prop._lattice)):
+        lat_prop._lattice[k].propagate(model_state, M)
     return M
 
 
+def param_dep():
+    if False:
+        # Zero sextopoles.
+        print("\nZeroing sextupoles.")
+        set_b_n_fam(lat, "sf_h", MultipoleIndex.sextupole, 0e0)
+        set_b_n_fam(lat, "sd1", MultipoleIndex.sextupole, 0e0)
+        set_b_n_fam(lat, "sd2", MultipoleIndex.sextupole, 0e0)
+
+    if False:
+        named_index = gtpsa.IndexMapping(
+            dict(x=0, px=1, y=2, py=3, delta=4, ct=5))
+        desc = gtpsa.desc(nv, no, nv_prm, no_prm)
+
+        print("\n  C [m]     = {:9.7f}".format(C))
+        print("  phi [deg] = {:5.3f}".format(compute_phi(lat)))
+        print("  nu        = [{:7.5f}, {:7.5f}]".format(nu[X_], nu[Y_]))
+        print("  xi        = [{:7.5f}, {:7.5f}]".format(xi[X_], xi[Y_]))
+
+    named_index = gtpsa.IndexMapping(
+        dict(x=0, px=1, y=2, py=3, delta=4, ct=5, K=6)
+    )
+
+    if False:
+        nv_prm = 1
+        no_prm = no
+        desc = gtpsa.desc(nv, no, nv_prm, no_prm)
+        if True:
+            lat_ptc = lat_mult_prm("sf_h", lat_prop._lattice, 3, desc)
+        else:
+            lat_ptc = lat_mult_prm("uq3", lat_prop._lattice, 2, desc)
+    else:
+        nv_prm = 0
+        no_prm = 0
+        desc = gtpsa.desc(nv, no, nv_prm, no_prm)
+        lat_ptc = lat_mult_prm("", lat_prop._lattice, 0, desc)
+
+    M = propagate(lat_ptc, named_index)
+
+    print("\nM:\n", M)
+    if False:
+        print_map("\nM:", M)
+
+    if False:
+        M2 = M
+        # Busted.
+        M2.getOrder(M2, 2)
+        print("\n:\n", M2)
+
+    if False:
+        M_inv = ts.inv(M)
+
+        M_M_inv = gtpsa.ss_vect_tpsa(desc, no, nv, index_mapping=named_index)
+        M_M_inv.rcompose(M, M_inv)
+        print("\nM:", M)
+        print("\nM^-1:", M_inv)
+        print("\nM*M^-1:", M_M_inv)
+        print("\nM.x:\n", M.x)
+        print("\nM_M_inv.x:\n", M_M_inv.x)
+        # print("\nM*M^-1:", M_M_inv[0])
+        assert False
+
+
 # Number of phase-space coordinates.
-nv = 6
+nv = 7
 # Variables max order.
 no = 4
 # Number of parameters.
@@ -220,87 +333,51 @@ nv_prm = 0
 # Parameters max order.
 no_prm = 0
 
-t_dir = os.path.join(
-    os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "BESSY-III",
-    "ipac_2023")
-t_file = os.path.join(t_dir, "b3_cf425cf_thor_scsi.lat")
+n_dof     = 2
+cod_eps   = 1e-15
+E_0       = 3.0e9
 
-n_dof, lat, model_state = read_lattice(t_file)
+A_max     = np.array([6e-3, 3e-3])
+beta_inj  = np.array([3.0, 3.0])
+delta_max = 3e-2
 
-if False:
-    # Zero sextopoles.
-    print("\nZeroing sextupoles.")
-    set_b_n_fam(lat, "sf", MultipoleIndex.sextupole, 0e0)
-    set_b_n_fam(lat, "sd", MultipoleIndex.sextupole, 0e0)
-    set_b_n_fam(lat, "sd2", MultipoleIndex.sextupole, 0e0)
+home_dir = os.path.join(
+    os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "MAX_IV", "max_4u",
+    "")
+lat_name = "max_4u_g_0"
+file_name = os.path.join(home_dir, lat_name+".lat")
 
-if False:
-    named_index = gtpsa.IndexMapping(dict(x=0, px=1, y=2, py=3, delta=4, ct=5))
-    desc = gtpsa.desc(nv, no, nv_prm, no_prm)
-    M, A, data = \
-        compute_periodic_solution(lat, model_state, named_index, desc, no)
+lat_prop = \
+    lp.lattice_properties_class(nv, no, nv_prm, no_prm, file_name, E_0, cod_eps)
 
-    # Compute linear chromaticity.
-    M = lo.compute_map(lat, model_state, desc=desc, tpsa_order=no)
-    stable, nu, xi = lo.compute_nu_xi(desc, no, M)
+lat_prop.prt_lat(lat_name+"_lat.txt")
 
-    C = rad.compute_circ(lat)
-
-    print("\n  C [m]     = {:9.7f}".format(C))
-    print("  phi [deg] = {:5.3f}".format(compute_phi(lat)))
-    print("  nu        = [{:7.5f}, {:7.5f}]".format(nu[X_], nu[Y_]))
-    print("  xi        = [{:7.5f}, {:7.5f}]".format(xi[X_], xi[Y_]))
-
-named_index = gtpsa.IndexMapping(
-    dict(x=0, px=1, y=2, py=3, delta=4, ct=5, K=6)
-)
-
-if True:
-    nv_prm = 1
-    no_prm = no
-    desc = gtpsa.desc(nv, no, nv_prm, no_prm)
-    if True:
-        lat_ptc = lat_mult_prm("sf", lat, 3, desc)
-    else:
-        lat_ptc = lat_mult_prm("uq3", lat, 2, desc)
-else:
-    nv_prm = 0
-    no_prm = 0
-    desc = gtpsa.desc(nv, no, nv_prm, no_prm)
-    lat_ptc = lat_mult_prm("", lat, 0, desc)
-
-M = propagate(lat_ptc, model_state, desc, no, nv, named_index)
-
-print("\nM:\n", M)
-if False:
-    print_map("\nM:", M)
-
-if False:
-    M2 = M
-    # Busted.
-    M2.getOrder(M2, 2)
-    print("\n:\n", M2)
+print("\nCircumference [m]      = {:7.5f}".format(lat_prop.compute_circ()))
+print("Total bend angle [deg] = {:7.5f}".format(lat_prop.compute_phi_lat()))
 
 if not False:
-    M_inv = ts.inv(M)
+    compute_optics(lat_prop)
 
-    M_M_inv = gtpsa.ss_vect_tpsa(desc, no, nv, index_mapping=named_index)
-    M_M_inv.rcompose(M, M_inv)
-    print("\nM:", M)
-    print("\nM^-1:", M_inv)
-    print("\nM*M^-1:", M_M_inv)
-    print("\nM.x:\n", M.x)
-    print("\nM_M_inv.x:\n", M_M_inv.x)
-    # print("\nM*M^-1:", M_M_inv[0])
-    assert False
+    if False:
+        lat_prop.plt_Twiss(lat_name+"_Twiss.png", not False)
+        lat_prop.plt_chrom(lat_name+"_chrom.png", not False)
 
-h = ts.M_to_h_DF(M)
-print("\nh:")
-h.print()
-h_re = gtpsa.tpsa(desc, no)
-h_im = gtpsa.tpsa(desc, no)
-ts.CtoR(h, h_re, h_im)
-print("\nh_re:")
-h_re.print()
-print("\nh_im:")
-h_im.print()
+M = compute_map(lat_prop, no)
+print("\nM:", M)
+
+twoJ = compute_twoJ(A_max, beta_inj)
+Id_scl = compute_Id_scl(lat_prop, twoJ)
+
+h_re, h_im = compute_h(lat_prop, M)
+A_0, A_1, R, g_re, g_im, K_re, K_im = compute_map_normal_form(lat_prop, M)
+
+if False:
+    # The real part of the driving terms are cancelled by mirror symmetry.
+    # The imaginary part of tune shift terms are zero.
+    h_im.print("h_im", 1e-5)
+    K_re.print("K_re", 1e-5)
+
+prt_nl(h_im, K_re)
+h_im = compose_bs(h_im, Id_scl)
+K_re = compose_bs(K_re, Id_scl)
+prt_nl(h_im, K_re)
