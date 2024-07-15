@@ -32,7 +32,7 @@ phi_max      = 0.85
 b_2_bend_max = 1.0
 b_2_max      = 10.0
 
-eps_x_des    = 150e-12
+eps_x_des    = 139e-12
 nu_uc_des    = [2.0/6.0, 0.12]
 nu_sp_des    = [2.25, 0.8]
 beta_des     = [5.7, 2.0]
@@ -295,6 +295,8 @@ file_name = os.path.join(home_dir, lat_name+".lat")
 
 lat_prop = \
     lp.lattice_properties_class(nv, no, nv_prm, no_prm, file_name, E_0, cod_eps)
+
+lat_prop.prt_lat(lat_name+"_lat.txt")
 
 print("\nCircumference [m]      = {:7.5f}".format(lat_prop.compute_circ()))
 print("Total bend angle [deg] = {:7.5f}".format(lat_prop.compute_phi_lat()))

@@ -64,7 +64,7 @@ class lattice_properties_class(
 
     def compute_rad_prop(self):
         dof = 3
-        planes = ["X", "Y", "Z"]
+        planes = ["x", "y", "z"]
         self._J = np.zeros(dof)
         self._tau = np.zeros(dof)
         self._eps = np.zeros(dof)
@@ -80,8 +80,9 @@ class lattice_properties_class(
                 self._eps[k] = -self._D_rad[k]/(2e0*self._alpha_rad[k])
             else:
                 # Unstable.
-                print("\ncompute_rad_prop:")
-                print("  Unstable in the plane: {:s}".format(planes[k]))
+                print("\ncompute_rad_prop:"+
+                      " unstable alpha_{:s} >= 0 ({:9.3e})".format(
+                          planes[k], self._alpha_rad[k]))
                 return False
 
         # Longitudinal Twiss parameters.
@@ -186,6 +187,9 @@ class lattice_properties_class(
             self._J[ind.X], self._J[ind.Y], self._J[ind.Z]))
         print("  tau [msec]    = [{:5.3f}, {:5.3f}, {:5.3f}]".format(
             1e3*self._tau[ind.X], 1e3*self._tau[ind.Y], 1e3*self._tau[ind.Z]))
+        print("  alpha_rad     = [{:9.3e}, {:9.3e}, {:9.3e}]".format(
+            self._alpha_rad[ind.X], self._alpha_rad[ind.Y],
+            self._alpha_rad[ind.Z]))
         print("  D             = [{:11.5e}, {:11.5e}, {:11.5e}]".format(
             self._D_rad[ind.X], self._D_rad[ind.Y], self._D_rad[ind.Z]))
 

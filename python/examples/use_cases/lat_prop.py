@@ -27,7 +27,7 @@ def compute_optics(lat_prop):
         # Compute radiation properties.
         stable, stable_rad = lat_prop.compute_radiation()
         print(stable, stable_rad)
-        if not  stable:
+        if not stable:
             print("\ncompute_radiation: unstable")
             raise ValueError
     except ValueError:

@@ -37,24 +37,25 @@ nu_uc        = [0.265, 0.0816]
 
 def compute_linear_optics(lat_prop):
     # Compute the beam dynamics properties.
-    J_z_min = 1e-3
+    alpha_rad_z_min = -1e-7
 
     try:
         # Compute Twiss parameters along lattice.
         if not lat_prop.comp_per_sol():
-            print("\nf_sp - comp_per_sol: unstable")
+            print("\ncomp_per_sol: unstable")
             raise ValueError
         else:
             _, _, _, nu = lat_prop.get_Twiss(len(lat_prop._lattice)-1)
 
         # Compute radiation properties.
         stable, stable_rad = lat_prop.compute_radiation()
-        if stable and not stable_rad:
-            stable = lat_prop._J[ind.Z] > J_z_min
-            print("\ncompute_linear_optics: J_z = {:9.3e}".format(
-                lat_prop._J[ind.Z]))
         if not stable:
-            print("\nf_sp - compute_radiation: unstable")
+            print("\ncompute_radiation: unstable")
+            raise ValueError
+        if lat_prop._alpha_rad[ind.Z] > alpha_rad_z_min:
+            print("\ncompute_linear_optics:\n"+
+                  " unstable in the longitudinal plane alpha_rad_z = {:9.3e}".
+                  format(lat_prop._alpha_rad[ind.Z]))
             raise ValueError
 
         # Compute linear chromaticity.
@@ -340,7 +341,7 @@ delta_max = 3e-2
 
 home_dir = os.path.join(
     os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "MAX_IV", "max_4u")
-lat_name = "max_4u_g_1"
+lat_name = "max_4u_g_0"
 file_name = os.path.join(home_dir, lat_name+".lat")
 
 lat_prop = \
