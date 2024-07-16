@@ -150,7 +150,7 @@ delta_max = 3e-2
 
 home_dir = os.path.join(
     os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "MAX_IV", "max_4u")
-lat_name = "max_4u_g_1"
+lat_name = input("file_name?> ")
 file_name = os.path.join(home_dir, lat_name+".lat")
 
 lat_prop = \
