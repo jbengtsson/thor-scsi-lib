@@ -53,6 +53,12 @@ class lattice_properties_class(
 
     # Public.
 
+    def __str__(self):
+        return \
+            f"\nlattice_properties_class:\n" \
+            +f"  no    = {self._no:d}\n  nv    = {self._nv:d}\n" \
+            +f"  n_dof = {self._n_dof:d}"
+
     def compute_circ(self):
         return np.sum([elem.get_length() for elem in self._lattice])
 
