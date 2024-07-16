@@ -33,7 +33,40 @@ corresponding_types = {
 
 
 def compute_nu_xi(lat_prop, M):
+    # nu = acos( Tr{ M_x,y(delta; b_3) } / 2 ) / 2 pi
     planes = ["x", "y"]
+
+    m_11 = [gtpsa.tpsa(lat_prop._desc, lat_prop._no),
+            gtpsa.tpsa(lat_prop._desc, lat_prop._no)]
+    m_22 = [gtpsa.tpsa(lat_prop._desc, lat_prop._no),
+            gtpsa.tpsa(lat_prop._desc, lat_prop._no)]
+
+    m_11[0].set(0e0, M.x.get([1, 0, 0, 0, 0, 0, 0]))
+    m_11[0].set([0, 0, 0, 0, 1, 0, 0], 0e0, M.x.get([1, 0, 0, 0, 1, 0, 0]))
+    m_11[0].set([0, 0, 0, 0, 1, 0, 1], 0e0, M.x.get([1, 0, 0, 0, 1, 0, 1]))
+
+    m_22[0].set(0e0, M.px.get([0, 1, 0, 0, 0, 0, 0]))
+    m_22[0].set([0, 0, 0, 0, 1, 0, 0], 0e0, M.px.get([0, 1, 0, 0, 1, 0, 0]))
+    m_22[0].set([0, 0, 0, 0, 1, 0, 1], 0e0, M.px.get([0, 1, 0, 0, 1, 0, 1]))
+
+    m_11[1].set(0e0, M.y.get([0, 0, 1, 0, 0, 0, 0]))
+    m_11[1].set([0, 0, 0, 0, 1, 0, 0], 0e0, M.y.get([0, 0, 1, 0, 1, 0, 0]))
+    m_11[1].set([0, 0, 0, 0, 1, 0, 1], 0e0, M.y.get([0, 0, 1, 0, 1, 0, 1]))
+
+    m_22[1].set(0e0, M.py.get([0, 0, 0, 1, 0, 0, 0]))
+    m_22[1].set([0, 0, 0, 0, 1, 0, 0], 0e0, M.py.get([0, 0, 0, 1, 1, 0, 0]))
+    m_22[1].set([0, 0, 0, 0, 1, 0, 1], 0e0, M.py.get([0, 0, 0, 1, 1, 0, 1]))
+
+    print()
+    tr = gtpsa.tpsa(lat_prop._desc, lat_prop._no)
+    for k in range(2):
+        tr = m_11[k] + m_22[k]
+        nu = lo.acos2_tpsa(M.jacobian()[2*k][2*k+1], tr/2e0)/(2e0*np.pi)
+        print("nu = {:12.5e}, {:12.5e}, {:12.5e}".
+              format(nu.get(), nu.get([0, 0, 0, 0, 1, 0, 0]),
+                     nu.get([0, 0, 0, 0, 1, 0, 1])))
+    assert False
+
     try:
         nu, xi = [np.zeros(2), np.zeros(2)]
         M_delta = gtpsa.tpsa(lat_prop._desc, lat_prop._no)
@@ -43,23 +76,28 @@ def compute_nu_xi(lat_prop, M):
                 print("\ncompute_nu_xi: unstable in plane {:s}".
                       format(planes[k]))
                 raise ValueError
+
+            print("\n", )
+            print(      M.x.index([1, 0, 0, 0, 1, 0, 0]))
+            print(      M.x.index([1, 0, 0, 0, 1, 0, 1]))
+            assert False
             M_delta.clear()
             if k == 0:
-                M_delta += M.x.get(lo.ind_1(2*k))
+                M_delta += M.x.get(2*k+1)
                 M_delta.set(
                     lo.ind_1(ind.delta), 0e0, M.x.get(lo.ind_2(2*k, ind.delta)))
                 # m_22 + delta * m_26.
-                M_delta += M.px.get(lo.ind_1(2*k+1))
+                M_delta += M.px.get(2*(k+1))
                 M_delta.set(
                     lo.ind_1(ind.delta), 1e0,
                     M.px.get(lo.ind_2(2*k+1, ind.delta)))
             elif k == 1:
-                M_delta += M.y.get(lo.ind_1(2*k))
+                M_delta += M.y.get(2*k+1)
                 M_delta.set(
                     lo.ind_1(ind.delta), 0e0,
                     M.y.get(lo.ind_2(2*k, ind.delta)))
                 # m_22 + delta * m_26.
-                M_delta += M.py.get(lo.ind_1(2*k+1))
+                M_delta += M.py.get(2*(k+1))
                 M_delta.set(
                     lo.ind_1(ind.delta), 1e0,
                     M.py.get(lo.ind_2(2*k+1, ind.delta)))
