@@ -7,16 +7,15 @@ import os
 import enum
 
 import numpy as np
-
-from thor_scsi.utils import lattice_properties as lp, index_class as ind, \
-    linear_optics as lo, prm_class as pc
-from thor_scsi.utils.output import mat2txt, vec2txt
+from scipy import linalg as la
 
 import gtpsa
 
 import thor_scsi.lib as ts
 
-from thor_scsi.utils import knobs
+from thor_scsi.utils import lattice_properties as lp, index_class as ind, \
+    linear_optics as lo, knobs
+from thor_scsi.utils.output import mat2txt, vec2txt
 
 
 class MultipoleIndex(enum.IntEnum):
@@ -24,92 +23,11 @@ class MultipoleIndex(enum.IntEnum):
     sextupole  = 3
 
 
-corresponding_types = {
-    ts.Sextupole:         ts.SextupoleTpsa,
-    ts.Quadrupole:        ts.QuadrupoleTpsa,
-    ts.HorizontalSteerer: ts.HorizontalSteererTpsa,
-    ts.VerticalSteerer:   ts.VerticalSteererTpsa,
-}
-
-
-def compute_nu_xi(lat_prop, M):
-    # nu = acos( Tr{ M_x,y(delta; b_3) } / 2 ) / 2 pi
-    planes = ["x", "y"]
-
-    m_11 = [gtpsa.tpsa(lat_prop._desc, lat_prop._no),
-            gtpsa.tpsa(lat_prop._desc, lat_prop._no)]
-    m_22 = [gtpsa.tpsa(lat_prop._desc, lat_prop._no),
-            gtpsa.tpsa(lat_prop._desc, lat_prop._no)]
-
-    m_11[0].set(0e0, M.x.get([1, 0, 0, 0, 0, 0, 0]))
-    m_11[0].set([0, 0, 0, 0, 1, 0, 0], 0e0, M.x.get([1, 0, 0, 0, 1, 0, 0]))
-    m_11[0].set([0, 0, 0, 0, 1, 0, 1], 0e0, M.x.get([1, 0, 0, 0, 1, 0, 1]))
-
-    m_22[0].set(0e0, M.px.get([0, 1, 0, 0, 0, 0, 0]))
-    m_22[0].set([0, 0, 0, 0, 1, 0, 0], 0e0, M.px.get([0, 1, 0, 0, 1, 0, 0]))
-    m_22[0].set([0, 0, 0, 0, 1, 0, 1], 0e0, M.px.get([0, 1, 0, 0, 1, 0, 1]))
-
-    m_11[1].set(0e0, M.y.get([0, 0, 1, 0, 0, 0, 0]))
-    m_11[1].set([0, 0, 0, 0, 1, 0, 0], 0e0, M.y.get([0, 0, 1, 0, 1, 0, 0]))
-    m_11[1].set([0, 0, 0, 0, 1, 0, 1], 0e0, M.y.get([0, 0, 1, 0, 1, 0, 1]))
-
-    m_22[1].set(0e0, M.py.get([0, 0, 0, 1, 0, 0, 0]))
-    m_22[1].set([0, 0, 0, 0, 1, 0, 0], 0e0, M.py.get([0, 0, 0, 1, 1, 0, 0]))
-    m_22[1].set([0, 0, 0, 0, 1, 0, 1], 0e0, M.py.get([0, 0, 0, 1, 1, 0, 1]))
-
-    print()
-    tr = gtpsa.tpsa(lat_prop._desc, lat_prop._no)
-    for k in range(2):
-        tr = m_11[k] + m_22[k]
-        nu = lo.acos2_tpsa(M.jacobian()[2*k][2*k+1], tr/2e0)/(2e0*np.pi)
-        print("nu = {:12.5e}, {:12.5e}, {:12.5e}".
-              format(nu.get(), nu.get([0, 0, 0, 0, 1, 0, 0]),
-                     nu.get([0, 0, 0, 0, 1, 0, 1])))
-    assert False
-
-    try:
-        nu, xi = [np.zeros(2), np.zeros(2)]
-        M_delta = gtpsa.tpsa(lat_prop._desc, lat_prop._no)
-        for k in range(2):
-            tr_k = np.trace(M.jacobian()[2*k:2*(k+1)])
-            if tr_k >= 2e0:
-                print("\ncompute_nu_xi: unstable in plane {:s}".
-                      format(planes[k]))
-                raise ValueError
-
-            print("\n", )
-            print(      M.x.index([1, 0, 0, 0, 1, 0, 0]))
-            print(      M.x.index([1, 0, 0, 0, 1, 0, 1]))
-            assert False
-            M_delta.clear()
-            if k == 0:
-                M_delta += M.x.get(2*k+1)
-                M_delta.set(
-                    lo.ind_1(ind.delta), 0e0, M.x.get(lo.ind_2(2*k, ind.delta)))
-                # m_22 + delta * m_26.
-                M_delta += M.px.get(2*(k+1))
-                M_delta.set(
-                    lo.ind_1(ind.delta), 1e0,
-                    M.px.get(lo.ind_2(2*k+1, ind.delta)))
-            elif k == 1:
-                M_delta += M.y.get(2*k+1)
-                M_delta.set(
-                    lo.ind_1(ind.delta), 0e0,
-                    M.y.get(lo.ind_2(2*k, ind.delta)))
-                # m_22 + delta * m_26.
-                M_delta += M.py.get(2*(k+1))
-                M_delta.set(
-                    lo.ind_1(ind.delta), 1e0,
-                    M.py.get(lo.ind_2(2*k+1, ind.delta)))
-            # M_delta = m_11 + m_22.
-            nu_tpsa = \
-                lo.acos2_tpsa(M.jacobian()[2*k][2*k+1], M_delta/2e0)/(2e0*np.pi)
-            nu[k], xi[k] = [nu_tpsa.get(), nu_tpsa.get(lo.ind_1(ind.delta))]
-    except ValueError:
-        print("\ncompute_nu_xi: unstable =", stable)
-        return False, np.nan, np.nan
-    else:
-        return True, nu, xi
+def compute_map(lat_prop):
+    M = lo.compute_map(
+        lat_prop._lattice, lat_prop._model_state, desc=lat_prop._desc,
+        tpsa_order=lat_prop._no)
+    return M
 
 
 def prt_map(map, str, *, eps: float=1e-30):
@@ -120,6 +38,15 @@ def prt_map(map, str, *, eps: float=1e-30):
     map.py.print("p_y", eps)
     map.delta.print("delta", eps)
     map.ct.print("ct", eps)
+
+
+corresponding_types = {
+    ts.Bending:           ts.BendingTpsa,
+    ts.Sextupole:         ts.SextupoleTpsa,
+    ts.Quadrupole:        ts.QuadrupoleTpsa,
+    ts.HorizontalSteerer: ts.HorizontalSteererTpsa,
+    ts.VerticalSteerer:   ts.VerticalSteererTpsa,
+}
 
 
 def convert_magnet_to_knobbable(a_magnet: ts.Mpole) -> ts.MpoleTpsa:
@@ -162,7 +89,7 @@ def lat_mult_prm(lat_prop, mult_prm_name, mpole_n):
 # Work-around for C++ virtual function -> Python mapping issue.
 # See function above:
 #   mult_prm
-def compute_map(lat_prop, lat):
+def compute_map_tps(lat_prop, lat):
     M = gtpsa.ss_vect_tpsa(
         lat_prop._desc, lat_prop._no, lat_prop._nv,
         index_mapping=lat_prop._named_index)
@@ -190,6 +117,150 @@ def param_dep(lat_prop, prm_name):
     return lat_ptc
 
 
+def compute_nu_xi(lat_prop, M):
+    # nu = acos( Tr{ M_x,y(delta; b_3) } / 2 ) / 2 pi
+    planes = ["x", "y"]
+
+    m_11 = [gtpsa.tpsa(lat_prop._desc, lat_prop._no),
+            gtpsa.tpsa(lat_prop._desc, lat_prop._no)]
+    m_22 = [gtpsa.tpsa(lat_prop._desc, lat_prop._no),
+            gtpsa.tpsa(lat_prop._desc, lat_prop._no)]
+
+    m_11[0].set(0e0, M.x.get([1, 0, 0, 0, 0, 0, 0]))
+    m_11[0].set([0, 0, 0, 0, 1, 0, 0], 0e0, M.x.get([1, 0, 0, 0, 1, 0, 0]))
+
+    m_22[0].set(0e0, M.px.get([0, 1, 0, 0, 0, 0, 0]))
+    m_22[0].set([0, 0, 0, 0, 1, 0, 0], 0e0, M.px.get([0, 1, 0, 0, 1, 0, 0]))
+
+    m_11[1].set(0e0, M.y.get([0, 0, 1, 0, 0, 0, 0]))
+    m_11[1].set([0, 0, 0, 0, 1, 0, 0], 0e0, M.y.get([0, 0, 1, 0, 1, 0, 0]))
+
+    m_22[1].set(0e0, M.py.get([0, 0, 0, 1, 0, 0, 0]))
+    m_22[1].set([0, 0, 0, 0, 1, 0, 0], 0e0, M.py.get([0, 0, 0, 1, 1, 0, 0]))
+
+    print()
+    tr = gtpsa.tpsa(lat_prop._desc, lat_prop._no)
+    xi = [gtpsa.tpsa(lat_prop._desc, lat_prop._no),
+          gtpsa.tpsa(lat_prop._desc, lat_prop._no)]
+    for k in range(2):
+        tr = m_11[k] + m_22[k]
+        if tr.get() < 2e0:
+            xi[k] = lo.acos2_tpsa(M.jacobian()[2*k][2*k+1], tr/2e0)/(2e0*np.pi)
+        else:
+            xi[k] = np.nan
+            print("\ncompute_nu_xi: unstable in plane {:s}".format(planes[k]))
+
+    print("xi_x = {:12.5e} {:12.5e}".
+          format(xi[ind.X].get(), xi[ind.X].get([0, 0, 0, 0, 1, 0, 0])))
+    print("xi_y = {:12.5e} {:12.5e}".
+          format(xi[ind.Y].get(), xi[ind.Y].get([0, 0, 0, 0, 1, 0, 0])))
+
+    return xi
+
+
+def compute_xi_prm(lat_prop, M):
+    # nu = acos( Tr{ M_x,y(delta; b_3) } / 2 ) / 2 pi
+    planes = ["x", "y"]
+
+    m_11 = [gtpsa.tpsa(lat_prop._desc, lat_prop._no),
+            gtpsa.tpsa(lat_prop._desc, lat_prop._no)]
+    m_22 = [gtpsa.tpsa(lat_prop._desc, lat_prop._no),
+            gtpsa.tpsa(lat_prop._desc, lat_prop._no)]
+
+    m_11[0].set(0e0, M.x.get([1, 0, 0, 0, 0, 0, 0]))
+    m_11[0].set([0, 0, 0, 0, 1, 0, 0], 0e0, M.x.get([1, 0, 0, 0, 1, 0, 0]))
+    m_11[0].set([0, 0, 0, 0, 1, 0, 1], 0e0, M.x.get([1, 0, 0, 0, 1, 0, 1]))
+
+    m_22[0].set(0e0, M.px.get([0, 1, 0, 0, 0, 0, 0]))
+    m_22[0].set([0, 0, 0, 0, 1, 0, 0], 0e0, M.px.get([0, 1, 0, 0, 1, 0, 0]))
+    m_22[0].set([0, 0, 0, 0, 1, 0, 1], 0e0, M.px.get([0, 1, 0, 0, 1, 0, 1]))
+
+    m_11[1].set(0e0, M.y.get([0, 0, 1, 0, 0, 0, 0]))
+    m_11[1].set([0, 0, 0, 0, 1, 0, 0], 0e0, M.y.get([0, 0, 1, 0, 1, 0, 0]))
+    m_11[1].set([0, 0, 0, 0, 1, 0, 1], 0e0, M.y.get([0, 0, 1, 0, 1, 0, 1]))
+
+    m_22[1].set(0e0, M.py.get([0, 0, 0, 1, 0, 0, 0]))
+    m_22[1].set([0, 0, 0, 0, 1, 0, 0], 0e0, M.py.get([0, 0, 0, 1, 1, 0, 0]))
+    m_22[1].set([0, 0, 0, 0, 1, 0, 1], 0e0, M.py.get([0, 0, 0, 1, 1, 0, 1]))
+
+    print()
+    tr = gtpsa.tpsa(lat_prop._desc, lat_prop._no)
+    xi = [gtpsa.tpsa(lat_prop._desc, lat_prop._no),
+          gtpsa.tpsa(lat_prop._desc, lat_prop._no)]
+    for k in range(2):
+        tr = m_11[k] + m_22[k]
+        if tr.get() < 2e0:
+            xi[k] = lo.acos2_tpsa(M.jacobian()[2*k][2*k+1], tr/2e0)/(2e0*np.pi)
+        else:
+            xi[k] = np.nan
+            print("\ncompute_xi_prm: unstable in plane {:s}".format(planes[k]))
+
+    print("xi_x = {:12.5e} {:12.5e} {:12.5e}".
+          format(xi[ind.X].get(), xi[ind.X].get([0, 0, 0, 0, 1, 0, 0]),
+                 xi[ind.X].get([0, 0, 0, 0, 1, 0, 1])))
+    print("xi_y = {:12.5e} {:12.5e} {:12.5e}".
+          format(xi[ind.Y].get(), xi[ind.Y].get([0, 0, 0, 0, 1, 0, 0]),
+                 xi[ind.Y].get([0, 0, 0, 0, 1, 0, 1])))
+
+    return xi
+
+
+def compute_sext_resp_mat_num(lat_prop, b3_list):
+    db_3xL = 1e0
+    n = len(b3_list)
+    A = np.zeros((n, n))
+    M = compute_map(lat_prop)
+    stable, _, xi = lo.compute_nu_xi(lat_prop._desc, lat_prop._no, M)
+    for k in range(n):
+        b_3xL = \
+            lat_prop.get_b_nxL_elem(b3_list[k], 0, MultipoleIndex.sextupole)
+        lat_prop.set_b_nxL_fam(
+            b3_list[k], MultipoleIndex.sextupole, b_3xL-db_3xL)
+        M = compute_map(lat_prop)
+        stable, _, xi_1 = lo.compute_nu_xi(lat_prop._desc, lat_prop._no, M)
+        lat_prop.set_b_nxL_fam(
+            b3_list[k], MultipoleIndex.sextupole, b_3xL+db_3xL)
+        M = compute_map(lat_prop)
+        stable, _, xi_2 = lo.compute_nu_xi(lat_prop._desc, lat_prop._no, M)
+        a_ij = (xi_2-xi_1)/(2e0*db_3xL)
+        A[ind.X, k] = a_ij[ind.X]
+        A[ind.Y, k] = a_ij[ind.Y]
+    return xi, A
+
+
+def compute_sext_resp_mat(lat_prop, b3_list):
+    n = len(b3_list)
+    xi = np.zeros(2)
+    A = np.zeros((n, n))
+    for k in range(n):
+        lat_ptc = param_dep(lat_prop, b3_list[k])
+        M = compute_map_tps(lat_prop, lat_ptc)
+        xi_tps = compute_xi_prm(lat_prop, M)
+        for j in range(2):
+            if k == 0:
+                xi[j] = xi_tps[j].get([0, 0, 0, 0, 1, 0, 0])
+            A[j, k] = xi_tps[j].get([0, 0, 0, 0, 1, 0, 1])
+    return xi, A
+
+
+def set_xi(lat_prop, xi_x, xi_y, b3_list):
+    n = len(b3_list)
+    xi, A = compute_sext_resp_mat(lat_prop, b3_list)
+    A_inv = la.pinv(A)
+    b_3 = A_inv @ (-xi)
+    for k in range(len(b3_list)):
+        lat_prop.set_b_n_fam(b3_list[k], MultipoleIndex.sextupole, b_3[k])
+
+    print("\nxi:\n", xi)
+    print("\nA:\n", A)
+    print("\nA_inv:\n", A_inv)
+    print("\nb_3:\n", b_3)
+
+    lat_ptc = param_dep(lat_prop, b3_list[0])
+    M = compute_map_tps(lat_prop, lat_ptc)
+    nu, xi_corr = compute_nu_xi(lat_prop, M)
+
+
 ind = ind.index_class()
 # Number of phase-space coordinates.
 nv = 6
@@ -208,21 +279,14 @@ home_dir = os.path.join(
 lat_name = "ake_2"
 file_name = os.path.join(home_dir, lat_name+".lat")
 
+np.set_printoptions(formatter={"float": "{:13.5e}".format})
+
 lat_prop = \
     lp.lattice_properties_class(nv, no, nv_prm, no_prm, file_name, E_0, cod_eps)
 
-b3_list = ["sfoh", "sfmh", "sd"]
-
-zero_sext(lat_prop, b3_list)
-
-lat_ptc = param_dep(lat_prop, b3_list[0])
-
-M = compute_map(lat_prop, lat_ptc)
+b3_list = ["sfoh", "sdqd"]
 
 if False:
-    prt_map(M, "\nM:")
+    zero_sext(lat_prop, b3_list)
 
-stable, nu, xi = compute_nu_xi(lat_prop, M)
-
-print("\nnu = [{:7.5f}, {:7.5f}]".format(nu[ind.X], nu[ind.Y]))
-print("xi = [{:7.5f}, {:7.5f}]".format(xi[ind.X], xi[ind.Y]))
+set_xi(lat_prop, 0e0, 0e0, b3_list)
