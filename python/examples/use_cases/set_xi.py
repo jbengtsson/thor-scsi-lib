@@ -93,7 +93,7 @@ def zero_sext(lat_prop, b3_list):
 
 def set_param_dep(lat_prop, prm_name):
     lat_prop._named_index = gtpsa.IndexMapping(
-        dict(x=0, px=1, y=2, py=3, delta=4, ct=5, K=6))
+        dict(x=0, px=1, y=2, py=3, delta=4, ct=5, prm=6, K=7))
 
     nv_prm = 1
     no_prm = no
@@ -111,21 +111,29 @@ def compute_nu_tps_prm(lat_prop, M):
     m_22 = [gtpsa.tpsa(lat_prop._desc, lat_prop._no),
             gtpsa.tpsa(lat_prop._desc, lat_prop._no)]
 
-    m_11[0].set(0e0, M.x.get([1, 0, 0, 0, 0, 0, 0]))
-    m_11[0].set([0, 0, 0, 0, 1, 0, 0], 0e0, M.x.get([1, 0, 0, 0, 1, 0, 0]))
-    m_11[0].set([0, 0, 0, 0, 1, 0, 1], 0e0, M.x.get([1, 0, 0, 0, 1, 0, 1]))
+    m_11[0].set(0e0, M.x.get([1, 0, 0, 0, 0, 0, 0, 0]))
+    m_11[0].set(
+        [0, 0, 0, 0, 1, 0, 0, 0], 0e0, M.x.get([1, 0, 0, 0, 1, 0, 0, 0]))
+    m_11[0].set(
+        [0, 0, 0, 0, 1, 0, 0, 1], 0e0, M.x.get([1, 0, 0, 0, 1, 0, 0, 1]))
 
-    m_22[0].set(0e0, M.px.get([0, 1, 0, 0, 0, 0, 0]))
-    m_22[0].set([0, 0, 0, 0, 1, 0, 0], 0e0, M.px.get([0, 1, 0, 0, 1, 0, 0]))
-    m_22[0].set([0, 0, 0, 0, 1, 0, 1], 0e0, M.px.get([0, 1, 0, 0, 1, 0, 1]))
+    m_22[0].set(0e0, M.px.get([0, 1, 0, 0, 0, 0, 0, 0]))
+    m_22[0].set(
+        [0, 0, 0, 0, 1, 0, 0, 0], 0e0, M.px.get([0, 1, 0, 0, 1, 0, 0, 0]))
+    m_22[0].set(
+        [0, 0, 0, 0, 1, 0, 0, 1], 0e0, M.px.get([0, 1, 0, 0, 1, 0, 0, 1]))
 
-    m_11[1].set(0e0, M.y.get([0, 0, 1, 0, 0, 0, 0]))
-    m_11[1].set([0, 0, 0, 0, 1, 0, 0], 0e0, M.y.get([0, 0, 1, 0, 1, 0, 0]))
-    m_11[1].set([0, 0, 0, 0, 1, 0, 1], 0e0, M.y.get([0, 0, 1, 0, 1, 0, 1]))
+    m_11[1].set(0e0, M.y.get([0, 0, 1, 0, 0, 0, 0, 0]))
+    m_11[1].set(
+        [0, 0, 0, 0, 1, 0, 0, 0], 0e0, M.y.get([0, 0, 1, 0, 1, 0, 0, 0]))
+    m_11[1].set(
+        [0, 0, 0, 0, 1, 0, 0, 1], 0e0, M.y.get([0, 0, 1, 0, 1, 0, 0, 1]))
 
-    m_22[1].set(0e0, M.py.get([0, 0, 0, 1, 0, 0, 0]))
-    m_22[1].set([0, 0, 0, 0, 1, 0, 0], 0e0, M.py.get([0, 0, 0, 1, 1, 0, 0]))
-    m_22[1].set([0, 0, 0, 0, 1, 0, 1], 0e0, M.py.get([0, 0, 0, 1, 1, 0, 1]))
+    m_22[1].set(0e0, M.py.get([0, 0, 0, 1, 0, 0, 0, 0]))
+    m_22[1].set(
+        [0, 0, 0, 0, 1, 0, 0, 0], 0e0, M.py.get([0, 0, 0, 1, 1, 0, 0, 0]))
+    m_22[1].set(
+        [0, 0, 0, 0, 1, 0, 0, 1], 0e0, M.py.get([0, 0, 0, 1, 1, 0, 0, 1]))
 
     tr = gtpsa.tpsa(lat_prop._desc, lat_prop._no)
     xi = [gtpsa.tpsa(lat_prop._desc, lat_prop._no),
@@ -175,8 +183,8 @@ def compute_sext_resp_mat(lat_prop, b3_list):
         xi_tps = compute_nu_tps_prm(lat_prop, M)
         for j in range(2):
             if k == 0:
-                xi[j] = xi_tps[j].get([0, 0, 0, 0, 1, 0, 0])
-            A[j, k] = xi_tps[j].get([0, 0, 0, 0, 1, 0, 1])
+                xi[j] = xi_tps[j].get([0, 0, 0, 0, 1, 0, 0, 0])
+            A[j, k] = xi_tps[j].get([0, 0, 0, 0, 1, 0, 0, 1])
     return xi, A
 
 
@@ -196,16 +204,18 @@ def set_xi(lat_prop, xi_x, xi_y, b3_list):
     nu_tps = compute_nu_tps_prm(lat_prop, M)
 
     print("\nnu_tps_x = {:12.5e} {:12.5e} {:12.5e}".
-          format(nu_tps[ind.X].get(), nu_tps[ind.X].get([0, 0, 0, 0, 1, 0, 0]),
-                 nu_tps[ind.X].get([0, 0, 0, 0, 1, 0, 1])))
+          format(nu_tps[ind.X].get(), nu_tps[ind.X].get(
+              [0, 0, 0, 0, 1, 0, 0, 0]),
+                 nu_tps[ind.X].get([0, 0, 0, 0, 1, 0, 1, 0])))
     print("nu_tps_y = {:12.5e} {:12.5e} {:12.5e}".
-          format(nu_tps[ind.Y].get(), nu_tps[ind.Y].get([0, 0, 0, 0, 1, 0, 0]),
-                 nu_tps[ind.Y].get([0, 0, 0, 0, 1, 0, 1])))
+          format(nu_tps[ind.Y].get(), nu_tps[ind.Y].get(
+              [0, 0, 0, 0, 1, 0, 0, 0]),
+                 nu_tps[ind.Y].get([0, 0, 0, 0, 1, 0, 1, 0])))
 
 
 ind = ind.index_class()
 # Number of phase-space coordinates.
-nv = 6
+nv = 7
 # Variables max order.
 no = 3
 # Number of parameters.
