@@ -4,6 +4,7 @@
 
 
 import os
+import sys
 import at
 
 
@@ -14,8 +15,8 @@ def tracy2at(file_name, harmonic_number):
 
 home_dir = os.path.join(
     os.environ["HOME"], os.environ["TRACY_LIB"], "projects", "in", "lattice",
-    "MAX_IV", "max_iv")
-lat_name = "m4-20240618-M1a-QFAQFBQFCp175c_tracy"
+    "MAX_IV")
+lat_name = sys.argv[1]
 file_name = os.path.join(home_dir, lat_name)
 
 tracy2at(file_name, 176)

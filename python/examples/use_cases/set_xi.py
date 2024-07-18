@@ -18,16 +18,9 @@ from thor_scsi.utils import lattice_properties as lp, index_class as ind, \
 from thor_scsi.utils.output import mat2txt, vec2txt
 
 
-class MultipoleIndex(enum.IntEnum):
-    quadrupole = 2
-    sextupole  = 3
-
-
-def compute_map(lat_prop):
-    M = lo.compute_map(
-        lat_prop._lattice, lat_prop._model_state, desc=lat_prop._desc,
-        tpsa_order=lat_prop._no)
-    return M
+class MpoleInd(enum.IntEnum):
+    quad = 2
+    sext  = 3
 
 
 def prt_map(map, str, *, eps: float=1e-30):
@@ -38,6 +31,13 @@ def prt_map(map, str, *, eps: float=1e-30):
     map.py.print("p_y", eps)
     map.delta.print("delta", eps)
     map.ct.print("ct", eps)
+
+
+def compute_map(lat_prop, no):
+    M = lo.compute_map(
+        lat_prop._lattice, lat_prop._model_state, desc=lat_prop._desc,
+        tpsa_order=no)
+    return M
 
 
 def set_mult_prm(lat_prop, elems, mult_family, mpole_n):
@@ -88,7 +88,7 @@ def zero_sext(lat_prop, b3_list):
     # Zero sextupoles.
     print("\nZeroing sextupoles.")
     for b3_name in b3_list:
-        lat_prop.set_b_n_fam(b3_name, MultipoleIndex.sextupole, 0e0)
+        lat_prop.set_b_n_fam(b3_name, MpoleInd.sext, 0e0)
 
 
 def set_param_dep(lat_prop, prm_name):
@@ -100,6 +100,15 @@ def set_param_dep(lat_prop, prm_name):
     lat_prop._desc = gtpsa.desc(lat_prop._nv, lat_prop._no, nv_prm, no_prm)
     lat_ptc = lat_set_mult_prm(lat_prop, prm_name, 3)
     return lat_ptc
+
+
+def unset_param_dep(lat_prop, prm_name):
+    lat_prop._named_index = gtpsa.IndexMapping(
+        dict(x=0, px=1, y=2, py=3, delta=4, ct=5, prm=6))
+
+    nv_prm = 0
+    lat_prop._desc = gtpsa.desc(lat_prop._nv, lat_prop._no, nv_prm, no_prm)
+    lat_ptc = lat_set_mult_prm(lat_prop, prm_name, 3)
 
 
 def compute_nu_tps_prm(lat_prop, M):
@@ -154,18 +163,18 @@ def compute_sext_resp_mat_num(lat_prop, b3_list):
     db_3xL = 1e0
     n = len(b3_list)
     A = np.zeros((n, n))
-    M = compute_map(lat_prop)
+    M = compute_map(lat_prop, 1)
     stable, _, xi = lo.compute_nu_xi(lat_prop._desc, lat_prop._no, M)
     for k in range(n):
         b_3xL = \
-            lat_prop.get_b_nxL_elem(b3_list[k], 0, MultipoleIndex.sextupole)
+            lat_prop.get_b_nxL_elem(b3_list[k], 0, MpoleInd.sext)
         lat_prop.set_b_nxL_fam(
-            b3_list[k], MultipoleIndex.sextupole, b_3xL-db_3xL)
-        M = compute_map(lat_prop)
+            b3_list[k], MpoleInd.sext, b_3xL-db_3xL)
+        M = compute_map(lat_prop, 1)
         stable, _, xi_1 = lo.compute_nu_xi(lat_prop._desc, lat_prop._no, M)
         lat_prop.set_b_nxL_fam(
-            b3_list[k], MultipoleIndex.sextupole, b_3xL+db_3xL)
-        M = compute_map(lat_prop)
+            b3_list[k], MpoleInd.sext, b_3xL+db_3xL)
+        M = compute_map(lat_prop, 1)
         stable, _, xi_2 = lo.compute_nu_xi(lat_prop._desc, lat_prop._no, M)
         a_ij = (xi_2-xi_1)/(2e0*db_3xL)
         A[ind.X, k] = a_ij[ind.X]
@@ -194,7 +203,7 @@ def set_xi(lat_prop, xi_x, xi_y, b3_list):
     A_inv = la.pinv(A)
     b_3 = A_inv @ (-xi)
     for k in range(len(b3_list)):
-        lat_prop.set_b_n_fam(b3_list[k], MultipoleIndex.sextupole, b_3[k])
+        lat_prop.set_b_n_fam(b3_list[k], MpoleInd.sext, b_3[k])
 
     M = gtpsa.ss_vect_tpsa(
         lat_prop._desc, lat_prop._no, lat_prop._nv,

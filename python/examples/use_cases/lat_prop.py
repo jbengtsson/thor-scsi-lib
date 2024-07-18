@@ -5,6 +5,7 @@
 
 
 import os
+import sys
 
 import numpy as np
 
@@ -119,17 +120,43 @@ K_dict = {
 }
 
 
-def prt_nl(h_im, K_re):
+def compute_rms(h, dict):
+    var = 0e0
+    for key in dict:
+        var += h.get(dict[key])**2
+    return np.sqrt(var)
+
+
+def prt_nl(h_rms, K_rms, h_im, K_re):
+    print("\n  h_im rms = {:9.3e}".format(h_rms))
+    print("  K_re rms = {:9.3e}".format(K_rms))
+
     print()
     for key in h_dict:
-        print("    {:s} = {:10.3e}".format(key, h_im.get(h_dict[key])))
+        print("  {:s}  = {:10.3e}".format(key, h_im.get(h_dict[key])))
         if key == "h_00201":
             print()
     print()
     for key in K_dict:
-        print("    {:s} = {:10.3e}".format(key, K_re.get(K_dict[key])))
+        print("  {:s}  = {:10.3e}".format(key, K_re.get(K_dict[key])))
         if key == "K_00220":
             print()
+
+
+def compute_prt_nl(lat_prop, Id_scl):
+    # Compute map to order no.
+    M = compute_map(lat_prop, no)
+    print("\nM:", M, end="")
+    h_re, h_im = compute_h(lat_prop, M)
+    A_0, A_1, R, g_re, g_im, K_re, K_im = compute_map_normal_form(lat_prop, M)
+
+    h_im = compose_bs(h_im, Id_scl)
+    K_re = compose_bs(K_re, Id_scl)
+
+    h_rms = compute_rms(h_im, h_dict)
+    K_rms = compute_rms(K_re, K_dict)
+
+    prt_nl(h_rms, K_rms, h_im, K_re)
 
 
 # Number of phase-space coordinates.
@@ -149,14 +176,14 @@ beta_inj  = np.array([3.0, 3.0])
 delta_max = 3e-2
 
 home_dir = os.path.join(
-    os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "MAX_IV", "max_4u")
-lat_name = input("file_name?> ")
+    os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "MAX_IV")
+lat_name = sys.argv[1]
 file_name = os.path.join(home_dir, lat_name+".lat")
 
 lat_prop = \
     lp.lattice_properties_class(nv, no, nv_prm, no_prm, file_name, E_0, cod_eps)
 
-lat_prop.prt_lat(lat_name+"_lat.txt")
+lat_prop.prt_lat("lat_prop_lat.txt")
 
 print("\nCircumference [m]      = {:7.5f}".format(lat_prop.compute_circ()))
 print("Total bend angle [deg] = {:7.5f}".format(lat_prop.compute_phi_lat()))
@@ -169,18 +196,10 @@ lat_prop.prt_M()
 lat_prop.prt_M_rad()
 
 if not False:
-    lat_prop.plt_Twiss(lat_name+"_Twiss.png", not False)
-    lat_prop.plt_chrom(lat_name+"_chrom.png", not False)
+    lat_prop.plt_Twiss("lat_prop_Twiss.png", not False)
+    lat_prop.plt_chrom("lat_prop_chrom.png", not False)
 
 twoJ = compute_twoJ(A_max, beta_inj)
 Id_scl = compute_Id_scl(lat_prop, twoJ)
 
-M = compute_map(lat_prop, no)
-print("\nM:", M)
-h_re, h_im = compute_h(lat_prop, M)
-A_0, A_1, R, g_re, g_im, K_re, K_im = compute_map_normal_form(lat_prop, M)
-
-h_im = compose_bs(h_im, Id_scl)
-K_re = compose_bs(K_re, Id_scl)
-
-prt_nl(h_im, K_re)
+compute_prt_nl(lat_prop, Id_scl)

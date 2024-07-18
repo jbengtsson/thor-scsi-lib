@@ -9,17 +9,22 @@ import logging
 logging.basicConfig(level="WARNING")
 logger = logging.getLogger("thor_scsi")
 
-from dataclasses import dataclass
 import os
+import sys
+from dataclasses import dataclass
+import enum
 from typing import Tuple
 
 import numpy as np
 from scipy import optimize as opt
+from scipy import linalg as la
 
 import gtpsa
 
+import thor_scsi.lib as ts
+
 from thor_scsi.utils import lattice_properties as lp, index_class as ind, \
-    linear_optics as lo, prm_class as pc
+    linear_optics as lo, knobs as kb, prm_class as pc
 from thor_scsi.utils.output import vec2txt
 
 
@@ -33,6 +38,227 @@ b_2_max      = 10.0
 
 eps_x_des    = 139e-12
 nu_uc        = [0.265, 0.0816]
+
+
+class MpoleInd(enum.IntEnum):
+    quad = 2
+    sext  = 3
+
+
+def prt_map(map, str, *, eps: float=1e-30):
+    print(str)
+    map.x.print("x", eps)
+    map.px.print("p_x", eps)
+    map.y.print("y", eps)
+    map.py.print("p_y", eps)
+    map.delta.print("delta", eps)
+    map.ct.print("ct", eps)
+
+
+def compute_map(lat_prop, no):
+    M = lo.compute_map(
+        lat_prop._lattice, lat_prop._model_state, desc=lat_prop._desc,
+        tpsa_order=no)
+    return M
+
+
+def set_mult_prm(lat_prop, mult_prm_name, mpole_n):
+    elems = [elem for elem in lat_prop._lattice]
+    mult_family = lat_prop._lattice.elements_with_name(mult_prm_name)
+
+    for k in range(len(mult_family)):
+        index = mult_family[k].index
+        elem = kb.convert_magnet_to_knobbable(elems[index])
+        elems[index] = \
+            kb.make_magnet_knobbable(
+                elem, po=1, desc=lat_prop._desc,
+                named_index=lat_prop._named_index, multipole_number=mpole_n,
+                offset=False
+            )
+        # While the RHS pointer can be recasted to:
+        #   CellVoid
+        #   ElemTypeKnobbed
+        #   QuadrupoleType
+        # the assignment of the LHS only gives:
+        #   CellVoid
+        # and the lack of:
+        #   ElemtypeKnobbed
+        # will lead to an assert on line 158 in:
+        #   thor_scsi/std_machine/accelerator.cc
+        #
+    return elems
+
+
+def set_mult_prm(lat_prop, mult_prm_name, mpole_n):
+    elems = [elem for elem in lat_prop._lattice]
+    mult_family = lat_prop._lattice.elements_with_name(mult_prm_name)
+
+    for k in range(len(mult_family)):
+        index = mult_family[k].index
+        elem = kb.convert_magnet_to_knobbable(elems[index])
+        elems[index] = \
+            kb.make_magnet_knobbable(
+                elem, po=1, desc=lat_prop._desc,
+                named_index=lat_prop._named_index, multipole_number=mpole_n,
+                offset=False
+            )
+    return elems
+
+
+def unset_mult_prm(lat_ptc, mult_prm_name, mpole_n):
+    elems = [elem for elem in lat_prop._lattice]
+    mult_family = lat_ptc.elements_with_name(mult_prm_name)
+    print(mult_family)
+    assert False
+
+    for k in range(len(mult_family)):
+        index = mult_family[k].index
+        elem = kb.convert_magnet_to_unknobbable(elems[index])
+        elems[index] = \
+            kb.make_magnet_unknobbable(
+                elem, po=1, desc=lat_prop._desc,
+                named_index=lat_prop._named_index, multipole_number=mpole_n,
+                offset=False
+            )
+    return elems
+
+
+# Work-around for C++ virtual function -> Python mapping issue.
+# See function above:
+#   set_mult_prm
+def compute_map_prm(lat_prop, lat):
+    M = gtpsa.ss_vect_tpsa(
+        lat_prop._desc, lat_prop._no, lat_prop._nv,
+        index_mapping=lat_prop._named_index)
+    M.set_identity()
+    for k in range(len(lat)):
+        lat[k].propagate(lat_prop._model_state, M)
+    return M
+
+
+def zero_sext(lat_prop, b3_list):
+    # Zero sextupoles.
+    print("\nZeroing sextupoles.")
+    for b3_name in b3_list:
+        lat_prop.set_b_n_fam(b3_name, MpoleInd.sext, 0e0)
+
+
+def set_param_dep(lat_prop, prm_name):
+    lat_prop._named_index = gtpsa.IndexMapping(
+        dict(x=0, px=1, y=2, py=3, delta=4, ct=5, prm=6, K=7))
+    nv_prm = 1
+    no_prm = no
+    lat_prop._desc = gtpsa.desc(lat_prop._nv, lat_prop._no, nv_prm, no_prm)
+    lat_ptc = set_mult_prm(lat_prop, prm_name, 3)
+    return lat_ptc
+
+
+def unset_param_dep(lat_ptc, prm_name):
+    lat_ptc = unset_mult_prm(lat_prop, prm_name, 3)
+
+    nv_prm = 0
+    lat_prop._named_index = gtpsa.IndexMapping(
+        dict(x=0, px=1, y=2, py=3, delta=4, ct=5, prm=6))
+
+    lat_prop._desc = gtpsa.desc(lat_prop._nv, lat_prop._no, nv_prm, no_prm)
+    return lat_ptc
+
+
+def compute_nu_tps_prm(lat_prop, M):
+    # nu = acos( Tr{ M_x,y(delta; b_3) } / 2 ) / 2 pi
+    planes = ["x", "y"]
+
+    m_11 = [gtpsa.tpsa(lat_prop._desc, lat_prop._no),
+            gtpsa.tpsa(lat_prop._desc, lat_prop._no)]
+    m_22 = [gtpsa.tpsa(lat_prop._desc, lat_prop._no),
+            gtpsa.tpsa(lat_prop._desc, lat_prop._no)]
+
+    m_11[0].set(0e0, M.x.get([1, 0, 0, 0, 0, 0, 0, 0]))
+    m_11[0].set(
+        [0, 0, 0, 0, 1, 0, 0, 0], 0e0, M.x.get([1, 0, 0, 0, 1, 0, 0, 0]))
+    m_11[0].set(
+        [0, 0, 0, 0, 1, 0, 0, 1], 0e0, M.x.get([1, 0, 0, 0, 1, 0, 0, 1]))
+
+    m_22[0].set(0e0, M.px.get([0, 1, 0, 0, 0, 0, 0, 0]))
+    m_22[0].set(
+        [0, 0, 0, 0, 1, 0, 0, 0], 0e0, M.px.get([0, 1, 0, 0, 1, 0, 0, 0]))
+    m_22[0].set(
+        [0, 0, 0, 0, 1, 0, 0, 1], 0e0, M.px.get([0, 1, 0, 0, 1, 0, 0, 1]))
+
+    m_11[1].set(0e0, M.y.get([0, 0, 1, 0, 0, 0, 0, 0]))
+    m_11[1].set(
+        [0, 0, 0, 0, 1, 0, 0, 0], 0e0, M.y.get([0, 0, 1, 0, 1, 0, 0, 0]))
+    m_11[1].set(
+        [0, 0, 0, 0, 1, 0, 0, 1], 0e0, M.y.get([0, 0, 1, 0, 1, 0, 0, 1]))
+
+    m_22[1].set(0e0, M.py.get([0, 0, 0, 1, 0, 0, 0, 0]))
+    m_22[1].set(
+        [0, 0, 0, 0, 1, 0, 0, 0], 0e0, M.py.get([0, 0, 0, 1, 1, 0, 0, 0]))
+    m_22[1].set(
+        [0, 0, 0, 0, 1, 0, 0, 1], 0e0, M.py.get([0, 0, 0, 1, 1, 0, 0, 1]))
+
+    tr = gtpsa.tpsa(lat_prop._desc, lat_prop._no)
+    xi = [gtpsa.tpsa(lat_prop._desc, lat_prop._no),
+          gtpsa.tpsa(lat_prop._desc, lat_prop._no)]
+    for k in range(2):
+        tr = m_11[k] + m_22[k]
+        if tr.get() < 2e0:
+            xi[k] = lo.acos2_tpsa(M.jacobian()[2*k][2*k+1], tr/2e0)/(2e0*np.pi)
+        else:
+            xi[k] = np.nan
+            print("\ncompute_nu_tps_prm: unstable in plane {:s}".
+                  format(planes[k]))
+
+    return xi
+
+
+def compute_sext_resp_mat(lat_prop, b3_list):
+    n = len(b3_list)
+    xi = np.zeros(2)
+    A = np.zeros((n, n))
+    for k in range(n):
+        lat_ptc = set_param_dep(lat_prop, b3_list[k])
+
+        M = compute_map_prm(lat_prop, lat_ptc)
+        xi_tps = compute_nu_tps_prm(lat_prop, M)
+        for j in range(2):
+            if k == 0:
+                xi[j] = xi_tps[j].get([0, 0, 0, 0, 1, 0, 0, 0])
+            A[j, k] = xi_tps[j].get([0, 0, 0, 0, 1, 0, 0, 1])
+
+    return xi, A
+
+
+def set_xi(lat_prop, xi_x, xi_y, b3_list):
+    n = len(b3_list)
+
+    xi, A = compute_sext_resp_mat(lat_prop, b3_list)
+    A_inv = la.pinv(A)
+    b_3 = A_inv @ (-xi)
+
+    for k in range(len(b3_list)):
+        lat_prop.set_b_n_fam(b3_list[k], MpoleInd.sext, b_3[k])
+
+    M = gtpsa.ss_vect_tpsa(
+        lat_prop._desc, lat_prop._no, lat_prop._nv,
+        index_mapping=lat_prop._named_index)
+    M.set_identity()
+    lat_prop._lattice.propagate(lat_prop._model_state, M)
+    nu_tps = compute_nu_tps_prm(lat_prop, M)
+
+    print("\nnu_tps_x = {:12.5e} {:12.5e}".
+          format(nu_tps[ind.X].get(),
+                 nu_tps[ind.X].get([0, 0, 0, 0, 1, 0, 0, 0])))
+    print("nu_tps_y = {:12.5e} {:12.5e}".
+          format(nu_tps[ind.Y].get(),
+                 nu_tps[ind.Y].get([0, 0, 0, 0, 1, 0, 0, 0])))
+
+    lat_prop._named_index = gtpsa.IndexMapping(
+        dict(x=0, px=1, y=2, py=3, delta=4, ct=5, prm=6))
+    nv_prm = 0
+    no_prm = no
+    lat_prop._desc = gtpsa.desc(lat_prop._nv, lat_prop._no, nv_prm, no_prm)
+
 
 
 def compute_linear_optics(lat_prop):
@@ -71,23 +297,6 @@ def compute_linear_optics(lat_prop):
         return False, np.nan, np.nan
     else:
         return True, nu, xi
-
-
-def prt_map(map, str, *, eps: float=1e-30):
-    print(str)
-    map.x.print("x", eps)
-    map.px.print("p_x", eps)
-    map.y.print("y", eps)
-    map.py.print("p_y", eps)
-    map.delta.print("delta", eps)
-    map.ct.print("ct", eps)
-
-
-def compute_map(lat_prop, no):
-    M = lo.compute_map(
-        lat_prop._lattice, lat_prop._model_state, desc=lat_prop._desc,
-        tpsa_order=no)
-    return M
 
 
 def compute_twoJ(A_max, beta_inj):
@@ -159,6 +368,9 @@ h_dict = {
 }
 
 K_dict = {
+    "K_11000" : [1, 1, 0, 0, 0, 0, 0],
+    "K_00110" : [0, 0, 1, 1, 0, 0, 0],
+
     "K_22000" : [2, 2, 0, 0, 0, 0, 0],
     "K_11110" : [1, 1, 1, 1, 0, 0, 0],
     "K_00220" : [0, 0, 2, 2, 0, 0, 0],
@@ -168,7 +380,17 @@ K_dict = {
 }
 
 
-def prt_nl(h_im, K_re):
+def compute_rms(h, dict):
+    var = 0e0
+    for key in dict:
+        var += h.get(dict[key])**2
+    return np.sqrt(var)
+
+
+def prt_nl(h_rms, K_rms, h_im, K_re):
+    print("\n  h_im rms = {:9.3e}".format(h_rms))
+    print("  K_re rms = {:9.3e}".format(K_rms))
+
     print()
     for key in h_dict:
         print("    {:s} = {:10.3e}".format(key, h_im.get(h_dict[key])))
@@ -177,20 +399,13 @@ def prt_nl(h_im, K_re):
     print()
     for key in K_dict:
         print("    {:s} = {:10.3e}".format(key, K_re.get(K_dict[key])))
-        if key == "K_00220":
+        if (key == "K_00110") or (key == "K_00220"):
             print()
-
-
-def compute_rms(h, dict):
-    var = 0e0
-    for key in dict:
-        var += h.get(dict[key])**2
-    return np.sqrt(var)
 
 
 def opt_uc \
         (lat_prop, prm_list, weight, b1_list, phi_lat, rb_1, phi_b, eps_x_des,
-         nu_uc, Id_scl):
+         nu_uc, Id_scl, b3_list):
     """Use Case: optimise super period.
     """
     chi_2_min = 1e30
@@ -219,14 +434,12 @@ def opt_uc \
               format(nu[ind.X], nu[ind.Y], nu_uc[ind.X], nu_uc[ind.Y]))
         print("    xi             =  [{:5.3f}, {:5.3f}]".
               format(xi[ind.X], xi[ind.Y]))
-        print("    h_im rms       =  {:9.3e}".format(h_rms))
-        print("    K_re rms       =  {:9.3e}".format(K_rms))
         print("\n    phi_sp         = {:8.5f}".format(phi))
         print("    C [m]          = {:8.5f}".format(lat_prop.compute_circ()))
         print("\n    phi_b1         = {:8.5f}".format(phi_b1))
         print("    phi_rb_1       = {:8.5f}".format(phi_rb_1))
         print("    phi_bend       = {:8.5f}".format(phi_bend))
-        prt_nl(h_im, K_re)
+        prt_nl(h_rms, K_rms, h_im, K_re)
         lat_prop.prt_rad()
         prm_list.prt_prm(prm)
 
@@ -271,6 +484,7 @@ def opt_uc \
         n_iter += 1
         prm_list.set_prm(prm)
         phi_lat.set_phi_lat()
+        set_xi(lat_prop, 0e0, 0e0, b3_list)
 
         stable, nu, xi = compute_linear_optics(lat_prop)
 
@@ -340,14 +554,14 @@ beta_inj  = np.array([3.0, 3.0])
 delta_max = 3e-2
 
 home_dir = os.path.join(
-    os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "MAX_IV", "max_4u")
-lat_name = "max_4u_g_0"
+    os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "MAX_IV")
+lat_name = sys.argv[1]
 file_name = os.path.join(home_dir, lat_name+".lat")
 
 lat_prop = \
     lp.lattice_properties_class(nv, no, nv_prm, no_prm, file_name, E_0, cod_eps)
 
-lat_prop.prt_lat(lat_name+"_lat.txt")
+lat_prop.prt_lat("max_4u_uc_lat.txt")
 
 print("\nCircumference [m]      = {:7.5f}".format(lat_prop.compute_circ()))
 print("Total bend angle [deg] = {:7.5f}".format(lat_prop.compute_phi_lat()))
@@ -420,6 +634,8 @@ phi_lat = pc.phi_lat_class(lat_prop, n_phi_b, phi_b)
 twoJ = compute_twoJ(A_max, beta_inj)
 Id_scl = compute_Id_scl(lat_prop, twoJ)
 
+b3_list = ["sfoh", "sdqd"]
+
 opt_uc \
     (lat_prop, prm_list, weight, b1_list, phi_lat, rb_1, phi_b, eps_x_des,
-     nu_uc, Id_scl)
+     nu_uc, Id_scl, b3_list)

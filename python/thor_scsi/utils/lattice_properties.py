@@ -200,11 +200,7 @@ class lattice_properties_class(
             self._D_rad[ind.X], self._D_rad[ind.Y], self._D_rad[ind.Z]))
 
     def prt_M_rad(self):
-        n_dof = 3
-        print("\nM:\ntpsa cst:")
-        for k in range(2*n_dof):
-            print(" {:13.6e}".format(self._M_rad.cst().iloc[k]), end="")
-        print("\ntpsa linear:\n"+mat2txt(self._M_rad.jacobian()[:6, :6]))
+        print("\nM:_rad", self._M_rad, end="")
 
 
 # def calculate_radiation(
