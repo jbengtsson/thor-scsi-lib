@@ -234,10 +234,11 @@ def set_xi(lat_prop, xi_x, xi_y, b3_list):
 
     xi, A = compute_sext_resp_mat(lat_prop, b3_list)
     A_inv = la.pinv(A)
-    b_3 = A_inv @ (-xi)
+    db_3 = A_inv @ (-xi)
 
     for k in range(len(b3_list)):
-        lat_prop.set_b_n_fam(b3_list[k], MpoleInd.sext, b_3[k])
+        b_3 = lat_prop.get_b_n_elem(b3_list[k], 0, MpoleInd.sext)
+        lat_prop.set_b_n_fam(b3_list[k], MpoleInd.sext, b_3+db_3[k])
 
     M = gtpsa.ss_vect_tpsa(
         lat_prop._desc, lat_prop._no, lat_prop._nv,
@@ -368,9 +369,6 @@ h_dict = {
 }
 
 K_dict = {
-    "K_11000" : [1, 1, 0, 0, 0, 0, 0],
-    "K_00110" : [0, 0, 1, 1, 0, 0, 0],
-
     "K_22000" : [2, 2, 0, 0, 0, 0, 0],
     "K_11110" : [1, 1, 1, 1, 0, 0, 0],
     "K_00220" : [0, 0, 2, 2, 0, 0, 0],
@@ -388,18 +386,22 @@ def compute_rms(h, dict):
 
 
 def prt_nl(h_rms, K_rms, h_im, K_re):
-    print("\n  h_im rms = {:9.3e}".format(h_rms))
-    print("  K_re rms = {:9.3e}".format(K_rms))
+    print("\n    h_im rms   = {:9.3e}".format(h_rms))
+    print("    K_re rms   = {:9.3e}".format(K_rms))
 
     print()
     for key in h_dict:
         print("    {:s} = {:10.3e}".format(key, h_im.get(h_dict[key])))
         if key == "h_00201":
             print()
+    print("\n    K_11001 = {:9.3e}".format(
+        K_re.get([1, 1, 0, 0, 1, 0, 0]), K_re.get([0, 0, 1, 1, 1, 0, 0])))
+    print("    K_00111 = {:9.3e}".format(
+        K_re.get([1, 1, 0, 0, 1, 0, 0]), K_re.get([0, 0, 1, 1, 1, 0, 0])))
     print()
     for key in K_dict:
         print("    {:s} = {:10.3e}".format(key, K_re.get(K_dict[key])))
-        if (key == "K_00110") or (key == "K_00220"):
+        if key == "K_00220":
             print()
 
 
@@ -484,11 +486,12 @@ def opt_uc \
         n_iter += 1
         prm_list.set_prm(prm)
         phi_lat.set_phi_lat()
-        set_xi(lat_prop, 0e0, 0e0, b3_list)
 
         stable, nu, xi = compute_linear_optics(lat_prop)
 
         if stable:
+            set_xi(lat_prop, 0e0, 0e0, b3_list)
+
             M = compute_map(lat_prop, no)
 
             h_re, h_im = compute_h(lat_prop, M)
@@ -634,7 +637,8 @@ phi_lat = pc.phi_lat_class(lat_prop, n_phi_b, phi_b)
 twoJ = compute_twoJ(A_max, beta_inj)
 Id_scl = compute_Id_scl(lat_prop, twoJ)
 
-b3_list = ["sfoh", "sdqd"]
+b3_list = ["sf_h", "sd1"]
+# b3_list = ["sfoh", "sdqd"]
 
 opt_uc \
     (lat_prop, prm_list, weight, b1_list, phi_lat, rb_1, phi_b, eps_x_des,
