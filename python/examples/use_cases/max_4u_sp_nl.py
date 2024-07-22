@@ -35,7 +35,7 @@ phi_max      = 0.85
 b_2_bend_max = 1.0
 b_2_max      = 10.0
 
-eps_x_des    = 139e-12
+eps_x_des    = 99e-12
 nu_uc_des    = [2.0/6.0, 0.12]
 nu_sp_des    = [2.25, 0.8]
 beta_des     = [5.7, 2.0]
@@ -181,14 +181,38 @@ def compute_map_normal_form(lat_prop, M):
     return A_0, A_1, R, g_re, g_im, K_re, K_im
 
 
-h_dict = {
+h_re_dict = {
+    "h_22000" : [2, 2, 0, 0, 0, 0, 0],
+    "h_11110" : [1, 1, 1, 1, 0, 0, 0],
+    "h_00220" : [0, 0, 2, 2, 0, 0, 0]
+}
+
+h_im_dict = {
     "h_10002" : [1, 0, 0, 0, 2, 0, 0],
     "h_20001" : [2, 0, 0, 0, 1, 0, 0],
     "h_00201" : [0, 0, 2, 0, 1, 0, 0],
 
     "h_30000" : [3, 0, 0, 0, 0, 0, 0],
     "h_21000" : [2, 1, 0, 0, 0, 0, 0],
-    "h_11100" : [1, 1, 1, 0, 0, 0, 0],
+    "h_10110" : [1, 0, 1, 1, 0, 0, 0],
+    "h_10200" : [1, 0, 2, 0, 0, 0, 0],
+    "h_10020" : [1, 0, 0, 2, 0, 0, 0]
+}
+
+h_re_dict = {
+    "h_22000" : [2, 2, 0, 0, 0, 0, 0],
+    "h_11110" : [1, 1, 1, 1, 0, 0, 0],
+    "h_00220" : [0, 0, 2, 2, 0, 0, 0]
+}
+
+h_im_dict = {
+    "h_10002" : [1, 0, 0, 0, 2, 0, 0],
+    "h_20001" : [2, 0, 0, 0, 1, 0, 0],
+    "h_00201" : [0, 0, 2, 0, 1, 0, 0],
+
+    "h_30000" : [3, 0, 0, 0, 0, 0, 0],
+    "h_21000" : [2, 1, 0, 0, 0, 0, 0],
+    "h_10110" : [1, 0, 1, 1, 0, 0, 0],
     "h_10200" : [1, 0, 2, 0, 0, 0, 0],
     "h_10020" : [1, 0, 0, 2, 0, 0, 0]
 }
@@ -210,24 +234,43 @@ def compute_rms(h, dict):
     return np.sqrt(var)
 
 
-def prt_nl(h_rms, K_rms, h_im, K_re):
-    print("\n    h_im rms   = {:9.3e}".format(h_rms))
-    print("    K_re rms   = {:9.3e}".format(K_rms))
+def prt_nl(h_im_rms, h_re_rms, K_rms, h_re, h_im, K_re):
+    print("\n  h_im rms = {:9.3e}".format(h_im_rms))
+    print("  K_re rms = {:9.3e}".format(K_rms))
 
     print()
-    for key in h_dict:
-        print("    {:s} = {:10.3e}".format(key, h_im.get(h_dict[key])))
+    for key in h_im_dict:
+        print("  {:s}  = {:10.3e}".format(key, h_im.get(h_im_dict[key])))
         if key == "h_00201":
             print()
-    print("\n    K_11001 = {:9.3e}".format(
-        K_re.get([1, 1, 0, 0, 1, 0, 0]), K_re.get([0, 0, 1, 1, 1, 0, 0])))
-    print("    K_00111 = {:9.3e}".format(
-        K_re.get([1, 1, 0, 0, 1, 0, 0]), K_re.get([0, 0, 1, 1, 1, 0, 0])))
+    print()
+    for key in h_re_dict:
+        print("  {:s}  = {:10.3e}".format(key, h_re.get(h_re_dict[key])))
+        if key == "h_00201":
+            print()
     print()
     for key in K_dict:
-        print("    {:s} = {:10.3e}".format(key, K_re.get(K_dict[key])))
+        print("  {:s}  = {:10.3e}".format(key, K_re.get(K_dict[key])))
         if key == "K_00220":
             print()
+
+
+def compute_nl(lat_prop, Id_scl):
+    # Compute map to order no.
+    M = compute_map(lat_prop, no)
+    print("\nM:", M, end="")
+    h_re, h_im = compute_h(lat_prop, M)
+    A_0, A_1, R, g_re, g_im, K_re, K_im = compute_map_normal_form(lat_prop, M)
+
+    h_re = compose_bs(h_re, Id_scl)
+    h_im = compose_bs(h_im, Id_scl)
+    K_re = compose_bs(K_re, Id_scl)
+
+    h_im_rms = compute_rms(h_im, h_im_dict)
+    h_re_rms = compute_rms(h_re, h_re_dict)
+    K_rms = compute_rms(K_re, K_dict)
+
+    return h_im_rms, h_re_rms, K_rms, h_re, h_im, K_re
 
 
 def prt_b_3(lat_prop, file_name, b_3_list):
@@ -260,7 +303,8 @@ def opt_sp(
 
     def prt_iter(
             prm, chi_2, Twiss_sp, eta_uc_1, alpha_uc_1, eta_uc_2, alpha_uc_2,
-            nu_uc, dnu, xi, h_im, K_re, h_rms, K_rms):
+            nu_uc, dnu, xi,
+            h_im_rms, h_re_rms, K_rms, h_re, h_im, K_re):
         nonlocal nu_uc_des, nu_sp_des, beta_des
 
         eta, alpha, beta, nu_sp = Twiss_sp
@@ -306,13 +350,13 @@ def opt_sp(
         print("\n    phi_b1         = {:8.5f}".format(phi_b1))
         print("    phi_b2         = {:8.5f}".format(phi_b2))
         print("    phi_rb         = {:8.5f}".format(phi_rb))
-        prt_nl(h_rms, K_rms, h_im, K_re)
+        prt_nl(h_im_rms, h_re_rms, K_rms, h_re, h_im, K_re)
         lat_prop.prt_rad()
         prm_list.prt_prm(prm)
 
     def compute_chi_2(
             Twiss_sp, eta_uc_1, alpha_uc_1, eta_uc_2, alpha_uc_2, nu_uc, dnu,
-            xi, h_rms, K_rms):
+            xi, h_im_rms, h_re_rms, K_rms):
         nonlocal nu_uc_des, nu_sp_des, beta_des
 
         prt = not False
@@ -322,88 +366,93 @@ def opt_sp(
         dchi_2 = weight[0]*(lat_prop._eps[ind.X]-eps_x_des)**2
         chi_2 = dchi_2
         if prt:
-            print("\n  dchi2(eps_x)    = {:9.3e}".format(dchi_2))
+            print("\n  dchi2(eps_x)     = {:9.3e}".format(dchi_2))
 
         dchi_2 = weight[1]*lat_prop._U_0**2
         chi_2 += dchi_2
         if prt:
-            print("  dchi2(U_0)      = {:9.3e}".format(dchi_2))
+            print("  dchi2(U_0)       = {:9.3e}".format(dchi_2))
 
         dchi_2 = weight[2]*(eta_uc_1[ind.px]**2+eta_uc_2[ind.px]**2)
         chi_2 += dchi_2
         if prt:
-            print("  dchi2(eta'_uc)  = {:9.3e}".format(dchi_2))
+            print("  dchi2(eta'_uc)   = {:9.3e}".format(dchi_2))
 
         dchi_2 = weight[3]*(
             alpha_uc_1[ind.X]**2+alpha_uc_2[ind.X]**2+alpha_uc_1[ind.Y]**2
             +alpha_uc_2[ind.Y]**2)
         chi_2 += dchi_2
         if prt:
-            print("  dchi2(alpha_uc) = {:9.3e}".format(dchi_2))
+            print("  dchi2(alpha_uc)  = {:9.3e}".format(dchi_2))
 
         dchi_2 = weight[4]*(nu_uc[ind.X]-nu_uc_des[ind.X])**2
         chi_2 += dchi_2
         if prt:
-            print("  dchi2(nu_uc_x)  = {:9.3e}".format(dchi_2))
+            print("  dchi2(nu_uc_x)   = {:9.3e}".format(dchi_2))
 
         dchi_2 = weight[5]*(nu_uc[ind.Y]-nu_uc_des[ind.Y])**2
         chi_2 += dchi_2
         if prt:
-            print("  dchi2(nu_uc_y)  = {:9.3e}".format(dchi_2))
+            print("  dchi2(nu_uc_y)   = {:9.3e}".format(dchi_2))
 
         dchi_2 = weight[6]*eta[ind.x]**2
         chi_2 += dchi_2
         if prt:
-            print("  dchi2(eta_x)    = {:9.3e}".format(dchi_2))
+            print("  dchi2(eta_x)     = {:9.3e}".format(dchi_2))
 
         dchi_2 = weight[7]*(nu_sp[ind.X]-nu_sp_des[ind.X])**2
         chi_2 += dchi_2
         if prt:
-            print("  dchi2(nu_sp_x)  = {:9.3e}".format(dchi_2))
+            print("  dchi2(nu_sp_x)   = {:9.3e}".format(dchi_2))
 
         dchi_2 = weight[8]*(nu_sp[ind.Y]-nu_sp_des[ind.Y])**2
         chi_2 += dchi_2
         if prt:
-            print("  dchi2(nu_sp_y)  = {:9.3e}".format(dchi_2))
+            print("  dchi2(nu_sp_y)   = {:9.3e}".format(dchi_2))
 
         dchi_2 = weight[9]*(beta[ind.X]-beta_des[ind.X])**2
         chi_2 += dchi_2
         if prt:
-            print("  dchi2(beta_x)   = {:9.3e}".format(dchi_2))
+            print("  dchi2(beta_x)    = {:9.3e}".format(dchi_2))
 
         dchi_2 = weight[10]*(beta[ind.Y]-beta_des[ind.Y])**2
         chi_2 += dchi_2
         if prt:
-            print("  dchi2(beta_y)   = {:9.3e}".format(dchi_2))
+            print("  dchi2(beta_y)    = {:9.3e}".format(dchi_2))
 
         dchi_2 = weight[11]*(dnu[ind.X]-dnu_des[ind.X])**2
         chi_2 += dchi_2
         if prt:
-            print("  dchi2(dnu_x)    = {:9.3e}".format(dchi_2))
+            print("  dchi2(dnu_x)     = {:9.3e}".format(dchi_2))
 
         dchi_2 = weight[12]*(dnu[ind.Y]-dnu_des[ind.Y])**2
         chi_2 += dchi_2
         if prt:
-            print("  dchi2(dnu_y)    = {:9.3e}".format(dchi_2))
+            print("  dchi2(dnu_y)     = {:9.3e}".format(dchi_2))
 
         dchi_2 = weight[13]*xi[ind.X]**2
         if prt:
-            print("  dchi2(xi_x)     = {:9.3e}".format(dchi_2))
+            print("  dchi2(xi_x)      = {:9.3e}".format(dchi_2))
 
         dchi_2 = weight[14]*xi[ind.Y]**2
         chi_2 += dchi_2
         if prt:
-            print("  dchi2(xi_y)     = {:9.3e}".format(dchi_2))
+            print("  dchi2(xi_y)      = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[15]*h_rms**2
+        dchi_2 = weight[15]*h_im_rms**2
         chi_2 += dchi_2
         if prt:
-            print("  dchi2(h_rms)    = {:9.3e}".format(dchi_2))
+            print("  dchi2(Im{{h}} rms) = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[16]*K_rms**2
+        dchi_2 = weight[16]*h_re_rms**2
         chi_2 += dchi_2
         if prt:
-            print("  dchi2(K_rms)    = {:9.3e}".format(dchi_2))
+            print("  dchi2(Re{{h}} rms) = {:9.3e}".format(dchi_2))
+
+        dchi_2 = weight[17]*K_rms**2
+        chi_2 += dchi_2
+        if prt:
+            print("  dchi2(K_rms)     = {:9.3e}".format(dchi_2))
 
         return chi_2
 
@@ -454,32 +503,24 @@ def opt_sp(
                     - lat_prop.get_Twiss(sp_2)[3][:] \
                     + lat_prop.get_Twiss(sp_1)[3][:]
 
-                if stable:
-                    M = compute_map(lat_prop, no)
+                M = compute_map(lat_prop, no)
 
-                    h_re, h_im = compute_h(lat_prop, M)
-                    A_0, A_1, R, g_re, g_im, K_re, K_im = \
-                        compute_map_normal_form(lat_prop, M)
+                h_re, h_im = compute_h(lat_prop, M)
+                A_0, A_1, R, g_re, g_im, K_re, K_im = \
+                    compute_map_normal_form(lat_prop, M)
 
-                    h_im = compose_bs(h_im, Id_scl)
-                    K_re = compose_bs(K_re, Id_scl)
-
-                    h_rms = compute_rms(h_im, h_dict)
-                    K_rms = compute_rms(K_re, K_dict)
-
-                dnu = \
-                    lat_prop.get_Twiss(-1)[3][:] \
-                    - lat_prop.get_Twiss(sp_2)[3][:] \
-                    + lat_prop.get_Twiss(sp_1)[3][:]
+                h_im_rms, h_re_rms, K_rms, h_re, h_im, K_re = \
+                    compute_nl(lat_prop, Id_scl)
 
                 chi_2 = compute_chi_2(
                     Twiss_sp, eta_uc_1, alpha_uc_1, eta_uc_2, alpha_uc_2,
-                    nu_uc, dnu, xi, h_rms, K_rms)
+                    nu_uc, dnu, xi, h_im_rms, h_re_rms, K_rms)
 
                 if chi_2 < chi_2_min:
                     prt_iter(
                         prm, chi_2, Twiss_sp, eta_uc_1, alpha_uc_1, eta_uc_2,
-                        alpha_uc_2, nu_uc, dnu, xi, h_im, K_re, h_rms, K_rms)
+                        alpha_uc_2, nu_uc, dnu, xi,
+                        h_im_rms, h_re_rms, K_rms, h_re, h_im, K_re)
                     lat_prop.prt_Twiss("twiss.txt")
                     pc.prt_lat(lat_prop, file_name, prm_list, phi_lat=phi_lat)
                     prt_b_3(lat_prop, "opt_sp_nl_b_3.txt", b_3_list)
@@ -599,12 +640,13 @@ weight = np.array([
     0e-3,  # nu_sp_y.
     0e-6,  # beta_x.
     0e-6,  # beta_y.
-    1e-2,  # dnu_x.
-    1e-2,  # dnu_y.
-    1e-7,  # xi_x.
-    1e-7,  # xi_y.
-    1e6,   # h rms.
-    1e8    # K rms.
+    0e-2,  # dnu_x.
+    0e-2,  # dnu_y.
+    0e-7,  # xi_x.
+    0e-7,  # xi_y.
+    1e5,   # Im{h} rms.
+    1e6,   # Re{h} rms.
+    1e6    # K rms.
 ])
 
 b1_list = ["b1_0", "b1_1", "b1_2", "b1_3", "b1_4", "b1_5"]
