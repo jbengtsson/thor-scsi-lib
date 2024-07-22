@@ -12,10 +12,13 @@ logger = logging.getLogger("thor_scsi")
 
 from dataclasses import dataclass
 import os
+import sys
+import enum
 from typing import Tuple
 
 import numpy as np
 from scipy import optimize as opt
+from scipy import linalg as la
 
 from thor_scsi.utils import lattice_properties as lp, index_class as ind, \
     linear_optics as lo, prm_class as pc
@@ -39,9 +42,211 @@ beta_des     = [5.7, 2.0]
 dnu_des      = [0.5, 0.25]     # Phase advance across the straight.
 
 
+class MpoleInd(enum.IntEnum):
+    quad = 2
+    sext  = 3
+
+
+def prt_map(map, str, *, eps: float=1e-30):
+    print(str)
+    map.x.print("x", eps)
+    map.px.print("p_x", eps)
+    map.y.print("y", eps)
+    map.py.print("p_y", eps)
+    map.delta.print("delta", eps)
+    map.ct.print("ct", eps)
+
+
+def compute_map(lat_prop, no):
+    M = lo.compute_map(
+        lat_prop._lattice, lat_prop._model_state, desc=lat_prop._desc,
+        tpsa_order=no)
+    return M
+
+
+def zero_sext(lat_prop, b_3_list):
+    # Zero sextupoles.
+    print("\nZeroing sextupoles.")
+    for b3_name in b_3_list:
+        lat_prop.set_b_n_fam(b3_name, MpoleInd.sext, 0e0)
+
+
+def compute_sext_resp_mat_num(lat_prop, b_3_list):
+    # Uses integrated sextupole strength.
+    db_3xL = 1e-3
+    n = len(b_3_list)
+    A = np.zeros((n, n))
+    M = compute_map(lat_prop, 2)
+    stable, _, xi = lo.compute_nu_xi(lat_prop._desc, lat_prop._no, M)
+    if stable:
+        for k in range(n):
+            b_3xL = \
+                lat_prop.get_b_nxL_elem(b_3_list[k], 0, MpoleInd.sext)
+            lat_prop.set_b_nxL_fam(b_3_list[k], MpoleInd.sext, b_3xL-db_3xL)
+            M = compute_map(lat_prop, 2)
+            stable, _, xi_1 = lo.compute_nu_xi(lat_prop._desc, lat_prop._no, M)
+            if stable:
+                lat_prop.set_b_nxL_fam(b_3_list[k], MpoleInd.sext, b_3xL+db_3xL)
+                M = compute_map(lat_prop, 2)
+                stable, _, xi_2 = \
+                    lo.compute_nu_xi(lat_prop._desc, lat_prop._no, M)
+                a_ij = (xi_2-xi_1)/(2e0*db_3xL)
+                A[ind.X, k] = a_ij[ind.X]
+                A[ind.Y, k] = a_ij[ind.Y]
+            else:
+                break
+        return stable, xi, A
+    else:
+         return False, np.nan, np.nan
+       
+
+
+def set_xi(lat_prop, xi_x, xi_y, b_3_list):
+    n = len(b_3_list)
+
+    # for k in range(len(b_3_list)):
+    #     lat_prop.set_b_n_fam(b_3_list[k], MpoleInd.sext, 0e0)
+    stable, xi, A = compute_sext_resp_mat_num(lat_prop, b_3_list)
+    if stable:
+        A_inv = la.pinv(A)
+        db_3xL = A_inv @ (-xi)
+
+        for k in range(len(b_3_list)):
+            b_3xL = lat_prop.get_b_nxL_elem(b_3_list[k], 0, MpoleInd.sext)
+            lat_prop.set_b_nxL_fam(b_3_list[k], MpoleInd.sext, b_3xL+db_3xL[k])
+            b_3 = lat_prop.get_b_n_elem(b_3_list[k], 0, MpoleInd.sext)
+
+            M = gtpsa.ss_vect_tpsa(
+                lat_prop._desc, lat_prop._no, lat_prop._nv,
+            index_mapping=lat_prop._named_index)
+            M = compute_map(lat_prop, 2)
+            stable, _, xi = lo.compute_nu_xi(lat_prop._desc, lat_prop._no, M)
+
+    return stable
+
+
+def compute_twoJ(A_max, beta_inj):
+    twoJ = \
+        np.array(
+            [A_max[ind.X]**2/beta_inj[ind.X], A_max[ind.Y]**2/beta_inj[ind.Y]])
+    return twoJ
+
+
+def compute_Id_scl(lat_prop, twoJ):
+    Id_scl = \
+        gtpsa.ss_vect_tpsa(
+            lat_prop._desc, lat_prop._no, index_mapping=lat_prop._named_index)
+    Id_scl.set_identity()
+    for k in range(4):
+        Id_scl.iloc[k].set_variable(0e0, k+1, np.sqrt(twoJ[k//2]))
+    Id_scl.delta.set_variable(0e0, 5, delta_max)
+    return Id_scl
+
+
+def compose_bs(h, map):
+    Id = \
+        gtpsa.ss_vect_tpsa(
+        lat_prop._desc, lat_prop._no, index_mapping=lat_prop._named_index)
+    t_map = \
+        gtpsa.ss_vect_tpsa(
+        lat_prop._desc, lat_prop._no, index_mapping=lat_prop._named_index)
+    t_map.x = h
+    t_map.compose(t_map, map)
+    return t_map.x 
+
+
+def compute_h(lat_prop, M):
+    h    = gtpsa.tpsa(lat_prop._desc, lat_prop._no)
+    h_re = gtpsa.tpsa(lat_prop._desc, lat_prop._no)
+    h_im = gtpsa.tpsa(lat_prop._desc, lat_prop._no)
+
+    M.M_to_h_DF(h)
+    h.CtoR(h_re, h_im)
+    return h_re, h_im
+
+
+def compute_map_normal_form(lat_prop, M):
+    A_0  = gtpsa.ss_vect_tpsa(lat_prop._desc, lat_prop._no)
+    A_1  = gtpsa.ss_vect_tpsa(lat_prop._desc, lat_prop._no)
+    R    = gtpsa.ss_vect_tpsa(lat_prop._desc, lat_prop._no)
+    g    = gtpsa.tpsa(lat_prop._desc, lat_prop._no)
+    g_re = gtpsa.tpsa(lat_prop._desc, lat_prop._no)
+    g_im = gtpsa.tpsa(lat_prop._desc, lat_prop._no)
+    K    = gtpsa.tpsa(lat_prop._desc, lat_prop._no)
+    K_re = gtpsa.tpsa(lat_prop._desc, lat_prop._no)
+    K_im = gtpsa.tpsa(lat_prop._desc, lat_prop._no)
+
+    M.Map_Norm(A_0, A_1, R, g, K)
+    K.CtoR(K_re, K_im)
+    return A_0, A_1, R, g_re, g_im, K_re, K_im
+
+
+h_dict = {
+    "h_10002" : [1, 0, 0, 0, 2, 0, 0],
+    "h_20001" : [2, 0, 0, 0, 1, 0, 0],
+    "h_00201" : [0, 0, 2, 0, 1, 0, 0],
+
+    "h_30000" : [3, 0, 0, 0, 0, 0, 0],
+    "h_21000" : [2, 1, 0, 0, 0, 0, 0],
+    "h_11100" : [1, 1, 1, 0, 0, 0, 0],
+    "h_10200" : [1, 0, 2, 0, 0, 0, 0],
+    "h_10020" : [1, 0, 0, 2, 0, 0, 0]
+}
+
+K_dict = {
+    "K_22000" : [2, 2, 0, 0, 0, 0, 0],
+    "K_11110" : [1, 1, 1, 1, 0, 0, 0],
+    "K_00220" : [0, 0, 2, 2, 0, 0, 0],
+
+    "K_11002" : [1, 1, 0, 0, 2, 0, 0],
+    "K_00112" : [0, 0, 1, 1, 2, 0, 0]
+}
+
+
+def compute_rms(h, dict):
+    var = 0e0
+    for key in dict:
+        var += h.get(dict[key])**2
+    return np.sqrt(var)
+
+
+def prt_nl(h_rms, K_rms, h_im, K_re):
+    print("\n    h_im rms   = {:9.3e}".format(h_rms))
+    print("    K_re rms   = {:9.3e}".format(K_rms))
+
+    print()
+    for key in h_dict:
+        print("    {:s} = {:10.3e}".format(key, h_im.get(h_dict[key])))
+        if key == "h_00201":
+            print()
+    print("\n    K_11001 = {:9.3e}".format(
+        K_re.get([1, 1, 0, 0, 1, 0, 0]), K_re.get([0, 0, 1, 1, 1, 0, 0])))
+    print("    K_00111 = {:9.3e}".format(
+        K_re.get([1, 1, 0, 0, 1, 0, 0]), K_re.get([0, 0, 1, 1, 1, 0, 0])))
+    print()
+    for key in K_dict:
+        print("    {:s} = {:10.3e}".format(key, K_re.get(K_dict[key])))
+        if key == "K_00220":
+            print()
+
+
+def prt_b_3(lat_prop, file_name, b_3_list):
+    outf = open(file_name, 'w')
+
+    for k in range(len(b_3_list)):
+        name = b_3_list[k]
+        L = lat_prop.get_L_elem(name, 0)
+        b_3 = lat_prop.get_b_n_elem(name, 0, 3)
+        print(("{:5s}: Sextupole, L = {:7.5f}, K = {:8.5f}, N = n_sext;")
+              .format(name, L, b_3), file=outf)
+
+    outf.close()
+
+
 def opt_sp(
         lat_prop, prm_list, uc_0, uc_1, uc_2, sp_1, sp_2, weight, b1_list,
-        b2_list, phi_lat, eps_x_des, nu_uc_des, nu_sp_des, beta_des, dnu_des):
+        b2_list, phi_lat, eps_x_des, nu_uc_des, nu_sp_des, beta_des, dnu_des,
+        Id_scl, b_3_list):
     """Use Case: optimise super period.
     """
 
@@ -55,7 +260,7 @@ def opt_sp(
 
     def prt_iter(
             prm, chi_2, Twiss_sp, eta_uc_1, alpha_uc_1, eta_uc_2, alpha_uc_2,
-            nu_uc, dnu, xi):
+            nu_uc, dnu, xi, h_im, K_re, h_rms, K_rms):
         nonlocal nu_uc_des, nu_sp_des, beta_des
 
         eta, alpha, beta, nu_sp = Twiss_sp
@@ -101,11 +306,13 @@ def opt_sp(
         print("\n    phi_b1         = {:8.5f}".format(phi_b1))
         print("    phi_b2         = {:8.5f}".format(phi_b2))
         print("    phi_rb         = {:8.5f}".format(phi_rb))
+        prt_nl(h_rms, K_rms, h_im, K_re)
+        lat_prop.prt_rad()
         prm_list.prt_prm(prm)
 
     def compute_chi_2(
             Twiss_sp, eta_uc_1, alpha_uc_1, eta_uc_2, alpha_uc_2, nu_uc, dnu,
-            xi):
+            xi, h_rms, K_rms):
         nonlocal nu_uc_des, nu_sp_des, beta_des
 
         prt = not False
@@ -188,6 +395,16 @@ def opt_sp(
         if prt:
             print("  dchi2(xi_y)     = {:9.3e}".format(dchi_2))
 
+        dchi_2 = weight[15]*h_rms**2
+        chi_2 += dchi_2
+        if prt:
+            print("  dchi2(h_rms)    = {:9.3e}".format(dchi_2))
+
+        dchi_2 = weight[16]*K_rms**2
+        chi_2 += dchi_2
+        if prt:
+            print("  dchi2(K_rms)    = {:9.3e}".format(dchi_2))
+
         return chi_2
 
     def f_sp(prm):
@@ -196,55 +413,79 @@ def opt_sp(
         n_iter += 1
         prm_list.set_prm(prm)
         phi_lat.set_phi_lat()
+        stable = set_xi(lat_prop, 0e0, 0e0, b_3_list)
 
-        try:
-            # Compute Twiss parameters along the lattice.
-            if not lat_prop.comp_per_sol():
-                print("\ncomp_per_sol: unstable")
-                raise ValueError
+        if stable:
+            try:
+                # Compute Twiss parameters along the lattice.
+                if not lat_prop.comp_per_sol():
+                    print("\ncomp_per_sol: unstable")
+                    raise ValueError
 
-            # Compute radiation properties.
-            if not lat_prop.compute_radiation():
-                print("\ncompute_radiation: unstable")
-                raise ValueError
+                # Compute radiation properties.
+                if not lat_prop.compute_radiation():
+                    print("\ncompute_radiation: unstable")
+                    raise ValueError
 
-            # Compute linear chromaticity.
-            M = lo.compute_map(
-                lat_prop._lattice, lat_prop._model_state,
-                desc=lat_prop._desc, tpsa_order=2)
-            stable, _, xi = \
-                lo.compute_nu_xi(lat_prop._desc, lat_prop._no, M)
-            if not stable:
-                print("\ncompute_nu_xi: unstable")
-                raise ValueError
-        except ValueError:
-            chi_2 = 1e30
-            if False:
-                print("\n{:3d} chi_2 = {:11.5e} ({:11.5e})".
-                      format(n_iter, chi_2, chi_2_min))
-                prm_list.prt_prm(prm)
+                # Compute linear chromaticity.
+                M = lo.compute_map(
+                    lat_prop._lattice, lat_prop._model_state,
+                    desc=lat_prop._desc, tpsa_order=2)
+                stable, _, xi = \
+                    lo.compute_nu_xi(lat_prop._desc, lat_prop._no, M)
+                if not stable:
+                    print("\ncompute_nu_xi: unstable")
+                    raise ValueError
+            except ValueError:
+                chi_2 = 1e30
+                if False:
+                    print("\n{:3d} chi_2 = {:11.5e} ({:11.5e})".
+                          format(n_iter, chi_2, chi_2_min))
+                    prm_list.prt_prm(prm)
+
+            else:
+                _, _, _, nu_0 = lat_prop.get_Twiss(uc_0-1)
+                eta_uc_1, alpha_uc_1, _, nu_1 = lat_prop.get_Twiss(uc_1)
+                nu_uc = nu_1 - nu_0
+                eta_uc_2, alpha_uc_2, _, _ = lat_prop.get_Twiss(uc_2)
+                Twiss_sp = lat_prop.get_Twiss(-1)
+                dnu = \
+                    lat_prop.get_Twiss(-1)[3][:] \
+                    - lat_prop.get_Twiss(sp_2)[3][:] \
+                    + lat_prop.get_Twiss(sp_1)[3][:]
+
+                if stable:
+                    M = compute_map(lat_prop, no)
+
+                    h_re, h_im = compute_h(lat_prop, M)
+                    A_0, A_1, R, g_re, g_im, K_re, K_im = \
+                        compute_map_normal_form(lat_prop, M)
+
+                    h_im = compose_bs(h_im, Id_scl)
+                    K_re = compose_bs(K_re, Id_scl)
+
+                    h_rms = compute_rms(h_im, h_dict)
+                    K_rms = compute_rms(K_re, K_dict)
+
+                dnu = \
+                    lat_prop.get_Twiss(-1)[3][:] \
+                    - lat_prop.get_Twiss(sp_2)[3][:] \
+                    + lat_prop.get_Twiss(sp_1)[3][:]
+
+                chi_2 = compute_chi_2(
+                    Twiss_sp, eta_uc_1, alpha_uc_1, eta_uc_2, alpha_uc_2,
+                    nu_uc, dnu, xi, h_rms, K_rms)
+
+                if chi_2 < chi_2_min:
+                    prt_iter(
+                        prm, chi_2, Twiss_sp, eta_uc_1, alpha_uc_1, eta_uc_2,
+                        alpha_uc_2, nu_uc, dnu, xi, h_im, K_re, h_rms, K_rms)
+                    lat_prop.prt_Twiss("twiss.txt")
+                    pc.prt_lat(lat_prop, file_name, prm_list, phi_lat=phi_lat)
+                    prt_b_3(lat_prop, "opt_sp_nl_b_3.txt", b_3_list)
+                    chi_2_min = min(chi_2, chi_2_min)
         else:
-            _, _, _, nu_0 = lat_prop.get_Twiss(uc_0-1)
-            eta_uc_1, alpha_uc_1, _, nu_1 = lat_prop.get_Twiss(uc_1)
-            nu_uc = nu_1 - nu_0
-            eta_uc_2, alpha_uc_2, _, _ = lat_prop.get_Twiss(uc_2)
-            Twiss_sp = lat_prop.get_Twiss(-1)
-
-            dnu = \
-                lat_prop.get_Twiss(-1)[3][:] - lat_prop.get_Twiss(sp_2)[3][:] \
-                + lat_prop.get_Twiss(sp_1)[3][:]
-
-            chi_2 = compute_chi_2(
-                Twiss_sp, eta_uc_1, alpha_uc_1, eta_uc_2, alpha_uc_2, nu_uc,
-                dnu, xi)
-
-            if chi_2 < chi_2_min:
-                prt_iter(
-                    prm, chi_2, Twiss_sp, eta_uc_1, alpha_uc_1, eta_uc_2,
-                    alpha_uc_2, nu_uc, dnu, xi)
-                lat_prop.prt_Twiss("twiss.txt")
-                pc.prt_lat(lat_prop, file_name, prm_list, phi_lat=phi_lat)
-                chi_2_min = min(chi_2, chi_2_min)
+            chi_2 = 1e30
 
         return chi_2
 
@@ -278,7 +519,7 @@ def opt_sp(
 # Number of phase-space coordinates.
 nv = 7
 # Variables max order.
-no = 2
+no = 4
 # Number of parameters.
 nv_prm = 0
 # Parameters max order.
@@ -287,19 +528,26 @@ no_prm = 0
 cod_eps = 1e-15
 E_0     = 3.0e9
 
+A_max     = np.array([6e-3, 3e-3])
+beta_inj  = np.array([3.0, 3.0])
+delta_max = 3e-2
+
 home_dir = os.path.join(
-    os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "MAX_IV", "max_4u")
-# lat_name = "max_iv_sp_jb"
-lat_name = input("file_name?> ")
+    os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "MAX_IV")
+lat_name = sys.argv[1]
 file_name = os.path.join(home_dir, lat_name+".lat")
 
 lat_prop = \
     lp.lattice_properties_class(nv, no, nv_prm, no_prm, file_name, E_0, cod_eps)
 
-lat_prop.prt_lat(lat_name+"_lat.txt")
+lat_prop.prt_lat("max_4u_sp_nl_lat.txt")
 
 print("\nCircumference [m]      = {:7.5f}".format(lat_prop.compute_circ()))
 print("Total bend angle [deg] = {:7.5f}".format(lat_prop.compute_phi_lat()))
+
+b_3_list = ["sf_h", "sd1"]
+# b_3_list = ["sfoh", "sdqd"]
+set_xi(lat_prop, 0e0, 0e0, b_3_list)
 
 try:
     # Compute Twiss parameters along lattice.
@@ -354,7 +602,9 @@ weight = np.array([
     1e-2,  # dnu_x.
     1e-2,  # dnu_y.
     1e-7,  # xi_x.
-    1e-7   # xi_y.
+    1e-7,  # xi_y.
+    1e6,   # h rms.
+    1e8    # K rms.
 ])
 
 b1_list = ["b1_0", "b1_1", "b1_2", "b1_3", "b1_4", "b1_5"]
@@ -425,6 +675,10 @@ else:
 
 prm_list = pc.prm_class(lat_prop, prms, b_2_max)
 
+twoJ = compute_twoJ(A_max, beta_inj)
+Id_scl = compute_Id_scl(lat_prop, twoJ)
+
 opt_sp(
     lat_prop, prm_list, uc_0, uc_1, uc_2, sp_1, sp_2, weight, b1_list, b2_list,
-    phi_lat, eps_x_des, nu_uc_des, nu_sp_des, beta_des, dnu_des)
+    phi_lat, eps_x_des, nu_uc_des, nu_sp_des, beta_des, dnu_des, Id_scl,
+    b_3_list)
