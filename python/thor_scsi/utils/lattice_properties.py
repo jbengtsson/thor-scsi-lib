@@ -172,6 +172,7 @@ class lattice_properties_class(
 
             stable_rad = self.compute_rad_prop()
         else:
+            stable_rad = False
             self._U_0 = np.nan
             self._J = np.zeros(3, float)
             self._tau = np.zeros(3, float)
