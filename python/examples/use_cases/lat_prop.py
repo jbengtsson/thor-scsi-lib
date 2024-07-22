@@ -98,14 +98,20 @@ def compute_map_normal_form(lat_prop, M):
     return A_0, A_1, R, g_re, g_im, K_re, K_im
 
 
-h_dict = {
+h_re_dict = {
+    "h_22000" : [2, 2, 0, 0, 0, 0, 0],
+    "h_11110" : [1, 1, 1, 1, 0, 0, 0],
+    "h_00220" : [0, 0, 2, 2, 0, 0, 0]
+}
+
+h_im_dict = {
     "h_10002" : [1, 0, 0, 0, 2, 0, 0],
     "h_20001" : [2, 0, 0, 0, 1, 0, 0],
     "h_00201" : [0, 0, 2, 0, 1, 0, 0],
 
     "h_30000" : [3, 0, 0, 0, 0, 0, 0],
     "h_21000" : [2, 1, 0, 0, 0, 0, 0],
-    "h_11100" : [1, 1, 1, 0, 0, 0, 0],
+    "h_10110" : [1, 0, 1, 1, 0, 0, 0],
     "h_10200" : [1, 0, 2, 0, 0, 0, 0],
     "h_10020" : [1, 0, 0, 2, 0, 0, 0]
 }
@@ -127,13 +133,18 @@ def compute_rms(h, dict):
     return np.sqrt(var)
 
 
-def prt_nl(h_rms, K_rms, h_im, K_re):
-    print("\n  h_im rms = {:9.3e}".format(h_rms))
+def prt_nl(h_im_rms, h_re_rms, K_rms, h_re, h_im, K_re):
+    print("\n  h_im rms = {:9.3e}".format(h_im_rms))
     print("  K_re rms = {:9.3e}".format(K_rms))
 
     print()
-    for key in h_dict:
-        print("  {:s}  = {:10.3e}".format(key, h_im.get(h_dict[key])))
+    for key in h_im_dict:
+        print("  {:s}  = {:10.3e}".format(key, h_im.get(h_im_dict[key])))
+        if key == "h_00201":
+            print()
+    print()
+    for key in h_re_dict:
+        print("  {:s}  = {:10.3e}".format(key, h_re.get(h_re_dict[key])))
         if key == "h_00201":
             print()
     print()
@@ -143,20 +154,22 @@ def prt_nl(h_rms, K_rms, h_im, K_re):
             print()
 
 
-def compute_prt_nl(lat_prop, Id_scl):
+def compute_nl(lat_prop, Id_scl):
     # Compute map to order no.
     M = compute_map(lat_prop, no)
     print("\nM:", M, end="")
     h_re, h_im = compute_h(lat_prop, M)
     A_0, A_1, R, g_re, g_im, K_re, K_im = compute_map_normal_form(lat_prop, M)
 
+    h_re = compose_bs(h_re, Id_scl)
     h_im = compose_bs(h_im, Id_scl)
     K_re = compose_bs(K_re, Id_scl)
 
-    h_rms = compute_rms(h_im, h_dict)
+    h_im_rms = compute_rms(h_im, h_im_dict)
+    h_re_rms = compute_rms(h_re, h_re_dict)
     K_rms = compute_rms(K_re, K_dict)
 
-    prt_nl(h_rms, K_rms, h_im, K_re)
+    return h_im_rms, h_re_rms, K_rms, h_re, h_im, K_re
 
 
 # Number of phase-space coordinates.
@@ -202,4 +215,5 @@ if not False:
 twoJ = compute_twoJ(A_max, beta_inj)
 Id_scl = compute_Id_scl(lat_prop, twoJ)
 
-compute_prt_nl(lat_prop, Id_scl)
+h_im_rms, h_re_rms, K_rms, h_re, h_im, K_re = compute_nl(lat_prop, Id_scl)
+prt_nl(h_im_rms, h_re_rms, K_rms, h_re, h_im, K_re)
