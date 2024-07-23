@@ -6,6 +6,7 @@ import enum
 import numpy as np
 from scipy import linalg as la
 
+import thor_scsi.lib as ts
 from thor_scsi.utils import index_class as ind, linear_optics as lo
 
 
@@ -22,8 +23,7 @@ class MpoleInd(enum.IntEnum):
 class nonlin_dyn_class:
     # Private.
 
-    def __init__(self, lat_prop, no, A_max, beta_inj, delta_max, b_3_list):
-        self._no        = no
+    def __init__(self, lat_prop, A_max, beta_inj, delta_max, b_3_list):
         self._A_max     = A_max
         self._beta_inj  = beta_inj
         self._delta_max = delta_max
@@ -131,11 +131,14 @@ class nonlin_dyn_class:
             lat_prop._lattice, lat_prop._model_state, desc=lat_prop._desc,
             tpsa_order=no)
 
-    def zero_sext(lat_prop, b_3_list):
-        # Zero sextupoles.
-        print("\nZeroing sextupoles.")
-        for b3_name in b_3_list:
-            lat_prop.set_b_n_fam(b3_name, MpoleInd.sext, 0e0)
+    def zero_mult(self, lat_prop, n):
+        # Zero multipoles.
+        print("\nZeroing multipoles - n = {:d}".format(n))
+        for k in range(len(lat_prop._lattice)):
+            if (n == 3) and (type(lat_prop._lattice[k]) == ts.Sextupole):
+                lat_prop._lattice[k].get_multipoles().set_multipole(n, 0e0)
+            elif (n == 4) and (type(lat_prop._lattice[k]) == ts.Octupole):
+                lat_prop._lattice[k].get_multipoles().set_multipole(n, 0e0)
 
     def compute_sext_resp_mat_num(self, lat_prop, b_3_list):
         # Uses integrated sextupole strength.
@@ -221,7 +224,7 @@ class nonlin_dyn_class:
 
     def compute_nl(self, lat_prop):
         # Compute map to order no.
-        self.compute_map(lat_prop, self._no)
+        self.compute_map(lat_prop, lat_prop._no)
 
         self.compute_h(lat_prop)
         self.compute_map_normal_form(lat_prop)
