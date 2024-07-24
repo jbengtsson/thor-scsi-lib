@@ -32,7 +32,7 @@ phi_max      = 0.85
 b_2_bend_max = 1.0
 b_2_max      = 10.0
 
-eps_x_des    = 49e-12
+eps_x_des    = 99e-12
 nu_uc_des    = [2.0/6.0, 0.12]
 nu_sp_des    = [2.25, 0.8]
 beta_des     = [5.7, 2.0]
@@ -88,33 +88,37 @@ def opt_sp(
         print("\n{:3d} chi_2 = {:11.5e}".format(n_iter, chi_2))
         print("    eps_x [pm.rad] = {:5.3f} [{:5.3f}]".
               format(1e12*lat_prop._eps[ind.X], 1e12*eps_x_des))
-        print("    U_0 [keV]      = {:5.3f}".format(1e-3*lat_prop._U_0))
+
+        print("\n    nu_uc          = [{:7.5f}, {:7.5f}] ([{:7.5f}, {:7.5f}])".
+              format(nu_uc[ind.X], nu_uc[ind.Y], nu_uc_des[ind.X],
+                     nu_uc_des[ind.Y]))
+        print("    nu_sp          = [{:7.5f}, {:7.5f}] ([{:7.5f}, {:7.5f}])".
+              format(nu_sp[ind.X], nu_sp[ind.Y], nu_sp_des[ind.X],
+                     nu_sp_des[ind.Y]))
+        print("    dnu            = [{:7.5f}, {:7.5f}] ([{:7.5f}, {:7.5f}])".
+              format(dnu[ind.X], dnu[ind.Y], dnu_des[ind.X], dnu_des[ind.Y]))
+        print("    xi             = [{:5.3f}, {:5.3f}]".
+              format(xi[ind.X], xi[ind.Y]))
+
         print("\n    eta'_uc        = {:9.3e} {:9.3e}".
               format(eta_uc_1[ind.px], eta_uc_2[ind.px]))
         print("    alpha_uc       = [{:9.3e}, {:9.3e}] [{:9.3e}, {:9.3e}]".
               format(alpha_uc_1[ind.X], alpha_uc_1[ind.Y], alpha_uc_2[ind.X],
                      alpha_uc_2[ind.Y]))
-        print("    nu_uc          = [{:7.5f}, {:7.5f}] ([{:7.5f}, {:7.5f}])".
-              format(nu_uc[ind.X], nu_uc[ind.Y], nu_uc_des[ind.X],
-                     nu_uc_des[ind.Y]))
         print("\n    eta_x          = {:9.3e}".format(eta[ind.x]))
-        print("\n    nu_sp          = [{:7.5f}, {:7.5f}] ([{:7.5f}, {:7.5f}])".
-              format(nu_sp[ind.X], nu_sp[ind.Y], nu_sp_des[ind.X],
-                     nu_sp_des[ind.Y]))
         print("    beta           = [{:7.5f}, {:7.5f}] ([{:7.5f}, {:7.5f}])".
               format(beta[ind.X], beta[ind.Y], beta_des[ind.X],
                      beta_des[ind.Y]))
-        print("    dnu            = [{:7.5f}, {:7.5f}] ([{:7.5f}, {:7.5f}])".
-              format(dnu[ind.X], dnu[ind.Y], dnu_des[ind.X], dnu_des[ind.Y]))
-        print("    xi             = [{:5.3f}, {:5.3f}]".
-              format(xi[ind.X], xi[ind.Y]))
+
         print("\n    phi_sp         = {:8.5f}".format(phi))
         print("    C [m]          = {:8.5f}".format(lat_prop.compute_circ()))
+
         print("\n    phi_b1         = {:8.5f}".format(phi_b1))
         print("    phi_b2         = {:8.5f}".format(phi_b2))
         print("    phi_rb         = {:8.5f}".format(phi_rb))
-        nld.prt_nl()
+
         lat_prop.prt_rad()
+        nld.prt_nl()
         prm_list.prt_prm(prm)
 
     def compute_chi_2(
@@ -310,7 +314,7 @@ def opt_sp(
 # Number of phase-space coordinates.
 nv = 7
 # Variables max order.
-no = 4
+no = 6
 # Number of parameters.
 nv_prm = 0
 # Parameters max order.
@@ -367,11 +371,9 @@ else:
 uc_0 = lat_prop._lattice.find("s2", 0).index
 uc_1 = lat_prop._lattice.find("s2", 1).index
 uc_2 = lat_prop._lattice.find("s2", 3).index
-sp_1 = lat_prop._lattice.find("s3", 0).index
-sp_2 = lat_prop._lattice.find("s3", 1).index
-# For 2 sf [sf1, sf2] families.
-# uc_0 = lat_prop._lattice.find("s2", 0).index
-# uc_1 = lat_prop._lattice.find("s2", 1).index
+sp_1 = lat_prop._lattice.find("s1", 0).index
+sp_2 = lat_prop._lattice.find("s1", 1).index
+
 print("\nunit cell entrance           {:5s} loc = {:d}".
       format(lat_prop._lattice[uc_0].name, uc_0))
 print("unit cell exit               {:5s} loc = {:d}".
