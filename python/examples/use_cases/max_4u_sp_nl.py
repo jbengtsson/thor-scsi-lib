@@ -118,7 +118,7 @@ def opt_sp(
         print("    phi_rb         = {:8.5f}".format(phi_rb))
 
         lat_prop.prt_rad()
-        nld.prt_nl()
+        nld.prt_nl(lat_prop)
         prm_list.prt_prm(prm)
 
     def compute_chi_2(
@@ -299,7 +299,7 @@ def opt_sp(
 # Number of phase-space coordinates.
 nv = 7
 # Variables max order.
-no = 6
+no = 4
 # Number of parameters.
 nv_prm = 0
 # Parameters max order.
@@ -385,7 +385,7 @@ weight = np.array([
     0e-2,  # dnu_x.
     0e-2,  # dnu_y.
     1e-3,  # xi.
-    0e5,   # Im{h} rms.
+    1e6,   # Im{h} rms.
     1e8    # K rms.
 ])
 

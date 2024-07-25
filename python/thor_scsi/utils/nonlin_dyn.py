@@ -65,20 +65,20 @@ class nonlin_dyn_class:
     K_xi_dict = {"K_11001" : [1, 1, 0, 0, 1, 0, 0],
                  "K_00111" : [0, 0, 1, 1, 1, 0, 0]}
 
-    K_dict = {"K_22000" : [2, 2, 0, 0, 0, 0, 0],
-              "K_11110" : [1, 1, 1, 1, 0, 0, 0],
-              "K_00220" : [0, 0, 2, 2, 0, 0, 0],
+    K_4_dict = {"K_22000" : [2, 2, 0, 0, 0, 0, 0],
+                "K_11110" : [1, 1, 1, 1, 0, 0, 0],
+                "K_00220" : [0, 0, 2, 2, 0, 0, 0],
 
-              "K_33000" : [3, 3, 0, 0, 0, 0, 0],
-              "K_22110" : [2, 2, 1, 1, 0, 0, 0],
-              "K_11220" : [1, 1, 2, 2, 0, 0, 0],
-              "K_00330" : [0, 0, 3, 3, 0, 0, 0],
+                "K_11002" : [1, 1, 0, 0, 2, 0, 0],
+                "K_00112" : [0, 0, 1, 1, 2, 0, 0]}
 
-              "K_11002" : [1, 1, 0, 0, 2, 0, 0],
-              "K_00112" : [0, 0, 1, 1, 2, 0, 0],
+    K_6_dict = {"K_33000" : [3, 3, 0, 0, 0, 0, 0],
+                "K_22110" : [2, 2, 1, 1, 0, 0, 0],
+                "K_11220" : [1, 1, 2, 2, 0, 0, 0],
+                "K_00330" : [0, 0, 3, 3, 0, 0, 0],
 
-              "K_11003" : [1, 1, 0, 0, 3, 0, 0],
-              "K_00113" : [0, 0, 1, 1, 3, 0, 0]}
+                "K_11003" : [1, 1, 0, 0, 3, 0, 0],
+                "K_00113" : [0, 0, 1, 1, 3, 0, 0]}
 
     def compute_twoJ(self):
         self._twoJ = \
@@ -223,9 +223,13 @@ class nonlin_dyn_class:
         self._K_im_scl = self.compose_bs(lat_prop, self._K_im, self._Id_scl)
 
         self._h_im_scl_rms = self.compute_rms(self._h_im_scl, self.h_dict)
-        self._K_re_scl_rms = self.compute_rms(self._K_re_scl, self.K_dict)
+        self._K_re_scl_rms = self.compute_rms(self._K_re_scl, self.K_4_dict)
+        if lat_prop._no >= 6:
+            self._K_rescl_rms = \
+                np.sqrt(self._K_re_scl_rms**2
+                        +self.compute_rms(self._K_re_scl, self.K_6_dict)**2)
 
-    def prt_nl(self):
+    def prt_nl(self, lat_prop):
         print("\nnu = [{:7.5f}, {:7.5f}]".format(
             -self._K_re.get([1, 1, 0, 0, 0, 0, 0])/np.pi,
             -self._K_re.get([0, 0, 1, 1, 0, 0, 0])/np.pi))
@@ -254,11 +258,19 @@ class nonlin_dyn_class:
                 print()
 
         print("\nRe{K}:")
-        for key in self.K_dict:
+        for key in self.K_4_dict:
             print("  {:s}  = {:10.3e}".
-                  format(key, self._K_re_scl.get(self.K_dict[key])))
-            if (key == "K_00220") or (key == "K_00330") or (key == "K_00112"):
+                  format(key, self._K_re_scl.get(self.K_4_dict[key])))
+            if key == "K_00220":
                 print()
+
+        if lat_prop._no >= 6:
+            print("\n")
+            for key in self.K_6_dict:
+                print("  {:s}  = {:10.3e}".
+                      format(key, self._K_re_scl.get(self.K_6_dict[key])))
+                if key == "K_00112":
+                    print()
 
 
 __all__ = [nonlin_dyn_class]

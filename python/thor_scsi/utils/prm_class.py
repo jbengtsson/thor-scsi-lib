@@ -276,7 +276,7 @@ def prt_lat(
     def prt_sext(name):
         L = lat_prop.get_L_elem(name, 0)
         b_3 = lat_prop.get_b_n_elem(name, 0, 3)
-        print(("{:5s}: Sextupole, L = {:7.5f}, K = {:8.5f}, N = n_quad;")
+        print(("{:5s}: Sextupole, L = {:7.5f}, K = {:10.5f}, N = n_quad;")
               .format(name, L, b_3), file=outf)
 
     # Dictionary of parameter types and corresponding print functions.
