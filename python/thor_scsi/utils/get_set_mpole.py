@@ -154,5 +154,11 @@ class get_set_mpole_class:
     def set_b_2_fam(self, fam_name, b_n):
         self.set_b_n_fam(fam_name, 2, b_n)
 
+    def get_b_3_elem(self, fam_name, kid_num):
+        return self.get_b_n_elem(fam_name, kid_num, 3)
+
+    def set_b_3_fam(self, fam_name, b_n):
+        self.set_b_n_fam(fam_name, 3, b_n)
+
 
 __all__ = [get_set_mpole_class]

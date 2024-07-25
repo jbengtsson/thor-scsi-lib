@@ -36,51 +36,34 @@ class nonlin_dyn_class:
 
         self._h_im_rms  = np.nan
         self._K_re_rms  = np.nan
+
         self._h_re      = np.nan
         self._h_im      = np.nan
         self._K_re      = np.nan
         self._K_im      = np.nan
+
+        self._h_re_scl  = np.nan
+        self._h_im_scl  = np.nan
+        self._K_re_scl  = np.nan
+        self._K_im_scl  = np.nan
 
         self.compute_twoJ()
         self.compute_Id_scl(lat_prop)
 
     # Public.
 
-    h_re_dict = {
-        "h_22000" : [2, 2, 0, 0, 0, 0, 0],
-        "h_11110" : [1, 1, 1, 1, 0, 0, 0],
-        "h_00220" : [0, 0, 2, 2, 0, 0, 0]
-    }
+    h_dict = {"h_10002" : [1, 0, 0, 0, 2, 0, 0],
+              "h_20001" : [2, 0, 0, 0, 1, 0, 0],
+              "h_00201" : [0, 0, 2, 0, 1, 0, 0],
 
-    h_im_dict = {
-        "h_10002" : [1, 0, 0, 0, 2, 0, 0],
-        "h_20001" : [2, 0, 0, 0, 1, 0, 0],
-        "h_00201" : [0, 0, 2, 0, 1, 0, 0],
+              "h_30000" : [3, 0, 0, 0, 0, 0, 0],
+              "h_21000" : [2, 1, 0, 0, 0, 0, 0],
+              "h_10110" : [1, 0, 1, 1, 0, 0, 0],
+              "h_10200" : [1, 0, 2, 0, 0, 0, 0],
+              "h_10020" : [1, 0, 0, 2, 0, 0, 0]}
 
-        "h_30000" : [3, 0, 0, 0, 0, 0, 0],
-        "h_21000" : [2, 1, 0, 0, 0, 0, 0],
-        "h_10110" : [1, 0, 1, 1, 0, 0, 0],
-        "h_10200" : [1, 0, 2, 0, 0, 0, 0],
-        "h_10020" : [1, 0, 0, 2, 0, 0, 0]
-    }
-
-    h_re_dict = {
-        "h_22000" : [2, 2, 0, 0, 0, 0, 0],
-        "h_11110" : [1, 1, 1, 1, 0, 0, 0],
-        "h_00220" : [0, 0, 2, 2, 0, 0, 0]
-    }
-
-    h_im_dict = {
-        "h_10002" : [1, 0, 0, 0, 2, 0, 0],
-        "h_20001" : [2, 0, 0, 0, 1, 0, 0],
-        "h_00201" : [0, 0, 2, 0, 1, 0, 0],
-
-        "h_30000" : [3, 0, 0, 0, 0, 0, 0],
-        "h_21000" : [2, 1, 0, 0, 0, 0, 0],
-        "h_10110" : [1, 0, 1, 1, 0, 0, 0],
-        "h_10200" : [1, 0, 2, 0, 0, 0, 0],
-        "h_10020" : [1, 0, 0, 2, 0, 0, 0]
-    }
+    K_xi_dict = {"K_11001" : [1, 1, 0, 0, 1, 0, 0],
+                 "K_00111" : [0, 0, 1, 1, 1, 0, 0]}
 
     K_dict = {"K_22000" : [2, 2, 0, 0, 0, 0, 0],
               "K_11110" : [1, 1, 1, 1, 0, 0, 0],
@@ -215,8 +198,8 @@ class nonlin_dyn_class:
         A_1        = gtpsa.ss_vect_tpsa(lat_prop._desc, lat_prop._no)
         R          = gtpsa.ss_vect_tpsa(lat_prop._desc, lat_prop._no)
         g          = gtpsa.tpsa(lat_prop._desc, lat_prop._no)
-        g_re       = gtpsa.tpsa(lat_prop._desc, lat_prop._no)
-        g_im       = gtpsa.tpsa(lat_prop._desc, lat_prop._no)
+        self._g_re = gtpsa.tpsa(lat_prop._desc, lat_prop._no)
+        self._g_im = gtpsa.tpsa(lat_prop._desc, lat_prop._no)
         K          = gtpsa.tpsa(lat_prop._desc, lat_prop._no)
         self._K_re = gtpsa.tpsa(lat_prop._desc, lat_prop._no)
         self._K_im = gtpsa.tpsa(lat_prop._desc, lat_prop._no)
@@ -231,40 +214,49 @@ class nonlin_dyn_class:
         return np.sqrt(var)
 
     def compute_nl(self, lat_prop):
-        # Compute map to order no.
-        self.compute_map(lat_prop, lat_prop._no)
-
         self.compute_h(lat_prop)
         self.compute_map_normal_form(lat_prop)
 
-        self._h_re = self.compose_bs(lat_prop, self._h_re, self._Id_scl)
-        self._h_im = self.compose_bs(lat_prop, self._h_im, self._Id_scl)
-        self._K_re = self.compose_bs(lat_prop, self._K_re, self._Id_scl)
-        self._K_im = self.compose_bs(lat_prop, self._K_im, self._Id_scl)
+        self._h_re_scl = self.compose_bs(lat_prop, self._h_re, self._Id_scl)
+        self._h_im_scl = self.compose_bs(lat_prop, self._h_im, self._Id_scl)
+        self._K_re_scl = self.compose_bs(lat_prop, self._K_re, self._Id_scl)
+        self._K_im_scl = self.compose_bs(lat_prop, self._K_im, self._Id_scl)
 
-        self._h_im_rms = self.compute_rms(self._h_im, self.h_im_dict)
-        self._K_re_rms = self.compute_rms(self._K_re, self.K_dict)
+        self._h_im_scl_rms = self.compute_rms(self._h_im_scl, self.h_dict)
+        self._K_re_scl_rms = self.compute_rms(self._K_re_scl, self.K_dict)
 
     def prt_nl(self):
-        print("\n  h_im rms = {:9.3e}".format(self._h_im_rms))
-        print("  K_re rms = {:9.3e}".format(self._K_re_rms))
+        print("\nnu = [{:7.5f}, {:7.5f}]".format(
+            -self._K_re.get([1, 1, 0, 0, 0, 0, 0])/np.pi,
+            -self._K_re.get([0, 0, 1, 1, 0, 0, 0])/np.pi))
+        print("xi = [{:5.3f}, {:5.3f}]\n".format(
+            -self._K_re.get([1, 1, 0, 0, 1, 0, 0])/np.pi,
+            -self._K_re.get([0, 0, 1, 1, 1, 0, 0])/np.pi))
+        for key in self.K_xi_dict:
+            print("  {:s}  = {:10.3e}".
+                  format(key, self._K_re.get(self.K_xi_dict[key])))
 
-        print()
-        for key in self.h_im_dict:
+        print("\n  h_im rms = {:9.3e}".format(self._h_im_scl_rms))
+        print("  K_re rms = {:9.3e}".format(self._K_re_scl_rms))
+
+        print("\nRe{h}:")
+        for key in self.h_dict:
             print("  {:s}  = {:10.3e}".
-                  format(key, self._h_im.get(self.h_im_dict[key])))
+                  format(key, self._h_re_scl.get(self.h_dict[key])))
             if key == "h_00201":
                 print()
-        print()
-        for key in self.h_re_dict:
+
+        print("\nIm{h}:")
+        for key in self.h_dict:
             print("  {:s}  = {:10.3e}".
-                  format(key, self._h_re.get(self.h_re_dict[key])))
+                  format(key, self._h_im_scl.get(self.h_dict[key])))
             if key == "h_00201":
                 print()
-        print()
+
+        print("\nRe{K}:")
         for key in self.K_dict:
             print("  {:s}  = {:10.3e}".
-                  format(key, self._K_re.get(self.K_dict[key])))
+                  format(key, self._K_re_scl.get(self.K_dict[key])))
             if (key == "K_00220") or (key == "K_00330") or (key == "K_00112"):
                 print()
 

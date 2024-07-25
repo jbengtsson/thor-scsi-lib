@@ -165,16 +165,16 @@ class prm_class(bend_class):
             "L":   self._lat_prop.get_L_elem,
             "L_b": self._lat_prop.get_L_elem,
             "phi": self._lat_prop.get_phi_elem,
-            "b_2": self._lat_prop.get_b_2_elem
-        }
+            "b_2": self._lat_prop.get_b_2_elem,
+            "b_3": self._lat_prop.get_b_3_elem}
 
         # Dictionary of parameter types and corresponding set functions.
         self._set_prm_func_dict = {
             "L":   self._lat_prop.set_L_fam,
             "L_b": self._lat_prop.set_L_bend_fam,
             "phi": self._lat_prop.set_phi_fam,
-            "b_2": self._lat_prop.set_b_2_fam
-        }
+            "b_2": self._lat_prop.set_b_2_fam,
+            "b_3": self._lat_prop.set_b_3_fam}
 
     # Public.
 
@@ -273,12 +273,19 @@ def prt_lat(
         print(("{:5s}: Quadrupole, L = {:7.5f}, K = {:8.5f}, N = n_quad;")
               .format(name, L, b_2), file=outf)
 
+    def prt_sext(name):
+        L = lat_prop.get_L_elem(name, 0)
+        b_3 = lat_prop.get_b_n_elem(name, 0, 3)
+        print(("{:5s}: Sextupole, L = {:7.5f}, K = {:8.5f}, N = n_quad;")
+              .format(name, L, b_3), file=outf)
+
     # Dictionary of parameter types and corresponding print functions.
     prt_prm_func_dict = {
         "L":   prt_drift,
         "L_b": prt_dip,
         "phi": prt_dip,
-        "b_2": prt_dip
+        "b_2": prt_dip,
+        "b_3": prt_sext
     }
 
     for k in range(len(prm_list._prm_list)):

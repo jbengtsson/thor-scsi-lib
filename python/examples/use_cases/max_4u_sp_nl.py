@@ -105,7 +105,7 @@ def opt_sp(
         print("    alpha_uc       = [{:9.3e}, {:9.3e}] [{:9.3e}, {:9.3e}]".
               format(alpha_uc_1[ind.X], alpha_uc_1[ind.Y], alpha_uc_2[ind.X],
                      alpha_uc_2[ind.Y]))
-        print("\n    eta_x          = {:9.3e}".format(eta[ind.x]))
+        print("    eta_x          = {:9.3e}".format(eta[ind.x]))
         print("    beta           = [{:7.5f}, {:7.5f}] ([{:7.5f}, {:7.5f}])".
               format(beta[ind.X], beta[ind.Y], beta_des[ind.X],
                      beta_des[ind.Y]))
@@ -133,88 +133,84 @@ def opt_sp(
         dchi_2 = weight[0]*(lat_prop._eps[ind.X]-eps_x_des)**2
         chi_2 = dchi_2
         if prt:
-            print("\n  dchi2(eps_x)     = {:9.3e}".format(dchi_2))
+            print("\n  dchi2(eps_x)        = {:9.3e}".format(dchi_2))
 
         dchi_2 = weight[1]*lat_prop._U_0**2
         chi_2 += dchi_2
         if prt:
-            print("  dchi2(U_0)       = {:9.3e}".format(dchi_2))
+            print("  dchi2(U_0)          = {:9.3e}".format(dchi_2))
 
         dchi_2 = weight[2]*(eta_uc_1[ind.px]**2+eta_uc_2[ind.px]**2)
         chi_2 += dchi_2
         if prt:
-            print("  dchi2(eta'_uc)   = {:9.3e}".format(dchi_2))
+            print("  dchi2(eta'_uc)      = {:9.3e}".format(dchi_2))
 
         dchi_2 = weight[3]*(
             alpha_uc_1[ind.X]**2+alpha_uc_2[ind.X]**2+alpha_uc_1[ind.Y]**2
             +alpha_uc_2[ind.Y]**2)
         chi_2 += dchi_2
         if prt:
-            print("  dchi2(alpha_uc)  = {:9.3e}".format(dchi_2))
+            print("  dchi2(alpha_uc)     = {:9.3e}".format(dchi_2))
 
         dchi_2 = weight[4]*(nu_uc[ind.X]-nu_uc_des[ind.X])**2
         chi_2 += dchi_2
         if prt:
-            print("  dchi2(nu_uc_x)   = {:9.3e}".format(dchi_2))
+            print("  dchi2(nu_uc_x)      = {:9.3e}".format(dchi_2))
 
         dchi_2 = weight[5]*(nu_uc[ind.Y]-nu_uc_des[ind.Y])**2
         chi_2 += dchi_2
         if prt:
-            print("  dchi2(nu_uc_y)   = {:9.3e}".format(dchi_2))
+            print("  dchi2(nu_uc_y)      = {:9.3e}".format(dchi_2))
 
         dchi_2 = weight[6]*eta[ind.x]**2
         chi_2 += dchi_2
         if prt:
-            print("  dchi2(eta_x)     = {:9.3e}".format(dchi_2))
+            print("  dchi2(eta_x)        = {:9.3e}".format(dchi_2))
 
         dchi_2 = weight[7]*(nu_sp[ind.X]-nu_sp_des[ind.X])**2
         chi_2 += dchi_2
         if prt:
-            print("  dchi2(nu_sp_x)   = {:9.3e}".format(dchi_2))
+            print("  dchi2(nu_sp_x)      = {:9.3e}".format(dchi_2))
 
         dchi_2 = weight[8]*(nu_sp[ind.Y]-nu_sp_des[ind.Y])**2
         chi_2 += dchi_2
         if prt:
-            print("  dchi2(nu_sp_y)   = {:9.3e}".format(dchi_2))
+            print("  dchi2(nu_sp_y)      = {:9.3e}".format(dchi_2))
 
         dchi_2 = weight[9]*(beta[ind.X]-beta_des[ind.X])**2
         chi_2 += dchi_2
         if prt:
-            print("  dchi2(beta_x)    = {:9.3e}".format(dchi_2))
+            print("  dchi2(beta_x)       = {:9.3e}".format(dchi_2))
 
         dchi_2 = weight[10]*(beta[ind.Y]-beta_des[ind.Y])**2
         chi_2 += dchi_2
         if prt:
-            print("  dchi2(beta_y)    = {:9.3e}".format(dchi_2))
+            print("  dchi2(beta_y)       = {:9.3e}".format(dchi_2))
 
         dchi_2 = weight[11]*(dnu[ind.X]-dnu_des[ind.X])**2
         chi_2 += dchi_2
         if prt:
-            print("  dchi2(dnu_x)     = {:9.3e}".format(dchi_2))
+            print("  dchi2(dnu_x)        = {:9.3e}".format(dchi_2))
 
         dchi_2 = weight[12]*(dnu[ind.Y]-dnu_des[ind.Y])**2
         chi_2 += dchi_2
         if prt:
-            print("  dchi2(dnu_y)     = {:9.3e}".format(dchi_2))
+            print("  dchi2(dnu_y)        = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[13]*xi[ind.X]**2
-        if prt:
-            print("  dchi2(xi_x)      = {:9.3e}".format(dchi_2))
-
-        dchi_2 = weight[14]*xi[ind.Y]**2
+        dchi_2 = weight[13]*(xi[ind.X]**2+xi[ind.Y]**2)
         chi_2 += dchi_2
         if prt:
-            print("  dchi2(xi_y)      = {:9.3e}".format(dchi_2))
+            print("  dchi2(xi)           = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[15]*nld._h_im_rms**2
+        dchi_2 = weight[14]*nld._h_im_scl_rms**2
         chi_2 += dchi_2
         if prt:
-            print("  dchi2(h_im_rms)  = {:9.3e}".format(dchi_2))
+            print("  dchi2(h_im_scl_rms) = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[16]*nld._K_re_rms**2
+        dchi_2 = weight[15]*nld._K_re_scl_rms**2
         chi_2 += dchi_2
         if prt:
-            print("  dchi2(K_re_rms)  = {:9.3e}".format(dchi_2))
+            print("  dchi2(K_re_scl_rms) = {:9.3e}".format(dchi_2))
 
         return chi_2
 
@@ -224,63 +220,52 @@ def opt_sp(
         n_iter += 1
         prm_list.set_prm(prm)
         phi_lat.set_phi_lat()
-        stable = nld.set_xi(lat_prop, 0e0, 0e0)
 
-        if stable:
-            try:
-                # Compute Twiss parameters along the lattice.
-                if not lat_prop.comp_per_sol():
-                    print("\ncomp_per_sol: unstable")
-                    raise ValueError
+        try:
+            # Compute Twiss parameters along the lattice.
+            if not lat_prop.comp_per_sol():
+                print("\ncomp_per_sol: unstable")
+                raise ValueError
 
-                # Compute radiation properties.
-                if not lat_prop.compute_radiation():
-                    print("\ncompute_radiation: unstable")
-                    raise ValueError
-
-                # Compute linear chromaticity.
-                M = lo.compute_map(
-                    lat_prop._lattice, lat_prop._model_state,
-                    desc=lat_prop._desc, tpsa_order=2)
-                stable, _, xi = \
-                    lo.compute_nu_xi(lat_prop._desc, lat_prop._no, M)
-                if not stable:
-                    print("\ncompute_nu_xi: unstable")
-                    raise ValueError
-            except ValueError:
-                chi_2 = 1e30
-                if False:
-                    print("\n{:3d} chi_2 = {:11.5e} ({:11.5e})".
-                          format(n_iter, chi_2, chi_2_min))
-                    prm_list.prt_prm(prm)
-
-            else:
-                _, _, _, nu_0 = lat_prop.get_Twiss(uc_0-1)
-                eta_uc_1, alpha_uc_1, _, nu_1 = lat_prop.get_Twiss(uc_1)
-                nu_uc = nu_1 - nu_0
-                eta_uc_2, alpha_uc_2, _, _ = lat_prop.get_Twiss(uc_2)
-                Twiss_sp = lat_prop.get_Twiss(-1)
-                dnu = \
-                    lat_prop.get_Twiss(-1)[3][:] \
-                    - lat_prop.get_Twiss(sp_2)[3][:] \
-                    + lat_prop.get_Twiss(sp_1)[3][:]
-
-                nld.compute_nl(lat_prop)
-
-                chi_2 = compute_chi_2(
-                    Twiss_sp, eta_uc_1, alpha_uc_1, eta_uc_2, alpha_uc_2,
-                    nu_uc, dnu, xi, nld)
-
-                if chi_2 < chi_2_min:
-                    prt_iter(
-                        prm, chi_2, Twiss_sp, eta_uc_1, alpha_uc_1, eta_uc_2,
-                        alpha_uc_2, nu_uc, dnu, xi, nld)
-                    lat_prop.prt_Twiss("twiss.txt")
-                    pc.prt_lat(lat_prop, file_name, prm_list, phi_lat=phi_lat)
-                    prt_b_3(lat_prop, "opt_sp_nl_b_3.txt", b_3_list)
-                    chi_2_min = min(chi_2, chi_2_min)
-        else:
+            # Compute radiation properties.
+            if not lat_prop.compute_radiation():
+                print("\ncompute_radiation: unstable")
+                raise ValueError
+        except ValueError:
             chi_2 = 1e30
+            if False:
+                print("\n{:3d} chi_2 = {:11.5e} ({:11.5e})".
+                      format(n_iter, chi_2, chi_2_min))
+                prm_list.prt_prm(prm)
+        else:
+            _, _, _, nu_0 = lat_prop.get_Twiss(uc_0-1)
+            eta_uc_1, alpha_uc_1, _, nu_1 = lat_prop.get_Twiss(uc_1)
+            nu_uc = nu_1 - nu_0
+            eta_uc_2, alpha_uc_2, _, _ = lat_prop.get_Twiss(uc_2)
+            Twiss_sp = lat_prop.get_Twiss(-1)
+            dnu = \
+                lat_prop.get_Twiss(-1)[3][:] \
+                - lat_prop.get_Twiss(sp_2)[3][:] \
+                + lat_prop.get_Twiss(sp_1)[3][:]
+
+            nld.compute_map(lat_prop, no)
+            nld.compute_nl(lat_prop)
+            xi =  \
+                np.array([-nld._K_re.get([1, 1, 0, 0, 1, 0, 0])/np.pi,
+                          -nld._K_re.get([0, 0, 1, 1, 1, 0, 0])/np.pi])
+
+            chi_2 = compute_chi_2(
+                Twiss_sp, eta_uc_1, alpha_uc_1, eta_uc_2, alpha_uc_2,
+                nu_uc, dnu, xi, nld)
+
+            if chi_2 < chi_2_min:
+                prt_iter(
+                    prm, chi_2, Twiss_sp, eta_uc_1, alpha_uc_1, eta_uc_2,
+                    alpha_uc_2, nu_uc, dnu, xi, nld)
+                lat_prop.prt_Twiss("twiss.txt")
+                pc.prt_lat(lat_prop, file_name, prm_list, phi_lat=phi_lat)
+                prt_b_3(lat_prop, "opt_sp_nl_b_3.txt", b_3_list)
+                chi_2_min = min(chi_2, chi_2_min)
 
         return chi_2
 
@@ -341,7 +326,6 @@ print("\nCircumference [m]      = {:7.5f}".format(lat_prop.compute_circ()))
 print("Total bend angle [deg] = {:7.5f}".format(lat_prop.compute_phi_lat()))
 
 b_3_list = ["s2", "s3"]
-# b_3_list = ["sfoh", "sdqd"]
 
 nld = nld_cl.nonlin_dyn_class(lat_prop, A_max, beta_inj, delta_max, b_3_list)
 
@@ -400,8 +384,7 @@ weight = np.array([
     0e-6,  # beta_y.
     0e-2,  # dnu_x.
     0e-2,  # dnu_y.
-    0e-7,  # xi_x.
-    0e-7,  # xi_y.
+    1e-3,  # xi.
     0e5,   # Im{h} rms.
     1e8    # K rms.
 ])
@@ -427,7 +410,12 @@ if True:
         ("b_2_bend", d1_bend),
 
         ("phi_bend", d2_bend),
-        ("r1",       "phi")
+        ("r1",       "phi"),
+
+        ("s1",       "b_3"),
+        ("s2",       "b_3"),
+        ("s3",       "b_3"),
+        ("s4",       "b_3")
     ]
 
     # To maintain the total bend angle.
