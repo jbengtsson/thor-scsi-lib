@@ -222,6 +222,7 @@ class nonlin_dyn_class:
         self._K_re_scl = self.compose_bs(lat_prop, self._K_re, self._Id_scl)
         self._K_im_scl = self.compose_bs(lat_prop, self._K_im, self._Id_scl)
 
+        self._h_re_scl_rms = self.compute_rms(self._h_re_scl, self.h_dict)
         self._h_im_scl_rms = self.compute_rms(self._h_im_scl, self.h_dict)
         self._K_re_scl_rms = self.compute_rms(self._K_re_scl, self.K_4_dict)
         if lat_prop._no >= 6:
@@ -240,7 +241,8 @@ class nonlin_dyn_class:
             print("  {:s}  = {:10.3e}".
                   format(key, self._K_re.get(self.K_xi_dict[key])))
 
-        print("\n  h_im rms = {:9.3e}".format(self._h_im_scl_rms))
+        print("\n  h_re rms = {:9.3e}".format(self._h_re_scl_rms))
+        print("  h_im rms = {:9.3e}".format(self._h_im_scl_rms))
         print("  K_re rms = {:9.3e}".format(self._K_re_scl_rms))
 
         print("\nRe{h}:")

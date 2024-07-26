@@ -219,7 +219,8 @@ def opt_sp(
 
         n_iter += 1
         prm_list.set_prm(prm)
-        phi_lat.set_phi_lat()
+        if phi_lat != []:
+            phi_lat.set_phi_lat()
 
         try:
             # Compute Twiss parameters along the lattice.
@@ -266,13 +267,18 @@ def opt_sp(
                 pc.prt_lat(lat_prop, file_name, prm_list, phi_lat=phi_lat)
                 prt_b_3(lat_prop, "opt_sp_nl_b_3.txt", b_3_list)
                 chi_2_min = min(chi_2, chi_2_min)
+            else:
+                if False:
+                    print("\n{:3d} chi_2 = {:21.15e} ({:21.15e})".
+                          format(n_iter, chi_2, chi_2_min))
+                    prm_list.prt_prm(prm)
 
         return chi_2
 
     max_iter = 1000
     f_tol    = 1e-10
-    x_tol    = 1e-4
-    g_tol    = 1e-5
+    x_tol    = 1e-8
+    g_tol    = 1e-8
 
     prm, bounds = prm_list.get_prm()
     f_sp(prm)
@@ -326,6 +332,7 @@ print("\nCircumference [m]      = {:7.5f}".format(lat_prop.compute_circ()))
 print("Total bend angle [deg] = {:7.5f}".format(lat_prop.compute_phi_lat()))
 
 b_3_list = ["s2", "s3"]
+# b_3_list = ["s1", "s2", "s3", "s4"]
 
 nld = nld_cl.nonlin_dyn_class(lat_prop, A_max, beta_inj, delta_max, b_3_list)
 
@@ -371,13 +378,13 @@ print("super period last sextupole  {:5s} loc = {:d}".
 
 # Weights.
 weight = np.array([
-    1e18,  # eps_x.
+    0e18,  # eps_x.
     0e-17, # U_0.
-    1e2,   # etap_x_uc.
-    1e-2,  # alpha_uc.
+    0e2,   # etap_x_uc.
+    0e-2,  # alpha_uc.
     0e0,   # nu_uc_x.
     0e0,   # nu_uc_y.
-    1e0,   # eta_x.
+    0e0,   # eta_x.
     0e-7,  # nu_sp_x.
     0e-3,  # nu_sp_y.
     0e-6,  # beta_x.
@@ -385,7 +392,7 @@ weight = np.array([
     0e-2,  # dnu_x.
     0e-2,  # dnu_y.
     1e-3,  # xi.
-    1e6,   # Im{h} rms.
+    0e6,   # Im{h} rms.
     1e8    # K rms.
 ])
 
@@ -399,63 +406,68 @@ d1_list = [
 d2_bend = pc.bend_class(lat_prop, d2_list, phi_max, b_2_max)
 d1_bend = pc.bend_class(lat_prop, d1_list, phi_max, b_2_max)
 
-if True:
-    prms = [
-        ("q1" ,      "b_2"),
-        ("q2",       "b_2"),
-        ("q3",       "b_2"),
-        ("r1",       "b_2"),
+step = 1;
 
-        ("b_2_bend", d2_bend),
-        ("b_2_bend", d1_bend),
+if step == 1:
+    phi_lat = []
 
-        ("phi_bend", d2_bend),
-        ("r1",       "phi"),
+    prms = [("s1", "b_3"),
+            ("s2", "b_3"),
+            ("s3", "b_3"),
+            ("s4", "b_3")]
+elif step == 2:
+    prms = [("q1" ,      "b_2"),
+            ("q2",       "b_2"),
+            ("q3",       "b_2"),
+            ("r1",       "b_2"),
 
-        ("s1",       "b_3"),
-        ("s2",       "b_3"),
-        ("s3",       "b_3"),
-        ("s4",       "b_3")
-    ]
+            ("b_2_bend", d2_bend),
+            ("b_2_bend", d1_bend),
+
+            ("phi_bend", d2_bend),
+            ("r1",       "phi"),
+
+            ("s1",       "b_3"),
+            ("s2",       "b_3"),
+            ("s3",       "b_3"),
+            ("s4",       "b_3")]
 
     # To maintain the total bend angle.
     phi_lat = pc.phi_lat_class(lat_prop, 2, d1_bend)
-else:
-    prms = [
-        ("q1",    "b_2"),
-        ("q2",    "b_2"),
-        ("q3",    "b_2"),
-        ("r1",    "b_2"),
+elif step == 3:
+    prms = [("q1",    "b_2"),
+            ("q2",    "b_2"),
+            ("q3",    "b_2"),
+            ("r1",    "b_2"),
 
-        ("d2_0",  "b_2"),
-        ("d2_1",  "b_2"),
-        ("d2_2",  "b_2"),
-        ("d2_3",  "b_2"),
-        ("d2_4",  "b_2"),
-        ("d2_5",  "b_2"),
+            ("d2_0",  "b_2"),
+            ("d2_1",  "b_2"),
+            ("d2_2",  "b_2"),
+            ("d2_3",  "b_2"),
+            ("d2_4",  "b_2"),
+            ("d2_5",  "b_2"),
 
-        ("d1_u6", "b_2"),
-        ("d1_u5", "b_2"),
-        ("d1_u4", "b_2"),
-        ("d1_u3", "b_2"),
-        ("d1_u2", "b_2"),
-        ("d1_u1", "b_2"),
-        ("d1_0",  "b_2"),
-        ("d1_d1", "b_2"),
-        ("d1_d2", "b_2"),
-        ("d1_d3", "b_2"),
-        ("d1_d4", "b_2"),
-        ("d1_d5", "b_2"),
+            ("d1_u6", "b_2"),
+            ("d1_u5", "b_2"),
+            ("d1_u4", "b_2"),
+            ("d1_u3", "b_2"),
+            ("d1_u2", "b_2"),
+            ("d1_u1", "b_2"),
+            ("d1_0",  "b_2"),
+            ("d1_d1", "b_2"),
+            ("d1_d2", "b_2"),
+            ("d1_d3", "b_2"),
+            ("d1_d4", "b_2"),
+            ("d1_d5", "b_2"),
 
-        ("d2_0",  "phi"),
-        ("d2_1",  "phi"),
-        ("d2_2",  "phi"),
-        ("d2_3",  "phi"),
-        ("d2_4",  "phi"),
-        ("d2_5",  "phi"),
+            ("d2_0",  "phi"),
+            ("d2_1",  "phi"),
+            ("d2_2",  "phi"),
+            ("d2_3",  "phi"),
+            ("d2_4",  "phi"),
+            ("d2_5",  "phi"),
 
-        ("r1",    "phi")
-    ]
+            ("r1",    "phi")]
 
     # To maintain the total bend angle.
     phi_lat = pc.phi_lat_class(lat_prop, 2, d1_bend)

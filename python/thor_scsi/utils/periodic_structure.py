@@ -93,6 +93,9 @@ class periodic_structure_class:
             case ts.Octupole:
                 type_code = \
                     np.sign(elem.get_multipoles().get_multipole(4).real)*1.5
+            case ts.Multipole:
+                type_code = \
+                    np.sign(elem.get_multipoles().get_multipole(4).real)*1.5
             case ts.Cavity:
                 type_code = 0.0 
             case _:

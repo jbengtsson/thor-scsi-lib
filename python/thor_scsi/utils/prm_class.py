@@ -276,7 +276,7 @@ def prt_lat(
     def prt_sext(name):
         L = lat_prop.get_L_elem(name, 0)
         b_3 = lat_prop.get_b_n_elem(name, 0, 3)
-        print(("{:5s}: Sextupole, L = {:7.5f}, K = {:10.5f}, N = n_quad;")
+        print(("{:5s}: Sextupole, L = {:7.5f}, K = {:10.5f}, N = n_sext;")
               .format(name, L, b_3), file=outf)
 
     # Dictionary of parameter types and corresponding print functions.
@@ -296,7 +296,7 @@ def prt_lat(
             prt_bend(prm_list._prm_list[k][1])
         else:
             print("\nprt_lat - undefined parameter:", prm_list._prm_list[k][1])
-    if phi_lat != None:
+    if (phi_lat != None) and (phi_lat != []):
         if type(phi_lat._dip_prm) == str:
             prt_dip(phi_lat._dip_prm)
         elif isinstance(phi_lat._dip_prm, bend_class):
