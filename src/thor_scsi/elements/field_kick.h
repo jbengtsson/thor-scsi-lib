@@ -36,7 +36,8 @@
 
 /*
 
-  Todo: ensure that irho is computed for a dipole sector bend in polar coordiantes
+  Todo: ensure that irho is computed for a dipole sector bend in polar
+  coordiantes
   (see t2lat.cc
   M->irho = (M->L != 0.0)? t*M_PI/180.0/M->L : t*M_PI/180.0;)
 
@@ -67,8 +68,8 @@ namespace thor_scsi::elements {
 	 *
 	 * d_2:  negative thus creates a negative drift
 	 *
-	 * @todo review interaction to configuration to see if integration intervals can be
-	 *       precomputed
+	 * @todo review interaction to configuration to see if integration
+	 *       intervals can be precomputed
 	 */
 	template<class C>
 	class FieldKickDelegate {
@@ -116,7 +117,8 @@ namespace thor_scsi::elements {
 	private:
 		// should be not defined as pointers are available
 		// FieldKickDelegate(const FieldKickDelegate& o) = delete;
-		FieldKickDelegate& operator= (const FieldKickDelegate& o) = delete;
+		FieldKickDelegate& operator= (const FieldKickDelegate& o) =
+			delete;
 
 		virtual void computeIntegrationSteps(void) = 0;
 
@@ -130,22 +132,26 @@ namespace thor_scsi::elements {
 		 *
 		 * 4th order integration method is given by
 		 */
-		void splitIntegrationStep(const double dL, double *dL1, double *dL2,
-					  double *dkL1, double *dkL2) const;
+		void splitIntegrationStep
+		(const double dL, double *dL1, double *dL2, double *dkL1,
+		 double *dkL2) const;
 
 		//
 		// as it is a templated function ... not defined virtual ...
 		template<typename T>
-		void _localPropagate(thor_scsi::core::ConfigType &conf, gtpsa::ss_vect<T> &ps);
+		void _localPropagate
+		(thor_scsi::core::ConfigType &conf, gtpsa::ss_vect<T> &ps);
 
-		inline std::unique_ptr<std::vector<double>> getDriftLength(void) const {
+		inline std::unique_ptr<std::vector<double>>
+		getDriftLength(void) const {
 			auto res = std::make_unique<std::vector<double>>(2);
 			res->at(0) = this->dL1;
 			res->at(1) = this->dL2;
 			return res;
 		}
 
-		inline std::unique_ptr<std::vector<double>> getKickLength(void) const {
+		inline std::unique_ptr<std::vector<double>>
+		getKickLength(void) const {
 			auto res = std::make_unique<std::vector<double>>(2);
 			res->at(0) = this->dL1;
 			res->at(1) = this->dL2;
@@ -196,10 +202,13 @@ namespace thor_scsi::elements {
 	 *
 	 * .. Warning:
 	 *        Derived classes are responsible to compute h_bend and h_ref
-	 *        from given fields and choice of coordinate system (polar or Cartesian)
+	 *        from given fields and choice of coordinate system (polar or
+	 *        Cartesian)
 	 *
-	 * This code can treat thin lenses, i.e. componets that have a length = 0e0.
-	 * Cartesian local coordinate system is used for thin lenses. For these h_bend = 0e0, and
+	 * This code can treat thin lenses, i.e. componets that have a
+	 * length = 0e0.
+	 * Cartesian local coordinate system is used for thin lenses. For these
+	 * h_bend = 0e0, and
 	 * href = 0e0.
 	 *
 	 * .. Todo:
@@ -247,8 +256,10 @@ namespace thor_scsi::elements {
 		virtual ~FieldKickKnobbed(){}
 		FieldKickKnobbed(FieldKickKnobbed&& O);
 
-		const char* type_name(void) const override { return "field_kick"; };
-		virtual void show(std::ostream& strm, const int level) const override;
+		const char* type_name(void) const override
+			{ return "field_kick"; };
+		virtual void show(std::ostream& strm, const int level)
+			const override;
 		void inline setIntegrationMethod(const int n){
 			this->validateIntegrationMethod(n);
 			this->Pmethod = n;
@@ -265,8 +276,10 @@ namespace thor_scsi::elements {
 		}
 
 		inline int getNumberOfIntegrationSteps(void) const {
-			auto n_steps = this->integ4O.getNumberOfIntegrationSteps();
-			// std::cerr << __FILE__ << " get integration steps " << n_steps
+			auto n_steps =
+				this->integ4O.getNumberOfIntegrationSteps();
+			// std::cerr << __FILE__ << " get integration steps "
+			// 	  << n_steps
 			// 	  << std::endl;
 			return n_steps;
 		}
@@ -315,7 +328,8 @@ namespace thor_scsi::elements {
 		 *
 		 * Todo: review if interface should be kept that manner
 		 */
-		virtual void inline setLength(const double& length) override final {
+		virtual void inline setLength(const double& length)
+			override final {
 			// delegate ...
 			FieldKickAPIKnobbed<C>::setLength(length);
 			if(0e0 == gtpsa::cst(length)){
@@ -327,7 +341,8 @@ namespace thor_scsi::elements {
 
 
 		/*
-		 * @brief: element takes geometric effects on the trajectory into account
+		 * @brief: element takes geometric effects on the trajectory
+		 * into account
 		 *
 		 * Checking that
 		 * @f[ \frac{1}{\rho} = irho == 0 @f]
@@ -369,17 +384,21 @@ namespace thor_scsi::elements {
 		}
 
 		virtual void localPropagate
-		(thor_scsi::core::ConfigType &conf, gtpsa::ss_vect<double> &ps) override final
+		(thor_scsi::core::ConfigType &conf, gtpsa::ss_vect<double> &ps)
+			override final
 			{ _localPropagate(conf, ps);}
 		virtual void localPropagate
-		(thor_scsi::core::ConfigType &conf, gtpsa::ss_vect<gtpsa::tpsa> &ps) override final
+		(thor_scsi::core::ConfigType &conf, gtpsa::ss_vect<gtpsa::tpsa>
+		 &ps) override final
 			{ _localPropagate(conf, ps);}
 		/*
 		virtual void localPropagate
-		(thor_scsi::core::ConfigType &conf, gtpsa::ss_vect<tps> &ps) override final {
+		(thor_scsi::core::ConfigType &conf, gtpsa::ss_vect<tps> &ps)
+			override final {
 			// _localPropagate(conf, ps);
 			throw std::runtime_error
-				("field kick local propagate not implemented for ss_vect<tps> ");
+				("field kick local propagate not implemented"
+				 " for ss_vect<tps> ");
 		}
 		*/
 
@@ -428,30 +447,30 @@ namespace thor_scsi::elements {
 		 *
 		 * @todo should a check be made that forth order is requested ?
 		 */
-		inline const FieldKickDelegate<C>& getFieldKickDelegator(void) const {
-			return this->integ4O;
-		}
+		inline const FieldKickDelegate<C>& getFieldKickDelegator(void)
+			const { return this->integ4O; }
 
 		/*
 		 * radiation delegate part
 		 */
 	public:
 		typedef thor_scsi::elements::
-		RadiationDelegateKickKnobbed<thor_scsi::elements::FieldKickAPIKnobbed<C>> rad_del_t;
+		RadiationDelegateKickKnobbed
+		<thor_scsi::elements::FieldKickAPIKnobbed<C>> rad_del_t;
 
 	protected:
 		std::shared_ptr<rad_del_t> rad_del;
 
 	public:
-		inline void setRadiationDelegate(std::shared_ptr<rad_del_t> p){
-			this->rad_del = p;
-		}
+		inline void setRadiationDelegate(std::shared_ptr<rad_del_t> p)
+			{ this->rad_del = p; }
 		inline auto getRadiationDelegate(void) const {
 			return this->rad_del;
 		}
 
 	private:
-		inline bool computeSynchrotronIntegrals(const thor_scsi::core::ConfigType &conf){
+		inline bool computeSynchrotronIntegrals
+		(const thor_scsi::core::ConfigType &conf){
 			return conf.emittance && !conf.Cavity_on;
 		}
 		inline auto _getRadiationDelegate(void) {
@@ -461,7 +480,8 @@ namespace thor_scsi::elements {
 	public:
 		template<typename T>
 		inline void _synchrotronIntegralsInit
-		(const thor_scsi::core::ConfigType &conf,  gtpsa::ss_vect<T> &ps){
+		(const thor_scsi::core::ConfigType &conf,
+		 gtpsa::ss_vect<T> &ps){
 			if(this->computeSynchrotronIntegrals(conf)){
 				auto ob = this->_getRadiationDelegate();
 				if(ob){
@@ -475,11 +495,13 @@ namespace thor_scsi::elements {
 		// rename it to
 		template<typename T>
 		inline void _synchrotronIntegralsFinish
-		(const thor_scsi::core::ConfigType &conf, gtpsa::ss_vect<T> &ps){
+		(const thor_scsi::core::ConfigType &conf,
+		 gtpsa::ss_vect<T> &ps){
 			if(this->computeSynchrotronIntegrals(conf)){
 				auto obj = this->_getRadiationDelegate();
 				if(obj){
-					obj->view(*this, ps, thor_scsi::core::ObservedState::end,
+					obj->view(*this, ps,
+						  thor_scsi::core::ObservedState::end,
 						  0);
 				}
 			}
@@ -488,11 +510,13 @@ namespace thor_scsi::elements {
 		// calculate the effect of radiation
 		template<typename T>
 		inline void _synchrotronIntegralsStep
-		(thor_scsi::core::ConfigType &conf, gtpsa::ss_vect<T> &ps, const int step) {
+		(thor_scsi::core::ConfigType &conf, gtpsa::ss_vect<T> &ps,
+		 const int step) {
 			if(this->computeSynchrotronIntegrals(conf)){
 				auto obj = this->_getRadiationDelegate();
 				if(obj){
-					obj->view(*this, ps, thor_scsi::core::ObservedState::event,
+					obj->view(*this, ps,
+						  thor_scsi::core::ObservedState::event,
 						  step);
 				}
 			}
@@ -500,7 +524,8 @@ namespace thor_scsi::elements {
 
 		// calculate quadfringe if quadrupole and required
 		template<typename T>
-		void _quadFringe(thor_scsi::core::ConfigType &conf, gtpsa::ss_vect<T> &ps);
+		void _quadFringe(thor_scsi::core::ConfigType &conf,
+				 gtpsa::ss_vect<T> &ps);
 
 		FieldKickForthOrder<C> integ4O;
 		int  Pmethod;                 ///< Integration Method.
@@ -509,7 +534,8 @@ namespace thor_scsi::elements {
 	};
 
 	typedef FieldKickKnobbed<thor_scsi::core::StandardDoubleType> FieldKick;
-	typedef FieldKickKnobbed<thor_scsi::core::TpsaVariantType> FieldKickTpsa;
+	typedef FieldKickKnobbed<thor_scsi::core::TpsaVariantType>
+	FieldKickTpsa;
 
 } // Name space
 

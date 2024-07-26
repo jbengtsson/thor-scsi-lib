@@ -9,22 +9,24 @@ namespace thor_scsi::elements {
 	/**
 	 * @brief a magnet with a single strong multipole
 	 *
-	 * typically not directly used but using derived classes as Quadrupole, Sextupole or Bending
+	 * typically not directly used but using derived classes as Quadrupole,
+	 * Sextupole or Bending
 	 */
-    template<class C>
+	template<class C>
 	class ClassicalMagnetWithKnob : public MpoleTypeWithKnob<C> {
-    protected:
-        using complex_type = typename C::complex_type;
-        using double_type = typename C::double_type;
+	protected:
+		using complex_type = typename C::complex_type;
+		using double_type = typename C::double_type;
 
-        /*
-         * no type name as not directly used
-         */
+		/*
+		 * no type name as not directly used
+		 */
 	public:
-		inline ClassicalMagnetWithKnob(const Config &config) : MpoleTypeWithKnob<C>(config){
+		inline ClassicalMagnetWithKnob(const Config &config) :
+			MpoleTypeWithKnob<C>(config){
 			/*
-			 * don't now how to access the multipole number derived by
-			 *  a subclass
+			 * don't now how to access the multipole number derived
+			 * by a subclass
 			 */
 		}
 		/**
@@ -46,11 +48,15 @@ namespace thor_scsi::elements {
 		 *
 		 * \endverbatim
 		 */
-		inline const std::shared_ptr<thor_scsi::core::TwoDimensionalMultipolesKnobbed<C>> getMultipoles(void) const {
+		inline const std::shared_ptr
+		<thor_scsi::core::TwoDimensionalMultipolesKnobbed<C>>
+		getMultipoles(void) const {
 			auto tmp = this->getFieldInterpolator();
 			if(!tmp){
 				std::stringstream strm;
-				strm << __FILE__ << " ClassicalMAgnet.getMultipoles: this->getFieldInterpolator = NULL ";
+				strm << __FILE__
+				     << " ClassicalMAgnet.getMultipoles:"
+					" this->getFieldInterpolator = NULL ";
 				std::cerr << strm.str() << std::endl;
 				abort();
 				throw std::logic_error(strm.str());
@@ -59,7 +65,7 @@ namespace thor_scsi::elements {
 		}
 
 		inline void setMainMultipoleStrength(const Config &config){
-			const double_type K = config.get<double>("K");
+			const double_type K = config.get<double>("B_2", 0.0);
 			// Watch the apersand ...
 			this->setMainMultipoleStrength(K);
 		}
@@ -69,8 +75,9 @@ namespace thor_scsi::elements {
 			this->getMultipoles()->setMultipole(n, mul);
 		}
 
-		inline void setMainMultipoleStrength(const Config &config, const int n){
-			double K = config.get<double>("K");
+		inline void setMainMultipoleStrength
+		(const Config &config, const int n){
+			double K = config.get<double>("B_2", 0.0);
 			this->setMainMultipoleStrength(K);
 		}
 
@@ -86,17 +93,25 @@ namespace thor_scsi::elements {
 			return this->getMultipoles()->getMultipole(n);
 		};
 
-		inline double_type getMainMultipoleStrengthComponent(void) const {
+		inline double_type getMainMultipoleStrengthComponent(void)
+			const {
 			auto cm = this->getMainMultipoleStrength();
 			if(this->isSkew()){
 				return cm.imag();
 			}
 			return cm.real();
 		}
+
+		inline void setMultipoleStrength(const Config &config){
+			const double_type K = config.get<double>("B_2", 0.0);
+			this->setMainMultipoleStrength(K);
+		}
 	};
 
-    typedef ClassicalMagnetWithKnob<thor_scsi::core::StandardDoubleType> ClassicalMagnet;
-    typedef ClassicalMagnetWithKnob<thor_scsi::core::TpsaVariantType> ClassicalMagnetTpsa;
+	typedef ClassicalMagnetWithKnob<thor_scsi::core::StandardDoubleType>
+	ClassicalMagnet;
+	typedef ClassicalMagnetWithKnob<thor_scsi::core::TpsaVariantType>
+	ClassicalMagnetTpsa;
 } // Name space
 
 #endif // _THOR_SCSI_ELEMENTS_CLASSICAL_MAGNET_H_

@@ -6,7 +6,7 @@
 
 namespace thor_scsi::elements {
 	// declaration of API ... to be used by radiation observer
-    template<class C>
+	template<class C>
 	class FieldKickAPIKnobbed : public LocalGalileanPRotKnobbed<C> {
 
 	public:
@@ -37,7 +37,9 @@ namespace thor_scsi::elements {
 			return this->integration_steps;
 		}
 
-		inline void setFieldInterpolator(std::shared_ptr<thor_scsi::core::Field2DInterpolationKnobbed<C>> a_intp){
+		inline void setFieldInterpolator
+		(std::shared_ptr<thor_scsi::core::
+		 Field2DInterpolationKnobbed<C>> a_intp){
 			this->intp = a_intp;
 		}
 		inline auto getFieldInterpolator(void) const {
@@ -53,17 +55,21 @@ namespace thor_scsi::elements {
 			  std::cerr << "use count " << this->intp.use_count() << std::endl;
 			  std::cerr.flush();
 			*/
-			auto tmp =  std::const_pointer_cast<thor_scsi::core::Field2DInterpolationKnobbed<C>>(this->intp);
+			auto tmp = std::const_pointer_cast
+				<thor_scsi::core::Field2DInterpolationKnobbed
+				 <C>>(this->intp);
 			return tmp;
 			// return ;
 		}
 	protected:
 		double Pirho = 0;             ///< 1/rho [1/m].
-		std::shared_ptr<thor_scsi::core::Field2DInterpolationKnobbed<C>> intp;
+		std::shared_ptr
+		<thor_scsi::core::Field2DInterpolationKnobbed<C>> intp;
 		int integration_steps = 1;
 	};
 
-    typedef  FieldKickAPIKnobbed<thor_scsi::core::StandardDoubleType> FieldKickAPI;
+	typedef FieldKickAPIKnobbed<thor_scsi::core::StandardDoubleType>
+	FieldKickAPI;
 } // Name space
 
 #endif // _THOR_SCSI_ELEMENTS_FIELD_KICK_API_H_

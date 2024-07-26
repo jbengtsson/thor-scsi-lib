@@ -56,6 +56,7 @@ set(thor_scsi_element_HEADERS
   elements/quadrupole.h
   elements/sextupole.h
   elements/octupole.h
+  elements/multipole.h
   elements/corrector.h
   elements/element_helpers.h
   elements/cavity.h

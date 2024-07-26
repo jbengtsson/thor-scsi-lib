@@ -10,19 +10,26 @@ namespace thor_scsi::elements {
 	public:
 		inline SextupoleTypeWithKnob(const Config &config)
 			: ClassicalMagnetWithKnob<C> (config)
-			{ this->setMainMultipoleStrength(config); }
+			{
+				this->setMainMultipoleStrength(config);
+				const double b_3 = config.get<double>("B_3");
+				this->getMultipoles()->setMultipole(3, b_3);
+			}
 
 		inline int getMainMultipoleNumber(void) const override final {
-			return 3;
+			return 2;
 		};
 		inline bool isSkew(void) const override final {
 			return false;
 		};
 
-		const char* type_name(void) const override final { return "Sextupole"; };
+		const char* type_name(void) const override final
+			{ return "Sextupole"; };
 	};
-	typedef SextupoleTypeWithKnob<thor_scsi::core::StandardDoubleType> SextupoleType;
-	typedef SextupoleTypeWithKnob<thor_scsi::core::TpsaVariantType> SextupoleTypeTpsa;
+	typedef SextupoleTypeWithKnob<thor_scsi::core::StandardDoubleType>
+	SextupoleType;
+	typedef SextupoleTypeWithKnob<thor_scsi::core::TpsaVariantType>
+	SextupoleTypeTpsa;
 } // Name space
 
 #endif // _THOR_SCSI_ELEMENTS_SEXTUPOLE_H_

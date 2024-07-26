@@ -3,6 +3,7 @@
 #include <thor_scsi/elements/quadrupole.h>
 #include <thor_scsi/elements/sextupole.h>
 #include <thor_scsi/elements/octupole.h>
+#include <thor_scsi/elements/multipole.h>
 #include <thor_scsi/elements/marker.h>
 #include <thor_scsi/elements/bpm.h>
 #include <thor_scsi/elements/cavity.h>
@@ -23,8 +24,11 @@ ts::register_elements(void)
 	tsc::Machine::registerElement<tse::QuadrupoleType>("Quadrupole");
 	tsc::Machine::registerElement<tse::SextupoleType>("Sextupole");
 	tsc::Machine::registerElement<tse::OctupoleType>("Octupole");
-	tsc::Machine::registerElement<tse::HorizontalSteererType>("HorizontalSteerer");
-	tsc::Machine::registerElement<tse::VerticalSteererType>("VerticalSteerer");
+	tsc::Machine::registerElement<tse::MultipoleType>("Multipole");
+	tsc::Machine::registerElement<tse::HorizontalSteererType>
+		("HorizontalSteerer");
+	tsc::Machine::registerElement<tse::VerticalSteererType>
+		("VerticalSteerer");
 	tsc::Machine::registerElement<tse::BendingType>("Bending");
 
 	// tsc::Machine::registerElement<tse::MpoleType>("mpole");

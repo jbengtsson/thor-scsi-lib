@@ -357,9 +357,9 @@ tse::FieldKickKnobbed<C>::FieldKickKnobbed
   this->setNumberOfIntegrationSteps(config.get<double>("N"));
   this->setLength(config.get<double>("L"));
 
-  this->setBendingAngle(config.get<double>("T", 0.0));
-  this->setEntranceAngle(config.get<double>("T1", 0.0));
-  this->setExitAngle(config.get<double>("T2", 0.0));
+  this->setBendingAngle(config.get<double>("Phi", 0.0));
+  this->setEntranceAngle(config.get<double>("Phi_1", 0.0));
+  this->setExitAngle(config.get<double>("Phi_2", 0.0));
   this->integ4O.setParent(this);
 }
 

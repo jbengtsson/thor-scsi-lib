@@ -24,9 +24,6 @@ namespace thor_scsi::elements {
                      ( K > 0 : focusing in horizontal plane )
                      ( K < 0 : defocusing in horizontal plane )
 		     N      = <# of kicks>,
-		     method = <method>, ( 2 or 4. The method to divide Q into slices.)
-		     ( The detail of <method> will be discussed later.)
-		     Default value is 2.
 		     Roll   = <roll angle>, ( [deg], design roll angle )
 		     HOM    = (i, <Bi>, <Ai>, ( multipole compoments (power series) )
 		     j, <Bj>, <Aj>, ( Systematic error Only )
@@ -39,7 +36,7 @@ namespace thor_scsi::elements {
 		 */
 	public:
 		inline BendingTypeWithKnob(const Config &config) : ClassicalMagnetWithKnob<C>(config){
-			const double gradient = config.get<double>("K");
+			const double gradient = config.get<double>("B_2", 0.0);
 			this->getMultipoles()->setMultipole(2, gradient);
 
 			/* set pirho */
