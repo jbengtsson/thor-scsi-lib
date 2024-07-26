@@ -62,6 +62,12 @@ lat_prop.prt_lat("lat_prop_lat.txt")
 print("\nCircumference [m]      = {:7.5f}".format(lat_prop.compute_circ()))
 print("Total bend angle [deg] = {:7.5f}".format(lat_prop.compute_phi_lat()))
 
+b_3_list = ["s1", "s2", "s3", "s4"]
+nld = nld_cl.nonlin_dyn_class(lat_prop, A_max, beta_inj, delta_max, b_3_list)
+if False:
+    nld.zero_mult(lat_prop, 3)
+    nld.zero_mult(lat_prop, 4)
+
 compute_optics(lat_prop)
 
 lat_prop.prt_lat_param()
@@ -69,22 +75,10 @@ lat_prop.prt_rad()
 lat_prop.prt_M()
 lat_prop.prt_M_rad()
 
-assert False
-
 if not False:
     lat_prop.plt_Twiss("lat_prop_Twiss.png", not False)
     lat_prop.plt_chrom("lat_prop_chrom.png", not False)
 
-b_3_list = ["s2", "s3"]
-
-nld = nld_cl.nonlin_dyn_class(lat_prop, A_max, beta_inj, delta_max, b_3_list)
-
-if True:
-    nld.set_xi(lat_prop, 0e0, 0e0)
-else:
-    nld.zero_mult(lat_prop, 3)
-    nld.zero_mult(lat_prop, 4)
-
 nld.compute_map(lat_prop, no)
 nld.compute_nl(lat_prop)
-nld.prt_nl()
+nld.prt_nl(lat_prop)

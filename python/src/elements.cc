@@ -12,6 +12,7 @@
 #include <thor_scsi/elements/quadrupole.h>
 #include <thor_scsi/elements/sextupole.h>
 #include <thor_scsi/elements/octupole.h>
+#include <thor_scsi/elements/multipole.h>
 #include <thor_scsi/elements/corrector.h>
 #include <thor_scsi/elements/cavity.h>
 
@@ -319,6 +320,12 @@ struct TemplatedClasses
 		typedef tse::OctupoleTypeWithKnob<C> OctK;
 		py::class_<OctK, std::shared_ptr<OctK>>
 			(this->m_module, oct_name.c_str(), cm)
+			.def(py::init<const Config &>());
+
+		std::string multi_name = "Multipole" + this->m_suffix;
+		typedef tse::MultipoleTypeWithKnob<C> MultK;
+		py::class_<MultK, std::shared_ptr<MultK>>
+			(this->m_module, multi_name.c_str(), cm)
 			.def(py::init<const Config &>());
 
 		std::string bending_name = "Bending" + this->m_suffix;

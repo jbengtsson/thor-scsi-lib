@@ -267,11 +267,11 @@ class nonlin_dyn_class:
                 print()
 
         if lat_prop._no >= 6:
-            print("\n")
+            print()
             for key in self.K_6_dict:
                 print("  {:s}  = {:10.3e}".
                       format(key, self._K_re_scl.get(self.K_6_dict[key])))
-                if key == "K_00112":
+                if key == "K_00330":
                     print()
 
 
