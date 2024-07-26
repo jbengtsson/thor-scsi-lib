@@ -111,6 +111,29 @@ def unset_param_dep(lat_prop, prm_name):
     lat_ptc = lat_set_mult_prm(lat_prop, prm_name, 3)
 
 
+def compute_sext_resp_mat_num(lat_prop, b3_list):
+    db_3xL = 1e0
+    n = len(b3_list)
+    A = np.zeros((n, n))
+    M = compute_map(lat_prop, 2)
+    stable, _, xi = lo.compute_nu_xi(lat_prop._desc, lat_prop._no, M)
+    for k in range(n):
+        b_3xL = \
+            lat_prop.get_b_nxL_elem(b3_list[k], 0, MpoleInd.sext)
+        lat_prop.set_b_nxL_fam(
+            b3_list[k], MpoleInd.sext, b_3xL-db_3xL)
+        M = compute_map(lat_prop, 2)
+        stable, _, xi_1 = lo.compute_nu_xi(lat_prop._desc, lat_prop._no, M)
+        lat_prop.set_b_nxL_fam(
+            b3_list[k], MpoleInd.sext, b_3xL+db_3xL)
+        M = compute_map(lat_prop, 2)
+        stable, _, xi_2 = lo.compute_nu_xi(lat_prop._desc, lat_prop._no, M)
+        a_ij = (xi_2-xi_1)/(2e0*db_3xL)
+        A[ind.X, k] = a_ij[ind.X]
+        A[ind.Y, k] = a_ij[ind.Y]
+    return xi, A
+
+
 def compute_nu_tps_prm(lat_prop, M):
     # nu = acos( Tr{ M_x,y(delta; b_3) } / 2 ) / 2 pi
     planes = ["x", "y"]
@@ -159,29 +182,6 @@ def compute_nu_tps_prm(lat_prop, M):
     return xi
 
 
-def compute_sext_resp_mat_num(lat_prop, b3_list):
-    db_3xL = 1e0
-    n = len(b3_list)
-    A = np.zeros((n, n))
-    M = compute_map(lat_prop, 1)
-    stable, _, xi = lo.compute_nu_xi(lat_prop._desc, lat_prop._no, M)
-    for k in range(n):
-        b_3xL = \
-            lat_prop.get_b_nxL_elem(b3_list[k], 0, MpoleInd.sext)
-        lat_prop.set_b_nxL_fam(
-            b3_list[k], MpoleInd.sext, b_3xL-db_3xL)
-        M = compute_map(lat_prop, 1)
-        stable, _, xi_1 = lo.compute_nu_xi(lat_prop._desc, lat_prop._no, M)
-        lat_prop.set_b_nxL_fam(
-            b3_list[k], MpoleInd.sext, b_3xL+db_3xL)
-        M = compute_map(lat_prop, 1)
-        stable, _, xi_2 = lo.compute_nu_xi(lat_prop._desc, lat_prop._no, M)
-        a_ij = (xi_2-xi_1)/(2e0*db_3xL)
-        A[ind.X, k] = a_ij[ind.X]
-        A[ind.Y, k] = a_ij[ind.Y]
-    return xi, A
-
-
 def compute_sext_resp_mat(lat_prop, b3_list):
     n = len(b3_list)
     xi = np.zeros(2)
@@ -190,6 +190,8 @@ def compute_sext_resp_mat(lat_prop, b3_list):
         lat_ptc = set_param_dep(lat_prop, b3_list[k])
         M = compute_map_prm(lat_prop, lat_ptc)
         xi_tps = compute_nu_tps_prm(lat_prop, M)
+        xi_tps[0].print("xi_tps")
+        xi_tps[1].print("xi_tps")
         for j in range(2):
             if k == 0:
                 xi[j] = xi_tps[j].get([0, 0, 0, 0, 1, 0, 0, 0])
@@ -200,26 +202,28 @@ def compute_sext_resp_mat(lat_prop, b3_list):
 def set_xi(lat_prop, xi_x, xi_y, b3_list):
     n = len(b3_list)
     xi, A = compute_sext_resp_mat(lat_prop, b3_list)
+    print("\nxi   =  [{:8.5f}, {:8.5f}]".format(xi[ind.X], xi[ind.Y]))
     A_inv = la.pinv(A)
-    b_3 = A_inv @ (-xi)
+    db_3 = A_inv @ (-xi)
+
+    print("A^-1:\n", A_inv)
+    print("db_3 = ", db_3)
+
     for k in range(len(b3_list)):
-        lat_prop.set_b_n_fam(b3_list[k], MpoleInd.sext, b_3[k])
+        b_3 = lat_prop.get_b_n_elem(b3_list[k], 0, MpoleInd.sext)
+        lat_prop.set_b_n_fam(b3_list[k], MpoleInd.sext, b_3+db_3[k])
+
+    xi, A = compute_sext_resp_mat(lat_prop, b3_list)
+    print("xi   =  [{:8.5f}, {:8.5f}]".format(xi[ind.X], xi[ind.Y]))
 
     M = gtpsa.ss_vect_tpsa(
         lat_prop._desc, lat_prop._no, lat_prop._nv,
         index_mapping=lat_prop._named_index)
     M.set_identity()
     lat_prop._lattice.propagate(lat_prop._model_state, M)
-    nu_tps = compute_nu_tps_prm(lat_prop, M)
+    stable, nu, xi = lo.compute_nu_xi(lat_prop._desc, lat_prop._no, M)
 
-    print("\nnu_tps_x = {:12.5e} {:12.5e} {:12.5e}".
-          format(nu_tps[ind.X].get(), nu_tps[ind.X].get(
-              [0, 0, 0, 0, 1, 0, 0, 0]),
-                 nu_tps[ind.X].get([0, 0, 0, 0, 1, 0, 1, 0])))
-    print("nu_tps_y = {:12.5e} {:12.5e} {:12.5e}".
-          format(nu_tps[ind.Y].get(), nu_tps[ind.Y].get(
-              [0, 0, 0, 0, 1, 0, 0, 0]),
-                 nu_tps[ind.Y].get([0, 0, 0, 0, 1, 0, 1, 0])))
+    print("xi   =  [{:8.5f}, {:8.5f}]".format(xi[ind.X], xi[ind.Y]))
 
 
 ind = ind.index_class()
@@ -236,8 +240,8 @@ cod_eps = 1e-15
 E_0     = 3.0e9
 
 home_dir = os.path.join(
-    os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "MAX_IV", "max_iv")
-lat_name = "ake_2"
+    os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "MAX_IV", "max_4u")
+lat_name = "max_4u_g_0"
 file_name = os.path.join(home_dir, lat_name+".lat")
 
 np.set_printoptions(formatter={"float": "{:13.5e}".format})
@@ -245,9 +249,11 @@ np.set_printoptions(formatter={"float": "{:13.5e}".format})
 lat_prop = \
     lp.lattice_properties_class(nv, no, nv_prm, no_prm, file_name, E_0, cod_eps)
 
-b3_list = ["sfoh", "sdqd"]
+b3_list = ["sf_h", "sd1"]
+# b3_list = ["sfoh", "sdqd"]
 
 if False:
     zero_sext(lat_prop, b3_list)
 
+set_xi(lat_prop, 0e0, 0e0, b3_list)
 set_xi(lat_prop, 0e0, 0e0, b3_list)
