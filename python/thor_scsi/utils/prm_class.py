@@ -274,7 +274,7 @@ def prt_lat(
             print(", Phi_2 = {:8.5f}".format(phi), end="", file=outf)
         if b_2 != 0e0:
             print(", B_2 = {:8.5f}".format(b_2), end="", file=outf)
-        print(",\n       N = n_bend;", file=outf)
+        print(", N = n_bend;", file=outf)
 
     def prt_bend(bend):
         for k in range(len(bend._bend_list)):

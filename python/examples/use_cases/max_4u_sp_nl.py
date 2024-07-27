@@ -305,7 +305,7 @@ def opt_sp(
 # Number of phase-space coordinates.
 nv = 7
 # Variables max order.
-no = 4
+no = 6
 # Number of parameters.
 nv_prm = 0
 # Parameters max order.
@@ -315,8 +315,8 @@ cod_eps = 1e-15
 E_0     = 3.0e9
 
 A_max     = np.array([6e-3, 3e-3])
-beta_inj  = np.array([3.0, 3.0])
 delta_max = 3e-2
+beta_inj  = np.array([3.0, 3.0])
 
 home_dir = os.path.join(
     os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "MAX_IV")
@@ -330,12 +330,6 @@ lat_prop.prt_lat("max_4u_sp_nl_lat.txt")
 
 print("\nCircumference [m]      = {:7.5f}".format(lat_prop.compute_circ()))
 print("Total bend angle [deg] = {:7.5f}".format(lat_prop.compute_phi_lat()))
-
-b_3_list = ["s2", "s3"]
-nld = nld_cl.nonlin_dyn_class(lat_prop, A_max, beta_inj, delta_max, b_3_list)
-nld.zero_mult(lat_prop, 3)
-nld.zero_mult(lat_prop, 4)
-nld.set_xi(lat_prop, 0e0, 0e0)
 
 try:
     # Compute Twiss parameters along lattice.
@@ -382,10 +376,18 @@ d1_list = [
 d2_bend = pc.bend_class(lat_prop, d2_list, phi_max, b_2_max)
 d1_bend = pc.bend_class(lat_prop, d1_list, phi_max, b_2_max)
 
-step = 2;
+b_3_list = ["s2", "s3"]
+nld = nld_cl.nonlin_dyn_class(lat_prop, A_max, beta_inj, delta_max, b_3_list)
+
+step = 3;
 
 if step == 1:
     phi_lat = []
+
+    if False:
+        nld.zero_mult(lat_prop, 3)
+        nld.zero_mult(lat_prop, 4)
+        nld.set_xi(lat_prop, 0e0, 0e0)
 
     # Weights.
     weight = np.array([
@@ -402,7 +404,7 @@ if step == 1:
         0e-6,  # beta_y.
         0e-2,  # dnu_x.
         0e-2,  # dnu_y.
-        1e-3,  # xi.
+        1e-1,  # xi.
         0e6,   # Im{h} rms.
         1e8    # K rms.
     ])
@@ -428,9 +430,9 @@ elif step == 2:
         0e-6,  # beta_y.
         0e-2,  # dnu_x.
         0e-2,  # dnu_y.
-        1e-4,  # xi.
+        1e-2,  # xi.
         0e6,   # Im{h} rms.
-        1e8    # K rms.
+        1e9    # K rms.
     ])
 
     prms = [
@@ -455,20 +457,20 @@ elif step == 2:
     phi_lat = pc.phi_lat_class(lat_prop, 2, d1_bend)
 elif step == 3:
     weight = np.array([
-        0e18,  # eps_x.
+        1e18,  # eps_x.
         0e-17, # U_0.
-        0e2,   # etap_x_uc.
-        0e-2,  # alpha_uc.
+        1e2,   # etap_x_uc.
+        1e-2,  # alpha_uc.
         0e0,   # nu_uc_x.
         0e0,   # nu_uc_y.
-        0e0,   # eta_x.
+        1e0,   # eta_x.
         0e-7,  # nu_sp_x.
         0e-3,  # nu_sp_y.
         0e-6,  # beta_x.
         0e-6,  # beta_y.
         0e-2,  # dnu_x.
         0e-2,  # dnu_y.
-        1e-3,  # xi.
+        1e-2,  # xi.
         0e6,   # Im{h} rms.
         1e8    # K rms.
     ])
