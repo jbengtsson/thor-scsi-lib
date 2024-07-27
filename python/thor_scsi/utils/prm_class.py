@@ -273,8 +273,8 @@ def prt_lat(
         if phi_2 != 0e0:
             print(", Phi_2 = {:8.5f}".format(phi), end="", file=outf)
         if b_2 != 0e0:
-            print(", K_2 = {:8.5f}".format(b_2), end="", file=outf)
-        print("\n       N = n_bend;", file=outf)
+            print(", B_2 = {:8.5f}".format(b_2), end="", file=outf)
+        print(",\n       N = n_bend;", file=outf)
 
     def prt_bend(bend):
         for k in range(len(bend._bend_list)):
@@ -283,7 +283,7 @@ def prt_lat(
     def prt_quad(fam_name):
         L = lat_prop.get_L_elem(fam_name, 0)
         b_2 = lat_prop.get_b_n_elem(fam_name, 0, 2)
-        print(("{:5s}: Quadrupole, L = {:7.5f}, K_2 = {:8.5f}, N = n_quad;")
+        print(("{:5s}: Quadrupole, L = {:7.5f}, B_2 = {:8.5f}, N = n_quad;")
               .format(fam_name, L, b_2), file=outf)
 
     def prt_sext(fam_name):
@@ -291,14 +291,14 @@ def prt_lat(
         L = lat_prop._lattice[k].get_length()
         b_3 = lat_prop._lattice[k].get_multipoles().get_multipole(3).real
         if type(lat_prop._lattice[k]) == ts.Sextupole:
-            print(("{:5s}: Sextupole, L = {:7.5f}, K_3 = {:10.5f}, N = n_sext;")
+            print(("{:5s}: Sextupole, L = {:7.5f}, B_3 = {:10.5f}, N = n_sext;")
                   .format(fam_name, L, b_3), file=outf)
         elif type(lat_prop._lattice[k]) == ts.Multipole:
             b_2 = lat_prop._lattice[k].get_multipoles().get_multipole(2).real
-            print("{:5s}: Multipole, L = {:7.5f}, K_3 = {:10.5f}".
+            print("{:5s}: Multipole, L = {:7.5f}, B_3 = {:10.5f}".
                   format(fam_name, L, b_3), end="", file=outf)
             if b_2 != 0e0:
-                print(", K_2 = {:8.5f}".format(b_2), end="", file=outf)
+                print(", B_2 = {:8.5f}".format(b_2), end="", file=outf)
             print(", N = n_sext;", file=outf)
         else:
             print("\nprt_sext - undefined element type: {:s}".format(fam_name))
