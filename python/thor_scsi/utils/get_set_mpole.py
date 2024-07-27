@@ -54,6 +54,14 @@ class get_set_mpole_class:
         for k in range(n_kid):
             self.set_L_bend_elem(fam_name, k, L)
 
+    def get_phi_1_elem(self, fam_name, kid_num):
+        b = self._lattice.find(fam_name, kid_num)
+        return math.degrees(b.get_entrance_angle())
+
+    def get_phi_2_elem(self, fam_name, kid_num):
+        b = self._lattice.find(fam_name, kid_num)
+        return math.degrees(b.get_exit_angle())
+
     def get_phi_elem(self, fam_name, kid_num):
         b = self._lattice.find(fam_name, kid_num)
         return math.degrees(b.get_length() * b.get_curvature())

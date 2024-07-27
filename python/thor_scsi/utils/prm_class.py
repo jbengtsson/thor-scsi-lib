@@ -4,6 +4,9 @@
 import numpy as np
 
 
+import thor_scsi.lib as ts
+
+
 quad = 2
 
 
@@ -114,7 +117,7 @@ class bend_class:
         print("    L     = {:8.5f}".format(self._bend_L_tot))
         print("    phi   = {:8.5f}".format(self._bend_phi))
         print("    b_2xL = {:8.5f}".format(self._bend_b_2xL))
-        print("\n    part     fraction   phi    fraction    b_2")
+        print("\n    part   fraction   phi    fraction   b_2")
         for k in range(len(self._bend_list)):
             print("    {:5s} {:8.5f} {:8.5f} {:8.5f} {:8.5f}".
                   format(self._bend_list[k], self._bend_phi_ratio[k],
@@ -210,7 +213,7 @@ class prm_class(bend_class):
             prm.append(p)
             bounds.append(b)
             if prt:
-                print(" {:12.5e} ({:5.1f}, {:5.1f})".
+                print("    {:12.5e} ({:5.1f}, {:5.1f})".
                       format(prm[k], bounds[k][0], bounds[k][1]))
         return np.array(prm), bounds
 
@@ -251,33 +254,55 @@ def prt_lat(
 # def prt_lat(lat_prop, file_name, prm_list):
     outf = open(file_name, 'w')
 
-    def prt_drift(name):
-        L = lat_prop.get_L_elem(name, 0)
-        print(("{:5s}: Drift, L = {:7.5f};").format(name, L), file=outf)
+    def prt_drift(fam_name):
+        L = lat_prop.get_L_elem(fam_name, 0)
+        print("{:5s}: Drift, L = {:7.5f};".format(fam_name, L), file=outf)
 
-    def prt_dip(name):
-        L = lat_prop.get_L_elem(name, 0)
-        phi = lat_prop.get_phi_elem(name, 0)
-        b_2 = lat_prop.get_b_n_elem(name, 0, 2)
-        print(("{:5s}: Bending, L = {:7.5f}, T = {:8.5f}, K = {:8.5f}"
-               ", T1 = 0.0, T2 = 0.0,\n       N = n_bend;")
-              .format(name, L, phi, b_2), file=outf)
+    def prt_dip(fam_name):
+        L = lat_prop.get_L_elem(fam_name, 0)
+        phi = lat_prop.get_phi_elem(fam_name, 0)
+        phi_1 = lat_prop.get_phi_1_elem(fam_name, 0)
+        phi_2 = lat_prop.get_phi_1_elem(fam_name, 0)
+        b_2 = lat_prop.get_b_n_elem(fam_name, 0, 2)
+        print("{:5s}: Bending, L = {:7.5f}".format(fam_name, L), end="",
+              file=outf)
+        if phi != 0e0:
+            print(", Phi = {:8.5f}".format(phi), end="", file=outf)
+        if phi_1 != 0e0:
+            print(", Phi_1 = {:8.5f}".format(phi), end="", file=outf)
+        if phi_2 != 0e0:
+            print(", Phi_2 = {:8.5f}".format(phi), end="", file=outf)
+        if b_2 != 0e0:
+            print(", K_2 = {:8.5f}".format(b_2), end="", file=outf)
+        print("\n       N = n_bend;", file=outf)
 
     def prt_bend(bend):
         for k in range(len(bend._bend_list)):
             prt_dip(bend._bend_list[k])
 
-    def prt_quad(name):
-        L = lat_prop.get_L_elem(name, 0)
-        b_2 = lat_prop.get_b_n_elem(name, 0, 2)
-        print(("{:5s}: Quadrupole, L = {:7.5f}, K = {:8.5f}, N = n_quad;")
-              .format(name, L, b_2), file=outf)
+    def prt_quad(fam_name):
+        L = lat_prop.get_L_elem(fam_name, 0)
+        b_2 = lat_prop.get_b_n_elem(fam_name, 0, 2)
+        print(("{:5s}: Quadrupole, L = {:7.5f}, K_2 = {:8.5f}, N = n_quad;")
+              .format(fam_name, L, b_2), file=outf)
 
-    def prt_sext(name):
-        L = lat_prop.get_L_elem(name, 0)
-        b_3 = lat_prop.get_b_n_elem(name, 0, 3)
-        print(("{:5s}: Sextupole, L = {:7.5f}, K = {:10.5f}, N = n_sext;")
-              .format(name, L, b_3), file=outf)
+    def prt_sext(fam_name):
+        k = lat_prop._lattice.find(fam_name, 0).index
+        L = lat_prop._lattice[k].get_length()
+        b_3 = lat_prop._lattice[k].get_multipoles().get_multipole(3).real
+        if type(lat_prop._lattice[k]) == ts.Sextupole:
+            print(("{:5s}: Sextupole, L = {:7.5f}, K_3 = {:10.5f}, N = n_sext;")
+                  .format(fam_name, L, b_3), file=outf)
+        elif type(lat_prop._lattice[k]) == ts.Multipole:
+            b_2 = lat_prop._lattice[k].get_multipoles().get_multipole(2).real
+            print("{:5s}: Multipole, L = {:7.5f}, K_3 = {:10.5f}".
+                  format(fam_name, L, b_3), end="", file=outf)
+            if b_2 != 0e0:
+                print(", K_2 = {:8.5f}".format(b_2), end="", file=outf)
+            print(", N = n_sext;", file=outf)
+        else:
+            print("\nprt_sext - undefined element type: {:s}".format(fam_name))
+            assert False
 
     # Dictionary of parameter types and corresponding print functions.
     prt_prm_func_dict = {
