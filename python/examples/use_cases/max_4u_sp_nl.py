@@ -75,9 +75,9 @@ class opt_sp_class:
         self._dnu        = np.nan
         self._xi         = np.nan
 
-        self._chi_2_min    = 1e30
-        self._n_iter       = -1
-        self._file_name    = "opt_sp.txt"
+        self._chi_2_min  = 1e30
+        self._n_iter     = -1
+        self._file_name  = "opt_sp.txt"
 
     # Public.
 
@@ -389,7 +389,7 @@ d1_bend = pc.bend_class(lat_prop, d1_list, phi_max, b_2_max)
 b_3_list = ["s2", "s3"]
 nld = nld_cl.nonlin_dyn_class(lat_prop, A_max, beta_inj, delta_max, b_3_list)
 
-step = 1;
+step = 2;
 
 if step == 1:
     phi_lat = []
@@ -414,7 +414,7 @@ if step == 1:
         0e-6,  # beta_y.
         0e-2,  # dnu_x.
         0e-2,  # dnu_y.
-        1e-1,  # xi.
+        1e0,   # xi.
         0e6,   # Im{h} rms.
         1e8    # K rms.
     ])
@@ -464,7 +464,11 @@ elif step == 2:
         ("s1",       "b_3"),
         ("s2",       "b_3"),
         ("s3",       "b_3"),
-        ("s4",       "b_3")
+        ("s4",       "b_3"),
+
+        ("o1",       "b_4"),
+        ("o2",       "b_4"),
+        ("o3",       "b_4")
     ]
 
     # To maintain the total bend angle.
@@ -522,12 +526,16 @@ elif step == 3:
         ("d2_4",  "phi"),
         ("d2_5",  "phi"),
 
-        # ("r1",    "phi")
+        # ("r1",    "phi"),
 
-        ("s1",       "b_3"),
-        ("s2",       "b_3"),
-        ("s3",       "b_3"),
-        ("s4",       "b_3")
+        ("s1",      "b_3"),
+        ("s2",      "b_3"),
+        ("s3",      "b_3"),
+        ("s4",      "b_3"),
+
+        ("o1",      "b_4"),
+        ("o2",      "b_4"),
+        ("o3",      "b_4")
     ]
 
     # To maintain the total bend angle.

@@ -260,82 +260,103 @@ def prt_lat(
         L = lat_prop.get_L_elem(fam_name, 0)
         print("{:5s}: Drift, L = {:7.5f};".format(fam_name, L), file=outf)
 
-    def prt_dip(fam_name):
-        L = lat_prop.get_L_elem(fam_name, 0)
-        phi = lat_prop.get_phi_elem(fam_name, 0)
-        phi_1 = lat_prop.get_phi_1_elem(fam_name, 0)
-        phi_2 = lat_prop.get_phi_1_elem(fam_name, 0)
-        b_2 = lat_prop.get_b_n_elem(fam_name, 0, 2)
-        print("{:5s}: Bending, L = {:7.5f}".format(fam_name, L), end="",
-              file=outf)
-        if phi != 0e0:
-            print(", Phi = {:8.5f}".format(phi), end="", file=outf)
-        if phi_1 != 0e0:
-            print(", Phi_1 = {:8.5f}".format(phi), end="", file=outf)
-        if phi_2 != 0e0:
-            print(", Phi_2 = {:8.5f}".format(phi), end="", file=outf)
-        if b_2 != 0e0:
-            print(", B_2 = {:8.5f}".format(b_2), end="", file=outf)
-        print(", N = n_bend;", file=outf)
-
-    def prt_bend(bend):
-        for k in range(len(bend._bend_list)):
-            prt_dip(bend._bend_list[k])
-
-    def prt_quad(fam_name):
-        L = lat_prop.get_L_elem(fam_name, 0)
-        b_2 = lat_prop.get_b_n_elem(fam_name, 0, 2)
-        print(("{:5s}: Quadrupole, L = {:7.5f}, B_2 = {:8.5f}, N = n_quad;")
-              .format(fam_name, L, b_2), file=outf)
-
-    def prt_sext(fam_name):
-        k = lat_prop._lattice.find(fam_name, 0).index
-        L = lat_prop._lattice[k].get_length()
-        b_3 = lat_prop._lattice[k].get_multipoles().get_multipole(3).real
-        if type(lat_prop._lattice[k]) == ts.Sextupole:
-            print(("{:5s}: Sextupole, L = {:7.5f}, B_3 = {:10.5f}, N = n_sext;")
-                  .format(fam_name, L, b_3), file=outf)
-        elif type(lat_prop._lattice[k]) == ts.Multipole:
-            b_2 = lat_prop._lattice[k].get_multipoles().get_multipole(2).real
-            print("{:5s}: Multipole, L = {:7.5f}, B_3 = {:10.5f}".
-                  format(fam_name, L, b_3), end="", file=outf)
+    def prt_dip(fam_name, prt_list):
+        if prt_list.count(fam_name) == 0:
+            prt_list.append(fam_name)
+            L = lat_prop.get_L_elem(fam_name, 0)
+            phi = lat_prop.get_phi_elem(fam_name, 0)
+            phi_1 = lat_prop.get_phi_1_elem(fam_name, 0)
+            phi_2 = lat_prop.get_phi_1_elem(fam_name, 0)
+            b_2 = lat_prop.get_b_n_elem(fam_name, 0, 2)
+            print("{:5s}: Bending, L = {:7.5f}".format(fam_name, L), end="",
+                  file=outf)
+            if phi != 0e0:
+                print(", Phi = {:8.5f}".format(phi), end="", file=outf)
+            if phi_1 != 0e0:
+                print(", Phi_1 = {:8.5f}".format(phi), end="", file=outf)
+            if phi_2 != 0e0:
+                print(", Phi_2 = {:8.5f}".format(phi), end="", file=outf)
             if b_2 != 0e0:
                 print(", B_2 = {:8.5f}".format(b_2), end="", file=outf)
-            print(", N = n_sext;", file=outf)
-        else:
-            print("\nprt_sext - undefined element type: {:s}".format(fam_name))
-            assert False
+            print(", N = n_bend;", file=outf)
+        return prt_list
 
-    def prt_oct(fam_name):
-        k = lat_prop._lattice.find(fam_name, 0).index
-        L = lat_prop._lattice[k].get_length()
-        b_4 = lat_prop._lattice[k].get_multipoles().get_multipole(4).real
-        print(("{:5s}: Octupole, L = {:7.5f}, B_4 = {:12.5e}, N = n_sext;")
-              .format(fam_name, L, b_4), file=outf)
+    def prt_bend(bend, prt_list):
+        for k in range(len(bend._bend_list)):
+            prt_list = prt_dip(bend._bend_list[k], prt_list)
+        return prt_list
+
+    def prt_quad(fam_name, prt_list):
+        if prt_list.count(fam_name) == 0:
+            prt_list.append(fam_name)
+            L = lat_prop.get_L_elem(fam_name, 0)
+            b_2 = lat_prop.get_b_n_elem(fam_name, 0, 2)
+            print("{:5s}: Quadrupole, L = {:7.5f}, B_2 = {:8.5f}, N = n_quad;"
+                  .format(fam_name, L, b_2), file=outf)
+        return prt_list
+
+    def prt_sext(fam_name, prt_list):
+        if prt_list.count(fam_name) == 0:
+            prt_list.append(fam_name)
+            k = lat_prop._lattice.find(fam_name, 0).index
+            L = lat_prop._lattice[k].get_length()
+            b_3 = lat_prop._lattice[k].get_multipoles().get_multipole(3).real
+            if type(lat_prop._lattice[k]) == ts.Sextupole:
+                print("{:5s}: Sextupole, L = {:7.5f}, B_3 = {:10.5f}, N = n_sext;"
+                      .format(fam_name, L, b_3), file=outf)
+            elif type(lat_prop._lattice[k]) == ts.Multipole:
+                b_2 = \
+                    lat_prop._lattice[k].get_multipoles().get_multipole(2).real
+                print("{:5s}: Multipole, L = {:7.5f}, B_3 = {:10.5f}".
+                      format(fam_name, L, b_3), end="", file=outf)
+                if b_2 != 0e0:
+                    print(", B_2 = {:8.5f}".format(b_2), end="", file=outf)
+                print(", N = n_sext;", file=outf)
+            else:
+                print("\nprt_sext - undefined element type: {:s}".
+                      format(fam_name))
+                assert False
+        return prt_list
+
+    def prt_oct(fam_name, prt_list):
+        if prt_list.count(fam_name) == 0:
+            k = lat_prop._lattice.find(fam_name, 0).index
+            L = lat_prop._lattice[k].get_length()
+            b_4 = lat_prop._lattice[k].get_multipoles().get_multipole(4).real
+            print("{:5s}: Octupole, L = {:7.5f}, B_4 = {:12.5e}, N = n_sext;"
+                  .format(fam_name, L, b_4), file=outf)
+        return prt_list
 
     # Dictionary of parameter types and corresponding print functions.
     prt_prm_func_dict = {
         "L":   prt_drift,
         "L_b": prt_dip,
         "phi": prt_dip,
-        "b_2": prt_dip,
+        "b_2": prt_quad,
         "b_3": prt_sext,
         "b_4": prt_oct
     }
 
+    // Print family once.
+    prt_list = []
     for k in range(len(prm_list._prm_list)):
         if type(prm_list._prm_list[k][1]) == str:
-            prt_prm_func_dict[prm_list._prm_list[k][1]](
-                prm_list._prm_list[k][0])
+            prt_list = \
+                prt_prm_func_dict[prm_list._prm_list[k][1]](
+                    prm_list._prm_list[k][0], prt_list)
         elif isinstance(prm_list._prm_list[k][1], bend_class):
-            prt_bend(prm_list._prm_list[k][1])
+            prt_list = \
+                prt_bend(prm_list._prm_list[k][1], prt_list)
         else:
             print("\nprt_lat - undefined parameter:", prm_list._prm_list[k][1])
+
     if (phi_lat != None) and (phi_lat != []):
         if type(phi_lat._dip_prm) == str:
-            prt_dip(phi_lat._dip_prm)
+            prt_list = \
+                prt_dip(phi_lat._dip_prm, prt_list)
         elif isinstance(phi_lat._dip_prm, bend_class):
-            prt_bend(phi_lat._dip_prm)
+            prt_list = \
+                prt_bend(phi_lat._dip_prm, prt_list)
         else:
             print("\nprt_lat - undefined parameter:", phi_lat._dip_prm)
 
