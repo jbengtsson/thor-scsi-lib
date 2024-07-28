@@ -337,7 +337,7 @@ def prt_lat(
         "b_4": prt_oct
     }
 
-    // Print family once.
+    # Print family once.
     prt_list = []
     for k in range(len(prm_list._prm_list)):
         if type(prm_list._prm_list[k][1]) == str:
