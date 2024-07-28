@@ -133,6 +133,8 @@ class opt_sp_class:
         prm_list.prt_prm(prm)
 
     def compute_chi_2(self):
+        prt = not False
+
         eta, alpha, nu_sp, beta = self._Twiss_sp
 
         dchi_2 = weight[0]*(self._lat_prop._eps[ind.X]-self._eps_x_des)**2
@@ -313,7 +315,7 @@ class opt_sp_class:
 # Number of phase-space coordinates.
 nv = 7
 # Variables max order.
-no = 5
+no = 6
 # Number of parameters.
 nv_prm = 0
 # Parameters max order.
