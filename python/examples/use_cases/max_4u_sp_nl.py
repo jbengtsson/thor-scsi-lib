@@ -39,125 +39,130 @@ beta_des     = [5.7, 2.0]
 dnu_des      = [0.5, 0.25]     # Phase advance across the straight.
 
 
-def prt_b_3(lat_prop, file_name, b_3_list):
-    outf = open(file_name, 'w')
+class opt_sp_class:
+    # Private
 
-    for k in range(len(b_3_list)):
-        name = b_3_list[k]
-        L = lat_prop.get_L_elem(name, 0)
-        b_3 = lat_prop.get_b_n_elem(name, 0, 3)
-        print(("{:5s}: Sextupole, L = {:7.5f}, K = {:8.5f}, N = n_sext;")
-              .format(name, L, b_3), file=outf)
+    def __init__(
+            self, lat_prop, prm_list, uc_0, uc_1, uc_2, sp_1, sp_2, weight,
+            b1_list, b2_list, phi_lat, rb, eps_x_des, nu_uc_des, nu_sp_des,
+            beta_des, dnu_des, nld):
 
-    outf.close()
+        self._lat_prop   = lat_prop
+        self._nld        = nld
+        self._prm_list   = prm_list
+        self._uc_0       = uc_0
+        self._uc_1       = uc_1
+        self._uc_2       = uc_2
+        self._sp_1       = sp_1
+        self._sp_2       = sp_2
+        self._weight     = weight
+        self._b1_list    = b1_list
+        self._b2_list    = b2_list
+        self._phi_lat    = phi_lat
+        self._rb         = rb
+        self._eps_x_des  = eps_x_des
+        self._nu_uc_des  = nu_uc_des
+        self._nu_sp_des  = nu_sp_des
+        self._beta_des   = beta_des
+        self._dnu_des    = dnu_des
 
+        self._Twiss_sp   = np.nan
+        self._eta_uc_1   = np.nan
+        self._eta_uc_2   = np.nan
+        self._alpha_uc_1 = np.nan
+        self._alpha_uc_2 = np.nan
+        self._nu_uc      = np.nan
+        self._dnu        = np.nan
+        self._xi         = np.nan
 
-def opt_sp(
-        lat_prop, prm_list, uc_0, uc_1, uc_2, sp_1, sp_2, weight, b1_list,
-        b2_list, phi_lat, rb, eps_x_des, nu_uc_des, nu_sp_des, beta_des,
-        dnu_des, nld):
-    """Use Case: optimise super period.
-    """
+        self._chi_2_min    = 1e30
+        self._n_iter       = -1
+        self._file_name    = "opt_sp.txt"
 
-    chi_2_min    = 1e30
-    n_iter       = -1
-    file_name    = "opt_sp.txt"
+    # Public.
 
-    Twiss_uc     = np.nan
-    Twiss_uc_ref = np.nan
-    nu_sp        = np.nan
+    def compute_phi_bend(self, bend_list):
+        phi = 0e0
+        for k in range(len(bend_list)):
+            phi += self._lat_prop.get_phi_elem(bend_list[k], 0)
+        return phi
 
-    def prt_iter(
-            prm, chi_2, Twiss_sp, eta_uc_1, alpha_uc_1, eta_uc_2, alpha_uc_2,
-            nu_uc, dnu, xi, nld):
-        nonlocal nu_uc_des, nu_sp_des, beta_des
+    def prt_iter(self, prm, chi_2):
+        eta, alpha, beta, nu_sp = self._Twiss_sp
+        phi = self._lat_prop.compute_phi_lat()
+        phi_b1 = self.compute_phi_bend(self._b1_list)
+        phi_b2 = self.compute_phi_bend(self._b2_list)
+        phi_rb = self._lat_prop.get_phi_elem(self._rb, 0)
 
-        eta, alpha, beta, nu_sp = Twiss_sp
-
-        def compute_phi_bend(lat_prop, bend_list):
-            phi = 0e0
-            for k in range(len(bend_list)):
-                phi += lat_prop.get_phi_elem(bend_list[k], 0)
-            return phi
-
-        phi = lat_prop.compute_phi_lat()
-        phi_b1 = compute_phi_bend(lat_prop, b1_list)
-        phi_b2 = compute_phi_bend(lat_prop, b2_list)
-        phi_rb = lat_prop.get_phi_elem(rb, 0)
-
-        print("\n{:3d} chi_2 = {:11.5e}".format(n_iter, chi_2))
+        print("\n{:3d} chi_2 = {:11.5e}".format(self._n_iter, chi_2))
         print("    eps_x [pm.rad] = {:5.3f} [{:5.3f}]".
-              format(1e12*lat_prop._eps[ind.X], 1e12*eps_x_des))
+              format(1e12*self._lat_prop._eps[ind.X], 1e12*self._eps_x_des))
 
         print("\n    nu_uc          = [{:7.5f}, {:7.5f}] ([{:7.5f}, {:7.5f}])".
-              format(nu_uc[ind.X], nu_uc[ind.Y], nu_uc_des[ind.X],
-                     nu_uc_des[ind.Y]))
+              format(self._nu_uc[ind.X], self._nu_uc[ind.Y],
+                     self._nu_uc_des[ind.X], self._nu_uc_des[ind.Y]))
         print("    nu_sp          = [{:7.5f}, {:7.5f}] ([{:7.5f}, {:7.5f}])".
               format(nu_sp[ind.X], nu_sp[ind.Y], nu_sp_des[ind.X],
                      nu_sp_des[ind.Y]))
         print("    dnu            = [{:7.5f}, {:7.5f}] ([{:7.5f}, {:7.5f}])".
-              format(dnu[ind.X], dnu[ind.Y], dnu_des[ind.X], dnu_des[ind.Y]))
+              format(self._dnu[ind.X], self._dnu[ind.Y],
+                     self._dnu_des[ind.X], dnu_des[ind.Y]))
         print("    xi             = [{:5.3f}, {:5.3f}]".
-              format(xi[ind.X], xi[ind.Y]))
+              format(self._xi[ind.X], self._xi[ind.Y]))
 
         print("\n    eta'_uc        = {:9.3e} {:9.3e}".
-              format(eta_uc_1[ind.px], eta_uc_2[ind.px]))
+              format(self._eta_uc_1[ind.px], self._eta_uc_2[ind.px]))
         print("    alpha_uc       = [{:9.3e}, {:9.3e}] [{:9.3e}, {:9.3e}]".
-              format(alpha_uc_1[ind.X], alpha_uc_1[ind.Y], alpha_uc_2[ind.X],
-                     alpha_uc_2[ind.Y]))
+              format(self._alpha_uc_1[ind.X], self._alpha_uc_1[ind.Y],
+                     self._alpha_uc_2[ind.X], self._alpha_uc_2[ind.Y]))
         print("    eta_x          = {:9.3e}".format(eta[ind.x]))
         print("    beta           = [{:7.5f}, {:7.5f}] ([{:7.5f}, {:7.5f}])".
               format(beta[ind.X], beta[ind.Y], beta_des[ind.X],
                      beta_des[ind.Y]))
 
         print("\n    phi_sp         = {:8.5f}".format(phi))
-        print("    C [m]          = {:8.5f}".format(lat_prop.compute_circ()))
+        print("    C [m]          = {:8.5f}".
+              format(self._lat_prop.compute_circ()))
 
         print("\n    phi_b1         = {:8.5f}".format(phi_b1))
         print("    phi_b2         = {:8.5f}".format(phi_b2))
         print("    phi_rb         = {:8.5f}".format(phi_rb))
 
-        lat_prop.prt_rad()
-        nld.prt_nl(lat_prop)
+        self._lat_prop.prt_rad()
+        self._nld.prt_nl(self._lat_prop)
         prm_list.prt_prm(prm)
 
-    def compute_chi_2(
-            Twiss_sp, eta_uc_1, alpha_uc_1, eta_uc_2, alpha_uc_2, nu_uc, dnu,
-            xi, nld):
-        nonlocal nu_uc_des, nu_sp_des, beta_des
+    def compute_chi_2(self):
+        eta, alpha, nu_sp, beta = self._Twiss_sp
 
-        prt = not False
-
-        eta, alpha, nu_sp, beta = Twiss_sp
-
-        dchi_2 = weight[0]*(lat_prop._eps[ind.X]-eps_x_des)**2
+        dchi_2 = weight[0]*(self._lat_prop._eps[ind.X]-self._eps_x_des)**2
         chi_2 = dchi_2
         if prt:
             print("\n  dchi2(eps_x)        = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[1]*lat_prop._U_0**2
+        dchi_2 = weight[1]*self._lat_prop._U_0**2
         chi_2 += dchi_2
         if prt:
             print("  dchi2(U_0)          = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[2]*(eta_uc_1[ind.px]**2+eta_uc_2[ind.px]**2)
+        dchi_2 = weight[2]*(self._eta_uc_1[ind.px]**2+self._eta_uc_2[ind.px]**2)
         chi_2 += dchi_2
         if prt:
             print("  dchi2(eta'_uc)      = {:9.3e}".format(dchi_2))
 
         dchi_2 = weight[3]*(
-            alpha_uc_1[ind.X]**2+alpha_uc_2[ind.X]**2+alpha_uc_1[ind.Y]**2
-            +alpha_uc_2[ind.Y]**2)
+            self._alpha_uc_1[ind.X]**2+self._alpha_uc_2[ind.X]**2 \
+            +self._alpha_uc_1[ind.Y]**2+self._alpha_uc_2[ind.Y]**2)
         chi_2 += dchi_2
         if prt:
             print("  dchi2(alpha_uc)     = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[4]*(nu_uc[ind.X]-nu_uc_des[ind.X])**2
+        dchi_2 = weight[4]*(self._nu_uc[ind.X]-self._nu_uc_des[ind.X])**2
         chi_2 += dchi_2
         if prt:
             print("  dchi2(nu_uc_x)      = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[5]*(nu_uc[ind.Y]-nu_uc_des[ind.Y])**2
+        dchi_2 = weight[5]*(self._nu_uc[ind.Y]-self._nu_uc_des[ind.Y])**2
         chi_2 += dchi_2
         if prt:
             print("  dchi2(nu_uc_y)      = {:9.3e}".format(dchi_2))
@@ -167,145 +172,148 @@ def opt_sp(
         if prt:
             print("  dchi2(eta_x)        = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[7]*(nu_sp[ind.X]-nu_sp_des[ind.X])**2
+        dchi_2 = weight[7]*(nu_sp[ind.X]-self._nu_sp_des[ind.X])**2
         chi_2 += dchi_2
         if prt:
             print("  dchi2(nu_sp_x)      = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[8]*(nu_sp[ind.Y]-nu_sp_des[ind.Y])**2
+        dchi_2 = weight[8]*(nu_sp[ind.Y]-self._nu_sp_des[ind.Y])**2
         chi_2 += dchi_2
         if prt:
             print("  dchi2(nu_sp_y)      = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[9]*(beta[ind.X]-beta_des[ind.X])**2
+        dchi_2 = weight[9]*(beta[ind.X]-self._beta_des[ind.X])**2
         chi_2 += dchi_2
         if prt:
             print("  dchi2(beta_x)       = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[10]*(beta[ind.Y]-beta_des[ind.Y])**2
+        dchi_2 = weight[10]*(beta[ind.Y]-self._beta_des[ind.Y])**2
         chi_2 += dchi_2
         if prt:
             print("  dchi2(beta_y)       = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[11]*(dnu[ind.X]-dnu_des[ind.X])**2
+        dchi_2 = weight[11]*(self._dnu[ind.X]-self._dnu_des[ind.X])**2
         chi_2 += dchi_2
         if prt:
             print("  dchi2(dnu_x)        = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[12]*(dnu[ind.Y]-dnu_des[ind.Y])**2
+        dchi_2 = weight[12]*(self._dnu[ind.Y]-self._dnu_des[ind.Y])**2
         chi_2 += dchi_2
         if prt:
             print("  dchi2(dnu_y)        = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[13]*(xi[ind.X]**2+xi[ind.Y]**2)
+        dchi_2 = weight[13]*(self._xi[ind.X]**2+self._xi[ind.Y]**2)
         chi_2 += dchi_2
         if prt:
             print("  dchi2(xi)           = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[14]*nld._h_im_scl_rms**2
+        dchi_2 = weight[14]*self._nld._h_im_scl_rms**2
         chi_2 += dchi_2
         if prt:
             print("  dchi2(h_im_scl_rms) = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[15]*nld._K_re_scl_rms**2
+        dchi_2 = weight[15]*self._nld._K_re_scl_rms**2
         chi_2 += dchi_2
         if prt:
             print("  dchi2(K_re_scl_rms) = {:9.3e}".format(dchi_2))
 
         return chi_2
 
-    def f_sp(prm):
-        nonlocal chi_2_min, n_iter, file_name
+    def opt_sp(self):
+        """Use Case: optimise super period.
+        """
 
-        n_iter += 1
-        prm_list.set_prm(prm)
-        if phi_lat != []:
-            phi_lat.set_phi_lat()
+        def f_sp(prm):
+            self._n_iter += 1
+            self._prm_list.set_prm(prm)
+            if phi_lat != []:
+                phi_lat.set_phi_lat()
 
-        try:
-            # Compute Twiss parameters along the lattice.
-            if not lat_prop.comp_per_sol():
-                print("\ncomp_per_sol: unstable")
-                raise ValueError
+            try:
+                # Compute Twiss parameters along the lattice.
+                if not self._lat_prop.comp_per_sol():
+                    print("\ncomp_per_sol: unstable")
+                    raise ValueError
 
-            # Compute radiation properties.
-            if not lat_prop.compute_radiation():
-                print("\ncompute_radiation: unstable")
-                raise ValueError
-        except ValueError:
-            chi_2 = 1e30
-            if False:
-                print("\n{:3d} chi_2 = {:11.5e} ({:11.5e})".
-                      format(n_iter, chi_2, chi_2_min))
-                prm_list.prt_prm(prm)
-        else:
-            _, _, _, nu_0 = lat_prop.get_Twiss(uc_0-1)
-            eta_uc_1, alpha_uc_1, _, nu_1 = lat_prop.get_Twiss(uc_1)
-            nu_uc = nu_1 - nu_0
-            eta_uc_2, alpha_uc_2, _, _ = lat_prop.get_Twiss(uc_2)
-            Twiss_sp = lat_prop.get_Twiss(-1)
-            dnu = \
-                lat_prop.get_Twiss(-1)[3][:] \
-                - lat_prop.get_Twiss(sp_2)[3][:] \
-                + lat_prop.get_Twiss(sp_1)[3][:]
-
-            nld.compute_map(lat_prop, no)
-            nld.compute_nl(lat_prop)
-            xi =  \
-                np.array([-nld._K_re.get([1, 1, 0, 0, 1, 0, 0])/np.pi,
-                          -nld._K_re.get([0, 0, 1, 1, 1, 0, 0])/np.pi])
-
-            chi_2 = compute_chi_2(
-                Twiss_sp, eta_uc_1, alpha_uc_1, eta_uc_2, alpha_uc_2,
-                nu_uc, dnu, xi, nld)
-
-            if chi_2 < chi_2_min:
-                prt_iter(
-                    prm, chi_2, Twiss_sp, eta_uc_1, alpha_uc_1, eta_uc_2,
-                    alpha_uc_2, nu_uc, dnu, xi, nld)
-                lat_prop.prt_Twiss("twiss.txt")
-                pc.prt_lat(lat_prop, file_name, prm_list, phi_lat=phi_lat)
-                prt_b_3(lat_prop, "opt_sp_nl_b_3.txt", b_3_list)
-                chi_2_min = min(chi_2, chi_2_min)
-            else:
+                # Compute radiation properties.
+                if not self._lat_prop.compute_radiation():
+                    print("\ncompute_radiation: unstable")
+                    raise ValueError
+            except ValueError:
+                chi_2 = 1e30
                 if False:
-                    print("\n{:3d} chi_2 = {:21.15e} ({:21.15e})".
-                          format(n_iter, chi_2, chi_2_min))
+                    print("\n{:3d} chi_2 = {:11.5e} ({:11.5e})".
+                          format(n_iter, chi_2, self._chi_2_min))
                     prm_list.prt_prm(prm)
+            else:
+                _, _, _, self._nu_0 = self._lat_prop.get_Twiss(uc_0-1)
+                self._eta_uc_1, self._alpha_uc_1, _, self._nu_1 = \
+                    self._lat_prop.get_Twiss(uc_1)
+                self._nu_uc = self._nu_1 - self._nu_0
+                self._eta_uc_2, self._alpha_uc_2, _, _ = \
+                    self._lat_prop.get_Twiss(uc_2)
+                self._Twiss_sp = self._lat_prop.get_Twiss(-1)
+                self._dnu = \
+                    self._lat_prop.get_Twiss(-1)[3][:] \
+                    - self._lat_prop.get_Twiss(sp_2)[3][:] \
+                    + self._lat_prop.get_Twiss(sp_1)[3][:]
 
-        return chi_2
+                self._nld.compute_map(self._lat_prop, self._lat_prop._no)
+                self._nld.compute_nl(self._lat_prop)
+                self._xi =  \
+                    np.array(
+                        [-self._nld._K_re.get([1, 1, 0, 0, 1, 0, 0])/np.pi,
+                         -self._nld._K_re.get([0, 0, 1, 1, 1, 0, 0])/np.pi])
 
-    max_iter = 1000
-    f_tol    = 1e-10
-    x_tol    = 1e-8
-    g_tol    = 1e-8
+                chi_2 = self.compute_chi_2()
 
-    prm, bounds = prm_list.get_prm()
-    f_sp(prm)
+                if chi_2 < self._chi_2_min:
+                    print("\nchi_2 =", chi_2)
+                    self.prt_iter(prm, chi_2)
+                    self._lat_prop.prt_Twiss("twiss.txt")
+                    pc.prt_lat(
+                        self._lat_prop, self._file_name, self._prm_list,
+                        phi_lat=self._phi_lat)
+                    chi_2_min = min(chi_2, self._chi_2_min)
+                else:
+                    if False:
+                        print("\n{:3d} chi_2 = {:21.15e} ({:21.15e})".
+                              format(self._n_iter, chi_2, self._chi_2_min))
+                        prm_list.prt_prm(prm)
 
-    # Methods:
-    #   Nelder-Mead, Powell, CG, BFGS, Newton-CG, L-BFGS-B, TNC, COBYLA,
-    #   SLSQP, trust-constr, dogleg, truct-ncg, trust-exact, trust-krylov.
+            return chi_2
 
-    # Powell ftol, xtol
-    # CG     gtol
-    minimum = opt.minimize(
-        f_sp,
-        prm,
-        method="CG",
-        # callback=prt_iter,
-        # bounds = bounds,
-        # options={"ftol": f_tol, "xtol": x_tol, "maxiter": max_iter}
-        options={"gtol": g_tol, "maxiter": max_iter}
-    )
+        max_iter = 1000
+        f_tol    = 1e-10
+        x_tol    = 1e-8
+        g_tol    = 1e-8
 
-    print("\n".join(minimum))
+        prm, bounds = prm_list.get_prm()
+        f_sp(prm)
+
+        # Methods:
+        #   Nelder-Mead, Powell, CG, BFGS, Newton-CG, L-BFGS-B, TNC, COBYLA,
+        #   SLSQP, trust-constr, dogleg, truct-ncg, trust-exact, trust-krylov.
+
+        # Powell ftol, xtol
+        # CG     gtol
+        minimum = opt.minimize(
+            f_sp,
+            prm,
+            method="CG",
+            # callback=prt_iter,
+            # bounds = bounds,
+            # options={"ftol": f_tol, "xtol": x_tol, "maxiter": max_iter}
+            options={"gtol": g_tol, "maxiter": max_iter}
+        )
+
+        print("\n".join(minimum))
 
 
 # Number of phase-space coordinates.
 nv = 7
 # Variables max order.
-no = 6
+no = 5
 # Number of parameters.
 nv_prm = 0
 # Parameters max order.
@@ -379,7 +387,7 @@ d1_bend = pc.bend_class(lat_prop, d1_list, phi_max, b_2_max)
 b_3_list = ["s2", "s3"]
 nld = nld_cl.nonlin_dyn_class(lat_prop, A_max, beta_inj, delta_max, b_3_list)
 
-step = 3;
+step = 1;
 
 if step == 1:
     phi_lat = []
@@ -413,7 +421,11 @@ if step == 1:
         ("s1", "b_3"),
         ("s2", "b_3"),
         ("s3", "b_3"),
-        ("s4", "b_3")
+        ("s4", "b_3"),
+
+        ("o1", "b_4"),
+        ("o2", "b_4"),
+        ("o3", "b_4")
     ]
 elif step == 2:
     weight = np.array([
@@ -509,6 +521,11 @@ elif step == 3:
         ("d2_5",  "phi"),
 
         # ("r1",    "phi")
+
+        ("s1",       "b_3"),
+        ("s2",       "b_3"),
+        ("s3",       "b_3"),
+        ("s4",       "b_3")
     ]
 
     # To maintain the total bend angle.
@@ -518,6 +535,8 @@ prm_list = pc.prm_class(lat_prop, prms, b_2_max)
 
 rb = "r1"
 
-opt_sp(
+opt_sp = opt_sp_class(
     lat_prop, prm_list, uc_0, uc_1, uc_2, sp_1, sp_2, weight, d2_list, d1_list,
     phi_lat, rb, eps_x_des, nu_uc_des, nu_sp_des, beta_des, dnu_des, nld)
+
+opt_sp.opt_sp()

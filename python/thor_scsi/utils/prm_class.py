@@ -169,7 +169,8 @@ class prm_class(bend_class):
             "L_b": self._lat_prop.get_L_elem,
             "phi": self._lat_prop.get_phi_elem,
             "b_2": self._lat_prop.get_b_2_elem,
-            "b_3": self._lat_prop.get_b_3_elem}
+            "b_3": self._lat_prop.get_b_3_elem,
+            "b_4": self._lat_prop.get_b_4_elem}
 
         # Dictionary of parameter types and corresponding set functions.
         self._set_prm_func_dict = {
@@ -177,7 +178,8 @@ class prm_class(bend_class):
             "L_b": self._lat_prop.set_L_bend_fam,
             "phi": self._lat_prop.set_phi_fam,
             "b_2": self._lat_prop.set_b_2_fam,
-            "b_3": self._lat_prop.set_b_3_fam}
+            "b_3": self._lat_prop.set_b_3_fam,
+            "b_4": self._lat_prop.set_b_4_fam}
 
     # Public.
 
@@ -304,13 +306,21 @@ def prt_lat(
             print("\nprt_sext - undefined element type: {:s}".format(fam_name))
             assert False
 
+    def prt_oct(fam_name):
+        k = lat_prop._lattice.find(fam_name, 0).index
+        L = lat_prop._lattice[k].get_length()
+        b_4 = lat_prop._lattice[k].get_multipoles().get_multipole(4).real
+        print(("{:5s}: Octupole, L = {:7.5f}, B_4 = {:12.5e}, N = n_sext;")
+              .format(fam_name, L, b_4), file=outf)
+
     # Dictionary of parameter types and corresponding print functions.
     prt_prm_func_dict = {
         "L":   prt_drift,
         "L_b": prt_dip,
         "phi": prt_dip,
         "b_2": prt_dip,
-        "b_3": prt_sext
+        "b_3": prt_sext,
+        "b_4": prt_oct
     }
 
     for k in range(len(prm_list._prm_list)):
