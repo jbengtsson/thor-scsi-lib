@@ -266,13 +266,12 @@ def set_xi(lat_prop, xi_x, xi_y, b_3_list):
         for k in range(len(b_3_list)):
             b_3xL = lat_prop.get_b_nxL_elem(b_3_list[k], 0, MpoleInd.sext)
             lat_prop.set_b_nxL_fam(b_3_list[k], MpoleInd.sext, b_3xL+db_3xL[k])
-            b_3 = lat_prop.get_b_n_elem(b_3_list[k], 0, MpoleInd.sext)
 
-            M = gtpsa.ss_vect_tpsa(
-                lat_prop._desc, lat_prop._no, lat_prop._nv,
-            index_mapping=lat_prop._named_index)
-            M = compute_map(lat_prop, 2)
-            stable, _, xi = lo.compute_nu_xi(lat_prop._desc, lat_prop._no, M)
+        M = gtpsa.ss_vect_tpsa(
+            lat_prop._desc, lat_prop._no, lat_prop._nv,
+        index_mapping=lat_prop._named_index)
+        M = compute_map(lat_prop, 2)
+        stable, _, xi = lo.compute_nu_xi(lat_prop._desc, lat_prop._no, M)
 
     return stable
 

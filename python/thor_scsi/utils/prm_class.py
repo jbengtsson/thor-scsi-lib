@@ -288,11 +288,15 @@ def prt_lat(
 
     def prt_quad(fam_name, prt_list):
         if prt_list.count(fam_name) == 0:
-            prt_list.append(fam_name)
-            L = lat_prop.get_L_elem(fam_name, 0)
-            b_2 = lat_prop.get_b_n_elem(fam_name, 0, 2)
-            print("{:5s}: Quadrupole, L = {:7.5f}, B_2 = {:8.5f}, N = n_quad;"
-                  .format(fam_name, L, b_2), file=outf)
+            k = lat_prop._lattice.find(fam_name, 0).index
+            if type(lat_prop._lattice[k]) == ts.Bending:
+                prt_list = prt_dip(fam_name, prt_list)
+            else:
+                prt_list.append(fam_name)
+                L = lat_prop.get_L_elem(fam_name, 0)
+                b_2 = lat_prop.get_b_n_elem(fam_name, 0, 2)
+                print("{:5s}: Quadrupole, L = {:7.5f}, B_2 = {:8.5f}, N = n_quad;"
+                      .format(fam_name, L, b_2), file=outf)
         return prt_list
 
     def prt_sext(fam_name, prt_list):

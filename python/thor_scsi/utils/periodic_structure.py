@@ -223,7 +223,7 @@ class periodic_structure_class:
         fig.tight_layout()
 
         plt.savefig(file_name)
-        print("\n - plot saved as:", file_name)
+        print("\nplt_scan_phi_rb - plot saved as:", file_name)
 
         if plot:
             plt.show()
@@ -251,7 +251,7 @@ class periodic_structure_class:
                   file=file)
             s += self._lattice[k].get_length()
         file.close()
-        print("\n - Lattice structure saved as:", file_name)
+        print("\nprt_lat - Lattice structure saved as:", file_name)
 
     def prt_M(self):
         print("\nM:", self._M, end="")
@@ -335,7 +335,7 @@ class periodic_structure_class:
                          beta[ind.Y], nu[ind.Y], eta[ind.y], eta[ind.py]),
                   file=file)
         file.close()
-        print("\n - Twiss parameters saved as:", file_name)
+        print("\nprt_Twiss - Twiss parameters saved as:", file_name)
 
     def comp_per_sol(self):
         """Compute the periodic solution for a super period.

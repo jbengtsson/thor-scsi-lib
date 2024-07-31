@@ -32,7 +32,7 @@ phi_max      = 0.85
 b_2_bend_max = 1.0
 b_2_max      = 10.0
 
-eps_x_des    = 99e-12
+eps_x_des    = 85e-12
 nu_uc_des    = [2.0/6.0, 0.12]
 nu_sp_des    = [2.25, 0.8]
 beta_des     = [5.7, 2.0]
@@ -47,37 +47,40 @@ class opt_sp_class:
             b1_list, b2_list, phi_lat, rb, eps_x_des, nu_uc_des, nu_sp_des,
             beta_des, dnu_des, nld):
 
-        self._lat_prop   = lat_prop
-        self._nld        = nld
-        self._prm_list   = prm_list
-        self._uc_0       = uc_0
-        self._uc_1       = uc_1
-        self._uc_2       = uc_2
-        self._sp_1       = sp_1
-        self._sp_2       = sp_2
-        self._weight     = weight
-        self._b1_list    = b1_list
-        self._b2_list    = b2_list
-        self._phi_lat    = phi_lat
-        self._rb         = rb
-        self._eps_x_des  = eps_x_des
-        self._nu_uc_des  = nu_uc_des
-        self._nu_sp_des  = nu_sp_des
-        self._beta_des   = beta_des
-        self._dnu_des    = dnu_des
+        self._lat_prop       = lat_prop
+        self._nld            = nld
+        self._prm_list       = prm_list
+        self._uc_0           = uc_0
+        self._uc_1           = uc_1
+        self._uc_2           = uc_2
+        self._sp_1           = sp_1
+        self._sp_2           = sp_2
+        self._weight         = weight
+        self._b1_list        = b1_list
+        self._b2_list        = b2_list
+        self._phi_lat        = phi_lat
+        self._rb             = rb
+        self._eps_x_des      = eps_x_des
+        self._nu_uc_des      = nu_uc_des
+        self._nu_sp_des      = nu_sp_des
+        self._beta_des       = beta_des
+        self._dnu_des        = dnu_des
 
-        self._Twiss_sp   = np.nan
-        self._eta_uc_1   = np.nan
-        self._eta_uc_2   = np.nan
-        self._alpha_uc_1 = np.nan
-        self._alpha_uc_2 = np.nan
-        self._nu_uc      = np.nan
-        self._dnu        = np.nan
-        self._xi         = np.nan
+        self._Twiss_sp       = np.nan
+        self._eta_uc_1       = np.nan
+        self._eta_uc_2       = np.nan
+        self._alpha_uc_1     = np.nan
+        self._alpha_uc_2     = np.nan
+        self._nu_uc          = np.nan
+        self._dnu            = np.nan
+        self._xi             = np.nan
 
-        self._chi_2_min  = 1e30
-        self._n_iter     = -1
-        self._file_name  = "opt_sp.txt"
+        self._chi_2_min      = 1e30
+        self._n_iter         = -1
+        self._file_name      = "opt_sp.txt"
+
+        self._h_im_scl_rms_0 = np.nan
+        self._K_re_scl_rms_0 = np.nan
 
     # Public.
 
@@ -129,7 +132,12 @@ class opt_sp_class:
         print("    phi_rb         = {:8.5f}".format(phi_rb))
 
         self._lat_prop.prt_rad()
+        print("\n  h_im_scl_rms = {:9.3e} ({:9.3e})".
+              format(self._nld._h_im_scl_rms, self._h_im_scl_rms_0))
+        print("  K_re_scl_rms = {:9.3e} ({:9.3e})".
+              format(self._nld._K_re_scl_rms, self._K_re_scl_rms_0))
         self._nld.prt_nl(self._lat_prop)
+
         prm_list.prt_prm(prm)
 
     def compute_chi_2(self):
@@ -290,6 +298,11 @@ class opt_sp_class:
         x_tol    = 1e-8
         g_tol    = 1e-8
 
+        self._nld.compute_map(self._lat_prop, self._lat_prop._no)
+        self._nld.compute_nl(self._lat_prop)
+        self._h_im_scl_rms_0 = self._nld._h_im_scl_rms
+        self._K_re_scl_rms_0 = self._nld._K_re_scl_rms
+
         prm, bounds = prm_list.get_prm()
         f_sp(prm)
 
@@ -359,9 +372,9 @@ else:
     lat_prop.prt_M()
     lat_prop.prt_M_rad()
 
-uc_0 = lat_prop._lattice.find("s2", 0).index
-uc_1 = lat_prop._lattice.find("s2", 1).index
-uc_2 = lat_prop._lattice.find("s2", 3).index
+uc_0 = lat_prop._lattice.find("s3", 0).index
+uc_1 = lat_prop._lattice.find("s3", 1).index
+uc_2 = lat_prop._lattice.find("s3", 3).index
 sp_1 = lat_prop._lattice.find("s1", 0).index
 sp_2 = lat_prop._lattice.find("s1", 1).index
 
@@ -383,21 +396,21 @@ d1_list = [
     "d1_d1", "d1_d2", "d1_d3", "d1_d4", "d1_d5"
 ]
 
-d2_bend = pc.bend_class(lat_prop, d2_list, phi_max, b_2_max)
 d1_bend = pc.bend_class(lat_prop, d1_list, phi_max, b_2_max)
+d2_bend = pc.bend_class(lat_prop, d2_list, phi_max, b_2_max)
 
-b_3_list = ["s2", "s3"]
+b_3_list = ["s3", "s4"]
 nld = nld_cl.nonlin_dyn_class(lat_prop, A_max, beta_inj, delta_max, b_3_list)
+
+if not False:
+    nld.zero_mult(lat_prop, 3)
+    nld.zero_mult(lat_prop, 4)
+    nld.set_xi(lat_prop, 0e0, 0e0)
 
 step = 2;
 
 if step == 1:
     phi_lat = []
-
-    if False:
-        nld.zero_mult(lat_prop, 3)
-        nld.zero_mult(lat_prop, 4)
-        nld.set_xi(lat_prop, 0e0, 0e0)
 
     # Weights.
     weight = np.array([
@@ -414,7 +427,7 @@ if step == 1:
         0e-6,  # beta_y.
         0e-2,  # dnu_x.
         0e-2,  # dnu_y.
-        1e0,   # xi.
+        0e-1,  # xi.
         0e6,   # Im{h} rms.
         1e8    # K rms.
     ])
@@ -431,7 +444,7 @@ if step == 1:
     ]
 elif step == 2:
     weight = np.array([
-        1e18,  # eps_x.
+        1e-8*1e18,  # eps_x.
         0e-17, # U_0.
         1e2,   # etap_x_uc.
         1e-2,  # alpha_uc.
@@ -444,9 +457,9 @@ elif step == 2:
         0e-6,  # beta_y.
         0e-2,  # dnu_x.
         0e-2,  # dnu_y.
-        1e-2,  # xi.
+        0e-4,  # xi.
         0e6,   # Im{h} rms.
-        1e9    # K rms.
+        1e-3*1e8    # K rms.
     ])
 
     prms = [
@@ -461,14 +474,14 @@ elif step == 2:
         ("phi_bend", d2_bend),
         # ("r1",       "phi"),
 
-        ("s1",       "b_3"),
-        ("s2",       "b_3"),
+        # ("s1",       "b_3"),
+        # ("s2",       "b_3"),
         ("s3",       "b_3"),
         ("s4",       "b_3"),
 
-        ("o1",       "b_4"),
-        ("o2",       "b_4"),
-        ("o3",       "b_4")
+        # ("o1",       "b_4"),
+        # ("o2",       "b_4"),
+        # ("o3",       "b_4")
     ]
 
     # To maintain the total bend angle.
@@ -488,7 +501,7 @@ elif step == 3:
         0e-6,  # beta_y.
         0e-2,  # dnu_x.
         0e-2,  # dnu_y.
-        1e-2,  # xi.
+        0e-2,  # xi.
         0e6,   # Im{h} rms.
         1e8    # K rms.
     ])

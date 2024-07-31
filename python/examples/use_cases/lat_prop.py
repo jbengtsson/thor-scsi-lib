@@ -79,6 +79,7 @@ if not False:
     lat_prop.plt_Twiss("lat_prop_Twiss.png", not False)
     lat_prop.plt_chrom("lat_prop_chrom.png", not False)
 
-nld.compute_map(lat_prop, no)
-nld.compute_nl(lat_prop)
-nld.prt_nl(lat_prop)
+if False:
+    nld.compute_map(lat_prop, no)
+    nld.compute_nl(lat_prop)
+    nld.prt_nl(lat_prop)
