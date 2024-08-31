@@ -3,7 +3,6 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
-from dataclasses import dataclass
 
 import gtpsa
 import thor_scsi.lib as ts
@@ -22,7 +21,7 @@ ind = ind.index_class()
 class periodic_structure_class:
     # Private.
 
-    def __init__(self, nv, no, nv_prm, no_prm, file_name, E_0):
+    def __init__(self, gtpsa_prop, file_name, E_0):
 
         self._named_index = []
         self._desc        = []
@@ -30,8 +29,8 @@ class periodic_structure_class:
         self._lattice     = []
         self._type_code   = np.nan # Lattice elements type code.
         self._model_state = []
-        self._no          = no
-        self._nv          = nv
+        self._no          = gtpsa_prop.no
+        self._nv          = gtpsa_prop.nv
         self._n_dof       = np.nan
 
         self._M           = np.nan
@@ -46,7 +45,8 @@ class periodic_structure_class:
             gtpsa.IndexMapping(dict(x=0, px=1, y=2, py=3, delta=4, ct=5))
 
         # Descriptor for Truncated Power Series Algebra variables.
-        self._desc = gtpsa.desc(nv, no, nv_prm, no_prm)
+        self._desc = gtpsa.desc(
+            gtpsa_prop.nv, gtpsa_prop.no, gtpsa_prop.nv_prm, gtpsa_prop.no_prm)
 
         # Read in & parse lattice file.
         self._lattice = accelerator_from_config(file_name)

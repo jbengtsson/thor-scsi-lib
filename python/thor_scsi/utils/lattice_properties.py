@@ -33,9 +33,9 @@ class lattice_properties_class(
         ps.periodic_structure_class, gs.get_set_mpole_class):
     # Private
 
-    def __init__(self, nv, no, nv_prm, no_prm, file_name, E_0, cod_eps):
+    def __init__(self, gtpsa_prop, file_name, E_0, cod_eps):
         # Initialise periodic_structure_class.
-        super().__init__(nv, no, nv_prm, no_prm, file_name, E_0)
+        super().__init__(gtpsa_prop, file_name, E_0)
         self._cod_eps       = cod_eps
         self._rad_del_kicks = []
         self._M_rad         = []       # ss_vect_tpsa.
