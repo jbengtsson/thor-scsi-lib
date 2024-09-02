@@ -23,12 +23,28 @@ class MpoleInd(en.IntEnum):
 ind = ind.index_class()
 
 
-def new_tpsa(gtpsa_prop):
-    return gtpsa.tpsa(gtpsa_prop.desc, gtpsa_prop.no)
+@dataclass
+class gtpsa_prop_class:
+    # GTPSA properties.
+    # Number of phase-space coordinates.
+    nv: ClassVar[int] = 7
+    # Max order for Poincaré map.
+    no: ClassVar[int] = 1
+    # Number of parameters.
+    nv_prm: ClassVar[int] = 0
+    # Parameters max order.
+    no_prm: ClassVar[int] = 0
+    # Index.
+    named_index = gtpsa.IndexMapping(dict(x=0, px=1, y=2, py=3, delta=4, ct=5))
+    # Descriptor
+    desc : ClassVar[gtpsa.desc]
 
 
-def new_ss_vect_tpsa(gtpsa_prop):
-    return gtpsa.ss_vect_tpsa(gtpsa_prop.desc, gtpsa_prop.no)
+class new():
+    def tpsa():
+        return gtpsa.tpsa(gtpsa_prop.desc, gtpsa_prop.no)
+    def ss_vect_tpsa():
+        return gtpsa.ss_vect_tpsa(gtpsa_prop.desc, gtpsa_prop.no)
 
 
 def compute_optics(lat_prop):
@@ -58,7 +74,7 @@ def prt_map(map, str, *, eps: float=1e-30):
     map.ct.print("ct", eps)
 
 
-def compute_map(lat_prop, gtpsa_prop):
+def compute_map(lat_prop):
     M = lo.compute_map(
         lat_prop._lattice, lat_prop._model_state, desc=lat_prop._desc,
         tpsa_order=gtpsa_prop.no)
@@ -72,8 +88,8 @@ def compute_twoJ(A_max, beta_inj):
     return twoJ
 
 
-def compute_Id_scl(gtpsa_prop, twoJ):
-    Id_scl = new_ss_vect_tpsa(gtpsa_prop)
+def compute_Id_scl(twoJ):
+    Id_scl = new.ss_vect_tpsa()
     Id_scl.set_identity()
     for k in range(4):
         Id_scl.iloc[k].set_variable(0e0, k+1, np.sqrt(twoJ[k//2]))
@@ -81,38 +97,38 @@ def compute_Id_scl(gtpsa_prop, twoJ):
     return Id_scl
 
 
-def compose_bs(gtpsa_prop, h, map):
-    t_map = new_ss_vect_tpsa(gtpsa_prop)
+def compose_bs(h, map):
+    t_map = new.ss_vect_tpsa()
     t_map.set_zero()
     t_map.x = h
     t_map.compose(t_map, map)
-    return t_map.x 
+    return t_map.x.to_tpsa()
 
 
-def compute_h(gtpsa_prop, M):
-    h = new_tpsa(gtpsa_prop)
+def compute_h(M):
+    h = new.tpsa()
     M.M_to_h_DF(h)
     return h
 
 
-def compute_map_normal_form(gtpsa_prop, M):
-    A_0 = new_ss_vect_tpsa(gtpsa_prop)
-    A_1 = new_ss_vect_tpsa(gtpsa_prop)
-    R   = new_ss_vect_tpsa(gtpsa_prop)
-    g   = new_tpsa(gtpsa_prop)
-    K   = new_tpsa(gtpsa_prop)
+def compute_map_normal_form(M):
+    A_0 = new.ss_vect_tpsa()
+    A_1 = new.ss_vect_tpsa()
+    R   = new.ss_vect_tpsa()
+    g   = new.tpsa()
+    K   = new.tpsa()
     M.Map_Norm(A_0, A_1, R, g, K)
     return A_0, A_1, R, g, K
 
 
-def compute_M(gtpsa_prop, K, A_0, A_1, g):
-    Id       = new_ss_vect_tpsa(gtpsa_prop)
-    R        = new_ss_vect_tpsa(gtpsa_prop)
-    A_0_inv  = new_ss_vect_tpsa(gtpsa_prop)
-    A_1_inv  = new_ss_vect_tpsa(gtpsa_prop)
-    A_nl     = new_ss_vect_tpsa(gtpsa_prop)
-    A_nl_inv = new_ss_vect_tpsa(gtpsa_prop)
-    M        = new_ss_vect_tpsa(gtpsa_prop)
+def compute_M(K, A_0, A_1, g):
+    Id       = new.ss_vect_tpsa()
+    R        = new.ss_vect_tpsa()
+    A_0_inv  = new.ss_vect_tpsa()
+    A_1_inv  = new.ss_vect_tpsa()
+    A_nl     = new.ss_vect_tpsa()
+    A_nl_inv = new.ss_vect_tpsa()
+    M        = new.ss_vect_tpsa()
 
     prt_map(M, "M:", eps=1e-30)
 
@@ -137,14 +153,14 @@ def compute_M(gtpsa_prop, K, A_0, A_1, g):
 
 
 def compute_R(desc, map, A_0, A_1, g, K, gtpsa_prop):
-    Id       = new_ss_vect_tpsa(gtpsa_prop)
-    M        = new_ss_vect_tpsa(gtpsa_prop)
-    R        = new_ss_vect_tpsa(gtpsa_prop)
-    R_inv    = new_ss_vect_tpsa(gtpsa_prop)
-    A_0_inv  = new_ss_vect_tpsa(gtpsa_prop)
-    A_1_inv  = new_ss_vect_tpsa(gtpsa_prop)
-    A_nl     = new_ss_vect_tpsa(gtpsa_prop)
-    A_nl_inv = new_ss_vect_tpsa(gtpsa_prop)
+    Id       = new.ss_vect_tpsa()
+    M        = new.ss_vect_tpsa()
+    R        = new.ss_vect_tpsa()
+    R_inv    = new.ss_vect_tpsa()
+    A_0_inv  = new.ss_vect_tpsa()
+    A_1_inv  = new.ss_vect_tpsa()
+    A_nl     = new.ss_vect_tpsa()
+    A_nl_inv = new.ss_vect_tpsa()
 
     Id.set_identity()
 
@@ -194,9 +210,10 @@ def compute_s_ijklm(lat_prop, i, j, k, l, m):
             m_y = k + l
             n_x = i - j
             n_y = k - l
+            L = lat_prop._lattice[n].get_length()
             b3xL = \
                 lat_prop._lattice[n].get_multipoles(). \
-                get_multipole(MpoleInd.sext).real
+                get_multipole(MpoleInd.sext).real*L
             s_ijklm += \
                 b3xL*beta[ind.X, n]**(m_x/2e0)*beta[ind.Y, n]**(m_y/2e0) \
                 *np.cos(abs(n_x*dnu[ind.X, n]+n_y*dnu[ind.Y, n] \
@@ -221,8 +238,40 @@ def compute_ampl_dep_orbit(lat_prop):
     return s_21000, s_30000, s_10110, s_10200, s_10020
 
 
-def chk_Poisson_bracket(no, desc):
-    Id = gtpsa.ss_vect_tpsa(desc, no)
+def chk_types():
+    Id = new.ss_vect_tpsa()
+    Id.set_identity()
+
+    print("\nId.x.to_tpsa():\n  ", type(Id.x), " ",
+          type(Id.iloc[ind.x]), sep="")
+    print(" ", type(Id.x.to_tpsa()))
+
+    f = new.tpsa()
+    g = new.tpsa()
+
+    f = Id.x.to_tpsa()
+    f.print("f")
+    print("\nf.integ(1):\n  ", type(f), sep="")
+    g = f.integ(1)
+    g.print("g")
+    print(" ", type(f), type(g))
+
+    f = new.tpsa()
+    g = new.tpsa()
+
+    print("\nf+g:\n  ", type(f), " ", type(g), sep="")
+    h = f + g
+    print(" ", type(f+g), type(h))
+
+    f = new.tpsa()
+
+    print("\nf.get_mns_1(1, gtpsa_prop.no-1):\n  ", type(f), sep="")
+    f = f.get_mns_1(1, gtpsa_prop.no-1)
+    print(" ", type(f))
+
+
+def chk_Poisson_bracket():
+    Id = new.ss_vect_tpsa()
     Id.set_identity()
 
     (1e0*Id.x).poisbra(1e0*Id.px, 6).print("[x, p_x]")
@@ -238,28 +287,29 @@ def chk_Poisson_bracket(no, desc):
     (1e0*Id.x).poisbra(1e0*Id.py, 6).print("[x, p_y]")
 
 
-# def chk_compose(no, desc):
+def chk_compose():
+    f = new.tpsa()
+    g = new.tpsa()
+    map_1 = new.ss_vect_tpsa()
+    map_2 = new.ss_vect_tpsa()
 
-@dataclass
-class gtpsa_prop_class:
-    # GTPSA properties.
-    # Number of phase-space coordinates.
-    nv: ClassVar[int] = 7
-    # Max order for Poincaré map.
-    no: ClassVar[int] = 4
-    # Number of parameters.
-    nv_prm: ClassVar[int] = 0
-    # Parameters max order.
-    no_prm: ClassVar[int] = 0
-    # Index.
-    named_index = gtpsa.IndexMapping(dict(x=0, px=1, y=2, py=3, delta=4, ct=5))
-    # Descriptor
-    desc : ClassVar[gtpsa.desc]
+    map_1.set_identity()
+    map_2.set_identity()
+    print("\n", type(map_1), type(map_2))
+    map_1.compose(map_1, map_2)
+    print("\n", type(map_1), type(map_2))
+
+    f.set([1, 0, 0, 0, 0, 0, 0], 0e0, 1e0)
+    print("\n", type(f), type(f))
+    g = compose_bs(f, map_1)
+    print("\n", type(f), type(g))
+
+    map_2.exppb(map_1, map_2)
+    print("\nmap_2", map_2)
 
 
 gtpsa_prop = gtpsa_prop_class()
 gtpsa_prop_class.no = 4
-print(gtpsa_prop.nv, gtpsa_prop.no)
 gtpsa_prop_class.desc = gtpsa.desc(gtpsa_prop.nv, gtpsa_prop.no)
 
 cod_eps = 1e-15
@@ -270,7 +320,7 @@ beta_inj  = np.array([3.0, 3.0])
 delta_max = 3e-2
 
 twoJ = compute_twoJ(A_max, beta_inj)
-Id_scl = compute_Id_scl(gtpsa_prop, twoJ)
+Id_scl = compute_Id_scl(twoJ)
 
 home_dir = os.path.join(
     os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "MAX_IV")
@@ -293,69 +343,99 @@ lat_prop._model_state.radiation = False
 lat_prop._model_state.Cavity_on = False
 
 if False:
-    chk_Poisson_bracket(no, desc)
+    chk_types()
+    assert False
 
 if False:
-    chk__compose(no, desc)
+    chk_Poisson_bracket()
+    assert False
 
-M = compute_map(lat_prop, gtpsa_prop)
+if False:
+    chk_compose()
+    assert False
+
+M = compute_map(lat_prop)
 print("\nM:", M)
 
 if False:
-    h_re = new_tpsa(gtpsa_prop)
-    h_im = new_tpsa(gtpsa_prop)
+    h_re = new.tpsa()
+    h_im = new.tpsa()
 
     h = compute_h(desc, M)
     h.CtoR(h_re, h_im)
-    h_re = compose_bs(no, desc, h_re, Id_scl)
-    h_im = compose_bs(no, desc, h_im, Id_scl)
+    h_re = compose_bs(h_re, Id_scl)
+    h_im = compose_bs(h_im, Id_scl)
 
 if not False:
-    A_0, A_1, R, g, K = compute_map_normal_form(gtpsa_prop, M)
+    A_0, A_1, R, g, K = compute_map_normal_form(M)
 
 if False:
-    compute_M(gtpsa_prop, K, A_0, A_1, g)
+    compute_M(K, A_0, A_1, g)
 if False:
-    compute_R(gtpsa_prop, M, A_0, A_1, g, K)
+    compute_R(M, A_0, A_1, g, K)
 
-g_re = new_tpsa(gtpsa_prop)
-g_im = new_tpsa(gtpsa_prop)
-K_re = new_tpsa(gtpsa_prop)
-K_im = new_tpsa(gtpsa_prop)
-
-g.CtoR(g_re, g_im)
-K.CtoR(K_re, K_im)
-
-if not False:
-    g_re = compose_bs(gtpsa_prop, g_re, Id_scl)
-    g_im = compose_bs(gtpsa_prop, g_im, Id_scl)
-    K_re = compose_bs(gtpsa_prop, K_re, Id_scl)
-    K_im = compose_bs(gtpsa_prop, K_im, Id_scl)
-
-g_im.print("g_im")
-
-g_im = g_im.get_mns_1(1, gtpsa_prop.no-1)
+g_re = new.tpsa()
+g_im = new.tpsa()
+K_re = new.tpsa()
+K_im = new.tpsa()
 
 # g_re is zero.
-# g_re.print("g_re")
-g_im.print("g_im")
-K_re.print("K_re")
+g.CtoR(g_re, g_im)
 # K_im is zero.
-# K_im.print("K_im:")
-print("\nA_1:", A_1)
+K.CtoR(K_re, K_im)
+
+if False:
+    g_re = compose_bs(g_re, Id_scl)
+    g_im = compose_bs(g_im, Id_scl)
+    K_re = compose_bs(K_re, Id_scl)
+    K_im = compose_bs(K_im, Id_scl)
+
+# g.print("g")
+# K_re.print("K_re", 1e-10)
+
+x_avg = new.tpsa()
+x_avg_re = new.tpsa()
+x_avg_im = new.tpsa()
+x3_avg = new.tpsa()
+x3_avg_re = new.tpsa()
+x3_avg_im = new.tpsa()
+x_y2_avg = new.tpsa()
+x_y2_avg_re = new.tpsa()
+x_y2_avg_im = new.tpsa()
+Id = new.ss_vect_tpsa()
+
+Id.set_identity()
+
+g = g.get_mns_1(1, 4)
+g.print("g", 1e-9)
+
+x_avg = g.poisbra(Id.x.to_tpsa(), 4)
+x_avg = compose_bs(x_avg, A_1)
+x_avg = x_avg.get_mns_1(1, 2)
+x_avg.CtoR(x_avg_re, x_avg_im)
+x_avg_re.print("<x_re>")
+s_11000 = x_avg_re.get([1, 1, 0, 0, 0, 0, 0])
+s_00110 = x_avg_re.get([0, 0, 1, 1, 0, 0, 0])
+
+x3_avg = g.poisbra(Id.x.to_tpsa()*Id.x.to_tpsa()*Id.x.to_tpsa(), 4)
+x3_avg = compose_bs(x3_avg, A_1)
+x3_avg.CtoR(x3_avg_re, x3_avg_im)
+x3_avg_re.print("<x^3_re>")
+s_22000 = x3_avg_re.get([2, 2, 0, 0, 0, 0, 0])
+s_11110_1 = x3_avg_re.get([1, 1, 1, 1, 0, 0, 0])
+
+x_y2_avg = g.poisbra(Id.x.to_tpsa()*Id.y.to_tpsa()*Id.y.to_tpsa(), 4)
+x_y2_avg = compose_bs(x_y2_avg, A_1)
+x_y2_avg.CtoR(x_y2_avg_re, x_y2_avg_im)
+x_y2_avg_re.print("<x*y^2_re>")
+s_11110_2 = x_y2_avg_re.get([1, 1, 1, 1, 0, 0, 0])
+s_00220 = x_y2_avg_re.get([0, 0, 2, 2, 0, 0, 0])
+
+print(f"\n  s_11000   = {s_11000:10.3e}")
+print(f"  s_00110   = {s_00110:10.3e}")
+print(f"  s_22000   = {s_22000:10.3e}")
+print(f"  s_11110_1 = {s_11110_1:10.3e}")
+print(f"  s_11110_2 = {s_11110_2:10.3e}")
+print(f"  s_00220   = {s_00220:10.3e}")
 
 compute_ampl_dep_orbit(lat_prop)
-
-Id = new_ss_vect_tpsa(gtpsa_prop)
-Id.set_identity()
-x_mean = (1e0*g_im).poisbra(1e0*Id.x, 6)
-x_mean.print("\n<x>:")
-
-t_map = new_ss_vect_tpsa(gtpsa_prop)
-t_map.set_zero()
-t_map.x = g_im
-assert False
-print("\nt_map:", t_map)
-t_map = t_map.compose(A_1, t_map)
-x_mean = t_map.iloc[ind.x]
-x_mean.print("\n<x>")
