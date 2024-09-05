@@ -74,15 +74,14 @@ class lattice_properties_class(
         self._J = np.zeros(dof)
         self._tau = np.zeros(dof)
         self._eps = np.zeros(dof)
-        C = self.compute_circ()
-        logger.info("\nC = %5.3f", C)
+        logger.info("\nC = %5.3f", self._circ)
         self._U_0 = self._model_state.Energy*self._dE
         for k in range(dof):
             if self._alpha_rad[k] < 0e0:
                 self._J[k] = \
                     2e0*(1e0+self._M_rad.cst().delta)*self._alpha_rad[k] \
                     /self._dE
-                self._tau[k] = -C/(c0*self._alpha_rad[k])
+                self._tau[k] = -self._circ/(c0*self._alpha_rad[k])
                 self._eps[k] = -self._D_rad[k]/(2e0*self._alpha_rad[k])
             else:
                 # Unstable.

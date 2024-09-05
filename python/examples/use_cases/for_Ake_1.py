@@ -60,11 +60,6 @@ class beam_dyn_class:
         self._alpha_c     = np.nan
         self._delta       = np.nan
         self._ct          = np.nan
-        self._circ        = lat_prop.compute_circ()
-        self._phi         = lat_prop.compute_phi_lat()
-
-        print(f"\nTotal bend angle [deg] = {self._phi:7.5f}")
-        print(f"Circumference [m]      = {self._circ:7.5f}")
 
     # Public.
 
@@ -89,7 +84,7 @@ class beam_dyn_class:
         lat_prop._lattice.propagate(lat_prop._model_state, self._M)
         self._M.ct.set([0, 0, 0, 0, 0, 0, 0], 0e0, 0e0)
 
-    def compute_ct_tpsa(self):
+    def compute_ct_tpsa(self, lat_prop):
         index = np.zeros(gtpsa_prop.nv, int)
 
         print("\nalpha_c:")
@@ -98,7 +93,7 @@ class beam_dyn_class:
         alpha_c_buf.append(0e0)
         for k in range(1, gtpsa_prop.no+1):
             index[ind.delta] = k
-            alpha_c = self._M.ct.get(index)/self._circ
+            alpha_c = self._M.ct.get(index)/lat_prop._circ
             alpha_c_buf.append(alpha_c)
             print("  {:1d} {:10.3e}".format(k, alpha_c))
         self._alpha_c = np.array(alpha_c_buf)
@@ -118,7 +113,7 @@ class beam_dyn_class:
             else:
                 print("Fixed points to O(4) [%]: complex solution")
 
-    def compute_ct_num(self, n_step, delta_max):
+    def compute_ct_num(self, lat_prop, n_step, delta_max):
         # Compose of a Taylor map with floating point phase space vector not
         # (yet) supported.
         ps_fp   = new.ss_vect_double()
@@ -190,6 +185,27 @@ class beam_dyn_class:
             plt.show()
 
 
+def compute_optics(lat_prop):
+    try:
+        # Compute Twiss parameters along lattice.
+        if not lat_prop.comp_per_sol():
+            print("\ncomp_per_sol: unstable")
+            raise ValueError
+
+        # Compute radiation properties.
+        stable, stable_rad = lat_prop.compute_radiation()
+        print(stable, stable_rad)
+        if not stable:
+            print("\ncompute_radiation: unstable")
+            raise ValueError
+
+        lat_prop._model_state.radiation = False
+        lat_prop._model_state.emittance = False
+        lat_prop._model_state.Cavity_on = False
+    except ValueError:
+        assert False
+
+
 cod_eps = 1e-15
 E_0     = 3.0e9
 
@@ -199,13 +215,17 @@ home_dir = os.path.join(
 lat_name = sys.argv[1]
 file_name = os.path.join(home_dir, lat_name+".lat")
 
-# Process lattice file & instantiate lattice object.
-lat_prop = \
-    lp.lattice_properties_class(gtpsa_prop, file_name, E_0, cod_eps)
-
-# Instantiate beam dynamics class & set TPSA max order - after processing
+# Instantiate beam dynamics class & set TPSA max order - before processing
 # lattice file.
 bd = beam_dyn_class(5)
+
+# Instantiate lattice object & process lattice file.
+lat_prop = lp.lattice_properties_class(gtpsa_prop, file_name, E_0, cod_eps)
+
+if False:
+    # Compute the linear optics.
+    compute_optics(lat_prop)
+    lat_prop.plt_Twiss(file_name+"_Twiss.png", not False)
 
 bd.compute_map(0e0)
 # Print linear part.
@@ -224,6 +244,6 @@ for k in range(1, gtpsa_prop.no+1):
 
 # Print out momentum compaction & fixed points in the longitudinal (aka
 # the "ignored") plane.
-bd.compute_ct_tpsa()
+bd.compute_ct_tpsa(lat_prop)
 
-bd.compute_ct_num(10, 5e-2)
+bd.compute_ct_num(lat_prop, 10, 5e-2)

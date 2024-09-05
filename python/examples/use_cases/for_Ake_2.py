@@ -43,6 +43,23 @@ class new():
         return gtpsa.ss_vect_tpsa(gtpsa_prop.desc, gtpsa_prop.no)
 
 
+def compute_optics(lat_prop):
+    try:
+        # Compute Twiss parameters along lattice.
+        if not lat_prop.comp_per_sol():
+            print("\ncomp_per_sol: unstable")
+            raise ValueError
+
+        # Compute radiation properties.
+        stable, stable_rad = lat_prop.compute_radiation()
+        print(stable, stable_rad)
+        if not stable:
+            print("\ncompute_radiation: unstable")
+            raise ValueError
+    except ValueError:
+        assert False
+
+
 # Variables max order.
 gtpsa_prop.no = 5
 gtpsa_prop.desc = gtpsa.desc(gtpsa_prop.nv, gtpsa_prop.no)
@@ -61,18 +78,8 @@ lat_prop = \
 print("\nTotal bend angle [deg] = {:7.5f}".format(lat_prop.compute_phi_lat()))
 print("Circumference [m]      = {:7.5f}".format(lat_prop.compute_circ()))
 
-try:
-    # Compute Twiss parameters along lattice.
-    if not lat_prop.comp_per_sol():
-        print("\ncomp_per_sol - unstable")
-        raise ValueError
-
-    # Compute radiation properties.
-    if not lat_prop.compute_radiation():
-        print("\ncompute_radiation - unstable")
-        raise ValueError
-except ValueError:
-    exit
+# Compute the linear optics.
+compute_optics(lat_prop)
 
 lat_prop.prt_lat_param()
 lat_prop.prt_M()

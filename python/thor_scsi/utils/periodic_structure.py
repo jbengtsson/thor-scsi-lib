@@ -33,6 +33,9 @@ class periodic_structure_class:
         self._nv          = gtpsa_prop.nv
         self._n_dof       = np.nan
 
+        self._circ        = np.nan
+        self._phi         = np.nan
+
         self._M           = np.nan
         self._alpha_c     = np.nan
         self._A           = np.nan
@@ -60,6 +63,11 @@ class periodic_structure_class:
         self._model_state.Energy = E_0
         self._model_state.radiation = False
         self._model_state.Cavity_on = False
+
+        self._circ = self.compute_circ()
+        self._phi = self.compute_phi_lat()
+        print(f"\nTotal bend angle [deg] = {self._phi:7.5f}")
+        print(f"Circumference [m]      = {self._circ:7.5f}")
 
     # Public.
 
