@@ -2,18 +2,15 @@
      Compute, print, and plot the global lattice properties.
 """
 
-import logging
-
-# Levels: DEBUG, INFO, WARNING, ERROR, and CRITICAL.
-logging.basicConfig(level="WARNING")
-logger = logging.getLogger("thor_scsi")
-
-from dataclasses import dataclass
 import os
 from typing import Tuple
+from dataclasses import dataclass
+from typing import ClassVar
 
 import numpy as np
 from scipy import optimize as opt
+
+import gtpsa
 
 from thor_scsi.utils import lattice_properties as lp, index_class as ind
 from thor_scsi.utils.output import vec2txt
@@ -22,14 +19,33 @@ from thor_scsi.utils.output import vec2txt
 ind = ind.index_class()
 
 
-# Number of phase-space coordinates.
-nv = 7
+@dataclass
+class gtpsa_prop:
+    # GTPSA properties.
+    # Number of phase-space coordinates.
+    nv: ClassVar[int] = 7
+    # Max order for Poincaré map.
+    no: ClassVar[int] = 1
+    # Number of parameters.
+    nv_prm: ClassVar[int] = 0
+    # Parameters max order.
+    no_prm: ClassVar[int] = 0
+    # Index.
+    named_index = gtpsa.IndexMapping(dict(x=0, px=1, y=2, py=3, delta=4, ct=5))
+    # Descriptor
+    desc : ClassVar[gtpsa.desc]
+
+
+class new():
+    def tpsa():
+        return gtpsa.tpsa(gtpsa_prop.desc, gtpsa_prop.no)
+    def ss_vect_tpsa():
+        return gtpsa.ss_vect_tpsa(gtpsa_prop.desc, gtpsa_prop.no)
+
+
 # Variables max order.
-no = 2
-# Number of parameters.
-nv_prm = 0
-# Parameters max order.
-no_prm = 0
+gtpsa_prop.no = 5
+gtpsa_prop.desc = gtpsa.desc(gtpsa_prop.nv, gtpsa_prop.no)
 
 cod_eps = 1e-15
 E_0     = 3.0e9
@@ -40,7 +56,7 @@ lat_name = "ake_0"
 file_name = os.path.join(home_dir, lat_name+".lat")
 
 lat_prop = \
-    lp.lattice_properties_class(nv, no, nv_prm, no_prm, file_name, E_0, cod_eps)
+    lp.lattice_properties_class(gtpsa_prop, file_name, E_0, cod_eps)
 
 print("\nTotal bend angle [deg] = {:7.5f}".format(lat_prop.compute_phi_lat()))
 print("Circumference [m]      = {:7.5f}".format(lat_prop.compute_circ()))
@@ -59,10 +75,10 @@ except ValueError:
     exit
 
 lat_prop.prt_lat_param()
-lat_prop.prt_rad()
 lat_prop.prt_M()
-lat_prop.prt_M_rad()
-lat_prop.prt_Twiss(lat_name+"_Twiss.txt")
+lat_prop.prt_rad()
+# lat_prop.prt_M_rad()
+# lat_prop.prt_Twiss(lat_name+"_Twiss.txt")
 
 if not False:
     lat_prop.plt_Twiss(lat_name+"_Twiss.png", not False)

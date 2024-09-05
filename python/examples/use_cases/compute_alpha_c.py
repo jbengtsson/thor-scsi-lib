@@ -32,6 +32,8 @@ import copy
 
 import numpy as np
 import matplotlib.pyplot as plt
+from typing import ClassVar
+from dataclasses import dataclass
 
 import gtpsa
 import thor_scsi.lib as ts
@@ -45,6 +47,47 @@ from thor_scsi.utils.output import prt2txt, mat2txt, vec2txt
 
 
 ind = ind.index_class()
+
+
+@dataclass
+class gtpsa_prop:
+    # GTPSA properties.
+    # Number of phase-space coordinates.
+    nv: ClassVar[int] = 7
+    # Max order for Poincaré map.
+    no: ClassVar[int] = 1
+    # Number of parameters.
+    nv_prm: ClassVar[int] = 0
+    # Parameters max order.
+    no_prm: ClassVar[int] = 0
+    # Index.
+    named_index = gtpsa.IndexMapping(dict(x=0, px=1, y=2, py=3, delta=4, ct=5))
+    # Descriptor
+    desc : ClassVar[gtpsa.desc]
+
+
+class new():
+    def tpsa():
+        return gtpsa.tpsa(gtpsa_prop.desc, gtpsa_prop.no)
+    def ss_vect_tpsa():
+        return gtpsa.ss_vect_tpsa(gtpsa_prop.desc, gtpsa_prop.no)
+
+
+def compute_optics(lat_prop):
+    try:
+        # Compute Twiss parameters along lattice.
+        if not lat_prop.comp_per_sol():
+            print("\ncomp_per_sol: unstable")
+            raise ValueError
+
+        # Compute radiation properties.
+        stable, stable_rad = lat_prop.compute_radiation()
+        print(stable, stable_rad)
+        if not stable:
+            print("\ncompute_radiation: unstable")
+            raise ValueError
+    except ValueError:
+        assert False
 
 
 def plot_D(lat_prop, s, disp, file_name):
@@ -158,11 +201,11 @@ def compute_alpha_c(map):
 
     C = lat_prop.compute_circ()
     print(f"\nC [m] = {C:5.3f}")
-    index = np.zeros(nv, int)
-    alpha_c = np.zeros(no+1)
+    index = np.zeros(gtpsa_prop.nv, int)
+    alpha_c = np.zeros(gtpsa_prop.no+1)
 
     print("\nalpha_c:")
-    for k in range(1, no+1):
+    for k in range(1, gtpsa_prop.no+1):
         index[ind.delta] = k
         alpha_c[k] = map.ct.get(index)/C
         print("  {:1d} {:10.3e}".format(k, alpha_c[k]))
@@ -183,12 +226,12 @@ def compute_alpha_c(map):
 
 
 def compute_D(map):
-    A0 = gtpsa.ss_vect_tpsa(desc, no)
+    A0 = new.ss_vect_tpsa()
     # Compute canonical transformation to delta-dependent fixed point.
-    ts.GoFix(map, A0)
-    index = np.zeros(nv, int)
+    map.GoFix(A0)
+    index = np.zeros(gtpsa_prop.nv, int)
     print("\ndispersion:")
-    for k in range(1, no+1):
+    for k in range(1, gtpsa_prop.no+1):
         index[ind.delta] = k
         print("  {:1d} {:10.3e} {:10.3e}".
               format(k, A0.x.get(index), A0.px.get(index)))
@@ -197,9 +240,9 @@ def compute_D(map):
 
 def compute_D_along_lattice(lat_prop, A0):
     A = A0
-    ind1 = np.zeros(nv, int)
+    ind1 = np.zeros(gtpsa_prop.nv, int)
     ind1[ind.delta] = 1
-    ind2 = np.zeros(nv, int)
+    ind2 = np.zeros(gtpsa_prop.nv, int)
     ind2[ind.delta] = 2
     n = len(lat_prop._lattice)
     s = np.zeros(n)
@@ -347,65 +390,43 @@ def print_H_long(file_name, phi, delta, H):
             print()
 
 
-# Number of phase-space coordinates.
-nv = 7
-# Variables max order.
-no = 3
-# Number of parameters.
-nv_prm = 0
-# Parameters max order.
-no_prm = 0
+gtpsa_prop.no = 3
+gtpsa_prop.desc = gtpsa.desc(gtpsa_prop.nv, gtpsa_prop.no)
 
 cod_eps = 1e-15
 E_0     = 2.5e9
 U_0     = 22.4e3
 
-named_index = gtpsa.IndexMapping(dict(x=0, px=1, y=2, py=3, delta=4, ct=5))
-
-# Descriptor for Truncated Power Series Algebra variables.
-desc = gtpsa.desc(nv, no, nv_prm, no_prm)
-
 home_dir = os.path.join(os.environ["HOME"], "Nextcloud", "thor_scsi", "JB",
-                     "BESSY-III", "ipac_2023")
-lat_name = "b3_cf425cf_thor_scsi"
+                        "MAX_IV")
+lat_name = sys.argv[1]
 file_name = os.path.join(home_dir, lat_name+".lat")
 
 print("\nlattice file:  \n", file_name)
 
 lat_prop = \
-    lp.lattice_properties_class(nv, no, nv_prm, no_prm, file_name, E_0, cod_eps)
+    lp.lattice_properties_class(gtpsa_prop, file_name, E_0, cod_eps)
 
 print("\nTotal bend angle [deg] = {:7.5f}".format(lat_prop.compute_phi_lat()))
 print("Circumference [m]      = {:7.5f}".format(lat_prop.compute_circ()))
 
-try:
-    # Compute Twiss parameters along lattice.
-    if not lat_prop.comp_per_sol():
-        print("\ncomp_per_sol - unstable")
-        raise ValueError
+compute_optics(lat_prop)
 
-    # Compute radiation properties.
-    if not lat_prop.compute_radiation():
-        print("\ncompute_radiation - unstable")
-        raise ValueError
-except ValueError:
-    exit
-else:
-    lat_prop.prt_lat_param()
-    lat_prop.prt_rad()
-    lat_prop.prt_M()
-    lat_prop.prt_M_rad()
-    lat_prop.prt_Twiss(lat_name+"_Twiss.txt")
+lat_prop.prt_lat_param()
+lat_prop.prt_M()
+# lat_prop.prt_rad()
+# lat_prop.prt_M_rad()
+# lat_prop.prt_Twiss(lat_name+"_Twiss.txt")
 
-if True:
+if False:
     lat_prop.plt_Twiss( "lin_opt.png", not False)
 
 r = co.compute_closed_orbit(
-    lat_prop._lattice, lat_prop._model_state, delta=0e0, eps=1e-10, desc=desc)
+    lat_prop._lattice, lat_prop._model_state, delta=0e0, eps=1e-10, desc=gtpsa_prop.desc)
 
 # Compute the Taylor map.
 
-map = gtpsa.ss_vect_tpsa(desc, no)
+map = new.ss_vect_tpsa()
 map.set_identity()
 r.x0.ct = 0e0
 map += r.x0
