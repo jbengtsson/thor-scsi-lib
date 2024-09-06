@@ -4,9 +4,9 @@ import sys
 import copy as _copy
 
 import enum as en
-import numpy as np
 from typing import ClassVar
 from dataclasses import dataclass
+import numpy as np
 
 import gtpsa
 import thor_scsi.lib as ts
@@ -24,7 +24,7 @@ ind = ind.index_class()
 
 
 @dataclass
-class gtpsa_prop_class:
+class gtpsa_prop:
     # GTPSA properties.
     # Number of phase-space coordinates.
     nv: ClassVar[int] = 7
@@ -218,11 +218,9 @@ def compute_h_ijklm(lat_prop, i, j, k, l, m):
             b3xL = lat_prop._lattice[n].get_multipoles(). \
                 get_multipole(MpoleInd.sext).real*L
             if b3xL != 0e0:
-                phi = n_x*dmu[ind.X, n-1] + n_y*dmu[ind.Y, n-1]
                 h_abs = b3xL*beta[ind.X, n-1]**(m_x/2e0) \
                     *beta[ind.Y, n-1]**(m_y/2e0)
-                dh_re = h_abs*np.cos(phi)
-                dh_im = h_abs*np.sin(phi)
+                phi = n_x*dmu[ind.X, n-1] + n_y*dmu[ind.Y, n-1]
                 h_re += h_abs*np.cos(phi)
                 h_im -= h_abs*np.sin(phi)
 
@@ -233,7 +231,7 @@ def compute_hh(lat_prop, h):
     h_re = new.tpsa()
     h_im = new.tpsa()
 
-    h = h.get_mns_1(1, 3)
+    h = h.get_mns_1(1, 3)*2e0
     h.CtoR(h_re, h_im)
     h_re.print("h_re", 1e-11)
     h_im.print("h_im", 1e-11)
@@ -277,8 +275,8 @@ def compute_g_ijklm(lat_prop, i, j, k, l, m):
     nu = np.array([lat_prop._Twiss.twiss.sel(plane="x", par="nu").values[-1],
                    lat_prop._Twiss.twiss.sel(plane="y", par="nu").values[-1]])
 
-    g_re_ijklm = 0e0
-    g_im_ijklm = 0e0
+    g_re = 0e0
+    g_im = 0e0
     for n in range(len(lat_prop._lattice)):
         if type(lat_prop._lattice[n]) == ts.Sextupole:
             m_x = i + j
@@ -290,12 +288,12 @@ def compute_g_ijklm(lat_prop, i, j, k, l, m):
                 lat_prop._lattice[n].get_multipoles(). \
                 get_multipole(MpoleInd.sext).real*L
             g_abs = b3xL*beta[ind.X, n]**(m_x/2e0)*beta[ind.Y, n]**(m_y/2e0)
-            phi = n_x*dnu[ind.X, n] + n_y*dnu[ind.Y, n]
-            g_re_ijklm += g_abs*np.cos(phi) \
+            phi = n_x*dmu[ind.X, n] + n_y*dmu[ind.Y, n]
+            g_re += g_abs*np.cos(phi) \
                 /np.sin(np.pi*(n_x*nu[ind.X]+n_y*nu[ind.Y]))
-            g_im_ijklm += g_abs*np.sin(phi) \
+            g_im += g_abs*np.sin(phi) \
                 /np.sin(np.pi*(n_x*nu[ind.X]+n_y*nu[ind.Y]))
-    return g_im_ijklm, g_re_ijklm
+    return g_im, g_re
 
 def compute_g(lat_prop, g):
     g_re = new.tpsa()
@@ -522,9 +520,8 @@ def compute_ampl_dep_orbit_tpsa_2(g):
     print(f"  s_00220   = {s_00220:10.3e}")
 
 
-gtpsa_prop = gtpsa_prop_class()
-gtpsa_prop_class.no = 5
-gtpsa_prop_class.desc = gtpsa.desc(gtpsa_prop.nv, gtpsa_prop.no)
+gtpsa_prop.no = 5
+gtpsa_prop.desc = gtpsa.desc(gtpsa_prop.nv, gtpsa_prop.no)
 
 cod_eps = 1e-15
 E_0     = 3.0e9
@@ -572,11 +569,20 @@ M = compute_map(lat_prop)
 print("\nM:", M)
 
 if not False:
-    h = compute_h(M)
+    A     = new.ss_vect_tpsa()
+    A_inv = new.ss_vect_tpsa()
+    M_Fl  = new.ss_vect_tpsa()
+
+    A_0, A_1, R, g, K = compute_map_normal_form(M)
+
+    A.compose(A_0, A_1)
+    A_inv.inv(A)
+    M_Fl.compose(M, A)
+    M_Fl.compose(A_inv, M_Fl)
+
+    h = compute_h(M_Fl)
     h.print("h", 1e-20)
 
-if not False:
-    A_0, A_1, R, g, K = compute_map_normal_form(M)
     print("\nA_0:", A_0)
     print("\nA_1:", A_1)
     g.print("g", 1e-10)
