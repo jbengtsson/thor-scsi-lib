@@ -2,13 +2,19 @@ cmake_minimum_required(VERSION 3.0.0)
 
 project("thor_scsi" LANGUAGES CXX Fortran)
 
+# Use absolute path - vs. RPATH.
+set(CMAKE_MACOSX_RPATH FALSE)
+# set(CMAKE_BUILD_WITH_INSTALL_NAME_DIR "${CMAKE_INSTALL_PREFIX}/lib")
+# set(CMAKE_INSTALL_NAME_DIR "${CMAKE_INSTALL_PREFIX}/lib")
+set(CMAKE_BUILD_WITH_INSTALL_NAME_DIR "/Users/johan/git/thor-scsi-lib/local/lib")
+set(CMAKE_INSTALL_NAME_DIR "/Users/johan/git/thor-scsi-lib/local/lib")
+
 ENABLE_LANGUAGE(Fortran)
 
 set(THOR_SCSI_VERSION 0.0.1)
 
 # option(PYTHON_MODULE_INSTALL "Install python module" OFF)
 option(PYTHON_MODULE_DEVELOPMENT_INSTALL "Install python binary module to source directory" ON)
-
 
 # specify the C++ standard
 set(CMAKE_CXX_STANDARD 17)
