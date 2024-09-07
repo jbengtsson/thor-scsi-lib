@@ -71,6 +71,10 @@ fi
 
 # Export path for libraries.
 if false; then
+    # Linux.
     echo "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$home_dir/local/lib" \
 	 >> ~/.bashrc
+    # Macbook.
+    # echo "export DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH:$home_dir/local/lib" \
+    # 	 >> ~/.bashrc
 fi
