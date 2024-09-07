@@ -225,7 +225,7 @@ Cmake checks that the version of required subcomponents is
 sufficient. If it reports that one of the components is not
 sufficiently new, I recommend to follow the following steps:
 
-1. follow the instructions below required to make camke identify
+1. follow the instructions below required to make cmake identify
    the component
 2. After the cmake found the components  I recommend to
 
