@@ -6,6 +6,10 @@
 
 import os
 import sys
+from dataclasses import dataclass
+from typing import ClassVar
+
+import gtpsa
 
 import numpy as np
 
@@ -14,6 +18,24 @@ from thor_scsi.utils import lattice_properties as lp, nonlin_dyn as nld_cl, \
 
 
 ind = ind.index_class()
+
+
+@dataclass
+class gtpsa_prop:
+    # GTPSA properties.
+    # Number of variables - phase-space coordinates & 1 for parameter
+    #dependence.
+    nv: ClassVar[int] = 6 + 1
+    # Max order.
+    no: ClassVar[int] = 1
+    # Number of parameters.
+    nv_prm: ClassVar[int] = 0
+    # Parameters max order.
+    no_prm: ClassVar[int] = 0
+    # Index.
+    named_index = gtpsa.IndexMapping(dict(x=0, px=1, y=2, py=3, delta=4, ct=5))
+    # Descriptor
+    desc : ClassVar[gtpsa.desc]
 
 
 def compute_optics(lat_prop):
@@ -33,10 +55,8 @@ def compute_optics(lat_prop):
         assert False
 
 
-# Number of phase-space coordinates.
-nv = 7
-# Variables max order.
-no = 6
+# TPSA max order.
+gtpsa_prop.no = 6
 # Number of parameters.
 nv_prm = 0
 # Parameters max order.
@@ -55,7 +75,7 @@ lat_name = sys.argv[1]
 file_name = os.path.join(home_dir, lat_name+".lat")
 
 lat_prop = \
-    lp.lattice_properties_class(nv, no, nv_prm, no_prm, file_name, E_0, cod_eps)
+    lp.lattice_properties_class(gtpsa_prop, file_name, E_0, cod_eps)
 
 lat_prop.prt_lat("lat_prop_lat.txt")
 
