@@ -60,7 +60,7 @@ if ! false; then
     export THOR_SCSI_LIB=$home_dir
     export gtpsa_PREFIX=$THOR_SCSI_LIB/local
     export thor_scsi_PREFIX=$THOR_SCSI_LIB/local
-    echo "\n\$THOR_SCSI_LIB set to: " $THOR_SCSI_LIB
+    echo "\n\$THOR_SCSI_LIB set to:     " $THOR_SCSI_LIB
     echo "\$gtpsa_PREFIX set to:      " $gtpsa_PREFIX
     echo "\$thor_scsi_PREFIX set to:  " $thor_scsi_PREFIX
     cd $home_dir/src/gtpsa/python
