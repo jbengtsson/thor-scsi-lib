@@ -2,12 +2,18 @@ cmake_minimum_required(VERSION 3.0.0)
 
 project("thor_scsi" LANGUAGES CXX Fortran)
 
-# Use absolute path - vs. RPATH.
-set(CMAKE_MACOSX_RPATH FALSE)
-# set(CMAKE_BUILD_WITH_INSTALL_NAME_DIR "${CMAKE_INSTALL_PREFIX}/lib")
-# set(CMAKE_INSTALL_NAME_DIR "${CMAKE_INSTALL_PREFIX}/lib")
-set(CMAKE_BUILD_WITH_INSTALL_NAME_DIR "/Users/johan/git/thor-scsi-lib/local/lib")
-set(CMAKE_INSTALL_NAME_DIR "/Users/johan/git/thor-scsi-lib/local/lib")
+
+# MacOS - set RPATH entries.
+set(CMAKE_BUILD_RPATH "${CMAKE_SOURCE_DIR}/local/lib")
+set(CMAKE_INSTALL_RPATH "${CMAKE_SOURCE_DIR}/local/lib")
+
+# Use absolute vs. relative paths.
+# For macOS - RPATH & DYLD_LIBRARY.
+# set(CMAKE_INSTALL_NAME_DIR "${CMAKE_SOURCE_DIR}/local/lib")
+# set(CMAKE_INSTALL_RPATH_USE_LINK_PATH)
+# set(CMAKE_INSTALL_RPATH "${CMAKE_SOURCE_DIR}/local/lib")
+# New in version 3.9.
+# set(CMAKE_BUILD_WITH_INSTALL_NAME_DIR ON)
 
 ENABLE_LANGUAGE(Fortran)
 
@@ -19,7 +25,6 @@ option(PYTHON_MODULE_DEVELOPMENT_INSTALL "Install python binary module to source
 # specify the C++ standard
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
-
 
 if(CMAKE_COMPILER_IS_GNUCXX)
   add_definitions(-g -ggdb -pedantic -Wall)
