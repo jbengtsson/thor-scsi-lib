@@ -12,8 +12,7 @@ import gtpsa
 import thor_scsi.lib as ts
 
 from thor_scsi.utils import lattice_properties as lp, linear_optics as lo, \
-    courant_snyder as cs, index_class as ind
-from thor_scsi.utils.output import mat2txt
+    index_class as ind
 
 
 class MpoleInd(en.IntEnum):
@@ -146,7 +145,7 @@ def compute_M(K, A_0, A_1, g):
     M.compose(M, A_nl_inv)
     M.compose(M, A_1_inv)
     M.compose(M, A_0_inv)
-    M.get_mns(1, no-1, M)
+    M.get_mns(1, gtpsa_prop.no-1, M)
     
     print("\nM:", M)
     prt_map(M, "M:", eps=1e-30)
@@ -166,12 +165,12 @@ def compute_R(desc, map, A_0, A_1, g, K, gtpsa_prop):
 
     M = _copy.copy(map)
 
-    K.h_DF_to_M(Id, 2, no, R)
+    K.h_DF_to_M(Id, 2, tpsa_prop.no, R)
     R_inv.inv(R)
-    R_inv.get_mns(1, no-1, R_inv)
+    R_inv.get_mns(1, tpsa_prop.no-1, R_inv)
     A_0_inv.inv(A_0)
     A_1_inv.inv(A_1)
-    g.h_DF_to_M(Id, 3, no, A_nl)
+    g.h_DF_to_M(Id, 3, tpsa_prop.no, A_nl)
     A_nl_inv.inv(A_nl)
 
     M.compose(M, A_0)
@@ -181,14 +180,19 @@ def compute_R(desc, map, A_0, A_1, g, K, gtpsa_prop):
     M.compose(A_0_inv, M)
     M.compose(A_1_inv, M)
     M.compose(A_nl_inv, M)
-    M.get_mns(1, no-1, M)
+    M.get_mns(1, tpsa_prop.no-1, M)
    
     print("\nM:", M)
     prt_map(M, "M:", eps=1e-10)
 
 
-def get_h_ijklm(g, i, j, k, l, m):
-    return g.get([i, j, k, l, m, 0, 0])
+def get_h_ijklm(h, i, j, k, l, m):
+    return h.get([i, j, k, l, m, 0, 0])
+
+
+def get_cmplx_h_ijklm(h_re, h_im, i, j, k, l, m):
+    return complex(get_h_ijklm(h_re, i, j, k, l, m),
+                   get_h_ijklm(h_im, i, j, k, l, m))
 
 
 def compute_h_ijklm(lat_prop, i, j, k, l, m):
@@ -206,8 +210,7 @@ def compute_h_ijklm(lat_prop, i, j, k, l, m):
     nu = np.array([lat_prop._Twiss.twiss.sel(plane="x", par="nu").values[-1],
                    lat_prop._Twiss.twiss.sel(plane="y", par="nu").values[-1]])
 
-    h_re = 0e0
-    h_im = 0e0
+    h= 0e0
     for n in range(len(lat_prop._lattice)):
         if type(lat_prop._lattice[n]) == ts.Sextupole:
             m_x = i + j
@@ -221,45 +224,55 @@ def compute_h_ijklm(lat_prop, i, j, k, l, m):
                 h_abs = b3xL*beta[ind.X, n-1]**(m_x/2e0) \
                     *beta[ind.Y, n-1]**(m_y/2e0)
                 phi = n_x*dmu[ind.X, n-1] + n_y*dmu[ind.Y, n-1]
-                h_re += h_abs*np.cos(phi)
-                h_im -= h_abs*np.sin(phi)
+                h += h_abs*np.exp(1j*phi)
 
-    return np.array([h_re, h_im])
+    return np.array(h)
 
 
-def compute_hh(lat_prop, h):
+def prt_h_cmplx_ijklm(symb, i, j, k, l, m, h):
+    ind = np.array([i, j, k, l, m], dtype=int)
+    str = ""
+    for k in range(len(ind)):
+        str += chr(ord('0')+ind[k])
+    if h.imag >= 0e0:
+        sgn = '+'
+    else:
+        sgn = '-'
+    print(f"  {symb:s}_{str:s} = ({h.real:12.5e} {sgn:s} i{abs(h.imag):11.5e})"
+          f"  {abs(h):9.3e}*exp({sgn:s}i{np.rad2deg(abs(np.angle(h))):3.1f})")
+
+
+def prt_h_ijklm(symb, i, j, k, l, m, h_re, h_im):
+    h = get_cmplx_h_ijklm(h_re, h_im, i, j, k, l, m)
+    prt_h_cmplx_ijklm(symb, i, j, k, l, m, h)
+
+
+def prt_h(symb, h):
     h_re = new.tpsa()
     h_im = new.tpsa()
 
-    h = h.get_mns_1(1, 3)*2e0
     h.CtoR(h_re, h_im)
-    h_re.print("h_re", 1e-11)
-    h_im.print("h_im", 1e-11)
 
-    h_21000 = -1e0/8e0*compute_h_ijklm(lat_prop, 2, 1, 0, 0, 0)
-    h_30000 = -1e0/24e0*compute_h_ijklm(lat_prop, 3, 0, 0, 0, 0)
-    h_10110 =  1e0/4e0*compute_h_ijklm(lat_prop, 1, 0, 1, 1, 0)
-    h_10200 =  1e0/8e0*compute_h_ijklm(lat_prop, 1, 0, 2, 0, 0)
-    h_10020 =  1e0/8e0*compute_h_ijklm(lat_prop, 1, 0, 0, 2, 0)
-
-    h_21000_ref = [get_h_ijklm(h_re, 2, 1, 0, 0, 0),
-                   get_h_ijklm(h_im, 2, 1, 0, 0, 0)]
-    h_30000_ref = [get_h_ijklm(h_re, 3, 0, 0, 0, 0),
-                   get_h_ijklm(h_im, 3, 0, 0, 0, 0)]
-    h_10110_ref = [get_h_ijklm(h_re, 1, 0, 1, 1, 0),
-                   get_h_ijklm(h_im, 1, 0, 1, 1, 0)]
-    h_10200_ref = [get_h_ijklm(h_re, 1, 0, 2, 0, 0),
-                   get_h_ijklm(h_im, 1, 0, 2, 0, 0)]
-    h_10020_ref = [get_h_ijklm(h_re, 1, 0, 0, 2, 0),
-                   get_h_ijklm(h_im, 1, 0, 0, 2, 0)]
-
-    print(f"\n  h_21000 = [{h_21000[0]:12.5e}, {h_21000[1]:12.5e}] ([{h_21000_ref[0]/2e0:12.5e}, {h_21000_ref[1]/2e0:12.5e}]))")
-    print(f"  h_30000 = [{h_30000[0]:12.5e}, {h_30000[1]:12.5e}] ([{h_30000_ref[0]/2e0:12.5e}, {h_30000_ref[1]/2e0:12.5e}]))")
-    print(f"  h_10110 = [{h_10110[0]:12.5e}, {h_10110[1]:12.5e}] ([{h_10110_ref[0]/2e0:12.5e}, {h_10110_ref[1]/2e0:12.5e}]))")
-    print(f"  h_10200 = [{h_10200[0]:12.5e}, {h_10200[1]:12.5e}] ([{h_10200_ref[0]/2e0:12.5e}, {h_10200_ref[1]/2e0:12.5e}]))")
-    print(f"  h_10020 = [{h_10020[0]:12.5e}, {h_10020[1]:12.5e}] ([{h_10020_ref[0]/2e0:12.5e}, {h_10020_ref[1]/2e0:12.5e}]))")
+    prt_h_ijklm(symb, 2, 1, 0, 0, 0, h_re, h_im)
+    prt_h_ijklm(symb, 3, 0, 0, 0, 0, h_re, h_im)
+    prt_h_ijklm(symb, 1, 0, 1, 1, 0, h_re, h_im)
+    prt_h_ijklm(symb, 1, 0, 2, 0, 0, h_re, h_im)
+    prt_h_ijklm(symb, 1, 0, 0, 2, 0, h_re, h_im)
 
 
+def prt_h_num():
+    # Can't hash a list (mutable) - but can hash a tuple (immutable).
+    h = {}
+    h[(2, 1, 0, 0, 0)] = -1e0/8e0 *compute_h_ijklm(lat_prop, 2, 1, 0, 0, 0)
+    h[(3, 0, 0, 0, 0)] = -1e0/24e0*compute_h_ijklm(lat_prop, 3, 0, 0, 0, 0)
+    h[(1, 0, 1, 1, 0)] =  1e0/4e0 *compute_h_ijklm(lat_prop, 1, 0, 1, 1, 0)
+    h[(1, 0, 2, 0, 0)] =  1e0/8e0 *compute_h_ijklm(lat_prop, 1, 0, 2, 0, 0)
+    h[(1, 0, 0, 2, 0)] =  1e0/8e0 *compute_h_ijklm(lat_prop, 1, 0, 0, 2, 0)
+
+    for key in h:
+        prt_h_cmplx_ijklm("h", key[0], key[1], key[2], key[3], key[4], h[key])
+
+        
 def compute_g_ijklm(lat_prop, i, j, k, l, m):
     eta = np.array(lat_prop._Twiss.dispersion.sel(phase_coordinate="x").values)
     alpha = np.array(
@@ -275,8 +288,7 @@ def compute_g_ijklm(lat_prop, i, j, k, l, m):
     nu = np.array([lat_prop._Twiss.twiss.sel(plane="x", par="nu").values[-1],
                    lat_prop._Twiss.twiss.sel(plane="y", par="nu").values[-1]])
 
-    g_re = 0e0
-    g_im = 0e0
+    g = 0e0
     for n in range(len(lat_prop._lattice)):
         if type(lat_prop._lattice[n]) == ts.Sextupole:
             m_x = i + j
@@ -289,37 +301,28 @@ def compute_g_ijklm(lat_prop, i, j, k, l, m):
                 get_multipole(MpoleInd.sext).real*L
             g_abs = b3xL*beta[ind.X, n]**(m_x/2e0)*beta[ind.Y, n]**(m_y/2e0)
             phi = n_x*dmu[ind.X, n] + n_y*dmu[ind.Y, n]
-            g_re += g_abs*np.cos(phi) \
+            # -0.71
+            # +0.1004
+            dphi = 0.1004*2e0*np.pi*(n_x*nu[ind.X]+n_y*nu[ind.Y])
+            g += g_abs*np.exp(-1j*(phi)) \
                 /np.sin(np.pi*(n_x*nu[ind.X]+n_y*nu[ind.Y]))
-            g_im += g_abs*np.sin(phi) \
-                /np.sin(np.pi*(n_x*nu[ind.X]+n_y*nu[ind.Y]))
-    return g_im, g_re
+    return g
 
-def compute_g(lat_prop, g):
-    g_re = new.tpsa()
-    g_im = new.tpsa()
 
-    g.CtoR(g_re, g_im)
+def compute_g(lat_prop, g_tps):
+    print("\nLie Generators - TPSA:")
+    prt_h('g', g_tps)
 
-    g_21000 =  1e0/8e0*compute_g_ijklm(lat_prop, 2, 1, 0, 0, 0)[0]
-    g_30000 =  1e0/48e0*compute_g_ijklm(lat_prop, 3, 0, 0, 0, 0)[0]
-    g_10110 = -1e0/8e0*compute_g_ijklm(lat_prop, 1, 0, 1, 1, 0)[0]
-    g_10200 = -1e0/16e0*compute_g_ijklm(lat_prop, 1, 0, 2, 0, 0)[0]
-    g_10020 = -1e0/16e0*compute_g_ijklm(lat_prop, 1, 0, 0, 2, 0)[0]
+    g = {}
+    g[(2, 1, 0, 0, 0)] =  1e0/16e0*compute_g_ijklm(lat_prop, 2, 1, 0, 0, 0)
+    g[(3, 0, 0, 0, 0)] =  1e0/48e0*compute_g_ijklm(lat_prop, 3, 0, 0, 0, 0)
+    g[(1, 0, 1, 1, 0)] = -1e0/8e0 *compute_g_ijklm(lat_prop, 1, 0, 1, 1, 0)
+    g[(1, 0, 2, 0, 0)] = -1e0/16e0*compute_g_ijklm(lat_prop, 1, 0, 2, 0, 0)
+    g[(1, 0, 0, 2, 0)] = -1e0/16e0*compute_g_ijklm(lat_prop, 1, 0, 0, 2, 0)
 
-    g_21000_ref = get_h_ijklm(g_im, 2, 1, 0, 0, 0)
-    g_30000_ref = get_h_ijklm(g_im, 3, 0, 0, 0, 0)
-    g_10110_ref = get_h_ijklm(g_im, 1, 0, 1, 1, 0)
-    g_10200_ref = get_h_ijklm(g_im, 1, 0, 2, 0, 0)
-    g_10020_ref = get_h_ijklm(g_im, 1, 0, 0, 2, 0)
-
-    print(f"\n  g_21000 = {g_21000:12.5e} ({g_21000_ref:12.5e})")
-    print(f"  g_30000 = {g_30000:12.5e} ({g_30000_ref:12.5e})")
-    print(f"  g_10110 = {g_10110:12.5e} ({g_10110_ref:12.5e})")
-    print(f"  g_10200 = {g_10200:12.5e} ({g_10200_ref:12.5e}")
-    print(f"  g_10020 = {g_10020:12.5e} ({g_10020_ref:12.5e}")
-
-    return g_21000, g_30000, g_10110, g_10200, g_10020
+    print("\nLie Generators - Numerical:")
+    for key in g:
+        prt_h_cmplx_ijklm("g", key[0], key[1], key[2], key[3], key[4], g[key])
 
 
 def chk_types():
@@ -541,8 +544,6 @@ file_name = os.path.join(home_dir, lat_name+".lat")
 lat_prop = \
     lp.lattice_properties_class(gtpsa_prop, file_name, E_0, cod_eps)
 
-print("\nCircumference [m] = {:7.5f}".format(lat_prop.compute_circ()))
-
 compute_optics(lat_prop)
 
 lat_prop.prt_lat_param()
@@ -581,19 +582,29 @@ if not False:
     M_Fl.compose(A_inv, M_Fl)
 
     h = compute_h(M_Fl)
-    h.print("h", 1e-20)
-
-    print("\nA_0:", A_0)
-    print("\nA_1:", A_1)
-    g.print("g", 1e-10)
-    K.print("K", 1e-10)
+    print("\nDriving Terms - TPSA:")
+    prt_h('h', h)
 
 if False:
     compute_M(K, A_0, A_1, g)
 if False:
     compute_R(M, A_0, A_1, g, K)
 
-compute_hh(lat_prop, h)
+print("\nDriving Terms - Numerical:")
+prt_h_num()
+
+if False:
+    g_re = new.tpsa()
+    g_im = new.tpsa()
+
+    g = g.get_mns_1(1, 3)
+    g.CtoR(g_re, g_im)
+    g_re.print("g_re")
+    g_im.print("g_im")
+
+R_inv = new.ss_vect_tpsa()
+R_inv.inv(R)
+
 compute_g(lat_prop, g)
 
 # compute_ampl_dep_orbit_tpsa_2(g)
