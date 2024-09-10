@@ -1,17 +1,14 @@
 '''Use Case:
      On & off-momentum tune footprintg.
 '''
-import enum
 import logging
 # Levels: DEBUG, INFO, WARNING, ERROR, and CRITICAL.
 logging.basicConfig(level='INFO')
 logger = logging.getLogger('thor_scsi')
 
 
-from scipy import optimize
 
 import os
-import copy
 
 import math
 import numpy as np
@@ -24,14 +21,10 @@ import gtpsa
 
 import thor_scsi.lib as tslib
 from thor_scsi.factory import accelerator_from_config
-from thor_scsi.utils.twiss_output import twiss_ds_to_df, df_to_tsv
-from thor_scsi.utils.linear_optics import compute_map, compute_nus, \
+from thor_scsi.utils.linear_optics import compute_map, \
     compute_nu_symp, check_if_stable_2D, compute_nu_xi, compute_map_and_diag, \
-    compute_Twiss_along_lattice, compute_dispersion
-from thor_scsi.utils.courant_snyder import compute_A_CS, compute_A, \
-    compute_Twiss_A
-from thor_scsi.utils.phase_space_vector import map2numpy
-from thor_scsi.utils.output import prt2txt, mat2txt, vec2txt
+    compute_Twiss_along_lattice
+from thor_scsi.utils.courant_snyder import compute_Twiss_A
 
 tpsa_order = 2
 

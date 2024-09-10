@@ -141,7 +141,7 @@ class nonlinear_beam_dynamics:
         self._M_Fl.compose(self._A_inv, self._M_Fl)
         
 
-    def compute_M(self, K, A_0, A_1, g):
+    def compute_M_from_MNF(self, K, A_0, A_1, g):
         prt_map(M, "M:", eps=1e-30)
 
         Id.set_identity()
@@ -163,7 +163,7 @@ class nonlinear_beam_dynamics:
         print("\nM:", M)
         prt_map(M, "M:", eps=1e-30)
 
-    def compute_R(self, desc, map, A_0, A_1, g, K, gtpsa_prop):
+    def compute_R_from_MNF(self, desc, map, A_0, A_1, g, K, gtpsa_prop):
         Id       = new.ss_vect_tpsa()
         M        = new.ss_vect_tpsa()
         R        = new.ss_vect_tpsa()
@@ -592,9 +592,9 @@ print("\nM:", nlbd._M)
 nlbd.compute_map_normal_form()
 
 if False:
-    compute_M(K, A_0, A_1, g)
+    compute_M_from_MNF(K, A_0, A_1, g)
 if False:
-    compute_R(M, A_0, A_1, g, K)
+    compute_R_from_MNF(M, A_0, A_1, g, K)
 
 nlbd.compute_M_Fl()
 
