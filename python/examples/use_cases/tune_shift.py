@@ -305,7 +305,7 @@ def compute_g_ijklm(lat_prop, i, j, k, l, m):
             g_abs = b3xL*beta[ind.X, n]**(m_x/2e0)*beta[ind.Y, n]**(m_y/2e0)
             dnu = np.pi*(n_x*nu[ind.X]+n_y*nu[ind.Y])
             phi = n_x*dmu[ind.X, n] + n_y*dmu[ind.Y, n]
-            g += 1j*g_abs*np.exp(-1j*(phi-dnu))/np.sin(dnu)
+            g -= 1j*g_abs*np.exp(-1j*(phi-dnu))/np.sin(dnu)
     return g
 
 
