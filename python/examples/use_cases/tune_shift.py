@@ -303,10 +303,9 @@ def compute_g_ijklm(lat_prop, i, j, k, l, m):
                 lat_prop._lattice[n].get_multipoles(). \
                 get_multipole(MpoleInd.sext).real*L
             g_abs = b3xL*beta[ind.X, n]**(m_x/2e0)*beta[ind.Y, n]**(m_y/2e0)
-            phi = n_x*(dmu[ind.X, n]-np.pi*nu[ind.X]) \
-                + n_y*(dmu[ind.Y, n]-np.pi*nu[ind.Y])
-            g += 1j*g_abs*np.exp(-1j*(phi)) \
-                /np.sin(np.pi*(n_x*nu[ind.X]+n_y*nu[ind.Y]))
+            dnu = np.pi*(n_x*nu[ind.X]+n_y*nu[ind.Y])
+            phi = n_x*dmu[ind.X, n] + n_y*dmu[ind.Y, n]
+            g += 1j*g_abs*np.exp(-1j*(phi-dnu))/np.sin(dnu)
     return g
 
 
@@ -589,20 +588,6 @@ if not False:
     prt_h('h', h)
 
 if False:
-    Id      = new.ss_vect_tpsa()
-    g_fp    = new.tpsa()
-    g_fp_re = new.tpsa()
-    g_fp_im = new.tpsa()
-
-    Id.set_identity()
-    op = Id - R_inv
-    op.pinv(op, [1, 1, 1, 1, 0, 0, 0])
-    g_fp = compose_bs(h, op)
-    g_fp.get_mns_1(1, 3)
-    print("\nLie Generators - TPSA:")
-    prt_h('g', g_fp)
-
-if False:
     compute_M(K, A_0, A_1, g)
 if False:
     compute_R(M, A_0, A_1, g, K)
@@ -618,9 +603,6 @@ if False:
     g.CtoR(g_re, g_im)
     g_re.print("g_re")
     g_im.print("g_im")
-
-R_inv = new.ss_vect_tpsa()
-R_inv.inv(R)
 
 compute_g(lat_prop, g)
 
