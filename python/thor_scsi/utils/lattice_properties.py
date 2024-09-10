@@ -31,7 +31,7 @@ class RadiationResult:
 
 class lattice_properties_class(
         ps.periodic_structure_class, gs.get_set_mpole_class):
-    # Private
+    # Private.
 
     def __init__(self, gtpsa_prop, file_name, E_0, cod_eps):
         # Initialise periodic_structure_class.
