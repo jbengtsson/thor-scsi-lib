@@ -46,6 +46,271 @@ class new():
         return gtpsa.ss_vect_tpsa(gtpsa_prop.desc, gtpsa_prop.no)
 
 
+class nonlinear_beam_dynamics:
+    # Private.
+    def __init__(self, gtpsa_prop, lat_prop):
+
+        self._gtpsa_prop = gtpsa_prop
+        self._lat_prop   = lat_prop
+        self._Id         = new.ss_vect_tpsa()
+
+        self._M          = np.nan
+
+        self._A_0        = new.ss_vect_tpsa()
+        self._A_0_inv    = new.ss_vect_tpsa()
+        self._A_1        = new.ss_vect_tpsa()
+        self._A_1_inv    = new.ss_vect_tpsa()
+        self._A          = new.ss_vect_tpsa()
+        self._A_inv      = new.ss_vect_tpsa()
+        self._A_nl       = new.ss_vect_tpsa()
+        self._A_nl_inv   = new.ss_vect_tpsa()
+        self._R          = new.ss_vect_tpsa()
+        self._R_inv      = new.ss_vect_tpsa()
+        self._g          = new.tpsa()
+        self._K          = new.tpsa()
+
+        self._M_Fl       = np.nan
+
+    # Public.
+
+    def compute_map(self):
+        self._M = lo.compute_map(
+            self._lat_prop._lattice, self._lat_prop._model_state,
+            desc=self._lat_prop._desc,
+            tpsa_order=self._gtpsa_prop.no)
+
+    def prt_map(self, str, *, eps: float=1e-30):
+        print(str)
+        self._map.x.print("x", eps)
+        self._map.px.print("p_x", eps)
+        self._map.y.print("y", eps)
+        self._map.py.print("p_y", eps)
+        self._map.delta.print("delta", eps)
+        self._map.ct.print("ct", eps)
+
+    def get_h_ijklm(self, h, i, j, k, l, m):
+        return h.get([i, j, k, l, m, 0, 0])
+
+    def get_cmplx_h_ijklm(self, h_re, h_im, i, j, k, l, m):
+        return complex(self.get_h_ijklm(h_re, i, j, k, l, m),
+                       self.get_h_ijklm(h_im, i, j, k, l, m))
+
+    def compute_h(self):
+        h = new.tpsa()
+        self._M_Fl.M_to_h_DF(h)
+        return h
+
+    def compute_map_normal_form(self):
+        self._M.Map_Norm(self._A_0, self._A_1, self._R, self._g, self._K)
+
+        self._A.compose(self._A_0, self._A_1)
+        self._A_inv.inv(self._A)
+
+        self._R_inv.inv(self._R)
+
+    def compute_M_Fl(self):
+        self._M_Fl = new.ss_vect_tpsa()
+
+        self._M_Fl.compose(self._M, self._A)
+        self._M_Fl.compose(self._A_inv, self._M_Fl)
+        
+
+    def compute_M(self, K, A_0, A_1, g):
+        prt_map(M, "M:", eps=1e-30)
+
+        Id.set_identity()
+
+        K.h_DF_to_M(Id, 2, gtpsa_prop.no, R)
+        A_0_inv.inv(A_0)
+        A_1_inv.inv(A_1)
+        g.h_DF_to_M(Id, 3, gtpsa_prop.no, A_nl)
+        A_nl_inv.inv(A_nl)
+
+        M.compose(A_0, A_1)
+        M.compose(M, A_nl)
+        M.compose(M, R)
+        M.compose(M, A_nl_inv)
+        M.compose(M, A_1_inv)
+        M.compose(M, A_0_inv)
+        M.get_mns(1, gtpsa_prop.no-1, M)
+
+        print("\nM:", M)
+        prt_map(M, "M:", eps=1e-30)
+
+    def compute_R(self, desc, map, A_0, A_1, g, K, gtpsa_prop):
+        Id       = new.ss_vect_tpsa()
+        M        = new.ss_vect_tpsa()
+        R        = new.ss_vect_tpsa()
+        R_inv    = new.ss_vect_tpsa()
+        A_0_inv  = new.ss_vect_tpsa()
+        A_1_inv  = new.ss_vect_tpsa()
+        A_nl     = new.ss_vect_tpsa()
+        A_nl_inv = new.ss_vect_tpsa()
+
+        Id.set_identity()
+
+        M = _copy.copy(map)
+
+        K.h_DF_to_M(Id, 2, tpsa_prop.no, R)
+        R_inv.inv(R)
+        R_inv.get_mns(1, tpsa_prop.no-1, R_inv)
+        A_0_inv.inv(A_0)
+        A_1_inv.inv(A_1)
+        g.h_DF_to_M(Id, 3, tpsa_prop.no, A_nl)
+        A_nl_inv.inv(A_nl)
+
+        M.compose(M, A_0)
+        M.compose(M, A_1)
+        M.compose(M, A_nl)
+        M.compose(M, R_inv)
+        M.compose(A_0_inv, M)
+        M.compose(A_1_inv, M)
+        M.compose(A_nl_inv, M)
+        M.get_mns(1, tpsa_prop.no-1, M)
+
+        print("\nM:", M)
+        prt_map(M, "M:", eps=1e-10)
+
+    def compute_h_ijklm(self, lat_prop, i, j, k, l, m):
+        eta = np.array(
+            lat_prop._Twiss.dispersion.sel(phase_coordinate="x").values)
+        alpha = np.array(
+            [lat_prop._Twiss.twiss.sel(plane="x", par="alpha").values,
+             lat_prop._Twiss.twiss.sel(plane="y", par="alpha").values]
+        )
+        beta = np.array(
+            [lat_prop._Twiss.twiss.sel(plane="x", par="beta").values,
+             lat_prop._Twiss.twiss.sel(plane="y", par="beta").values]
+        )
+        dnu = np.array(
+            [lat_prop._Twiss.twiss.sel(plane="x", par="nu").values,
+             lat_prop._Twiss.twiss.sel(plane="y", par="nu").values])
+        dmu = 2e0*np.pi*dnu
+        nu = np.array(
+            [lat_prop._Twiss.twiss.sel(plane="x", par="nu").values[-1],
+             lat_prop._Twiss.twiss.sel(plane="y", par="nu").values[-1]])
+
+        h = 0e0
+        for n in range(len(lat_prop._lattice)):
+            if type(lat_prop._lattice[n]) == ts.Sextupole:
+                m_x = i + j
+                m_y = k + l
+                n_x = i - j
+                n_y = k - l
+                L = lat_prop._lattice[n].get_length()
+                b3xL = lat_prop._lattice[n].get_multipoles(). \
+                    get_multipole(MpoleInd.sext).real*L
+                if b3xL != 0e0:
+                    h_abs = b3xL*beta[ind.X, n-1]**(m_x/2e0) \
+                        *beta[ind.Y, n-1]**(m_y/2e0)
+                    phi = n_x*dmu[ind.X, n-1] + n_y*dmu[ind.Y, n-1]
+                    h += h_abs*np.exp(1j*phi)
+
+        return np.array(h)
+
+    def compute_g_ijklm(self, i, j, k, l, m):
+        eta = np.array(
+            lat_prop._Twiss.dispersion.sel(phase_coordinate="x").values)
+        alpha = np.array(
+            [lat_prop._Twiss.twiss.sel(plane="x", par="alpha").values,
+             lat_prop._Twiss.twiss.sel(plane="y", par="alpha").values]
+        )
+        beta = np.array(
+            [lat_prop._Twiss.twiss.sel(plane="x", par="beta").values,
+             lat_prop._Twiss.twiss.sel(plane="y", par="beta").values]
+        )
+        dnu = np.array([lat_prop._Twiss.twiss.sel(plane="x", par="nu").values,
+                        lat_prop._Twiss.twiss.sel(plane="y", par="nu").values])
+        dmu = 2e0*np.pi*dnu
+        nu = np.array(
+            [lat_prop._Twiss.twiss.sel(plane="x", par="nu").values[-1],
+             lat_prop._Twiss.twiss.sel(plane="y", par="nu").values[-1]])
+
+        g_fp = 0e0
+        for n in range(len(lat_prop._lattice)):
+            if type(lat_prop._lattice[n]) == ts.Sextupole:
+                m_x = i + j
+                m_y = k + l
+                n_x = i - j
+                n_y = k - l
+                L = lat_prop._lattice[n].get_length()
+                b3xL = \
+                    lat_prop._lattice[n].get_multipoles(). \
+                    get_multipole(MpoleInd.sext).real*L
+                g_abs = b3xL*beta[ind.X, n]**(m_x/2e0)*beta[ind.Y, n]**(m_y/2e0)
+                dnu = np.pi*(n_x*nu[ind.X]+n_y*nu[ind.Y])
+                phi = n_x*dmu[ind.X, n] + n_y*dmu[ind.Y, n]
+                g_fp -= 1j*g_abs*np.exp(-1j*(phi-dnu))/np.sin(dnu)
+        return g_fp
+
+    def compute_g(self):
+        print("\nLie Generators - TPSA:")
+        self.prt_h_tpsa('g', self._g)
+
+        g = {}
+        g[(2, 1, 0, 0, 0)] =  1e0/16e0*self.compute_g_ijklm(2, 1, 0, 0, 0)
+        g[(3, 0, 0, 0, 0)] =  1e0/48e0*self.compute_g_ijklm(3, 0, 0, 0, 0)
+        g[(1, 0, 1, 1, 0)] = -1e0/8e0 *self.compute_g_ijklm(1, 0, 1, 1, 0)
+        g[(1, 0, 2, 0, 0)] = -1e0/16e0*self.compute_g_ijklm(1, 0, 2, 0, 0)
+        g[(1, 0, 0, 2, 0)] = -1e0/16e0*self.compute_g_ijklm(1, 0, 0, 2, 0)
+
+        print("\nLie Generators - FP:")
+        for key in g:
+            self.prt_h_cmplx_ijklm(
+                "g", key[0], key[1], key[2], key[3], key[4], g[key])
+
+    def prt_h_cmplx_ijklm(self, symb, i, j, k, l, m, h):
+        ind = np.array([i, j, k, l, m], dtype=int)
+        str = ""
+        for k in range(len(ind)):
+            str += chr(ord('0')+ind[k])
+        if h.imag >= 0e0:
+            sgn_h_im = '+'
+        else:
+            sgn_h_im = '-'
+        h_abs = abs(h)
+        h_arg = np.rad2deg(np.angle(h))
+        print(f"  {symb:s}_{str:s} = ({h.real:23.16e} {sgn_h_im:s}"
+              f" i{abs(h.imag):22.16e})"
+              f"  {h_abs:9.3e} |_ {h_arg:6.1f})")
+
+    def prt_h_ijklm(self, symb, i, j, k, l, m, h_re, h_im):
+        h = self.get_cmplx_h_ijklm(h_re, h_im, i, j, k, l, m)
+        self.prt_h_cmplx_ijklm(symb, i, j, k, l, m, h)
+
+    def prt_h_tpsa(self, symb, h):
+        h_re = new.tpsa()
+        h_im = new.tpsa()
+
+        h.CtoR(h_re, h_im)
+
+        print("\nDriving Terms - TPSA:")
+        self.prt_h_ijklm(symb, 2, 1, 0, 0, 0, h_re, h_im)
+        self.prt_h_ijklm(symb, 3, 0, 0, 0, 0, h_re, h_im)
+        self.prt_h_ijklm(symb, 1, 0, 1, 1, 0, h_re, h_im)
+        self.prt_h_ijklm(symb, 1, 0, 2, 0, 0, h_re, h_im)
+        self.prt_h_ijklm(symb, 1, 0, 0, 2, 0, h_re, h_im)
+
+    def prt_h_fp(self):
+        # Can't hash a list (mutable) - but can hash a tuple (immutable).
+        h = {}
+        h[(2, 1, 0, 0, 0)] = -1e0/8e0 *self.compute_h_ijklm(
+            lat_prop, 2, 1, 0, 0, 0)
+        h[(3, 0, 0, 0, 0)] = -1e0/24e0*self.compute_h_ijklm(
+            lat_prop, 3, 0, 0, 0, 0)
+        h[(1, 0, 1, 1, 0)] =  1e0/4e0 *self.compute_h_ijklm(
+            lat_prop, 1, 0, 1, 1, 0)
+        h[(1, 0, 2, 0, 0)] =  1e0/8e0 *self.compute_h_ijklm(
+            lat_prop, 1, 0, 2, 0, 0)
+        h[(1, 0, 0, 2, 0)] =  1e0/8e0 *self.compute_h_ijklm(
+            lat_prop, 1, 0, 0, 2, 0)
+
+        print("\nDriving Terms - FP:")
+        for key in h:
+            self.prt_h_cmplx_ijklm(
+                "h", key[0], key[1], key[2], key[3], key[4], h[key])
+
+
 def compute_optics(lat_prop):
     try:
         # Compute Twiss parameters along lattice.
@@ -61,23 +326,6 @@ def compute_optics(lat_prop):
             raise ValueError
     except ValueError:
         assert False
-
-
-def prt_map(map, str, *, eps: float=1e-30):
-    print(str)
-    map.x.print("x", eps)
-    map.px.print("p_x", eps)
-    map.y.print("y", eps)
-    map.py.print("p_y", eps)
-    map.delta.print("delta", eps)
-    map.ct.print("ct", eps)
-
-
-def compute_map(lat_prop):
-    M = lo.compute_map(
-        lat_prop._lattice, lat_prop._model_state, desc=lat_prop._desc,
-        tpsa_order=gtpsa_prop.no)
-    return M
 
 
 def compute_twoJ(A_max, beta_inj):
@@ -102,227 +350,6 @@ def compose_bs(h, map):
     t_map.x = h
     t_map.compose(t_map, map)
     return t_map.x.to_tpsa()
-
-
-def compute_h(M):
-    h = new.tpsa()
-    M.M_to_h_DF(h)
-    return h
-
-
-def compute_map_normal_form(M):
-    A_0 = new.ss_vect_tpsa()
-    A_1 = new.ss_vect_tpsa()
-    R   = new.ss_vect_tpsa()
-    g   = new.tpsa()
-    K   = new.tpsa()
-    M.Map_Norm(A_0, A_1, R, g, K)
-    return A_0, A_1, R, g, K
-
-
-def compute_M(K, A_0, A_1, g):
-    Id       = new.ss_vect_tpsa()
-    R        = new.ss_vect_tpsa()
-    A_0_inv  = new.ss_vect_tpsa()
-    A_1_inv  = new.ss_vect_tpsa()
-    A_nl     = new.ss_vect_tpsa()
-    A_nl_inv = new.ss_vect_tpsa()
-    M        = new.ss_vect_tpsa()
-
-    prt_map(M, "M:", eps=1e-30)
-
-    Id.set_identity()
-
-    K.h_DF_to_M(Id, 2, gtpsa_prop.no, R)
-    A_0_inv.inv(A_0)
-    A_1_inv.inv(A_1)
-    g.h_DF_to_M(Id, 3, gtpsa_prop.no, A_nl)
-    A_nl_inv.inv(A_nl)
-
-    M.compose(A_0, A_1)
-    M.compose(M, A_nl)
-    M.compose(M, R)
-    M.compose(M, A_nl_inv)
-    M.compose(M, A_1_inv)
-    M.compose(M, A_0_inv)
-    M.get_mns(1, gtpsa_prop.no-1, M)
-    
-    print("\nM:", M)
-    prt_map(M, "M:", eps=1e-30)
-
-
-def compute_R(desc, map, A_0, A_1, g, K, gtpsa_prop):
-    Id       = new.ss_vect_tpsa()
-    M        = new.ss_vect_tpsa()
-    R        = new.ss_vect_tpsa()
-    R_inv    = new.ss_vect_tpsa()
-    A_0_inv  = new.ss_vect_tpsa()
-    A_1_inv  = new.ss_vect_tpsa()
-    A_nl     = new.ss_vect_tpsa()
-    A_nl_inv = new.ss_vect_tpsa()
-
-    Id.set_identity()
-
-    M = _copy.copy(map)
-
-    K.h_DF_to_M(Id, 2, tpsa_prop.no, R)
-    R_inv.inv(R)
-    R_inv.get_mns(1, tpsa_prop.no-1, R_inv)
-    A_0_inv.inv(A_0)
-    A_1_inv.inv(A_1)
-    g.h_DF_to_M(Id, 3, tpsa_prop.no, A_nl)
-    A_nl_inv.inv(A_nl)
-
-    M.compose(M, A_0)
-    M.compose(M, A_1)
-    M.compose(M, A_nl)
-    M.compose(M, R_inv)
-    M.compose(A_0_inv, M)
-    M.compose(A_1_inv, M)
-    M.compose(A_nl_inv, M)
-    M.get_mns(1, tpsa_prop.no-1, M)
-   
-    print("\nM:", M)
-    prt_map(M, "M:", eps=1e-10)
-
-
-def get_h_ijklm(h, i, j, k, l, m):
-    return h.get([i, j, k, l, m, 0, 0])
-
-
-def get_cmplx_h_ijklm(h_re, h_im, i, j, k, l, m):
-    return complex(get_h_ijklm(h_re, i, j, k, l, m),
-                   get_h_ijklm(h_im, i, j, k, l, m))
-
-
-def compute_h_ijklm(lat_prop, i, j, k, l, m):
-    eta = np.array(lat_prop._Twiss.dispersion.sel(phase_coordinate="x").values)
-    alpha = np.array(
-        [lat_prop._Twiss.twiss.sel(plane="x", par="alpha").values,
-         lat_prop._Twiss.twiss.sel(plane="y", par="alpha").values]
-    )
-    beta = np.array([lat_prop._Twiss.twiss.sel(plane="x", par="beta").values,
-                     lat_prop._Twiss.twiss.sel(plane="y", par="beta").values]
-    )
-    dnu = np.array([lat_prop._Twiss.twiss.sel(plane="x", par="nu").values,
-                    lat_prop._Twiss.twiss.sel(plane="y", par="nu").values])
-    dmu = 2e0*np.pi*dnu
-    nu = np.array([lat_prop._Twiss.twiss.sel(plane="x", par="nu").values[-1],
-                   lat_prop._Twiss.twiss.sel(plane="y", par="nu").values[-1]])
-
-    h= 0e0
-    for n in range(len(lat_prop._lattice)):
-        if type(lat_prop._lattice[n]) == ts.Sextupole:
-            m_x = i + j
-            m_y = k + l
-            n_x = i - j
-            n_y = k - l
-            L = lat_prop._lattice[n].get_length()
-            b3xL = lat_prop._lattice[n].get_multipoles(). \
-                get_multipole(MpoleInd.sext).real*L
-            if b3xL != 0e0:
-                h_abs = b3xL*beta[ind.X, n-1]**(m_x/2e0) \
-                    *beta[ind.Y, n-1]**(m_y/2e0)
-                phi = n_x*dmu[ind.X, n-1] + n_y*dmu[ind.Y, n-1]
-                h += h_abs*np.exp(1j*phi)
-
-    return np.array(h)
-
-
-def prt_h_cmplx_ijklm(symb, i, j, k, l, m, h):
-    ind = np.array([i, j, k, l, m], dtype=int)
-    str = ""
-    for k in range(len(ind)):
-        str += chr(ord('0')+ind[k])
-    if h.imag >= 0e0:
-        sgn_h_im = '+'
-    else:
-        sgn_h_im = '-'
-    h_abs = abs(h)
-    h_arg = np.rad2deg(np.angle(h))
-    print(f"  {symb:s}_{str:s} = ({h.real:23.16e} {sgn_h_im:s}"
-          f" i{abs(h.imag):22.16e})"
-          f"  {h_abs:9.3e} |_ {h_arg:6.1f})")
-
-
-def prt_h_ijklm(symb, i, j, k, l, m, h_re, h_im):
-    h = get_cmplx_h_ijklm(h_re, h_im, i, j, k, l, m)
-    prt_h_cmplx_ijklm(symb, i, j, k, l, m, h)
-
-
-def prt_h(symb, h):
-    h_re = new.tpsa()
-    h_im = new.tpsa()
-
-    h.CtoR(h_re, h_im)
-
-    prt_h_ijklm(symb, 2, 1, 0, 0, 0, h_re, h_im)
-    prt_h_ijklm(symb, 3, 0, 0, 0, 0, h_re, h_im)
-    prt_h_ijklm(symb, 1, 0, 1, 1, 0, h_re, h_im)
-    prt_h_ijklm(symb, 1, 0, 2, 0, 0, h_re, h_im)
-    prt_h_ijklm(symb, 1, 0, 0, 2, 0, h_re, h_im)
-
-
-def prt_h_num():
-    # Can't hash a list (mutable) - but can hash a tuple (immutable).
-    h = {}
-    h[(2, 1, 0, 0, 0)] = -1e0/8e0 *compute_h_ijklm(lat_prop, 2, 1, 0, 0, 0)
-    h[(3, 0, 0, 0, 0)] = -1e0/24e0*compute_h_ijklm(lat_prop, 3, 0, 0, 0, 0)
-    h[(1, 0, 1, 1, 0)] =  1e0/4e0 *compute_h_ijklm(lat_prop, 1, 0, 1, 1, 0)
-    h[(1, 0, 2, 0, 0)] =  1e0/8e0 *compute_h_ijklm(lat_prop, 1, 0, 2, 0, 0)
-    h[(1, 0, 0, 2, 0)] =  1e0/8e0 *compute_h_ijklm(lat_prop, 1, 0, 0, 2, 0)
-
-    for key in h:
-        prt_h_cmplx_ijklm("h", key[0], key[1], key[2], key[3], key[4], h[key])
-
-        
-def compute_g_ijklm(lat_prop, i, j, k, l, m):
-    eta = np.array(lat_prop._Twiss.dispersion.sel(phase_coordinate="x").values)
-    alpha = np.array(
-        [lat_prop._Twiss.twiss.sel(plane="x", par="alpha").values,
-         lat_prop._Twiss.twiss.sel(plane="y", par="alpha").values]
-    )
-    beta = np.array([lat_prop._Twiss.twiss.sel(plane="x", par="beta").values,
-                     lat_prop._Twiss.twiss.sel(plane="y", par="beta").values]
-    )
-    dnu = np.array([lat_prop._Twiss.twiss.sel(plane="x", par="nu").values,
-                    lat_prop._Twiss.twiss.sel(plane="y", par="nu").values])
-    dmu = 2e0*np.pi*dnu
-    nu = np.array([lat_prop._Twiss.twiss.sel(plane="x", par="nu").values[-1],
-                   lat_prop._Twiss.twiss.sel(plane="y", par="nu").values[-1]])
-
-    g = 0e0
-    for n in range(len(lat_prop._lattice)):
-        if type(lat_prop._lattice[n]) == ts.Sextupole:
-            m_x = i + j
-            m_y = k + l
-            n_x = i - j
-            n_y = k - l
-            L = lat_prop._lattice[n].get_length()
-            b3xL = \
-                lat_prop._lattice[n].get_multipoles(). \
-                get_multipole(MpoleInd.sext).real*L
-            g_abs = b3xL*beta[ind.X, n]**(m_x/2e0)*beta[ind.Y, n]**(m_y/2e0)
-            dnu = np.pi*(n_x*nu[ind.X]+n_y*nu[ind.Y])
-            phi = n_x*dmu[ind.X, n] + n_y*dmu[ind.Y, n]
-            g -= 1j*g_abs*np.exp(-1j*(phi-dnu))/np.sin(dnu)
-    return g
-
-
-def compute_g(lat_prop, g_tps):
-    print("\nLie Generators - TPSA:")
-    prt_h('g', g_tps)
-
-    g = {}
-    g[(2, 1, 0, 0, 0)] =  1e0/16e0*compute_g_ijklm(lat_prop, 2, 1, 0, 0, 0)
-    g[(3, 0, 0, 0, 0)] =  1e0/48e0*compute_g_ijklm(lat_prop, 3, 0, 0, 0, 0)
-    g[(1, 0, 1, 1, 0)] = -1e0/8e0 *compute_g_ijklm(lat_prop, 1, 0, 1, 1, 0)
-    g[(1, 0, 2, 0, 0)] = -1e0/16e0*compute_g_ijklm(lat_prop, 1, 0, 2, 0, 0)
-    g[(1, 0, 0, 2, 0)] = -1e0/16e0*compute_g_ijklm(lat_prop, 1, 0, 0, 2, 0)
-
-    print("\nLie Generators - Numerical:")
-    for key in g:
-        prt_h_cmplx_ijklm("g", key[0], key[1], key[2], key[3], key[4], g[key])
 
 
 def chk_types():
@@ -566,45 +593,26 @@ if False:
     chk_compose()
     assert False
 
-M = compute_map(lat_prop)
-print("\nM:", M)
+nlbd = nonlinear_beam_dynamics(gtpsa_prop, lat_prop)
 
-if not False:
-    A     = new.ss_vect_tpsa()
-    A_inv = new.ss_vect_tpsa()
-    R_inv = new.ss_vect_tpsa()
-    M_Fl  = new.ss_vect_tpsa()
+nlbd.compute_map()
+print("\nM:", nlbd._M)
 
-    A_0, A_1, R, g, K = compute_map_normal_form(M)
-
-    A.compose(A_0, A_1)
-    A_inv.inv(A)
-    R_inv.inv(R)
-    M_Fl.compose(M, A)
-    M_Fl.compose(A_inv, M_Fl)
-
-    h = compute_h(M_Fl)
-    print("\nDriving Terms - TPSA:")
-    prt_h('h', h)
+nlbd.compute_map_normal_form()
 
 if False:
     compute_M(K, A_0, A_1, g)
 if False:
     compute_R(M, A_0, A_1, g, K)
 
-print("\nDriving Terms - Numerical:")
-prt_h_num()
+nlbd.compute_M_Fl()
 
-if False:
-    g_re = new.tpsa()
-    g_im = new.tpsa()
+h = nlbd.compute_h()
+nlbd.prt_h_tpsa('h', h)
 
-    g = g.get_mns_1(1, 3)
-    g.CtoR(g_re, g_im)
-    g_re.print("g_re")
-    g_im.print("g_im")
+nlbd.prt_h_fp()
 
-compute_g(lat_prop, g)
+nlbd.compute_g()
 
 # compute_ampl_dep_orbit_tpsa_2(g)
 
