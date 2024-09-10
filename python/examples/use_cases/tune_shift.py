@@ -235,11 +235,14 @@ def prt_h_cmplx_ijklm(symb, i, j, k, l, m, h):
     for k in range(len(ind)):
         str += chr(ord('0')+ind[k])
     if h.imag >= 0e0:
-        sgn = '+'
+        sgn_h_im = '+'
     else:
-        sgn = '-'
-    print(f"  {symb:s}_{str:s} = ({h.real:12.5e} {sgn:s} i{abs(h.imag):11.5e})"
-          f"  {abs(h):9.3e}*exp({sgn:s}i{np.rad2deg(abs(np.angle(h))):3.1f})")
+        sgn_h_im = '-'
+    h_abs = abs(h)
+    h_arg = np.rad2deg(np.angle(h))
+    print(f"  {symb:s}_{str:s} = ({h.real:23.16e} {sgn_h_im:s}"
+          f" i{abs(h.imag):22.16e})"
+          f"  {h_abs:9.3e} |_ {h_arg:6.1f})")
 
 
 def prt_h_ijklm(symb, i, j, k, l, m, h_re, h_im):
@@ -300,11 +303,9 @@ def compute_g_ijklm(lat_prop, i, j, k, l, m):
                 lat_prop._lattice[n].get_multipoles(). \
                 get_multipole(MpoleInd.sext).real*L
             g_abs = b3xL*beta[ind.X, n]**(m_x/2e0)*beta[ind.Y, n]**(m_y/2e0)
-            phi = n_x*dmu[ind.X, n] + n_y*dmu[ind.Y, n]
-            # -0.71
-            # +0.1004
-            dphi = 0.1004*2e0*np.pi*(n_x*nu[ind.X]+n_y*nu[ind.Y])
-            g += g_abs*np.exp(-1j*(phi)) \
+            phi = n_x*(dmu[ind.X, n]-np.pi*nu[ind.X]) \
+                + n_y*(dmu[ind.Y, n]-np.pi*nu[ind.Y])
+            g += 1j*g_abs*np.exp(-1j*(phi)) \
                 /np.sin(np.pi*(n_x*nu[ind.X]+n_y*nu[ind.Y]))
     return g
 
@@ -572,18 +573,34 @@ print("\nM:", M)
 if not False:
     A     = new.ss_vect_tpsa()
     A_inv = new.ss_vect_tpsa()
+    R_inv = new.ss_vect_tpsa()
     M_Fl  = new.ss_vect_tpsa()
 
     A_0, A_1, R, g, K = compute_map_normal_form(M)
 
     A.compose(A_0, A_1)
     A_inv.inv(A)
+    R_inv.inv(R)
     M_Fl.compose(M, A)
     M_Fl.compose(A_inv, M_Fl)
 
     h = compute_h(M_Fl)
     print("\nDriving Terms - TPSA:")
     prt_h('h', h)
+
+if False:
+    Id      = new.ss_vect_tpsa()
+    g_fp    = new.tpsa()
+    g_fp_re = new.tpsa()
+    g_fp_im = new.tpsa()
+
+    Id.set_identity()
+    op = Id - R_inv
+    op.pinv(op, [1, 1, 1, 1, 0, 0, 0])
+    g_fp = compose_bs(h, op)
+    g_fp.get_mns_1(1, 3)
+    print("\nLie Generators - TPSA:")
+    prt_h('g', g_fp)
 
 if False:
     compute_M(K, A_0, A_1, g)
