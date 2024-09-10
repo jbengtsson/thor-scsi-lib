@@ -49,13 +49,38 @@ class new():
 class nonlinear_beam_dynamics:
     # Private.
     def __init__(self, gtpsa_prop, lat_prop):
-
+        # GTPSA parameters.
         self._gtpsa_prop = gtpsa_prop
+
+        # Lattice properties.
         self._lat_prop   = lat_prop
+
+        # Linear optics.
+        self._eta = np.array(
+            lat_prop._Twiss.dispersion.sel(phase_coordinate="x").values)
+        self._alpha = np.array(
+            [lat_prop._Twiss.twiss.sel(plane="x", par="alpha").values,
+             lat_prop._Twiss.twiss.sel(plane="y", par="alpha").values]
+        )
+        self._beta = np.array(
+            [lat_prop._Twiss.twiss.sel(plane="x", par="beta").values,
+             lat_prop._Twiss.twiss.sel(plane="y", par="beta").values]
+        )
+        self._dnu = np.array(
+            [lat_prop._Twiss.twiss.sel(plane="x", par="nu").values,
+             lat_prop._Twiss.twiss.sel(plane="y", par="nu").values])
+        self._dmu = 2e0*np.pi*self._dnu
+        self._nu = np.array(
+            [lat_prop._Twiss.twiss.sel(plane="x", par="nu").values[-1],
+             lat_prop._Twiss.twiss.sel(plane="y", par="nu").values[-1]])
+
+        # Identity map.
         self._Id         = new.ss_vect_tpsa()
 
+        # Poincaré map.
         self._M          = np.nan
 
+        # Map normal form.
         self._A_0        = new.ss_vect_tpsa()
         self._A_0_inv    = new.ss_vect_tpsa()
         self._A_1        = new.ss_vect_tpsa()
@@ -69,6 +94,7 @@ class nonlinear_beam_dynamics:
         self._g          = new.tpsa()
         self._K          = new.tpsa()
 
+        # Map in Floquet space.
         self._M_Fl       = np.nan
 
     # Public.
@@ -172,80 +198,45 @@ class nonlinear_beam_dynamics:
         prt_map(M, "M:", eps=1e-10)
 
     def compute_h_ijklm(self, lat_prop, i, j, k, l, m):
-        eta = np.array(
-            lat_prop._Twiss.dispersion.sel(phase_coordinate="x").values)
-        alpha = np.array(
-            [lat_prop._Twiss.twiss.sel(plane="x", par="alpha").values,
-             lat_prop._Twiss.twiss.sel(plane="y", par="alpha").values]
-        )
-        beta = np.array(
-            [lat_prop._Twiss.twiss.sel(plane="x", par="beta").values,
-             lat_prop._Twiss.twiss.sel(plane="y", par="beta").values]
-        )
-        dnu = np.array(
-            [lat_prop._Twiss.twiss.sel(plane="x", par="nu").values,
-             lat_prop._Twiss.twiss.sel(plane="y", par="nu").values])
-        dmu = 2e0*np.pi*dnu
-        nu = np.array(
-            [lat_prop._Twiss.twiss.sel(plane="x", par="nu").values[-1],
-             lat_prop._Twiss.twiss.sel(plane="y", par="nu").values[-1]])
-
+        m_x = i + j
+        m_y = k + l
+        n_x = i - j
+        n_y = k - l
         h = 0e0
-        for n in range(len(lat_prop._lattice)):
-            if type(lat_prop._lattice[n]) == ts.Sextupole:
-                m_x = i + j
-                m_y = k + l
-                n_x = i - j
-                n_y = k - l
-                L = lat_prop._lattice[n].get_length()
-                b3xL = lat_prop._lattice[n].get_multipoles(). \
+        for n, ele in enumerate(lat_prop._lattice):
+            if type(ele) == ts.Sextupole:
+                L = ele.get_length()
+                b3xL = ele.get_multipoles(). \
                     get_multipole(MpoleInd.sext).real*L
                 if b3xL != 0e0:
-                    h_abs = b3xL*beta[ind.X, n-1]**(m_x/2e0) \
-                        *beta[ind.Y, n-1]**(m_y/2e0)
-                    phi = n_x*dmu[ind.X, n-1] + n_y*dmu[ind.Y, n-1]
+                    h_abs = b3xL*self._beta[ind.X, n-1]**(m_x/2e0) \
+                        *self._beta[ind.Y, n-1]**(m_y/2e0)
+                    phi = n_x*self._dmu[ind.X, n-1] + n_y*self._dmu[ind.Y, n-1]
                     h += h_abs*np.exp(1j*phi)
 
         return np.array(h)
 
     def compute_g_ijklm(self, i, j, k, l, m):
-        eta = np.array(
-            lat_prop._Twiss.dispersion.sel(phase_coordinate="x").values)
-        alpha = np.array(
-            [lat_prop._Twiss.twiss.sel(plane="x", par="alpha").values,
-             lat_prop._Twiss.twiss.sel(plane="y", par="alpha").values]
-        )
-        beta = np.array(
-            [lat_prop._Twiss.twiss.sel(plane="x", par="beta").values,
-             lat_prop._Twiss.twiss.sel(plane="y", par="beta").values]
-        )
-        dnu = np.array([lat_prop._Twiss.twiss.sel(plane="x", par="nu").values,
-                        lat_prop._Twiss.twiss.sel(plane="y", par="nu").values])
-        dmu = 2e0*np.pi*dnu
-        nu = np.array(
-            [lat_prop._Twiss.twiss.sel(plane="x", par="nu").values[-1],
-             lat_prop._Twiss.twiss.sel(plane="y", par="nu").values[-1]])
-
+        m_x = i + j
+        m_y = k + l
+        n_x = i - j
+        n_y = k - l
         g_fp = 0e0
-        for n in range(len(lat_prop._lattice)):
-            if type(lat_prop._lattice[n]) == ts.Sextupole:
-                m_x = i + j
-                m_y = k + l
-                n_x = i - j
-                n_y = k - l
-                L = lat_prop._lattice[n].get_length()
+        for n, ele in enumerate(lat_prop._lattice):
+            if type(ele) == ts.Sextupole:
+                L = ele.get_length()
                 b3xL = \
-                    lat_prop._lattice[n].get_multipoles(). \
+                    ele.get_multipoles(). \
                     get_multipole(MpoleInd.sext).real*L
-                g_abs = b3xL*beta[ind.X, n]**(m_x/2e0)*beta[ind.Y, n]**(m_y/2e0)
-                dnu = np.pi*(n_x*nu[ind.X]+n_y*nu[ind.Y])
-                phi = n_x*dmu[ind.X, n] + n_y*dmu[ind.Y, n]
+                g_abs = b3xL*self._beta[ind.X, n]**(m_x/2e0) \
+                    *self._beta[ind.Y, n]**(m_y/2e0)
+                dnu = np.pi*(n_x*self._nu[ind.X]+n_y*self._nu[ind.Y])
+                phi = n_x*self._dmu[ind.X, n] + n_y*self._dmu[ind.Y, n]
                 g_fp -= 1j*g_abs*np.exp(-1j*(phi-dnu))/np.sin(dnu)
         return g_fp
 
     def compute_g(self):
-        print("\nLie Generators - TPSA:")
-        self.prt_h_tpsa('g', self._g)
+        self.prt_h_tpsa("\nLie Generators - TPSA:", 'g', self._g)
 
         g = {}
         g[(2, 1, 0, 0, 0)] =  1e0/16e0*self.compute_g_ijklm(2, 1, 0, 0, 0)
@@ -262,7 +253,7 @@ class nonlinear_beam_dynamics:
     def prt_h_cmplx_ijklm(self, symb, i, j, k, l, m, h):
         ind = np.array([i, j, k, l, m], dtype=int)
         str = ""
-        for k in range(len(ind)):
+        for k in ind:
             str += chr(ord('0')+ind[k])
         if h.imag >= 0e0:
             sgn_h_im = '+'
@@ -278,20 +269,20 @@ class nonlinear_beam_dynamics:
         h = self.get_cmplx_h_ijklm(h_re, h_im, i, j, k, l, m)
         self.prt_h_cmplx_ijklm(symb, i, j, k, l, m, h)
 
-    def prt_h_tpsa(self, symb, h):
+    def prt_h_tpsa(self, title, symb, h):
         h_re = new.tpsa()
         h_im = new.tpsa()
 
         h.CtoR(h_re, h_im)
 
-        print("\nDriving Terms - TPSA:")
+        print(title)
         self.prt_h_ijklm(symb, 2, 1, 0, 0, 0, h_re, h_im)
         self.prt_h_ijklm(symb, 3, 0, 0, 0, 0, h_re, h_im)
         self.prt_h_ijklm(symb, 1, 0, 1, 1, 0, h_re, h_im)
         self.prt_h_ijklm(symb, 1, 0, 2, 0, 0, h_re, h_im)
         self.prt_h_ijklm(symb, 1, 0, 0, 2, 0, h_re, h_im)
 
-    def prt_h_fp(self):
+    def prt_h_fp(self, title):
         # Can't hash a list (mutable) - but can hash a tuple (immutable).
         h = {}
         h[(2, 1, 0, 0, 0)] = -1e0/8e0 *self.compute_h_ijklm(
@@ -305,7 +296,7 @@ class nonlinear_beam_dynamics:
         h[(1, 0, 0, 2, 0)] =  1e0/8e0 *self.compute_h_ijklm(
             lat_prop, 1, 0, 0, 2, 0)
 
-        print("\nDriving Terms - FP:")
+        print(title)
         for key in h:
             self.prt_h_cmplx_ijklm(
                 "h", key[0], key[1], key[2], key[3], key[4], h[key])
@@ -608,9 +599,9 @@ if False:
 nlbd.compute_M_Fl()
 
 h = nlbd.compute_h()
-nlbd.prt_h_tpsa('h', h)
+nlbd.prt_h_tpsa("\nDriving Terms - TPSA:", 'h', h)
 
-nlbd.prt_h_fp()
+nlbd.prt_h_fp("\nDriving Terms - FP:")
 
 nlbd.compute_g()
 
