@@ -114,12 +114,12 @@ class nonlinear_beam_dynamics:
         self._map.delta.print("delta", eps)
         self._map.ct.print("ct", eps)
 
-    def get_f_ijklm(self, f, i, j, k, l, m):
-        return f.get([i, j, k, l, m, 0, 0])
+    def get_f_I(self, f, I):
+        return f.get([I[0], I[1], I[2], I[3], I[4], 0, 0])
 
-    def get_cmplx_f_ijklm(self, f_re, f_im, i, j, k, l, m):
-        return complex(self.get_f_ijklm(f_re, i, j, k, l, m),
-                       self.get_f_ijklm(f_im, i, j, k, l, m))
+    def get_cmplx_f_I(self, f_re, f_im, I):
+        return complex(self.get_f_I(f_re, I),
+                       self.get_f_I(f_im, I))
 
     def compute_h_tpsa(self):
         h_tpsa = new.tpsa()
@@ -163,7 +163,7 @@ class nonlinear_beam_dynamics:
         print("\nM:", M)
         prt_map(M, "M:", eps=1e-30)
 
-    def compute_R_from_MNF(self, desc, map, A_0, A_1, g, K, gtpsa_prop):
+    def compute_R_from_MNF(self, map, A_0, A_1, g, K):
         Id       = new.ss_vect_tpsa()
         M        = new.ss_vect_tpsa()
         R        = new.ss_vect_tpsa()
@@ -197,13 +197,13 @@ class nonlinear_beam_dynamics:
         print("\nM:", M)
         prt_map(M, "M:", eps=1e-10)
 
-    def compute_h_ijklm(self, lat_prop, i, j, k, l, m):
-        m_x = i + j
-        m_y = k + l
-        n_x = i - j
-        n_y = k - l
-        h_ijklm = 0e0
-        for n, ele in enumerate(lat_prop._lattice):
+    def compute_h_I(self, I):
+        m_x = I[0] + I[1]
+        m_y = I[2] + I[3]
+        n_x = I[0] - I[1]
+        n_y = I[2] - I[3]
+        h_I = 0e0
+        for n, ele in enumerate(self._lat_prop._lattice):
             if type(ele) == ts.Sextupole:
                 L = ele.get_length()
                 b3xL = ele.get_multipoles(). \
@@ -212,58 +212,53 @@ class nonlinear_beam_dynamics:
                     h_abs = b3xL*self._beta[ind.X, n-1]**(m_x/2e0) \
                         *self._beta[ind.Y, n-1]**(m_y/2e0)
                     phi = n_x*self._dmu[ind.X, n-1] + n_y*self._dmu[ind.Y, n-1]
-                    h_ijklm += h_abs*np.exp(1j*phi)
+                    h_I += h_abs*np.exp(1j*phi)
 
-        return h_ijklm
+        return h_I
 
     def compute_h_fp(self):
         # Can't hash a list (mutable) - but can hash a tuple (immutable).
         h_fp = {}
-        h_fp[(2, 1, 0, 0, 0)] = -1e0/8e0 *self.compute_h_ijklm(
-            lat_prop, 2, 1, 0, 0, 0)
-        h_fp[(3, 0, 0, 0, 0)] = -1e0/24e0*self.compute_h_ijklm(
-            lat_prop, 3, 0, 0, 0, 0)
-        h_fp[(1, 0, 1, 1, 0)] =  1e0/4e0 *self.compute_h_ijklm(
-            lat_prop, 1, 0, 1, 1, 0)
-        h_fp[(1, 0, 2, 0, 0)] =  1e0/8e0 *self.compute_h_ijklm(
-            lat_prop, 1, 0, 2, 0, 0)
-        h_fp[(1, 0, 0, 2, 0)] =  1e0/8e0 *self.compute_h_ijklm(
-            lat_prop, 1, 0, 0, 2, 0)
+        h_fp[(2, 1, 0, 0, 0)] = -1e0/8e0 *self.compute_h_I([2, 1, 0, 0, 0])
+        h_fp[(3, 0, 0, 0, 0)] = -1e0/24e0*self.compute_h_I([3, 0, 0, 0, 0])
+        h_fp[(1, 0, 1, 1, 0)] =  1e0/4e0 *self.compute_h_I([1, 0, 1, 1, 0])
+        h_fp[(1, 0, 2, 0, 0)] =  1e0/8e0 *self.compute_h_I([1, 0, 2, 0, 0])
+        h_fp[(1, 0, 0, 2, 0)] =  1e0/8e0 *self.compute_h_I([1, 0, 0, 2, 0])
         return h_fp
 
-    def compute_g_ijklm(self, i, j, k, l, m):
-        m_x = i + j
-        m_y = k + l
-        n_x = i - j
-        n_y = k - l
-        g_fp_ijklm = 0e0
-        for n, ele in enumerate(lat_prop._lattice):
+    def compute_g_I(self, j, I):
+        m_x = I[0] + I[1]
+        m_y = I[2] + I[3]
+        n_x = I[0] - I[1]
+        n_y = I[2] - I[3]
+        g_fp_I = 0e0
+        for k, ele in enumerate(self._lat_prop._lattice):
             if type(ele) == ts.Sextupole:
                 L = ele.get_length()
                 b3xL = \
                     ele.get_multipoles(). \
                     get_multipole(MpoleInd.sext).real*L
-                g_abs = b3xL*self._beta[ind.X, n]**(m_x/2e0) \
-                    *self._beta[ind.Y, n]**(m_y/2e0)
+                g_abs = b3xL*self._beta[ind.X, k-1]**(m_x/2e0) \
+                    *self._beta[ind.Y, k-1]**(m_y/2e0)
+                phi = n_x*(self._dmu[ind.X, k-1]-self._dmu[ind.X, j]) \
+                    + n_y*(self._dmu[ind.Y, k-1]-self._dmu[ind.Y, j])
                 dnu = np.pi*(n_x*self._nu[ind.X]+n_y*self._nu[ind.Y])
-                phi = n_x*self._dmu[ind.X, n] + n_y*self._dmu[ind.Y, n]
-                g_fp_ijklm -= 1j*g_abs*np.exp(1j*(phi-dnu))/np.sin(dnu)
-        return g_fp_ijklm
+                g_fp_I -= 1j*g_abs*np.exp(1j*(phi-dnu))/np.sin(dnu)
+        return g_fp_I
 
-    def compute_g_fp(self):
+    def compute_g_fp(self, j):
         g_fp = {}
-        g_fp[(2, 1, 0, 0, 0)] =  1e0/16e0*self.compute_g_ijklm(2, 1, 0, 0, 0)
-        g_fp[(3, 0, 0, 0, 0)] =  1e0/48e0*self.compute_g_ijklm(3, 0, 0, 0, 0)
-        g_fp[(1, 0, 1, 1, 0)] = -1e0/8e0 *self.compute_g_ijklm(1, 0, 1, 1, 0)
-        g_fp[(1, 0, 2, 0, 0)] = -1e0/16e0*self.compute_g_ijklm(1, 0, 2, 0, 0)
-        g_fp[(1, 0, 0, 2, 0)] = -1e0/16e0*self.compute_g_ijklm(1, 0, 0, 2, 0)
+        g_fp[(2, 1, 0, 0, 0)] =  1e0/16e0*self.compute_g_I(j, [2, 1, 0, 0, 0])
+        g_fp[(3, 0, 0, 0, 0)] =  1e0/48e0*self.compute_g_I(j, [3, 0, 0, 0, 0])
+        g_fp[(1, 0, 1, 1, 0)] = -1e0/8e0 *self.compute_g_I(j, [1, 0, 1, 1, 0])
+        g_fp[(1, 0, 2, 0, 0)] = -1e0/16e0*self.compute_g_I(j, [1, 0, 2, 0, 0])
+        g_fp[(1, 0, 0, 2, 0)] = -1e0/16e0*self.compute_g_I(j, [1, 0, 0, 2, 0])
         return g_fp
 
-    def prt_f_cmplx_ijklm(self, symb, i, j, k, l, m, f):
-        ind = np.array([i, j, k, l, m], dtype=int)
+    def prt_f_cmplx_I(self, symb, I, f):
         str = ""
-        for k in ind:
-            str += chr(ord('0')+ind[k])
+        for k in I:
+            str += chr(ord('0')+k)
         if f.imag >= 0e0:
             sgn_f_im = '+'
         else:
@@ -274,9 +269,9 @@ class nonlinear_beam_dynamics:
               f" i{abs(f.imag):22.16e})"
               f"  {f_abs:9.3e} |_ {f_arg:6.1f})")
 
-    def prt_f_ijklm(self, symb, i, j, k, l, m, f_re, f_im):
-        f = self.get_cmplx_f_ijklm(f_re, f_im, i, j, k, l, m)
-        self.prt_f_cmplx_ijklm(symb, i, j, k, l, m, f)
+    def prt_f_I(self, symb, I, f_re, f_im):
+        f = self.get_cmplx_f_I(f_re, f_im, I)
+        self.prt_f_cmplx_I(symb, I, f)
 
     def prt_f_tpsa(self, title, symb, f_tpsa):
         f_re = new.tpsa()
@@ -285,19 +280,32 @@ class nonlinear_beam_dynamics:
         f_tpsa.CtoR(f_re, f_im)
 
         print(title)
-        self.prt_f_ijklm(symb, 2, 1, 0, 0, 0, f_re, f_im)
-        self.prt_f_ijklm(symb, 3, 0, 0, 0, 0, f_re, f_im)
-        self.prt_f_ijklm(symb, 1, 0, 1, 1, 0, f_re, f_im)
-        self.prt_f_ijklm(symb, 1, 0, 2, 0, 0, f_re, f_im)
-        self.prt_f_ijklm(symb, 1, 0, 0, 2, 0, f_re, f_im)
+        self.prt_f_I(symb, [2, 1, 0, 0, 0], f_re, f_im)
+        self.prt_f_I(symb, [3, 0, 0, 0, 0], f_re, f_im)
+        self.prt_f_I(symb, [1, 0, 1, 1, 0], f_re, f_im)
+        self.prt_f_I(symb, [1, 0, 2, 0, 0], f_re, f_im)
+        self.prt_f_I(symb, [1, 0, 0, 2, 0], f_re, f_im)
 
     def prt_f_fp(self, title, symb, f_fp):
         print(title)
         for key, value in f_fp.items():
-            self.prt_f_cmplx_ijklm(
-                symb, key[0], key[1], key[2], key[3], key[4], value)
+            self.prt_f_cmplx_I(symb, key, value)
 
 
+    def dnudJ(self):
+        a_xx = 0e0
+        for j, ele in enumerate(self._lat_prop._lattice):
+            if type(ele) == ts.Sextupole:
+                L = ele.get_length()
+                g_k = compute_g_fp()
+                b3xL = ele.get_multipoles(). \
+                    get_multipole(MpoleInd.sext).real*L
+                if b3xL != 0e0:
+                    g_k = compute_g_fp(j)
+                    a_xx -= b3xL*self._beta[ind.X, j-1]*g_k[3, 0, 0, 0, 0]
+
+        return a_xx/(2e0*np.pi)
+        
 
 def compute_optics(lat_prop):
     try:
@@ -580,7 +588,7 @@ h_fp = nlbd.compute_h_fp()
 nlbd.prt_f_fp("\nDriving Terms - FP:", 'h', h_fp)
 
 nlbd.prt_f_tpsa("\nLie Generators - TPSA:", 'g', nlbd._g)
-g_fp = nlbd.compute_g_fp()
+g_fp = nlbd.compute_g_fp(0)
 nlbd.prt_f_fp("\nLie Generators - FP:", 'g', g_fp)
 
 # compute_ampl_dep_orbit_tpsa_2(g)
