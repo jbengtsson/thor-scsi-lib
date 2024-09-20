@@ -12,12 +12,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 import gtpsa
-import thor_scsi.lib as ts
 
 from thor_scsi.utils import lattice_properties as lp, closed_orbit as co, \
     index_class as ind
-
-from thor_scsi.utils.output import mat2txt
 
 
 ind = ind.index_class()
@@ -129,7 +126,14 @@ class beam_dyn_class:
             ps_tpsa.compose(self._M, ps_tpsa)
             ct_tpsa = ps_tpsa.cst().ct
 
-            ps_fp.set_zero()
+            # Compute closed orbit.
+            cod = co.compute_closed_orbit(
+                lat_prop._lattice, lat_prop._model_state, delta=delta,
+                eps=1e-10, desc=gtpsa_prop.desc)
+            print("\n  cod = ", cod.x0)
+            assert False
+
+            ps_fp = cod.x0
             ps_fp.delta = delta
             lat_prop._lattice.propagate(lat_prop._model_state, ps_fp)
             ct_fp = ps_fp.ct
@@ -205,6 +209,8 @@ def compute_optics(lat_prop):
     except ValueError:
         assert False
 
+
+# Main program.
 
 cod_eps = 1e-15
 E_0     = 3.0e9
