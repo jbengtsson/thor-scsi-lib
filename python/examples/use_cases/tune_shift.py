@@ -97,6 +97,8 @@ class nonlinear_beam_dynamics:
         # Map in Floquet space.
         self._M_Fl       = np.nan
 
+        self._Id.set_identity()
+
     # Public.
 
     def compute_map(self):
@@ -123,6 +125,7 @@ class nonlinear_beam_dynamics:
 
     def compute_h_tpsa(self):
         h_tpsa = new.tpsa()
+        self.compute_M_Fl()
         self._M_Fl.M_to_h_DF(h_tpsa)
         return h_tpsa
 
@@ -238,12 +241,13 @@ class nonlinear_beam_dynamics:
                 b3xL = \
                     ele.get_multipoles(). \
                     get_multipole(MpoleInd.sext).real*L
-                g_abs = b3xL*self._beta[ind.X, k-1]**(m_x/2e0) \
-                    *self._beta[ind.Y, k-1]**(m_y/2e0)
-                phi = n_x*(self._dmu[ind.X, k-1]-self._dmu[ind.X, j]) \
-                    + n_y*(self._dmu[ind.Y, k-1]-self._dmu[ind.Y, j])
-                dnu = np.pi*(n_x*self._nu[ind.X]+n_y*self._nu[ind.Y])
-                g_fp_I -= 1j*g_abs*np.exp(1j*(phi-dnu))/np.sin(dnu)
+                if (b3xL != 0e0):
+                    g_abs = b3xL*self._beta[ind.X, k-1]**(m_x/2e0) \
+                        *self._beta[ind.Y, k-1]**(m_y/2e0)
+                    phi = n_x*(self._dmu[ind.X, k-1]-self._dmu[ind.X, j-1]) \
+                        + n_y*(self._dmu[ind.Y, k-1]-self._dmu[ind.Y, j-1])
+                    dnu = np.pi*(n_x*self._nu[ind.X]+n_y*self._nu[ind.Y])
+                    g_fp_I -= 1j*g_abs*np.exp(1j*(phi-dnu))/np.sin(dnu)
         return g_fp_I
 
     def compute_g_fp(self, j):
@@ -291,20 +295,104 @@ class nonlinear_beam_dynamics:
         for key, value in f_fp.items():
             self.prt_f_cmplx_I(symb, key, value)
 
+    def compute_dq_dJ_tpsa(self):
+        x = new.tpsa()
+        x_re = new.tpsa()
+        x_im = new.tpsa()
 
-    def dnudJ(self):
-        a_xx = 0e0
+        x = self._g.poisbra(self._Id.x.to_tpsa(), 4)
+        x.CtoR(x_re, x_im)
+        x = complex(x_re.get([1, 1, 0, 0, 0]), x_im.get([1, 1, 0, 0, 0]))
+        print(f"\n  x_11000 = {x:21.3e}")
+        x = complex(x_re.get([0, 0, 1, 1, 0]), x_im.get([0, 0, 1, 1, 0]))
+        print(f"  x_00110 = {x:21.3e}")
+
+        x = self._g.poisbra(self._Id.x.to_tpsa()**3, 4)
+        x.CtoR(x_re, x_im)
+        x = complex(x_re.get([2, 2, 0, 0, 0]), x_im.get([2, 2, 0, 0, 0]))
+        print(f"  x_22000 = {x:21.3e}")
+
+        x = self._g.poisbra(self._Id.x.to_tpsa()*self._Id.y.to_tpsa()**2, 4)
+        x.CtoR(x_re, x_im)
+        x = complex(x_re.get([1, 1, 1, 1, 0]), x_im.get([1, 1, 1, 1, 0]))
+        print(f"  x_11110 = {x:21.3e}")
+        x = complex(x_re.get([0, 0, 2, 2, 0]), x_im.get([0, 0, 2, 2, 0]))
+        print(f"  x_00220 = {x:21.3e}")
+
+    def compute_dq_dJ_fp_I(self, j, I):
+        m_x = I[0] + I[1]
+        m_y = I[2] + I[3]
+        n_x = I[0] - I[1]
+        n_y = I[2] - I[3]
+        h_I = 0e0
+        dq = 0e0
+        for k, ele in enumerate(self._lat_prop._lattice):
+            if type(ele) == ts.Sextupole:
+                L = ele.get_length()
+                b3xL = \
+                    ele.get_multipoles(). \
+                    get_multipole(MpoleInd.sext).real*L
+                if (b3xL != 0e0):
+                    dq_abs = b3xL*self._beta[ind.X, k-1]**(m_x/2e0) \
+                        *self._beta[ind.Y, k-1]**(m_y/2e0)
+                    phi = abs(n_x*(self._dmu[ind.X, k-1]-self._dmu[ind.X, j-1])
+                              + n_y*(self._dmu[ind.Y, k-1]
+                                     -self._dmu[ind.Y, j-1]))
+                    dnu = np.pi*(n_x*self._nu[ind.X]+n_y*self._nu[ind.Y])
+                    dq += dq_abs*np.cos((phi-dnu))/np.sin(dnu)
+        return dq
+        
+    def compute_dq_dJ_fp(self, j):
+        Id = new.ss_vect_tpsa()
+        
+        Id.set_identity()
+
+        dq = -np.sqrt(self._beta[ind.X, j-1])*(
+            nlbd.compute_dq_dJ_fp_I(1, [2, 1, 0, 0, 0])
+            *Id.x.to_tpsa()*Id.px.to_tpsa()
+            -nlbd.compute_dq_dJ_fp_I(1, [1, 0, 1, 1, 0])
+            *Id.y.to_tpsa()*Id.py.to_tpsa()
+        )/8e0
+
+        dq -= 3e0*self._beta[ind.X, j-1] \
+            *nlbd.compute_dq_dJ_fp_I(1, [3, 0, 0, 0, 0])/16e0 \
+            *Id.x.to_tpsa()**2*Id.px.to_tpsa()**2
+
+        # dq -= self._beta[ind.X, j-1]*(
+        #     nlbd.compute_dq_dJ_fp_I(1, [1, 0, 2, 0, 0])
+        #     +1e0*nlbd.compute_dq_dJ_fp_I(1, [1, 0, 1, 1, 0]) \
+        #     -nlbd.compute_dq_dJ_fp_I(1, [1, 0, 0, 2, 0])) \
+        #     *Id.y.to_tpsa()**2/16e0
+            # *Id.y.to_tpsa()**2*Id.py.to_tpsa()**2
+
+        return dq
+
+    def compute_dnu_dJ(self):
+        a = np.zeros(3, dtype=complex)
+        a_k = np.zeros(3, dtype=complex)
         for j, ele in enumerate(self._lat_prop._lattice):
             if type(ele) == ts.Sextupole:
                 L = ele.get_length()
-                g_k = compute_g_fp()
                 b3xL = ele.get_multipoles(). \
                     get_multipole(MpoleInd.sext).real*L
                 if b3xL != 0e0:
-                    g_k = compute_g_fp(j)
-                    a_xx -= b3xL*self._beta[ind.X, j-1]*g_k[3, 0, 0, 0, 0]
+                    g_k = self.compute_g_fp(j)
+                    a[0] -= b3xL*self._beta[ind.X, j-1] \
+                        *(g_k[2, 1, 0, 0, 0]+g_k[3, 0, 0, 0, 0])
+                    a[1] -= b3xL*(
+                        self._beta[ind.X, j-1]*g_k[1, 0, 1, 1, 0]
+                        -self._beta[ind.Y, j-1]
+                        *(g_k[1, 0, 2, 0, 0]+g_k[1, 0, 0, 2, 0]))
+                    a[2] += b3xL*(
+                        self._beta[ind.Y, j-1]*(
+                            g_k[1, 0, 1, 1, 0]+g_k[1, 0, 2, 0, 0]
+                            +g_k[1, 0, 0, 2, 0]))
 
-        return a_xx/(2e0*np.pi)
+                    a_k[0] += b3xL*(self._beta[ind.Y, j-1]*g_k[1, 0, 1, 1, 0])
+                    a_k[1] += b3xL*(self._beta[ind.Y, j-1]*g_k[1, 0, 2, 0, 0])
+                    a_k[2] += b3xL*(self._beta[ind.Y, j-1]*g_k[1, 0, 0, 2, 0])
+
+        return a/(2e0*np.pi), a_k/(2e0*np.pi)
         
 
 def compute_optics(lat_prop):
@@ -368,7 +456,21 @@ def chk_Poisson_bracket():
     Id = new.ss_vect_tpsa()
     Id.set_identity()
 
-    ps_dim = 6
+    ps_dim = 4
+
+    f = Id.x.to_tpsa()*Id.y.to_tpsa()**2
+    g = Id.px.to_tpsa()*Id.py.to_tpsa()**2
+    f.poisbra(g, ps_dim).print("[f, g]")
+
+    f = Id.x.to_tpsa()*Id.py.to_tpsa()**2
+    g = Id.px.to_tpsa()*Id.y.to_tpsa()**2
+    f.poisbra(g, ps_dim).print("[f, g]")
+
+    f = Id.x.to_tpsa()**2*Id.px.to_tpsa()
+    g = Id.px.to_tpsa()*Id.py.to_tpsa()*Id.y.to_tpsa()
+    f.poisbra(g, ps_dim).print("[f, g]")
+
+    assert False
 
     Id.x.to_tpsa().poisbra(Id.px.to_tpsa(), ps_dim).print("[x, p_x]")
     Id.px.to_tpsa().poisbra(Id.x.to_tpsa(), ps_dim).print("[p_x, x]")
@@ -386,7 +488,7 @@ def chk_Poisson_bracket():
         print("[x^3, x]", 1e-11)
     pow(Id.x.to_tpsa(), 3).poisbra(Id.px.to_tpsa(), ps_dim). \
         print("[x^3, p_x]", 1e-11)
-    pow(Id.x.to_tpsa(), 3).poisbra(pow(Id.x.to_tpsa(), 2)
+    pow(Id.x.to_tpsa(), 3).poisbra(pow(Id.x.to_tpsa(), ps_dun)
                                    *Id.px.to_tpsa(), ps_dim). \
         print("[x^3,  x*p_x^2]", 1e-11)
 
@@ -413,18 +515,9 @@ def chk_compose():
 
 
 def pb(f, g):
+    n_dof = 2
     a = new.tpsa()
-    ps_dim = 6
-    for k in range(ps_dim):
-        print("k =", k)
-        fp = f.deriv(2*k+2)
-        gp = g.deriv(2*k+1)
-        print(fp.get_description())
-        print(gp.get_description())
-        fp.print("fp", 1e-11)
-        gp.print("gp", 1e-11)
-        fxg = fp*gp
-        fxg.print("fxg", 1e-11)
+    for k in range(n_dof):
         a += f.deriv(2*k+1)*g.deriv(2*k+2) - f.deriv(2*k+2)*g.deriv(2*k+1)
     return a
 
@@ -530,7 +623,7 @@ def compute_ampl_dep_orbit_tpsa_2(g):
     print(f"  s_00220   = {s_00220:10.3e}")
 
 
-gtpsa_prop.no = 5
+gtpsa_prop.no = 4
 gtpsa_prop.desc = gtpsa.desc(gtpsa_prop.nv, gtpsa_prop.no)
 
 cod_eps = 1e-15
@@ -573,23 +666,48 @@ print("\nM:", nlbd._M)
 
 nlbd.compute_map_normal_form()
 
+K_re = new.tpsa()
+K_im = new.tpsa()
+nlbd._K.CtoR(K_re, K_im)
+K_re.print("K_re")
+
 if False:
     compute_M_from_MNF(K, A_0, A_1, g)
 if False:
     compute_R_from_MNF(M, A_0, A_1, g, K)
 
-nlbd.compute_M_Fl()
-print("\nM_Fl:", nlbd._M_Fl)
+nlbd.compute_dq_dJ_tpsa()
+
+dq = nlbd.compute_dq_dJ_fp(1)
+dq.print("dq")
+assert False
 
 h_tpsa = nlbd.compute_h_tpsa()
+h_tpsa = h_tpsa.get_mns_1(1, 3)
+h_tpsa_re = new.tpsa()
+h_tpsa_im = new.tpsa()
+h_tpsa.CtoR(h_tpsa_re, h_tpsa_im)
+h_tpsa_re.print("h_tpsa_re")
 nlbd.prt_f_tpsa("\nDriving Terms - TPSA:", 'h', h_tpsa)
 
 h_fp = nlbd.compute_h_fp()
 nlbd.prt_f_fp("\nDriving Terms - FP:", 'h', h_fp)
 
 nlbd.prt_f_tpsa("\nLie Generators - TPSA:", 'g', nlbd._g)
-g_fp = nlbd.compute_g_fp(0)
+g_fp = nlbd.compute_g_fp(1)
 nlbd.prt_f_fp("\nLie Generators - FP:", 'g', g_fp)
+
+K = [K_re.get([2, 2, 0, 0, 0]), K_re.get([1, 1, 1, 1, 0]),
+     K_re.get([0, 0, 2, 2, 0])]
+print(f"\nK:\n [{K[0]:10.3e}, {K[1]:10.3e}, {K[2]:10.3e}]")
+assert False
+K, K_k = nlbd.compute_dnu_dJ()
+print(f"  [{abs(K[0]):10.3e} |_ {np.rad2deg(np.angle(K[0])):6.1f}"
+      f", {abs(K[1]):10.3e} |_ {np.rad2deg(np.angle(K[1])):6.1f}"
+      f", {abs(K[2]):10.3e}] |_ {np.rad2deg(np.angle(K[2])):6.1f}")
+print(f"  [{abs(K_k[0]):10.3e} |_ {np.rad2deg(np.angle(K_k[0])):6.1f}"
+      f", {abs(K_k[1]):10.3e} |_ {np.rad2deg(np.angle(K_k[1])):6.1f}"
+      f", {abs(K_k[2]):10.3e}] |_ {np.rad2deg(np.angle(K_k[2])):6.1f}")
 
 # compute_ampl_dep_orbit_tpsa_2(g)
 
