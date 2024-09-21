@@ -129,7 +129,7 @@ class nonlinear_beam_dynamics:
         self._map.ct.print("ct", eps)
 
     def get_f_I(self, f, I):
-        return f.get([I[0], I[1], I[2], I[3], I[4], I[5], 0])
+        return f.get([I[0], I[1], I[2], I[3], I[4]])
 
     def get_cmplx_f_I(self, f_re, f_im, I):
         return complex(self.get_f_I(f_re, I),
@@ -363,8 +363,8 @@ class nonlinear_beam_dynamics:
             nlbd.compute_dq_dJ_fp_I(1, [2, 1, 0, 0, 0])
             *Id.x.to_tpsa()*Id.px.to_tpsa()
             -nlbd.compute_dq_dJ_fp_I(1, [1, 0, 1, 1, 0])
-            *Id.y.to_tpsa()*Id.py.to_tpsa()
-        )/8e0
+            *Id.y.to_tpsa()*Id.py.to_tpsa()) \
+            /8e0
 
         dq -= self._beta[ind.X, j-1]*(
             nlbd.compute_dq_dJ_fp_I(1, [3, 0, 0, 0, 0])
@@ -380,8 +380,8 @@ class nonlinear_beam_dynamics:
 
             +(1e0*nlbd.compute_dq_dJ_fp_I(1, [1, 0, 2, 0, 0])
               +4e0*nlbd.compute_dq_dJ_fp_I(1, [1, 0, 1, 1, 0])
-              +1e0*nlbd.compute_dq_dJ_fp_I(1, [1, 0, 0, 2, 0])
-            )*Id.y.to_tpsa()**2*Id.py.to_tpsa()**2
+              +1e0*nlbd.compute_dq_dJ_fp_I(1, [1, 0, 0, 2, 0]))
+            *Id.y.to_tpsa()**2*Id.py.to_tpsa()**2
         )/128e0
 
         return dq
@@ -477,9 +477,14 @@ def chk_Poisson_bracket():
 
     ps_dim = 4
 
-    f = Id.x.to_tpsa()*Id.y.to_tpsa()**2
-    g = Id.px.to_tpsa()*Id.py.to_tpsa()**2
-    f.poisbra(g, ps_dim).print("[f, g]")
+    f = get_mn([3, 0, 0, 0, 0])
+    f.poisbra(get_mn([0, 3, 0, 0, 0]), ps_dim).print("[h^3+_x, h^3-_x]")
+
+    f = get_mn([2, 1, 0, 0, 0])
+    f.poisbra(get_mn([1, 2, 0, 0, 0]),
+              ps_dim).print("[h^2+_x*h^-_, h^+_x*h^2-_x]")
+
+    assert False
 
     f = Id.x.to_tpsa()**2*Id.px.to_tpsa()
     g = Id.px.to_tpsa()*Id.y.to_tpsa()*Id.py.to_tpsa()
@@ -545,27 +550,69 @@ def pb(f, g):
     return a
 
 
-def prt_term(nlbd, I, scl):
-    ps_dim = 4;
-
-    f = 1e0
+def get_mn(I):
+    Id = new.ss_vect_tpsa()
+    Id.set_identity()
+    mn = 1e0
     for k, i in enumerate(I):
-        f *= nlbd._Id.iloc[k].to_tpsa()**i
-
-    x = nlbd._g_im.poisbra(f, ps_dim)
-    x_I  = nlbd.get_f_I(x, [2, 2, 0, 0, 0, 0, 0])
-    dq = scl*nlbd._beta[ind.X, 0]*nlbd.compute_dq_dJ_fp_I(1, I)
-    print(f"  <x_22000> = {x_I:12.5e}, ({dq:12.5e})")
+        mn *= Id.iloc[k].to_tpsa()**i
+    return mn
 
 
 def chk_terms(nlbd):
-    print("\nh^3+_x:")
-    I = [3, 0, 0, 0, 0, 0, 0]
-    x = prt_term(nlbd, I, -1e0/64e0)
+    ps_dim = 4;
 
-    print("h^2+_x*h^-x:")
-    I = [2, 1, 0, 0, 0, 0, 0]
-    x = prt_term(nlbd, I, -3e0/64e0)
+    x_re = new.tpsa()
+    x_im = new.tpsa()
+
+    print("\n<x>:")
+    x = nlbd._g.poisbra(get_mn([1, 0, 0, 0, 0]), ps_dim)
+    x.CtoR(x_re, x_im)
+    x_I  = nlbd.get_f_I(x_re, [1, 1, 0, 0, 0])
+    scl = -np.sqrt(nlbd._beta[ind.X, 0])/8e0
+    dq = scl*nlbd.compute_dq_dJ_fp_I(1, [2, 1, 0, 0, 0])
+    print(f"  g_11000 = {x_I:12.5e} ({dq:12.5e})")
+
+    x_I  = nlbd.get_f_I(x_re, [0, 0, 1, 1, 0])
+    scl = np.sqrt(nlbd._beta[ind.X, 0])/8e0
+    dq = scl*nlbd.compute_dq_dJ_fp_I(1, [1, 0, 1, 1, 0])
+    print(f"  g_00110 = {x_I:12.5e} ({dq:12.5e})")
+
+    print("\n<x^3>:")
+    x = nlbd._g.poisbra(get_mn([3, 0, 0, 0, 0]), ps_dim)
+    x.CtoR(x_re, x_im)
+    x_I  = nlbd.get_f_I(x_re, [2, 2, 0, 0, 0])
+    scl = -nlbd._beta[ind.X, 0]/64e0
+    dq_1 = scl*nlbd.compute_dq_dJ_fp_I(1, [3, 0, 0, 0, 0])
+    scl = -3e0*nlbd._beta[ind.X, 0]/64e0
+    dq_2 = scl*nlbd.compute_dq_dJ_fp_I(1, [2, 1, 0, 0, 0])
+    dq = dq_1 + dq_2
+    print(f"  g_22000 = {x_I:12.5e} ({dq:12.5e} = {dq_1:12.5e} + {dq_2:12.5e})")
+
+    print("\n<x*y^2>:")
+    x = nlbd._g.poisbra(get_mn([1, 0, 2, 0, 0]), ps_dim)
+    x.CtoR(x_re, x_im)
+    x_I  = nlbd.get_f_I(x_re, [1, 1, 1, 1, 0])
+    scl = 4e0*nlbd._beta[ind.X, 0]/128e0
+    dq_1 = scl*nlbd.compute_dq_dJ_fp_I(1, [1, 0, 2, 0, 0])
+    scl = -4e0*nlbd._beta[ind.X, 0]/128e0
+    dq_2 = scl*nlbd.compute_dq_dJ_fp_I(1, [2, 1, 0, 0, 0])
+    scl = -4e0*nlbd._beta[ind.X, 0]/128e0
+    dq_3 = scl*nlbd.compute_dq_dJ_fp_I(1, [1, 0, 0, 2, 0])
+    dq = dq_1 + dq_2 + dq_3
+    print(f"  g_11110 = {x_I:12.5e} ({dq:12.5e} = {dq_1:12.5e}"
+          f" + {dq_2:12.5e} + {dq_3:12.5e})")
+
+    x_I  = nlbd.get_f_I(x_re, [0, 0, 2, 2, 0])
+    scl = nlbd._beta[ind.X, 0]/128e0
+    dq_1 = scl*nlbd.compute_dq_dJ_fp_I(1, [1, 0, 2, 0, 0])
+    scl = 4e0*nlbd._beta[ind.X, 0]/128e0
+    dq_2 = scl*nlbd.compute_dq_dJ_fp_I(1, [1, 0, 1, 1, 0])
+    scl = nlbd._beta[ind.X, 0]/128e0
+    dq_3 = scl*nlbd.compute_dq_dJ_fp_I(1, [1, 0, 0, 2, 0])
+    dq = dq_1 + dq_2 + dq_3
+    print(f"  g_00220 = {x_I:12.5e} ({dq:12.5e} = {dq_1:12.5e}"
+          f" + {dq_2:12.5e} + {dq_3:12.5e})")
 
 
 def compute_ampl_dep_orbit_tpsa(g):
