@@ -46,6 +46,14 @@ class new():
         return gtpsa.ss_vect_tpsa(gtpsa_prop.desc, gtpsa_prop.no)
 
 
+def trunc(a, no_cut):
+    no = a.get_description().maximum_orders(0, 0)
+    a.get_description().truncate(no_cut)
+    a = 1e0*a
+    a.get_description().truncate(no)
+    return a
+
+
 class nonlinear_beam_dynamics:
     # Private.
     def __init__(self, gtpsa_prop, lat_prop):
@@ -319,6 +327,13 @@ class nonlinear_beam_dynamics:
         x = complex(x_re.get([0, 0, 2, 2, 0]), x_im.get([0, 0, 2, 2, 0]))
         print(f"  x_00220 = {x:21.3e}")
 
+        # g_re = new.tpsa()
+        # g_im = new.tpsa()
+        # self._g = trunc(self._g, 3)
+        # self._g.CtoR(g_re, g_im)
+        # x = g_im.poisbra(self._Id.x.to_tpsa()**3, 4)
+        # x.print("x")
+
     def compute_dq_dJ_fp_I(self, j, I):
         m_x = I[0] + I[1]
         m_y = I[2] + I[3]
@@ -354,16 +369,23 @@ class nonlinear_beam_dynamics:
             *Id.y.to_tpsa()*Id.py.to_tpsa()
         )/8e0
 
-        dq -= 3e0*self._beta[ind.X, j-1] \
-            *nlbd.compute_dq_dJ_fp_I(1, [3, 0, 0, 0, 0])/16e0 \
-            *Id.x.to_tpsa()**2*Id.px.to_tpsa()**2
+        dq -= self._beta[ind.X, j-1]*(
+            nlbd.compute_dq_dJ_fp_I(1, [3, 0, 0, 0, 0])
+            +3e0*nlbd.compute_dq_dJ_fp_I(1, [2, 1, 0, 0, 0])) \
+            *Id.x.to_tpsa()**2*Id.px.to_tpsa()**2 \
+            /64e0
 
-        # dq -= self._beta[ind.X, j-1]*(
-        #     nlbd.compute_dq_dJ_fp_I(1, [1, 0, 2, 0, 0])
-        #     +1e0*nlbd.compute_dq_dJ_fp_I(1, [1, 0, 1, 1, 0]) \
-        #     -nlbd.compute_dq_dJ_fp_I(1, [1, 0, 0, 2, 0])) \
-        #     *Id.y.to_tpsa()**2/16e0
-            # *Id.y.to_tpsa()**2*Id.py.to_tpsa()**2
+        dq += self._beta[ind.X, j-1]*(
+            4e0*(nlbd.compute_dq_dJ_fp_I(1, [1, 0, 2, 0, 0])
+                 -nlbd.compute_dq_dJ_fp_I(1, [2, 1, 0, 0, 0])
+                 -nlbd.compute_dq_dJ_fp_I(1, [1, 0, 0, 2, 0]))
+            *Id.x.to_tpsa()*Id.px.to_tpsa()*Id.y.to_tpsa()*Id.py.to_tpsa()
+
+            +(1e0*nlbd.compute_dq_dJ_fp_I(1, [1, 0, 2, 0, 0])
+              +4e0*nlbd.compute_dq_dJ_fp_I(1, [1, 0, 1, 1, 0])
+              +1e0*nlbd.compute_dq_dJ_fp_I(1, [1, 0, 0, 2, 0])
+            )*Id.y.to_tpsa()**2*Id.py.to_tpsa()**2
+        )/128e0
 
         return dq
 
@@ -462,12 +484,16 @@ def chk_Poisson_bracket():
     g = Id.px.to_tpsa()*Id.py.to_tpsa()**2
     f.poisbra(g, ps_dim).print("[f, g]")
 
-    f = Id.x.to_tpsa()*Id.py.to_tpsa()**2
-    g = Id.px.to_tpsa()*Id.y.to_tpsa()**2
+    f = Id.x.to_tpsa()**2*Id.px.to_tpsa()
+    g = Id.px.to_tpsa()*Id.y.to_tpsa()*Id.py.to_tpsa()
     f.poisbra(g, ps_dim).print("[f, g]")
 
-    f = Id.x.to_tpsa()**2*Id.px.to_tpsa()
-    g = Id.px.to_tpsa()*Id.py.to_tpsa()*Id.y.to_tpsa()
+    f = Id.x.to_tpsa()*Id.y.to_tpsa()*Id.py.to_tpsa()
+    g = Id.px.to_tpsa()*Id.y.to_tpsa()*Id.py.to_tpsa()
+    f.poisbra(g, ps_dim).print("[f, g]")
+
+    f = Id.x.to_tpsa()*Id.py.to_tpsa()**2
+    g = Id.px.to_tpsa()*Id.y.to_tpsa()**2
     f.poisbra(g, ps_dim).print("[f, g]")
 
     assert False
