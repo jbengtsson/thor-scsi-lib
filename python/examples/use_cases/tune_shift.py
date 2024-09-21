@@ -100,7 +100,11 @@ class nonlinear_beam_dynamics:
         self._R          = new.ss_vect_tpsa()
         self._R_inv      = new.ss_vect_tpsa()
         self._g          = new.tpsa()
+        self._g_re       = new.tpsa()
+        self._g_im       = new.tpsa()
         self._K          = new.tpsa()
+        self._K_re       = new.tpsa()
+        self._K_im       = new.tpsa()
 
         # Map in Floquet space.
         self._M_Fl       = np.nan
@@ -125,7 +129,7 @@ class nonlinear_beam_dynamics:
         self._map.ct.print("ct", eps)
 
     def get_f_I(self, f, I):
-        return f.get([I[0], I[1], I[2], I[3], I[4], 0, 0])
+        return f.get([I[0], I[1], I[2], I[3], I[4], I[5], 0])
 
     def get_cmplx_f_I(self, f_re, f_im, I):
         return complex(self.get_f_I(f_re, I),
@@ -139,11 +143,11 @@ class nonlinear_beam_dynamics:
 
     def compute_map_normal_form(self):
         self._M.Map_Norm(self._A_0, self._A_1, self._R, self._g, self._K)
-
         self._A.compose(self._A_0, self._A_1)
         self._A_inv.inv(self._A)
-
         self._R_inv.inv(self._R)
+        self._g.CtoR(self._g_re, self._g_im)
+        self._K.CtoR(self._K_re, self._K_im)
 
     def compute_M_Fl(self):
         self._M_Fl = new.ss_vect_tpsa()
@@ -326,13 +330,6 @@ class nonlinear_beam_dynamics:
         print(f"  x_11110 = {x:21.3e}")
         x = complex(x_re.get([0, 0, 2, 2, 0]), x_im.get([0, 0, 2, 2, 0]))
         print(f"  x_00220 = {x:21.3e}")
-
-        # g_re = new.tpsa()
-        # g_im = new.tpsa()
-        # self._g = trunc(self._g, 3)
-        # self._g.CtoR(g_re, g_im)
-        # x = g_im.poisbra(self._Id.x.to_tpsa()**3, 4)
-        # x.print("x")
 
     def compute_dq_dJ_fp_I(self, j, I):
         m_x = I[0] + I[1]
@@ -548,6 +545,29 @@ def pb(f, g):
     return a
 
 
+def prt_term(nlbd, I, scl):
+    ps_dim = 4;
+
+    f = 1e0
+    for k, i in enumerate(I):
+        f *= nlbd._Id.iloc[k].to_tpsa()**i
+
+    x = nlbd._g_im.poisbra(f, ps_dim)
+    x_I  = nlbd.get_f_I(x, [2, 2, 0, 0, 0, 0, 0])
+    dq = scl*nlbd._beta[ind.X, 0]*nlbd.compute_dq_dJ_fp_I(1, I)
+    print(f"  <x_22000> = {x_I:12.5e}, ({dq:12.5e})")
+
+
+def chk_terms(nlbd):
+    print("\nh^3+_x:")
+    I = [3, 0, 0, 0, 0, 0, 0]
+    x = prt_term(nlbd, I, -1e0/64e0)
+
+    print("h^2+_x*h^-x:")
+    I = [2, 1, 0, 0, 0, 0, 0]
+    x = prt_term(nlbd, I, -3e0/64e0)
+
+
 def compute_ampl_dep_orbit_tpsa(g):
     x_avg       = new.tpsa()
     x_avg_re    = new.tpsa()
@@ -692,10 +712,11 @@ print("\nM:", nlbd._M)
 
 nlbd.compute_map_normal_form()
 
-K_re = new.tpsa()
-K_im = new.tpsa()
-nlbd._K.CtoR(K_re, K_im)
-K_re.print("K_re")
+nlbd._K_re.print("K_re")
+
+if not False:
+    chk_terms(nlbd)
+    assert False
 
 if False:
     compute_M_from_MNF(K, A_0, A_1, g)
