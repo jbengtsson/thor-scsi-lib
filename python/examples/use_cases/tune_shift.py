@@ -366,13 +366,13 @@ class nonlinear_beam_dynamics:
             *Id.y.to_tpsa()*Id.py.to_tpsa()) \
             /8e0
 
-        dq -= self._beta[ind.X, j-1]*(
+        dq -= 3e0*np.sqrt(self._beta[ind.X, j-1])*(
             nlbd.compute_dq_dJ_fp_I(1, [3, 0, 0, 0, 0])
             +3e0*nlbd.compute_dq_dJ_fp_I(1, [2, 1, 0, 0, 0])) \
             *Id.x.to_tpsa()**2*Id.px.to_tpsa()**2 \
             /64e0
 
-        dq += self._beta[ind.X, j-1]*(
+        dq += np.sqrt(self._beta[ind.X, j-1])*(
             4e0*(nlbd.compute_dq_dJ_fp_I(1, [1, 0, 2, 0, 0])
                  -nlbd.compute_dq_dJ_fp_I(1, [2, 1, 0, 0, 0])
                  -nlbd.compute_dq_dJ_fp_I(1, [1, 0, 0, 2, 0]))
@@ -382,7 +382,7 @@ class nonlinear_beam_dynamics:
               +4e0*nlbd.compute_dq_dJ_fp_I(1, [1, 0, 1, 1, 0])
               +1e0*nlbd.compute_dq_dJ_fp_I(1, [1, 0, 0, 2, 0]))
             *Id.y.to_tpsa()**2*Id.py.to_tpsa()**2
-        )/128e0
+        )/64e0
 
         return dq
 
@@ -533,7 +533,7 @@ def chk_compose():
     map_1.compose(map_1, map_2)
     print("\n", type(map_1), type(map_2))
 
-    f.set([1, 0, 0, 0, 0, 0, 0], 0e0, 1e0)
+    f.set([1, 0, 0, 0, 0], 0e0, 1e0)
     print("\n", type(f), type(f))
     g = compose_bs(f, map_1)
     print("\n", type(f), type(g))
@@ -569,50 +569,95 @@ def chk_terms(nlbd):
     x = nlbd._g.poisbra(get_mn([1, 0, 0, 0, 0]), ps_dim)
     x.CtoR(x_re, x_im)
     x_I  = nlbd.get_f_I(x_re, [1, 1, 0, 0, 0])
-    scl = -np.sqrt(nlbd._beta[ind.X, 0])/8e0
-    dq = scl*nlbd.compute_dq_dJ_fp_I(1, [2, 1, 0, 0, 0])
-    print(f"  g_11000 = {x_I:12.5e} ({dq:12.5e})")
+    scl = np.sqrt(nlbd._beta[ind.X, 0])/8e0
+    dq = -scl*nlbd.compute_dq_dJ_fp_I(1, [2, 1, 0, 0, 0])
+    print(f"  s_11000 = {x_I:12.5e}")
+    print(f"            {dq:12.5e}")
 
     x_I  = nlbd.get_f_I(x_re, [0, 0, 1, 1, 0])
-    scl = np.sqrt(nlbd._beta[ind.X, 0])/8e0
     dq = scl*nlbd.compute_dq_dJ_fp_I(1, [1, 0, 1, 1, 0])
-    print(f"  g_00110 = {x_I:12.5e} ({dq:12.5e})")
+    print(f"\n  s_00110 = {x_I:12.5e}")
+    print(f"            {dq:12.5e}")
 
     print("\n<x^3>:")
     x = nlbd._g.poisbra(get_mn([3, 0, 0, 0, 0]), ps_dim)
     x.CtoR(x_re, x_im)
     x_I  = nlbd.get_f_I(x_re, [2, 2, 0, 0, 0])
-    scl = -nlbd._beta[ind.X, 0]/64e0
-    dq_1 = scl*nlbd.compute_dq_dJ_fp_I(1, [3, 0, 0, 0, 0])
-    scl = -3e0*nlbd._beta[ind.X, 0]/64e0
-    dq_2 = scl*nlbd.compute_dq_dJ_fp_I(1, [2, 1, 0, 0, 0])
-    dq = dq_1 + dq_2
-    print(f"  g_22000 = {x_I:12.5e} ({dq:12.5e} = {dq_1:12.5e} + {dq_2:12.5e})")
+
+    # A x4 to correct for cosine & sine terms - for both f & g -> [f, g].
+    scl = 4e0/8e0
+    g = nlbd._g_im.get([3, 0, 0, 0, 0])*get_mn([3, 0, 0, 0, 0])
+    x_1_tps = scl*g.poisbra(get_mn([0, 3, 0, 0, 0]), ps_dim)
+    x_1_tps = x_1_tps.get([2, 2, 0, 0, 0])
+    g = nlbd._g_im.get([2, 1, 0, 0, 0])*get_mn([2, 1, 0, 0, 0])
+    x_2_tps = 3e0*scl*g.poisbra(get_mn([1, 2, 0, 0, 0]), ps_dim)
+    x_2_tps = x_2_tps.get([2, 2, 0, 0, 0])
+    x_tps = x_1_tps + x_2_tps
+
+    scl = 3e0*np.sqrt(nlbd._beta[ind.X, 0])/64e0
+    dq_1_fp = -scl*nlbd.compute_dq_dJ_fp_I(1, [3, 0, 0, 0, 0])
+    dq_2_fp = -scl*3e0*nlbd.compute_dq_dJ_fp_I(1, [2, 1, 0, 0, 0])
+    dq_fp = dq_1_fp + dq_2_fp
+
+    print(f"  s_22000 = {x_I:12.5e}")
+    print(f"            {x_tps:12.5e} = {x_1_tps:+12.5e} {x_2_tps:+12.5e}")
+    print(f"            {dq_fp:12.5e} = {dq_1_fp:+12.5e} {dq_2_fp:+12.5e}")
 
     print("\n<x*y^2>:")
     x = nlbd._g.poisbra(get_mn([1, 0, 2, 0, 0]), ps_dim)
     x.CtoR(x_re, x_im)
     x_I  = nlbd.get_f_I(x_re, [1, 1, 1, 1, 0])
-    scl = 4e0*nlbd._beta[ind.X, 0]/128e0
-    dq_1 = scl*nlbd.compute_dq_dJ_fp_I(1, [1, 0, 2, 0, 0])
-    scl = -4e0*nlbd._beta[ind.X, 0]/128e0
-    dq_2 = scl*nlbd.compute_dq_dJ_fp_I(1, [2, 1, 0, 0, 0])
-    scl = -4e0*nlbd._beta[ind.X, 0]/128e0
-    dq_3 = scl*nlbd.compute_dq_dJ_fp_I(1, [1, 0, 0, 2, 0])
-    dq = dq_1 + dq_2 + dq_3
-    print(f"  g_11110 = {x_I:12.5e} ({dq:12.5e} = {dq_1:12.5e}"
-          f" + {dq_2:12.5e} + {dq_3:12.5e})")
+
+    # A x4 to correct for cosine & sine terms - for both f & g -> [f, g].
+    scl = 4e0/8e0
+    g = nlbd._g_im.get([1, 0, 2, 0, 0])*get_mn([1, 0, 2, 0, 0])
+    x_1_tps = scl*g.poisbra(get_mn([0, 1, 0, 2, 0]), ps_dim)
+    x_1_tps = x_1_tps.get([1, 1, 1, 1, 0])
+    g = nlbd._g_im.get([2, 1, 0, 0, 0])*get_mn([2, 1, 0, 0, 0])
+    x_2_tps = 2e0*scl*g.poisbra(get_mn([0, 1, 1, 1, 0]), ps_dim)
+    x_2_tps = x_2_tps.get([1, 1, 1, 1, 0])
+    g = nlbd._g_im.get([1, 0, 0, 2, 0])*get_mn([1, 0, 0, 2, 0])
+    x_3_tps = scl*g.poisbra(get_mn([0, 1, 2, 0, 0]), ps_dim)
+    x_3_tps = x_3_tps.get([1, 1, 1, 1, 0])
+    x_tps = x_1_tps + x_2_tps + x_3_tps
+
+    scl = np.sqrt(nlbd._beta[ind.X, 0])/16e0
+    dq_1_fp = scl*nlbd.compute_dq_dJ_fp_I(1, [1, 0, 2, 0, 0])
+    dq_2_fp = -scl*nlbd.compute_dq_dJ_fp_I(1, [2, 1, 0, 0, 0])
+    dq_3_fp = -scl*nlbd.compute_dq_dJ_fp_I(1, [1, 0, 0, 2, 0])
+    dq_fp = dq_1_fp + dq_2_fp + dq_3_fp
+
+    print(f"  s_11110 = {x_I:12.5e}")
+    print(f"            {x_tps:12.5e} = {x_1_tps:+12.5e} {x_2_tps:+12.5e}"
+          f" {x_3_tps:+12.5e}")
+    print(f"            {dq_fp:12.5e} = {dq_1_fp:+12.5e} {dq_2_fp:+12.5e}"
+          f" {dq_3_fp:+12.5e}")
 
     x_I  = nlbd.get_f_I(x_re, [0, 0, 2, 2, 0])
-    scl = nlbd._beta[ind.X, 0]/128e0
-    dq_1 = scl*nlbd.compute_dq_dJ_fp_I(1, [1, 0, 2, 0, 0])
-    scl = 4e0*nlbd._beta[ind.X, 0]/128e0
-    dq_2 = scl*nlbd.compute_dq_dJ_fp_I(1, [1, 0, 1, 1, 0])
-    scl = nlbd._beta[ind.X, 0]/128e0
-    dq_3 = scl*nlbd.compute_dq_dJ_fp_I(1, [1, 0, 0, 2, 0])
-    dq = dq_1 + dq_2 + dq_3
-    print(f"  g_00220 = {x_I:12.5e} ({dq:12.5e} = {dq_1:12.5e}"
-          f" + {dq_2:12.5e} + {dq_3:12.5e})")
+
+    # A x4 to correct for cosine & sine terms - for both f & g -> [f, g].
+    scl = 4e0/8e0
+    g = nlbd._g_im.get([1, 0, 2, 0, 0])*get_mn([1, 0, 2, 0, 0])
+    x_1_tps = scl*g.poisbra(get_mn([0, 1, 0, 2, 0]), ps_dim)
+    x_1_tps = x_1_tps.get([0, 0, 2, 2, 0])
+    g = nlbd._g_im.get([1, 0, 1, 1, 0])*get_mn([1, 0, 1, 1, 0])
+    x_2_tps = 2e0*scl*g.poisbra(get_mn([0, 1, 1, 1, 0]), ps_dim)
+    x_2_tps = x_2_tps.get([0, 0, 2, 2, 0])
+    g = nlbd._g_im.get([1, 0, 0, 2, 0])*get_mn([1, 0, 0, 2, 0])
+    x_3_tps = scl*g.poisbra(get_mn([0, 1, 2, 0, 0]), ps_dim)
+    x_3_tps = x_3_tps.get([0, 0, 2, 2, 0])
+    x_tps = x_1_tps + x_2_tps + x_3_tps
+
+    scl = np.sqrt(nlbd._beta[ind.X, 0])/64e0
+    dq_1_fp = scl*nlbd.compute_dq_dJ_fp_I(1, [1, 0, 2, 0, 0])
+    dq_2_fp = scl*4e0*nlbd.compute_dq_dJ_fp_I(1, [1, 0, 1, 1, 0])
+    dq_3_fp = scl*nlbd.compute_dq_dJ_fp_I(1, [1, 0, 0, 2, 0])
+    dq_fp = dq_1_fp + dq_2_fp + dq_3_fp
+    print(f"\n  s_00220 = {x_I:12.5e}")
+    print(f"            {x_tps:12.5e} = {x_1_tps:+12.5e} {x_2_tps:+12.5e}"
+          f" {x_3_tps:+12.5e}")
+    print(f"            {dq_fp:12.5e} = {dq_1_fp:+12.5e} {dq_2_fp:+12.5e}"
+          f" {dq_3_fp:+12.5e}")
 
 
 def compute_ampl_dep_orbit_tpsa(g):
@@ -640,8 +685,8 @@ def compute_ampl_dep_orbit_tpsa(g):
     x_avg = x_avg.get_mns_1(1, 2)
     x_avg.CtoR(x_avg_re, x_avg_im)
     x_avg_re.print("<x_re>", 1e-11)
-    s_11000 = x_avg_re.get([1, 1, 0, 0, 0, 0, 0])
-    s_00110 = x_avg_re.get([0, 0, 1, 1, 0, 0, 0])
+    s_11000 = x_avg_re.get([1, 1, 0, 0, 0])
+    s_00110 = x_avg_re.get([0, 0, 1, 1, 0])
 
     x3_avg = g.poisbra(pow(Id.x.to_tpsa(), 3), ps_dim)
     x3_avg.print("<x3>", 1e-11)
@@ -649,15 +694,15 @@ def compute_ampl_dep_orbit_tpsa(g):
     x3_avg.print("<x3>", 1e-11)
     x3_avg.CtoR(x3_avg_re, x3_avg_im)
     x3_avg_re.print("<x^3_re>")
-    s_22000 = x3_avg_re.get([2, 2, 0, 0, 0, 0, 0])
-    s_11110_1 = x3_avg_re.get([1, 1, 1, 1, 0, 0, 0])
+    s_22000 = x3_avg_re.get([2, 2, 0, 0, 0])
+    s_11110_1 = x3_avg_re.get([1, 1, 1, 1, 0])
 
     x_y2_avg = g.poisbra(Id.x.to_tpsa()*pow(Id.y.to_tpsa(), 2), ps_dim)
     x_y2_avg = compose_bs(x_y2_avg, A_1)
     x_y2_avg.CtoR(x_y2_avg_re, x_y2_avg_im)
     x_y2_avg_re.print("<x*y^2_re>")
-    s_11110_2 = x_y2_avg_re.get([1, 1, 1, 1, 0, 0, 0])
-    s_00220 = x_y2_avg_re.get([0, 0, 2, 2, 0, 0, 0])
+    s_11110_2 = x_y2_avg_re.get([1, 1, 1, 1, 0])
+    s_00220 = x_y2_avg_re.get([0, 0, 2, 2, 0])
 
     print(f"\n  s_11000   = {s_11000:10.3e}")
     print(f"  s_00110   = {s_00110:10.3e}")
@@ -686,8 +731,8 @@ def compute_ampl_dep_orbit_tpsa_2(g):
     x_avg = compose_bs(x_avg, A_1)
     x_avg.CtoR(x_avg_re, x_avg_im)
     x_avg_re.print("<x_re>", 1e-11)
-    s_11000 = x_avg_re.get([1, 1, 0, 0, 0, 0, 0])
-    s_00110 = x_avg_re.get([0, 0, 1, 1, 0, 0, 0])
+    s_11000 = x_avg_re.get([1, 1, 0, 0, 0])
+    s_00110 = x_avg_re.get([0, 0, 1, 1, 0])
 
     f = pb(g, pow(Id.x.to_tpsa(), 3))
     f.print("f", 1e-11)
@@ -698,15 +743,15 @@ def compute_ampl_dep_orbit_tpsa_2(g):
     x3_avg.print("<x3>", 1e-11)
     x3_avg.CtoR(x3_avg_re, x3_avg_im)
     x3_avg_re.print("<x^3_re>")
-    s_22000 = x3_avg_re.get([2, 2, 0, 0, 0, 0, 0])
-    s_11110_1 = x3_avg_re.get([1, 1, 1, 1, 0, 0, 0])
+    s_22000 = x3_avg_re.get([2, 2, 0, 0, 0])
+    s_11110_1 = x3_avg_re.get([1, 1, 1, 1, 0])
 
     x_y2_avg = pb(g, Id.x.to_tpsa()*pow(Id.y.to_tpsa(), 2))
     x_y2_avg = compose_bs(x_y2_avg, A_1)
     x_y2_avg.CtoR(x_y2_avg_re, x_y2_avg_im)
     x_y2_avg_re.print("<x*y^2_re>")
-    s_11110_2 = x_y2_avg_re.get([1, 1, 1, 1, 0, 0, 0])
-    s_00220 = x_y2_avg_re.get([0, 0, 2, 2, 0, 0, 0])
+    s_11110_2 = x_y2_avg_re.get([1, 1, 1, 1, 0])
+    s_00220 = x_y2_avg_re.get([0, 0, 2, 2, 0])
 
     print(f"\n  s_11000   = {s_11000:10.3e}")
     print(f"  s_00110   = {s_00110:10.3e}")
@@ -761,7 +806,7 @@ nlbd.compute_map_normal_form()
 
 nlbd._K_re.print("K_re")
 
-if not False:
+if False:
     chk_terms(nlbd)
     assert False
 
