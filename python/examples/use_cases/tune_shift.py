@@ -590,13 +590,13 @@ def chk_terms(nlbd):
     x_1_tps = scl*g.poisbra(get_mn([0, 3, 0, 0, 0]), ps_dim)
     x_1_tps = x_1_tps.get([2, 2, 0, 0, 0])
     g = nlbd._g_im.get([2, 1, 0, 0, 0])*get_mn([2, 1, 0, 0, 0])
-    x_2_tps = 3e0*scl*g.poisbra(get_mn([1, 2, 0, 0, 0]), ps_dim)
+    x_2_tps = scl*g.poisbra(3e0*get_mn([1, 2, 0, 0, 0]), ps_dim)
     x_2_tps = x_2_tps.get([2, 2, 0, 0, 0])
     x_tps = x_1_tps + x_2_tps
 
     scl = 3e0*np.sqrt(nlbd._beta[ind.X, 0])/64e0
     dq_1_fp = -scl*nlbd.compute_dq_dJ_fp_I(1, [3, 0, 0, 0, 0])
-    dq_2_fp = -scl*3e0*nlbd.compute_dq_dJ_fp_I(1, [2, 1, 0, 0, 0])
+    dq_2_fp = -3e0*scl*nlbd.compute_dq_dJ_fp_I(1, [2, 1, 0, 0, 0])
     dq_fp = dq_1_fp + dq_2_fp
 
     print(f"  s_22000 = {x_I:12.5e}")
@@ -614,7 +614,7 @@ def chk_terms(nlbd):
     x_1_tps = scl*g.poisbra(get_mn([0, 1, 0, 2, 0]), ps_dim)
     x_1_tps = x_1_tps.get([1, 1, 1, 1, 0])
     g = nlbd._g_im.get([2, 1, 0, 0, 0])*get_mn([2, 1, 0, 0, 0])
-    x_2_tps = 2e0*scl*g.poisbra(get_mn([0, 1, 1, 1, 0]), ps_dim)
+    x_2_tps = scl*g.poisbra(2e0*get_mn([0, 1, 1, 1, 0]), ps_dim)
     x_2_tps = x_2_tps.get([1, 1, 1, 1, 0])
     g = nlbd._g_im.get([1, 0, 0, 2, 0])*get_mn([1, 0, 0, 2, 0])
     x_3_tps = scl*g.poisbra(get_mn([0, 1, 2, 0, 0]), ps_dim)
@@ -641,7 +641,7 @@ def chk_terms(nlbd):
     x_1_tps = scl*g.poisbra(get_mn([0, 1, 0, 2, 0]), ps_dim)
     x_1_tps = x_1_tps.get([0, 0, 2, 2, 0])
     g = nlbd._g_im.get([1, 0, 1, 1, 0])*get_mn([1, 0, 1, 1, 0])
-    x_2_tps = 2e0*scl*g.poisbra(get_mn([0, 1, 1, 1, 0]), ps_dim)
+    x_2_tps = scl*g.poisbra(2e0*get_mn([0, 1, 1, 1, 0]), ps_dim)
     x_2_tps = x_2_tps.get([0, 0, 2, 2, 0])
     g = nlbd._g_im.get([1, 0, 0, 2, 0])*get_mn([1, 0, 0, 2, 0])
     x_3_tps = scl*g.poisbra(get_mn([0, 1, 2, 0, 0]), ps_dim)
@@ -650,7 +650,7 @@ def chk_terms(nlbd):
 
     scl = np.sqrt(nlbd._beta[ind.X, 0])/64e0
     dq_1_fp = scl*nlbd.compute_dq_dJ_fp_I(1, [1, 0, 2, 0, 0])
-    dq_2_fp = scl*4e0*nlbd.compute_dq_dJ_fp_I(1, [1, 0, 1, 1, 0])
+    dq_2_fp = 4e0*scl*nlbd.compute_dq_dJ_fp_I(1, [1, 0, 1, 1, 0])
     dq_3_fp = scl*nlbd.compute_dq_dJ_fp_I(1, [1, 0, 0, 2, 0])
     dq_fp = dq_1_fp + dq_2_fp + dq_3_fp
     print(f"\n  s_00220 = {x_I:12.5e}")
@@ -806,7 +806,7 @@ nlbd.compute_map_normal_form()
 
 nlbd._K_re.print("K_re")
 
-if False:
+if not False:
     chk_terms(nlbd)
     assert False
 
