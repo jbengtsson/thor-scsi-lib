@@ -569,12 +569,14 @@ def chk_terms(nlbd):
     x = nlbd._g.poisbra(get_mn([1, 0, 0, 0, 0]), ps_dim)
     x.CtoR(x_re, x_im)
     x_I  = nlbd.get_f_I(x_re, [1, 1, 0, 0, 0])
+
     scl = np.sqrt(nlbd._beta[ind.X, 0])/8e0
     dq = -scl*nlbd.compute_dq_dJ_fp_I(1, [2, 1, 0, 0, 0])
     print(f"  s_11000 = {x_I:12.5e}")
     print(f"            {dq:12.5e}")
 
     x_I  = nlbd.get_f_I(x_re, [0, 0, 1, 1, 0])
+
     dq = scl*nlbd.compute_dq_dJ_fp_I(1, [1, 0, 1, 1, 0])
     print(f"\n  s_00110 = {x_I:12.5e}")
     print(f"            {dq:12.5e}")
@@ -600,8 +602,23 @@ def chk_terms(nlbd):
     dq_fp = dq_1_fp + dq_2_fp
 
     print(f"  s_22000 = {x_I:12.5e}")
-    print(f"            {x_tps:12.5e} = {x_1_tps:+12.5e} {x_2_tps:+12.5e}")
-    print(f"            {dq_fp:12.5e} = {dq_1_fp:+12.5e} {dq_2_fp:+12.5e}")
+    print(f"            {x_tps:12.5e} = {x_1_tps:12.5e} {x_2_tps:+12.5e}")
+    print(f"            {dq_fp:12.5e} = {dq_1_fp:12.5e} {dq_2_fp:+12.5e}")
+
+    x_I  = nlbd.get_f_I(x_re, [1, 1, 1, 1, 0])
+
+    # A x4 to correct for cosine & sine terms - for both f & g -> [f, g].
+    scl = 4e0/8e0
+    g = nlbd._g_im.get([1, 0, 1, 1, 0])*get_mn([1, 0, 1, 1, 0])
+    x_tps = scl*g.poisbra(3e0*get_mn([1, 2, 0, 0, 0]), ps_dim)
+    x_tps = x_tps.get([1, 1, 1, 1, 0])
+
+    scl = np.sqrt(nlbd._beta[ind.X, 0])/16e0
+    dq_fp = 3e0*scl*nlbd.compute_dq_dJ_fp_I(1, [1, 0, 1, 1, 0])
+
+    print(f"\n  s_11110 = {x_I:12.5e}")
+    print(f"            {x_tps:12.5e}")
+    print(f"            {dq_fp:12.5e}")
 
     print("\n<x*y^2>:")
     x = nlbd._g.poisbra(get_mn([1, 0, 2, 0, 0]), ps_dim)
@@ -628,9 +645,9 @@ def chk_terms(nlbd):
     dq_fp = dq_1_fp + dq_2_fp + dq_3_fp
 
     print(f"  s_11110 = {x_I:12.5e}")
-    print(f"            {x_tps:12.5e} = {x_1_tps:+12.5e} {x_2_tps:+12.5e}"
+    print(f"            {x_tps:12.5e} = {x_1_tps:12.5e} {x_2_tps:+12.5e}"
           f" {x_3_tps:+12.5e}")
-    print(f"            {dq_fp:12.5e} = {dq_1_fp:+12.5e} {dq_2_fp:+12.5e}"
+    print(f"            {dq_fp:12.5e} = {dq_1_fp:12.5e} {dq_2_fp:+12.5e}"
           f" {dq_3_fp:+12.5e}")
 
     x_I  = nlbd.get_f_I(x_re, [0, 0, 2, 2, 0])
@@ -654,9 +671,9 @@ def chk_terms(nlbd):
     dq_3_fp = scl*nlbd.compute_dq_dJ_fp_I(1, [1, 0, 0, 2, 0])
     dq_fp = dq_1_fp + dq_2_fp + dq_3_fp
     print(f"\n  s_00220 = {x_I:12.5e}")
-    print(f"            {x_tps:12.5e} = {x_1_tps:+12.5e} {x_2_tps:+12.5e}"
+    print(f"            {x_tps:12.5e} = {x_1_tps:12.5e} {x_2_tps:+12.5e}"
           f" {x_3_tps:+12.5e}")
-    print(f"            {dq_fp:12.5e} = {dq_1_fp:+12.5e} {dq_2_fp:+12.5e}"
+    print(f"            {dq_fp:12.5e} = {dq_1_fp:12.5e} {dq_2_fp:+12.5e}"
           f" {dq_3_fp:+12.5e}")
 
 
