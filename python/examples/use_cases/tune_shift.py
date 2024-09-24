@@ -312,17 +312,12 @@ class nonlinear_beam_dynamics:
         x_re = new.tpsa()
         x_im = new.tpsa()
 
-        x = self._g.poisbra(self._Id.x.to_tpsa(), 4)
-        x.CtoR(x_re, x_im)
-        x = complex(x_re.get([1, 1, 0, 0, 0]), x_im.get([1, 1, 0, 0, 0]))
-        print(f"\n  x_11000 = {x:21.3e}")
-        x = complex(x_re.get([0, 0, 1, 1, 0]), x_im.get([0, 0, 1, 1, 0]))
-        print(f"  x_00110 = {x:21.3e}")
-
-        x = self._g.poisbra(self._Id.x.to_tpsa()**3, 4)
+        x = self._g.poisbra(self._Id.x.to_tpsa()**3/3e0, 4)
         x.CtoR(x_re, x_im)
         x = complex(x_re.get([2, 2, 0, 0, 0]), x_im.get([2, 2, 0, 0, 0]))
-        print(f"  x_22000 = {x:21.3e}")
+        print(f"\n  x_22000 = {x:21.3e}")
+        x = complex(x_re.get([1, 1, 1, 1, 0]), x_im.get([1, 1, 1, 1, 0]))
+        print(f"  x_11110 = {x:21.3e}")
 
         x = self._g.poisbra(self._Id.x.to_tpsa()*self._Id.y.to_tpsa()**2, 4)
         x.CtoR(x_re, x_im)
@@ -359,30 +354,23 @@ class nonlinear_beam_dynamics:
         
         Id.set_identity()
 
-        dq = -np.sqrt(self._beta[ind.X, j-1])*(
+        dq = np.zeros(4, dtype=float)
+        dq[0] = -np.sqrt(self._beta[ind.X, j-1])*(
+            3e0*nlbd.compute_dq_dJ_fp_I(1, [2, 1, 0, 0, 0]) \
+            +nlbd.compute_dq_dJ_fp_I(1, [3, 0, 0, 0, 0]))/64e0
+
+        dq[1] = np.sqrt(self._beta[ind.X, j-1]) \
+            *nlbd.compute_dq_dJ_fp_I(1, [1, 0, 1, 1, 0])/16e0
+
+        dq[2] = -np.sqrt(self._beta[ind.X, j-1])*(
             nlbd.compute_dq_dJ_fp_I(1, [2, 1, 0, 0, 0])
-            *Id.x.to_tpsa()*Id.px.to_tpsa()
-            -nlbd.compute_dq_dJ_fp_I(1, [1, 0, 1, 1, 0])
-            *Id.y.to_tpsa()*Id.py.to_tpsa()) \
-            /8e0
+            -nlbd.compute_dq_dJ_fp_I(1, [1, 0, 2, 0, 0])
+            +nlbd.compute_dq_dJ_fp_I(1, [1, 0, 0, 2, 0]))/16e0
 
-        dq -= 3e0*np.sqrt(self._beta[ind.X, j-1])*(
-            nlbd.compute_dq_dJ_fp_I(1, [3, 0, 0, 0, 0])
-            +3e0*nlbd.compute_dq_dJ_fp_I(1, [2, 1, 0, 0, 0])) \
-            *Id.x.to_tpsa()**2*Id.px.to_tpsa()**2 \
-            /64e0
-
-        dq += np.sqrt(self._beta[ind.X, j-1])*(
-            4e0*(nlbd.compute_dq_dJ_fp_I(1, [1, 0, 2, 0, 0])
-                 -nlbd.compute_dq_dJ_fp_I(1, [2, 1, 0, 0, 0])
-                 -nlbd.compute_dq_dJ_fp_I(1, [1, 0, 0, 2, 0]))
-            *Id.x.to_tpsa()*Id.px.to_tpsa()*Id.y.to_tpsa()*Id.py.to_tpsa()
-
-            +(1e0*nlbd.compute_dq_dJ_fp_I(1, [1, 0, 2, 0, 0])
-              +4e0*nlbd.compute_dq_dJ_fp_I(1, [1, 0, 1, 1, 0])
-              +1e0*nlbd.compute_dq_dJ_fp_I(1, [1, 0, 0, 2, 0]))
-            *Id.y.to_tpsa()**2*Id.py.to_tpsa()**2
-        )/64e0
+        dq[3] = np.sqrt(self._beta[ind.X, j-1])*(
+            4e0*nlbd.compute_dq_dJ_fp_I(1, [1, 0, 1, 1, 0])
+            +nlbd.compute_dq_dJ_fp_I(1, [1, 0, 2, 0, 0])
+            +nlbd.compute_dq_dJ_fp_I(1, [1, 0, 0, 2, 0]))/64e0
 
         return dq
 
@@ -559,29 +547,6 @@ def get_mn(I):
     return mn
 
 
-def x_avg(nlbd):
-    ps_dim = 4;
-
-    x_re = new.tpsa()
-    x_im = new.tpsa()
-
-    print("\n<x>:")
-    x = nlbd._g.poisbra(get_mn([1, 0, 0, 0, 0]), ps_dim)
-    x.CtoR(x_re, x_im)
-    x_I  = nlbd.get_f_I(x_re, [1, 1, 0, 0, 0])
-
-    scl = np.sqrt(nlbd._beta[ind.X, 0])/8e0
-    dq = -scl*nlbd.compute_dq_dJ_fp_I(1, [2, 1, 0, 0, 0])
-    print(f"  s_11000 = {x_I:12.5e}")
-    print(f"            {dq:12.5e}")
-
-    x_I  = nlbd.get_f_I(x_re, [0, 0, 1, 1, 0])
-
-    dq = scl*nlbd.compute_dq_dJ_fp_I(1, [1, 0, 1, 1, 0])
-    print(f"\n  s_00110 = {x_I:12.5e}")
-    print(f"            {dq:12.5e}")
-
-
 def x3_avg(nlbd):
     ps_dim = 4;
 
@@ -589,23 +554,23 @@ def x3_avg(nlbd):
     x_im = new.tpsa()
 
     print("\n<x^3>:")
-    x = nlbd._g.poisbra(get_mn([3, 0, 0, 0, 0]), ps_dim)
+    x = nlbd._g.poisbra(get_mn([3, 0, 0, 0, 0])/3e0, ps_dim)
     x.CtoR(x_re, x_im)
     x_I  = nlbd.get_f_I(x_re, [2, 2, 0, 0, 0])
 
     # A x4 to correct for cosine & sine terms - for both f & g -> [f, g].
-    scl = 4e0/8e0
-    g = nlbd._g_im.get([3, 0, 0, 0, 0])*get_mn([3, 0, 0, 0, 0])
-    x_1_tps = scl*g.poisbra(get_mn([0, 3, 0, 0, 0]), ps_dim)
-    x_1_tps = x_1_tps.get([2, 2, 0, 0, 0])
+    scl = 4e0/24e0
     g = nlbd._g_im.get([2, 1, 0, 0, 0])*get_mn([2, 1, 0, 0, 0])
-    x_2_tps = scl*g.poisbra(3e0*get_mn([1, 2, 0, 0, 0]), ps_dim)
+    x_1_tps = scl*g.poisbra(3e0*get_mn([1, 2, 0, 0, 0]), ps_dim)
+    x_1_tps = x_1_tps.get([2, 2, 0, 0, 0])
+    g = nlbd._g_im.get([3, 0, 0, 0, 0])*get_mn([3, 0, 0, 0, 0])
+    x_2_tps = scl*g.poisbra(get_mn([0, 3, 0, 0, 0]), ps_dim)
     x_2_tps = x_2_tps.get([2, 2, 0, 0, 0])
     x_tps = x_1_tps + x_2_tps
 
-    scl = 3e0*np.sqrt(nlbd._beta[ind.X, 0])/64e0
-    dq_1_fp = -scl*nlbd.compute_dq_dJ_fp_I(1, [3, 0, 0, 0, 0])
-    dq_2_fp = -3e0*scl*nlbd.compute_dq_dJ_fp_I(1, [2, 1, 0, 0, 0])
+    scl = np.sqrt(nlbd._beta[ind.X, 0])/64e0
+    dq_1_fp = -3e0*scl*nlbd.compute_dq_dJ_fp_I(1, [2, 1, 0, 0, 0])
+    dq_2_fp = -scl*nlbd.compute_dq_dJ_fp_I(1, [3, 0, 0, 0, 0])
     dq_fp = dq_1_fp + dq_2_fp
 
     print(f"  s_22000 = {x_I:12.5e}")
@@ -617,11 +582,11 @@ def x3_avg(nlbd):
     # A x4 to correct for cosine & sine terms - for both f & g -> [f, g].
     scl = 4e0/8e0
     g = nlbd._g_im.get([1, 0, 1, 1, 0])*get_mn([1, 0, 1, 1, 0])
-    x_tps = scl*g.poisbra(3e0*get_mn([1, 2, 0, 0, 0]), ps_dim)
+    x_tps = scl*g.poisbra(get_mn([1, 2, 0, 0, 0]), ps_dim)
     x_tps = x_tps.get([1, 1, 1, 1, 0])
 
     scl = np.sqrt(nlbd._beta[ind.X, 0])/16e0
-    dq_fp = 3e0*scl*nlbd.compute_dq_dJ_fp_I(1, [1, 0, 1, 1, 0])
+    dq_fp = scl*nlbd.compute_dq_dJ_fp_I(1, [1, 0, 1, 1, 0])
 
     print(f"\n  s_11110 = {x_I:12.5e}")
     print(f"            {x_tps:12.5e}")
@@ -641,11 +606,11 @@ def xy2_avg(nlbd):
 
     # A x4 to correct for cosine & sine terms - for both f & g -> [f, g].
     scl = 4e0/8e0
-    g = nlbd._g_im.get([1, 0, 2, 0, 0])*get_mn([1, 0, 2, 0, 0])
-    x_1_tps = scl*g.poisbra(get_mn([0, 1, 0, 2, 0]), ps_dim)
-    x_1_tps = x_1_tps.get([1, 1, 1, 1, 0])
     g = nlbd._g_im.get([2, 1, 0, 0, 0])*get_mn([2, 1, 0, 0, 0])
-    x_2_tps = scl*g.poisbra(2e0*get_mn([0, 1, 1, 1, 0]), ps_dim)
+    x_1_tps = scl*g.poisbra(2e0*get_mn([0, 1, 1, 1, 0]), ps_dim)
+    x_1_tps = x_1_tps.get([1, 1, 1, 1, 0])
+    g = nlbd._g_im.get([1, 0, 2, 0, 0])*get_mn([1, 0, 2, 0, 0])
+    x_2_tps = scl*g.poisbra(get_mn([0, 1, 0, 2, 0]), ps_dim)
     x_2_tps = x_2_tps.get([1, 1, 1, 1, 0])
     g = nlbd._g_im.get([1, 0, 0, 2, 0])*get_mn([1, 0, 0, 2, 0])
     x_3_tps = scl*g.poisbra(get_mn([0, 1, 2, 0, 0]), ps_dim)
@@ -653,8 +618,8 @@ def xy2_avg(nlbd):
     x_tps = x_1_tps + x_2_tps + x_3_tps
 
     scl = np.sqrt(nlbd._beta[ind.X, 0])/16e0
-    dq_1_fp = scl*nlbd.compute_dq_dJ_fp_I(1, [1, 0, 2, 0, 0])
-    dq_2_fp = -scl*nlbd.compute_dq_dJ_fp_I(1, [2, 1, 0, 0, 0])
+    dq_1_fp = -scl*nlbd.compute_dq_dJ_fp_I(1, [2, 1, 0, 0, 0])
+    dq_2_fp = scl*nlbd.compute_dq_dJ_fp_I(1, [1, 0, 2, 0, 0])
     dq_3_fp = -scl*nlbd.compute_dq_dJ_fp_I(1, [1, 0, 0, 2, 0])
     dq_fp = dq_1_fp + dq_2_fp + dq_3_fp
 
@@ -668,11 +633,11 @@ def xy2_avg(nlbd):
 
     # A x4 to correct for cosine & sine terms - for both f & g -> [f, g].
     scl = 4e0/8e0
-    g = nlbd._g_im.get([1, 0, 2, 0, 0])*get_mn([1, 0, 2, 0, 0])
-    x_1_tps = scl*g.poisbra(get_mn([0, 1, 0, 2, 0]), ps_dim)
-    x_1_tps = x_1_tps.get([0, 0, 2, 2, 0])
     g = nlbd._g_im.get([1, 0, 1, 1, 0])*get_mn([1, 0, 1, 1, 0])
-    x_2_tps = scl*g.poisbra(2e0*get_mn([0, 1, 1, 1, 0]), ps_dim)
+    x_1_tps = scl*g.poisbra(2e0*get_mn([0, 1, 1, 1, 0]), ps_dim)
+    x_1_tps = x_1_tps.get([0, 0, 2, 2, 0])
+    g = nlbd._g_im.get([1, 0, 2, 0, 0])*get_mn([1, 0, 2, 0, 0])
+    x_2_tps = scl*g.poisbra(get_mn([0, 1, 0, 2, 0]), ps_dim)
     x_2_tps = x_2_tps.get([0, 0, 2, 2, 0])
     g = nlbd._g_im.get([1, 0, 0, 2, 0])*get_mn([1, 0, 0, 2, 0])
     x_3_tps = scl*g.poisbra(get_mn([0, 1, 2, 0, 0]), ps_dim)
@@ -680,8 +645,8 @@ def xy2_avg(nlbd):
     x_tps = x_1_tps + x_2_tps + x_3_tps
 
     scl = np.sqrt(nlbd._beta[ind.X, 0])/64e0
-    dq_1_fp = scl*nlbd.compute_dq_dJ_fp_I(1, [1, 0, 2, 0, 0])
-    dq_2_fp = 4e0*scl*nlbd.compute_dq_dJ_fp_I(1, [1, 0, 1, 1, 0])
+    dq_1_fp = 4e0*scl*nlbd.compute_dq_dJ_fp_I(1, [1, 0, 1, 1, 0])
+    dq_2_fp = scl*nlbd.compute_dq_dJ_fp_I(1, [1, 0, 2, 0, 0])
     dq_3_fp = scl*nlbd.compute_dq_dJ_fp_I(1, [1, 0, 0, 2, 0])
     dq_fp = dq_1_fp + dq_2_fp + dq_3_fp
     print(f"\n  s_00220 = {x_I:12.5e}")
@@ -692,7 +657,6 @@ def xy2_avg(nlbd):
 
 
 def chk_terms(nlbd):
-    x_avg(nlbd)
     x3_avg(nlbd)
     xy2_avg(nlbd)
 
@@ -843,7 +807,7 @@ nlbd.compute_map_normal_form()
 
 nlbd._K_re.print("K_re")
 
-if not False:
+if False:
     chk_terms(nlbd)
     assert False
 
@@ -855,7 +819,12 @@ if False:
 nlbd.compute_dq_dJ_tpsa()
 
 dq = nlbd.compute_dq_dJ_fp(1)
-dq.print("dq")
+print("\n<x^3>:")
+print(f"  s_22000 = {dq[0]:12.5e}")
+print(f"  s_11110 = {dq[1]:12.5e}")
+print("<x*y^2>:")
+print(f"  s_11110 = {dq[2]:12.5e}")
+print(f"  s_00220 = {dq[3]:12.5e}")
 assert False
 
 h_tpsa = nlbd.compute_h_tpsa()
