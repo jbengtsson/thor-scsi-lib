@@ -559,7 +559,7 @@ def get_mn(I):
     return mn
 
 
-def chk_terms(nlbd):
+def x_avg(nlbd):
     ps_dim = 4;
 
     x_re = new.tpsa()
@@ -580,6 +580,13 @@ def chk_terms(nlbd):
     dq = scl*nlbd.compute_dq_dJ_fp_I(1, [1, 0, 1, 1, 0])
     print(f"\n  s_00110 = {x_I:12.5e}")
     print(f"            {dq:12.5e}")
+
+
+def x3_avg(nlbd):
+    ps_dim = 4;
+
+    x_re = new.tpsa()
+    x_im = new.tpsa()
 
     print("\n<x^3>:")
     x = nlbd._g.poisbra(get_mn([3, 0, 0, 0, 0]), ps_dim)
@@ -619,6 +626,13 @@ def chk_terms(nlbd):
     print(f"\n  s_11110 = {x_I:12.5e}")
     print(f"            {x_tps:12.5e}")
     print(f"            {dq_fp:12.5e}")
+
+
+def xy2_avg(nlbd):
+    ps_dim = 4;
+
+    x_re = new.tpsa()
+    x_im = new.tpsa()
 
     print("\n<x*y^2>:")
     x = nlbd._g.poisbra(get_mn([1, 0, 2, 0, 0]), ps_dim)
@@ -675,6 +689,12 @@ def chk_terms(nlbd):
           f" {x_3_tps:+12.5e}")
     print(f"            {dq_fp:12.5e} = {dq_1_fp:12.5e} {dq_2_fp:+12.5e}"
           f" {dq_3_fp:+12.5e}")
+
+
+def chk_terms(nlbd):
+    x_avg(nlbd)
+    x3_avg(nlbd)
+    xy2_avg(nlbd)
 
 
 def compute_ampl_dep_orbit_tpsa(g):
