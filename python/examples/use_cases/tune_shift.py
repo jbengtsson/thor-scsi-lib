@@ -307,10 +307,29 @@ class nonlinear_beam_dynamics:
         for key, value in f_fp.items():
             self.prt_f_cmplx_I(symb, key, value)
 
-    def compute_dq_dJ_tpsa(self):
+    def compute_dq_dJ(self, j):
         x = new.tpsa()
         x_re = new.tpsa()
         x_im = new.tpsa()
+
+        # Propagate g.
+        Id = new.ss_vect_tpsa()
+        R = new.ss_vect_tpsa()
+
+        Id.set_identity()
+        R.set_identity()
+        c = np.zeros(2, dtype=float)
+        s = np.zeros(2, dtype=float)
+        for k, ele in enumerate(c):
+            c[k] = np.cos(self._dmu[k, j-1])
+            s[k] = np.sin(self._dmu[k, j-1])
+        for k in range(2):
+            R.iloc[2*k] = c[k]*Id.iloc[2*k].to_tpsa() \
+                + s[k]*Id.iloc[2*k+1].to_tpsa()
+            R.iloc[2*k+1] = -s[k]*Id.iloc[2*k].to_tpsa() \
+                + c[k]*Id.iloc[2*k+1].to_tpsa()
+        print("\nR:", R)
+        assert False
 
         x = self._g.poisbra(self._Id.x.to_tpsa()**3/3e0, 4)
         x.CtoR(x_re, x_im)
@@ -349,45 +368,45 @@ class nonlinear_beam_dynamics:
                     dq += dq_abs*np.cos((phi-dnu))/np.sin(dnu)
         return dq
         
-    def compute_dq_dJ_fp(self, j):
+    def compute_dq_dJ_k_fp(self, j):
         Id = new.ss_vect_tpsa()
         Id.set_identity()
 
-        dq_dJ = np.zeros(9, dtype=float)
+        dq_dJ_k = np.zeros(9, dtype=float)
 
         scale = np.sqrt(self._beta[ind.X, j-1])/64e0
-        dq_dJ[0] = -3e0*scale*nlbd.compute_dq_dJ_fp_I(1, [2, 1, 0, 0, 0])
-        dq_dJ[1] = -scale*nlbd.compute_dq_dJ_fp_I(1, [3, 0, 0, 0, 0])
+        dq_dJ_k[0] = -3e0*scale*nlbd.compute_dq_dJ_fp_I(1, [2, 1, 0, 0, 0])
+        dq_dJ_k[1] = -scale*nlbd.compute_dq_dJ_fp_I(1, [3, 0, 0, 0, 0])
 
         scale = np.sqrt(self._beta[ind.X, j-1])/16e0
-        dq_dJ[2] = scale*nlbd.compute_dq_dJ_fp_I(1, [1, 0, 1, 1, 0])
+        dq_dJ_k[2] = scale*nlbd.compute_dq_dJ_fp_I(1, [1, 0, 1, 1, 0])
 
         scale = np.sqrt(self._beta[ind.X, j-1])/16e0
-        dq_dJ[3] = -scale*nlbd.compute_dq_dJ_fp_I(1, [2, 1, 0, 0, 0])
-        dq_dJ[4] = scale*nlbd.compute_dq_dJ_fp_I(1, [1, 0, 2, 0, 0])
-        dq_dJ[5] = -scale*nlbd.compute_dq_dJ_fp_I(1, [1, 0, 0, 2, 0])
+        dq_dJ_k[3] = -scale*nlbd.compute_dq_dJ_fp_I(1, [2, 1, 0, 0, 0])
+        dq_dJ_k[4] = scale*nlbd.compute_dq_dJ_fp_I(1, [1, 0, 2, 0, 0])
+        dq_dJ_k[5] = -scale*nlbd.compute_dq_dJ_fp_I(1, [1, 0, 0, 2, 0])
 
         scale = np.sqrt(self._beta[ind.X, j-1])/64e0
-        dq_dJ[6] = 4e0*scale*nlbd.compute_dq_dJ_fp_I(1, [1, 0, 1, 1, 0])
-        dq_dJ[7] = scale*nlbd.compute_dq_dJ_fp_I(1, [1, 0, 2, 0, 0])
-        dq_dJ[8] = scale*nlbd.compute_dq_dJ_fp_I(1, [1, 0, 0, 2, 0])
+        dq_dJ_k[6] = 4e0*scale*nlbd.compute_dq_dJ_fp_I(1, [1, 0, 1, 1, 0])
+        dq_dJ_k[7] = scale*nlbd.compute_dq_dJ_fp_I(1, [1, 0, 2, 0, 0])
+        dq_dJ_k[8] = scale*nlbd.compute_dq_dJ_fp_I(1, [1, 0, 0, 2, 0])
 
-        return dq_dJ
+        return dq_dJ_k
 
-    def compute_dq_dJ_sum_fp(self, dq_dJ):
+    def compute_dq_dJ_sum_fp(self, dq_dJ_k):
         dq_dJ_sum = np.zeros(4, dtype=float)
-        dq_dJ_sum[0] = dq_dJ[0] + dq_dJ[1]
-        dq_dJ_sum[1] = dq_dJ[2]
-        dq_dJ_sum[2] = dq_dJ[3] + dq_dJ[4] + dq_dJ[5]
-        dq_dJ_sum[3] = dq_dJ[6] + dq_dJ[7] + dq_dJ[8]
+        dq_dJ_sum[0] = dq_dJ_k[0] + dq_dJ_k[1]
+        dq_dJ_sum[1] = dq_dJ_k[2]
+        dq_dJ_sum[2] = dq_dJ_k[3] + dq_dJ_k[4] + dq_dJ_k[5]
+        dq_dJ_sum[3] = dq_dJ_k[6] + dq_dJ_k[7] + dq_dJ_k[8]
         return dq_dJ_sum
-         
 
-    def compute_dq_dJ(self, j):
-        dq = self.compute_dq_dJ_fp(j)
-        x3_1_avg  = dq[0]*get_mn([2, 2, 0, 0, 0])
-        x3_2_avg  = dq[1]*get_mn([1, 1, 1, 1, 0])
-        xy2_avg = dq[2]*get_mn([1, 1, 1, 1, 0]) + dq[3]*get_mn([0, 0, 2, 2, 0])
+    def compute_dq_dJ_fp(self, j):
+        dq_dJ_k = self.compute_dq_dJ_k_fp(j)
+        x3_1_avg  = dq_dJ_k[0]*get_mn([2, 2, 0, 0, 0])
+        x3_2_avg  = dq_dJ_k[1]*get_mn([1, 1, 1, 1, 0])
+        xy2_avg = dq_dJ_k[2]*get_mn([1, 1, 1, 1, 0]) \
+            + dq_dJ_k[3]*get_mn([0, 0, 2, 2, 0])
         return [x3_1_avg, x3_2_avg, xy2_avg]
 
     def compute_dnu_dJ(self):
@@ -397,7 +416,7 @@ class nonlinear_beam_dynamics:
                 L = ele.get_length()
                 b3xL = ele.get_multipoles().get_multipole(MpoleInd.sext).real*L
                 if b3xL != 0e0:
-                    dq = self.compute_dq_dJ(j-1)
+                    dq = self.compute_dq_dJ_avg_fp(j-1)
                     nu[ind.X] += b3xL*dq[0]
                     nu[ind.Y] += b3xL*dq[2]
 
@@ -552,7 +571,7 @@ def get_mn(I):
     return mn
 
 
-def compute_dq_dJ_tpsa(nlbd):
+def compute_dq_dJ_chk(nlbd):
     ps_dim = 4;
 
     x_re = new.tpsa()
@@ -618,44 +637,44 @@ def compute_dq_dJ_tpsa(nlbd):
     return dq_dJ_g_tot, dq_dJ_g
 
 
-def prt_terms(nlbd, dq_dJ_g_tot, dq_dJ_g, dq_dJ_fp):
+def prt_terms(nlbd, dq_dJ_g_tot, dq_dJ_g, dq_dJ_k_fp):
     dq_dJ_g_sum = np.zeros(4, dtype=float)
     dq_dJ_g_sum[0] = dq_dJ_g[0] + dq_dJ_g[1]
     dq_dJ_g_sum[1] = dq_dJ_g[2]
     dq_dJ_g_sum[2] = dq_dJ_g[3] + dq_dJ_g[4] + dq_dJ_g[5]
     dq_dJ_g_sum[3] = dq_dJ_g[6] + dq_dJ_g[7] + dq_dJ_g[8]
 
-    dq_dJ_fp_sum = nlbd.compute_dq_dJ_sum_fp(dq_dJ_fp)
+    dq_dJ_fp_sum = nlbd.compute_dq_dJ_sum_fp(dq_dJ_k_fp)
 
     print("\n<x^3>:")
     print(f"  s_22000 = {dq_dJ_g_tot[0]:12.5e}")
     print(f"            {dq_dJ_g_sum[0]:12.5e} = {dq_dJ_g[0]:12.5e}"
           f" {dq_dJ_g[1]:+12.5e}")
-    print(f"            {dq_dJ_fp_sum[0]:12.5e} = {dq_dJ_fp[0]:12.5e}"
-          f" {dq_dJ_fp[1]:+12.5e}")
+    print(f"            {dq_dJ_fp_sum[0]:12.5e} = {dq_dJ_k_fp[0]:12.5e}"
+          f" {dq_dJ_k_fp[1]:+12.5e}")
 
     print(f"\n  s_11110 = {dq_dJ_g_tot[1]:12.5e}")
     print(f"            {dq_dJ_g_sum[1]:12.5e}")
-    print(f"            {dq_dJ_fp[2]:12.5e}")
+    print(f"            {dq_dJ_k_fp[2]:12.5e}")
 
     print("\n<x*y^2>:")
     print(f"  s_11110 = {dq_dJ_g_tot[2]:12.5e}")
     print(f"            {dq_dJ_g_sum[2]:12.5e} = {dq_dJ_g[3]:12.5e}"
           f" {dq_dJ_g[4]:+12.5e} {dq_dJ_g[5]:+12.5e}")
-    print(f"            {dq_dJ_fp_sum[2]:12.5e} = {dq_dJ_fp[3]:12.5e}"
-          f" {dq_dJ_fp[4]:+12.5e} {dq_dJ_fp[5]:+12.5e}")
+    print(f"            {dq_dJ_fp_sum[2]:12.5e} = {dq_dJ_k_fp[3]:12.5e}"
+          f" {dq_dJ_k_fp[4]:+12.5e} {dq_dJ_k_fp[5]:+12.5e}")
 
     print(f"\n  s_00220 = {dq_dJ_g_tot[3]:12.5e}")
     print(f"            {dq_dJ_g_sum[3]:12.5e} = {dq_dJ_g[6]:12.5e}"
           f" {dq_dJ_g[7]:+12.5e} {dq_dJ_g[8]:+12.5e}")
-    print(f"            {dq_dJ_fp_sum[3]:12.5e} = {dq_dJ_fp[6]:12.5e}"
-          f" {dq_dJ_fp[7]:+12.5e} {dq_dJ_fp[8]:+12.5e}")
+    print(f"            {dq_dJ_fp_sum[3]:12.5e} = {dq_dJ_k_fp[6]:12.5e}"
+          f" {dq_dJ_k_fp[7]:+12.5e} {dq_dJ_k_fp[8]:+12.5e}")
 
 
 def chk_terms(nlbd):
-    dq_dJ_fp = nlbd.compute_dq_dJ_fp(1)
-    dq_dJ_g_tot, dq_dJ_g = compute_dq_dJ_tpsa(nlbd)
-    prt_terms(nlbd, dq_dJ_g_tot, dq_dJ_g, dq_dJ_fp)
+    dq_dJ_k_fp = nlbd.compute_dq_dJ_k_fp(1)
+    dq_dJ_g_tot, dq_dJ_g = compute_dq_dJ_chk(nlbd)
+    prt_terms(nlbd, dq_dJ_g_tot, dq_dJ_g, dq_dJ_k_fp)
 
 
 def compute_ampl_dep_orbit_tpsa(g):
@@ -813,9 +832,7 @@ if False:
 if False:
     compute_R_from_MNF(M, A_0, A_1, g, K)
 
-nlbd.compute_dq_dJ_tpsa()
-
-dq_dJ = nlbd.compute_dq_dJ_fp(1)
+dq_dJ = nlbd.compute_dq_dJ_k_fp(1)
 dq_dJ_sum = nlbd.compute_dq_dJ_sum_fp(dq_dJ)
 print("\n<x^3>:")
 print(f"  s_22000 = {dq_dJ_sum[0]:12.5e}")
@@ -824,9 +841,8 @@ print("<x*y^2>:")
 print(f"  s_11110 = {dq_dJ_sum[2]:12.5e}")
 print(f"  s_00220 = {dq_dJ_sum[3]:12.5e}")
 
-dq = nlbd.compute_dq_dJ(1)
+dq = nlbd.compute_dq_dJ(25)
 
-nlbd.compute_dnu_dJ()
 assert False
 
 h_tpsa = nlbd.compute_h_tpsa()
