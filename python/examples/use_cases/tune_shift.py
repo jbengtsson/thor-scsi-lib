@@ -307,15 +307,11 @@ class nonlinear_beam_dynamics:
         for key, value in f_fp.items():
             self.prt_f_cmplx_I(symb, key, value)
 
-    def compute_dq_dJ(self, j):
-        x = new.tpsa()
-        x_re = new.tpsa()
-        x_im = new.tpsa()
 
+    def propagate_g(self, j):
         # Propagate g.
         Id = new.ss_vect_tpsa()
         R = new.ss_vect_tpsa()
-
         Id.set_identity()
         R.set_identity()
         c = np.zeros(2, dtype=float)
@@ -328,17 +324,25 @@ class nonlinear_beam_dynamics:
                 + s[k]*Id.iloc[2*k+1].to_tpsa()
             R.iloc[2*k+1] = -s[k]*Id.iloc[2*k].to_tpsa() \
                 + c[k]*Id.iloc[2*k+1].to_tpsa()
-        print("\nR:", R)
-        assert False
+        g = compose_bs(self._g, R)
+        return g
 
-        x = self._g.poisbra(self._Id.x.to_tpsa()**3/3e0, 4)
+
+    def compute_dq_dJ(self, j):
+        x = new.tpsa()
+        x_re = new.tpsa()
+        x_im = new.tpsa()
+
+        g = self.propagate_g(j)
+
+        x = g.poisbra(self._Id.x.to_tpsa()**3/3e0, 4)
         x.CtoR(x_re, x_im)
         x = complex(x_re.get([2, 2, 0, 0, 0]), x_im.get([2, 2, 0, 0, 0]))
         print(f"\n  x_22000 = {x:21.3e}")
         x = complex(x_re.get([1, 1, 1, 1, 0]), x_im.get([1, 1, 1, 1, 0]))
         print(f"  x_11110 = {x:21.3e}")
 
-        x = self._g.poisbra(self._Id.x.to_tpsa()*self._Id.y.to_tpsa()**2, 4)
+        x = g.poisbra(self._Id.x.to_tpsa()*self._Id.y.to_tpsa()**2, 4)
         x.CtoR(x_re, x_im)
         x = complex(x_re.get([1, 1, 1, 1, 0]), x_im.get([1, 1, 1, 1, 0]))
         print(f"  x_11110 = {x:21.3e}")
@@ -571,9 +575,11 @@ def get_mn(I):
     return mn
 
 
-def compute_dq_dJ_chk(nlbd):
+def compute_dq_dJ_chk(nlbd, j):
     ps_dim = 4;
 
+    g_re = new.tpsa()
+    g_im = new.tpsa()
     x_re = new.tpsa()
     x_im = new.tpsa()
 
@@ -581,17 +587,20 @@ def compute_dq_dJ_chk(nlbd):
 
     dq_dJ_g = np.zeros(9, dtype=float)
 
+    g = nlbd.propagate_g(j)
+    g.CtoR(g_re, g_im)
+
     # <x^3>.
-    x = nlbd._g.poisbra(get_mn([3, 0, 0, 0, 0])/3e0, ps_dim)
+    x = g.poisbra(get_mn([3, 0, 0, 0, 0])/3e0, ps_dim)
     x.CtoR(x_re, x_im)
     dq_dJ_g_tot.append(nlbd.get_f_I(x_re, [2, 2, 0, 0, 0]))
 
     # A x4 to correct for cosine & sine terms - for both f & g -> [f, g].
     scl = 4e0/24e0
-    g = nlbd._g_im.get([2, 1, 0, 0, 0])*get_mn([2, 1, 0, 0, 0])
+    g = g_im.get([2, 1, 0, 0, 0])*get_mn([2, 1, 0, 0, 0])
     dq_dJ_g[0] = scl*g.poisbra(3e0*get_mn([1, 2, 0, 0, 0]), ps_dim
                                ).get([2, 2, 0, 0, 0])
-    g = nlbd._g_im.get([3, 0, 0, 0, 0])*get_mn([3, 0, 0, 0, 0])
+    g = g_im.get([3, 0, 0, 0, 0])*get_mn([3, 0, 0, 0, 0])
     dq_dJ_g[1] = scl*g.poisbra(get_mn([0, 3, 0, 0, 0]), ps_dim
                                ).get([2, 2, 0, 0, 0])
     
@@ -599,24 +608,24 @@ def compute_dq_dJ_chk(nlbd):
 
     # A x4 to correct for cosine & sine terms - for both f & g -> [f, g].
     scl = 4e0/8e0
-    g = nlbd._g_im.get([1, 0, 1, 1, 0])*get_mn([1, 0, 1, 1, 0])
+    g = g_im.get([1, 0, 1, 1, 0])*get_mn([1, 0, 1, 1, 0])
     dq_dJ_g[2] = scl*g.poisbra(get_mn([1, 2, 0, 0, 0]), ps_dim
                                ).get([1, 1, 1, 1, 0])
 
     # <x*y^2>.
-    x = nlbd._g.poisbra(get_mn([1, 0, 2, 0, 0]), ps_dim)
+    x = g.poisbra(get_mn([1, 0, 2, 0, 0]), ps_dim)
     x.CtoR(x_re, x_im)
     dq_dJ_g_tot.append(nlbd.get_f_I(x_re, [1, 1, 1, 1, 0]))
 
     # A x4 to correct for cosine & sine terms - for both f & g -> [f, g].
     scl = 4e0/8e0
-    g = nlbd._g_im.get([2, 1, 0, 0, 0])*get_mn([2, 1, 0, 0, 0])
+    g = g_im.get([2, 1, 0, 0, 0])*get_mn([2, 1, 0, 0, 0])
     dq_dJ_g[3] = scl*g.poisbra(2e0*get_mn([0, 1, 1, 1, 0]), ps_dim
                                ).get([1, 1, 1, 1, 0])
-    g = nlbd._g_im.get([1, 0, 2, 0, 0])*get_mn([1, 0, 2, 0, 0])
+    g = g_im.get([1, 0, 2, 0, 0])*get_mn([1, 0, 2, 0, 0])
     dq_dJ_g[4] = scl*g.poisbra(get_mn([0, 1, 0, 2, 0]), ps_dim
                                ).get([1, 1, 1, 1, 0])
-    g = nlbd._g_im.get([1, 0, 0, 2, 0])*get_mn([1, 0, 0, 2, 0])
+    g = g_im.get([1, 0, 0, 2, 0])*get_mn([1, 0, 0, 2, 0])
     dq_dJ_g[5] = scl*g.poisbra(get_mn([0, 1, 2, 0, 0]), ps_dim
                                ).get([1, 1, 1, 1, 0])
 
@@ -624,13 +633,13 @@ def compute_dq_dJ_chk(nlbd):
 
     # A x4 to correct for cosine & sine terms - for both f & g -> [f, g].
     scl = 4e0/8e0
-    g = nlbd._g_im.get([1, 0, 1, 1, 0])*get_mn([1, 0, 1, 1, 0])
+    g = g_im.get([1, 0, 1, 1, 0])*get_mn([1, 0, 1, 1, 0])
     dq_dJ_g[6] = scl*g.poisbra(2e0*get_mn([0, 1, 1, 1, 0]), ps_dim
                                ).get([0, 0, 2, 2, 0])
-    g = nlbd._g_im.get([1, 0, 2, 0, 0])*get_mn([1, 0, 2, 0, 0])
+    g = g_im.get([1, 0, 2, 0, 0])*get_mn([1, 0, 2, 0, 0])
     dq_dJ_g[7] = scl*g.poisbra(get_mn([0, 1, 0, 2, 0]), ps_dim
                                ).get([0, 0, 2, 2, 0])
-    g = nlbd._g_im.get([1, 0, 0, 2, 0])*get_mn([1, 0, 0, 2, 0])
+    g = g_im.get([1, 0, 0, 2, 0])*get_mn([1, 0, 0, 2, 0])
     dq_dJ_g[8] = scl*g.poisbra(get_mn([0, 1, 2, 0, 0]), ps_dim
                                ).get([0, 0, 2, 2, 0])
 
@@ -671,9 +680,9 @@ def prt_terms(nlbd, dq_dJ_g_tot, dq_dJ_g, dq_dJ_k_fp):
           f" {dq_dJ_k_fp[7]:+12.5e} {dq_dJ_k_fp[8]:+12.5e}")
 
 
-def chk_terms(nlbd):
-    dq_dJ_k_fp = nlbd.compute_dq_dJ_k_fp(1)
-    dq_dJ_g_tot, dq_dJ_g = compute_dq_dJ_chk(nlbd)
+def chk_terms(nlbd, j):
+    dq_dJ_k_fp = nlbd.compute_dq_dJ_k_fp(j)
+    dq_dJ_g_tot, dq_dJ_g = compute_dq_dJ_chk(nlbd, j)
     prt_terms(nlbd, dq_dJ_g_tot, dq_dJ_g, dq_dJ_k_fp)
 
 
@@ -823,16 +832,20 @@ nlbd.compute_map_normal_form()
 
 nlbd._K_re.print("K_re")
 
-if not False:
-    chk_terms(nlbd)
-    # assert False
+if False:
+    chk_terms(nlbd, 1)
+    assert False
 
 if False:
     compute_M_from_MNF(K, A_0, A_1, g)
 if False:
     compute_R_from_MNF(M, A_0, A_1, g, K)
 
-dq_dJ = nlbd.compute_dq_dJ_k_fp(1)
+loc = 25
+
+chk_terms(nlbd, loc)
+
+dq_dJ = nlbd.compute_dq_dJ_k_fp(loc)
 dq_dJ_sum = nlbd.compute_dq_dJ_sum_fp(dq_dJ)
 print("\n<x^3>:")
 print(f"  s_22000 = {dq_dJ_sum[0]:12.5e}")
@@ -841,7 +854,7 @@ print("<x*y^2>:")
 print(f"  s_11110 = {dq_dJ_sum[2]:12.5e}")
 print(f"  s_00220 = {dq_dJ_sum[3]:12.5e}")
 
-dq = nlbd.compute_dq_dJ(25)
+dq = nlbd.compute_dq_dJ(loc)
 
 assert False
 
