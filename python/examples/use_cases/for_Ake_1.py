@@ -130,11 +130,9 @@ class beam_dyn_class:
             cod = co.compute_closed_orbit(
                 lat_prop._lattice, lat_prop._model_state, delta=delta,
                 eps=1e-10, desc=gtpsa_prop.desc)
-            print("\n  cod = ", cod.x0)
-            assert False
 
             ps_fp = cod.x0
-            ps_fp.delta = delta
+            ps_fp.ct = 0e0
             lat_prop._lattice.propagate(lat_prop._model_state, ps_fp)
             ct_fp = ps_fp.ct
 
