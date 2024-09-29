@@ -57,10 +57,6 @@ def compute_optics(lat_prop):
 
 # TPSA max order.
 gtpsa_prop.no = 6
-# Number of parameters.
-nv_prm = 0
-# Parameters max order.
-no_prm = 0
 
 cod_eps = 1e-15
 E_0     = 3.0e9

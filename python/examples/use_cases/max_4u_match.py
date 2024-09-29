@@ -3,15 +3,11 @@
 """
 
 
-import logging
-
-# Levels: DEBUG, INFO, WARNING, ERROR, and CRITICAL.
-logging.basicConfig(level="WARNING")
-logger = logging.getLogger("thor_scsi")
-
+import os
+import sys
 import copy as _copy
 from dataclasses import dataclass
-import os
+from typing import ClassVar
 from typing import Tuple
 
 import numpy as np
@@ -39,6 +35,24 @@ eta_des   = [0.0, 0.0]   # [eta_x, eta'_x] at the centre of the straight.
 alpha_des = [0.0, 0.0]   # Alpha_x,y at the centre of the straight.
 beta_des  = [9.2, 2.0]   # Beta_x,y at the centre of the straight.
 dnu_des   = [0.5, 0.25]  # Phase advance across the straight.
+
+
+@dataclass
+class gtpsa_prop:
+    # GTPSA properties.
+    # Number of variables - phase-space coordinates & 1 for parameter
+    #dependence.
+    nv: ClassVar[int] = 6 + 1
+    # Max order.
+    no: ClassVar[int] = 1
+    # Number of parameters.
+    nv_prm: ClassVar[int] = 0
+    # Parameters max order.
+    no_prm: ClassVar[int] = 0
+    # Index.
+    named_index = gtpsa.IndexMapping(dict(x=0, px=1, y=2, py=3, delta=4, ct=5))
+    # Descriptor
+    desc : ClassVar[gtpsa.desc]
 
 
 def compute_periodic_cell(lat_prop, uc_0, uc_1):
@@ -223,31 +237,24 @@ def match_straight(
     print("\n".join(minimum))
 
 
-# Number of phase-space coordinates.
-nv = 7
-# Variables max order.
-no = 2
-# Number of parameters.
-nv_prm = 0
-# Parameters max order.
-no_prm = 0
+# TPSA max order.
+gtpsa_prop.no = 2
 
 cod_eps = 1e-15
 E_0     = 3.0e9
 
 home_dir = os.path.join(
-    os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "MAX_iv", "max_4u")
-# lat_name = "max_iv_sp_matched"
-lat_name = "max_4u_g_1"
+    os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "MAX_IV")
+lat_name = sys.argv[1]
 file_name = os.path.join(home_dir, lat_name+".lat")
 
 lat_prop = \
-    lp.lattice_properties_class(nv, no, nv_prm, no_prm, file_name, E_0, cod_eps)
+    lp.lattice_properties_class(gtpsa_prop, file_name, E_0, cod_eps)
 
 print("\nCircumference [m]      = {:7.5f}".format(lat_prop.compute_circ()))
 print("Total bend angle [deg] = {:7.5f}".format(lat_prop.compute_phi_lat()))
 
-lat_prop.prt_lat(lat_name+"_lat.txt")
+lat_prop.prt_lat("max_4u_match_lat.txt")
 
 uc_0 = lat_prop._lattice.find("b1_0", 7).index
 uc_1 = lat_prop._lattice.find("b1_0", 8).index
