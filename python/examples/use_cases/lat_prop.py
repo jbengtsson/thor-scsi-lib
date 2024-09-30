@@ -70,8 +70,7 @@ home_dir = os.path.join(
 lat_name = sys.argv[1]
 file_name = os.path.join(home_dir, lat_name+".lat")
 
-lat_prop = \
-    lp.lattice_properties_class(gtpsa_prop, file_name, E_0, cod_eps)
+lat_prop = lp.lattice_properties_class(gtpsa_prop, file_name, E_0, cod_eps)
 
 lat_prop.prt_lat("lat_prop_lat.txt")
 

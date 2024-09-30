@@ -4,15 +4,10 @@
 """
 
 
-import logging
-
-# Levels: DEBUG, INFO, WARNING, ERROR, and CRITICAL.
-logging.basicConfig(level="WARNING")
-logger = logging.getLogger("thor_scsi")
-
-from dataclasses import dataclass
 import os
 import sys
+from dataclasses import dataclass
+from typing import ClassVar
 
 import numpy as np
 from scipy import optimize as opt
@@ -37,6 +32,24 @@ nu_uc_des    = [2.0/6.0, 0.12]
 nu_sp_des    = [2.25, 0.8]
 beta_des     = [5.7, 2.0]
 dnu_des      = [0.5, 0.25]     # Phase advance across the straight.
+
+
+@dataclass
+class gtpsa_prop:
+    # GTPSA properties.
+    # Number of variables - phase-space coordinates & 1 for parameter
+    #dependence.
+    nv: ClassVar[int] = 6 + 1
+    # Max order.
+    no: ClassVar[int] = 1
+    # Number of parameters.
+    nv_prm: ClassVar[int] = 0
+    # Parameters max order.
+    no_prm: ClassVar[int] = 0
+    # Index.
+    named_index = gtpsa.IndexMapping(dict(x=0, px=1, y=2, py=3, delta=4, ct=5))
+    # Descriptor
+    desc : ClassVar[gtpsa.desc]
 
 
 class opt_sp_class:
@@ -349,7 +362,7 @@ file_name = os.path.join(home_dir, lat_name+".lat")
 lat_prop = \
     lp.lattice_properties_class(nv, no, nv_prm, no_prm, file_name, E_0, cod_eps)
 
-lat_prop.prt_lat("max_4u_sp_nl_lat.txt")
+lat_prop.prt_lat("lat_prop_lat.txt")
 
 print("\nCircumference [m]      = {:7.5f}".format(lat_prop.compute_circ()))
 print("Total bend angle [deg] = {:7.5f}".format(lat_prop.compute_phi_lat()))

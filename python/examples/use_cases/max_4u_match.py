@@ -86,14 +86,12 @@ def match_straight(
                 phi += lat_prop.get_phi_elem(bend_list[k], 0)
             return phi
 
-        rb_1 = "qf1"
-        rb_2 = "qf1_e"
+        rb = "r1"
 
         phi = lat_prop.compute_phi_lat()
-        phi_b1 = compute_phi_bend(lat_prop, b1_list)
-        phi_b2 = compute_phi_bend(lat_prop, b2_list)
-        phi_rb_1 = lat_prop.get_phi_elem(rb_1, 0)
-        phi_rb_2 = lat_prop.get_phi_elem(rb_2, 0)
+        phi_d2 = compute_phi_bend(lat_prop, d2_list)
+        phi_d1 = compute_phi_bend(lat_prop, d1_list)
+        phi_rb = lat_prop.get_phi_elem(rb, 0)
 
         print("\n{:4d} chi_2 = {:9.3e}".format(n_iter, chi_2))
         print("    [eta_x, eta'_x] = "+
@@ -114,10 +112,9 @@ def match_straight(
                      Twiss_des[3][ind.X], Twiss_des[3][ind.Y]))
         print("\n    phi_sp          = {:8.5f}".format(phi))
         print("    C [m]           = {:8.5f}".format(lat_prop.compute_circ()))
-        print("\n    phi_b1          = {:8.5f}".format(phi_b1))
-        print("    phi_b2          = {:8.5f}".format(phi_b2))
-        print("    phi_rb_1        = {:8.5f}".format(phi_rb_1))
-        print("    phi_rb_2        = {:8.5f}".format(phi_rb_2))
+        print("\n    phi_d2          = {:8.5f}".format(phi_d2))
+        print("    phi_d1          = {:8.5f}".format(phi_d1))
+        print("    phi_rb          = {:8.5f}".format(phi_rb))
         prm_list.prt_prm(prm)
 
     def compute_chi_2_Twiss(Twiss_des, Twiss_k):
@@ -256,9 +253,11 @@ print("Total bend angle [deg] = {:7.5f}".format(lat_prop.compute_phi_lat()))
 
 lat_prop.prt_lat("max_4u_match_lat.txt")
 
-uc_0 = lat_prop._lattice.find("b1_0", 7).index
-uc_1 = lat_prop._lattice.find("b1_0", 8).index
-sp_1 = lat_prop._lattice.find("sd2", 1).index
+# uc_0 = lat_prop._lattice.find("d2_0", 7).index
+# uc_1 = lat_prop._lattice.find("d2_0", 8).index
+uc_0 = lat_prop._lattice.find("q4_h", 7).index
+uc_1 = lat_prop._lattice.find("q4_h", 8).index
+sp_1 = lat_prop._lattice.find("s1", 1).index
 sp_2 = lat_prop._lattice.find("cav", 0).index
 print("\nunit cell entrance           {:5s} loc = {:d}".
       format(lat_prop._lattice[uc_0].name, uc_0))
@@ -281,15 +280,15 @@ weight = np.array([
     1e-4  # dnu_y across the straight.
 ])
 
-b1_list = ["b1_0", "b1_1", "b1_2", "b1_3", "b1_4", "b1_5"]
+d2_list = ["d2_0", "d2_1", "d2_2", "d2_3", "d2_4", "d2_5"]
 
-b2_list = [
-    "b2u_6", "b2u_5", "b2u_4", "b2u_3", "b2u_2", "b2u_1", "b2_0",
-    "b2d_1", "b2d_2", "b2d_3", "b2d_4", "b2d_5"
+d1_list = [
+    "d1_u6", "d1_u5", "d1_u4", "d1_u3", "d1_u2", "d1_u1", "d1_0",
+    "d1_d1", "d1_d2", "d1_d3", "d1_d4", "d1_d5"
 ]
 
-b1_bend = pc.bend_class(lat_prop, b1_list, phi_max, b_2_max)
-b2_bend = pc.bend_class(lat_prop, b2_list, phi_max, b_2_max)
+d2_bend = pc.bend_class(lat_prop, d2_list, phi_max, b_2_max)
+d1_bend = pc.bend_class(lat_prop, d1_list, phi_max, b_2_max)
 
 # Remark:
 # Using the bend angles as parameters - maintaining the total - will change the
@@ -297,18 +296,18 @@ b2_bend = pc.bend_class(lat_prop, b2_list, phi_max, b_2_max)
 # approach.
 
 prm_list = [
-    ("qf1_e",    "b_2"),
-    ("qd",       "b_2"),
-    ("qf2",      "b_2"),
-    ("b_2_bend", b2_bend),
+    ("q1",       "b_2"),
+    ("q2",       "b_2"),
+    ("q3",       "b_2"),
+    # ("b_2_bend", d1_bend),
 
-    ("phi_bend", b1_bend)
+    ("phi_bend", d2_bend)
 ]
 
 prm_list = pc.prm_class(lat_prop, prm_list, b_2_max)
 
 # To maintain the total bend angle.
-phi_lat = pc.phi_lat_class(lat_prop, 2, b2_bend)
+phi_lat = pc.phi_lat_class(lat_prop, 2, d1_bend)
 
 match_straight(
     lat_prop, prm_list, uc_0, uc_1, sp_1, sp_2, weight, phi_lat, Twiss_des)

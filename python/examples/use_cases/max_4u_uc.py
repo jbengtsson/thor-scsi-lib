@@ -3,15 +3,10 @@
 """
 
 
-import logging
-
-# Levels: DEBUG, INFO, WARNING, ERROR, and CRITICAL.
-logging.basicConfig(level="WARNING")
-logger = logging.getLogger("thor_scsi")
-
 import os
 import sys
 from dataclasses import dataclass
+from typing import ClassVar
 import enum
 from typing import Tuple
 
@@ -36,8 +31,26 @@ phi_max      = 0.85
 b_2_bend_max = 1.0
 b_2_max      = 10.0
 
-eps_x_des    = 139e-12
+eps_x_des    = 99e-12
 nu_uc        = [0.265, 0.0816]
+
+
+@dataclass
+class gtpsa_prop:
+    # GTPSA properties.
+    # Number of variables - phase-space coordinates & 1 for parameter
+    #dependence.
+    nv: ClassVar[int] = 6 + 1
+    # Max order.
+    no: ClassVar[int] = 1
+    # Number of parameters.
+    nv_prm: ClassVar[int] = 0
+    # Parameters max order.
+    no_prm: ClassVar[int] = 0
+    # Index.
+    named_index = gtpsa.IndexMapping(dict(x=0, px=1, y=2, py=3, delta=4, ct=5))
+    # Descriptor
+    desc : ClassVar[gtpsa.desc]
 
 
 class MpoleInd(enum.IntEnum):
@@ -202,6 +215,7 @@ def compute_nu_tps_prm(lat_prop, M):
           gtpsa.tpsa(lat_prop._desc, lat_prop._no)]
     for k in range(2):
         tr = m_11[k] + m_22[k]
+        print(f"{tr.get():10.3e}")
         if tr.get() < 2e0:
             xi[k] = lo.acos2_tpsa(M.jacobian()[2*k][2*k+1], tr/2e0)/(2e0*np.pi)
         else:
@@ -278,7 +292,7 @@ def set_xi(lat_prop, xi_x, xi_y, b_3_list):
 
 def compute_linear_optics(lat_prop):
     # Compute the beam dynamics properties.
-    alpha_rad_z_min = -1e-5
+    alpha_rad_z_min = -1e-8
 
     try:
         # Compute Twiss parameters along lattice.
@@ -424,7 +438,7 @@ def prt_b_3(lat_prop, file_name, b_3_list):
         name = b_3_list[k]
         L = lat_prop.get_L_elem(name, 0)
         b_3 = lat_prop.get_b_n_elem(name, 0, 3)
-        print(("{:5s}: Sextupole, L = {:7.5f}, K = {:8.5f}, N = n_sext;")
+        print(("{:5s}: Sextupole, L = {:7.5f}, B_3 = {:8.5f}, N = n_sext;")
               .format(name, L, b_3), file=outf)
 
     outf.close()
@@ -517,7 +531,7 @@ def opt_uc \
             stable, nu, xi = compute_linear_optics(lat_prop)
 
         if stable:
-            M = compute_map(lat_prop, no)
+            M = compute_map(lat_prop, gtpsa_prop.no)
 
             h_re, h_im = compute_h(lat_prop, M)
             A_0, A_1, R, g_re, g_im, K_re, K_im = \
@@ -566,14 +580,8 @@ def opt_uc \
     print("\n".join(minimum))
 
 
-# Number of phase-space coordinates.
-nv = 7
-# Variables max order.
-no = 4
-# Number of parameters.
-nv_prm = 0
-# Parameters max order.
-no_prm = 0
+# TPSA max order.
+gtpsa_prop.no = 4
 
 cod_eps   = 1e-15
 E_0       = 3.0e9
@@ -589,16 +597,14 @@ file_name = os.path.join(home_dir, lat_name+".lat")
 
 np.set_printoptions(formatter={"float": "{:10.3e}".format})
 
-lat_prop = \
-    lp.lattice_properties_class(nv, no, nv_prm, no_prm, file_name, E_0, cod_eps)
+lat_prop = lp.lattice_properties_class(gtpsa_prop, file_name, E_0, cod_eps)
 
 lat_prop.prt_lat("max_4u_uc_lat.txt")
 
 print("\nCircumference [m]      = {:7.5f}".format(lat_prop.compute_circ()))
 print("Total bend angle [deg] = {:7.5f}".format(lat_prop.compute_phi_lat()))
 
-b_3_list = ["sf_h", "sd1"]
-# b_3_list = ["sfoh", "sdqd"]
+b_3_list = ["s3", "s4"]
 set_xi(lat_prop, 0e0, 0e0, b_3_list)
 
 if not False:
@@ -619,49 +625,50 @@ weight = np.array([
     1e12  # K rms.
 ])
 
-b1_list = ["b1_0", "b1_1", "b1_2", "b1_3", "b1_4", "b1_5"]
+d2_list = ["d2_0", "d2_1", "d2_2", "d2_3", "d2_4", "d2_5"]
 
-b1_bend = pc.bend_class(lat_prop, b1_list, phi_max, b_2_max)
+d2_bend = pc.bend_class(lat_prop, d2_list, phi_max, b_2_max)
 
 if True:
     prms = [
-        ("qf1",      "b_2"),
+        ("r1",       "b_2"),
+        ("q4_h",     "b_2"),
 
-        ("b1_0",     "b_2"),
-        ("b1_1",     "b_2"),
-        ("b1_2",     "b_2"),
-        ("b1_3",     "b_2"),
-        ("b1_4",     "b_2"),
-        ("b1_5",     "b_2"),
+        ("d2_0",     "b_2"),
+        ("d2_1",     "b_2"),
+        ("d2_2",     "b_2"),
+        ("d2_3",     "b_2"),
+        ("d2_4",     "b_2"),
+        ("d2_5",     "b_2"),
 
-        ("phi_bend", b1_bend),
-        ("qf1",     "phi"),
+        # ("phi_bend", d2_bend),
+        # ("r1",       "phi"),
     ]
 else:
     prms = [
         ("qf1",      "b_2"),
 
-        ("b1_0",     "b_2"),
-        ("b1_1",     "b_2"),
-        ("b1_2",     "b_2"),
-        ("b1_3",     "b_2"),
-        ("b1_4",     "b_2"),
-        ("b1_5",     "b_2"),
+        ("d2_0",     "b_2"),
+        ("d2_1",     "b_2"),
+        ("d2_2",     "b_2"),
+        ("d2_3",     "b_2"),
+        ("d2_4",     "b_2"),
+        ("d2_5",     "b_2"),
 
-        ("b1_0",     "phi"),
-        ("b1_1",     "phi"),
-        ("b1_2",     "phi"),
-        ("b1_3",     "phi"),
-        ("b1_4",     "phi"),
-        # ("b1_5",     "phi"),
+        ("d2_0",     "phi"),
+        ("d2_1",     "phi"),
+        ("d2_2",     "phi"),
+        ("d2_3",     "phi"),
+        ("d2_4",     "phi"),
+        # ("d2_5",     "phi"),
 
         ("qf1",     "phi"),
     ]
 
 prm_list = pc.prm_class(lat_prop, prms, b_2_max)
 
-rb_1    = "qf1"
-phi_b   = "b1_5"
+rb_1    = "r1"
+phi_b   = "d2_5"
 n_phi_b = 10
 # To maintain the total bend angle.
 phi_lat = pc.phi_lat_class(lat_prop, n_phi_b, phi_b)
@@ -670,5 +677,5 @@ twoJ = compute_twoJ(A_max, beta_inj)
 Id_scl = compute_Id_scl(lat_prop, twoJ)
 
 opt_uc \
-    (lat_prop, prm_list, weight, b1_list, phi_lat, rb_1, phi_b, eps_x_des,
+    (lat_prop, prm_list, weight, d2_list, phi_lat, rb_1, phi_b, eps_x_des,
      nu_uc, Id_scl, b_3_list)
