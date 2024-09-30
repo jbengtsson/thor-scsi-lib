@@ -376,9 +376,9 @@ class nonlinear_beam_dynamics:
                 if (b3xL != 0e0):
                     dx_dJ_abs = b3xL*self._beta[ind.X, k-1]**(m_x/2e0) \
                         *self._beta[ind.Y, k-1]**(m_y/2e0)
-                    phi = abs(n_x*(self._dmu[ind.X, k-1]-self._dmu[ind.X, j-1])
-                              + n_y*(self._dmu[ind.Y, k-1]
-                                     -self._dmu[ind.Y, j-1]))
+                    phi = abs(
+                        n_x*(self._dmu[ind.X, k-1]-self._dmu[ind.X, j-1])
+                        + n_y*(self._dmu[ind.Y, k-1]-self._dmu[ind.Y, j-1]))
                     dnu = np.pi*(n_x*self._nu[ind.X]+n_y*self._nu[ind.Y])
                     dx_dJ += dx_dJ_abs*np.exp(1j*(phi-dnu))/np.sin(dnu)
 
@@ -388,21 +388,21 @@ class nonlinear_beam_dynamics:
         dx_dJ_k = np.zeros(9, dtype=complex)
 
         scl = np.sqrt(self._beta[ind.X, j-1])/64e0
-        dx_dJ_k[0] = -3e0*scl*nlbd.compute_dx_dJ_fp_I(1, [2, 1, 0, 0, 0])
-        dx_dJ_k[1] = -scl*nlbd.compute_dx_dJ_fp_I(1, [3, 0, 0, 0, 0])
+        dx_dJ_k[0] = -3e0*scl*nlbd.compute_dx_dJ_fp_I(j, [2, 1, 0, 0, 0])
+        dx_dJ_k[1] = -scl*nlbd.compute_dx_dJ_fp_I(j, [3, 0, 0, 0, 0])
 
         scl = np.sqrt(self._beta[ind.X, j-1])/16e0
-        dx_dJ_k[2] = scl*nlbd.compute_dx_dJ_fp_I(1, [1, 0, 1, 1, 0])
+        dx_dJ_k[2] = scl*nlbd.compute_dx_dJ_fp_I(j, [1, 0, 1, 1, 0])
 
         scl = np.sqrt(self._beta[ind.X, j-1])/16e0
-        dx_dJ_k[3] = -scl*nlbd.compute_dx_dJ_fp_I(1, [2, 1, 0, 0, 0])
-        dx_dJ_k[4] = scl*nlbd.compute_dx_dJ_fp_I(1, [1, 0, 2, 0, 0])
-        dx_dJ_k[5] = -scl*nlbd.compute_dx_dJ_fp_I(1, [1, 0, 0, 2, 0])
+        dx_dJ_k[3] = -scl*nlbd.compute_dx_dJ_fp_I(j, [2, 1, 0, 0, 0])
+        dx_dJ_k[4] = scl*nlbd.compute_dx_dJ_fp_I(j, [1, 0, 2, 0, 0])
+        dx_dJ_k[5] = -scl*nlbd.compute_dx_dJ_fp_I(j, [1, 0, 0, 2, 0])
 
         scl = np.sqrt(self._beta[ind.X, j-1])/64e0
-        dx_dJ_k[6] = 4e0*scl*nlbd.compute_dx_dJ_fp_I(1, [1, 0, 1, 1, 0])
-        dx_dJ_k[7] = scl*nlbd.compute_dx_dJ_fp_I(1, [1, 0, 2, 0, 0])
-        dx_dJ_k[8] = scl*nlbd.compute_dx_dJ_fp_I(1, [1, 0, 0, 2, 0])
+        dx_dJ_k[6] = 4e0*scl*nlbd.compute_dx_dJ_fp_I(j, [1, 0, 1, 1, 0])
+        dx_dJ_k[7] = scl*nlbd.compute_dx_dJ_fp_I(j, [1, 0, 2, 0, 0])
+        dx_dJ_k[8] = scl*nlbd.compute_dx_dJ_fp_I(j, [1, 0, 0, 2, 0])
 
         return dx_dJ_k
 
@@ -420,12 +420,13 @@ class nonlinear_beam_dynamics:
                 L = ele.get_length()
                 b3xL = ele.get_multipoles().get_multipole(MpoleInd.sext).real*L
                 if b3xL != 0e0:
-                    dq = self.compute_dx_dJ_fp(j-1)
-                    nu[ind.X] += b3xL*dq[0]
-                    nu[ind.Y] += b3xL*dq[2]
+                    dx_dJ_k = self.compute_dx_dJ_k_fp(j-1)
+                    x3, xy2 = self.compute_dx_dJ(dx_dJ_k)
+                    nu[ind.X] += tpsa_mul(b3xL*self._beta[ind.X, j-1],
+                                          x3.real())
+                    nu[ind.Y] += tpsa_mul(b3xL*self._beta[ind.Y, j-1],
+                                          xy2.real())
 
-        for k in range(2):
-            nu[k] *= 2e0
         nu[ind.X].print("nu_x")
         nu[ind.Y].print("nu_y")
         
@@ -583,8 +584,6 @@ def get_cmn(c, I):
 
 def RtoCmplx(a_re, a_im):
     a = new.ctpsa()
-    a_re.print("a_re")
-    a_im.print("a_im")
     for k, coeff in enumerate(a_re.get_coefficients()):
         I = coeff[0]
         c = coeff[1]
@@ -594,6 +593,15 @@ def RtoCmplx(a_re, a_im):
         c = a_re.get(I) + 1j*coeff[1]
         a.set(I, 0e0, c)
     return a
+
+
+def tpsa_mul(scl, a):
+    b = new.tpsa()
+    for k, coeff in enumerate(a.get_coefficients()):
+        I = coeff[0]
+        c = coeff[1]
+        b.set(I, 0e0, scl*c)
+    return b
 
 
 def compute_dx_dJ_g_k(nlbd, j):
@@ -722,8 +730,6 @@ def chk_terms(nlbd, j):
         nlbd, x3_g_PB, xy2_g_PB, dx_dJ_g_k, x3_g, xy2_g, dx_dJ_k_fp, x3_fp,
         xy2_fp)
 
-    assert False
-
 
 gtpsa_prop.no = 4
 gtpsa_prop.desc = gtpsa.desc(gtpsa_prop.nv, gtpsa_prop.no)
@@ -779,24 +785,13 @@ if False:
 if False:
     compute_R_from_MNF(M, A_0, A_1, g, K)
 
-if not True:
+if True:
     # loc = 237
     loc = 357
 else:
     loc = 1
 
 chk_terms(nlbd, loc)
-
-dx_dJ = nlbd.compute_dx_dJ_k_fp(loc)
-dx_dJ_sum = nlbd.compute_dx_dJ_sum_fp(dx_dJ)
-print("\n<x^3>:")
-print(f"  s_22000 = {dx_dJ_sum[0]:12.5e}")
-print(f"  s_11110 = {dx_dJ_sum[1]:12.5e}")
-print("<x*y^2>:")
-print(f"  s_11110 = {dx_dJ_sum[2]:12.5e}")
-print(f"  s_00220 = {dx_dJ_sum[3]:12.5e}")
-
-dq = nlbd.compute_dx_dJ(loc)
 
 nlbd.compute_dnu_dJ()
 
@@ -820,7 +815,7 @@ nlbd.prt_f_fp("\nLie Generators - FP:", 'g', g_fp)
 K = [K_re.get([2, 2, 0, 0, 0]), K_re.get([1, 1, 1, 1, 0]),
      K_re.get([0, 0, 2, 2, 0])]
 print(f"\nK:\n [{K[0]:10.3e}, {K[1]:10.3e}, {K[2]:10.3e}]")
-assert False
+
 K, K_k = nlbd.compute_dnu_dJ()
 print(f"  [{abs(K[0]):10.3e}  \u2220 {np.rad2deg(np.angle(K[0])):6.1f}"
       f", {abs(K[1]):10.3e}  \u2220 {np.rad2deg(np.angle(K[1])):6.1f}"
