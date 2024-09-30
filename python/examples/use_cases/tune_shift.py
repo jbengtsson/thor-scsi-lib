@@ -42,6 +42,8 @@ class gtpsa_prop:
 class new():
     def tpsa():
         return gtpsa.tpsa(gtpsa_prop.desc, gtpsa_prop.no)
+    def ctpsa():
+        return gtpsa.ctpsa(gtpsa_prop.desc, gtpsa_prop.no)
     def ss_vect_tpsa():
         return gtpsa.ss_vect_tpsa(gtpsa_prop.desc, gtpsa_prop.no)
 
@@ -329,34 +331,42 @@ class nonlinear_beam_dynamics:
         g = compose_bs(self._g, R)
         return g
 
-    def compute_dq_dJ(self, j):
+    def compute_dx_dJ_PB(self, j):
+        ps_dim = 4
+
         x = new.tpsa()
         x_re = new.tpsa()
         x_im = new.tpsa()
+        x3 = new.ctpsa()
+        xy2 = new.ctpsa()
 
         g = self.propagate_g(j)
 
-        x = g.poisbra(self._Id.x.to_tpsa()**3/3e0, 4)
+        # <x^3>.
+        x = g.poisbra(self._Id.x.to_tpsa()**3/3e0, ps_dim)
         x.CtoR(x_re, x_im)
-        x = complex(x_re.get([2, 2, 0, 0, 0]), x_im.get([2, 2, 0, 0, 0]))
-        print(f"\n  x_22000 = {x:21.3e}")
-        x = complex(x_re.get([1, 1, 1, 1, 0]), x_im.get([1, 1, 1, 1, 0]))
-        print(f"  x_11110 = {x:21.3e}")
+        I = [2, 2, 0, 0, 0]
+        x3.set(I, 0e0, x_re.get(I)+1j*x_im.get(I))
+        I = [1, 1, 1, 1, 0]
+        x3.set(I, 0e0, x_re.get(I)+1j*x_im.get(I))
 
-        x = g.poisbra(self._Id.x.to_tpsa()*self._Id.y.to_tpsa()**2, 4)
+        # <x*y^2>.
+        x = g.poisbra(self._Id.x.to_tpsa()*self._Id.y.to_tpsa()**2, ps_dim)
         x.CtoR(x_re, x_im)
-        x = complex(x_re.get([1, 1, 1, 1, 0]), x_im.get([1, 1, 1, 1, 0]))
-        print(f"  x_11110 = {x:21.3e}")
-        x = complex(x_re.get([0, 0, 2, 2, 0]), x_im.get([0, 0, 2, 2, 0]))
-        print(f"  x_00220 = {x:21.3e}")
+        I = [1, 1, 1, 1, 0]
+        xy2.set(I, 0e0, x_re.get(I)+1j*x_im.get(I))
+        I = [0, 0, 2, 2, 0]
+        xy2.set(I, 0e0, x_re.get(I)+1j*x_im.get(I))
 
-    def compute_dq_dJ_fp_I(self, j, I):
+        return x3, xy2
+
+    def compute_dx_dJ_fp_I(self, j, I):
         m_x = I[0] + I[1]
         m_y = I[2] + I[3]
         n_x = I[0] - I[1]
         n_y = I[2] - I[3]
         h_I = 0e0
-        dq = 0e0
+        dx_dJ = 0e0
         for k, ele in enumerate(self._lat_prop._lattice):
             if type(ele) == ts.Sextupole:
                 L = ele.get_length()
@@ -364,55 +374,44 @@ class nonlinear_beam_dynamics:
                     ele.get_multipoles(). \
                     get_multipole(MpoleInd.sext).real*L
                 if (b3xL != 0e0):
-                    dq_abs = b3xL*self._beta[ind.X, k-1]**(m_x/2e0) \
+                    dx_dJ_abs = b3xL*self._beta[ind.X, k-1]**(m_x/2e0) \
                         *self._beta[ind.Y, k-1]**(m_y/2e0)
                     phi = abs(n_x*(self._dmu[ind.X, k-1]-self._dmu[ind.X, j-1])
                               + n_y*(self._dmu[ind.Y, k-1]
                                      -self._dmu[ind.Y, j-1]))
                     dnu = np.pi*(n_x*self._nu[ind.X]+n_y*self._nu[ind.Y])
-                    dq += dq_abs*np.cos((phi-dnu))/np.sin(dnu)
-        return dq
-        
-    def compute_dq_dJ_k_fp(self, j):
-        Id = new.ss_vect_tpsa()
-        Id.set_identity()
+                    dx_dJ += dx_dJ_abs*np.exp(1j*(phi-dnu))/np.sin(dnu)
 
-        dq_dJ_k = np.zeros(9, dtype=float)
+        return dx_dJ
 
-        scale = np.sqrt(self._beta[ind.X, j-1])/64e0
-        dq_dJ_k[0] = -3e0*scale*nlbd.compute_dq_dJ_fp_I(1, [2, 1, 0, 0, 0])
-        dq_dJ_k[1] = -scale*nlbd.compute_dq_dJ_fp_I(1, [3, 0, 0, 0, 0])
+    def compute_dx_dJ_k_fp(self, j):
+        dx_dJ_k = np.zeros(9, dtype=complex)
 
-        scale = np.sqrt(self._beta[ind.X, j-1])/16e0
-        dq_dJ_k[2] = scale*nlbd.compute_dq_dJ_fp_I(1, [1, 0, 1, 1, 0])
+        scl = np.sqrt(self._beta[ind.X, j-1])/64e0
+        dx_dJ_k[0] = -3e0*scl*nlbd.compute_dx_dJ_fp_I(1, [2, 1, 0, 0, 0])
+        dx_dJ_k[1] = -scl*nlbd.compute_dx_dJ_fp_I(1, [3, 0, 0, 0, 0])
 
-        scale = np.sqrt(self._beta[ind.X, j-1])/16e0
-        dq_dJ_k[3] = -scale*nlbd.compute_dq_dJ_fp_I(1, [2, 1, 0, 0, 0])
-        dq_dJ_k[4] = scale*nlbd.compute_dq_dJ_fp_I(1, [1, 0, 2, 0, 0])
-        dq_dJ_k[5] = -scale*nlbd.compute_dq_dJ_fp_I(1, [1, 0, 0, 2, 0])
+        scl = np.sqrt(self._beta[ind.X, j-1])/16e0
+        dx_dJ_k[2] = scl*nlbd.compute_dx_dJ_fp_I(1, [1, 0, 1, 1, 0])
 
-        scale = np.sqrt(self._beta[ind.X, j-1])/64e0
-        dq_dJ_k[6] = 4e0*scale*nlbd.compute_dq_dJ_fp_I(1, [1, 0, 1, 1, 0])
-        dq_dJ_k[7] = scale*nlbd.compute_dq_dJ_fp_I(1, [1, 0, 2, 0, 0])
-        dq_dJ_k[8] = scale*nlbd.compute_dq_dJ_fp_I(1, [1, 0, 0, 2, 0])
+        scl = np.sqrt(self._beta[ind.X, j-1])/16e0
+        dx_dJ_k[3] = -scl*nlbd.compute_dx_dJ_fp_I(1, [2, 1, 0, 0, 0])
+        dx_dJ_k[4] = scl*nlbd.compute_dx_dJ_fp_I(1, [1, 0, 2, 0, 0])
+        dx_dJ_k[5] = -scl*nlbd.compute_dx_dJ_fp_I(1, [1, 0, 0, 2, 0])
 
-        return dq_dJ_k
+        scl = np.sqrt(self._beta[ind.X, j-1])/64e0
+        dx_dJ_k[6] = 4e0*scl*nlbd.compute_dx_dJ_fp_I(1, [1, 0, 1, 1, 0])
+        dx_dJ_k[7] = scl*nlbd.compute_dx_dJ_fp_I(1, [1, 0, 2, 0, 0])
+        dx_dJ_k[8] = scl*nlbd.compute_dx_dJ_fp_I(1, [1, 0, 0, 2, 0])
 
-    def compute_dq_dJ_sum_fp(self, dq_dJ_k):
-        dq_dJ_sum = np.zeros(4, dtype=float)
-        dq_dJ_sum[0] = dq_dJ_k[0] + dq_dJ_k[1]
-        dq_dJ_sum[1] = dq_dJ_k[2]
-        dq_dJ_sum[2] = dq_dJ_k[3] + dq_dJ_k[4] + dq_dJ_k[5]
-        dq_dJ_sum[3] = dq_dJ_k[6] + dq_dJ_k[7] + dq_dJ_k[8]
-        return dq_dJ_sum
+        return dx_dJ_k
 
-    def compute_dq_dJ_fp(self, j):
-        dq_dJ_k = self.compute_dq_dJ_k_fp(j)
-        x3_1_avg  = dq_dJ_k[0]*get_mn([2, 2, 0, 0, 0])
-        x3_2_avg  = dq_dJ_k[1]*get_mn([1, 1, 1, 1, 0])
-        xy2_avg = dq_dJ_k[2]*get_mn([1, 1, 1, 1, 0]) \
-            + dq_dJ_k[3]*get_mn([0, 0, 2, 2, 0])
-        return [x3_1_avg, x3_2_avg, xy2_avg]
+    def compute_dx_dJ(self, dx_dJ_k):
+        x3  = get_cmn(dx_dJ_k[0]+dx_dJ_k[1], [2, 2, 0, 0, 0]) \
+            + get_cmn(dx_dJ_k[2], [1, 1, 1, 1, 0])
+        xy2 = get_cmn(dx_dJ_k[3]+dx_dJ_k[4]+dx_dJ_k[5], [1, 1, 1, 1, 0]) \
+            + get_cmn(dx_dJ_k[6]+dx_dJ_k[7]+dx_dJ_k[8], [0, 0, 2, 2, 0])
+        return x3, xy2
 
     def compute_dnu_dJ(self):
         nu = [new.tpsa(), new.tpsa()]
@@ -421,7 +420,7 @@ class nonlinear_beam_dynamics:
                 L = ele.get_length()
                 b3xL = ele.get_multipoles().get_multipole(MpoleInd.sext).real*L
                 if b3xL != 0e0:
-                    dq = self.compute_dq_dJ_fp(j-1)
+                    dq = self.compute_dx_dJ_fp(j-1)
                     nu[ind.X] += b3xL*dq[0]
                     nu[ind.Y] += b3xL*dq[2]
 
@@ -576,145 +575,154 @@ def get_mn(I):
     return mn
 
 
-def compute_dq_dJ_chk(nlbd, j):
+def get_cmn(c, I):
+    cmn = new.ctpsa()
+    cmn.set(I, 0e0, c)
+    return cmn
+
+
+def RtoCmplx(a_re, a_im):
+    a = new.ctpsa()
+    a_re.print("a_re")
+    a_im.print("a_im")
+    for k, coeff in enumerate(a_re.get_coefficients()):
+        I = coeff[0]
+        c = coeff[1]
+        a.set(I, 0e0, c)
+    for k, coeff in enumerate(a_im.get_coefficients()):
+        I = coeff[0]
+        c = a_re.get(I) + 1j*coeff[1]
+        a.set(I, 0e0, c)
+    return a
+
+
+def compute_dx_dJ_g_k(nlbd, j):
     ps_dim = 4;
 
     g_re = new.tpsa()
     g_im = new.tpsa()
-    x_re = new.tpsa()
-    x_im = new.tpsa()
 
-    dq_dJ_g_tot = np.zeros(4, dtype=complex)
-    dq_dJ_g = np.zeros(9, dtype=complex)
+    dx_dJ_g_k = np.zeros(9, dtype=complex)
 
     g = nlbd.propagate_g(j)
     g.CtoR(g_re, g_im)
 
-    # <x^3>.
-    x = g.poisbra(get_mn([3, 0, 0, 0, 0])/3e0, ps_dim)
-    x.CtoR(x_re, x_im)
-    dq_dJ_g_tot[0] = complex(nlbd.get_f_I(x_re, [2, 2, 0, 0, 0]),
-                             nlbd.get_f_I(x_im, [2, 2, 0, 0, 0]))
-
-    # A x4 to correct for cosine & sine terms - for both f & g -> [f, g].
-    scl = 4e0/24e0
-    g_k_re = g_re.get([2, 1, 0, 0, 0])*get_mn([2, 1, 0, 0, 0])
-    g_k_im = g_im.get([2, 1, 0, 0, 0])*get_mn([2, 1, 0, 0, 0])
-    dq_dJ_g[0] = scl*complex(
-        g_re.poisbra(3e0*get_mn([1, 2, 0, 0, 0]), ps_dim).get([2, 2, 0, 0, 0]),
-        g_im.poisbra(3e0*get_mn([1, 2, 0, 0, 0]), ps_dim).get([2, 2, 0, 0, 0]))
-    g_re_k = g_re.get([3, 0, 0, 0, 0])*get_mn([3, 0, 0, 0, 0])
-    g_im_k = g_im.get([3, 0, 0, 0, 0])*get_mn([3, 0, 0, 0, 0])
-    dq_dJ_g[1] = scl*complex(
-        g_re.poisbra(get_mn([0, 3, 0, 0, 0]), ps_dim).get([2, 2, 0, 0, 0]),
-        g_im.poisbra(get_mn([0, 3, 0, 0, 0]), ps_dim).get([2, 2, 0, 0, 0]))
-
-    dq_dJ_g_tot[1] = complex(nlbd.get_f_I(x_re, [1, 1, 1, 1, 0]),
-                             nlbd.get_f_I(x_im, [1, 1, 1, 1, 0]))
-
     # A x4 to correct for cosine & sine terms - for both f & g -> [f, g].
     scl = 4e0/8e0
+
+    # <x^3>.
+
+    g_k_re = g_re.get([2, 1, 0, 0, 0])*get_mn([2, 1, 0, 0, 0])
+    g_k_im = g_im.get([2, 1, 0, 0, 0])*get_mn([2, 1, 0, 0, 0])
+    dx_dJ_g_k[0] = scl*complex(
+        g_re.poisbra(get_mn([1, 2, 0, 0, 0]), ps_dim).get([2, 2, 0, 0, 0]),
+        g_im.poisbra(get_mn([1, 2, 0, 0, 0]), ps_dim).get([2, 2, 0, 0, 0]))
+    g_re_k = g_re.get([3, 0, 0, 0, 0])*get_mn([3, 0, 0, 0, 0])
+    g_im_k = g_im.get([3, 0, 0, 0, 0])*get_mn([3, 0, 0, 0, 0])
+    dx_dJ_g_k[1] = scl*complex(
+        g_re.poisbra(get_mn([0, 3, 0, 0, 0]), ps_dim).get([2, 2, 0, 0, 0])/3e0,
+        g_im.poisbra(get_mn([0, 3, 0, 0, 0]), ps_dim).get([2, 2, 0, 0, 0])/3e0)
+
     g_re_k = g_re.get([1, 0, 1, 1, 0])*get_mn([1, 0, 1, 1, 0])
     g_im_k = g_im.get([1, 0, 1, 1, 0])*get_mn([1, 0, 1, 1, 0])
-    dq_dJ_g[2] = scl*complex(
+    dx_dJ_g_k[2] = scl*complex(
         g_re.poisbra(get_mn([1, 2, 0, 0, 0]), ps_dim).get([1, 1, 1, 1, 0]),
         g_im.poisbra(get_mn([1, 2, 0, 0, 0]), ps_dim).get([1, 1, 1, 1, 0]))
 
-    # <x*y^2>.
-    x = g.poisbra(get_mn([1, 0, 2, 0, 0]), ps_dim)
-    x.CtoR(x_re, x_im)
-    dq_dJ_g_tot[2] = complex(nlbd.get_f_I(x_re, [1, 1, 1, 1, 0]),
-                             nlbd.get_f_I(x_im, [1, 1, 1, 1, 0]))
+    # <x*^2>.
 
-    # A x4 to correct for cosine & sine terms - for both f & g -> [f, g].
-    scl = 4e0/8e0
     g_re_k = g_re.get([2, 1, 0, 0, 0])*get_mn([2, 1, 0, 0, 0])
     g_im_k = g_im.get([2, 1, 0, 0, 0])*get_mn([2, 1, 0, 0, 0])
-    dq_dJ_g[3] = scl*complex(
+    dx_dJ_g_k[3] = scl*complex(
         g_re.poisbra(2e0*get_mn([0, 1, 1, 1, 0]), ps_dim).get([1, 1, 1, 1, 0]),
         g_im.poisbra(2e0*get_mn([0, 1, 1, 1, 0]), ps_dim).get([1, 1, 1, 1, 0]))
     g_re_k = g_re.get([1, 0, 2, 0, 0])*get_mn([1, 0, 2, 0, 0])
     g_im_k = g_im.get([1, 0, 2, 0, 0])*get_mn([1, 0, 2, 0, 0])
-    dq_dJ_g[4] = scl*complex(
+    dx_dJ_g_k[4] = scl*complex(
         g_re.poisbra(get_mn([0, 1, 0, 2, 0]), ps_dim).get([1, 1, 1, 1, 0]),
         g_im.poisbra(get_mn([0, 1, 0, 2, 0]), ps_dim).get([1, 1, 1, 1, 0]))
     g_re_k = g_re.get([1, 0, 0, 2, 0])*get_mn([1, 0, 0, 2, 0])
     g_im_k = g_im.get([1, 0, 0, 2, 0])*get_mn([1, 0, 0, 2, 0])
-    dq_dJ_g[5] = scl*complex(
+    dx_dJ_g_k[5] = scl*complex(
         g_re.poisbra(get_mn([0, 1, 2, 0, 0]), ps_dim).get([1, 1, 1, 1, 0]),
         g_im.poisbra(get_mn([0, 1, 2, 0, 0]), ps_dim).get([1, 1, 1, 1, 0]))
 
-    dq_dJ_g_tot[3] = complex(nlbd.get_f_I(x_re, [0, 0, 2, 2, 0]),
-                             nlbd.get_f_I(x_im, [0, 0, 2, 2, 0]))
-
-    # A x4 to correct for cosine & sine terms - for both f & g -> [f, g].
-    scl = 4e0/8e0
     g_re_k = g_re.get([1, 0, 1, 1, 0])*get_mn([1, 0, 1, 1, 0])
     g_im_k = g_im.get([1, 0, 1, 1, 0])*get_mn([1, 0, 1, 1, 0])
-    dq_dJ_g[6] = scl*complex(
+    dx_dJ_g_k[6] = scl*complex(
         g_re.poisbra(2e0*get_mn([0, 1, 1, 1, 0]), ps_dim).get([0, 0, 2, 2, 0]),
         g_im.poisbra(2e0*get_mn([0, 1, 1, 1, 0]), ps_dim).get([0, 0, 2, 2, 0]))
     g_re_k = g_re.get([1, 0, 2, 0, 0])*get_mn([1, 0, 2, 0, 0])
     g_im_k = g_im.get([1, 0, 2, 0, 0])*get_mn([1, 0, 2, 0, 0])
-    dq_dJ_g[7] = scl*complex(
+    dx_dJ_g_k[7] = scl*complex(
         g_re.poisbra(get_mn([0, 1, 0, 2, 0]), ps_dim).get([0, 0, 2, 2, 0]),
         g_im.poisbra(get_mn([0, 1, 0, 2, 0]), ps_dim).get([0, 0, 2, 2, 0]))
     g_re_k = g_re.get([1, 0, 0, 2, 0])*get_mn([1, 0, 0, 2, 0])
     g_im_k = g_im.get([1, 0, 0, 2, 0])*get_mn([1, 0, 0, 2, 0])
-    dq_dJ_g[8] = scl*complex(
+    dx_dJ_g_k[8] = scl*complex(
         g_re.poisbra(get_mn([0, 1, 2, 0, 0]), ps_dim).get([0, 0, 2, 2, 0]),
         g_im.poisbra(get_mn([0, 1, 2, 0, 0]), ps_dim).get([0, 0, 2, 2, 0]))
 
-    return dq_dJ_g_tot, dq_dJ_g
+    return dx_dJ_g_k
 
 
-def prt_terms(nlbd, dq_dJ_g_tot, dq_dJ_g, dq_dJ_k_fp):
-    dq_dJ_g_sum = np.zeros(4, dtype=complex)
-    dq_dJ_g_sum[0] = dq_dJ_g[0] + dq_dJ_g[1]
-    dq_dJ_g_sum[1] = dq_dJ_g[2]
-    dq_dJ_g_sum[2] = dq_dJ_g[3] + dq_dJ_g[4] + dq_dJ_g[5]
-    dq_dJ_g_sum[3] = dq_dJ_g[6] + dq_dJ_g[7] + dq_dJ_g[8]
+def prt_ampl_phase(str, a, nl="\n"):
+    print(f"{str:s}{abs(a):10.3e} \u2220 {np.rad2deg(np.angle(a)):6.1f}",
+          end=nl)
 
-    dq_dJ_fp_sum = nlbd.compute_dq_dJ_sum_fp(dq_dJ_k_fp)
 
+def prt_terms(
+        nlbd, x3_g_PB, xy2_g_PB, dx_dJ_g_k, x3_g, xy2_g, dx_dJ_k_fp, x3_fp,
+        xy2_fp):
     print("\n<x^3>:")
-    print(f"  s_22000 = {abs(dq_dJ_g_tot[0]):12.5e}"
-          f" |_ {np.rad2deg(np.angle(dq_dJ_g_tot[0])):6.1f}")
-    print(f"            {abs(dq_dJ_g_sum[0]):12.5e}"
-          f" |_ {np.rad2deg(np.angle(dq_dJ_g_sum[0])):6.1f}"
-          f" = {dq_dJ_g[0]:12.5e}"
-          f" {dq_dJ_g[1]:+12.5e}")
-    print(f"            {dq_dJ_fp_sum[0]:12.5e} = {dq_dJ_k_fp[0]:12.5e}"
-          f" {dq_dJ_k_fp[1]:+12.5e}")
+    prt_ampl_phase("  s_22000 = ", x3_g_PB.get([2, 2, 0, 0, 0]))
+    prt_ampl_phase("            ", x3_g.get([2, 2, 0, 0, 0]), nl="")
+    prt_ampl_phase(" = ", dx_dJ_g_k[0], nl="")
+    prt_ampl_phase("", dx_dJ_g_k[1])
+    prt_ampl_phase("            ", x3_fp.get([2, 2, 0, 0, 0]), nl="")
+    prt_ampl_phase(" = ", dx_dJ_k_fp[0], nl="")
+    prt_ampl_phase("", dx_dJ_k_fp[1])
 
-    print(f"\n  s_11110 = {abs(dq_dJ_g_tot[1]):12.5e}"
-          f" |_ {np.rad2deg(np.angle(dq_dJ_g_tot[1])):6.1f}")
-    print(f"            {abs(dq_dJ_g_sum[1]):12.5e}"
-          f" |_ {np.rad2deg(np.angle(dq_dJ_g_sum[1])):6.1f}")
-    print(f"            {dq_dJ_k_fp[2]:12.5e}")
+    prt_ampl_phase("\n  s_11110 = ", x3_g_PB.get([1, 1, 1, 1, 0]))
+    prt_ampl_phase("            ", x3_g.get([1, 1, 1, 1, 0]))
+    prt_ampl_phase("            ", dx_dJ_k_fp[2])
 
     print("\n<x*y^2>:")
-    print(f"  s_11110 = {abs(dq_dJ_g_tot[2]):12.5e}"
-          f" |_ {np.rad2deg(np.angle(dq_dJ_g_tot[2])):6.1f}")
-    print(f"            {abs(dq_dJ_g_sum[2]):12.5e}"
-          f" |_ {np.rad2deg(np.angle(dq_dJ_g_sum[2])):6.1f}"
-          f" = {dq_dJ_g[3]:12.5e} {dq_dJ_g[4]:+12.5e} {dq_dJ_g[5]:+12.5e}")
-    print(f"            {dq_dJ_fp_sum[2]:12.5e} = {dq_dJ_k_fp[3]:12.5e}"
-          f" {dq_dJ_k_fp[4]:+12.5e} {dq_dJ_k_fp[5]:+12.5e}")
+    prt_ampl_phase("  s_11110 = ", xy2_g_PB.get([1, 1, 1, 1, 0]))
+    prt_ampl_phase("            ", xy2_g.get([1, 1, 1, 1, 0]), nl="")
+    prt_ampl_phase(" = ", dx_dJ_g_k[3], nl="")
+    prt_ampl_phase("", dx_dJ_g_k[4], nl="")
+    prt_ampl_phase("", dx_dJ_g_k[5])
+    prt_ampl_phase("            ", xy2_fp.get([1, 1, 1, 1, 0]), nl="")
+    prt_ampl_phase(" = ", dx_dJ_k_fp[3], nl="")
+    prt_ampl_phase("", dx_dJ_k_fp[4], nl="")
+    prt_ampl_phase("", dx_dJ_k_fp[5])
 
-    print(f"\n  s_00220 = {abs(dq_dJ_g_tot[3]):12.5e}"
-          f" |_ {np.rad2deg(np.angle(dq_dJ_g_tot[3])):6.1f}")
-    print(f"            {abs(dq_dJ_g_sum[3]):12.5e}"
-          f" |_ {np.rad2deg(np.angle(dq_dJ_g_sum[3])):6.1f}"
-          f" = {dq_dJ_g[6]:12.5e} {dq_dJ_g[7]:+12.5e} {dq_dJ_g[8]:+12.5e}")
-    print(f"            {dq_dJ_fp_sum[3]:12.5e} = {dq_dJ_k_fp[6]:12.5e}"
-          f" {dq_dJ_k_fp[7]:+12.5e} {dq_dJ_k_fp[8]:+12.5e}")
+    prt_ampl_phase("\n  s_00220 = ", xy2_g_PB.get([0, 0, 2, 2, 0]))
+    prt_ampl_phase("            ", xy2_g.get([0, 0, 2, 2, 0]), nl="")
+    prt_ampl_phase(" = ", dx_dJ_g_k[6], nl="")
+    prt_ampl_phase("", dx_dJ_g_k[7], nl="")
+    prt_ampl_phase("", dx_dJ_g_k[8])
+    prt_ampl_phase("            ", xy2_fp.get([0, 0, 2, 2, 0]), nl="")
+    prt_ampl_phase(" = ", dx_dJ_k_fp[6], nl="")
+    prt_ampl_phase("", dx_dJ_k_fp[7], nl="")
+    prt_ampl_phase("", dx_dJ_k_fp[8])
 
 
 def chk_terms(nlbd, j):
-    dq_dJ_k_fp = nlbd.compute_dq_dJ_k_fp(j)
-    dq_dJ_g_tot, dq_dJ_g = compute_dq_dJ_chk(nlbd, j)
-    prt_terms(nlbd, dq_dJ_g_tot, dq_dJ_g, dq_dJ_k_fp)
+    x3_g_PB, xy2_g_PB = nlbd.compute_dx_dJ_PB(j)
+
+    dx_dJ_g_k = compute_dx_dJ_g_k(nlbd, j)
+    x3_g, xy2_g = nlbd.compute_dx_dJ(dx_dJ_g_k)
+
+    dx_dJ_k_fp = nlbd.compute_dx_dJ_k_fp(j)
+    x3_fp, xy2_fp = nlbd.compute_dx_dJ(dx_dJ_k_fp)
+
+    prt_terms(
+        nlbd, x3_g_PB, xy2_g_PB, dx_dJ_g_k, x3_g, xy2_g, dx_dJ_k_fp, x3_fp,
+        xy2_fp)
+
+    assert False
 
 
 gtpsa_prop.no = 4
@@ -779,16 +787,16 @@ else:
 
 chk_terms(nlbd, loc)
 
-dq_dJ = nlbd.compute_dq_dJ_k_fp(loc)
-dq_dJ_sum = nlbd.compute_dq_dJ_sum_fp(dq_dJ)
+dx_dJ = nlbd.compute_dx_dJ_k_fp(loc)
+dx_dJ_sum = nlbd.compute_dx_dJ_sum_fp(dx_dJ)
 print("\n<x^3>:")
-print(f"  s_22000 = {dq_dJ_sum[0]:12.5e}")
-print(f"  s_11110 = {dq_dJ_sum[1]:12.5e}")
+print(f"  s_22000 = {dx_dJ_sum[0]:12.5e}")
+print(f"  s_11110 = {dx_dJ_sum[1]:12.5e}")
 print("<x*y^2>:")
-print(f"  s_11110 = {dq_dJ_sum[2]:12.5e}")
-print(f"  s_00220 = {dq_dJ_sum[3]:12.5e}")
+print(f"  s_11110 = {dx_dJ_sum[2]:12.5e}")
+print(f"  s_00220 = {dx_dJ_sum[3]:12.5e}")
 
-dq = nlbd.compute_dq_dJ(loc)
+dq = nlbd.compute_dx_dJ(loc)
 
 nlbd.compute_dnu_dJ()
 
@@ -814,9 +822,9 @@ K = [K_re.get([2, 2, 0, 0, 0]), K_re.get([1, 1, 1, 1, 0]),
 print(f"\nK:\n [{K[0]:10.3e}, {K[1]:10.3e}, {K[2]:10.3e}]")
 assert False
 K, K_k = nlbd.compute_dnu_dJ()
-print(f"  [{abs(K[0]):10.3e} |_ {np.rad2deg(np.angle(K[0])):6.1f}"
-      f", {abs(K[1]):10.3e} |_ {np.rad2deg(np.angle(K[1])):6.1f}"
-      f", {abs(K[2]):10.3e}] |_ {np.rad2deg(np.angle(K[2])):6.1f}")
-print(f"  [{abs(K_k[0]):10.3e} |_ {np.rad2deg(np.angle(K_k[0])):6.1f}"
-      f", {abs(K_k[1]):10.3e} |_ {np.rad2deg(np.angle(K_k[1])):6.1f}"
-      f", {abs(K_k[2]):10.3e}] |_ {np.rad2deg(np.angle(K_k[2])):6.1f}")
+print(f"  [{abs(K[0]):10.3e}  \u2220 {np.rad2deg(np.angle(K[0])):6.1f}"
+      f", {abs(K[1]):10.3e}  \u2220 {np.rad2deg(np.angle(K[1])):6.1f}"
+      f", {abs(K[2]):10.3e}]  \u2220 {np.rad2deg(np.angle(K[2])):6.1f}")
+print(f"  [{abs(K_k[0]):10.3e}  \u2220 {np.rad2deg(np.angle(K_k[0])):6.1f}"
+      f", {abs(K_k[1]):10.3e}  \u2220 {np.rad2deg(np.angle(K_k[1])):6.1f}"
+      f", {abs(K_k[2]):10.3e}]  \u2220 {np.rad2deg(np.angle(K_k[2])):6.1f}")
