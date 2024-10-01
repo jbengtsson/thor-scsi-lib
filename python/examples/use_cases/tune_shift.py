@@ -318,8 +318,6 @@ class nonlinear_beam_dynamics:
         c = np.zeros(2, dtype=float)
         s = np.zeros(2, dtype=float)
         nu = np.array([])
-        print(f"\nnu = [{self._dmu[ind.X, j-1]/(2e0*np.pi):7.5f}"
-              f", {self._dmu[ind.Y, j-1]/(2e0*np.pi):7.5f}]")
         for k, ele in enumerate(c):
             c[k] = np.cos(self._dmu[k, j-1])
             s[k] = np.sin(self._dmu[k, j-1])
@@ -345,6 +343,9 @@ class nonlinear_beam_dynamics:
         # <x^3>.
         x = g.poisbra(self._Id.x.to_tpsa()**3/3e0, ps_dim)
         x.CtoR(x_re, x_im)
+
+        # Imaginary part is zero.
+
         I = [2, 2, 0, 0, 0]
         x3.set(I, 0e0, x_re.get(I)+1j*x_im.get(I))
         I = [1, 1, 1, 1, 0]
@@ -361,6 +362,14 @@ class nonlinear_beam_dynamics:
         return x3, xy2
 
     def compute_dx_dJ_fp_I(self, j, I):
+        dmu_j = np.zeros(2)
+        dmu_k = np.zeros(2)
+
+        for l in range(2):
+            dmu_j[l] = self._dmu[l, j-1]
+            if j-1 < 0:
+                dmu_j[l] -= 2e0*np.pi*self._nu[l]
+
         m_x = I[0] + I[1]
         m_y = I[2] + I[3]
         n_x = I[0] - I[1]
@@ -374,62 +383,64 @@ class nonlinear_beam_dynamics:
                     ele.get_multipoles(). \
                     get_multipole(MpoleInd.sext).real*L
                 if (b3xL != 0e0):
+                    for l in range(2):
+                        dmu_k[l] = self._dmu[l, k-1]
+                        if j-1 < 0:
+                            dmu_k[l] -= 2e0*np.pi*self._nu[l]
                     dx_dJ_abs = b3xL*self._beta[ind.X, k-1]**(m_x/2e0) \
                         *self._beta[ind.Y, k-1]**(m_y/2e0)
-                    phi = abs(
-                        n_x*(self._dmu[ind.X, k-1]-self._dmu[ind.X, j-1])
-                        + n_y*(self._dmu[ind.Y, k-1]-self._dmu[ind.Y, j-1]))
+                    phi = abs(n_x*(dmu_k[ind.X]-dmu_j[ind.X])
+                              + n_y*(dmu_k[ind.Y]-dmu_j[ind.Y]))
                     dnu = np.pi*(n_x*self._nu[ind.X]+n_y*self._nu[ind.Y])
-                    dx_dJ += dx_dJ_abs*np.exp(1j*(phi-dnu))/np.sin(dnu)
+                    dx_dJ += dx_dJ_abs*np.cos(phi-dnu)/np.sin(dnu)
 
         return dx_dJ
 
     def compute_dx_dJ_k_fp(self, j):
-        dx_dJ_k = np.zeros(9, dtype=complex)
+        dx_dJ_k = np.zeros(9, dtype=float)
 
+        # <x^3>.
         scl = np.sqrt(self._beta[ind.X, j-1])/64e0
+
         dx_dJ_k[0] = -3e0*scl*nlbd.compute_dx_dJ_fp_I(j, [2, 1, 0, 0, 0])
         dx_dJ_k[1] = -scl*nlbd.compute_dx_dJ_fp_I(j, [3, 0, 0, 0, 0])
+        dx_dJ_k[2] = 4e0*scl*nlbd.compute_dx_dJ_fp_I(j, [1, 0, 1, 1, 0])
 
-        scl = np.sqrt(self._beta[ind.X, j-1])/16e0
-        dx_dJ_k[2] = scl*nlbd.compute_dx_dJ_fp_I(j, [1, 0, 1, 1, 0])
+        # <x*y^2>.
+        dx_dJ_k[3] = 8e0*scl*nlbd.compute_dx_dJ_fp_I(j, [2, 1, 0, 0, 0])
+        dx_dJ_k[4] = -4e0*scl*nlbd.compute_dx_dJ_fp_I(j, [1, 0, 2, 0, 0])
+        dx_dJ_k[5] = 4e0*scl*nlbd.compute_dx_dJ_fp_I(j, [1, 0, 0, 2, 0])
 
-        scl = np.sqrt(self._beta[ind.X, j-1])/16e0
-        dx_dJ_k[3] = -scl*nlbd.compute_dx_dJ_fp_I(j, [2, 1, 0, 0, 0])
-        dx_dJ_k[4] = scl*nlbd.compute_dx_dJ_fp_I(j, [1, 0, 2, 0, 0])
-        dx_dJ_k[5] = -scl*nlbd.compute_dx_dJ_fp_I(j, [1, 0, 0, 2, 0])
-
-        scl = np.sqrt(self._beta[ind.X, j-1])/64e0
-        dx_dJ_k[6] = 4e0*scl*nlbd.compute_dx_dJ_fp_I(j, [1, 0, 1, 1, 0])
-        dx_dJ_k[7] = scl*nlbd.compute_dx_dJ_fp_I(j, [1, 0, 2, 0, 0])
-        dx_dJ_k[8] = scl*nlbd.compute_dx_dJ_fp_I(j, [1, 0, 0, 2, 0])
+        dx_dJ_k[6] = -4e0*scl*nlbd.compute_dx_dJ_fp_I(j, [1, 0, 1, 1, 0])
+        dx_dJ_k[7] = -scl*nlbd.compute_dx_dJ_fp_I(j, [1, 0, 2, 0, 0])
+        dx_dJ_k[8] = -scl*nlbd.compute_dx_dJ_fp_I(j, [1, 0, 0, 2, 0])
 
         return dx_dJ_k
 
     def compute_dx_dJ(self, dx_dJ_k):
-        x3  = get_cmn(dx_dJ_k[0]+dx_dJ_k[1], [2, 2, 0, 0, 0]) \
-            + get_cmn(dx_dJ_k[2], [1, 1, 1, 1, 0])
-        xy2 = get_cmn(dx_dJ_k[3]+dx_dJ_k[4]+dx_dJ_k[5], [1, 1, 1, 1, 0]) \
-            + get_cmn(dx_dJ_k[6]+dx_dJ_k[7]+dx_dJ_k[8], [0, 0, 2, 2, 0])
+        x3 = new.tpsa()
+        xy2 = new.tpsa()
+        x3.set([2, 2, 0, 0, 0], 0e0, dx_dJ_k[0]+dx_dJ_k[1])
+        x3.set([1, 1, 1, 1, 0], 0e0, dx_dJ_k[2])
+        xy2.set([1, 1, 1, 1, 0], 0e0, dx_dJ_k[3]+dx_dJ_k[4]+dx_dJ_k[5])
+        xy2.set([0, 0, 2, 2, 0], 0e0, dx_dJ_k[6]+dx_dJ_k[7]+dx_dJ_k[8])
         return x3, xy2
 
     def compute_dnu_dJ(self):
-        nu = [new.tpsa(), new.tpsa()]
+        K = [new.tpsa(), new.tpsa(), new.tpsa(), new.tpsa()]
         for j, ele in enumerate(self._lat_prop._lattice):
             if type(ele) == ts.Sextupole:
                 L = ele.get_length()
                 b3xL = ele.get_multipoles().get_multipole(MpoleInd.sext).real*L
                 if b3xL != 0e0:
-                    dx_dJ_k = self.compute_dx_dJ_k_fp(j-1)
-                    x3, xy2 = self.compute_dx_dJ(dx_dJ_k)
-                    nu[ind.X] += tpsa_mul(b3xL*self._beta[ind.X, j-1],
-                                          x3.real())
-                    nu[ind.Y] += tpsa_mul(b3xL*self._beta[ind.Y, j-1],
-                                          xy2.real())
-
-        nu[ind.X].print("nu_x")
-        nu[ind.Y].print("nu_y")
-        
+                        dx_dJ_k = self.compute_dx_dJ_k_fp(j)
+                        x3, xy2 = self.compute_dx_dJ(dx_dJ_k)
+                        K[0] -= self._beta[ind.X, j-1]*b3xL*x3
+                        K[1] -= self._beta[ind.Y, j-1]*b3xL*xy2
+        print("\nK:\n")
+        for k in range(4):
+            K[k].print("")
+       
 
 def compute_optics(lat_prop):
     try:
@@ -616,7 +627,7 @@ def compute_dx_dJ_g_k(nlbd, j):
     g.CtoR(g_re, g_im)
 
     # A x4 to correct for cosine & sine terms - for both f & g -> [f, g].
-    scl = 4e0/8e0
+    scl = -1j*4e0/8e0
 
     # <x^3>.
 
@@ -725,6 +736,8 @@ def chk_terms(nlbd, j):
 
     dx_dJ_k_fp = nlbd.compute_dx_dJ_k_fp(j)
     x3_fp, xy2_fp = nlbd.compute_dx_dJ(dx_dJ_k_fp)
+    x3_fp.print("x3_fp")
+    xy2_fp.print("xy2_fp")
 
     prt_terms(
         nlbd, x3_g_PB, xy2_g_PB, dx_dJ_g_k, x3_g, xy2_g, dx_dJ_k_fp, x3_fp,
@@ -777,24 +790,19 @@ nlbd.compute_map_normal_form()
 nlbd._K_re.print("K_re")
 
 if False:
-    chk_terms(nlbd, 1)
-    assert False
-
-if False:
     compute_M_from_MNF(K, A_0, A_1, g)
 if False:
     compute_R_from_MNF(M, A_0, A_1, g, K)
 
-if True:
-    # loc = 237
-    loc = 357
-else:
-    loc = 1
-
-chk_terms(nlbd, loc)
+if False:
+    if True:
+        loc = 1
+    else:
+        # loc = 237
+        loc = 357
+    chk_terms(nlbd, loc)
 
 nlbd.compute_dnu_dJ()
-
 assert False
 
 h_tpsa = nlbd.compute_h_tpsa()
