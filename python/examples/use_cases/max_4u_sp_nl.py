@@ -338,14 +338,8 @@ class opt_sp_class:
         print("\n".join(minimum))
 
 
-# Number of phase-space coordinates.
-nv = 7
-# Variables max order.
-no = 6
-# Number of parameters.
-nv_prm = 0
-# Parameters max order.
-no_prm = 0
+# TPSA max order.
+gtpsa_prop.no = 6
 
 cod_eps = 1e-15
 E_0     = 3.0e9
@@ -359,8 +353,7 @@ home_dir = os.path.join(
 lat_name = sys.argv[1]
 file_name = os.path.join(home_dir, lat_name+".lat")
 
-lat_prop = \
-    lp.lattice_properties_class(nv, no, nv_prm, no_prm, file_name, E_0, cod_eps)
+lat_prop = lp.lattice_properties_class(gtpsa_prop, file_name, E_0, cod_eps)
 
 lat_prop.prt_lat("lat_prop_lat.txt")
 
@@ -479,6 +472,7 @@ elif step == 2:
         ("q1" ,      "b_2"),
         ("q2",       "b_2"),
         ("q3",       "b_2"),
+        ("q4_h",     "b_2"),
         ("r1",       "b_2"),
 
         ("b_2_bend", d2_bend),
