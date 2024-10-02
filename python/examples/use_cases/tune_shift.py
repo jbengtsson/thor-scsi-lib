@@ -335,29 +335,30 @@ class nonlinear_beam_dynamics:
         x = new.tpsa()
         x_re = new.tpsa()
         x_im = new.tpsa()
-        x3 = new.ctpsa()
-        xy2 = new.ctpsa()
+        x3 = new.tpsa()
+        xy2 = new.tpsa()
 
         g = self.propagate_g(j)
 
         # <x^3>.
-        x = g.poisbra(self._Id.x.to_tpsa()**3/3e0, ps_dim)
+        # x = g.poisbra(self._Id.x.to_tpsa()**3/3e0, ps_dim)
+        x = g.poisbra(self._Id.x.to_tpsa()**3, ps_dim)
         x.CtoR(x_re, x_im)
 
         # Imaginary part is zero.
 
         I = [2, 2, 0, 0, 0]
-        x3.set(I, 0e0, x_re.get(I)+1j*x_im.get(I))
+        x3.set(I, 0e0, x_re.get(I))
         I = [1, 1, 1, 1, 0]
-        x3.set(I, 0e0, x_re.get(I)+1j*x_im.get(I))
+        x3.set(I, 0e0, x_re.get(I))
 
         # <x*y^2>.
         x = g.poisbra(self._Id.x.to_tpsa()*self._Id.y.to_tpsa()**2, ps_dim)
         x.CtoR(x_re, x_im)
         I = [1, 1, 1, 1, 0]
-        xy2.set(I, 0e0, x_re.get(I)+1j*x_im.get(I))
+        xy2.set(I, 0e0, x_im.get(I))
         I = [0, 0, 2, 2, 0]
-        xy2.set(I, 0e0, x_re.get(I)+1j*x_im.get(I))
+        xy2.set(I, 0e0, x_re.get(I))
 
         return x3, xy2
 
@@ -389,8 +390,8 @@ class nonlinear_beam_dynamics:
                             dmu_k[l] -= 2e0*np.pi*self._nu[l]
                     dx_dJ_abs = b3xL*self._beta[ind.X, k-1]**(m_x/2e0) \
                         *self._beta[ind.Y, k-1]**(m_y/2e0)
-                    phi = abs(n_x*(dmu_k[ind.X]-dmu_j[ind.X])
-                              + n_y*(dmu_k[ind.Y]-dmu_j[ind.Y]))
+                    phi = n_x*abs(dmu_k[ind.X]-dmu_j[ind.X]) \
+                        + n_y*abs((dmu_k[ind.Y]-dmu_j[ind.Y]))
                     dnu = np.pi*(n_x*self._nu[ind.X]+n_y*self._nu[ind.Y])
                     dx_dJ += dx_dJ_abs*np.cos(phi-dnu)/np.sin(dnu)
 
@@ -427,18 +428,23 @@ class nonlinear_beam_dynamics:
         return x3, xy2
 
     def compute_dnu_dJ(self):
-        K = [new.tpsa(), new.tpsa(), new.tpsa(), new.tpsa()]
+        K = [new.tpsa(), new.tpsa()]
+        I = [1, 1, 1, 1, 0]
         for j, ele in enumerate(self._lat_prop._lattice):
             if type(ele) == ts.Sextupole:
                 L = ele.get_length()
                 b3xL = ele.get_multipoles().get_multipole(MpoleInd.sext).real*L
                 if b3xL != 0e0:
+                    if not True:
+                        x3, xy2 = self.compute_dx_dJ_PB(j)
+                    else:
                         dx_dJ_k = self.compute_dx_dJ_k_fp(j)
                         x3, xy2 = self.compute_dx_dJ(dx_dJ_k)
-                        K[0] -= self._beta[ind.X, j-1]*b3xL*x3
-                        K[1] -= self._beta[ind.Y, j-1]*b3xL*xy2
+                    K[0] -= self._beta[ind.X, j-1]*b3xL \
+                        *(x3+0*xy2.get(I)*get_mn(I))
+                    K[1] -= self._beta[ind.Y, j-1]*b3xL*xy2
         print("\nK:\n")
-        for k in range(4):
+        for k in range(2):
             K[k].print("")
        
 
