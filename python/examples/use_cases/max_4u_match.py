@@ -253,10 +253,12 @@ print("Total bend angle [deg] = {:7.5f}".format(lat_prop.compute_phi_lat()))
 
 lat_prop.prt_lat("max_4u_match_lat.txt")
 
-# uc_0 = lat_prop._lattice.find("d2_0", 7).index
-# uc_1 = lat_prop._lattice.find("d2_0", 8).index
-uc_0 = lat_prop._lattice.find("q4_h", 7).index
-uc_1 = lat_prop._lattice.find("q4_h", 8).index
+if True:
+    uc_0 = lat_prop._lattice.find("d2_0", 7).index
+    uc_1 = lat_prop._lattice.find("d2_0", 8).index
+else:
+    uc_0 = lat_prop._lattice.find("q4_h", 7).index
+    uc_1 = lat_prop._lattice.find("q4_h", 8).index
 sp_1 = lat_prop._lattice.find("s1", 1).index
 sp_2 = lat_prop._lattice.find("cav", 0).index
 print("\nunit cell entrance           {:5s} loc = {:d}".
@@ -299,7 +301,7 @@ prm_list = [
     ("q1",       "b_2"),
     ("q2",       "b_2"),
     ("q3",       "b_2"),
-    # ("b_2_bend", d1_bend),
+    ("b_2_bend", d1_bend),
 
     ("phi_bend", d2_bend)
 ]

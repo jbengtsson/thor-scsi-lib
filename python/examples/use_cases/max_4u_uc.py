@@ -32,7 +32,7 @@ b_2_bend_max = 1.0
 b_2_max      = 10.0
 
 eps_x_des    = 99e-12
-nu_uc        = [0.265, 0.0816]
+nu_uc        = [0.35, 0.1]
 
 
 @dataclass
@@ -618,11 +618,11 @@ if not False:
 # Weights.
 weight = np.array([
     1e22, # eps_x.
-    0e-2, # nu_uc_x.
-    0e-2, # nu_uc_y.
+    1e-2, # nu_uc_x.
+    1e0, # nu_uc_y.
     0e-7, # xi.
-    1e8,  # h rms.
-    1e12  # K rms.
+    1e-5*1e8,  # h rms.
+    1e-5*1e12  # K rms.
 ])
 
 d2_list = ["d2_0", "d2_1", "d2_2", "d2_3", "d2_4", "d2_5"]
@@ -632,7 +632,7 @@ d2_bend = pc.bend_class(lat_prop, d2_list, phi_max, b_2_max)
 if True:
     prms = [
         ("r1",       "b_2"),
-        ("q4_h",     "b_2"),
+        # ("q4_h",     "b_2"),
 
         ("d2_0",     "b_2"),
         ("d2_1",     "b_2"),

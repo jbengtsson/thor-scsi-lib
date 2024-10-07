@@ -420,8 +420,8 @@ if step == 1:
         ("b_2_bend", d2_bend),
         ("b_2_bend", d1_bend),
 
-        ("phi_bend", d2_bend),
-        ("r1",       "phi")
+        # ("phi_bend", d2_bend),
+        # ("r1",       "phi")
     ]
 
     # To maintain the total bend angle.
