@@ -115,11 +115,11 @@ class nonlinear_beam_dynamics:
 
     # Public.
 
-    def compute_map(self):
-        self._M = lo.compute_map(
-            self._lat_prop._lattice, self._lat_prop._model_state,
-            desc=self._lat_prop._desc,
-            tpsa_order=self._gtpsa_prop.no)
+    # def compute_map(self):
+    #     self._M = lo.compute_map(
+    #         self._lat_prop._lattice, self._lat_prop._model_state,
+    #         desc=self._lat_prop._desc,
+    #         tpsa_order=self._gtpsa_prop.no)
 
     def prt_map(self, str, *, eps: float=1e-30):
         print(str)
@@ -317,14 +317,18 @@ class nonlinear_beam_dynamics:
         R.set_identity()
         c = np.zeros(2, dtype=float)
         s = np.zeros(2, dtype=float)
-        nu = np.array([])
+        dmu_j = np.zeros(2, dtype=float)
+        for k in range(2):
+            dmu_j[k] = self._dmu[k, j-1]
+            if j-1 < 0e0:
+                dmu_j[k] -= 2e0*np.pi*self._nu[k]
         for k, ele in enumerate(c):
-            c[k] = np.cos(self._dmu[k, j-1])
-            s[k] = np.sin(self._dmu[k, j-1])
+            c[k] = np.cos(dmu_j[k])
+            s[k] = np.sin(dmu_j[k])
         for k in range(2):
             R.iloc[2*k] = c[k]*Id.iloc[2*k].to_tpsa() \
-                + s[k]*Id.iloc[2*k+1].to_tpsa()
-            R.iloc[2*k+1] = -s[k]*Id.iloc[2*k].to_tpsa() \
+                - s[k]*Id.iloc[2*k+1].to_tpsa()
+            R.iloc[2*k+1] = s[k]*Id.iloc[2*k].to_tpsa() \
                 + c[k]*Id.iloc[2*k+1].to_tpsa()
         g = compose_bs(self._g, R)
         return g
@@ -340,12 +344,11 @@ class nonlinear_beam_dynamics:
 
         g = self.propagate_g(j)
 
+        # Imaginary part is zero.
+
         # <x^3>.
-        # x = g.poisbra(self._Id.x.to_tpsa()**3/3e0, ps_dim)
         x = g.poisbra(self._Id.x.to_tpsa()**3, ps_dim)
         x.CtoR(x_re, x_im)
-
-        # Imaginary part is zero.
 
         I = [2, 2, 0, 0, 0]
         x3.set(I, 0e0, x_re.get(I))
@@ -356,7 +359,7 @@ class nonlinear_beam_dynamics:
         x = g.poisbra(self._Id.x.to_tpsa()*self._Id.y.to_tpsa()**2, ps_dim)
         x.CtoR(x_re, x_im)
         I = [1, 1, 1, 1, 0]
-        xy2.set(I, 0e0, x_im.get(I))
+        xy2.set(I, 0e0, x_re.get(I))
         I = [0, 0, 2, 2, 0]
         xy2.set(I, 0e0, x_re.get(I))
 
@@ -435,18 +438,31 @@ class nonlinear_beam_dynamics:
                 L = ele.get_length()
                 b3xL = ele.get_multipoles().get_multipole(MpoleInd.sext).real*L
                 if b3xL != 0e0:
-                    if not True:
+                    if True:
                         x3, xy2 = self.compute_dx_dJ_PB(j)
                     else:
                         dx_dJ_k = self.compute_dx_dJ_k_fp(j)
                         x3, xy2 = self.compute_dx_dJ(dx_dJ_k)
-                    K[0] -= self._beta[ind.X, j-1]*b3xL \
-                        *(x3+0*xy2.get(I)*get_mn(I))
+                    x3.print("x3")
+                    xy2.print("xy2")
+                    K[0] -= b3xL*(self._beta[ind.X, j-1]*x3+
+                                  self._beta[ind.Y, j-1]*xy2.get(I)*get_mn(I))
                     K[1] -= self._beta[ind.Y, j-1]*b3xL*xy2
         print("\nK:\n")
         for k in range(2):
             K[k].print("")
        
+
+def compute_map(lat_prop, j):
+    M = new.ss_vect_tpsa()
+    M.set_identity()
+    n = len(lat_prop._lattice)
+    print(f"  n = {n:1d}")
+    lat_prop._lattice.propagate(lat_prop._model_state, M, j, n-j)
+    if j != 0:
+        lat_prop._lattice.propagate(lat_prop._model_state, M, 0, j)
+    return M
+
 
 def compute_optics(lat_prop):
     try:
@@ -621,6 +637,43 @@ def tpsa_mul(scl, a):
     return b
 
 
+def compute_A_CS(j):
+    Id = new.ss_vect_tpsa()
+    A_CS = new.ss_vect_tpsa()
+    Id.set_identity()
+    A_CS.set_identity()
+    for k in range(2):
+        A_CS.iloc[2*k] = np.sqrt(nlbd._beta[k, j-1])*Id.iloc[2*k].to_tpsa()
+        A_CS.iloc[2*k+1] = -nlbd._alpha[k, j-1]/np.sqrt(nlbd._beta[k, j-1]) \
+            *Id.iloc[2*k].to_tpsa() \
+            + 1e0/np.sqrt(nlbd._beta[k, j-1])*Id.iloc[2*k+1].to_tpsa()
+    return A_CS
+
+def chk_it(nlbd):
+    x3_re = new.tpsa()
+    x3_im = new.tpsa()
+    K = [new.tpsa(), new.tpsa()]
+    I = [1, 1, 1, 1, 0]
+    for j, ele in enumerate(nlbd._lat_prop._lattice):
+        if type(ele) == ts.Sextupole:
+            L = ele.get_length()
+            b3xL = ele.get_multipoles().get_multipole(MpoleInd.sext).real*L
+            if b3xL != 0e0:
+                nlbd._M = compute_map(lat_prop, j)
+                nlbd.compute_map_normal_form()
+                # g = nlbd.propagate_g(j)
+                # <x^3>.
+                x3 = nlbd._g.poisbra(nlbd._Id.x.to_tpsa()**3, 4)
+                x3.CtoR(x3_re, x3_im)
+
+                dx_dJ_k = nlbd.compute_dx_dJ_k_fp(j)
+                x3_fp, xy2_fp = nlbd.compute_dx_dJ(dx_dJ_k)
+
+                I = [2, 2, 0, 0, 0]
+                print(f"  x3_22000 = {x3_fp.get(I):10.3e}"
+                      f" {x3_re.get(I):10.3e} {x3_im.get(I):10.3e}")
+
+
 def compute_dx_dJ_g_k(nlbd, j):
     ps_dim = 4;
 
@@ -654,7 +707,7 @@ def compute_dx_dJ_g_k(nlbd, j):
         g_re.poisbra(get_mn([1, 2, 0, 0, 0]), ps_dim).get([1, 1, 1, 1, 0]),
         g_im.poisbra(get_mn([1, 2, 0, 0, 0]), ps_dim).get([1, 1, 1, 1, 0]))
 
-    # <x*^2>.
+    # <x*y^2>.
 
     g_re_k = g_re.get([2, 1, 0, 0, 0])*get_mn([2, 1, 0, 0, 0])
     g_im_k = g_im.get([2, 1, 0, 0, 0])*get_mn([2, 1, 0, 0, 0])
@@ -788,7 +841,7 @@ if False:
 
 nlbd = nonlinear_beam_dynamics(gtpsa_prop, lat_prop)
 
-nlbd.compute_map()
+nlbd._M = compute_map(lat_prop, 0)
 print("\nM:", nlbd._M)
 
 nlbd.compute_map_normal_form()
@@ -808,8 +861,10 @@ if False:
         loc = 357
     chk_terms(nlbd, loc)
 
-nlbd.compute_dnu_dJ()
+chk_it(nlbd)
+
 assert False
+nlbd.compute_dnu_dJ()
 
 h_tpsa = nlbd.compute_h_tpsa()
 h_tpsa = h_tpsa.get_mns_1(1, 3)
