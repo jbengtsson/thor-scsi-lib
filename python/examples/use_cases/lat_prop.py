@@ -91,6 +91,7 @@ lat_prop.prt_M()
 lat_prop.prt_M_rad()
 
 if not False:
+    lat_prop.prt_Twiss("lat_prop_Twiss.txt")
     lat_prop.plt_Twiss("lat_prop_Twiss.png", not False)
     lat_prop.plt_chrom("lat_prop_chrom.png", not False)
 

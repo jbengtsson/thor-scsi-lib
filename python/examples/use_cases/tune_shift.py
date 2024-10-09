@@ -14,6 +14,8 @@ import thor_scsi.lib as ts
 from thor_scsi.utils import lattice_properties as lp, linear_optics as lo, \
     index_class as ind
 
+from thor_scsi.utils.output import mat2txt
+
 
 class MpoleInd(en.IntEnum):
     quad = 2
@@ -59,6 +61,29 @@ def trunc(a, no_cut):
 class nonlinear_beam_dynamics:
     # Private.
     def __init__(self, gtpsa_prop, lat_prop):
+
+        # Constants
+        self._I_21000 = [2, 1, 0, 0, 0]
+        self._I_30000 = [3, 0, 0, 0, 0]
+        self._I_10110 = [1, 0, 1, 1, 0]
+        self._I_10200 = [1, 0, 2, 0, 0]
+        self._I_10020 = [1, 0, 0, 2, 0] 
+
+        self._I_03000 = [0, 3, 0, 0, 0]
+
+        self._I_11000 = [1, 1, 0, 0, 0]
+        self._I_00110 = [0, 0, 1, 1, 0]
+        self._I_22000 = [2, 2, 0, 0, 0]
+        self._I_11110 = [1, 1, 1, 1, 0]
+        self._I_00220 = [0, 0, 2, 2, 0]
+
+        # Can't hash a list (mutable) - but can hash a tuple (immutable).
+        self._I_21000_tuple = (2, 1, 0, 0, 0)
+        self._I_30000_tuple = (3, 0, 0, 0, 0)
+        self._I_10110_tuple = (1, 0, 1, 1, 0)
+        self._I_10200_tuple = (1, 0, 2, 0, 0)
+        self._I_10020_tuple = (1, 0, 0, 2, 0) 
+
         # GTPSA parameters.
         self._gtpsa_prop = gtpsa_prop
 
@@ -223,8 +248,7 @@ class nonlinear_beam_dynamics:
         for n, ele in enumerate(self._lat_prop._lattice):
             if type(ele) == ts.Sextupole:
                 L = ele.get_length()
-                b3xL = ele.get_multipoles(). \
-                    get_multipole(MpoleInd.sext).real*L
+                b3xL = ele.get_multipoles().get_multipole(MpoleInd.sext).real*L
                 if b3xL != 0e0:
                     h_abs = b3xL*self._beta[ind.X, n-1]**(m_x/2e0) \
                         *self._beta[ind.Y, n-1]**(m_y/2e0)
@@ -236,11 +260,12 @@ class nonlinear_beam_dynamics:
     def compute_h_fp(self):
         # Can't hash a list (mutable) - but can hash a tuple (immutable).
         h_fp = {}
-        h_fp[(2, 1, 0, 0, 0)] = -1e0/8e0 *self.compute_h_I([2, 1, 0, 0, 0])
-        h_fp[(3, 0, 0, 0, 0)] = -1e0/24e0*self.compute_h_I([3, 0, 0, 0, 0])
-        h_fp[(1, 0, 1, 1, 0)] =  1e0/4e0 *self.compute_h_I([1, 0, 1, 1, 0])
-        h_fp[(1, 0, 2, 0, 0)] =  1e0/8e0 *self.compute_h_I([1, 0, 2, 0, 0])
-        h_fp[(1, 0, 0, 2, 0)] =  1e0/8e0 *self.compute_h_I([1, 0, 0, 2, 0])
+        h_fp[self._I_21000_tuple] = -1e0/8e0 *self.compute_h_I(self._I_21000)
+        h_fp[self._I_30000_tuple] = -1e0/24e0*self.compute_h_I(self._I_30000)
+        h_fp[self._I_10110_tuple] =  1e0/4e0 *self.compute_h_I(self._I_10110)
+        h_fp[self._I_10200_tuple] =  1e0/8e0 *self.compute_h_I(self._I_10200)
+        h_fp[self._I_10020_tuple] =  1e0/8e0 *self.compute_h_I(self._I_10020)
+
         return h_fp
 
     def compute_g_I(self, j, I):
@@ -248,44 +273,61 @@ class nonlinear_beam_dynamics:
         m_y = I[2] + I[3]
         n_x = I[0] - I[1]
         n_y = I[2] - I[3]
-        g_fp_I = 0e0
+        g_I = 0e0
+        dmu_j = np.zeros(2)
         for k, ele in enumerate(self._lat_prop._lattice):
             if type(ele) == ts.Sextupole:
                 L = ele.get_length()
-                b3xL = \
-                    ele.get_multipoles(). \
-                    get_multipole(MpoleInd.sext).real*L
+                b3xL = ele.get_multipoles().get_multipole(MpoleInd.sext).real*L
                 if (b3xL != 0e0):
+                    for l in range(2):
+                        # -1 is last element.
+                        dmu_j[l] = self._dmu[l, j-1]
+                        if j-1 < 0:
+                            dmu_j[l] -= 2e0*np.pi*self._nu[l]
                     g_abs = b3xL*self._beta[ind.X, k-1]**(m_x/2e0) \
                         *self._beta[ind.Y, k-1]**(m_y/2e0)
-                    phi = n_x*(self._dmu[ind.X, k-1]-self._dmu[ind.X, j-1]) \
-                        + n_y*(self._dmu[ind.Y, k-1]-self._dmu[ind.Y, j-1])
+                    phi = n_x*abs(self._dmu[ind.X, k-1]-dmu_j[ind.X]) \
+                        + n_y*abs(self._dmu[ind.Y, k-1]-dmu_j[ind.Y])
                     dnu = np.pi*(n_x*self._nu[ind.X]+n_y*self._nu[ind.Y])
-                    g_fp_I -= 1j*g_abs*np.exp(1j*(phi-dnu))/np.sin(dnu)
-        return g_fp_I
+                    g_I -= 1j*g_abs*np.exp(1j*(phi-dnu))/np.sin(dnu)
+        return g_I
 
     def compute_g_fp(self, j):
-        g_fp = {}
-        g_fp[(2, 1, 0, 0, 0)] =  1e0/16e0*self.compute_g_I(j, [2, 1, 0, 0, 0])
-        g_fp[(3, 0, 0, 0, 0)] =  1e0/48e0*self.compute_g_I(j, [3, 0, 0, 0, 0])
-        g_fp[(1, 0, 1, 1, 0)] = -1e0/8e0 *self.compute_g_I(j, [1, 0, 1, 1, 0])
-        g_fp[(1, 0, 2, 0, 0)] = -1e0/16e0*self.compute_g_I(j, [1, 0, 2, 0, 0])
-        g_fp[(1, 0, 0, 2, 0)] = -1e0/16e0*self.compute_g_I(j, [1, 0, 0, 2, 0])
-        return g_fp
+        # Compute the Lie generators.
+        g_re = new.tpsa()
+        g_im = new.tpsa()
+        g = 1e0/16e0*self.compute_g_I(j, self._I_21000)
+        g_re.set(self._I_21000, 0e0, g.real)
+        g_im.set(self._I_21000, 0e0, g.imag)
+        g = 1e0/48e0*self.compute_g_I(j, self._I_30000)
+        g_re.set(self._I_30000, 0e0, g.real)
+        g_im.set(self._I_30000, 0e0, g.imag)
+        g = -1e0/8e0 *self.compute_g_I(j, self._I_10110)
+        g_re.set(self._I_10110, 0e0, g.real)
+        g_im.set(self._I_10110, 0e0, g.imag)
+        g = -1e0/16e0*self.compute_g_I(j, self._I_10200)
+        g_re.set(self._I_10200, 0e0, g.real)
+        g_im.set(self._I_10200, 0e0, g.imag)
+        g = -1e0/16e0*self.compute_g_I(j, self._I_10020)
+        g_re.set(self._I_10020, 0e0, g.real)
+        g_im.set(self._I_10020, 0e0, g.imag)
+        return g_re, g_im
 
-    def prt_f_cmplx_I(self, symb, I, f):
+    def prt_ampl_phase(self, str, c, nl="\n"):
+        print(f"{str:s}{abs(c):10.3e} \u2220 {np.rad2deg(np.angle(c)):6.1f}",
+              end=nl)
+
+    def I2str(self, I):
         str = ""
         for k in I:
             str += chr(ord('0')+k)
-        if f.imag >= 0e0:
-            sgn_f_im = '+'
-        else:
-            sgn_f_im = '-'
-        f_abs = abs(f)
-        f_arg = np.rad2deg(np.angle(f))
-        print(f"  {symb:s}_{str:s} = ({f.real:23.16e} {sgn_f_im:s}"
-              f" i{abs(f.imag):22.16e})"
-              f"  {f_abs:9.3e} |_ {f_arg:6.1f})")
+        return str
+
+    def prt_f_cmplx_I(self, symb, I, f):
+        str = self.I2str(I)
+        print(f"  {symb:s}_{str:s} =", end="")
+        self.prt_ampl_phase("", f, nl="")
 
     def prt_f_I(self, symb, I, f_re, f_im):
         f = self.get_cmplx_f_I(f_re, f_im, I)
@@ -298,16 +340,17 @@ class nonlinear_beam_dynamics:
         f_tpsa.CtoR(f_re, f_im)
 
         print(title)
-        self.prt_f_I(symb, [2, 1, 0, 0, 0], f_re, f_im)
-        self.prt_f_I(symb, [3, 0, 0, 0, 0], f_re, f_im)
-        self.prt_f_I(symb, [1, 0, 1, 1, 0], f_re, f_im)
-        self.prt_f_I(symb, [1, 0, 2, 0, 0], f_re, f_im)
-        self.prt_f_I(symb, [1, 0, 0, 2, 0], f_re, f_im)
+        self.prt_f_I(symb, self._I_21000, f_re, f_im)
+        self.prt_f_I(symb, self._I_30000, f_re, f_im)
+        self.prt_f_I(symb, self._I_10110, f_re, f_im)
+        self.prt_f_I(symb, self._I_10200, f_re, f_im)
+        self.prt_f_I(symb, self._I_10020, f_re, f_im)
 
     def prt_f_fp(self, title, symb, f_fp):
         print(title)
         for key, value in f_fp.items():
             self.prt_f_cmplx_I(symb, key, value)
+            print()
 
     def propagate_g(self, j):
         # Propagate g.
@@ -319,8 +362,9 @@ class nonlinear_beam_dynamics:
         s = np.zeros(2, dtype=float)
         dmu_j = np.zeros(2, dtype=float)
         for k in range(2):
+            # -1 is last element.
             dmu_j[k] = self._dmu[k, j-1]
-            if j-1 < 0e0:
+            if j-1 < 0:
                 dmu_j[k] -= 2e0*np.pi*self._nu[k]
         for k, ele in enumerate(c):
             c[k] = np.cos(dmu_j[k])
@@ -330,46 +374,60 @@ class nonlinear_beam_dynamics:
                 - s[k]*Id.iloc[2*k+1].to_tpsa()
             R.iloc[2*k+1] = s[k]*Id.iloc[2*k].to_tpsa() \
                 + c[k]*Id.iloc[2*k+1].to_tpsa()
-        g = compose_bs(self._g, R)
-        return g
+        self._g = compose_bs(self._g, R)
 
     def compute_dx_dJ_PB(self, j):
         ps_dim = 4
 
-        x = new.tpsa()
-        x_re = new.tpsa()
-        x_im = new.tpsa()
-        x3 = new.tpsa()
-        xy2 = new.tpsa()
+        dx = new.tpsa()
+        dx_re = new.tpsa()
+        dx_im = new.tpsa()
+        x1_re = new.tpsa()
+        x3_re = new.tpsa()
+        xy2_re = new.tpsa()
 
-        g = self.propagate_g(j)
+        # g = self.propagate_g(j)
 
         # Imaginary part is zero.
 
-        # <x^3>.
-        x = g.poisbra(self._Id.x.to_tpsa()**3, ps_dim)
-        x.CtoR(x_re, x_im)
+        self._A_1 = compute_A_CS(2, self._A_1)[1]
 
-        I = [2, 2, 0, 0, 0]
-        x3.set(I, 0e0, x_re.get(I))
-        I = [1, 1, 1, 1, 0]
-        x3.set(I, 0e0, x_re.get(I))
+        # <x>.
+        dx = self._g.poisbra(
+            compose_bs(self._Id.x.to_tpsa(), self._A_1), ps_dim)
+        dx.CtoR(dx_re, dx_im)
+        x1_re.set(self._I_11000, 0e0, self._beta[ind.X, j]
+                  *dx_re.get(self._I_11000))
+        x1_re.set(self._I_00110, 0e0, self._beta[ind.Y, j]
+                  *dx_re.get(self._I_00110))
+
+        # <x^3>.
+        dx = (self._g.get(self._I_03000)*get_mn(self._I_03000)).poisbra(
+            compose_bs(self._Id.x.to_tpsa()**3, self._A_1), ps_dim)
+        dx.CtoR(dx_re, dx_im)
+
+        # Divide by J_x.
+        x3_re.set(self._I_11000, 0e0, dx_re.get(self._I_22000))
+        x3_re.set(self._I_00110, 0e0, dx_re.get(self._I_11110))
 
         # <x*y^2>.
-        x = g.poisbra(self._Id.x.to_tpsa()*self._Id.y.to_tpsa()**2, ps_dim)
-        x.CtoR(x_re, x_im)
-        I = [1, 1, 1, 1, 0]
-        xy2.set(I, 0e0, x_re.get(I))
-        I = [0, 0, 2, 2, 0]
-        xy2.set(I, 0e0, x_re.get(I))
+        dx = self._g.poisbra(
+            compose_bs(self._Id.x.to_tpsa(), self._A_1)
+            *compose_bs(self._Id.y.to_tpsa()**2, self._A_1), ps_dim)
+        dx.CtoR(dx_re, dx_im)
 
-        return x3, xy2
+        # Divide by J_y.
+        xy2_re.set(self._I_11000, 0e0, -dx_re.get(self._I_11110))
+        xy2_re.set(self._I_00110, 0e0, -dx_re.get(self._I_00220))
+
+        return x1_re, x3_re, xy2_re
 
     def compute_dx_dJ_fp_I(self, j, I):
         dmu_j = np.zeros(2)
         dmu_k = np.zeros(2)
 
         for l in range(2):
+            # -1 is last element.
             dmu_j[l] = self._dmu[l, j-1]
             if j-1 < 0:
                 dmu_j[l] -= 2e0*np.pi*self._nu[l]
@@ -383,13 +441,12 @@ class nonlinear_beam_dynamics:
         for k, ele in enumerate(self._lat_prop._lattice):
             if type(ele) == ts.Sextupole:
                 L = ele.get_length()
-                b3xL = \
-                    ele.get_multipoles(). \
-                    get_multipole(MpoleInd.sext).real*L
+                b3xL = ele.get_multipoles().get_multipole(MpoleInd.sext).real*L
                 if (b3xL != 0e0):
                     for l in range(2):
+                        # -1 is last element.
                         dmu_k[l] = self._dmu[l, k-1]
-                        if j-1 < 0:
+                        if k-1 < 0:
                             dmu_k[l] -= 2e0*np.pi*self._nu[l]
                     dx_dJ_abs = b3xL*self._beta[ind.X, k-1]**(m_x/2e0) \
                         *self._beta[ind.Y, k-1]**(m_y/2e0)
@@ -404,60 +461,58 @@ class nonlinear_beam_dynamics:
         dx_dJ_k = np.zeros(9, dtype=float)
 
         # <x^3>.
-        scl = np.sqrt(self._beta[ind.X, j-1])/64e0
+        scl = self._beta[ind.X, j-1]**(3e0/2e0)/64e0
 
-        dx_dJ_k[0] = -3e0*scl*nlbd.compute_dx_dJ_fp_I(j, [2, 1, 0, 0, 0])
-        dx_dJ_k[1] = -scl*nlbd.compute_dx_dJ_fp_I(j, [3, 0, 0, 0, 0])
-        dx_dJ_k[2] = 4e0*scl*nlbd.compute_dx_dJ_fp_I(j, [1, 0, 1, 1, 0])
+        dx_dJ_k[0] = -3e0*scl*nlbd.compute_dx_dJ_fp_I(j, self._I_21000)
+        dx_dJ_k[1] = -scl*nlbd.compute_dx_dJ_fp_I(j, self._I_30000)
+        dx_dJ_k[2] = 4e0*scl*nlbd.compute_dx_dJ_fp_I(j, self._I_10110)
 
         # <x*y^2>.
-        dx_dJ_k[3] = 8e0*scl*nlbd.compute_dx_dJ_fp_I(j, [2, 1, 0, 0, 0])
-        dx_dJ_k[4] = -4e0*scl*nlbd.compute_dx_dJ_fp_I(j, [1, 0, 2, 0, 0])
-        dx_dJ_k[5] = 4e0*scl*nlbd.compute_dx_dJ_fp_I(j, [1, 0, 0, 2, 0])
+        scl = np.sqrt(self._beta[ind.X, j-1])*self._beta[ind.Y, j-1]/64e0
+        dx_dJ_k[3] = 8e0*scl*nlbd.compute_dx_dJ_fp_I(j, self._I_21000)
+        dx_dJ_k[4] = -4e0*scl*nlbd.compute_dx_dJ_fp_I(j, self._I_10200)
+        dx_dJ_k[5] = 4e0*scl*nlbd.compute_dx_dJ_fp_I(j, self._I_10020)
 
-        dx_dJ_k[6] = -4e0*scl*nlbd.compute_dx_dJ_fp_I(j, [1, 0, 1, 1, 0])
-        dx_dJ_k[7] = -scl*nlbd.compute_dx_dJ_fp_I(j, [1, 0, 2, 0, 0])
-        dx_dJ_k[8] = -scl*nlbd.compute_dx_dJ_fp_I(j, [1, 0, 0, 2, 0])
+        dx_dJ_k[6] = -4e0*scl*nlbd.compute_dx_dJ_fp_I(j, self._I_10110)
+        dx_dJ_k[7] = -scl*nlbd.compute_dx_dJ_fp_I(j, self._I_10200)
+        dx_dJ_k[8] = -scl*nlbd.compute_dx_dJ_fp_I(j, self._I_10020)
 
         return dx_dJ_k
 
     def compute_dx_dJ(self, dx_dJ_k):
         x3 = new.tpsa()
         xy2 = new.tpsa()
-        x3.set([2, 2, 0, 0, 0], 0e0, dx_dJ_k[0]+dx_dJ_k[1])
-        x3.set([1, 1, 1, 1, 0], 0e0, dx_dJ_k[2])
-        xy2.set([1, 1, 1, 1, 0], 0e0, dx_dJ_k[3]+dx_dJ_k[4]+dx_dJ_k[5])
-        xy2.set([0, 0, 2, 2, 0], 0e0, dx_dJ_k[6]+dx_dJ_k[7]+dx_dJ_k[8])
+        x3.set(self._I_11000, 0e0, dx_dJ_k[0]+dx_dJ_k[1])
+        x3.set(self._I_00110, 0e0, dx_dJ_k[2])
+        xy2.set(self._I_11000, 0e0, dx_dJ_k[3]+dx_dJ_k[4]+dx_dJ_k[5])
+        xy2.set(self._I_00110, 0e0, dx_dJ_k[6]+dx_dJ_k[7]+dx_dJ_k[8])
         return x3, xy2
 
     def compute_dnu_dJ(self):
         K = [new.tpsa(), new.tpsa()]
-        I = [1, 1, 1, 1, 0]
         for j, ele in enumerate(self._lat_prop._lattice):
             if type(ele) == ts.Sextupole:
                 L = ele.get_length()
                 b3xL = ele.get_multipoles().get_multipole(MpoleInd.sext).real*L
                 if b3xL != 0e0:
-                    if True:
-                        x3, xy2 = self.compute_dx_dJ_PB(j)
+                    nlbd._M = compute_map(lat_prop, j)
+                    nlbd.compute_map_normal_form()
+                    if not True:
+                        x3_re, xy2_re = self.compute_dx_dJ_PB(j)
                     else:
                         dx_dJ_k = self.compute_dx_dJ_k_fp(j)
-                        x3, xy2 = self.compute_dx_dJ(dx_dJ_k)
-                    x3.print("x3")
-                    xy2.print("xy2")
-                    K[0] -= b3xL*(self._beta[ind.X, j-1]*x3+
-                                  self._beta[ind.Y, j-1]*xy2.get(I)*get_mn(I))
-                    K[1] -= self._beta[ind.Y, j-1]*b3xL*xy2
-        print("\nK:\n")
-        for k in range(2):
-            K[k].print("")
+                        x3_re, xy2_re = self.compute_dx_dJ(dx_dJ_k)
+                    K[0] -= b3xL*(x3_re+0*xy2_re.get(self._I_11110)
+                                  *get_mn(self._I_11110))
+                    K[1] -= b3xL*xy2_re
+        K[0].print("K")
+        K[1].print("K")
        
 
 def compute_map(lat_prop, j):
     M = new.ss_vect_tpsa()
     M.set_identity()
     n = len(lat_prop._lattice)
-    print(f"  n = {n:1d}")
     lat_prop._lattice.propagate(lat_prop._model_state, M, j, n-j)
     if j != 0:
         lat_prop._lattice.propagate(lat_prop._model_state, M, 0, j)
@@ -637,23 +692,114 @@ def tpsa_mul(scl, a):
     return b
 
 
-def compute_A_CS(j):
-    Id = new.ss_vect_tpsa()
-    A_CS = new.ss_vect_tpsa()
-    Id.set_identity()
-    A_CS.set_identity()
+def compute_alpha_beta(A_tpsa):
+    A = A_tpsa.jacobian()[:4, :4]
+    A_A_tp = A @ A.transpose()
+    alpha = []
+    beta = []
     for k in range(2):
-        A_CS.iloc[2*k] = np.sqrt(nlbd._beta[k, j-1])*Id.iloc[2*k].to_tpsa()
-        A_CS.iloc[2*k+1] = -nlbd._alpha[k, j-1]/np.sqrt(nlbd._beta[k, j-1]) \
-            *Id.iloc[2*k].to_tpsa() \
-            + 1e0/np.sqrt(nlbd._beta[k, j-1])*Id.iloc[2*k+1].to_tpsa()
-    return A_CS
+        alpha.append(-A_A_tp[2*k, 2*k+1])
+        beta.append(A_A_tp[2*k, 2*k])
+    return np.array(alpha), np.array(beta)
+
+
+def get_ij(i, j, A):
+    I = [0, 0, 0, 0, 0]
+    I[j] = 1
+    return A.iloc[i].get(I)
+
+
+def set_ij(i, j, a, A):
+    I = [0, 0, 0, 0, 0]
+    I[j] = 1
+    A.iloc[i].set(I, 0e0, a)
+    return A
+
+
+def compute_dnu(n_dof, A):
+    eps = 1e-15;
+    dnu = []
+    for k in range(n_dof):
+        if k < 2:
+            dnu.append(np.arctan2(get_ij(2*k, 2*k+1, A), get_ij(2*k, 2*k, A))
+                       /(2e0*np.pi))
+        elif n == 3:
+            dnu.append(-np.arctan2(get_ij(ct, ind.delta, A),
+                                   get_ij(ct, ind.ct, A))/(2e0*np.pi))
+            if dnu[-1] < -eps:
+                dnu[-1] += 1e0;
+    return np.array(dnu)
+
+
+def compute_A_CS(n_dof, A):
+    A_CS = new.ss_vect_tpsa()
+    R = new.ss_vect_tpsa()
+    R.set_identity();
+    dnu = compute_dnu(n_dof, A)
+    for k in range(n_dof):
+        c = np.cos(2e0*np.pi*dnu[k])
+        s = np.sin(2e0*np.pi*dnu[k]);
+        set_ij(2*k, 2*k, c, R)
+        set_ij(2*k, 2*k+1, -s, R)
+        set_ij(2*k+1, 2*k, s, R)
+        set_ij(2*k+1, 2*k+1, c, R)
+        A_CS.compose(A, R)
+    return dnu, A_CS;
+
+
+def compute_A(j):
+    A = new.ss_vect_tpsa()
+    A.set_identity()
+    for k in range(2):
+        set_ij(2*k, 2*k, np.sqrt(nlbd._beta[k, j]), A)
+        set_ij(2*k+1, 2*k, -nlbd._alpha[k, j]/np.sqrt(nlbd._beta[k, j]), A)
+        set_ij(2*k+1, 2*k+1, 1e0/np.sqrt(nlbd._beta[k, j]), A)
+    return A
+
+
+def chk_g(nlbd):
+    g_re = new.tpsa()
+    g_im = new.tpsa()
+
+    # Can't hash a list (mutable) - but can hash a tuple (immutable).
+    ind_list = {}
+    ind_list[nlbd._I_30000_tuple] = nlbd._I_30000
+    ind_list[nlbd._I_21000_tuple] = nlbd._I_21000
+    ind_list[nlbd._I_10110_tuple] = nlbd._I_10110
+    ind_list[nlbd._I_10200_tuple] = nlbd._I_10200
+    ind_list[nlbd._I_10020_tuple] = nlbd._I_10020
+
+    print("\n")
+    for j, ele in enumerate(nlbd._lat_prop._lattice):
+        if not True:
+            nlbd.propagate_g(j)
+        else:
+            nlbd._M = compute_map(lat_prop, j)
+            nlbd.compute_map_normal_form()
+        nlbd._g.CtoR(g_re, g_im)
+        g_re_fp, g_im_fp = nlbd.compute_g_fp(j)
+
+        print("\ng:")
+        for key, value in ind_list.items():
+            str = nlbd.I2str(ind_list[key])
+            c = complex(g_re_fp.get(ind_list[key]), g_im_fp.get(ind_list[key]))
+            print(f"  g_{str:s} = ", end="")
+            nlbd.prt_ampl_phase("", c, nl="")
+            c = complex(g_re.get(ind_list[key]), g_im.get(ind_list[key]))
+            nlbd.prt_ampl_phase("\t\t", c, nl="\n")
+
 
 def chk_it(nlbd):
     x3_re = new.tpsa()
     x3_im = new.tpsa()
+    xy2_re = new.tpsa()
+    xy2_im = new.tpsa()
     K = [new.tpsa(), new.tpsa()]
-    I = [1, 1, 1, 1, 0]
+    
+    I_11000 = [1, 1, 0, 0, 0]
+    I_00110 = [0, 0, 1, 1, 0]
+
+    print("\n")
     for j, ele in enumerate(nlbd._lat_prop._lattice):
         if type(ele) == ts.Sextupole:
             L = ele.get_length()
@@ -662,16 +808,26 @@ def chk_it(nlbd):
                 nlbd._M = compute_map(lat_prop, j)
                 nlbd.compute_map_normal_form()
                 # g = nlbd.propagate_g(j)
-                # <x^3>.
-                x3 = nlbd._g.poisbra(nlbd._Id.x.to_tpsa()**3, 4)
-                x3.CtoR(x3_re, x3_im)
+
+                x1_re, x3_re, xy2_re = nlbd.compute_dx_dJ_PB(j)
 
                 dx_dJ_k = nlbd.compute_dx_dJ_k_fp(j)
                 x3_fp, xy2_fp = nlbd.compute_dx_dJ(dx_dJ_k)
+                x_fp_re = x3_fp + xy2_fp
 
-                I = [2, 2, 0, 0, 0]
-                print(f"  x3_22000 = {x3_fp.get(I):10.3e}"
-                      f" {x3_re.get(I):10.3e} {x3_im.get(I):10.3e}")
+                print(f"  {dx_dJ_k[1]:10.3e}"
+                      f"\t {x3_re.get(I_11000):10.3e}")
+
+                # print(f"  {x_fp_re.get(I_11000):10.3e}"
+                #       f" ({x_re.get(I_11000):10.3e}"
+                #       f" = {x1_re.get(I_11000):10.3e}"
+                #       f" {x3_re.get(I_11000):+10.3e}"
+                #       f" {xy2_re.get(I_11000):+10.3e})"
+                #       f" {x_fp_re.get(I_00110):10.3e}"
+                #       f" ({x_re.get(I_00110):10.3e}"
+                #       f" = {x1_re.get(I_00110):10.3e}"
+                #       f" {x3_re.get(I_00110):+10.3e}"
+                #       f" {xy2_re.get(I_00110):+10.3e})")
 
 
 def compute_dx_dJ_g_k(nlbd, j):
@@ -798,9 +954,8 @@ def chk_terms(nlbd, j):
     x3_fp.print("x3_fp")
     xy2_fp.print("xy2_fp")
 
-    prt_terms(
-        nlbd, x3_g_PB, xy2_g_PB, dx_dJ_g_k, x3_g, xy2_g, dx_dJ_k_fp, x3_fp,
-        xy2_fp)
+    prt_terms(nlbd, x3_g_PB, xy2_g_PB, dx_dJ_g_k, x3_g, xy2_g, dx_dJ_k_fp,
+              x3_fp, xy2_fp)
 
 
 gtpsa_prop.no = 4
@@ -814,8 +969,7 @@ home_dir = os.path.join(
 lat_name = sys.argv[1]
 file_name = os.path.join(home_dir, lat_name+".lat")
 
-lat_prop = \
-    lp.lattice_properties_class(gtpsa_prop, file_name, E_0, cod_eps)
+lat_prop = lp.lattice_properties_class(gtpsa_prop, file_name, E_0, cod_eps)
 
 compute_optics(lat_prop)
 
@@ -860,11 +1014,18 @@ if False:
         # loc = 237
         loc = 357
     chk_terms(nlbd, loc)
+    assert False
 
-chk_it(nlbd)
+if not False:
+    chk_g(nlbd)
+    assert False
 
-assert False
+if False:
+    chk_it(nlbd)
+    assert False
+
 nlbd.compute_dnu_dJ()
+assert False
 
 h_tpsa = nlbd.compute_h_tpsa()
 h_tpsa = h_tpsa.get_mns_1(1, 3)
