@@ -84,13 +84,14 @@ class nonlinear_beam_dynamics:
         self._I_10200_tuple = (1, 0, 2, 0, 0)
         self._I_10020_tuple = (1, 0, 0, 2, 0) 
 
-        # GTPSA parameters.
+        # TPSA parameters.
         self._gtpsa_prop = gtpsa_prop
 
         # Lattice properties.
         self._lat_prop   = lat_prop
 
         # Linear optics.
+        self._s = np.array(lat_prop._Twiss.s)
         self._eta = np.array(
             lat_prop._Twiss.dispersion.sel(phase_coordinate="x").values)
         self._alpha = np.array(
@@ -509,13 +510,23 @@ class nonlinear_beam_dynamics:
         K[1].print("K")
        
 
-def compute_map(lat_prop, j):
+def compute_map_k(lat_prop, k):
+    # Compute Poincaré map at location k.
+    map = new.ss_vect_tpsa()
+    map.set_identity()
+    n = len(lat_prop._lattice)
+    lat_prop._lattice.propagate(lat_prop._model_state, map, k, n-k)
+    if k != 0:
+        lat_prop._lattice.propagate(lat_prop._model_state, map, 0, k)
+    return map
+
+
+def compute_M_k(lat_prop, k):
+    # Compute transer map for element k.
     M = new.ss_vect_tpsa()
     M.set_identity()
     n = len(lat_prop._lattice)
-    lat_prop._lattice.propagate(lat_prop._model_state, M, j, n-j)
-    if j != 0:
-        lat_prop._lattice.propagate(lat_prop._model_state, M, 0, j)
+    lat_prop._lattice.propagate(lat_prop._model_state, M, k, 1)
     return M
 
 
@@ -757,9 +768,24 @@ def compute_A(j):
     return A
 
 
-def chk_g(nlbd):
+def prt_alpha_beta(lat_prop, k, A):
+    name = lat_prop._lattice[k].name
+    alpha, beta = compute_alpha_beta(nlbd._A)
+    print(f"   {k:2d} {name:10s}{nlbd._s[k]:5.3f} {alpha[ind.X]:8.5f}"
+          f" {beta[ind.X]:7.5f}  {alpha[ind.Y]:8.5f} {beta[ind.Y]:7.5f}")
+
+
+def map_trunc(no_cut, A):
+    for k in range(7):
+        A.iloc[k].get_description().truncate(no_cut)
+    return A
+
+
+def chk_g(lat_prop, nlbd):
     g_re = new.tpsa()
     g_im = new.tpsa()
+    M = new.ss_vect_tpsa()
+    M_j_inv = new.ss_vect_tpsa()
 
     # Can't hash a list (mutable) - but can hash a tuple (immutable).
     ind_list = {}
@@ -771,15 +797,35 @@ def chk_g(nlbd):
 
     print("\n")
     for j, ele in enumerate(nlbd._lat_prop._lattice):
+        # nlbd.propagate_g(j)
+
+        # Compute map at element entrance.
         if not True:
-            nlbd.propagate_g(j)
+            nlbd._M = compute_map_k(lat_prop, j)
         else:
-            nlbd._M = compute_map(lat_prop, j)
-            nlbd.compute_map_normal_form()
+            M_j = compute_M_k(lat_prop, j)
+            M_j_inv.inv(M_j)
+            nlbd._M.compose(nlbd._M, M_j_inv)
+            nlbd._M.compose(M_j, nlbd._M)
+
+        nlbd.compute_map_normal_form()
         nlbd._g.CtoR(g_re, g_im)
+
+        if False:
+            prt_alpha_beta(lat_prop, j, nlbd._A_1)
+
         g_re_fp, g_im_fp = nlbd.compute_g_fp(j)
 
-        print("\ng:")
+        print(f"\n  {j:2d}"
+              f"  nu = [{nlbd._dnu[ind.X, j]:7.5f},"
+              f" {nlbd._dnu[ind.Y, j]:7.5f}]"
+              f"  mu = [{nlbd._dmu[ind.X, j]:7.5f},"
+              f" {nlbd._dmu[ind.Y, j]:7.5f}]"
+              f"  alpha = [{nlbd._alpha[ind.X, j]:7.5f},"
+              f" {nlbd._alpha[ind.Y, j]:8.5f}]"
+              f"  beta = [{nlbd._beta[ind.X, j]:7.5f},"
+              f" {nlbd._beta[ind.Y, j]:8.5f}]")
+
         for key, value in ind_list.items():
             str = nlbd.I2str(ind_list[key])
             c = complex(g_re_fp.get(ind_list[key]), g_im_fp.get(ind_list[key]))
@@ -995,7 +1041,7 @@ if False:
 
 nlbd = nonlinear_beam_dynamics(gtpsa_prop, lat_prop)
 
-nlbd._M = compute_map(lat_prop, 0)
+nlbd._M = compute_map_k(lat_prop, 0)
 print("\nM:", nlbd._M)
 
 nlbd.compute_map_normal_form()
@@ -1017,7 +1063,7 @@ if False:
     assert False
 
 if not False:
-    chk_g(nlbd)
+    chk_g(lat_prop, nlbd)
     assert False
 
 if False:
