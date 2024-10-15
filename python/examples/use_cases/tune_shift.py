@@ -93,7 +93,9 @@ class nonlinear_beam_dynamics:
         # Linear optics.
         self._s = np.array(lat_prop._Twiss.s)
         self._eta = np.array(
-            lat_prop._Twiss.dispersion.sel(phase_coordinate="x").values)
+            [lat_prop._Twiss.dispersion.sel(phase_coordinate="x").values,
+            lat_prop._Twiss.dispersion.sel(phase_coordinate="px").values]
+        )
         self._alpha = np.array(
             [lat_prop._Twiss.twiss.sel(plane="x", par="alpha").values,
              lat_prop._Twiss.twiss.sel(plane="y", par="alpha").values]
@@ -758,13 +760,23 @@ def compute_A_CS(n_dof, A):
     return dnu, A_CS;
 
 
-def compute_A(j):
+def compute_A_0_k(j):
+    A = new.ss_vect_tpsa()
+    A.set_identity()
+    set_ij(ind.x,     ind.delta,  nlbd._eta[ind.x,  j], A)
+    set_ij(ind.px,    ind.delta,  nlbd._eta[ind.px, j], A)
+    set_ij(ind.delta, ind.x,     -nlbd._eta[ind.px, j], A)
+    set_ij(ind.delta, ind.px,     nlbd._eta[ind.x,  j], A)
+    return A
+
+
+def compute_A_1_k(j):
     A = new.ss_vect_tpsa()
     A.set_identity()
     for k in range(2):
-        set_ij(2*k, 2*k, np.sqrt(nlbd._beta[k, j]), A)
-        set_ij(2*k+1, 2*k, -nlbd._alpha[k, j]/np.sqrt(nlbd._beta[k, j]), A)
-        set_ij(2*k+1, 2*k+1, 1e0/np.sqrt(nlbd._beta[k, j]), A)
+        set_ij(2*k,   2*k,   np.sqrt(nlbd._beta[k, j]),                    A)
+        set_ij(2*k+1, 2*k,   -nlbd._alpha[k, j]/np.sqrt(nlbd._beta[k, j]), A)
+        set_ij(2*k+1, 2*k+1, 1e0/np.sqrt(nlbd._beta[k, j]),                A)
     return A
 
 
@@ -786,6 +798,10 @@ def chk_g(lat_prop, nlbd):
     g_im = new.tpsa()
     M = new.ss_vect_tpsa()
     M_j_inv = new.ss_vect_tpsa()
+    A = new.ss_vect_tpsa()
+    A_inv = new.ss_vect_tpsa()
+    R = new.ss_vect_tpsa()
+    R_inv = new.ss_vect_tpsa()
 
     # Can't hash a list (mutable) - but can hash a tuple (immutable).
     ind_list = {}
@@ -795,10 +811,10 @@ def chk_g(lat_prop, nlbd):
     ind_list[nlbd._I_10200_tuple] = nlbd._I_10200
     ind_list[nlbd._I_10020_tuple] = nlbd._I_10020
 
+    g_0 = nlbd._g
     print("\n")
-    for j, ele in enumerate(nlbd._lat_prop._lattice):
-        # nlbd.propagate_g(j)
-
+    # for j, ele in enumerate(nlbd._lat_prop._lattice):
+    for j in range(1, len(nlbd._lat_prop._lattice)-1):
         # Compute map at element entrance.
         if not True:
             nlbd._M = compute_map_k(lat_prop, j)
@@ -809,6 +825,28 @@ def chk_g(lat_prop, nlbd):
             nlbd._M.compose(M_j, nlbd._M)
 
         nlbd.compute_map_normal_form()
+        g_1 = nlbd._g
+
+        A_0 = compute_A_0_k(j-1)
+        A_1 = compute_A_1_k(j-1)
+        A.compose(A_0, A_1)
+        A_inv.inv(A)
+        R.compose(M_j, A)
+        A_0 = compute_A_0_k(j)
+        A_1 = compute_A_1_k(j)
+        A.compose(A_0, A_1)
+        A_inv.inv(A)
+        R.compose(A_inv, R)
+        R_inv.inv(R)
+
+        nlbd._g = g_0
+        nlbd.propagate_g(j)
+        g_2 = nlbd._g
+        # g = compose_bs(g, R)
+
+        trunc(nlbd._g, 3).print("nlbd._g")
+        trunc(g, 3).print("g")
+
         nlbd._g.CtoR(g_re, g_im)
 
         if False:
