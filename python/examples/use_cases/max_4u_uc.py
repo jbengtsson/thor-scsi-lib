@@ -604,7 +604,8 @@ lat_prop.prt_lat("max_4u_uc_lat.txt")
 print("\nCircumference [m]      = {:7.5f}".format(lat_prop.compute_circ()))
 print("Total bend angle [deg] = {:7.5f}".format(lat_prop.compute_phi_lat()))
 
-b_3_list = ["s3", "s4"]
+# b_3_list = ["s3", "s4"]
+b_3_list = ["s2_f1", "s3_f1"]
 set_xi(lat_prop, 0e0, 0e0, b_3_list)
 
 if not False:
