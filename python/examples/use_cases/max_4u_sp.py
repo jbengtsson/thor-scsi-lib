@@ -29,7 +29,7 @@ b_2_max      = 10.0
 
 eps_x_des    = 49e-12
 nu_uc_des    = [0.4, 0.1]
-nu_sp_des    = [2.915, 0.906]
+nu_sp_des    = [2.91, 0.85]
 beta_des     = [5.7, 2.0]
 dnu_des      = [0.5, 0.25]     # Phase advance across the straight.
 
@@ -247,6 +247,14 @@ class opt_sp_class:
                 if not self._lat_prop.compute_radiation():
                     print("\ncompute_radiation: unstable")
                     raise ValueError
+
+                # Compute linear chromaticity.
+                M = self._nld.compute_map(lat_prop, 2)
+                stable, _, self._xi = \
+                    lo.compute_nu_xi(lat_prop._desc, lat_prop._no, self._nld._M)
+                if not stable:
+                    print("\ncompute_nu_xi: unstable")
+                    raise ValueError
             except ValueError:
                 chi_2 = 1e30
                 if False:
@@ -254,10 +262,6 @@ class opt_sp_class:
                           format(n_iter, chi_2, self._chi_2_min))
                     prm_list.prt_prm(prm)
             else:
-                M = self._nld.compute_map(lat_prop, 2)
-                stable, _, self._xi = \
-                    lo.compute_nu_xi(lat_prop._desc, lat_prop._no, self._nld._M)
-
                 _, _, _, self._nu_0 = self._lat_prop.get_Twiss(uc_0-1)
                 self._eta_uc_1, self._alpha_uc_1, _, self._nu_1 = \
                     self._lat_prop.get_Twiss(uc_1)
@@ -400,16 +404,16 @@ if step == 1:
         0e-17, # U_0.
         1e2,   # etap_x_uc.
         1e-2,  # alpha_uc.
-        1e0,   # nu_uc_x.
-        1e0,   # nu_uc_y.
+        1e-1,  # nu_uc_x.
+        1e-1,  # nu_uc_y.
         1e0,   # eta_x.
-        0e-7,  # nu_sp_x.
-        0e-3,  # nu_sp_y.
+        1e-4,  # nu_sp_x.
+        1e-8,  # nu_sp_y.
         0e-6,  # beta_x.
         0e-6,  # beta_y.
-        1e-2,  # dnu_x.
-        1e-2,  # dnu_y.
-        1e-5  # xi.
+        0e-3,  # dnu_x.
+        0e-3,  # dnu_y.
+        1e-6   # xi.
     ])
 
     prms = [
