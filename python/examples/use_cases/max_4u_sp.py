@@ -29,8 +29,8 @@ b_2_max      = 10.0
 
 eps_x_des    = 49e-12
 nu_uc_des    = [0.4, 0.1]
-nu_sp_des    = [2.91, 0.85]
-beta_des     = [5.7, 2.0]
+nu_sp_des    = [3.1, 0.9]
+beta_des     = [4.0, 3.0]
 dnu_des      = [0.5, 0.25]     # Phase advance across the straight.
 
 
@@ -56,18 +56,15 @@ class opt_sp_class:
     # Private
 
     def __init__(
-            self, lat_prop, prm_list, uc_0, uc_1, uc_2, sp_1, sp_2, weight,
+            self, lat_prop, prm_list, uc_list, sp_list, weight,
             b1_list, b2_list, phi_lat, rb, eps_x_des, nu_uc_des, nu_sp_des,
             beta_des, dnu_des, nld):
 
         self._lat_prop       = lat_prop
         self._nld            = nld
         self._prm_list       = prm_list
-        self._uc_0           = uc_0
-        self._uc_1           = uc_1
-        self._uc_2           = uc_2
-        self._sp_1           = sp_1
-        self._sp_2           = sp_2
+        self._uc_list        = uc_list
+        self._sp_list        = sp_list
         self._weight         = weight
         self._b1_list        = b1_list
         self._b2_list        = b2_list
@@ -80,10 +77,8 @@ class opt_sp_class:
         self._dnu_des        = dnu_des
 
         self._Twiss_sp       = np.nan
-        self._eta_uc_1       = np.nan
-        self._eta_uc_2       = np.nan
-        self._alpha_uc_1     = np.nan
-        self._alpha_uc_2     = np.nan
+        self._eta_list       = np.zeros((2, 4))
+        self._alpha_list     = np.zeros((2, 2))
         self._nu_uc          = np.nan
         self._dnu            = np.nan
         self._xi             = np.nan
@@ -126,11 +121,19 @@ class opt_sp_class:
         print("    xi             = [{:5.3f}, {:5.3f}]".
               format(self._xi[ind.X], self._xi[ind.Y]))
 
-        print("\n    eta'_uc        = {:9.3e} {:9.3e}".
-              format(self._eta_uc_1[ind.px], self._eta_uc_2[ind.px]))
-        print("    alpha_uc       = [{:9.3e}, {:9.3e}] [{:9.3e}, {:9.3e}]".
-              format(self._alpha_uc_1[ind.X], self._alpha_uc_1[ind.Y],
-                     self._alpha_uc_2[ind.X], self._alpha_uc_2[ind.Y]))
+        if len(uc_list) == 2:
+            print("\n    eta'_uc        = {:9.3e}".
+                  format(self._eta_list[0][ind.px]))
+            print("    alpha_uc       = [{:9.3e}, {:9.3e}]".
+                  format(self._alpha_list[0][ind.X],
+                         self._alpha_list[0][ind.Y]))
+        else:
+            print("\n    eta'_uc        = {:9.3e} {:9.3e}".
+                  format(self._eta_list[0][ind.px], self._eta_list[1][ind.px]))
+            print("    alpha_uc       = [{:9.3e}, {:9.3e}] [{:9.3e}, {:9.3e}]".
+                  format(self._alpha_list[0][ind.X], self._alpha_list[0][ind.Y],
+                         self._alpha_list[1][ind.X], self._alpha_list[1][ind.Y]
+                         ))
         print("    eta_x          = {:9.3e}".format(eta[ind.x]))
         print("    beta           = [{:7.5f}, {:7.5f}] ([{:7.5f}, {:7.5f}])".
               format(beta[ind.X], beta[ind.Y], beta_des[ind.X],
@@ -163,14 +166,20 @@ class opt_sp_class:
         if prt:
             print("  dchi2(U_0)          = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[2]*(self._eta_uc_1[ind.px]**2+self._eta_uc_2[ind.px]**2)
+        dchi_2 = weight[2]*(self._eta_list[0][ind.px]**2
+                            +self._eta_list[1][ind.px]**2)
         chi_2 += dchi_2
         if prt:
             print("  dchi2(eta'_uc)      = {:9.3e}".format(dchi_2))
 
         dchi_2 = weight[3]*(
-            self._alpha_uc_1[ind.X]**2+self._alpha_uc_2[ind.X]**2 \
-            +self._alpha_uc_1[ind.Y]**2+self._alpha_uc_2[ind.Y]**2)
+            self._alpha_list[0][ind.X]**2+self._alpha_list[0][ind.Y]**2)
+        chi_2 += dchi_2
+        if prt:
+            print("  dchi2(alpha_uc)     = {:9.3e}".format(dchi_2))
+
+        dchi_2 = weight[3]*(
+            self._alpha_list[1][ind.X]**2+self._alpha_list[1][ind.Y]**2)
         chi_2 += dchi_2
         if prt:
             print("  dchi2(alpha_uc)     = {:9.3e}".format(dchi_2))
@@ -262,23 +271,26 @@ class opt_sp_class:
                           format(n_iter, chi_2, self._chi_2_min))
                     prm_list.prt_prm(prm)
             else:
-                _, _, _, self._nu_0 = self._lat_prop.get_Twiss(uc_0-1)
-                self._eta_uc_1, self._alpha_uc_1, _, self._nu_1 = \
-                    self._lat_prop.get_Twiss(uc_1)
+                _, _, _, self._nu_0 = self._lat_prop.get_Twiss(
+                    self._uc_list[0]-1)
+                self._eta_list[0], self._alpha_list[0], _, self._nu_1 = \
+                    self._lat_prop.get_Twiss(self._uc_list[1])
                 self._nu_uc = self._nu_1 - self._nu_0
-                self._eta_uc_2, self._alpha_uc_2, _, _ = \
-                    self._lat_prop.get_Twiss(uc_2)
+                if len(uc_list) == 3:
+                    self._eta_list[1], self._alpha_list[1], _, _ = \
+                        self._lat_prop.get_Twiss(self._uc_list[2])
                 self._Twiss_sp = self._lat_prop.get_Twiss(-1)
                 self._dnu = \
                     self._lat_prop.get_Twiss(-1)[3][:] \
-                    - self._lat_prop.get_Twiss(sp_2)[3][:] \
-                    + self._lat_prop.get_Twiss(sp_1)[3][:]
+                    - self._lat_prop.get_Twiss(sp_list[1])[3][:] \
+                    + self._lat_prop.get_Twiss(sp_list[0])[3][:]
 
                 chi_2 = self.compute_chi_2()
 
                 if chi_2 < self._chi_2_min:
                     self.prt_iter(prm, chi_2)
-                    self._lat_prop.prt_Twiss("twiss.txt")
+                    if False:
+                        self._lat_prop.prt_Twiss("twiss.txt")
                     pc.prt_lat(
                         self._lat_prop, self._file_name, self._prm_list,
                         phi_lat=self._phi_lat)
@@ -321,7 +333,7 @@ class opt_sp_class:
 # TPSA max order.
 gtpsa_prop.no = 2
 
-cod_eps = 1e-15
+cod_eps = 1e-10
 E_0     = 3.0e9
 
 A_max     = np.array([6e-3, 3e-3])
@@ -359,22 +371,28 @@ else:
     lat_prop.prt_M()
     lat_prop.prt_M_rad()
 
-uc_0 = lat_prop._lattice.find("ucborder", 0).index
-uc_1 = lat_prop._lattice.find("ucborder", 1).index
-uc_2 = lat_prop._lattice.find("ucborder", 2).index
-sp_1 = lat_prop._lattice.find("lsborder", 0).index
-sp_2 = lat_prop._lattice.find("lsborder", 1).index
+uc_list = []
+uc_list.append(lat_prop._lattice.find("ucborder", 0).index)
+uc_list.append(lat_prop._lattice.find("ucborder", 1).index)
+if False:
+    uc_list.append(lat_prop._lattice.find("ucborder", 2).index)
+uc_list = np.array(uc_list)
+
+sp_list = np.zeros(2, dtype=int)
+sp_list[0] = lat_prop._lattice.find("lsborder", 0).index
+sp_list[1] = lat_prop._lattice.find("lsborder", 1).index
 
 print("\nunit cell entrance           {:5s} loc = {:d}".
-      format(lat_prop._lattice[uc_0].name, uc_0))
+      format(lat_prop._lattice[uc_list[0]].name, uc_list[0]))
 print("unit cell exit               {:5s} loc = {:d}".
-      format(lat_prop._lattice[uc_1].name, uc_1))
-print("next unit cell exit          {:5s} loc = {:d}".
-      format(lat_prop._lattice[uc_2].name, uc_2))
+      format(lat_prop._lattice[uc_list[1]].name, uc_list[1]))
+if len(uc_list) == 3:
+    print("next unit cell exit          {:5s} loc = {:d}".
+          format(lat_prop._lattice[uc_list[2]].name, uc_list[2]))
 print("super period first sextupole {:5s} loc = {:d}".
-      format(lat_prop._lattice[sp_1].name, sp_1))
+      format(lat_prop._lattice[sp_list[0]].name, sp_list[0]))
 print("super period last sextupole  {:5s} loc = {:d}".
-      format(lat_prop._lattice[sp_1].name, sp_2))
+      format(lat_prop._lattice[sp_list[1]].name, sp_list[1]))
 
 d2_list = ["d2_f1_sl_d0a", "d2_f1_sl_d0b", "d2_f1_sl_d0c", "d2_f1_sl_df1",
            "d2_f1_sl_df2", "d2_f1_sl_df3", "d2_f1_sl_df4", "d2_f1_sl_df5"]
@@ -400,28 +418,28 @@ step = 1;
 
 if step == 1:
     weight = np.array([
-        1e17,  # eps_x.
+        1e16,  # eps_x.
         0e-17, # U_0.
         1e2,   # etap_x_uc.
         1e-2,  # alpha_uc.
-        1e-1,  # nu_uc_x.
-        1e-1,  # nu_uc_y.
+        1e0,   # nu_uc_x.
+        1e0,   # nu_uc_y.
         1e0,   # eta_x.
-        1e-4,  # nu_sp_x.
-        1e-8,  # nu_sp_y.
-        0e-6,  # beta_x.
-        0e-6,  # beta_y.
+        0e-6,  # nu_sp_x.
+        0e-6,  # nu_sp_y.
+        1e-5,  # beta_x.
+        1e-7,  # beta_y.
         0e-3,  # dnu_x.
         0e-3,  # dnu_y.
-        1e-6   # xi.
+        1e-5   # xi.
     ])
 
     prms = [
-        ("q1_f1" ,      "b_2"),
-        ("q2_f1",       "b_2"),
-        ("q3_f1",       "b_2"),
-        # ("q4_h",     "b_2"),
-        ("r1_f1",       "b_2"),
+        ("q1_f1" ,   "b_2"),
+        ("q2_f1",    "b_2"),
+        ("q3_f1",    "b_2"),
+        # ("q4_h",  "b_2"),
+        ("r1_f1",    "b_2"),
 
         ("b_2_bend", d2_bend),
         ("b_2_bend", d1_bend),
@@ -498,7 +516,7 @@ prm_list = pc.prm_class(lat_prop, prms, b_2_max)
 rb = "r1_f1"
 
 opt_sp = opt_sp_class(
-    lat_prop, prm_list, uc_0, uc_1, uc_2, sp_1, sp_2, weight, d2_list, d1_list,
+    lat_prop, prm_list, uc_list, sp_list, weight, d2_list, d1_list,
     phi_lat, rb, eps_x_des, nu_uc_des, nu_sp_des, beta_des, dnu_des, nld)
 
 opt_sp.opt_sp()

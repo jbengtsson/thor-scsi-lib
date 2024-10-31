@@ -327,15 +327,16 @@ class periodic_structure_class:
         """
         file = open(file_name, "w")
         nu = np.zeros(2, dtype=float)
-        print("\n     Name          s    type  alpha_x   beta_x  nu_x     eta_x"
-              "   eta'_x    alpha_y   beta_y  nu_y     eta_y   eta'_y",
+        print("\n     Name               s    type  alpha_x   beta_x  nu_x"
+              "     eta_x   eta'_x    alpha_y   beta_y  nu_y     eta_y"
+              "   eta'_y",
               file=file)
         print("                  [m]                    [m]             [m]"
               "     [m]                 [m]             [m]", file=file)
         for k in range(len(self._Twiss.index)):
             eta, alpha, beta, nu = self.get_Twiss(k)
 
-            print("{:3d} {:10s} {:7.3f} {:4.1f} {:9.5f} {:8.5f} {:7.5f} {:8.5f}"
+            print("{:3d} {:15s} {:7.3f} {:4.1f} {:9.5f} {:8.5f} {:7.5f} {:8.5f}"
                   " {:8.5f} {:9.5f} {:8.5f} {:7.5f} {:8.5f} {:8.5f}".
                   format(k, self._lattice[k].name,  self._Twiss.s[k],
                          self._type_code[k], alpha[ind.X], beta[ind.X],

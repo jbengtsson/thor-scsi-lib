@@ -157,12 +157,11 @@ class lattice_properties_class(
             compute_M_diag(dof, self._M_rad.jacobian())
 
         if stable:
+            self._model_state.emittance = True
+
             A_7x7 = np.zeros((7, 7))
             A_7x7[:6, :6] = self._A_rad
             A_7x7[6, 6] = 1e0
-
-            self._model_state.emittance = True
-
             A_cpy  = gtpsa.ss_vect_tpsa(self._desc, 1)
             A_cpy += self._M_rad.cst()
             A_cpy.set_jacobian(A_7x7)
