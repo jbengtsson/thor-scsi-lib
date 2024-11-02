@@ -29,7 +29,10 @@ b_2_max      = 10.0
 
 eps_x_des    = 49e-12
 nu_uc_des    = [0.4, 0.1]
-nu_sp_des    = [3.1, 0.9]
+if not False:
+    nu_sp_des    = [2.25, 0.65]
+else:
+    nu_sp_des    = [3.05, 0.85]
 beta_des     = [4.0, 3.0]
 dnu_des      = [0.5, 0.25]     # Phase advance across the straight.
 
@@ -149,7 +152,7 @@ class opt_sp_class:
 
         self._lat_prop.prt_rad()
 
-        prm_list.prt_prm(prm)
+        self._prm_list.prt_prm(prm)
 
     def compute_chi_2(self):
         prt = not False
@@ -269,7 +272,7 @@ class opt_sp_class:
                 if False:
                     print("\n{:3d} chi_2 = {:11.5e} ({:11.5e})".
                           format(n_iter, chi_2, self._chi_2_min))
-                    prm_list.prt_prm(prm)
+                    self._prm_list.prt_prm(prm)
             else:
                 _, _, _, self._nu_0 = self._lat_prop.get_Twiss(
                     self._uc_list[0]-1)
@@ -299,7 +302,7 @@ class opt_sp_class:
                     if False:
                         print("\n{:3d} chi_2 = {:21.15e} ({:21.15e})".
                               format(self._n_iter, chi_2, self._chi_2_min))
-                        prm_list.prt_prm(prm)
+                        self._prm_list.prt_prm(prm)
 
             return chi_2
 
@@ -308,7 +311,7 @@ class opt_sp_class:
         x_tol    = 1e-8
         g_tol    = 1e-8
 
-        prm, bounds = prm_list.get_prm()
+        prm, bounds = self._prm_list.get_prm()
         f_sp(prm)
 
         # Methods:
@@ -374,7 +377,7 @@ else:
 uc_list = []
 uc_list.append(lat_prop._lattice.find("ucborder", 0).index)
 uc_list.append(lat_prop._lattice.find("ucborder", 1).index)
-if False:
+if True:
     uc_list.append(lat_prop._lattice.find("ucborder", 2).index)
 uc_list = np.array(uc_list)
 
@@ -418,28 +421,28 @@ step = 1;
 
 if step == 1:
     weight = np.array([
-        1e16,  # eps_x.
+        1e15,  # eps_x.
         0e-17, # U_0.
         1e2,   # etap_x_uc.
         1e-2,  # alpha_uc.
-        1e0,   # nu_uc_x.
-        1e0,   # nu_uc_y.
+        1e-1,   # nu_uc_x.
+        1e-1,   # nu_uc_y.
         1e0,   # eta_x.
-        0e-6,  # nu_sp_x.
-        0e-6,  # nu_sp_y.
-        1e-5,  # beta_x.
-        1e-7,  # beta_y.
+        1e-4,  # nu_sp_x.
+        0e-7,  # nu_sp_y.
+        0e-5,  # beta_x.
+        0e-7,  # beta_y.
         0e-3,  # dnu_x.
         0e-3,  # dnu_y.
-        1e-5   # xi.
+        1e-6   # xi.
     ])
 
     prms = [
-        ("q1_f1" ,   "b_2"),
-        ("q2_f1",    "b_2"),
-        ("q3_f1",    "b_2"),
+        ("q1_f1" , "b_2"),
+        ("q2_f1",  "b_2"),
+        ("q3_f1",  "b_2"),
         # ("q4_h",  "b_2"),
-        ("r1_f1",    "b_2"),
+        ("r1_f1",  "b_2"),
 
         ("b_2_bend", d2_bend),
         ("b_2_bend", d1_bend),
