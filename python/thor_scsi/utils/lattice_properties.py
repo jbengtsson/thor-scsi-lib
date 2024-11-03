@@ -171,11 +171,12 @@ class lattice_properties_class(
 
             stable_rad = self.compute_rad_prop()
         else:
-            stable_rad = False
+            print("\ncompute_radiation: unstable")
             self._U_0 = np.nan
             self._J = np.zeros(3, float)
             self._tau = np.zeros(3, float)
             self._eps = np.zeros(3, float)
+            return stable, False
 
         return stable, stable_rad
 

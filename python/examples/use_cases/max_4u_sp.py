@@ -21,8 +21,6 @@ import gtpsa
 
 ind = ind.index_class()
 
-L_min        = 0.10
-L_max        = 0.50
 phi_max      = 0.85
 b_2_bend_max = 1.0
 b_2_max      = 10.0
@@ -297,7 +295,7 @@ class opt_sp_class:
                     pc.prt_lat(
                         self._lat_prop, self._file_name, self._prm_list,
                         phi_lat=self._phi_lat)
-                    chi_2_min = min(chi_2, self._chi_2_min)
+                    self._chi_2_min = min(chi_2, self._chi_2_min)
                 else:
                     if False:
                         print("\n{:3d} chi_2 = {:21.15e} ({:21.15e})".

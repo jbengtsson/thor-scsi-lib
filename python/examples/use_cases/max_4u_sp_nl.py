@@ -21,15 +21,14 @@ import gtpsa
 
 ind = ind.index_class()
 
-L_min        = 0.10
-L_max        = 0.50
 phi_max      = 0.85
 b_2_bend_max = 1.0
 b_2_max      = 10.0
 
 eps_x_des    = 49e-12
+alpha_c_des  = 5e-6
 nu_uc_des    = [0.4, 0.1]
-nu_sp_des    = [3.05, 0.85]
+nu_sp_des    = [3.11, 0.78]
 beta_des     = [4.0, 3.0]
 dnu_des      = [0.5, 0.25]     # Phase advance across the straight.
 
@@ -105,11 +104,13 @@ class opt_sp_class:
         phi_b2 = self.compute_phi_bend(self._b2_list)
         phi_rb = self._lat_prop.get_phi_elem(self._rb, 0)
 
-        print("\n{:3d} chi_2 = {:16.10e}".format(self._n_iter, chi_2))
+        print("\n{:3d} chi_2 = {:9.3e} ({:9.3e})".format(
+            self._n_iter, self._chi_2_min, chi_2-self._chi_2_min))
         print("    eps_x [pm.rad] = {:5.3f} [{:5.3f}]".
               format(1e12*self._lat_prop._eps[ind.X], 1e12*self._eps_x_des))
 
-        print("\n    nu_uc          = [{:7.5f}, {:7.5f}] ([{:7.5f}, {:7.5f}])".
+        print("\n    alpha_c        = {:9.3e}".format(self._lat_prop._alpha_c))
+        print("    nu_uc          = [{:7.5f}, {:7.5f}] ([{:7.5f}, {:7.5f}])".
               format(self._nu_uc[ind.X], self._nu_uc[ind.Y],
                      self._nu_uc_des[ind.X], self._nu_uc_des[ind.Y]))
         print("    nu_sp          = [{:7.5f}, {:7.5f}] ([{:7.5f}, {:7.5f}])".
@@ -166,85 +167,90 @@ class opt_sp_class:
         if prt:
             print("\n  dchi2(eps_x)        = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[1]*self._lat_prop._U_0**2
+        dchi_2 = weight[1]*(self._lat_prop._alpha_c-alpha_c_des)**2
+        chi_2 = dchi_2
+        if prt:
+            print("  dchi2(alpha_c)      = {:9.3e}".format(dchi_2))
+
+        dchi_2 = weight[2]*self._lat_prop._U_0**2
         chi_2 += dchi_2
         if prt:
             print("  dchi2(U_0)          = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[2]*(self._eta_list[0][ind.px]**2
+        dchi_2 = weight[3]*(self._eta_list[0][ind.px]**2
                             +self._eta_list[1][ind.px]**2)
         chi_2 += dchi_2
         if prt:
             print("  dchi2(eta'_uc)      = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[3]*(
+        dchi_2 = weight[4]*(
             self._alpha_list[0][ind.X]**2+self._alpha_list[0][ind.Y]**2)
         chi_2 += dchi_2
         if prt:
             print("  dchi2(alpha_uc)     = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[3]*(
+        dchi_2 = weight[4]*(
             self._alpha_list[1][ind.X]**2+self._alpha_list[1][ind.Y]**2)
         chi_2 += dchi_2
         if prt:
             print("  dchi2(alpha_uc)     = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[4]*(self._nu_uc[ind.X]-self._nu_uc_des[ind.X])**2
+        dchi_2 = weight[5]*(self._nu_uc[ind.X]-self._nu_uc_des[ind.X])**2
         chi_2 += dchi_2
         if prt:
             print("  dchi2(nu_uc_x)      = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[5]*(self._nu_uc[ind.Y]-self._nu_uc_des[ind.Y])**2
+        dchi_2 = weight[6]*(self._nu_uc[ind.Y]-self._nu_uc_des[ind.Y])**2
         chi_2 += dchi_2
         if prt:
             print("  dchi2(nu_uc_y)      = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[6]*eta[ind.x]**2
+        dchi_2 = weight[7]*eta[ind.x]**2
         chi_2 += dchi_2
         if prt:
             print("  dchi2(eta_x)        = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[7]*(nu_sp[ind.X]-self._nu_sp_des[ind.X])**2
+        dchi_2 = weight[8]*(nu_sp[ind.X]-self._nu_sp_des[ind.X])**2
         chi_2 += dchi_2
         if prt:
             print("  dchi2(nu_sp_x)      = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[8]*(nu_sp[ind.Y]-self._nu_sp_des[ind.Y])**2
+        dchi_2 = weight[9]*(nu_sp[ind.Y]-self._nu_sp_des[ind.Y])**2
         chi_2 += dchi_2
         if prt:
             print("  dchi2(nu_sp_y)      = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[9]*(beta[ind.X]-self._beta_des[ind.X])**2
+        dchi_2 = weight[10]*(beta[ind.X]-self._beta_des[ind.X])**2
         chi_2 += dchi_2
         if prt:
             print("  dchi2(beta_x)       = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[10]*(beta[ind.Y]-self._beta_des[ind.Y])**2
+        dchi_2 = weight[11]*(beta[ind.Y]-self._beta_des[ind.Y])**2
         chi_2 += dchi_2
         if prt:
             print("  dchi2(beta_y)       = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[11]*(self._dnu[ind.X]-self._dnu_des[ind.X])**2
+        dchi_2 = weight[12]*(self._dnu[ind.X]-self._dnu_des[ind.X])**2
         chi_2 += dchi_2
         if prt:
             print("  dchi2(dnu_x)        = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[12]*(self._dnu[ind.Y]-self._dnu_des[ind.Y])**2
+        dchi_2 = weight[13]*(self._dnu[ind.Y]-self._dnu_des[ind.Y])**2
         chi_2 += dchi_2
         if prt:
             print("  dchi2(dnu_y)        = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[13]*(self._xi[ind.X]**2+self._xi[ind.Y]**2)
+        dchi_2 = weight[14]*(self._xi[ind.X]**2+self._xi[ind.Y]**2)
         chi_2 += dchi_2
         if prt:
             print("  dchi2(xi)           = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[14]*self._nld._h_im_scl_rms**2
+        dchi_2 = weight[15]*self._nld._h_im_scl_rms**2
         chi_2 += dchi_2
         if prt:
             print("  dchi2(h_im_scl_rms) = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[15]*self._nld._K_re_scl_rms**2
+        dchi_2 = weight[16]*self._nld._K_re_scl_rms**2
         chi_2 += dchi_2
         if prt:
             print("  dchi2(K_re_scl_rms) = {:9.3e}".format(dchi_2))
@@ -275,7 +281,7 @@ class opt_sp_class:
                 chi_2 = 1e30
                 if False:
                     print("\n{:3d} chi_2 = {:11.5e} ({:11.5e})".
-                          format(n_iter, chi_2, self._chi_2_min))
+                          format(self._n_iter, chi_2, self._chi_2_min))
                     self._prm_list.prt_prm(prm)
             else:
                 _, _, _, self._nu_0 = self._lat_prop.get_Twiss(uc_list[0]-1)
@@ -307,19 +313,19 @@ class opt_sp_class:
                     pc.prt_lat(
                         self._lat_prop, self._file_name, self._prm_list,
                         phi_lat=self._phi_lat)
-                    chi_2_min = min(chi_2, self._chi_2_min)
+                    self._chi_2_min = min(chi_2, self._chi_2_min)
                 else:
-                    if False:
-                        print("\n{:3d} chi_2 = {:21.15e} ({:21.15e})".
-                              format(self._n_iter, chi_2, self._chi_2_min))
-                        self._prm_list.prt_prm(prm)
+                    if not False:
+                        print("\n{:3d} dchi_2 = {:9.3e}".
+                              format(self._n_iter, chi_2-self._chi_2_min))
+                        # self._prm_list.prt_prm(prm)
 
             return chi_2
 
         max_iter = 1000
-        f_tol    = 1e-10
-        x_tol    = 1e-8
-        g_tol    = 1e-8
+        f_tol    = 1e-30
+        x_tol    = 1e-30
+        g_tol    = 1e-30
 
         self._nld.compute_map(self._lat_prop, self._lat_prop._no)
         self._nld.compute_nl(self._lat_prop)
@@ -338,11 +344,11 @@ class opt_sp_class:
         minimum = opt.minimize(
             f_sp,
             prm,
-            method="CG",
+            method="Powell",
             # callback=prt_iter,
             # bounds = bounds,
-            # options={"ftol": f_tol, "xtol": x_tol, "maxiter": max_iter}
-            options={"gtol": g_tol, "maxiter": max_iter}
+            options={"ftol": f_tol, "xtol": x_tol, "maxiter": max_iter}
+            # options={"gtol": g_tol, "maxiter": max_iter}
         )
 
         print("\n".join(minimum))
@@ -440,6 +446,7 @@ if step == 1:
     # Weights.
     weight = np.array([
         0e18,  # eps_x.
+        1e0,   # alpha_c.
         0e-17, # U_0.
         0e2,   # etap_x_uc.
         0e-2,  # alpha_uc.
@@ -470,11 +477,12 @@ if step == 1:
 elif step == 2:
     weight = np.array([
         1e15,  # eps_x.
+        1e7,   # alpha_c.
         0e-17, # U_0.
         1e2,   # etap_x_uc.
         1e-2,  # alpha_uc.
-        1e-1,   # nu_uc_x.
-        1e-1,   # nu_uc_y.
+        1e-1,  # nu_uc_x.
+        1e-1,  # nu_uc_y.
         1e0,   # eta_x.
         1e-4,  # nu_sp_x.
         0e-3,  # nu_sp_y.
@@ -484,7 +492,7 @@ elif step == 2:
         0e-2,  # dnu_y.
         0e-4,  # xi.
         0e6,   # Im{h} rms.
-        1e9    # K rms.
+        1e7    # K rms.
     ])
 
     prms = [
@@ -515,6 +523,7 @@ elif step == 2:
 elif step == 3:
     weight = np.array([
         1e18,  # eps_x.
+        1e0,   # alpha_c.
         0e-17, # U_0.
         1e2,   # etap_x_uc.
         1e-2,  # alpha_uc.

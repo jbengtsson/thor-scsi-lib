@@ -344,7 +344,8 @@ def compute_M_diag(
                 nu_eig[k] = acos2(w[k].imag, w[k].real) / (2e0 * np.pi)
             else:
                 # Unstable.
-                print("\ncompute_M_diag: |arg| for acos2 > 1", w[k])
+                print(f"\ncompute_M_diag: plane = {k//2:1d}: |arg| for acos > 1"
+                      f" ({w[k]:7.5f})")
                 return False, np.nan, np.nan, np.nan, np.nan
 
         logger.debug(
@@ -432,10 +433,9 @@ def compute_M_diag(
                 )
             )
     else:
-        nu        = np.nan
-        A         = np.nan
-        A_inv     = np.nan
-        alpha_rad = np.nan
+        print("\ncompute_M_diag: Tr(M) = [{:12.5e}, {}]",
+              M[2, 2].trace(), M[2:4, 2:4].trace()) 
+        return False, np.nan, np.nan, np.nan, np.nan
 
     return stable, nu, A, A_inv, alpha_rad
 
@@ -550,6 +550,7 @@ def compute_map_and_diag(
         lat.propagate(model_state, Atest)
     else:
         print("\ncompute_map_and_diag: unstable")
+        return false, np.nan, np.nan, np.nan
     return stable, t_map, nu, A
 
 
