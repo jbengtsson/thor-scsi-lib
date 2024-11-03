@@ -274,7 +274,8 @@ class opt_sp_class:
                     raise ValueError
 
                 # Compute radiation properties.
-                if not self._lat_prop.compute_radiation():
+                stable, stable_rad = self._lat_prop.compute_radiation()
+                if not stable or not stable_rad:
                     print("\ncompute_radiation: unstable")
                     raise ValueError
             except ValueError:
@@ -435,7 +436,9 @@ nld = nld_cl.nonlin_dyn_class(lat_prop, A_max, beta_inj, delta_max, b_3_list)
 
 if False:
     nld.zero_mult(lat_prop, 3)
+if not False:
     nld.zero_mult(lat_prop, 4)
+if False:
     nld.set_xi(lat_prop, 0e0, 0e0)
 
 step = 2;
