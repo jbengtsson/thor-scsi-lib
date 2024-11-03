@@ -433,8 +433,8 @@ def compute_M_diag(
                 )
             )
     else:
-        print("\ncompute_M_diag: Tr(M) = [{:12.5e}, {}]",
-              M[2, 2].trace(), M[2:4, 2:4].trace()) 
+        print("\ncompute_M_diag: Tr(M_x,y)/2 = [{:7.5f}, {:7.5f}]".format(
+            M[0:2, 0:2].trace()/2e0, M[2:4, 2:4].trace()/2e0))
         return False, np.nan, np.nan, np.nan, np.nan
 
     return stable, nu, A, A_inv, alpha_rad
@@ -550,7 +550,7 @@ def compute_map_and_diag(
         lat.propagate(model_state, Atest)
     else:
         print("\ncompute_map_and_diag: unstable")
-        return false, np.nan, np.nan, np.nan
+        return False, np.nan, np.nan, np.nan
     return stable, t_map, nu, A
 
 

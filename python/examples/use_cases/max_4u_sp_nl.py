@@ -26,7 +26,7 @@ b_2_bend_max = 1.0
 b_2_max      = 10.0
 
 eps_x_des    = 49e-12
-alpha_c_des  = 5e-6
+alpha_c_des  = 1e-5
 nu_uc_des    = [0.4, 0.1]
 nu_sp_des    = [3.11, 0.78]
 beta_des     = [4.0, 3.0]
@@ -324,9 +324,9 @@ class opt_sp_class:
             return chi_2
 
         max_iter = 1000
-        f_tol    = 1e-30
-        x_tol    = 1e-30
-        g_tol    = 1e-30
+        f_tol    = 1e-10
+        x_tol    = 1e-10
+        g_tol    = 1e-8
 
         self._nld.compute_map(self._lat_prop, self._lat_prop._no)
         self._nld.compute_nl(self._lat_prop)
@@ -335,6 +335,11 @@ class opt_sp_class:
 
         prm, bounds = self._prm_list.get_prm()
         f_sp(prm)
+        dprm = np.array([
+            1e1, 1e1, 1e1,
+            1e-1, 1e-1, 1e-1, 1e-1,
+            1e-2, 1e-2, 1e-2, 1e-2, 1e-2, 1e-2
+        ])
 
         # Methods:
         #   Nelder-Mead, Powell, CG, BFGS, Newton-CG, L-BFGS-B, TNC, COBYLA,
@@ -345,11 +350,11 @@ class opt_sp_class:
         minimum = opt.minimize(
             f_sp,
             prm,
-            method="Powell",
+            method="CG",
             # callback=prt_iter,
             # bounds = bounds,
-            options={"ftol": f_tol, "xtol": x_tol, "maxiter": max_iter}
-            # options={"gtol": g_tol, "maxiter": max_iter}
+            # options={"ftol": f_tol, "xtol": x_tol, "maxiter": max_iter}
+            options={"gtol": g_tol, "maxiter": max_iter, "eps": dprm}
         )
 
         print("\n".join(minimum))
@@ -436,7 +441,7 @@ nld = nld_cl.nonlin_dyn_class(lat_prop, A_max, beta_inj, delta_max, b_3_list)
 
 if False:
     nld.zero_mult(lat_prop, 3)
-if not False:
+if False:
     nld.zero_mult(lat_prop, 4)
 if False:
     nld.set_xi(lat_prop, 0e0, 0e0)
@@ -480,7 +485,7 @@ if step == 1:
 elif step == 2:
     weight = np.array([
         1e15,  # eps_x.
-        1e7,   # alpha_c.
+        1e6,   # alpha_c.
         0e-17, # U_0.
         1e2,   # etap_x_uc.
         1e-2,  # alpha_uc.
@@ -493,12 +498,23 @@ elif step == 2:
         0e-6,  # beta_y.
         0e-2,  # dnu_x.
         0e-2,  # dnu_y.
-        0e-4,  # xi.
+        1e-3,  # xi.
         0e6,   # Im{h} rms.
         1e7    # K rms.
     ])
 
     prms = [
+        # Powell optimiser intialises by first optimising each parameter in the
+        # list.
+        ("o1_f1_sl", "b_4"),
+        ("o2_f1_sl", "b_4"),
+        ("o3_f1_sl", "b_4"),
+
+        ("s1_f1",    "b_3"),
+        ("s2_f1",    "b_3"),
+        ("s3_f1",    "b_3"),
+        ("s4_f1",    "b_3"),
+
         ("q1_f1" , "b_2"),
         ("q2_f1",  "b_2"),
         ("q3_f1",  "b_2"),
@@ -508,17 +524,8 @@ elif step == 2:
         ("b_2_bend", d2_bend),
         ("b_2_bend", d1_bend),
 
-        ("phi_bend", d2_bend),
-        # ("r1",       "phi"),
-
-        ("s1_f1",    "b_3"),
-        ("s2_f1",    "b_3"),
-        ("s3_f1",    "b_3"),
-        ("s4_f1",    "b_3"),
-
-        ("o1_f1_sl", "b_4"),
-        ("o2_f1_sl", "b_4"),
-        ("o3_f1_sl", "b_4")
+        # ("phi_bend", d2_bend)
+        # ("r1",       "phi")
     ]
 
     # To maintain the total bend angle.

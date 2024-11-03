@@ -26,6 +26,7 @@ b_2_bend_max = 1.0
 b_2_max      = 10.0
 
 eps_x_des    = 49e-12
+alpha_c_des  = 1e-5
 nu_uc_des    = [0.4, 0.1]
 if not False:
     nu_sp_des    = [2.25, 0.65]
@@ -106,11 +107,13 @@ class opt_sp_class:
         phi_b2 = self.compute_phi_bend(self._b2_list)
         phi_rb = self._lat_prop.get_phi_elem(self._rb, 0)
 
-        print("\n{:3d} chi_2 = {:16.10e}".format(self._n_iter, chi_2))
+        print("\n{:3d} chi_2 = {:9.3e} ({:9.3e})".format(
+            self._n_iter, self._chi_2_min, chi_2-self._chi_2_min))
         print("    eps_x [pm.rad] = {:5.3f} [{:5.3f}]".
               format(1e12*self._lat_prop._eps[ind.X], 1e12*self._eps_x_des))
 
-        print("\n    nu_uc          = [{:7.5f}, {:7.5f}] ([{:7.5f}, {:7.5f}])".
+        print("\n    alpha_c        = {:9.3e}".format(self._lat_prop._alpha_c))
+        print("    nu_uc          = [{:7.5f}, {:7.5f}] ([{:7.5f}, {:7.5f}])".
               format(self._nu_uc[ind.X], self._nu_uc[ind.Y],
                      self._nu_uc_des[ind.X], self._nu_uc_des[ind.Y]))
         print("    nu_sp          = [{:7.5f}, {:7.5f}] ([{:7.5f}, {:7.5f}])".
@@ -162,75 +165,80 @@ class opt_sp_class:
         if prt:
             print("\n  dchi2(eps_x)        = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[1]*self._lat_prop._U_0**2
+        dchi_2 = weight[1]*(self._lat_prop._alpha_c-alpha_c_des)**2
+        chi_2 = dchi_2
+        if prt:
+            print("  dchi2(alpha_c)      = {:9.3e}".format(dchi_2))
+
+        dchi_2 = weight[2]*self._lat_prop._U_0**2
         chi_2 += dchi_2
         if prt:
             print("  dchi2(U_0)          = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[2]*(self._eta_list[0][ind.px]**2
+        dchi_2 = weight[3]*(self._eta_list[0][ind.px]**2
                             +self._eta_list[1][ind.px]**2)
         chi_2 += dchi_2
         if prt:
             print("  dchi2(eta'_uc)      = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[3]*(
+        dchi_2 = weight[4]*(
             self._alpha_list[0][ind.X]**2+self._alpha_list[0][ind.Y]**2)
         chi_2 += dchi_2
         if prt:
             print("  dchi2(alpha_uc)     = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[3]*(
+        dchi_2 = weight[4]*(
             self._alpha_list[1][ind.X]**2+self._alpha_list[1][ind.Y]**2)
         chi_2 += dchi_2
         if prt:
             print("  dchi2(alpha_uc)     = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[4]*(self._nu_uc[ind.X]-self._nu_uc_des[ind.X])**2
+        dchi_2 = weight[5]*(self._nu_uc[ind.X]-self._nu_uc_des[ind.X])**2
         chi_2 += dchi_2
         if prt:
             print("  dchi2(nu_uc_x)      = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[5]*(self._nu_uc[ind.Y]-self._nu_uc_des[ind.Y])**2
+        dchi_2 = weight[6]*(self._nu_uc[ind.Y]-self._nu_uc_des[ind.Y])**2
         chi_2 += dchi_2
         if prt:
             print("  dchi2(nu_uc_y)      = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[6]*eta[ind.x]**2
+        dchi_2 = weight[7]*eta[ind.x]**2
         chi_2 += dchi_2
         if prt:
             print("  dchi2(eta_x)        = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[7]*(nu_sp[ind.X]-self._nu_sp_des[ind.X])**2
+        dchi_2 = weight[8]*(nu_sp[ind.X]-self._nu_sp_des[ind.X])**2
         chi_2 += dchi_2
         if prt:
             print("  dchi2(nu_sp_x)      = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[8]*(nu_sp[ind.Y]-self._nu_sp_des[ind.Y])**2
+        dchi_2 = weight[9]*(nu_sp[ind.Y]-self._nu_sp_des[ind.Y])**2
         chi_2 += dchi_2
         if prt:
             print("  dchi2(nu_sp_y)      = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[9]*(beta[ind.X]-self._beta_des[ind.X])**2
+        dchi_2 = weight[10]*(beta[ind.X]-self._beta_des[ind.X])**2
         chi_2 += dchi_2
         if prt:
             print("  dchi2(beta_x)       = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[10]*(beta[ind.Y]-self._beta_des[ind.Y])**2
+        dchi_2 = weight[11]*(beta[ind.Y]-self._beta_des[ind.Y])**2
         chi_2 += dchi_2
         if prt:
             print("  dchi2(beta_y)       = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[11]*(self._dnu[ind.X]-self._dnu_des[ind.X])**2
+        dchi_2 = weight[12]*(self._dnu[ind.X]-self._dnu_des[ind.X])**2
         chi_2 += dchi_2
         if prt:
             print("  dchi2(dnu_x)        = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[12]*(self._dnu[ind.Y]-self._dnu_des[ind.Y])**2
+        dchi_2 = weight[13]*(self._dnu[ind.Y]-self._dnu_des[ind.Y])**2
         chi_2 += dchi_2
         if prt:
             print("  dchi2(dnu_y)        = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[13]*(self._xi[ind.X]**2+self._xi[ind.Y]**2)
+        dchi_2 = weight[14]*(self._xi[ind.X]**2+self._xi[ind.Y]**2)
         chi_2 += dchi_2
         if prt:
             print("  dchi2(xi)           = {:9.3e}".format(dchi_2))
@@ -298,8 +306,8 @@ class opt_sp_class:
                     self._chi_2_min = min(chi_2, self._chi_2_min)
                 else:
                     if False:
-                        print("\n{:3d} chi_2 = {:21.15e} ({:21.15e})".
-                              format(self._n_iter, chi_2, self._chi_2_min))
+                        print("\n{:3d} dchi_2 = {:9.3e}".
+                              format(self._n_iter, chi_2-self._chi_2_min))
                         self._prm_list.prt_prm(prm)
 
             return chi_2
@@ -420,11 +428,12 @@ step = 1;
 if step == 1:
     weight = np.array([
         1e15,  # eps_x.
+        1e5,   # alpha_c.
         0e-17, # U_0.
         1e2,   # etap_x_uc.
         1e-2,  # alpha_uc.
-        1e-1,   # nu_uc_x.
-        1e-1,   # nu_uc_y.
+        1e-1,  # nu_uc_x.
+        1e-1,  # nu_uc_y.
         1e0,   # eta_x.
         1e-4,  # nu_sp_x.
         0e-7,  # nu_sp_y.
@@ -454,6 +463,7 @@ if step == 1:
 elif step == 2:
     weight = np.array([
         1e18,  # eps_x.
+        1e0,   # alpha_c.
         0e-17, # U_0.
         1e2,   # etap_x_uc.
         1e-2,  # alpha_uc.
