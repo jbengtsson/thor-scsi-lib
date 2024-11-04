@@ -55,9 +55,9 @@ class opt_sp_class:
     # Private
 
     def __init__(
-            self, lat_prop, prm_list, uc_list, sp_list, weight, b1_list,
-            b2_list, phi_lat, rb, eps_x_des, nu_uc_des, nu_sp_des, beta_des,
-            dnu_des, nld):
+            self, lat_prop, prm_list, dprm_list, uc_list, sp_list, weight,
+            b1_list, b2_list, phi_lat, rb, eps_x_des, nu_uc_des, nu_sp_des,
+            beta_des, dnu_des, nld):
 
         self._lat_prop       = lat_prop
         self._nld            = nld
@@ -335,11 +335,6 @@ class opt_sp_class:
 
         prm, bounds = self._prm_list.get_prm()
         f_sp(prm)
-        dprm = np.array([
-            1e1, 1e1, 1e1,
-            1e-1, 1e-1, 1e-1, 1e-1,
-            1e-2, 1e-2, 1e-2, 1e-2, 1e-2, 1e-2
-        ])
 
         # Methods:
         #   Nelder-Mead, Powell, CG, BFGS, Newton-CG, L-BFGS-B, TNC, COBYLA,
@@ -354,7 +349,9 @@ class opt_sp_class:
             # callback=prt_iter,
             # bounds = bounds,
             # options={"ftol": f_tol, "xtol": x_tol, "maxiter": max_iter}
-            options={"gtol": g_tol, "maxiter": max_iter, "eps": dprm}
+            jac="2-point",
+            options={"gtol": g_tol, "maxiter": max_iter,
+                     "finite_diff_rel_step": dprm_list}
         )
 
         print("\n".join(minimum))
@@ -454,7 +451,7 @@ if step == 1:
     # Weights.
     weight = np.array([
         0e18,  # eps_x.
-        1e0,   # alpha_c.
+        0e0,   # alpha_c.
         0e-17, # U_0.
         0e2,   # etap_x_uc.
         0e-2,  # alpha_uc.
@@ -473,15 +470,20 @@ if step == 1:
     ])
 
     prms = [
-        # ("s1_f1",    "b_3"),
-        # ("s2_f1",    "b_3"),
-        # ("s3_f1",    "b_3"),
-        # ("s4_f1",    "b_3"),
+        ("s1_f1",    "b_3"),
+        ("s2_f1",    "b_3"),
+        ("s3_f1",    "b_3"),
+        ("s4_f1",    "b_3"),
 
         ("o1_f1_sl", "b_4"),
         ("o2_f1_sl", "b_4"),
         ("o3_f1_sl", "b_4")
     ]
+
+    dprm_list = np.array([
+        1e-1, 1e-1, 1e-1, 1e-1,
+        1e1, 1e1, 1e1,
+    ])
 elif step == 2:
     weight = np.array([
         1e15,  # eps_x.
@@ -504,17 +506,8 @@ elif step == 2:
     ])
 
     prms = [
-        # Powell optimiser intialises by first optimising each parameter in the
-        # list.
-        ("o1_f1_sl", "b_4"),
-        ("o2_f1_sl", "b_4"),
-        ("o3_f1_sl", "b_4"),
-
-        ("s1_f1",    "b_3"),
-        ("s2_f1",    "b_3"),
-        ("s3_f1",    "b_3"),
-        ("s4_f1",    "b_3"),
-
+        # Note, the Powell optimiser intialises by first optimising each
+        # parameter in the list.
         ("q1_f1" , "b_2"),
         ("q2_f1",  "b_2"),
         ("q3_f1",  "b_2"),
@@ -524,9 +517,24 @@ elif step == 2:
         ("b_2_bend", d2_bend),
         ("b_2_bend", d1_bend),
 
-        # ("phi_bend", d2_bend)
-        # ("r1",       "phi")
+        # ("phi_bend", d2_bend),
+        # ("r1",       "phi"),
+
+        ("s1_f1",    "b_3"),
+        ("s2_f1",    "b_3"),
+        ("s3_f1",    "b_3"),
+        ("s4_f1",    "b_3"),
+
+        ("o1_f1_sl", "b_4"),
+        ("o2_f1_sl", "b_4"),
+        ("o3_f1_sl", "b_4")
     ]
+
+    dprm_list = np.array([
+        1e-2, 1e-2, 1e-2, 1e-2, 1e-2, 1e-2,
+        1e-1, 1e-1, 1e-1, 1e-1,
+        1e1, 1e1, 1e1,
+    ])
 
     # To maintain the total bend angle.
     phi_lat = pc.phi_lat_class(lat_prop, 2, d1_bend)
@@ -604,7 +612,7 @@ prm_list = pc.prm_class(lat_prop, prms, b_2_max)
 rb = "r1_f1"
 
 opt_sp = opt_sp_class(
-    lat_prop, prm_list, uc_list, sp_list, weight, d2_list, d1_list, phi_lat,
-    rb, eps_x_des, nu_uc_des, nu_sp_des, beta_des, dnu_des, nld)
+    lat_prop, prm_list, dprm_list, uc_list, sp_list, weight, d2_list, d1_list,
+    phi_lat, rb, eps_x_des, nu_uc_des, nu_sp_des, beta_des, dnu_des, nld)
 
 opt_sp.opt_sp()
