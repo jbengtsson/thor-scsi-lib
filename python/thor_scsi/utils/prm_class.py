@@ -256,9 +256,12 @@ def prt_lat(
 # def prt_lat(lat_prop, file_name, prm_list):
     outf = open(file_name, 'w')
 
-    def prt_drift(fam_name):
-        L = lat_prop.get_L_elem(fam_name, 0)
-        print("{:5s}: Drift, L = {:7.5f};".format(fam_name, L), file=outf)
+    def prt_drift(fam_name, prt_list):
+        if prt_list.count(fam_name) == 0:
+            prt_list.append(fam_name)
+            L = lat_prop.get_L_elem(fam_name, 0)
+            print("{:5s}: Drift, L = {:7.5f};".format(fam_name, L), file=outf)
+        return prt_list
 
     def prt_dip(fam_name, prt_list):
         if prt_list.count(fam_name) == 0:
@@ -295,7 +298,8 @@ def prt_lat(
                 prt_list.append(fam_name)
                 L = lat_prop.get_L_elem(fam_name, 0)
                 b_2 = lat_prop.get_b_n_elem(fam_name, 0, 2)
-                print("{:5s}: Quadrupole, L = {:7.5f}, B_2 = {:8.5f}, N = n_quad;"
+                print("{:5s}: Quadrupole, L = {:7.5f}"
+                      ", B_2 = {:8.5f}, N = n_quad;"
                       .format(fam_name, L, b_2), file=outf)
         return prt_list
 
@@ -306,7 +310,8 @@ def prt_lat(
             L = lat_prop._lattice[k].get_length()
             b_3 = lat_prop._lattice[k].get_multipoles().get_multipole(3).real
             if type(lat_prop._lattice[k]) == ts.Sextupole:
-                print("{:5s}: Sextupole, L = {:7.5f}, B_3 = {:10.5f}, N = n_sext;"
+                print("{:5s}: Sextupole, L = {:7.5f}, B_3 = {:10.5f}"
+                      ", N = n_sext;"
                       .format(fam_name, L, b_3), file=outf)
             elif type(lat_prop._lattice[k]) == ts.Multipole:
                 b_2 = \
