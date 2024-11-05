@@ -274,10 +274,10 @@ class nonlin_dyn_class:
         self._K_re_scl_rms = np.sqrt(K_geom**2+K_chrom**2)
 
     def prt_nl(self, lat_prop):
-        print("\nnu = [{:7.5f}, {:7.5f}]".format(
+        print("\n  nu = [{:7.5f}, {:7.5f}]".format(
             -self._K_re.get([1, 1, 0, 0, 0, 0, 0])/np.pi,
             -self._K_re.get([0, 0, 1, 1, 0, 0, 0])/np.pi))
-        print("xi = [{:5.3f}, {:5.3f}]\n".format(
+        print("  xi = [{:5.3f}, {:5.3f}]\n".format(
             -self._K_re.get([1, 1, 0, 0, 1, 0, 0])/np.pi,
             -self._K_re.get([0, 0, 1, 1, 1, 0, 0])/np.pi))
         for key in self.K_xi_dict:
