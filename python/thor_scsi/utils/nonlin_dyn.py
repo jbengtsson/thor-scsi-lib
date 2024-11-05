@@ -65,6 +65,16 @@ class nonlin_dyn_class:
               "h_10200" : [1, 0, 2, 0, 0, 0, 0],
               "h_10020" : [1, 0, 0, 2, 0, 0, 0]}
 
+    h_scl_dict = {"h_10002" : 1e-2,
+                  "h_20001" : 1e-2,
+                  "h_00201" : 1e-2,
+
+                  "h_30000" : 1e-2,
+                  "h_21000" : 1e-2,
+                  "h_10110" : 1e-2,
+                  "h_10200" : 1e-2,
+                  "h_10020" : 1e-2}
+
     K_xi_dict = {"K_11001" : [1, 1, 0, 0, 1, 0, 0],
                  "K_00111" : [0, 0, 1, 1, 1, 0, 0]}
 
@@ -77,12 +87,26 @@ class nonlin_dyn_class:
                    "K_11220" : [1, 1, 2, 2, 0, 0, 0],
                    "K_00330" : [0, 0, 3, 3, 0, 0, 0]}
 
+    K_geom_scl_dict = {"K_22000" : 1.0,
+                       "K_11110" : 1.0,
+                       "K_00220" : 1.0,
+
+                       "K_33000" : 5.0,
+                       "K_22110" : 5.0,
+                       "K_11220" : 5.0,
+                       "K_00330" : 5.0}
 
     K_chrom_dict = {"K_11002" : [1, 1, 0, 0, 2, 0, 0],
                     "K_00112" : [0, 0, 1, 1, 2, 0, 0],
 
                     "K_11003" : [1, 1, 0, 0, 3, 0, 0],
                     "K_00113" : [0, 0, 1, 1, 3, 0, 0]}
+
+    K_chrom_scl_dict = {"K_11002" : 1.0,
+                        "K_00112" : 1.0,
+
+                        "K_11003" : 5.0,
+                        "K_00113" : 5.0}
 
     def compute_twoJ(self):
         self._twoJ = \
@@ -214,11 +238,15 @@ class nonlin_dyn_class:
         self._M.Map_Norm(A_0, A_1, R, g, K)
         K.CtoR(self._K_re, self._K_im)
 
-    def compute_rms(self, h, dict):
-        var = 0e0
-        for key in dict:
-            var += h.get(dict[key])**2
-        return np.sqrt(var)
+    def scl_h(self, h, h_scl_dict, h_dict):
+        for key in h_dict:
+            h.set(h_dict[key], 0e0, h_scl_dict[key]*h.get(h_dict[key]))
+
+    def compute_rms(self, h, h_dict):
+        rms = 0e0
+        for key in h_dict:
+            rms += h.get(h_dict[key])**2
+        return np.sqrt(rms)
 
     def compute_nl(self, lat_prop):
         self.compute_h(lat_prop)
@@ -229,11 +257,21 @@ class nonlin_dyn_class:
         self._K_re_scl = self.compose_bs(lat_prop, self._K_re, self._Id_scl)
         self._K_im_scl = self.compose_bs(lat_prop, self._K_im, self._Id_scl)
 
+        self.scl_h(self._h_re_scl, self.h_scl_dict, self.h_dict)
+        self.scl_h(self._h_im_scl, self.h_scl_dict, self.h_dict)
+
+        self.scl_h(self._K_re_scl, self.K_geom_scl_dict, self.K_geom_dict)
+        self.scl_h(self._K_re_scl, self.K_chrom_scl_dict, self.K_chrom_dict)
+        self.scl_h(self._K_im_scl, self.K_geom_scl_dict, self.K_geom_dict)
+        self.scl_h(self._K_im_scl, self.K_chrom_scl_dict, self.K_chrom_dict)
+
         self._h_re_scl_rms = self.compute_rms(self._h_re_scl, self.h_dict)
         self._h_im_scl_rms = self.compute_rms(self._h_im_scl, self.h_dict)
-        K_geam = self.compute_rms(self._K_re_scl, self.K_geom_dict)
-        K_chrom = self.compute_rms(self._K_re_scl, self.K_geom_dict)
-        self._K_re_scl_rms = np.sqrt(K_geam**2+K_chrom**2)
+
+        K_geom = self.compute_rms(self._K_re_scl, self.K_geom_dict)
+        K_chrom = self.compute_rms(self._K_re_scl, self.K_chrom_dict)
+
+        self._K_re_scl_rms = np.sqrt(K_geom**2+K_chrom**2)
 
     def prt_nl(self, lat_prop):
         print("\nnu = [{:7.5f}, {:7.5f}]".format(
