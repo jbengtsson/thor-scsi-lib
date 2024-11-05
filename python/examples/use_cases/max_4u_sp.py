@@ -166,7 +166,7 @@ class opt_sp_class:
             print("\n  dchi2(eps_x)        = {:9.3e}".format(dchi_2))
 
         dchi_2 = weight[1]*(self._lat_prop._alpha_c-alpha_c_des)**2
-        chi_2 = dchi_2
+        chi_2 += dchi_2
         if prt:
             print("  dchi2(alpha_c)      = {:9.3e}".format(dchi_2))
 

@@ -87,7 +87,9 @@ class opt_sp_class:
         self._file_name      = "opt_sp.txt"
 
         self._h_im_scl_rms_0 = np.nan
+        self._h_im_scl_rms_1 = np.nan
         self._K_re_scl_rms_0 = np.nan
+        self._K_re_scl_rms_1 = np.nan
 
     # Public.
 
@@ -149,10 +151,12 @@ class opt_sp_class:
         print("    phi_rb         = {:8.5f}".format(phi_rb))
 
         self._lat_prop.prt_rad()
-        print("\n  h_im_scl_rms = {:9.3e} ({:9.3e})".
-              format(self._nld._h_im_scl_rms, self._h_im_scl_rms_0))
-        print("  K_re_scl_rms = {:9.3e} ({:9.3e})".
-              format(self._nld._K_re_scl_rms, self._K_re_scl_rms_0))
+        print("\n  h_im_scl_rms = {:9.3e} ({:9.3e} <- {:9.3e})".
+              format(self._nld._h_im_scl_rms, self._h_im_scl_rms_1,
+                     self._h_im_scl_rms_0))
+        print("  K_re_scl_rms = {:9.3e} ({:9.3e} <- {:9.3e})".
+              format(self._nld._K_re_scl_rms, self._K_re_scl_rms_1,
+                     self._K_re_scl_rms_0))
         self._nld.prt_nl(self._lat_prop)
 
         self._prm_list.prt_prm(prm)
@@ -168,7 +172,7 @@ class opt_sp_class:
             print("\n  dchi2(eps_x)        = {:9.3e}".format(dchi_2))
 
         dchi_2 = weight[1]*(self._lat_prop._alpha_c-alpha_c_des)**2
-        chi_2 = dchi_2
+        chi_2 += dchi_2
         if prt:
             print("  dchi2(alpha_c)      = {:9.3e}".format(dchi_2))
 
@@ -315,6 +319,8 @@ class opt_sp_class:
                         self._lat_prop, self._file_name, self._prm_list,
                         phi_lat=self._phi_lat)
                     self._chi_2_min = min(chi_2, self._chi_2_min)
+                    self._h_im_scl_rms_1 = self._nld._h_im_scl_rms
+                    self._K_re_scl_rms_1 = self._nld._K_re_scl_rms
                 else:
                     if not False:
                         print("\n{:3d} dchi_2 = {:9.3e}".
@@ -330,8 +336,8 @@ class opt_sp_class:
 
         self._nld.compute_map(self._lat_prop, self._lat_prop._no)
         self._nld.compute_nl(self._lat_prop)
-        self._h_im_scl_rms_0 = self._nld._h_im_scl_rms
-        self._K_re_scl_rms_0 = self._nld._K_re_scl_rms
+        self._h_im_scl_rms_1 = self._h_im_scl_rms_0 = self._nld._h_im_scl_rms
+        self._K_re_scl_rms_1 = self._K_re_scl_rms_0 = self._nld._K_re_scl_rms
 
         prm, bounds = self._prm_list.get_prm()
         f_sp(prm)
@@ -340,19 +346,28 @@ class opt_sp_class:
         #   Nelder-Mead, Powell, CG, BFGS, Newton-CG, L-BFGS-B, TNC, COBYLA,
         #   SLSQP, trust-constr, dogleg, truct-ncg, trust-exact, trust-krylov.
 
-        # Powell ftol, xtol
-        # CG     gtol
-        minimum = opt.minimize(
-            f_sp,
-            prm,
-            method="CG",
-            # callback=prt_iter,
-            # bounds = bounds,
-            # options={"ftol": f_tol, "xtol": x_tol, "maxiter": max_iter}
-            jac="2-point",
-            options={"gtol": g_tol, "maxiter": max_iter,
-                     "finite_diff_rel_step": dprm_list}
-        )
+        if True:
+            # Powell ftol, xtol
+            minimum = opt.minimize(
+                f_sp,
+                prm,
+                method="Powell",
+                # callback=prt_iter,
+                # bounds = bounds,
+                options={"ftol": f_tol, "xtol": x_tol, "maxiter": max_iter}
+            )
+        else:
+            # CG     gtol
+            minimum = opt.minimize(
+                f_sp,
+                prm,
+                method="CG",
+                # callback=prt_iter,
+                # bounds = bounds,
+                jac=None,
+                options={"gtol": g_tol, "maxiter": max_iter,
+                         "eps": dprm_list}
+            )
 
         print("\n".join(minimum))
 
@@ -470,19 +485,20 @@ if step == 1:
     ])
 
     prms = [
-        ("s1_f1",    "b_3"),
-        ("s2_f1",    "b_3"),
+        # ("s1_f1",    "b_3"),
+        # ("s2_f1",    "b_3"),
         ("s3_f1",    "b_3"),
         ("s4_f1",    "b_3"),
 
-        ("o1_f1_sl", "b_4"),
-        ("o2_f1_sl", "b_4"),
-        ("o3_f1_sl", "b_4")
+        # ("o1_f1_sl", "b_4"),
+        # ("o2_f1_sl", "b_4"),
+        # ("o3_f1_sl", "b_4")
     ]
 
     dprm_list = np.array([
-        1e-1, 1e-1, 1e-1, 1e-1,
-        1e1, 1e1, 1e1,
+        # 1e-1, 1e-1,
+        1e-1, 1e-1,
+        # 1e1, 1e1, 1e1,
     ])
 elif step == 2:
     weight = np.array([
@@ -494,15 +510,15 @@ elif step == 2:
         1e-1,  # nu_uc_x.
         1e-1,  # nu_uc_y.
         1e0,   # eta_x.
-        1e-4,  # nu_sp_x.
+        1e-5,  # nu_sp_x.
         0e-3,  # nu_sp_y.
         0e-6,  # beta_x.
         0e-6,  # beta_y.
         0e-2,  # dnu_x.
         0e-2,  # dnu_y.
-        1e-3,  # xi.
+        1e0,   # xi.
         0e6,   # Im{h} rms.
-        1e7    # K rms.
+        1e9    # K rms.
     ])
 
     prms = [
@@ -518,22 +534,23 @@ elif step == 2:
         ("b_2_bend", d1_bend),
 
         # ("phi_bend", d2_bend),
-        # ("r1",       "phi"),
+        # ("r1",       "phi")
 
-        ("s1_f1",    "b_3"),
-        ("s2_f1",    "b_3"),
+        # ("s1_f1",    "b_3"),
+        # ("s2_f1",    "b_3"),
         ("s3_f1",    "b_3"),
         ("s4_f1",    "b_3"),
 
-        ("o1_f1_sl", "b_4"),
-        ("o2_f1_sl", "b_4"),
-        ("o3_f1_sl", "b_4")
+        # ("o1_f1_sl", "b_4"),
+        # ("o2_f1_sl", "b_4"),
+        # ("o3_f1_sl", "b_4"),
     ]
 
     dprm_list = np.array([
         1e-2, 1e-2, 1e-2, 1e-2, 1e-2, 1e-2,
-        1e-1, 1e-1, 1e-1, 1e-1,
-        1e1, 1e1, 1e1,
+        1e-1, 1e-1,
+        # 1e-1, 1e-1,
+        # 1e1, 1e1, 1e1,
     ])
 
     # To maintain the total bend angle.
