@@ -29,7 +29,7 @@ eps_x_des    = 49e-12
 alpha_c_des  = 1e-5
 nu_uc_des    = [0.4, 0.1]
 nu_sp_des    = [3.11, 0.78]
-beta_des     = [4.0, 3.0]
+beta_des     = [5.0, 3.0]
 dnu_des      = [0.5, 0.25]     # Phase advance across the straight.
 
 
@@ -284,7 +284,7 @@ class opt_sp_class:
                     raise ValueError
             except ValueError:
                 chi_2 = 1e30
-                if False:
+                if not False:
                     print("\n{:3d} chi_2 = {:11.5e} ({:11.5e})".
                           format(self._n_iter, chi_2, self._chi_2_min))
                     self._prm_list.prt_prm(prm)
@@ -322,7 +322,7 @@ class opt_sp_class:
                     self._h_im_scl_rms_1 = self._nld._h_im_scl_rms
                     self._K_re_scl_rms_1 = self._nld._K_re_scl_rms
                 else:
-                    if not False:
+                    if False:
                         print("\n{:3d} dchi_2 = {:9.3e}".
                               format(self._n_iter, chi_2-self._chi_2_min))
                         # self._prm_list.prt_prm(prm)
@@ -503,7 +503,7 @@ if step == 1:
 elif step == 2:
     weight = np.array([
         1e15,  # eps_x.
-        1e6,   # alpha_c.
+        1e7,   # alpha_c.
         0e-17, # U_0.
         1e2,   # etap_x_uc.
         1e-2,  # alpha_uc.
@@ -512,13 +512,13 @@ elif step == 2:
         1e0,   # eta_x.
         1e-5,  # nu_sp_x.
         0e-3,  # nu_sp_y.
-        0e-6,  # beta_x.
+        1e-4,  # beta_x.
         0e-6,  # beta_y.
         0e-2,  # dnu_x.
         0e-2,  # dnu_y.
-        1e0,   # xi.
+        1e-1,  # xi.
         0e6,   # Im{h} rms.
-        1e9    # K rms.
+        1e6    # K rms.
     ])
 
     prms = [
