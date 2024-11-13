@@ -432,8 +432,8 @@ void py_thor_scsi_init_elements(py::module &m)
 		.def("get_voltage",         &tse::CavityType::getVoltage)
 		.def("set_phase",           &tse::CavityType::setPhase)
 		.def("get_phase",           &tse::CavityType::getPhase)
-		.def("set_harmonic_number", &tse::CavityType::setHarmonicNumber)
-		.def("get_harmonic_number", &tse::CavityType::getHarmonicNumber)
+		.def("set_harmonic_number", &tse::CavityType::setHarNum)
+		.def("get_harmonic_number", &tse::CavityType::getHarNum)
 		.def(py::init<const Config &>());
 
 	/*

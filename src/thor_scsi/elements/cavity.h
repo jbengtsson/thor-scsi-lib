@@ -45,11 +45,11 @@ namespace thor_scsi::elements {
 			return this->phi;
 		}
 
-		inline void setHarmonicNumber(const int n){
+		inline void setHarNum(const int n){
 			this->Ph = n;
 		}
 
-		inline int getHarmonicNumber(void) const {
+		inline int getHarNum(void) const {
 			return this->Ph;
 		}
 
