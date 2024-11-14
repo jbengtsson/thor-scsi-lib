@@ -1,5 +1,5 @@
 #include <gtpsa/ss_vect.h>
-// #include <gtpsa/lielib.hpp>
+#include <gtpsa/lielib.hpp>
 #include <thor_scsi/elements/sextupole.h>
 #include <iostream>
 #include <assert.h>
@@ -110,7 +110,7 @@ void test2(void)
   print_map("\nM_M_inv:", M_M_inv);
   assert(false);
 
-  M.M_to_h_DF(h);
+  h = gtpsa::M_to_h_DF(M);
   h.print("\nh:", 1e-30, 0);
 }
 
@@ -211,7 +211,7 @@ void dragt_finn_fact(void)
 
   M = compute_sext_map(desc, no);
 
-  M.M_to_h_DF(h);
+  h = gtpsa::M_to_h_DF(M);
   h.print("\nh:", 1e-30, 0);
 }
 
