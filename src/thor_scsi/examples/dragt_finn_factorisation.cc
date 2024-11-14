@@ -110,7 +110,7 @@ void test2(void)
   print_map("\nM_M_inv:", M_M_inv);
   assert(false);
 
-  h = gtpsa::M_to_h_DF(M);
+  M.M_to_h_DF(h);
   h.print("\nh:", 1e-30, 0);
 }
 
@@ -211,7 +211,7 @@ void dragt_finn_fact(void)
 
   M = compute_sext_map(desc, no);
 
-  h = gtpsa::M_to_h_DF(M);
+  M.M_to_h_DF(h);
   h.print("\nh:", 1e-30, 0);
 }
 
