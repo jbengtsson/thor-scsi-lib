@@ -25,15 +25,13 @@ from thor_scsi.utils.output import mat2txt, vec2txt
 
 ind = ind.index_class()
 
-L_min        = 0.10
-L_max        = 0.50
 phi_max      = 0.85
 b_2_bend_max = 1.0
 b_2_max      = 10.0
 
 eta_des   = [0.0, 0.0]   # [eta_x, eta'_x] at the centre of the straight.
 alpha_des = [0.0, 0.0]   # Alpha_x,y at the centre of the straight.
-beta_des  = [9.2, 2.0]   # Beta_x,y at the centre of the straight.
+beta_des  = [5.0, 3.0]   # Beta_x,y at the centre of the straight.
 dnu_des   = [0.5, 0.25]  # Phase advance across the straight.
 
 
@@ -55,13 +53,13 @@ class gtpsa_prop:
     desc : ClassVar[gtpsa.desc]
 
 
-def compute_periodic_cell(lat_prop, uc_0, uc_1):
+def compute_periodic_cell(lat_prop, uc_list):
     M = gtpsa.ss_vect_tpsa(lat_prop._desc, 1)
     M.set_identity()
     # The 3rd argument is the 1st element index & the 4th the number of elements
     # to propagate across.
     lat_prop._lattice.propagate(
-        lat_prop._model_state, M, uc_0, uc_1-uc_0+1)
+        lat_prop._model_state, M, uc_list[0], uc_list[1]-uc_list[0]+1)
     stable, nu, A, A_inv, _ = lo.compute_M_diag(2, M.jacobian())
     eta, Twiss = lo.transform_matrix_extract_twiss(A)
     alpha = np.array((Twiss[ind.X][0], Twiss[ind.Y][0]))
@@ -73,7 +71,7 @@ def compute_periodic_cell(lat_prop, uc_0, uc_1):
 
 
 def match_straight(
-        lat_prop, prm_list, uc_0, uc_1, sp_1, sp_2, weight, phi_lat, Twiss_des):
+        lat_prop, prm_list, uc_list, sp_list, weight, phi_lat, Twiss_des, rb):
     chi_2_min = 1e30
     n_iter    = 0
     A0        = gtpsa.ss_vect_tpsa(lat_prop._desc, 1)
@@ -85,8 +83,6 @@ def match_straight(
             for k in range(len(bend_list)):
                 phi += lat_prop.get_phi_elem(bend_list[k], 0)
             return phi
-
-        rb = "r1"
 
         phi = lat_prop.compute_phi_lat()
         phi_d2 = compute_phi_bend(lat_prop, d2_list)
@@ -166,13 +162,13 @@ def match_straight(
 
         A1 = _copy.copy(A0)
         lat_prop._lattice.propagate(
-            lat_prop._model_state, A1, uc_1+1, sp_2-uc_1)
+            lat_prop._model_state, A1, uc_list[1]+1, sp_list[0]-uc_list[1])
         Twiss_k = cs.compute_Twiss_A(A1.jacobian())
         print("\ncompute_chi_2:")
 
         A1 = _copy.copy(A0)
         lat_prop._lattice.propagate(
-            lat_prop._model_state, A1, uc_1+1, sp_1-uc_1)
+            lat_prop._model_state, A1, uc_list[1]+1, sp_list[0]-uc_list[1])
         _, _, _, dnu = cs.compute_Twiss_A(A1.jacobian())
         Twiss_k[3][:] = 2e0*(Twiss_k[3][:]-dnu[:])
 
@@ -194,7 +190,7 @@ def match_straight(
             chi_2_min = min(chi_2, chi_2_min)
 
             # Problematic => system not time invariant.
-            _, A = compute_periodic_cell(lat_prop, uc_0, uc_1)
+            _, A = compute_periodic_cell(lat_prop, uc_list)
             A0.set_jacobian(A_7x7)
         return chi_2
 
@@ -203,7 +199,7 @@ def match_straight(
     x_tol    = 1e-4
     g_tol    = 1e-5
 
-    Twiss_0, A = compute_periodic_cell(lat_prop, uc_0, uc_1)
+    Twiss_0, A = compute_periodic_cell(lat_prop, uc_list)
 
     print("\nmatch_straight:\n\nEntrance:")
     lat_prop.prt_Twiss_param(Twiss_0)
@@ -219,17 +215,24 @@ def match_straight(
     #   Nelder-Mead, Powell, CG, BFGS, Newton-CG, L-BFGS-B, TNC, COBYLA,
     #   SLSQP, trust-constr, dogleg, truct-ncg, trust-exact, trust-krylov.
 
-    # Powell ftol, xtol
-    # CG     gtol
-    minimum = opt.minimize(
-        f_match,
-        prm,
-        method="CG",
-        # callback=prt_iter,
-        # bounds = bounds,
-        # options={"ftol": f_tol, "xtol": x_tol, "maxiter": max_iter}
-        options={"gtol": g_tol, "maxiter": max_iter}
-    )
+    if True:
+        minimum = opt.minimize(
+            f_match,
+            prm,
+            method="Powell",
+            # callback=prt_iter,
+            bounds = bounds,
+            options={"ftol": f_tol, "xtol": x_tol, "maxiter": max_iter}
+        )
+    else:
+        minimum = opt.minimize(
+            f_match,
+            prm,
+            method="CG",
+            # callback=prt_iter,
+            # bounds = bounds,
+            options={"gtol": g_tol, "maxiter": max_iter}
+        )
 
     print("\n".join(minimum))
 
@@ -253,22 +256,22 @@ print("Total bend angle [deg] = {:7.5f}".format(lat_prop.compute_phi_lat()))
 
 lat_prop.prt_lat("max_4u_match_lat.txt")
 
-if True:
-    uc_0 = lat_prop._lattice.find("d2_0", 7).index
-    uc_1 = lat_prop._lattice.find("d2_0", 8).index
-else:
-    uc_0 = lat_prop._lattice.find("q4_h", 7).index
-    uc_1 = lat_prop._lattice.find("q4_h", 8).index
-sp_1 = lat_prop._lattice.find("s1", 1).index
-sp_2 = lat_prop._lattice.find("cav", 0).index
+uc_list = np.zeros(2, dtype=int)
+uc_list[0] = lat_prop._lattice.find("r1_f1", 0).index
+uc_list[1] = lat_prop._lattice.find("r1_f1", 1).index
+
+sp_list = np.zeros(2, dtype=int)
+sp_list[0] = lat_prop._lattice.find("lsborder", 1).index
+sp_list[1] = lat_prop._lattice.find("cav", 0).index
+
 print("\nunit cell entrance           {:5s} loc = {:d}".
-      format(lat_prop._lattice[uc_0].name, uc_0))
+      format(lat_prop._lattice[uc_list[0]].name, uc_list[0]))
 print("unit cell exit               {:5s} loc = {:d}".
-      format(lat_prop._lattice[uc_1].name, uc_1))
+      format(lat_prop._lattice[uc_list[1]].name, uc_list[1]))
 print("super period last sextupole  {:5s} loc = {:d}".
-      format(lat_prop._lattice[sp_1].name, sp_1))
+      format(lat_prop._lattice[sp_list[0]].name, sp_list[0]))
 print("super period exit            {:5s} loc = {:d}".
-      format(lat_prop._lattice[sp_2].name, sp_2))
+      format(lat_prop._lattice[sp_list[1]].name, sp_list[1]))
 
 Twiss_des = np.array([eta_des, alpha_des, beta_des, dnu_des])
 
@@ -282,34 +285,41 @@ weight = np.array([
     1e-4  # dnu_y across the straight.
 ])
 
-d2_list = ["d2_0", "d2_1", "d2_2", "d2_3", "d2_4", "d2_5"]
+d2_list = ["d2_f1_sl_d0a", "d2_f1_sl_d0b", "d2_f1_sl_d0c", "d2_f1_sl_df1",
+           "d2_f1_sl_df2", "d2_f1_sl_df3", "d2_f1_sl_df4", "d2_f1_sl_df5"]
 
 d1_list = [
-    "d1_u6", "d1_u5", "d1_u4", "d1_u3", "d1_u2", "d1_u1", "d1_0",
-    "d1_d1", "d1_d2", "d1_d3", "d1_d4", "d1_d5"
+    "d1_f1_sl_ds6", "d1_f1_sl_ds5", "d1_f1_sl_ds4", "d1_f1_sl_ds3",
+    "d1_f1_sl_ds2", "d1_f1_sl_ds1", "d1_f1_sl_ds0",
+    "d1_f1_sl_dm1", "d1_f1_sl_dm2", "d1_f1_sl_dm3", "d1_f1_sl_dm4",
+    "d1_f1_sl_dm5"
 ]
 
-d2_bend = pc.bend_class(lat_prop, d2_list, phi_max, b_2_max)
 d1_bend = pc.bend_class(lat_prop, d1_list, phi_max, b_2_max)
+d2_bend = pc.bend_class(lat_prop, d2_list, phi_max, b_2_max)
 
 # Remark:
 # Using the bend angles as parameters - maintaining the total - will change the
 # initial conditions for the horizontal dipspersion; i.e., requires an iterative
 # approach.
 
-prm_list = [
-    ("q1",       "b_2"),
-    ("q2",       "b_2"),
-    ("q3",       "b_2"),
+prms = [
+    ("q1_f1", "b_2"),
+    ("q2_f1", "b_2"),
+    ("q3_f1", "b_2"),
+
+    # ("s1_f1", "phi"),
+
     ("b_2_bend", d1_bend),
-
-    ("phi_bend", d2_bend)
+    # ("phi_bend", d2_bend)
 ]
-
-prm_list = pc.prm_class(lat_prop, prm_list, b_2_max)
 
 # To maintain the total bend angle.
 phi_lat = pc.phi_lat_class(lat_prop, 2, d1_bend)
 
+prm_list = pc.prm_class(lat_prop, prms, b_2_max)
+
+rb = "r1_f1"
+
 match_straight(
-    lat_prop, prm_list, uc_0, uc_1, sp_1, sp_2, weight, phi_lat, Twiss_des)
+    lat_prop, prm_list, uc_list, sp_list, weight, phi_lat, Twiss_des, rb)

@@ -26,7 +26,7 @@ b_2_bend_max = 1.0
 b_2_max      = 10.0
 
 eps_x_des    = 49e-12
-alpha_c_des  = 1e-5
+alpha_c_des  = 5e-6
 nu_uc_des    = [0.4, 0.1]
 nu_sp_des    = [3.11, 0.78]
 beta_des     = [5.0, 3.0]
