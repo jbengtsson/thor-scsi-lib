@@ -276,12 +276,12 @@ Twiss_des = np.array([eta_des, alpha_des, beta_des, dnu_des])
 
 # Weights.
 weight = np.array([
-    1e1,  # eta_x at the centre of the straight.
+    1e1,  # [eta_x, eta'_x] at the centre of the straight.
     1e0,  # alpha at the centre of the straight.
     1e-2, # beta_x at the centre of the straight.
     1e-2, # beta_y at the centre of the straight.
-    1e-4, # dnu_x across the straight.
-    1e-4  # dnu_y across the straight.
+    0e-4, # dnu_x across the straight.
+    0e-4  # dnu_y across the straight.
 ])
 
 d2_list = ["d2_f1_sl_d0a", "d2_f1_sl_d0b", "d2_f1_sl_d0c", "d2_f1_sl_df1",
@@ -307,7 +307,9 @@ prms = [
     ("q2_f1", "b_2"),
     ("q3_f1", "b_2"),
 
+    ("q1_f1", "phi"),
     ("q2_f1", "phi"),
+    ("q3_f1", "phi"),
 
     ("b_2_bend", d1_bend),
     # ("phi_bend", d2_bend)
