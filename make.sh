@@ -42,9 +42,19 @@ if false; then
 fi
 
 # Install required libraries.
-if  false; then
-    # Upgrade from pip-24.0 to pip-24.1.
-    pip install --upgrade pip
+if false; then
+    # If e.g.:
+    #   [notice] A new release of pip is available: 24.2 -> 24.3.1
+    #   [notice] To update, run: python3.13 -m pip install --upgrade pip
+    # then upgrade in the virtual environment:
+    python3.13 -m pip install --upgrade pip
+    # To check versions:
+    #   pip list
+    #   python -m pip list
+    # Remark: to build the Python libraries - don't use:
+    #   pip install .
+    # but:
+    #   python -m pip install .
     # Upgrade: wheel, setuptools, and pip.
     pip install wheel setuptools pip --upgrade
     pip install pybind11
@@ -64,9 +74,9 @@ if ! false; then
     echo "\$gtpsa_PREFIX set to:      " $gtpsa_PREFIX
     echo "\$thor_scsi_PREFIX set to:  " $thor_scsi_PREFIX
     cd $home_dir/src/gtpsa/python
-    pip install .
+    python -m pip install .
     cd $home_dir/python
-    pip install .
+    python -mpip install .
 fi
 
 # Export path for libraries.
