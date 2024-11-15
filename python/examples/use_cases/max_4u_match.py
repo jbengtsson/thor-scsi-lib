@@ -162,9 +162,8 @@ def match_straight(
 
         A1 = _copy.copy(A0)
         lat_prop._lattice.propagate(
-            lat_prop._model_state, A1, uc_list[1]+1, sp_list[0]-uc_list[1])
+            lat_prop._model_state, A1, uc_list[1]+1, sp_list[1]-uc_list[1])
         Twiss_k = cs.compute_Twiss_A(A1.jacobian())
-        print("\ncompute_chi_2:")
 
         A1 = _copy.copy(A0)
         lat_prop._lattice.propagate(
@@ -215,7 +214,7 @@ def match_straight(
     #   Nelder-Mead, Powell, CG, BFGS, Newton-CG, L-BFGS-B, TNC, COBYLA,
     #   SLSQP, trust-constr, dogleg, truct-ncg, trust-exact, trust-krylov.
 
-    if True:
+    if not True:
         minimum = opt.minimize(
             f_match,
             prm,
@@ -279,8 +278,8 @@ Twiss_des = np.array([eta_des, alpha_des, beta_des, dnu_des])
 weight = np.array([
     1e1,  # eta_x at the centre of the straight.
     1e0,  # alpha at the centre of the straight.
-    0e0,  # beta_x at the centre of the straight.
-    0e0,  # beta_y at the centre of the straight.
+    1e-2, # beta_x at the centre of the straight.
+    1e-2, # beta_y at the centre of the straight.
     1e-4, # dnu_x across the straight.
     1e-4  # dnu_y across the straight.
 ])
@@ -308,7 +307,7 @@ prms = [
     ("q2_f1", "b_2"),
     ("q3_f1", "b_2"),
 
-    # ("s1_f1", "phi"),
+    ("q2_f1", "phi"),
 
     ("b_2_bend", d1_bend),
     # ("phi_bend", d2_bend)

@@ -298,9 +298,13 @@ def prt_lat(
                 prt_list.append(fam_name)
                 L = lat_prop.get_L_elem(fam_name, 0)
                 b_2 = lat_prop.get_b_n_elem(fam_name, 0, 2)
+                phi = lat_prop.get_phi_elem(fam_name, 0)
                 print("{:5s}: Quadrupole, L = {:7.5f}"
-                      ", B_2 = {:8.5f}, N = n_quad;"
-                      .format(fam_name, L, b_2), file=outf)
+                      ", B_2 = {:8.5f}"
+                      .format(fam_name, L, b_2), end="", file=outf)
+                if phi != 0e0:
+                    print(", Phi = {:8.5f}".format(phi), end="", file=outf)
+                print(", N = n_quad;", file=outf)
         return prt_list
 
     def prt_sext(fam_name, prt_list):

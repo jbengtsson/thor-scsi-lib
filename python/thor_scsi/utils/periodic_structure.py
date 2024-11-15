@@ -249,12 +249,12 @@ class periodic_structure_class:
         Print lattice structure.
         """
         file = open(file_name, "w")
-        print("\n     Name          s    type", file=file)
-        print("                  [m]", file=file)
+        print("\n     Name               s    type", file=file)
+        print("                       [m]", file=file)
         s = 0e0
         for k in range(len(self._lattice)):
             # print("k =", k)
-            print("{:3d} {:10s} {:7.3f} {:4.1f}".
+            print("{:3d} {:15s} {:7.3f} {:4.1f}".
                   format(k, self._lattice[k].name, s, self._type_code[k]),
                   file=file)
             s += self._lattice[k].get_length()
@@ -331,8 +331,9 @@ class periodic_structure_class:
               "     eta_x   eta'_x    alpha_y   beta_y  nu_y     eta_y"
               "   eta'_y",
               file=file)
-        print("                  [m]                    [m]             [m]"
-              "     [m]                 [m]             [m]", file=file)
+        print("                       [m]                    [m]"
+              "             [m]     [m]                 [m]             [m]",
+              file=file)
         for k in range(len(self._Twiss.index)):
             eta, alpha, beta, nu = self.get_Twiss(k)
 
