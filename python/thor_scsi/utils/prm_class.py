@@ -302,7 +302,7 @@ def prt_lat(
                 if phi == 0e0:
                     print("{:5s}: Quadrupole, L = {:7.5f}, B_2 = {:8.5f}"
                           ", N = n_quad;"
-                          .format(fam_name, L, b_2), end="", file=outf)
+                          .format(fam_name, L, b_2), file=outf)
                 else:
                     print("{:5s}: Bending, L = {:7.5f}, B_2 = {:8.5f}"
                           ", Phi = {:8.5f}, N = n_bend;"
