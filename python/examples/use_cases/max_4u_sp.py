@@ -466,14 +466,14 @@ if step == 1:
         1e-2,  # alpha_uc.
         1e-1,  # nu_uc_x.
         1e-1,  # nu_uc_y.
-        1e1,   # eta_x.
+        1e2,   # eta_x.
         0e-4,  # nu_sp_x.
         0e-7,  # nu_sp_y.
-        1e-5,  # beta_x.
+        1e-4,  # beta_x.
         0e-7,  # beta_y.
         0e-3,  # dnu_x.
         0e-3,  # dnu_y.
-        1e-5   # xi.
+        1e-6   # xi.
     ])
 
     prms = [

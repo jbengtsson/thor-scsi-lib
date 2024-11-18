@@ -71,7 +71,8 @@ def compute_periodic_cell(lat_prop, uc_list):
 
 
 def match_straight(
-        lat_prop, prm_list, uc_list, sp_list, weight, phi_lat, Twiss_des, rb):
+        lat_prop, prm_list, uc_list, sp_list, weight, d1_bend, d2_bend,
+        Twiss_des, rb):
     chi_2_min = 1e30
     n_iter    = 0
     A0        = gtpsa.ss_vect_tpsa(lat_prop._desc, 1)
@@ -85,8 +86,8 @@ def match_straight(
             return phi
 
         phi = lat_prop.compute_phi_lat()
-        phi_d2 = compute_phi_bend(lat_prop, d2_list)
-        phi_d1 = compute_phi_bend(lat_prop, d1_list)
+        phi_d1 = compute_phi_bend(lat_prop, d1_bend._bend_list)
+        phi_d2 = compute_phi_bend(lat_prop, d2_bend._bend_list)
         phi_rb = lat_prop.get_phi_elem(rb, 0)
 
         print("\n{:4d} chi_2 = {:9.3e}".format(n_iter, chi_2))
@@ -180,13 +181,13 @@ def match_straight(
 
         n_iter += 1
         prm_list.set_prm(prm)
-        if phi_lat != []:
-            phi_lat.set_phi_lat()
+        if d1_bend != []:
+            d1_bend.correct_bend_phi()
 
         chi_2, Twiss_k = compute_chi_2(A0, Twiss_des)
         if chi_2 < chi_2_min:
             prt_iter(prm, chi_2, Twiss_des, Twiss_k)
-            pc.prt_lat(lat_prop, "match_lat_k.txt", prm_list, phi_lat=phi_lat)
+            pc.prt_lat(lat_prop, "match_lat_k.txt", prm_list, d1_bend=d1_bend)
             chi_2_min = min(chi_2, chi_2_min)
 
             # Problematic => system not time invariant.
@@ -314,10 +315,6 @@ prms = [
     ("q2_f1", "b_2"),
     ("q3_f1", "b_2"),
 
-    # ("q1_f1", "phi"),
-    # ("q2_f1", "phi"),
-    # ("q3_f1", "phi"),
-
     ("b_2_bend", d1_bend),
 
     ("d1_f1_sl_ds6", "phi"),
@@ -340,12 +337,10 @@ dprm_list = np.array([
     1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3
 ])
 
-# To maintain the total bend angle.
-phi_lat = pc.phi_lat_class(lat_prop, 2, d1_bend)
-
 prm_list = pc.prm_class(lat_prop, prms, b_2_max)
 
 rb = "r1_f1"
 
 match_straight(
-    lat_prop, prm_list, uc_list, sp_list, weight, phi_lat, Twiss_des, rb)
+    lat_prop, prm_list, uc_list, sp_list, weight, d1_bend, d2_bend, Twiss_des,
+    rb)
