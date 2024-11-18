@@ -38,20 +38,29 @@ class gtpsa_prop:
     desc : ClassVar[gtpsa.desc]
 
 
-def compute_optics(lat_prop, rad):
+def compute_optics(lat_prop):
     try:
         # Compute Twiss parameters along lattice.
         if not lat_prop.comp_per_sol():
             print("\ncomp_per_sol: unstable")
             raise ValueError
 
-        if rad:
-            # Compute radiation properties.
-            stable, stable_rad = lat_prop.compute_radiation()
-            print(stable, stable_rad)
-            if not stable:
-                print("\ncompute_radiation: unstable")
-                raise ValueError
+        # Adjust RF phase for sign of alpha_c.
+        print("\ncompute_optics:")
+        print("  alpha_c = {:10.3e}".format(lat_prop._alpha_c))
+        cav_loc = lat_prop._lattice.find("cav", 0)
+        if lat_prop._alpha_c >= 0e0:
+            cav_loc.set_phase(0.0)
+        else:
+            print("  phi_rf  = 180 deg") 
+            cav_loc.set_phase(180.0)
+
+        # Compute radiation properties.
+        stable, stable_rad = lat_prop.compute_radiation()
+        print("\n", stable, stable_rad)
+        if not stable:
+            print("\ncompute_radiation: unstable")
+            raise ValueError
     except ValueError:
         assert False
 
@@ -65,8 +74,6 @@ E_0     = 3.0e9
 A_max     = np.array([6e-3, 3e-3])
 beta_inj  = np.array([3.0, 3.0])
 delta_max = 3e-2
-
-rad = not True;
 
 home_dir = os.path.join(
     os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "MAX_IV")
@@ -86,14 +93,12 @@ if False:
     nld.zero_mult(lat_prop, 3)
     nld.zero_mult(lat_prop, 4)
 
-compute_optics(lat_prop, rad)
+compute_optics(lat_prop)
 
 lat_prop.prt_lat_param()
-if rad:
-    lat_prop.prt_rad()
+lat_prop.prt_rad()
 lat_prop.prt_M()
-if rad:
-    lat_prop.prt_M_rad()
+lat_prop.prt_M_rad()
 
 if not False:
     lat_prop.prt_Twiss("lat_prop_Twiss.txt")

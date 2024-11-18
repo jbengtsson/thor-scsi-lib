@@ -180,7 +180,8 @@ def match_straight(
 
         n_iter += 1
         prm_list.set_prm(prm)
-        phi_lat.set_phi_lat()
+        if phi_lat != []:
+            phi_lat.set_phi_lat()
 
         chi_2, Twiss_k = compute_chi_2(A0, Twiss_des)
         if chi_2 < chi_2_min:
@@ -191,6 +192,11 @@ def match_straight(
             # Problematic => system not time invariant.
             _, A = compute_periodic_cell(lat_prop, uc_list)
             A0.set_jacobian(A_7x7)
+        else:
+            print("\n{:3d} {:9.3e} ({:9.3e})".
+                  format(n_iter, chi_2, chi_2-chi_2_min))
+            prm_list.prt_prm(prm)
+
         return chi_2
 
     max_iter = 1000
@@ -229,7 +235,8 @@ def match_straight(
             prm,
             method="CG",
             # callback=prt_iter,
-            # bounds = bounds,
+            jac=None,
+            bounds = bounds,
             options={"gtol": g_tol, "maxiter": max_iter}
         )
 
@@ -276,10 +283,10 @@ Twiss_des = np.array([eta_des, alpha_des, beta_des, dnu_des])
 
 # Weights.
 weight = np.array([
-    1e1,  # [eta_x, eta'_x] at the centre of the straight.
+    1e2,  # [eta_x, eta'_x] at the centre of the straight.
     1e0,  # alpha at the centre of the straight.
     1e-2, # beta_x at the centre of the straight.
-    1e-2, # beta_y at the centre of the straight.
+    1e-3, # beta_y at the centre of the straight.
     0e-4, # dnu_x across the straight.
     0e-4  # dnu_y across the straight.
 ])
@@ -307,13 +314,31 @@ prms = [
     ("q2_f1", "b_2"),
     ("q3_f1", "b_2"),
 
-    ("q1_f1", "phi"),
-    ("q2_f1", "phi"),
-    ("q3_f1", "phi"),
+    # ("q1_f1", "phi"),
+    # ("q2_f1", "phi"),
+    # ("q3_f1", "phi"),
 
     ("b_2_bend", d1_bend),
-    # ("phi_bend", d2_bend)
+
+    ("d1_f1_sl_ds6", "phi"),
+    ("d1_f1_sl_ds5", "phi"),
+    ("d1_f1_sl_ds4", "phi"),
+    ("d1_f1_sl_ds3", "phi"),
+    ("d1_f1_sl_ds2", "phi"),
+    ("d1_f1_sl_ds1", "phi"),
+    ("d1_f1_sl_ds0", "phi"),
+    ("d1_f1_sl_dm1", "phi"),
+    ("d1_f1_sl_dm2", "phi"),
+    ("d1_f1_sl_dm3", "phi"),
+    ("d1_f1_sl_dm4", "phi"),
+    ("d1_f1_sl_dm5", "phi")
 ]
+
+dprm_list = np.array([
+    1e-3, 1e-3, 1e-3,
+    1e-3,
+    1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3
+])
 
 # To maintain the total bend angle.
 phi_lat = pc.phi_lat_class(lat_prop, 2, d1_bend)

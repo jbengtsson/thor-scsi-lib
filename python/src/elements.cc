@@ -426,14 +426,14 @@ void py_thor_scsi_init_elements(py::module &m)
 	//, std::shared_ptr<tse::>
 	py::class_<tse::CavityType, std::shared_ptr<tse::CavityType>>
 		(m, "Cavity", elem_type)
-		.def("set_frequency",       &tse::CavityType::setFrequency)
-		.def("get_frequency",       &tse::CavityType::getFrequency)
-		.def("set_voltage",         &tse::CavityType::setVoltage)
-		.def("get_voltage",         &tse::CavityType::getVoltage)
-		.def("set_phase",           &tse::CavityType::setPhase)
-		.def("get_phase",           &tse::CavityType::getPhase)
-		.def("set_harmonic_number", &tse::CavityType::setHarNum)
-		.def("get_harmonic_number", &tse::CavityType::getHarNum)
+		.def("set_frequency", &tse::CavityType::setFrequency)
+		.def("get_frequency", &tse::CavityType::getFrequency)
+		.def("set_voltage",   &tse::CavityType::setVoltage)
+		.def("get_voltage",   &tse::CavityType::getVoltage)
+		.def("set_phase",     &tse::CavityType::setPhase)
+		.def("get_phase",     &tse::CavityType::getPhase)
+		.def("set_har_num",   &tse::CavityType::setHarNum)
+		.def("get_har_num",   &tse::CavityType::getHarNum)
 		.def(py::init<const Config &>());
 
 	/*

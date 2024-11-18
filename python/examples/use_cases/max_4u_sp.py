@@ -59,18 +59,19 @@ class opt_sp_class:
 
     def __init__(
             self, lat_prop, prm_list, dprm_list, uc_list, sp_list, weight,
-            b1_list, b2_list, phi_lat, rb, eps_x_des, nu_uc_des, nu_sp_des,
+            d1_bend, d2_bend, rb, eps_x_des, nu_uc_des, nu_sp_des,
             beta_des, dnu_des, nld):
 
         self._lat_prop       = lat_prop
+        self._rf_cav_name    = "cav"
+        self._cav_loc        = lat_prop._lattice.find(self._rf_cav_name, 0)
         self._nld            = nld
         self._prm_list       = prm_list
         self._uc_list        = uc_list
         self._sp_list        = sp_list
         self._weight         = weight
-        self._b1_list        = b1_list
-        self._b2_list        = b2_list
-        self._phi_lat        = phi_lat
+        self._d1_bend        = d1_bend
+        self._d2_bend        = d2_bend
         self._rb             = rb
         self._eps_x_des      = eps_x_des
         self._nu_uc_des      = nu_uc_des
@@ -89,9 +90,6 @@ class opt_sp_class:
         self._n_iter         = -1
         self._file_name      = "opt_sp.txt"
 
-        self._h_im_scl_rms_0 = np.nan
-        self._K_re_scl_rms_0 = np.nan
-
     # Public.
 
     def compute_phi_bend(self, bend_list):
@@ -103,8 +101,8 @@ class opt_sp_class:
     def prt_iter(self, prm, chi_2):
         eta, alpha, beta, nu_sp = self._Twiss_sp
         phi = self._lat_prop.compute_phi_lat()
-        phi_b1 = self.compute_phi_bend(self._b1_list)
-        phi_b2 = self.compute_phi_bend(self._b2_list)
+        phi_d1 = self.compute_phi_bend(self._d1_bend._bend_list)
+        phi_d2 = self.compute_phi_bend(self._d2_bend._bend_list)
         phi_rb = self._lat_prop.get_phi_elem(self._rb, 0)
 
         print("\n{:3d} chi_2 = {:9.3e} ({:9.3e})".format(
@@ -147,8 +145,8 @@ class opt_sp_class:
         print("    C [m]          = {:8.5f}".
               format(self._lat_prop.compute_circ()))
 
-        print("\n    phi_b1         = {:8.5f}".format(phi_b1))
-        print("    phi_b2         = {:8.5f}".format(phi_b2))
+        print("\n    phi_d1         = {:8.5f}".format(phi_d1))
+        print("    phi_d2         = {:8.5f}".format(phi_d2))
         print("    phi_rb         = {:8.5f}".format(phi_rb))
 
         self._lat_prop.prt_rad()
@@ -252,14 +250,24 @@ class opt_sp_class:
         def f_sp(prm):
             self._n_iter += 1
             self._prm_list.set_prm(prm)
-            if phi_lat != []:
-                phi_lat.set_phi_lat()
+            if d1_bend != []:
+                self._d1_bend.correct_bend_phi()
+            if d2_bend != []:
+                self._d2_bend.correct_bend_phi()
 
             try:
                 # Compute Twiss parameters along the lattice.
                 if not self._lat_prop.comp_per_sol():
                     print("\ncomp_per_sol: unstable")
                     raise ValueError
+
+                # Adjust RF phase for sign of alpha_c.
+                if self._lat_prop._alpha_c >= 0e0:
+                    self._cav_loc.set_phase(0e0)
+                else:
+                    self._cav_loc.set_phase(180e0)
+                    print("\nopt_sp:  alpha_c = {:10.3e} => phi_rf = 180 deg".
+                          format(self._lat_prop._alpha_c))
 
                 # Compute radiation properties.
                 stable, stable_rad = self._lat_prop.compute_radiation()
@@ -303,21 +311,21 @@ class opt_sp_class:
                         self._lat_prop.prt_Twiss("twiss.txt")
                     pc.prt_lat(
                         self._lat_prop, self._file_name, self._prm_list,
-                        phi_lat=self._phi_lat)
+                        d1_bend=self._d1_bend)
                     self._chi_2_min = min(chi_2, self._chi_2_min)
                 else:
-                    if False:
+                    if not False:
                         print("\n{:3d} {:9.3e} ({:9.3e})".
                               format(self._n_iter, chi_2,
                                      chi_2-self._chi_2_min))
-                        self._prm_list.prt_prm(prm)
+                        # self._prm_list.prt_prm(prm)
 
             return chi_2
 
         max_iter = 1000
         f_tol    = 1e-10
-        x_tol    = 1e-8
-        g_tol    = 1e-8
+        g_tol    = 1e-7
+        x_tol    = 1e-7
 
         prm, bounds = self._prm_list.get_prm()
         f_sp(prm)
@@ -348,7 +356,6 @@ class opt_sp_class:
                 prm,
                 method="CG",
                 # callback=prt_iter,
-                # bounds = bounds,
                 jac=None,
                 options={"gtol": g_tol, "maxiter": max_iter,
                          "eps": dprm_list}
@@ -386,6 +393,15 @@ try:
         print("\ncomp_per_sol: unstable")
         raise ValueError
 
+    # Adjust RF phase for sign of alpha_c.
+    cav_loc = lat_prop._lattice.find("cav", 0)
+    if lat_prop._alpha_c >= 0e0:
+        cav_loc.set_phase(0.0)
+    else:
+        print("  alpha_c = {:10.3e} phi_rf = 180 deg".
+              format(lat_prop._alpha_c))
+        cav_loc.set_phase(180.0)
+
     # Compute radiation properties.
     if not lat_prop.compute_radiation():
         print("\ncompute_radiation: unstable")
@@ -401,7 +417,7 @@ else:
 uc_list = []
 uc_list.append(lat_prop._lattice.find("ucborder", 0).index)
 uc_list.append(lat_prop._lattice.find("ucborder", 1).index)
-if not True:
+if True:
     uc_list.append(lat_prop._lattice.find("ucborder", 2).index)
 uc_list = np.array(uc_list)
 
@@ -439,34 +455,28 @@ nld = nld_cl.nonlin_dyn_class(lat_prop, A_max, beta_inj, delta_max, b_3_list)
 nld.zero_mult(lat_prop, 3)
 nld.zero_mult(lat_prop, 4)
 
-step = 2;
+step = 1;
 
 if step == 1:
     weight = np.array([
         1e15,  # eps_x.
         1e7,   # alpha_c.
-        0e-17, # U_0.
+        1e-15, # U_0.
         1e2,   # etap_x_uc.
         1e-2,  # alpha_uc.
         1e-1,  # nu_uc_x.
         1e-1,  # nu_uc_y.
-        1e0,   # eta_x.
+        1e1,   # eta_x.
         0e-4,  # nu_sp_x.
         0e-7,  # nu_sp_y.
-        1e-3,  # beta_x.
+        1e-5,  # beta_x.
         0e-7,  # beta_y.
         0e-3,  # dnu_x.
         0e-3,  # dnu_y.
-        1e-7   # xi.
+        1e-5   # xi.
     ])
 
     prms = [
-        # ("q_jb",   "b_2"),
-
-        # ("dL_1",   "L"),
-        # ("dL_2",   "L"),
-        # ("dL_3",   "L"),
-
         ("q1_f1" , "b_2"),
         ("q2_f1",  "b_2"),
         ("q3_f1",  "b_2"),
@@ -475,24 +485,41 @@ if step == 1:
         ("b_2_bend", d2_bend),
         ("b_2_bend", d1_bend),
 
-        # ("phi_bend", d2_bend),
-        # ("r1",       "phi")
+        ("d1_f1_sl_ds6", "phi"),
+        ("d1_f1_sl_ds5", "phi"),
+        ("d1_f1_sl_ds4", "phi"),
+        ("d1_f1_sl_ds3", "phi"),
+        ("d1_f1_sl_ds2", "phi"),
+        ("d1_f1_sl_ds1", "phi"),
+        ("d1_f1_sl_ds0", "phi"),
+        ("d1_f1_sl_dm1", "phi"),
+        ("d1_f1_sl_dm2", "phi"),
+        ("d1_f1_sl_dm3", "phi"),
+        ("d1_f1_sl_dm4", "phi"),
+        ("d1_f1_sl_dm5", "phi"),
+
+        ("d2_f1_sl_d0a", "phi"),
+        ("d2_f1_sl_d0b", "phi"),
+        ("d2_f1_sl_d0c", "phi"),
+        ("d2_f1_sl_df1", "phi"),
+        ("d2_f1_sl_df2", "phi"),
+        ("d2_f1_sl_df3", "phi"),
+        ("d2_f1_sl_df4", "phi"),
+        ("d2_f1_sl_df5", "phi")
+
     ]
 
     dprm_list = np.array([
-        # 1e-3,
-        # 1e-3, 1e-3, 1e-3,
         1e-3, 1e-3, 1e-3, 1e-3,
-        1e-3, 1e-3
+        1e-3, 1e-3,
+        1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3,
+        1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3
     ])
-
-    # To maintain the total bend angle.
-    phi_lat = pc.phi_lat_class(lat_prop, 2, d1_bend)
 elif step == 2:
     weight = np.array([
         1e15,  # eps_x.
         1e7,   # alpha_c.
-        0e-17, # U_0.
+        1e-17, # U_0.
         1e2,   # etap_x_uc.
         1e-2,  # alpha_uc.
         1e-1,  # nu_uc_x.
@@ -508,16 +535,12 @@ elif step == 2:
     ])
 
     prms = [
-        # ("q_jb",   "b_2"),
+        ("q1_f1", "b_2"),
+        ("q2_f1", "b_2"),
+        ("q3_f1", "b_2"),
+        ("r1_f1", "b_2"),
 
-        # ("dL_1",   "L"),
-        # ("dL_2",   "L"),
-        # ("dL_3",   "L"),
-
-        ("q1_f1",       "b_2"),
-        ("q2_f1",       "b_2"),
-        ("q3_f1",       "b_2"),
-        ("r1_f1",       "b_2"),
+        ("q1_f1", "phi"),
 
         ("d2_f1_sl_d0a", "b_2"),
         ("d2_f1_sl_d0b", "b_2"),
@@ -569,7 +592,7 @@ prm_list = pc.prm_class(lat_prop, prms, b_2_max)
 rb = "r1_f1"
 
 opt_sp = opt_sp_class(
-    lat_prop, prm_list, dprm_list, uc_list, sp_list, weight, d2_list, d1_list,
-    phi_lat, rb, eps_x_des, nu_uc_des, nu_sp_des, beta_des, dnu_des, nld)
+    lat_prop, prm_list, dprm_list, uc_list, sp_list, weight, d1_bend, d2_bend,
+    rb, eps_x_des, nu_uc_des, nu_sp_des, beta_des, dnu_des, nld)
 
 opt_sp.opt_sp()

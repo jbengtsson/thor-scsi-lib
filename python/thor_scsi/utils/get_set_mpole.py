@@ -69,7 +69,7 @@ class get_set_mpole_class:
     def set_phi_elem(self, fam_name, kid_num, phi):
         b = self._lattice.find(fam_name, kid_num)
         L = b.get_length()
-        h = math.radians(phi) / L
+        h = math.radians(phi)/L
         b.set_curvature(h)
 
     def set_phi_fam(self, fam_name, phi):
@@ -81,8 +81,8 @@ class get_set_mpole_class:
         b = self._lattice.find(fam_name, kid_num)
         L = b.get_length()
         # phi [rad].
-        phi = b.get_length() * b.get_curvature()
-        h = (phi + dphi) / L
+        phi = L*b.get_curvature()
+        h = (phi+math.radians(dphi))/L
         b.set_curvature(h)
 
     def set_dphi_fam(self, fam_name, dphi):
