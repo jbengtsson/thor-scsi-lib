@@ -417,7 +417,7 @@ else:
 uc_list = []
 uc_list.append(lat_prop._lattice.find("ucborder", 0).index)
 uc_list.append(lat_prop._lattice.find("ucborder", 1).index)
-if True:
+if not True:
     uc_list.append(lat_prop._lattice.find("ucborder", 2).index)
 uc_list = np.array(uc_list)
 
@@ -460,7 +460,68 @@ step = 1;
 if step == 1:
     weight = np.array([
         1e15,  # eps_x.
-        1e7,   # alpha_c.
+        1e5,   # alpha_c.
+        1e-15, # U_0.
+        1e2,   # etap_x_uc.
+        1e-2,  # alpha_uc.
+        1e0,   # nu_uc_x.
+        1e0,   # nu_uc_y.
+        1e2,   # eta_x.
+        0e-4,  # nu_sp_x.
+        0e-7,  # nu_sp_y.
+        1e-4,  # beta_x.
+        0e-5,  # beta_y.
+        0e-3,  # dnu_x.
+        0e-3,  # dnu_y.
+        1e-5   # xi.
+    ])
+
+    prms = [
+        ("q0_f1", "phi"),
+        ("q0_f1", "b_2"),
+
+        ("q1_f1", "b_2"),
+        ("q2_f1", "b_2"),
+        ("q3_f1", "b_2"),
+        ("r1_f1", "b_2"),
+
+        ("b_2_bend", d2_bend),
+        ("b_2_bend", d1_bend),
+
+        # ("d1_f1_sl_ds6", "phi"),
+        # ("d1_f1_sl_ds5", "phi"),
+        # ("d1_f1_sl_ds4", "phi"),
+        # ("d1_f1_sl_ds3", "phi"),
+        # ("d1_f1_sl_ds2", "phi"),
+        # ("d1_f1_sl_ds1", "phi"),
+        # ("d1_f1_sl_ds0", "phi"),
+        # ("d1_f1_sl_dm1", "phi"),
+        # ("d1_f1_sl_dm2", "phi"),
+        # ("d1_f1_sl_dm3", "phi"),
+        # ("d1_f1_sl_dm4", "phi"),
+        # ("d1_f1_sl_dm5", "phi"),
+
+        # ("d2_f1_sl_d0a", "phi"),
+        # ("d2_f1_sl_d0b", "phi"),
+        # ("d2_f1_sl_d0c", "phi"),
+        # ("d2_f1_sl_df1", "phi"),
+        # ("d2_f1_sl_df2", "phi"),
+        # ("d2_f1_sl_df3", "phi"),
+        # ("d2_f1_sl_df4", "phi"),
+        # ("d2_f1_sl_df5", "phi")
+    ]
+
+    dprm_list = np.array([
+        1e-3, 1e-3,
+        1e-3, 1e-3, 1e-3, 1e-3,
+        1e-3, 1e-3,
+        # 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3,
+        # 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3
+    ])
+elif step == 2:
+    weight = np.array([
+        1e15,  # eps_x.
+        1e5,   # alpha_c.
         1e-15, # U_0.
         1e2,   # etap_x_uc.
         1e-2,  # alpha_uc.
@@ -469,11 +530,11 @@ if step == 1:
         1e2,   # eta_x.
         0e-4,  # nu_sp_x.
         0e-7,  # nu_sp_y.
-        1e-4,  # beta_x.
+        1e-3,  # beta_x.
         0e-7,  # beta_y.
         0e-3,  # dnu_x.
         0e-3,  # dnu_y.
-        1e-6   # xi.
+        1e-5   # xi.
     ])
 
     prms = [
@@ -506,7 +567,6 @@ if step == 1:
         ("d2_f1_sl_df3", "phi"),
         ("d2_f1_sl_df4", "phi"),
         ("d2_f1_sl_df5", "phi")
-
     ]
 
     dprm_list = np.array([
@@ -515,77 +575,6 @@ if step == 1:
         1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3,
         1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3
     ])
-elif step == 2:
-    weight = np.array([
-        1e15,  # eps_x.
-        1e7,   # alpha_c.
-        1e-17, # U_0.
-        1e2,   # etap_x_uc.
-        1e-2,  # alpha_uc.
-        1e-1,  # nu_uc_x.
-        1e-1,  # nu_uc_y.
-        1e0,   # eta_x.
-        0e-4,  # nu_sp_x.
-        0e-7,  # nu_sp_y.
-        1e-3,  # beta_x.
-        0e-7,  # beta_y.
-        0e-3,  # dnu_x.
-        0e-3,  # dnu_y.
-        1e-7   # xi.
-    ])
-
-    prms = [
-        ("q1_f1", "b_2"),
-        ("q2_f1", "b_2"),
-        ("q3_f1", "b_2"),
-        ("r1_f1", "b_2"),
-
-        ("q1_f1", "phi"),
-
-        ("d2_f1_sl_d0a", "b_2"),
-        ("d2_f1_sl_d0b", "b_2"),
-        ("d2_f1_sl_d0c", "b_2"),
-        ("d2_f1_sl_df1", "b_2"),
-        ("d2_f1_sl_df2", "b_2"),
-        ("d2_f1_sl_df3", "b_2"),
-        ("d2_f1_sl_df4", "b_2"),
-        ("d2_f1_sl_df5", "b_2"),
-
-        ("d1_f1_sl_ds6", "b_2"),
-        ("d1_f1_sl_ds5", "b_2"),
-        ("d1_f1_sl_ds4", "b_2"),
-        ("d1_f1_sl_ds3", "b_2"),
-        ("d1_f1_sl_ds2", "b_2"),
-        ("d1_f1_sl_ds1", "b_2"),
-        ("d1_f1_sl_ds0", "b_2"),
-        ("d1_f1_sl_dm1", "b_2"),
-        ("d1_f1_sl_dm2", "b_2"),
-        ("d1_f1_sl_dm3", "b_2"),
-        ("d1_f1_sl_dm4", "b_2"),
-        ("d1_f1_sl_dm5", "b_2"),
-
-        # ("d2_f1_sl_d0a", "phi"),
-        # ("d2_f1_sl_d0b", "phi"),
-        # ("d2_f1_sl_d0c", "phi"),
-        # ("d2_f1_sl_df1",  "phi"),
-        # ("d2_f1_sl_df2",  "phi"),
-        # ("d2_f1_sl_df3",  "phi"),
-        # ("d2_f1_sl_df4",  "phi"),
-        # ("d2_f1_sl_df5",  "phi"),
-
-        # ("r1",    "phi")
-    ]
-
-    dprm_list = np.array([
-        # 1e-3,
-        # 1e-3, 1e-3, 1e-3,
-        1e-3, 1e-3, 1e-3, 1e-3,
-        1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3,
-        1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3
-    ])
-
-    # To maintain the total bend angle.
-    phi_lat = pc.phi_lat_class(lat_prop, 2, d1_bend)
 
 prm_list = pc.prm_class(lat_prop, prms, b_2_max)
 

@@ -30,9 +30,6 @@ class bend_class:
         self._phi_max        = phi_max
         self._b_2_max        = b_2_max
 
-        print("\n__init__: self._bend_b_2xL = {:10.3e}".
-              format(self._bend_b_2xL))
-
     def __str__(self):
         return "bend"
 
@@ -57,7 +54,6 @@ class bend_class:
         b_2xL = 0e0
         for k in range(len(self._bend_list)):
             b_2xL += self._lat_prop.get_b_nxL_elem(self._bend_list[k], 0, quad)
-        print("\ncompute_bend_b_2xL: b_2xL = {:10.3e}".format(b_2xL))
         return b_2xL
 
     def compute_phi_ratios(self):
