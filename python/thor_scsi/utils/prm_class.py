@@ -243,7 +243,7 @@ class prm_class(bend_class):
             print("\nprm_class::get_prm:")
         for k in range(len(self._prm_list)):
             if prt:
-                print("  {:10s}".format(self._prm_list[k][0]), end="")
+                print("  {:15s}".format(self._prm_list[k][0]), end="")
             if type(self._prm_list[k][1]) == str:
                 p = \
                     self._get_prm_func_dict[self._prm_list[k][1]](
