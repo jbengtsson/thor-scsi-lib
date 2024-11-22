@@ -28,7 +28,7 @@ b_2_max      = 10.0
 eps_x_des    = 49e-12
 alpha_c_des  = 5e-6
 nu_uc_des    = [0.4, 0.1]
-nu_sp_des    = [3.11, 0.78]
+nu_sp_des    = [2.89, 0.91]
 beta_des     = [5.0, 3.0]
 dnu_des      = [0.5, 0.25]     # Phase advance across the straight.
 
@@ -138,8 +138,8 @@ class opt_sp_class:
                          ))
         print("    eta_x          = {:9.3e}".format(eta[ind.x]))
         print("    beta           = [{:7.5f}, {:7.5f}] ([{:7.5f}, {:7.5f}])".
-              format(beta[ind.X], beta[ind.Y], beta_des[ind.X],
-                     beta_des[ind.Y]))
+              format(beta[ind.X], beta[ind.Y], self._beta_des[ind.X],
+                    self._beta_des[ind.Y]))
 
         print("\n    phi_sp         = {:8.5f}".format(phi))
         print("    C [m]          = {:8.5f}".
@@ -470,8 +470,8 @@ if step == 1:
         1e0,   # nu_uc_x.
         1e0,   # nu_uc_y.
         1e2,   # eta_x.
-        0e-4,  # nu_sp_x.
-        0e-7,  # nu_sp_y.
+        1e-6,  # nu_sp_x.
+        1e-6,  # nu_sp_y.
         1e-4,  # beta_x.
         0e-5,  # beta_y.
         0e-3,  # dnu_x.
@@ -493,35 +493,39 @@ if step == 1:
         ("b_2_bend", d2_bend),
         ("b_2_bend", d1_bend),
 
-        # ("d1_f1_sl_ds6", "phi"),
-        # ("d1_f1_sl_ds5", "phi"),
-        # ("d1_f1_sl_ds4", "phi"),
-        # ("d1_f1_sl_ds3", "phi"),
-        # ("d1_f1_sl_ds2", "phi"),
-        # ("d1_f1_sl_ds1", "phi"),
-        # ("d1_f1_sl_ds0", "phi"),
-        # ("d1_f1_sl_dm1", "phi"),
-        # ("d1_f1_sl_dm2", "phi"),
-        # ("d1_f1_sl_dm3", "phi"),
-        # ("d1_f1_sl_dm4", "phi"),
-        # ("d1_f1_sl_dm5", "phi"),
+        ("d1_f1_sl_ds6", "phi"),
+        ("d1_f1_sl_ds5", "phi"),
+        ("d1_f1_sl_ds4", "phi"),
+        ("d1_f1_sl_ds3", "phi"),
+        ("d1_f1_sl_ds2", "phi"),
+        ("d1_f1_sl_ds1", "phi"),
+        ("d1_f1_sl_ds0", "phi"),
+        ("d1_f1_sl_dm1", "phi"),
+        ("d1_f1_sl_dm2", "phi"),
+        ("d1_f1_sl_dm3", "phi"),
+        ("d1_f1_sl_dm4", "phi"),
+        ("d1_f1_sl_dm5", "phi"),
 
-        # ("d2_f1_sl_d0a", "phi"),
-        # ("d2_f1_sl_d0b", "phi"),
-        # ("d2_f1_sl_d0c", "phi"),
-        # ("d2_f1_sl_df1", "phi"),
-        # ("d2_f1_sl_df2", "phi"),
-        # ("d2_f1_sl_df3", "phi"),
-        # ("d2_f1_sl_df4", "phi"),
-        # ("d2_f1_sl_df5", "phi")
+        ("d2_f1_sl_d0a", "phi"),
+        ("d2_f1_sl_d0b", "phi"),
+        ("d2_f1_sl_d0c", "phi"),
+        ("d2_f1_sl_df1", "phi"),
+        ("d2_f1_sl_df2", "phi"),
+        ("d2_f1_sl_df3", "phi"),
+        ("d2_f1_sl_df4", "phi"),
+        ("d2_f1_sl_df5", "phi"),
+
+        ("s3_f1",    "b_3"),
+        ("s4_f1",    "b_3")
     ]
 
     dprm_list = np.array([
         1e-3, 1e-3,
         1e-3, 1e-3, 1e-3, 1e-3,
         1e-3, 1e-3,
-        # 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3,
-        # 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3
+        1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3,
+        1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3,
+        1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3
     ])
 elif step == 2:
     weight = np.array([

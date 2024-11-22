@@ -311,14 +311,12 @@ d2_bend = pc.bend_class(lat_prop, d2_list, phi_max, b_2_max)
 # approach.
 
 prms = [
-    ("q0_f1", "b_2"),
     ("q1_f1", "b_2"),
     ("q2_f1", "b_2"),
     ("q3_f1", "b_2"),
 
+    ("q2_f1", "phi"),
     ("b_2_bend", d1_bend),
-
-    ("q0_f1", "phi"),
 
     # ("d1_f1_sl_ds6", "phi"),
     # ("d1_f1_sl_ds5", "phi"),
@@ -335,10 +333,10 @@ prms = [
 ]
 
 dprm_list = np.array([
+    1e-3, 1e-3, 1e-3,
     1e-3, 1e-3, 1e-3, 1e-3,
-    1e-3,
-    1e-3,
-    # 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3
+    1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3,
+    1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3
 ])
 
 prm_list = pc.prm_class(lat_prop, prms, b_2_max)
