@@ -356,9 +356,9 @@ def prt_lat(
                           ", N = n_quad;"
                           .format(fam_name, L, b_2), file=outf)
                 else:
-                    print("{:5s}: Bending, L = {:7.5f}, B_2 = {:8.5f}"
-                          ", Phi = {:8.5f}, N = n_bend;"
-                          .format(fam_name, L, b_2, phi), file=outf)
+                    print("{:5s}: Bending, L = {:7.5f}, Phi = {:8.5f}"
+                          ", B_2 = {:8.5f}, N = n_bend;"
+                          .format(fam_name, L, phi, b_2), file=outf)
         return prt_list
 
     def prt_sext(fam_name, prt_list):
