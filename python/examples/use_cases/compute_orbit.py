@@ -2,9 +2,16 @@
      Compute the orbit shift from reverse bends.
 """
 
+import logging
+
+# Levels: DEBUG, INFO, WARNING, ERROR, and CRITICAL.
+logging.basicConfig(level="ERROR")
+logger = logging.getLogger("thor_scsi")
 
 import os
 import sys
+from dataclasses import dataclass
+from typing import ClassVar
 
 import math
 import numpy as np
@@ -18,6 +25,24 @@ from thor_scsi.utils import lattice_properties as lp, nonlin_dyn as nld_cl, \
 
 
 ind = ind.index_class()
+
+
+@dataclass
+class gtpsa_prop:
+    # GTPSA properties.
+    # Number of variables - phase-space coordinates & 1 for parameter
+    #dependence.
+    nv: ClassVar[int] = 6 + 1
+    # Max order.
+    no: ClassVar[int] = 1
+    # Number of parameters.
+    nv_prm: ClassVar[int] = 0
+    # Parameters max order.
+    no_prm: ClassVar[int] = 0
+    # Index.
+    named_index = gtpsa.IndexMapping(dict(x=0, px=1, y=2, py=3, delta=4, ct=5))
+    # Descriptor
+    desc : ClassVar[gtpsa.desc]
 
 
 def compute_optics(lat_prop):
@@ -40,9 +65,7 @@ def compute_optics(lat_prop):
 def get_lat(home_dir, lat_name, E_0):
     file_name = os.path.join(home_dir, lat_name+".lat")
 
-    lat_prop = \
-        lp.lattice_properties_class(
-            nv, no, nv_prm, no_prm, file_name, E_0, cod_eps)
+    lat_prop = lp.lattice_properties_class(gtpsa_prop, file_name, E_0, cod_eps)
     lat_prop.prt_lat(lat_name+"_lat.txt")
 
     print("\n{:s}".format(lat_name))
@@ -53,6 +76,7 @@ def get_lat(home_dir, lat_name, E_0):
 
     # Computes element s location: lat_prop._Twiss.s[].
     compute_optics(lat_prop)
+    lat_prop._model_state.radiation = False
 
     if False:
         lat_prop.prt_lat_param()
@@ -73,9 +97,10 @@ def prt_bend(lat_ref, lat_prop):
     phi_tot_ref = 0e0
     phi_tot = 0e0
     print("#  k      s        name                  L              phi"
-          "         b_1xL\n"
+          "         b_1xL   b_1xL_sum\n"
           "#        [m]                            [m]            [deg]"
-          "        [mrad]", file=file)
+          "        [mrad]    [mrad]", file=file)
+    b_1xL_sum = 0e0
     for k in range(len(lat_ref._lattice)):
         if (type(lat_prop._lattice[k]) == ts.Bending) or \
            (type(lat_prop._lattice[k]) == ts.Quadrupole):
@@ -96,12 +121,13 @@ def prt_bend(lat_ref, lat_prop):
                 phi_tot += phi
 
                 b_1xL = math.radians(phi-phi_ref)
+                b_1xL_sum += b_1xL
                 b.get_multipoles().set_multipole(1, b_1xL/L)
 
                 print("  {:3d}  {:6.3f}  {:8s} ({:8s})  {:5.3f} ({:5.3f})" \
-                      "  {:6.3f} ({:6.3f})  {:6.3f}".
+                      "  {:6.3f} ({:6.3f})  {:6.3f}   {:6.3f}".
                       format(index_ref, s, fam_name_ref, fam_name, L_ref, L,
-                             phi_ref, phi, 1e3*b_1xL), file=file)
+                             phi_ref, phi, 1e3*b_1xL, 1e3*b_1xL_sum), file=file)
     print("\n  phi_tot = {:8.5f} ({:8.5f})".format(phi_tot_ref, phi_tot),
         file=file)
     file.close()
@@ -111,8 +137,14 @@ def prt_orbit(lat_prop):
     file_name = "prt_orbit.txt"
     file = open(file_name, "w")
 
+    # r = co.compute_closed_orbit(
+    #     lat_prop._lattice, lat_prop._model_state, delta=0e0, max_iter=10,
+    #     eps=1e-10, desc=lat_prop._desc)
+
     M = gtpsa.ss_vect_tpsa(lat_prop._desc, 1)
     M.set_identity()
+    # M.px += -0.448e-3
+    # M += r.x0
     print("# k               s    type     x       p_x\n"
           "#                [m]           [mm]    [mrad]", file=file)
     for k in range(len(lat_prop._lattice)):
@@ -123,14 +155,8 @@ def prt_orbit(lat_prop):
             1e3*M.cst().x, 1e3*M.cst().px), file=file)
 
 
-# Number of phase-space coordinates.
-nv = 7
-# Variables max order.
-no = 2
-# Number of parameters.
-nv_prm = 0
-# Parameters max order.
-no_prm = 0
+# TPSA max order.
+gtpsa_prop.no = 2
 
 cod_eps = 1e-15
 E_0     = 3.0e9
@@ -142,14 +168,15 @@ beta_inj  = np.array([3.0, 3.0])
 home_dir = os.path.join(
     os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "MAX_IV")
 home_dir_1 = os.path.join(home_dir, "max_iv")
-lat_ref = get_lat(home_dir_1, "max_iv_baseline", E_0)
 home_dir_2 = os.path.join(home_dir, "max_4u")
+lat_ref = get_lat(home_dir_1, "max_iv_baseline", E_0)
 lat_prop = get_lat(home_dir_2, "max_4u_sp_jb_5", E_0)
 
 prt_bend(lat_ref, lat_prop)
 
-b_3_list = []
-nld = nld_cl.nonlin_dyn_class(lat_prop, A_max, beta_inj, delta_max, b_3_list)
+b_n_list = ["q1", "q2", "q3", "s1", "s2", "s3", "s4", "o1", "o2", "o3"]
+nld = nld_cl.nonlin_dyn_class(lat_prop, A_max, beta_inj, delta_max, b_n_list)
+nld.zero_mult(lat_prop, 2)
 nld.zero_mult(lat_prop, 3)
 nld.zero_mult(lat_prop, 4)
 

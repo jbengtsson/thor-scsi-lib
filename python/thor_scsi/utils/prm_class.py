@@ -11,7 +11,7 @@ quad = 2
 
 
 class bend_class:
-    # Compound bending magnet.
+    # Compound bending magnets.
 
     # Private
 
@@ -102,6 +102,7 @@ class bend_class:
                 self._bend_list[k], self._bend_phi_ratio[k]*prm)
 
     def correct_bend_phi(self):
+        # Maintain total bend angle.
         dphi = self._bend_phi - self.compute_bend_phi()
         n = len(self._bend_list)
         dphi /= n
@@ -135,6 +136,7 @@ class bend_class:
 
 
 class phi_lat_class():
+    # Class to maintain the total bend angle for a super period.
     # Private
 
     def __init__(self, lat_prop, n_bend, dip_prm):
@@ -267,7 +269,7 @@ class prm_class(bend_class):
             prm.append(p)
             bounds.append(b)
             if prt:
-                print("    {:12.5e} ({:5.1f}, {:5.1f})".
+                print("    {:12.5e} ({:3.1f}, {:3.1f})".
                       format(prm[k], bounds[k][0], bounds[k][1]))
         return np.array(prm), bounds
 

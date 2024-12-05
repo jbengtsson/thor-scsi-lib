@@ -286,14 +286,17 @@ Twiss_des = np.array([eta_des, alpha_des, beta_des, dnu_des])
 weight = np.array([
     1e2,  # [eta_x, eta'_x] at the centre of the straight.
     1e0,  # alpha at the centre of the straight.
-    1e-2, # beta_x at the centre of the straight.
-    1e-3, # beta_y at the centre of the straight.
+    0e-2, # beta_x at the centre of the straight.
+    0e-3, # beta_y at the centre of the straight.
     0e-4, # dnu_x across the straight.
     0e-4  # dnu_y across the straight.
 ])
 
-d2_list = ["d2_f1_sl_d0a", "d2_f1_sl_d0b", "d2_f1_sl_d0c", "d2_f1_sl_df1",
-           "d2_f1_sl_df2", "d2_f1_sl_df3", "d2_f1_sl_df4", "d2_f1_sl_df5"]
+if not False:
+    d2_list = []
+else:
+    d2_list = ["d2_f1_sl_d0a", "d2_f1_sl_d0b", "d2_f1_sl_d0c", "d2_f1_sl_df1",
+               "d2_f1_sl_df2", "d2_f1_sl_df3", "d2_f1_sl_df4", "d2_f1_sl_df5"]
 
 d1_list = [
     "d1_f1_sl_ds6", "d1_f1_sl_ds5", "d1_f1_sl_ds4", "d1_f1_sl_ds3",
@@ -315,26 +318,35 @@ prms = [
     ("q2_f1", "b_2"),
     ("q3_f1", "b_2"),
 
-    ("q2_f1", "phi"),
-    ("b_2_bend", d1_bend),
+    ("r1_f1", "b_2"),
+    ("dsim",  "b_2"),
 
-    # ("d1_f1_sl_ds6", "phi"),
-    # ("d1_f1_sl_ds5", "phi"),
-    # ("d1_f1_sl_ds4", "phi"),
-    # ("d1_f1_sl_ds3", "phi"),
-    # ("d1_f1_sl_ds2", "phi"),
-    # ("d1_f1_sl_ds1", "phi"),
-    # ("d1_f1_sl_ds0", "phi"),
-    # ("d1_f1_sl_dm1", "phi"),
-    # ("d1_f1_sl_dm2", "phi"),
-    # ("d1_f1_sl_dm3", "phi"),
-    # ("d1_f1_sl_dm4", "phi"),
-    # ("d1_f1_sl_dm5", "phi")
+    # ("r1_f1", "phi"),
+    # ("dsim", "phi"),
+    ("q1_f1", "phi"),
+    ("q2_f1", "phi"),
+    ("q3_f1", "phi"),
+    # ("b_2_bend", d1_bend),
+
+    ("d1_f1_sl_ds6", "phi"),
+    ("d1_f1_sl_ds5", "phi"),
+    ("d1_f1_sl_ds4", "phi"),
+    ("d1_f1_sl_ds3", "phi"),
+    ("d1_f1_sl_ds2", "phi"),
+    ("d1_f1_sl_ds1", "phi"),
+    ("d1_f1_sl_ds0", "phi"),
+    ("d1_f1_sl_dm1", "phi"),
+    ("d1_f1_sl_dm2", "phi"),
+    ("d1_f1_sl_dm3", "phi"),
+    ("d1_f1_sl_dm4", "phi"),
+    ("d1_f1_sl_dm5", "phi")
 ]
 
 dprm_list = np.array([
     1e-3, 1e-3, 1e-3,
-    1e-3, 1e-3, 1e-3, 1e-3,
+    1e-3, 1e-3,
+    1e-3, 1e-3, 1e-3,
+    # 1e-3, 1e-3, 1e-3, 1e-3,
     1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3,
     1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3
 ])
