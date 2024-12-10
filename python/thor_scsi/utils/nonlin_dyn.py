@@ -153,14 +153,11 @@ class nonlin_dyn_class:
     def zero_mult(self, lat_prop, n):
         # Zero multipoles.
         print("\nZeroing multipoles: n = {:d}".format(n))
-        for k in range(len(lat_prop._lattice)):
-            if (type(lat_prop._lattice[k]) == ts.Bending) \
-               or (type(lat_prop._lattice[k]) == ts.Quadrupole) \
-               or (type(lat_prop._lattice[k]) == ts.Sextupole) \
-               or (type(lat_prop._lattice[k]) == ts.Octupole) \
-               or (type(lat_prop._lattice[k]) == ts.Multipole):
-                print("zero_mult", lat_prop._lattice[k].name)
-                lat_prop._lattice[k].get_multipoles().set_multipole(n, 0e0)
+        for el in lat_prop._lattice:
+            if (type(el) == ts.Bending) or (type(el) == ts.Quadrupole) \
+               or (type(el) == ts.Sextupole) or (type(el) == ts.Octupole) \
+               or (type(el) == ts.Multipole):
+                el.get_multipoles().set_multipole(n, 0e0)
 
     def compute_sext_resp_mat_num(self, lat_prop, b_3_list):
         # Uses integrated sextupole strength.
