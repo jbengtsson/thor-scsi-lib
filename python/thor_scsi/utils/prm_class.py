@@ -103,11 +103,19 @@ class bend_class:
 
     def correct_bend_phi(self):
         # Maintain total bend angle.
+        prt = False
+        if prt:
+            print("\ncorrect_bend_phi:")
         dphi = self._bend_phi - self.compute_bend_phi()
         n = len(self._bend_list)
         dphi /= n
         for k in range(n):
+            if prt:
+                print("  {:5s}".format(self._bend_list[k]))
             self._lat_prop.set_dphi_fam(self._bend_list[k], dphi)
+        if prt:
+            print("  {:9.3e} ({:9.3e})".format(
+                self.compute_bend_phi(), self._bend_phi))
 
     def set_bend_b_2(self, prm):
         prt = False

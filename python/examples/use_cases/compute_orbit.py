@@ -212,7 +212,8 @@ prt_bend(lat_ref, lat_prop)
 
 b_n_list = [ "s1_f1", "s2_f1", "s3_f1", "s4_f1", "o1_f1", "o2_f1", "o3_f1"]
 nld = nld_cl.nonlin_dyn_class(lat_prop, A_max, beta_inj, delta_max, b_n_list)
-nld.zero_mult(lat_prop, 2)
+if True:
+    nld.zero_mult(lat_prop, 2)
 nld.zero_mult(lat_prop, 3)
 nld.zero_mult(lat_prop, 4)
 

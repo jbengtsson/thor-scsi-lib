@@ -31,8 +31,8 @@ phi_max      = 0.85
 b_2_bend_max = 1.0
 b_2_max      = 10.0
 
-eps_x_des    = 99e-12
-nu_uc        = [0.35, 0.1]
+eps_x_des    = 49e-12
+nu_uc        = [0.35, 0.15]
 
 
 @dataclass
@@ -464,7 +464,8 @@ def opt_uc \
             return phi
 
         phi = lat_prop.compute_phi_lat()
-        phi_b1 = compute_phi_bend(lat_prop, b1_list)
+        if b1_list is not None:
+            phi_b1 = compute_phi_bend(lat_prop, b1_list)
         phi_rb_1 = lat_prop.get_phi_elem(rb_1, 0)
         phi_bend = lat_prop.get_phi_elem(phi_b, 0)
 
@@ -524,7 +525,8 @@ def opt_uc \
 
         n_iter += 1
         prm_list.set_prm(prm)
-        phi_lat.set_phi_lat()
+        if b1_list is not None:
+            phi_lat.set_phi_lat()
         stable = set_xi(lat_prop, 0e0, 0e0, b_3_list)
 
         if stable:
@@ -546,7 +548,7 @@ def opt_uc \
             chi_2 = compute_chi_2(nu, xi, h_rms, K_rms)
             if chi_2 < chi_2_min:
                 prt_iter(prm, chi_2, nu, xi, h_im, K_re, h_rms, K_rms)
-                pc.prt_lat(lat_prop, "opt_uc.txt", prm_list, phi_lat=phi_lat)
+                pc.prt_lat(lat_prop, "opt_uc.txt", prm_list)
                 prt_b_3(lat_prop, "opt_uc_b_3.txt", b_3_list)
                 chi_2_min = min(chi_2, chi_2_min)
             return chi_2
@@ -601,11 +603,7 @@ lat_prop = lp.lattice_properties_class(gtpsa_prop, file_name, E_0, cod_eps)
 
 lat_prop.prt_lat("max_4u_uc_lat.txt")
 
-print("\nCircumference [m]      = {:7.5f}".format(lat_prop.compute_circ()))
-print("Total bend angle [deg] = {:7.5f}".format(lat_prop.compute_phi_lat()))
-
-# b_3_list = ["s3", "s4"]
-b_3_list = ["s2_f1", "s3_f1"]
+b_3_list = ["s3_f1", "s4_f1"]
 set_xi(lat_prop, 0e0, 0e0, b_3_list)
 
 if not False:
@@ -618,32 +616,32 @@ if not False:
 
 # Weights.
 weight = np.array([
-    1e22, # eps_x.
-    1e-2, # nu_uc_x.
-    1e0, # nu_uc_y.
+    1e20, # eps_x.
+    0e-2, # nu_uc_x.
+    0e0,  # nu_uc_y.
     0e-7, # xi.
     1e-5*1e8,  # h rms.
     1e-5*1e12  # K rms.
 ])
 
-d2_list = ["d2_0", "d2_1", "d2_2", "d2_3", "d2_4", "d2_5"]
+d2_list = []
+# d2_list = ["d2_0", "d2_1", "d2_2", "d2_3", "d2_4", "d2_5"]
 
-d2_bend = pc.bend_class(lat_prop, d2_list, phi_max, b_2_max)
+# d2_bend = pc.bend_class(lat_prop, d2_list, phi_max, b_2_max)
 
 if True:
     prms = [
-        ("r1",       "b_2"),
-        # ("q4_h",     "b_2"),
+        ("r1_f1", "b_2"),
+        ("dsim",  "b_2"),
+        ("s3_f1", "b_2"),
+        ("s4_f1", "b_2"),
 
-        ("d2_0",     "b_2"),
-        ("d2_1",     "b_2"),
-        ("d2_2",     "b_2"),
-        ("d2_3",     "b_2"),
-        ("d2_4",     "b_2"),
-        ("d2_5",     "b_2"),
-
-        # ("phi_bend", d2_bend),
-        # ("r1",       "phi"),
+        # ("d2_0",     "b_2"),
+        # ("d2_1",     "b_2"),
+        # ("d2_2",     "b_2"),
+        # ("d2_3",     "b_2"),
+        # ("d2_4",     "b_2"),
+        # ("d2_5",     "b_2"),
     ]
 else:
     prms = [
@@ -668,8 +666,8 @@ else:
 
 prm_list = pc.prm_class(lat_prop, prms, b_2_max)
 
-rb_1    = "r1"
-phi_b   = "d2_5"
+rb_1    = "r1_f1"
+phi_b   = "dsim"
 n_phi_b = 10
 # To maintain the total bend angle.
 phi_lat = pc.phi_lat_class(lat_prop, n_phi_b, phi_b)

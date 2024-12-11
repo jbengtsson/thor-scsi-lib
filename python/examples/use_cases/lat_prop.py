@@ -84,9 +84,6 @@ lat_prop = lp.lattice_properties_class(gtpsa_prop, file_name, E_0, cod_eps)
 
 lat_prop.prt_lat("lat_prop_lat.txt")
 
-print("\nCircumference [m]      = {:7.5f}".format(lat_prop.compute_circ()))
-print("Total bend angle [deg] = {:7.5f}".format(lat_prop.compute_phi_lat()))
-
 b_3_list = ["s1", "s2", "s3", "s4"]
 nld = nld_cl.nonlin_dyn_class(lat_prop, A_max, beta_inj, delta_max, b_3_list)
 if False:

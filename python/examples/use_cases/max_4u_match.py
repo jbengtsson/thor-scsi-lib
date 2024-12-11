@@ -71,7 +71,7 @@ def compute_periodic_cell(lat_prop, uc_list):
 
 
 def match_straight(
-        lat_prop, prm_list, uc_list, sp_list, weight, d1_bend, d2_bend,
+        lat_prop, prm_list, uc_list, sp_list, weight, d1_bend, d2_bend, sp_bend,
         Twiss_des, rb):
     chi_2_min = 1e30
     n_iter    = 0
@@ -86,8 +86,10 @@ def match_straight(
             return phi
 
         phi = lat_prop.compute_phi_lat()
-        phi_d1 = compute_phi_bend(lat_prop, d1_bend._bend_list)
-        phi_d2 = compute_phi_bend(lat_prop, d2_bend._bend_list)
+        if d1_bend != []:
+            phi_d1 = compute_phi_bend(lat_prop, d1_bend._bend_list)
+        if d2_bend != []:
+            phi_d2 = compute_phi_bend(lat_prop, d2_bend._bend_list)
         phi_rb = lat_prop.get_phi_elem(rb, 0)
 
         print("\n{:4d} chi_2 = {:9.3e}".format(n_iter, chi_2))
@@ -109,8 +111,10 @@ def match_straight(
                      Twiss_des[3][ind.X], Twiss_des[3][ind.Y]))
         print("\n    phi_sp          = {:8.5f}".format(phi))
         print("    C [m]           = {:8.5f}".format(lat_prop.compute_circ()))
-        print("\n    phi_d2          = {:8.5f}".format(phi_d2))
-        print("    phi_d1          = {:8.5f}".format(phi_d1))
+        if d2_bend != []:
+            print("\n    phi_d2          = {:8.5f}".format(phi_d2))
+        if d1_bend != []:
+            print("    phi_d1          = {:8.5f}".format(phi_d1))
         print("    phi_rb          = {:8.5f}".format(phi_rb))
         prm_list.prt_prm(prm)
 
@@ -183,6 +187,10 @@ def match_straight(
         prm_list.set_prm(prm)
         if d1_bend != []:
             d1_bend.correct_bend_phi()
+        if d2_bend != []:
+            d2_bend.correct_bend_phi()
+        if sp_bend != []:
+            sp_bend.set_phi_lat()
 
         chi_2, Twiss_k = compute_chi_2(A0, Twiss_des)
         if chi_2 < chi_2_min:
@@ -202,8 +210,8 @@ def match_straight(
 
     max_iter = 1000
     f_tol    = 1e-4
-    g_tol    = 1e-5
-    x_tol    = 1e-4
+    g_tol    = 1e-4
+    x_tol    = 1e-5
 
     Twiss_0, A = compute_periodic_cell(lat_prop, uc_list)
 
@@ -264,8 +272,8 @@ print("Total bend angle [deg] = {:7.5f}".format(lat_prop.compute_phi_lat()))
 lat_prop.prt_lat("max_4u_match_lat.txt")
 
 uc_list = np.zeros(2, dtype=int)
-uc_list[0] = lat_prop._lattice.find("r1_f1", 0).index
-uc_list[1] = lat_prop._lattice.find("r1_f1", 1).index
+uc_list[0] = lat_prop._lattice.find("ucborder", 0).index
+uc_list[1] = lat_prop._lattice.find("ucborder", 1).index
 
 sp_list = np.zeros(2, dtype=int)
 sp_list[0] = lat_prop._lattice.find("lsborder", 1).index
@@ -286,17 +294,11 @@ Twiss_des = np.array([eta_des, alpha_des, beta_des, dnu_des])
 weight = np.array([
     1e2,  # [eta_x, eta'_x] at the centre of the straight.
     1e0,  # alpha at the centre of the straight.
-    0e-2, # beta_x at the centre of the straight.
-    0e-3, # beta_y at the centre of the straight.
+    1e-3, # beta_x at the centre of the straight.
+    1e-3, # beta_y at the centre of the straight.
     0e-4, # dnu_x across the straight.
     0e-4  # dnu_y across the straight.
 ])
-
-if not False:
-    d2_list = []
-else:
-    d2_list = ["d2_f1_sl_d0a", "d2_f1_sl_d0b", "d2_f1_sl_d0c", "d2_f1_sl_df1",
-               "d2_f1_sl_df2", "d2_f1_sl_df3", "d2_f1_sl_df4", "d2_f1_sl_df5"]
 
 d1_list = [
     "d1_f1_sl_ds6", "d1_f1_sl_ds5", "d1_f1_sl_ds4", "d1_f1_sl_ds3",
@@ -304,29 +306,28 @@ d1_list = [
     "d1_f1_sl_dm1", "d1_f1_sl_dm2", "d1_f1_sl_dm3", "d1_f1_sl_dm4",
     "d1_f1_sl_dm5"
 ]
-
 d1_bend = pc.bend_class(lat_prop, d1_list, phi_max, b_2_max)
-d2_bend = pc.bend_class(lat_prop, d2_list, phi_max, b_2_max)
+
+if not False:
+    d2_list = []
+    d2_bend = []
+else:
+    d2_list = ["d2_f1_sl_d0a", "d2_f1_sl_d0b", "d2_f1_sl_d0c", "d2_f1_sl_df1",
+               "d2_f1_sl_df2", "d2_f1_sl_df3", "d2_f1_sl_df4", "d2_f1_sl_df5"]
+    d2_bend = pc.bend_class(lat_prop, d2_list, phi_max, b_2_max)
 
 # Remark:
-# Using the bend angles as parameters - maintaining the total - will change the
-# initial conditions for the horizontal dipspersion; i.e., requires an iterative
-# approach.
+# The local bend angles are treated as parameters - but maintaining the total.
+# However, this will change periodic solution for the horizontal dipspersion
+# for the unit dipole cells.
+# Hence, an iterative approach is required.
 
 prms = [
     ("q1_f1", "b_2"),
     ("q2_f1", "b_2"),
     ("q3_f1", "b_2"),
 
-    ("r1_f1", "b_2"),
-    ("dsim",  "b_2"),
-
-    # ("r1_f1", "phi"),
-    # ("dsim", "phi"),
-    ("q1_f1", "phi"),
-    ("q2_f1", "phi"),
-    ("q3_f1", "phi"),
-    # ("b_2_bend", d1_bend),
+    ("b_2_bend", d1_bend),
 
     ("d1_f1_sl_ds6", "phi"),
     ("d1_f1_sl_ds5", "phi"),
@@ -342,11 +343,11 @@ prms = [
     ("d1_f1_sl_dm5", "phi")
 ]
 
+sp_bend = pc.phi_lat_class(lat_prop, 2, d1_bend)
+
 dprm_list = np.array([
     1e-3, 1e-3, 1e-3,
     1e-3, 1e-3,
-    1e-3, 1e-3, 1e-3,
-    # 1e-3, 1e-3, 1e-3, 1e-3,
     1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3,
     1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3
 ])
@@ -356,5 +357,6 @@ prm_list = pc.prm_class(lat_prop, prms, b_2_max)
 rb = "r1_f1"
 
 match_straight(
-    lat_prop, prm_list, uc_list, sp_list, weight, d1_bend, d2_bend, Twiss_des,
+    lat_prop, prm_list, uc_list, sp_list, weight, d1_bend, d2_bend, sp_bend,
+    Twiss_des,
     rb)
