@@ -203,9 +203,10 @@ home_dir = os.path.join(
     os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "MAX_IV")
 home_dir_1 = os.path.join(home_dir, "max_iv")
 home_dir_2 = os.path.join(home_dir, "max_4u")
-lat_ref = get_lat(home_dir_1, "max_iv_baseline", E_0)
-lat_prop = get_lat(home_dir_2, "max_4u_sp_jb_5",
-                   E_0)
+# lat_ref = get_lat(home_dir_1, "max_iv_baseline", E_0)
+# lat_prop = get_lat(home_dir_2, "max_4u_sp_jb_5", E_0)
+lat_ref = get_lat(home_dir_1, "max_iv_baseline_3", E_0)
+lat_prop = get_lat(home_dir_2, "m4U_240831_f01_08_06_01_lattice_7", E_0)
 
 prt_bend(lat_ref, lat_prop)
 
