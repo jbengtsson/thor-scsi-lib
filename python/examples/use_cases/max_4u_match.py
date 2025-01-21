@@ -263,11 +263,7 @@ home_dir = os.path.join(
 lat_name = sys.argv[1]
 file_name = os.path.join(home_dir, lat_name+".lat")
 
-lat_prop = \
-    lp.lattice_properties_class(gtpsa_prop, file_name, E_0, cod_eps)
-
-print("\nCircumference [m]      = {:7.5f}".format(lat_prop.compute_circ()))
-print("Total bend angle [deg] = {:7.5f}".format(lat_prop.compute_phi_lat()))
+lat_prop = lp.lattice_properties_class(gtpsa_prop, file_name, E_0, cod_eps)
 
 lat_prop.prt_lat("max_4u_match_lat.txt")
 
@@ -329,27 +325,30 @@ prms = [
 
     ("b_2_bend", d1_bend),
 
-    ("d1_f1_sl_ds6", "phi"),
-    ("d1_f1_sl_ds5", "phi"),
-    ("d1_f1_sl_ds4", "phi"),
-    ("d1_f1_sl_ds3", "phi"),
-    ("d1_f1_sl_ds2", "phi"),
-    ("d1_f1_sl_ds1", "phi"),
-    ("d1_f1_sl_ds0", "phi"),
-    ("d1_f1_sl_dm1", "phi"),
-    ("d1_f1_sl_dm2", "phi"),
-    ("d1_f1_sl_dm3", "phi"),
-    ("d1_f1_sl_dm4", "phi"),
-    ("d1_f1_sl_dm5", "phi")
+    ("dsim", "phi"),
+
+    # ("d1_f1_sl_ds6", "phi"),
+    # ("d1_f1_sl_ds5", "phi"),
+    # ("d1_f1_sl_ds4", "phi"),
+    # ("d1_f1_sl_ds3", "phi"),
+    # ("d1_f1_sl_ds2", "phi"),
+    # ("d1_f1_sl_ds1", "phi"),
+    # ("d1_f1_sl_ds0", "phi"),
+    # ("d1_f1_sl_dm1", "phi"),
+    # ("d1_f1_sl_dm2", "phi"),
+    # ("d1_f1_sl_dm3", "phi"),
+    # ("d1_f1_sl_dm4", "phi"),
+    # ("d1_f1_sl_dm5", "phi")
 ]
 
 sp_bend = pc.phi_lat_class(lat_prop, 2, d1_bend)
 
 dprm_list = np.array([
     1e-3, 1e-3, 1e-3,
+    1e-3,
     1e-3, 1e-3,
-    1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3,
-    1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3
+    # 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3,
+    # 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3
 ])
 
 prm_list = pc.prm_class(lat_prop, prms, b_2_max)
