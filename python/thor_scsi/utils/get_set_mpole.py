@@ -90,6 +90,27 @@ class get_set_mpole_class:
         for k in range(n_kid):
             self.set_dphi_elem(fam_name, k, dphi)
 
+    def get_h_elem(self, fam_name, kid_num):
+        b = self._lattice.find(fam_name, kid_num)
+        return b.get_curvature()
+
+    def set_h_elem(self, fam_name, kid_num, h):
+        # Keep phi constant - adjust length.
+        if h != 0e0:
+            b = self._lattice.find(fam_name, kid_num)
+            L = b.get_length()
+            phi = L*b.get_curvature()
+            b.set_curvature(h)
+            L = phi/b.get_curvature()
+            b.set_length(L)
+        else:
+            print("set_h_elem - h is zero!\n")
+
+    def set_h_fam(self, fam_name, h):
+        n_kid = len(self._lattice.elements_with_name(fam_name))
+        for k in range(n_kid):
+            self.set_h_elem(fam_name, k, h)
+
     def set_phi_rect_elem(self, fam_name, kid_num, phi):
         self.set_phi_elem(fam_name, k, phi)
         b = self._lattice.find(fam_name, kid_num)
