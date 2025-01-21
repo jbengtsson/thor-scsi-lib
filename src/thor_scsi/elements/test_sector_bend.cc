@@ -393,9 +393,9 @@ BOOST_AUTO_TEST_CASE(test21_sector_tps_symplectic)
   const double length = 1e0, b2 = 1e0, phi = 5e0, delta = 0e0;
 
   C.set<std::string>("name", "test");
-  C.set<double>("K", b2);
+  C.set<double>("B_2", b2);
   C.set<double>("L", length);
-  C.set<double>("T", phi);
+  C.set<double>("Phi", phi);
   C.set<double>("N", 100);
 
   auto bend = tse::BendingType(C);
@@ -425,15 +425,18 @@ BOOST_AUTO_TEST_CASE(test30_bend_config)
 {
   tsc::ConfigType calc_config;
   Config C;
-  const double length = 1e0, b2 = 1e0, phi = 5e0, delta = 0e0, T1=1.2e0, T2=0.75e0;
-  const double phi_rad = phi * M_PI / 180e0;
-  const double curvature = phi_rad / length;
+  const double
+    length = 1e0, b2 = 1e0, phi = 5e0, delta = 0e0, T1=1.2e0, T2=0.75e0;
+  const double
+    phi_rad = phi * M_PI / 180e0;
+  const double
+    curvature = phi_rad / length;
   C.set<std::string>("name", "test");
-  C.set<double>("K",  b2);
+  C.set<double>("B_2",  b2);
   C.set<double>("L",  length);
-  C.set<double>("T",  phi);
-  C.set<double>("T1", T1);
-  C.set<double>("T2", T2);
+  C.set<double>("Phi",  phi);
+  C.set<double>("Phi_1", T1);
+  C.set<double>("Phi_2", T2);
   C.set<double>("N", 100);
 
   auto bend_ref = tse::BendingType(C);

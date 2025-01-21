@@ -31,7 +31,7 @@ BOOST_AUTO_TEST_CASE(test10_quadrupole_ostream)
   tsc::ConfigType calc_config;
   Config C;
   C.set<std::string>("name", "test");
-  C.set<double>("K", 0.0);
+  C.set<double>("B_2", 0.0);
   C.set<double>("L", 0e0);
   C.set<double>("N", 1);
 
@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE(test10_quadrupole_K)
   Config C;
   C.set<std::string>("name", "test");
   const double grad = 27e0;
-  C.set<double>("K", grad);
+  C.set<double>("B_2", grad);
   C.set<double>("L", 0e0);
   C.set<double>("N", 1);
 
@@ -74,7 +74,7 @@ BOOST_AUTO_TEST_CASE(test10_quadrupole_setMul)
   Config C;
   C.set<std::string>("name", "test");
   const double grad = 27e0;
-  C.set<double>("K", grad);
+  C.set<double>("B_2", grad);
   C.set<double>("L", 0e0);
   C.set<double>("N", 1);
 
@@ -158,7 +158,7 @@ BOOST_AUTO_TEST_CASE(test20_quadrupole_thin_eval)
   tsc::ConfigType calc_config;
   Config C;
   C.set<std::string>("name", "test");
-  C.set<double>("K", 0e0);
+  C.set<double>("B_2", 0e0);
   C.set<double>("L", 0e0);
   C.set<double>("N", 1);
 
@@ -344,7 +344,7 @@ BOOST_AUTO_TEST_CASE(test20_quadrupole_typical_length_eval)
   tsc::ConfigType calc_config;
   Config C;
   C.set<std::string>("name", "test");
-  C.set<double>("K", gradient);
+  C.set<double>("B_2", gradient);
   C.set<double>("L", length);
   C.set<double>("N", 1);
 
