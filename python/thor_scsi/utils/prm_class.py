@@ -230,6 +230,7 @@ class prm_class(bend_class):
             "L":   self._lat_prop.get_L_elem,
             "L_b": self._lat_prop.get_L_elem,
             "phi": self._lat_prop.get_phi_elem,
+            "h":   self._lat_prop.get_h_elem,
             "b_2": self._lat_prop.get_b_2_elem,
             "b_3": self._lat_prop.get_b_3_elem,
             "b_4": self._lat_prop.get_b_4_elem}
@@ -239,6 +240,7 @@ class prm_class(bend_class):
             "L":   self._lat_prop.set_L_fam,
             "L_b": self._lat_prop.set_L_bend_fam,
             "phi": self._lat_prop.set_phi_fam,
+            "h":   self._lat_prop.set_h_fam,
             "b_2": self._lat_prop.set_b_2_fam,
             "b_3": self._lat_prop.set_b_3_fam,
             "b_4": self._lat_prop.set_b_4_fam}
@@ -409,6 +411,7 @@ def prt_lat(
         "L":   prt_drift,
         "L_b": prt_dip,
         "phi": prt_dip,
+        "h": prt_dip,
         "b_2": prt_quad,
         "b_3": prt_sext,
         "b_4": prt_oct
