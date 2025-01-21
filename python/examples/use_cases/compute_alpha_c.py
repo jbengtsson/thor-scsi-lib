@@ -340,11 +340,11 @@ def H_long(E0, phi, delta, h_rf, V_rf, phi0, alpha_c):
 def compute_H_long(
         lat_prop, E0, alpha_c, n, phi_max, delta_max, U_0, neg_alpha_c):
     cav = lat_prop._lattice.find("cav", 0)
-    h_rf = cav.get_harmonic_number()
+    h_rf = cav.get_har_num()
     V_rf = cav.get_voltage()
     f_rf = cav.get_frequency()
 
-    phi0 = - abs(np.arcsin(U_0/V_rf))
+    phi0 = - 0*abs(np.arcsin(U_0/V_rf))
     if neg_alpha_c:
         phi0 += pi
 
