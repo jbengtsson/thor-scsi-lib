@@ -32,7 +32,7 @@ b_2_bend_max = 1.0
 b_2_max      = 10.0
 
 eps_x_des    = 49e-12
-nu_uc        = [0.35, 0.15]
+nu_uc        = [0.49, 0.24]
 
 
 @dataclass
@@ -300,7 +300,16 @@ def compute_linear_optics(lat_prop):
             print("\ncomp_per_sol: unstable")
             raise ValueError
         else:
-            _, _, _, nu = lat_prop.get_Twiss(len(lat_prop._lattice)-1)
+            _, _, beta, nu = lat_prop.get_Twiss(len(lat_prop._lattice)-1)
+
+        # Adjust RF phase for sign of alpha_c.
+        cav_loc = lat_prop._lattice.find("cav", 0)
+        if lat_prop._alpha_c >= 0e0:
+            cav_loc.set_phase(0e0)
+        else:
+            cav_loc.set_phase(180e0)
+            print("\nopt_sp:  alpha_c = {:10.3e} => phi_rf = 180 deg".
+                  format(lat_prop._alpha_c))
 
         # Compute radiation properties.
         stable, stable_rad = lat_prop.compute_radiation()
@@ -321,9 +330,9 @@ def compute_linear_optics(lat_prop):
             print("\nf_sp - compute_nu_xi: unstable")
             raise ValueError
     except ValueError:
-        return False, np.nan, np.nan
+        return False, np.nan, np.nan, np.nan
     else:
-        return True, nu, xi
+        return True, beta, nu, xi
 
 
 def compute_twoJ(A_max, beta_inj):
@@ -444,9 +453,23 @@ def prt_b_3(lat_prop, file_name, b_3_list):
     outf.close()
 
 
-def opt_uc \
-        (lat_prop, prm_list, weight, b1_list, phi_lat, rb_1, phi_b, eps_x_des,
-         nu_uc, Id_scl, b_3_list):
+def compute_Twiss(M):
+    alpha = np.zeros(2)
+    beta = np.zeros(2)
+    nu = np.zeros(2)
+    for k in range(2):
+        tr = np.trace(M[2*k:2*k+2, 2*k:2*k+2])
+        nu[k] = np.arccos(tr/2e0)/(2e0*np.pi)
+        if M[2*k, 2*k+1] < 0e0:
+            nu[k] = 1e0 - nu[k]
+        alpha[k] = (M[2*k, 2*k]-np.cos(2e0*np.pi*nu[k]))/np.sin(2e0*np.pi*nu[k])
+        beta[k] = M[2*k, 2*k+1]/np.sin(2e0*np.pi*nu[k])
+    return alpha, beta, nu
+
+
+def opt_uc(
+        lat_prop, prm_list, weight, sp_bend, rb_1, phi_b, eps_x_des, nu_uc,
+        Id_scl, b_3_list):
     """Use Case: optimise super period.
     """
     chi_2_min = 1e30
@@ -454,7 +477,7 @@ def opt_uc \
     n_iter    = 0
     file_name = "opt_uc.txt"
 
-    def prt_iter(prm, chi_2, nu, xi, h_im, K_re, h_rms, K_rms):
+    def prt_iter(prm, chi_2, beta, nu, xi, h_im, K_re, h_rms, K_rms):
         nonlocal n_iter
 
         def compute_phi_bend(lat_prop, bend_list):
@@ -464,8 +487,6 @@ def opt_uc \
             return phi
 
         phi = lat_prop.compute_phi_lat()
-        if b1_list is not None:
-            phi_b1 = compute_phi_bend(lat_prop, b1_list)
         phi_rb_1 = lat_prop.get_phi_elem(rb_1, 0)
         phi_bend = lat_prop.get_phi_elem(phi_b, 0)
 
@@ -474,12 +495,13 @@ def opt_uc \
               format(1e12*lat_prop._eps[ind.X], 1e12*eps_x_des))
         print("    nu_uc          =  [{:7.5f}, {:7.5f}] ([{:7.5f}, {:7.5f}])".
               format(nu[ind.X], nu[ind.Y], nu_uc[ind.X], nu_uc[ind.Y]))
+        print("    beta            = [{:5.3f}, {:5.3f}]".
+              format(beta[ind.X], beta[ind.Y]))
         print("    xi             =  [{:5.3f}, {:5.3f}]".
               format(xi[ind.X], xi[ind.Y]))
         print("\n    phi_sp         = {:8.5f}".format(phi))
         print("    C [m]          = {:8.5f}".format(lat_prop.compute_circ()))
-        print("\n    phi_b1         = {:8.5f}".format(phi_b1))
-        print("    phi_rb_1       = {:8.5f}".format(phi_rb_1))
+        print("\n    phi_rb_1       = {:8.5f}".format(phi_rb_1))
         print("    phi_bend       = {:8.5f}".format(phi_bend))
         prt_nl(h_rms, K_rms, h_im, K_re)
         lat_prop.prt_rad()
@@ -520,17 +542,17 @@ def opt_uc \
 
         return chi_2
 
-    def f_sp(prm):
+    def f_uc(prm):
         nonlocal chi_2_min, n_iter
 
         n_iter += 1
         prm_list.set_prm(prm)
-        if b1_list is not None:
-            phi_lat.set_phi_lat()
+        if sp_bend is not None:
+            sp_bend.set_phi_lat()
         stable = set_xi(lat_prop, 0e0, 0e0, b_3_list)
 
         if stable:
-            stable, nu, xi = compute_linear_optics(lat_prop)
+            stable, beta, nu, xi = compute_linear_optics(lat_prop)
 
         if stable:
             M = compute_map(lat_prop, gtpsa_prop.no)
@@ -547,7 +569,7 @@ def opt_uc \
 
             chi_2 = compute_chi_2(nu, xi, h_rms, K_rms)
             if chi_2 < chi_2_min:
-                prt_iter(prm, chi_2, nu, xi, h_im, K_re, h_rms, K_rms)
+                prt_iter(prm, chi_2, beta, nu, xi, h_im, K_re, h_rms, K_rms)
                 pc.prt_lat(lat_prop, "opt_uc.txt", prm_list)
                 prt_b_3(lat_prop, "opt_uc_b_3.txt", b_3_list)
                 chi_2_min = min(chi_2, chi_2_min)
@@ -567,17 +589,25 @@ def opt_uc \
     #   Nelder-Mead, Powell, CG, BFGS, Newton-CG, L-BFGS-B, TNC, COBYLA,
     #   SLSQP, trust-constr, dogleg, truct-ncg, trust-exact, trust-krylov.
 
-    # Powell ftol, xtol
-    # CG     gtol
-    minimum = opt.minimize(
-        f_sp,
-        prm,
-        method="CG",
-        # callback=prt_iter,
-        bounds = bounds,
-        # options={"ftol": f_tol, "xtol": x_tol, "maxiter": max_iter}
-        options={"gtol": g_tol, "maxiter": max_iter}
-    )
+    if not True:
+        minimum = opt.minimize(
+            f_uc,
+            prm,
+            method="Powell",
+            # callback=prt_iter,
+            bounds = bounds,
+            options={"ftol": f_tol, "xtol": x_tol, "maxiter": max_iter}
+        )
+    else:
+        minimum = opt.minimize(
+            f_uc,
+            prm,
+            method="CG",
+            # callback=prt_iter,
+            jac=None,
+            bounds = bounds,
+            options={"gtol": g_tol, "maxiter": max_iter}
+        )
 
     print("\n".join(minimum))
 
@@ -616,8 +646,8 @@ if not False:
 
 # Weights.
 weight = np.array([
-    1e20, # eps_x.
-    0e-2, # nu_uc_x.
+    1e17, # eps_x.
+    0e0, # nu_uc_x.
     0e0,  # nu_uc_y.
     0e-7, # xi.
     1e-5*1e8,  # h rms.
@@ -634,15 +664,17 @@ if True:
         ("r1_f1", "b_2"),
         ("dsim",  "b_2"),
         ("s3_f1", "b_2"),
-        ("s4_f1", "b_2"),
 
-        # ("d2_0",     "b_2"),
-        # ("d2_1",     "b_2"),
-        # ("d2_2",     "b_2"),
-        # ("d2_3",     "b_2"),
-        # ("d2_4",     "b_2"),
-        # ("d2_5",     "b_2"),
-    ]
+        ("dsim",  "phi"),
+        ("r1_f1", "phi")
+]
+
+    dprm_list = np.array([
+        1e-3, 1e-3, 1e-3,
+        1e-3, 1e-3
+    ])
+
+    sp_bend = pc.phi_lat_class(lat_prop, 2, "dsim")
 else:
     prms = [
         ("qf1",      "b_2"),
@@ -668,13 +700,10 @@ prm_list = pc.prm_class(lat_prop, prms, b_2_max)
 
 rb_1    = "r1_f1"
 phi_b   = "dsim"
-n_phi_b = 10
-# To maintain the total bend angle.
-phi_lat = pc.phi_lat_class(lat_prop, n_phi_b, phi_b)
 
 twoJ = compute_twoJ(A_max, beta_inj)
 Id_scl = compute_Id_scl(lat_prop, twoJ)
 
-opt_uc \
-    (lat_prop, prm_list, weight, d2_list, phi_lat, rb_1, phi_b, eps_x_des,
-     nu_uc, Id_scl, b_3_list)
+opt_uc(
+    lat_prop, prm_list, weight, sp_bend, rb_1, phi_b, eps_x_des, nu_uc, Id_scl,
+    b_3_list)
