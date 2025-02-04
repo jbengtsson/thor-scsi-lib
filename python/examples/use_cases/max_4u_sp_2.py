@@ -13,7 +13,7 @@ import numpy as np
 from scipy import optimize as opt
 
 from thor_scsi.utils import lattice_properties as lp, index_class as ind, \
-    linear_optics as lo, prm_class as pc, nonlin_dyn as nld_cl
+    linear_optics as lo, prm_class as pc, nonlin_dyn as nld_class
 from thor_scsi.utils.output import mat2txt, vec2txt
 
 import gtpsa
@@ -26,7 +26,7 @@ b_2_bend_max = 1.0
 b_2_max      = 10.0
 
 eps_x_des    = 49e-12
-alpha_c_des  = 5e-6
+alpha_c_des  = 5e-5
 nu_uc_des    = [0.4, 0.1]
 nu_sp_des    = [2.89, 0.91]
 beta_des     = [5.0, 3.0]
@@ -56,8 +56,8 @@ class opt_sp_class:
 
     def __init__(
             self, lat_prop, prm_list, dprm_list, uc_list, sp_list, weight,
-            d1_bend, d2_bend, rb, eps_x_des, nu_uc_des, nu_sp_des,
-            beta_des, dnu_des, nld):
+            d1_bend, d2_bend, rb, eps_x_des, nu_uc_des, nu_sp_des, beta_des,
+            dnu_des, nld):
 
         self._lat_prop       = lat_prop
         self._nld            = nld
@@ -150,13 +150,6 @@ class opt_sp_class:
         print("    phi_rb         = {:8.5f}".format(phi_rb))
 
         self._lat_prop.prt_rad()
-        print("\n  h_im_scl_rms = {:9.3e} ({:9.3e} <- {:9.3e})".
-              format(self._nld._h_im_scl_rms, self._h_im_scl_rms_1,
-                     self._h_im_scl_rms_0))
-        print("  K_re_scl_rms = {:9.3e} ({:9.3e} <- {:9.3e})".
-              format(self._nld._K_re_scl_rms, self._K_re_scl_rms_1,
-                     self._K_re_scl_rms_0))
-        self._nld.prt_nl(self._lat_prop)
 
         self._prm_list.prt_prm(prm)
 
@@ -248,16 +241,6 @@ class opt_sp_class:
         if prt:
             print("  dchi2(xi)           = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[15]*self._nld._h_im_scl_rms**2
-        chi_2 += dchi_2
-        if prt:
-            print("  dchi2(h_im_scl_rms) = {:9.3e}".format(dchi_2))
-
-        dchi_2 = weight[16]*self._nld._K_re_scl_rms**2
-        chi_2 += dchi_2
-        if prt:
-            print("  dchi2(K_re_scl_rms) = {:9.3e}".format(dchi_2))
-
         return chi_2
 
     def opt_sp(self):
@@ -283,6 +266,14 @@ class opt_sp_class:
                 if not stable or not stable_rad:
                     print("\ncompute_radiation: unstable")
                     raise ValueError
+ 
+                # Compute linear chromaticity.
+                self._nld.compute_map(lat_prop, 2)
+                stable, _, self._xi = \
+                    lo.compute_nu_xi(lat_prop._desc, lat_prop._no, self._nld._M)
+                if not stable:
+                    print("\ncompute_nu_xi: unstable")
+                    raise ValueError
             except ValueError:
                 chi_2 = 1e30
                 if not False:
@@ -303,13 +294,6 @@ class opt_sp_class:
                     - self._lat_prop.get_Twiss(sp_list[1])[3][:] \
                     + self._lat_prop.get_Twiss(sp_list[0])[3][:]
 
-                self._nld.compute_map(self._lat_prop, self._lat_prop._no)
-                self._nld.compute_nl(self._lat_prop)
-                self._xi =  \
-                    np.array(
-                        [-self._nld._K_re.get([1, 1, 0, 0, 1, 0, 0])/np.pi,
-                         -self._nld._K_re.get([0, 0, 1, 1, 1, 0, 0])/np.pi])
-
                 chi_2 = self.compute_chi_2()
 
                 if chi_2 < self._chi_2_min:
@@ -320,8 +304,6 @@ class opt_sp_class:
                         self._lat_prop, self._file_name, self._prm_list,
                         d1_bend=self._d1_bend)
                     self._chi_2_min = min(chi_2, self._chi_2_min)
-                    self._h_im_scl_rms_1 = self._nld._h_im_scl_rms
-                    self._K_re_scl_rms_1 = self._nld._K_re_scl_rms
                 else:
                     if False:
                         print("\n{:3d} dchi_2 = {:9.3e}".
@@ -331,14 +313,9 @@ class opt_sp_class:
             return chi_2
 
         max_iter = 1000
-        f_tol    = 1e-10
-        g_tol    = 1e-7
+        f_tol    = 1e-6
         x_tol    = 1e-7
-
-        self._nld.compute_map(self._lat_prop, self._lat_prop._no)
-        self._nld.compute_nl(self._lat_prop)
-        self._h_im_scl_rms_1 = self._h_im_scl_rms_0 = self._nld._h_im_scl_rms
-        self._K_re_scl_rms_1 = self._K_re_scl_rms_0 = self._nld._K_re_scl_rms
+        g_tol    = 1e-6
 
         prm, bounds = self._prm_list.get_prm()
         f_sp(prm)
@@ -347,7 +324,7 @@ class opt_sp_class:
         #   Nelder-Mead, Powell, CG, BFGS, Newton-CG, L-BFGS-B, TNC, COBYLA,
         #   SLSQP, trust-constr, dogleg, truct-ncg, trust-exact, trust-krylov.
 
-        if True:
+        if not True:
             # Powell ftol, xtol
             minimum = opt.minimize(
                 f_sp,
@@ -373,7 +350,7 @@ class opt_sp_class:
 
 
 # TPSA max order.
-gtpsa_prop.no = 6
+gtpsa_prop.no = 2
 
 cod_eps = 1e-10
 E_0     = 3.0e9
@@ -435,92 +412,78 @@ print("super period first sextupole {:5s} loc = {:d}".
 print("super period last sextupole  {:5s} loc = {:d}".
       format(lat_prop._lattice[sp_list[1]].name, sp_list[1]))
 
-d2_list = ["d2_f1_sl_d0a", "d2_f1_sl_d0b", "d2_f1_sl_d0c", "d2_f1_sl_df1",
-           "d2_f1_sl_df2", "d2_f1_sl_df3", "d2_f1_sl_df4", "d2_f1_sl_df5"]
-
 d1_list = [
-    "d1_f1_sl_ds6", "d1_f1_sl_ds5", "d1_f1_sl_ds4", "d1_f1_sl_ds3",
-    "d1_f1_sl_ds2", "d1_f1_sl_ds1", "d1_f1_sl_ds0",
-    "d1_f1_sl_dm1", "d1_f1_sl_dm2", "d1_f1_sl_dm3", "d1_f1_sl_dm4",
-    "d1_f1_sl_dm5"
+    "d1_h2_sl_dm1", "d1_h2_sl_dm2", "d1_h2_sl_dm3", "d1_h2_sl_dm4",
+    "d1_h2_sl_dm5",
+    "d1_h2_sl_ds0", "d1_h2_sl_ds1", "d1_h2_sl_ds2", "d1_h2_sl_ds3",
+    "d1_h2_sl_ds4", "d1_h2_sl_ds5", "d1_h2_sl_ds6",
 ]
+d2_list = ["d2_h2_sl_d0a", "d2_h2_sl_d0b", "d2_h2_sl_d0c", "d2_h2_sl_df1",
+           "d2_h2_sl_df2", "d2_h2_sl_df3", "d2_h2_sl_df4", "d2_h2_sl_df5"]
 
 d1_bend = pc.bend_class(lat_prop, d1_list, phi_max, b_2_max)
 d2_bend = pc.bend_class(lat_prop, d2_list, phi_max, b_2_max)
 
-b_3_list = ["s3_f1", "s4_f1"]
-nld = nld_cl.nonlin_dyn_class(lat_prop, A_max, beta_inj, delta_max, b_3_list)
+b_3_list = ["s3_h2", "s4_h2"]
 
-if False:
-    nld.zero_mult(lat_prop, 3)
-if False:
-    nld.zero_mult(lat_prop, 4)
-if False:
-    nld.set_xi(lat_prop, 0e0, 0e0)
+nld = nld_class.nonlin_dyn_class(lat_prop, A_max, beta_inj, delta_max, b_3_list)
+nld.zero_mult(lat_prop, 3)
+nld.zero_mult(lat_prop, 4)
 
 step = 1;
 
 if step == 1:
     weight = np.array([
-        1e15,  # eps_x.
-        1e5,   # alpha_c.
+        1e16,  # eps_x.
+        1e6,   # alpha_c.
         1e-15, # U_0.
         1e2,   # etap_x_uc.
         1e-2,  # alpha_uc.
-        1e0,   # nu_uc_x.
-        1e0,   # nu_uc_y.
+        1e1,   # nu_uc_x.
+        1e1,   # nu_uc_y.
         1e2,   # eta_x.
-        1e-6,  # nu_sp_x.
-        1e-6,  # nu_sp_y.
-        1e-4,  # beta_x.
-        0e-5,  # beta_y.
+        1e-7,  # nu_sp_x.
+        1e-7,  # nu_sp_y.
+        1e-6,  # beta_x.
+        1e-6,  # beta_y.
         0e-3,  # dnu_x.
         0e-3,  # dnu_y.
-        1e-5,  # xi.
-        0e6,   # Im{h} rms.
-        1e6    # K rms.
+        1e-6   # xi.
     ])
 
     prms = [
-        ("q0_f1", "phi"),
-        ("q0_f1", "b_2"),
-
-        ("q1_f1", "b_2"),
-        ("q2_f1", "b_2"),
-        ("q3_f1", "b_2"),
-        ("r1_f1", "b_2"),
+        ("q1_h2", "b_2"),
+        ("q2_h2", "b_2"),
+        ("r1_h2", "b_2"),
+        ("r2_h2", "b_2"),
 
         ("b_2_bend", d2_bend),
         ("b_2_bend", d1_bend),
 
-        ("d1_f1_sl_ds6", "phi"),
-        ("d1_f1_sl_ds5", "phi"),
-        ("d1_f1_sl_ds4", "phi"),
-        ("d1_f1_sl_ds3", "phi"),
-        ("d1_f1_sl_ds2", "phi"),
-        ("d1_f1_sl_ds1", "phi"),
-        ("d1_f1_sl_ds0", "phi"),
-        ("d1_f1_sl_dm1", "phi"),
-        ("d1_f1_sl_dm2", "phi"),
-        ("d1_f1_sl_dm3", "phi"),
-        ("d1_f1_sl_dm4", "phi"),
-        ("d1_f1_sl_dm5", "phi"),
+        ("d1_h2_sl_ds6", "phi"),
+        ("d1_h2_sl_ds5", "phi"),
+        ("d1_h2_sl_ds4", "phi"),
+        ("d1_h2_sl_ds3", "phi"),
+        ("d1_h2_sl_ds2", "phi"),
+        ("d1_h2_sl_ds1", "phi"),
+        ("d1_h2_sl_ds0", "phi"),
+        ("d1_h2_sl_dm1", "phi"),
+        ("d1_h2_sl_dm2", "phi"),
+        ("d1_h2_sl_dm3", "phi"),
+        ("d1_h2_sl_dm4", "phi"),
+        ("d1_h2_sl_dm5", "phi"),
 
-        ("d2_f1_sl_d0a", "phi"),
-        ("d2_f1_sl_d0b", "phi"),
-        ("d2_f1_sl_d0c", "phi"),
-        ("d2_f1_sl_df1", "phi"),
-        ("d2_f1_sl_df2", "phi"),
-        ("d2_f1_sl_df3", "phi"),
-        ("d2_f1_sl_df4", "phi"),
-        ("d2_f1_sl_df5", "phi"),
-
-        ("s3_f1",    "b_3"),
-        ("s4_f1",    "b_3")
+        ("d2_h2_sl_d0a", "phi"),
+        ("d2_h2_sl_d0b", "phi"),
+        ("d2_h2_sl_d0c", "phi"),
+        ("d2_h2_sl_df1", "phi"),
+        ("d2_h2_sl_df2", "phi"),
+        ("d2_h2_sl_df3", "phi"),
+        ("d2_h2_sl_df4", "phi"),
+        ("d2_h2_sl_df5", "phi")
     ]
 
     dprm_list = np.array([
-        1e-3, 1e-3,
         1e-3, 1e-3, 1e-3, 1e-3,
         1e-3, 1e-3,
         1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3,
@@ -543,9 +506,7 @@ elif step == 2:
         0e-6,  # beta_y.
         0e-2,  # dnu_x.
         0e-2,  # dnu_y.
-        1e-1,  # xi.
-        0e6,   # Im{h} rms.
-        1e6    # K rms.
+        1e-1   # xi.
     ])
 
     prms = [
@@ -595,9 +556,7 @@ elif step == 3:
         0e-6,  # beta_y.
         0e-2,  # dnu_x.
         0e-2,  # dnu_y.
-        0e-2,  # xi.
-        0e6,   # Im{h} rms.
-        1e8    # K rms.
+        0e-2   # xi.
     ])
 
     prms = [
@@ -647,7 +606,7 @@ elif step == 3:
 
 prm_list = pc.prm_class(lat_prop, prms, b_2_max)
 
-rb = "r1_f1"
+rb = "r1_h2"
 
 opt_sp = opt_sp_class(
     lat_prop, prm_list, dprm_list, uc_list, sp_list, weight, d1_bend, d2_bend,
