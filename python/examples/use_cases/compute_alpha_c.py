@@ -184,7 +184,7 @@ def plot_H_long(phi, delta, H, file_name, title):
     gr_1.set_title(title)
     gr_1.set_xlabel(r"phi [$^\circ$]")
     gr_1.set_ylabel(r"$\delta$ [%]")
-    gr_1.contour(phi, 1e2*delta, H, 30)
+    gr_1.contour(phi, 1e2*delta, H, 50)
 
     fig.tight_layout()
 
@@ -445,8 +445,11 @@ if True:
     plot_D_alpha_1(lat_prop, s, disp, "D_alpha_1.png")
     plot_D_alpha_2(lat_prop, s, disp, "D_alpha_2.png")
 
+delta_max = 15e-2
+n_points  = 50
 phi, delta, H = \
-    compute_H_long(lat_prop, E_0, alpha_c, 10, 180e0, 20e-2, U_0, False)
+    compute_H_long(
+        lat_prop, E_0, alpha_c, n_points, 180e0, delta_max, U_0, False)
 
 if not True:
     print_H_long("H_long.dat", phi, delta, H)
