@@ -64,17 +64,15 @@ def compute_optics(lat_prop):
         assert False
 
 
-def get_lat(home_dir, lat_name, E_0):
-    file_name = os.path.join(home_dir, lat_name+".lat")
-
+def get_lat(file_name, E_0):
     lat_prop = lp.lattice_properties_class(gtpsa_prop, file_name, E_0, cod_eps)
-    lat_prop.prt_lat(lat_name+"_lat.txt")
+    lat_prop.prt_lat("lat_prop_lat.txt")
 
     print("\n{:s}".format(lat_name))
     print("Circumference [m]      = {:7.5f}".format(lat_prop.compute_circ()))
     print("Total bend angle [deg] = {:7.5f}".format(lat_prop.compute_phi_lat()))
 
-    lat_prop.prt_lat(lat_name+"_lat.txt")
+    lat_prop.prt_lat("compute_orbit_lat.txt")
 
     # Computes element s location: lat_prop._Twiss.s[].
     compute_optics(lat_prop)
@@ -110,10 +108,10 @@ def prt_bend(lat_ref, lat_prop):
     phi_tot = 0e0
     dphi_tot = 0e0
     b_1xL_sum = 0e0
-    print("#  k      s        name                  L              phi"
-          "          dphi    b_1xL  b_1xL_sum\n"
-          "#        [m]                            [m]            [deg]"
-          "        [mrad]  [mrad]   [mrad]", file=file)
+    print("#  k      s                name                        L"
+          "              phi          dphi    b_1xL  b_1xL_sum\n"
+          "#        [m]                                          [m]"
+          "            [deg]        [mrad]  [mrad]   [mrad]", file=file)
     for k in range(len(lat_ref._lattice)):
         el_ref = lat_ref._lattice[k]
         if (type(el_ref) == ts.Bending) or (type(el_ref) == ts.Quadrupole):
@@ -125,6 +123,7 @@ def prt_bend(lat_ref, lat_prop):
 
             el = lat_prop._lattice[k]
             fam_name = el.name
+            print(f"{fam_name_ref:15s} {fam_name:15s}")
             L = el.get_length()
             phi = get_phi(el)
             dphi = phi - phi_ref
@@ -135,7 +134,7 @@ def prt_bend(lat_ref, lat_prop):
             b_1xL_sum += b_1xL
             el.get_multipoles().set_multipole(1, b_1xL/L)
 
-            print("  {:3d}  {:6.3f}  {:8s} ({:8s})  {:5.3f} ({:5.3f})" \
+            print("  {:3d}  {:6.3f}  {:15s} ({:15s})  {:5.3f} ({:5.3f})" \
                   "  {:6.3f} ({:6.3f})  {:6.3f}  {:6.3f}   {:6.3f}".
                   format(k, s, fam_name_ref, fam_name, L_ref, L,
                          phi_ref, phi, 1e3*dphi*np.pi/180e0, 1e3*b_1xL,
@@ -174,15 +173,15 @@ def prt_orbit(lat_prop):
     M_1 = gtpsa.ss_vect_tpsa(lat_prop._desc, 1)
     M_1.set_zero()
     M_1.px += dp_x
-    print("# k               s    type     x       p_x      dp_x\n"
-          "#                [m]           [mm]    [mrad]   [mrad]",
+    print("# k                      s    type     x       p_x      dp_x\n"
+          "#                       [m]           [mm]    [mrad]   [mrad]",
           file=file)
     for k in range(len(lat_prop._lattice)):
         M_0 = _copy.copy(M_1)
         lat_prop._lattice.propagate(lat_prop._model_state, M_1, k, 1)
         s = lat_ref._Twiss.s[k]
         el = lat_prop._lattice[k]
-        print("{:3d}  {:8s}  {:6.3f}  {:4.1f}  {:7.3f}  {:7.3f}  {:7.3f}".
+        print("{:3d}  {:15s}  {:6.3f}  {:4.1f}  {:7.3f}  {:7.3f}  {:7.3f}".
               format(
                   k, el.name, s, lat_prop._type_code[k],
                   1e3*M_1.cst().x, 1e3*M_1.cst().px,
@@ -201,12 +200,14 @@ beta_inj  = np.array([3.0, 3.0])
 
 home_dir = os.path.join(
     os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "MAX_IV")
-home_dir_1 = os.path.join(home_dir, "max_iv")
-home_dir_2 = os.path.join(home_dir, "max_4u")
-# lat_ref = get_lat(home_dir_1, "max_iv_baseline", E_0)
-# lat_prop = get_lat(home_dir_2, "max_4u_sp_jb_5", E_0)
-lat_ref = get_lat(home_dir_1, "max_iv_baseline_3", E_0)
-lat_prop = get_lat(home_dir_2, "m4U_240831_f01_08_06_01_lattice_7", E_0)
+
+lat_name = sys.argv[1]
+
+file_name_ref = os.path.join(home_dir, "max_iv/max_iv_baseline_3.lat")
+file_name = os.path.join(home_dir, lat_name+".lat")
+
+lat_ref = get_lat(file_name_ref, E_0)
+lat_prop = get_lat(file_name, E_0)
 
 prt_bend(lat_ref, lat_prop)
 
