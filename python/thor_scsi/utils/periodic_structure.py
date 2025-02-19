@@ -66,8 +66,9 @@ class periodic_structure_class:
 
         self._circ = self.compute_circ()
         self._phi = self.compute_phi_lat()
-        print(f"\nTotal bend angle [deg] = {self._phi:7.5f}")
-        print(f"Circumference [m]      = {self._circ:7.5f}")
+        print(f"\n{file_name:s}")
+        print(f"  Total bend angle [deg] = {self._phi:7.5f}")
+        print(f"  Circumference [m]      = {self._circ:7.5f}")
 
     # Public.
 
