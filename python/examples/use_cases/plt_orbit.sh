@@ -50,3 +50,5 @@ plot file_name.".txt" using 3:4 axis x1y2 notitle with fsteps lt 1 lw 1 \
      lc rgb "black", \
      file_name.".txt" using 3:6 title "x" with lines ls 2;
 if (!ps) pause mouse "click on graph to cont.\n";
+
+EOP
