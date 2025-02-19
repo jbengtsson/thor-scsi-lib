@@ -13,17 +13,16 @@ import sys
 from dataclasses import dataclass
 from typing import ClassVar
 
-import copy as _copy
-
 import math
 import numpy as np
+
+from scipy.interpolate import CubicSpline
 
 import gtpsa
 
 import thor_scsi.lib as ts
 
-from thor_scsi.utils import lattice_properties as lp, nonlin_dyn as nld_cl, \
-    closed_orbit as co, index_class as ind
+from thor_scsi.utils import lattice_properties as lp, index_class as ind
 
 
 ind = ind.index_class()
@@ -47,175 +46,110 @@ class gtpsa_prop:
     desc : ClassVar[gtpsa.desc]
 
 
-def compute_optics(lat_prop):
-    try:
-        # Compute Twiss parameters along lattice.
-        if not lat_prop.comp_per_sol():
-            print("\ncomp_per_sol: unstable")
-            raise ValueError
-
-        # Compute radiation properties.
-        stable, stable_rad = lat_prop.compute_radiation()
-        print(stable, stable_rad)
-        if not stable:
-            print("\ncompute_radiation: unstable")
-            raise ValueError
-    except ValueError:
-        assert False
-
-
-def get_lat(file_name, E_0):
-    lat_prop = lp.lattice_properties_class(gtpsa_prop, file_name, E_0, cod_eps)
-    lat_prop.prt_lat("lat_prop_lat.txt")
-
-    print("\n{:s}".format(lat_name))
-    print("Circumference [m]      = {:7.5f}".format(lat_prop.compute_circ()))
-    print("Total bend angle [deg] = {:7.5f}".format(lat_prop.compute_phi_lat()))
-
-    lat_prop.prt_lat("compute_orbit_lat.txt")
-
-    # Computes element s location: lat_prop._Twiss.s[].
-    compute_optics(lat_prop)
-    lat_prop._model_state.radiation = False
-    lat_prop._model_state.Cavity_on = False
-
-    if False:
-        lat_prop.prt_lat_param()
-        lat_prop.prt_rad()
-        lat_prop.prt_M()
-        lat_prop.prt_M_rad()
-
-    if False:
-        lat_prop.plt_Twiss("compute_orbit_Twiss.png", not False)
-
+def get_lat(lat_file_name, file_name, E_0):
+    lat_prop = lp.lattice_properties_class(
+        gtpsa_prop, lat_file_name, E_0, cod_eps)
+    lat_prop.prt_lat(file_name)
     return lat_prop
 
 
 def get_phi(el):
-    L = el.get_length()
-    if el.get_curvature() is not None:
-        phi = math.degrees(L*el.get_curvature())
+    if (type(el) == ts.Bending) or (type(el) == ts.Quadrupole):
+        if el.get_curvature() is not None:
+            L = el.get_length()
+            phi = math.degrees(L*el.get_curvature())
+        else:
+            phi = 0e0
     else:
         phi = 0e0
     return phi
 
 
-def prt_bend(lat_ref, lat_prop):
-    file_name = "prt_bend.txt"
-    file = open(file_name, "w")
-
-    phi_tot_ref = 0e0
-    phi_tot = 0e0
-    dphi_tot = 0e0
-    b_1xL_sum = 0e0
-    print("#  k      s                name                        L"
-          "              phi          dphi    b_1xL  b_1xL_sum\n"
-          "#        [m]                                          [m]"
-          "            [deg]        [mrad]  [mrad]   [mrad]", file=file)
-    for k in range(len(lat_ref._lattice)):
-        el_ref = lat_ref._lattice[k]
-        if (type(el_ref) == ts.Bending) or (type(el_ref) == ts.Quadrupole):
-            fam_name_ref = el_ref.name
-            s = lat_ref._Twiss.s[k]
-            L_ref = el_ref.get_length()
-            phi_ref = get_phi(el_ref)
-            phi_tot_ref += phi_ref
-
-            el = lat_prop._lattice[k]
-            fam_name = el.name
-            print(f"{fam_name_ref:15s} {fam_name:15s}")
-            L = el.get_length()
-            phi = get_phi(el)
-            dphi = phi - phi_ref
-            phi_tot += phi
-            dphi_tot += dphi
-
-            b_1xL = math.radians(dphi)
-            b_1xL_sum += b_1xL
-            el.get_multipoles().set_multipole(1, b_1xL/L)
-
-            print("  {:3d}  {:6.3f}  {:15s} ({:15s})  {:5.3f} ({:5.3f})" \
-                  "  {:6.3f} ({:6.3f})  {:6.3f}  {:6.3f}   {:6.3f}".
-                  format(k, s, fam_name_ref, fam_name, L_ref, L,
-                         phi_ref, phi, 1e3*dphi*np.pi/180e0, 1e3*b_1xL,
-                         1e3*b_1xL_sum), file=file)
-    print("\n  phi_tot = {:8.5f} ({:8.5f}) dphi = {:9.3e}".
-          format(phi_tot_ref, phi_tot, dphi_tot), file=file)
-    file.close()
-
-
-def compute_dx(lat_prop):
-    eps = 1e-10
-    M_0 = gtpsa.ss_vect_tpsa(lat_prop._desc, 1)
-    M_1 = gtpsa.ss_vect_tpsa(lat_prop._desc, 1)
+def compute_layout(lat_prop):
+    s_buf = []
+    X_buf = []
+    Y_buf = []
+    p_x_buf = []
+    s = 0e0
+    s_ref = s
+    X = 0e0
+    Y = 0e0
     p_x = 0e0
-    print("\ncompute_dx:")
-    while True:
-        M_0.set_zero()
-        M_0.px += p_x
-        M_1 = _copy.copy(M_0)
-        lat_prop._lattice.propagate(lat_prop._model_state, M_1)
-        dp_x = (M_1+M_0).cst().px/2e0
-        p_x -= dp_x
-        print("  p_x = {:10.3e}".format(p_x))
-        if abs(dp_x) < eps:
-            break
-    return p_x
+    s_buf.append(s)
+    X_buf.append(X)
+    Y_buf.append(Y)
+    p_x_buf.append(p_x)
+    for k, elem in enumerate(lat_prop._lattice):
+        elem = lat_prop._lattice[k]
+        L = elem.get_length()
+        phi = math.radians(get_phi(elem))
+        if phi == 0e0:
+            X += L*np.cos(p_x)
+            Y += L*np.sin(p_x)
+        else:
+            rho = L/phi
+            X += rho*(np.sin(p_x+phi)-np.sin(p_x))
+            Y += rho*(np.cos(p_x)-np.cos(p_x+phi))
+        s += L
+        p_x += phi
+        # Cubic spline fit requires strictly monotonic series.
+        if s > s_ref:
+            s_buf.append(s)
+            X_buf.append(X)
+            Y_buf.append(Y)
+            p_x_buf.append(p_x)
+            s_ref = s
+    s_buf = np.array(s_buf)
+    X_buf = np.array(X_buf)
+    Y_buf = np.array(Y_buf)
+    p_x_buf = np.array(p_x_buf)
+    X_cs = CubicSpline(s_buf, X_buf, bc_type="natural")
+    Y_cs = CubicSpline(s_buf, Y_buf, bc_type="natural")
+    return s_buf, X_cs, Y_cs, p_x_buf
 
 
-def prt_orbit(lat_prop):
-    file_name = "prt_orbit.txt"
+def prt_layout(file_name, s, X, Y, p_x):
     file = open(file_name, "w")
 
-    dp_x = compute_dx(lat_prop)
+    print("# k      s            X          Y         p_x\n"
+          "#                    [m]        [m]       [rad]", file=file)
+    for k in range(len(s)):
+        print(f"{k:4d}  {s[k]:9.5f}  {X(s[k]):9.5f}  {Y(s[k]):9.5f}"
+              f"  {p_x[k]:9.5f}", file=file)
 
-    M_0 = gtpsa.ss_vect_tpsa(lat_prop._desc, 1)
-    M_1 = gtpsa.ss_vect_tpsa(lat_prop._desc, 1)
-    M_1.set_zero()
-    M_1.px += dp_x
-    print("# k                      s    type     x       p_x      dp_x\n"
-          "#                       [m]           [mm]    [mrad]   [mrad]",
-          file=file)
-    for k in range(len(lat_prop._lattice)):
-        M_0 = _copy.copy(M_1)
-        lat_prop._lattice.propagate(lat_prop._model_state, M_1, k, 1)
-        s = lat_ref._Twiss.s[k]
-        el = lat_prop._lattice[k]
-        print("{:3d}  {:15s}  {:6.3f}  {:4.1f}  {:7.3f}  {:7.3f}  {:7.3f}".
-              format(
-                  k, el.name, s, lat_prop._type_code[k],
-                  1e3*M_1.cst().x, 1e3*M_1.cst().px,
-                  1e3*(M_1-M_0).cst().px), file=file)
+
+def prt_layout_diff(s_ref, X_ref, Y_ref, p_x_ref, X, Y):
+    file_name = "layout_diff.txt"
+    file = open(file_name, "w")
+
+    print("# k      s            DX            DY           diff\n"
+          "#                     [m]           [m]           [m]", file=file)
+    for k in range(len(s_ref)):
+        Dx = X(s_ref[k]) - X_ref(s_ref[k])
+        Dy = Y(s_ref[k]) - Y_ref(s_ref[k])
+        diff = np.sqrt((Dx*np.sin(p_x[k]))**2+(Dy*np.cos(p_x[k]))**2)
+        print(f"{k:4d}  {s_ref[k]:9.5f}  {Dx:12.5e}  {Dy:12.5e}  {diff:12.5e}",
+              file=file)
 
 
 # TPSA max order.
-gtpsa_prop.no = 2
+gtpsa_prop.no = 1
 
 cod_eps = 1e-15
 E_0     = 3.0e9
 
-A_max     = np.array([6e-3, 3e-3])
-delta_max = 3e-2
-beta_inj  = np.array([3.0, 3.0])
-
 home_dir = os.path.join(
     os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "MAX_IV")
 
-lat_name = sys.argv[1]
+file_name_ref = os.path.join(home_dir, "max_iv", "max_iv_baseline_2.lat")
+file_name = os.path.join(home_dir, sys.argv[1]+".lat")
 
-file_name_ref = os.path.join(home_dir, "max_iv/max_iv_baseline_3.lat")
-file_name = os.path.join(home_dir, lat_name+".lat")
+lat_ref = get_lat(file_name_ref, "lattice_ref_lat.txt", E_0)
+s_ref, X_ref, Y_ref, p_x_ref = compute_layout(lat_ref)
+prt_layout("lattice_ref_layout.txt", s_ref, X_ref, Y_ref, p_x_ref)
 
-lat_ref = get_lat(file_name_ref, E_0)
-lat_prop = get_lat(file_name, E_0)
+lat_prop = get_lat(file_name, "lattice_lat.txt", E_0)
+s, X, Y, p_x = compute_layout(lat_prop)
+prt_layout("lattice_layout.txt", s, X, Y, p_x)
 
-prt_bend(lat_ref, lat_prop)
-
-b_n_list = [ "s1_f1", "s2_f1", "s3_f1", "s4_f1", "o1_f1", "o2_f1", "o3_f1"]
-nld = nld_cl.nonlin_dyn_class(lat_prop, A_max, beta_inj, delta_max, b_n_list)
-if True:
-    nld.zero_mult(lat_prop, 2)
-nld.zero_mult(lat_prop, 3)
-nld.zero_mult(lat_prop, 4)
-
-prt_orbit(lat_prop)
+prt_layout_diff(s_ref, X_ref, Y_ref, p_x_ref, X, Y)
