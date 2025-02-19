@@ -561,7 +561,7 @@ def compute_A(
         desc: gtpsa.desc):
     """Compute A from Twiss parameters.
     """
-    A_mat = np.zeros((6, 6), dtype=float)
+    A_mat = np.zeros((7, 7), dtype=float)
     A = gtpsa.ss_vect_tpsa(desc, 1)
     for k in range(2):
         A_mat[2*k, 2*k]   = np.sqrt(beta[k])
