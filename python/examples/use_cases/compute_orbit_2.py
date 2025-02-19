@@ -108,6 +108,13 @@ def compute_layout(lat_prop):
     return s_buf, X_cs, Y_cs, p_x_buf
 
 
+def compute_orbit(s_ref, X_ref, Y_ref, p_x_ref, X, Y, k):
+    Dx = X(s_ref[k]) - X_ref(s_ref[k])
+    Dy = Y(s_ref[k]) - Y_ref(s_ref[k])
+    dx = np.sqrt((Dx*np.sin(p_x_ref[k]))**2+(Dy*np.cos(p_x_ref[k]))**2)
+    return Dx, Dy, dx
+
+
 def prt_layout(file_name, s, X, Y, p_x):
     file = open(file_name, "w")
 
@@ -118,17 +125,15 @@ def prt_layout(file_name, s, X, Y, p_x):
               f"  {p_x[k]:9.5f}", file=file)
 
 
-def prt_layout_diff(s_ref, X_ref, Y_ref, p_x_ref, X, Y):
-    file_name = "layout_diff.txt"
+def prt_layout_dx(s_ref, X_ref, Y_ref, p_x_ref, X, Y):
+    file_name = "layout_dx.txt"
     file = open(file_name, "w")
 
-    print("# k      s            DX            DY           diff\n"
+    print("# k      s            DX            DY            dx\n"
           "#                     [m]           [m]           [m]", file=file)
     for k in range(len(s_ref)):
-        Dx = X(s_ref[k]) - X_ref(s_ref[k])
-        Dy = Y(s_ref[k]) - Y_ref(s_ref[k])
-        diff = np.sqrt((Dx*np.sin(p_x[k]))**2+(Dy*np.cos(p_x[k]))**2)
-        print(f"{k:4d}  {s_ref[k]:9.5f}  {Dx:12.5e}  {Dy:12.5e}  {diff:12.5e}",
+        Dx, Dy, dx = compute_orbit(s_ref, X_ref, Y_ref, p_x_ref, X, Y, k)
+        print(f"{k:4d}  {s_ref[k]:9.5f}  {Dx:12.5e}  {Dy:12.5e}  {dx:12.5e}",
               file=file)
 
 
@@ -152,4 +157,4 @@ lat_prop = get_lat(file_name, "lattice_lat.txt", E_0)
 s, X, Y, p_x = compute_layout(lat_prop)
 prt_layout("lattice_layout.txt", s, X, Y, p_x)
 
-prt_layout_diff(s_ref, X_ref, Y_ref, p_x_ref, X, Y)
+prt_layout_dx(s_ref, X_ref, Y_ref, p_x_ref, X, Y)
