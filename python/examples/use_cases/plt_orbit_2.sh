@@ -5,7 +5,7 @@ prm1=${1-0}
 gnuplot << EOP
 
 ps          = $prm1
-file_name = "layout_dx"
+file_name = "orbit"
 
 f_s = 24
 l_w = 2

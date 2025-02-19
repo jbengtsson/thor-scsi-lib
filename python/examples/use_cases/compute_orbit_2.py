@@ -125,8 +125,8 @@ def prt_layout(file_name, s, X, Y, p_x):
               f"  {p_x[k]:9.5f}", file=file)
 
 
-def prt_layout_dx(s_ref, X_ref, Y_ref, p_x_ref, X, Y):
-    file_name = "layout_dx.txt"
+def prt_orbit(s_ref, X_ref, Y_ref, p_x_ref, X, Y):
+    file_name = "orbit.txt"
     file = open(file_name, "w")
 
     print("# k      s            DX            DY            dx\n"
@@ -157,4 +157,4 @@ lat_prop = get_lat(file_name, "lattice_lat.txt", E_0)
 s, X, Y, p_x = compute_layout(lat_prop)
 prt_layout("lattice_layout.txt", s, X, Y, p_x)
 
-prt_layout_dx(s_ref, X_ref, Y_ref, p_x_ref, X, Y)
+prt_orbit(s_ref, X_ref, Y_ref, p_x_ref, X, Y)
