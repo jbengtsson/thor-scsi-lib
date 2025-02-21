@@ -27,7 +27,7 @@ X_, Y_, Z_ = [
 ]
 
 
-def compute_A(
+def compute_A_mat(
         eta: np.ndarray, alpha: np.ndarray, beta: np.ndarray) -> np.ndarray:
     r"""Compute twiss diagonalisation
 
@@ -101,7 +101,7 @@ def compute_dnu(n_dof, A):
     return a
 
 
-def compute_A_CS(n_dof, A):
+def compute_A_CS_mat(n_dof, A):
     """compute Courant Snyder form of A
 
     Rotate A to zero a12 (or equivalent for the other planes)
@@ -235,5 +235,6 @@ def compute_Twiss_M(M):
 
     return [eta, alpha, beta, nu, stable]
 
-__all__ = ["compute_A", "compute_dnu", "compute_A_CS", "compute_Twiss_A",
-           "compute_Twiss_A_A_tp", "compute_dispersion", "compute_Twiss_M"]
+__all__ = ["compute_A_mat", "compute_dnu", "compute_A_CS_mat",
+           "compute_Twiss_A_mat", "compute_Twiss_A_A_tp", "compute_dispersion",
+           "compute_Twiss_M"]

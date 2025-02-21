@@ -3,7 +3,7 @@
 
 import thor_scsi.lib as tslib
 # from .phase_space_vector import ss_vect_tps2ps_jac, array2ss_vect_tps
-from .courant_snyder import compute_A_CS
+from .courant_snyder import compute_A_CS_mat, compute_A_mat
 from .extract_info import accelerator_info
 from .accelerator import instrument_with_standard_observers
 from .phase_space_vector import omega_block_matrix, map2numpy
@@ -386,7 +386,7 @@ def compute_M_diag(
         logger.debug("\neta:\n" + vec2txt(eta))
 
         [A, A_inv, u1] = compute_A_from_eigenvec(n_dof, eta, u_ord)
-        A, _ = compute_A_CS(2, A)
+        A, _ = compute_A_CS_mat(2, A)
 
         logger.debug(
             "\nu1:\n"
@@ -416,7 +416,7 @@ def compute_M_diag(
                     np.log(np.sqrt(np.absolute(w_ord[2 * k])
                                    * np.absolute(w_ord[2 * k + 1])))
 
-        A_CS, dnu_cs = compute_A_CS(n_dof, A)
+        A_CS, dnu_cs = compute_A_CS_mat(n_dof, A)
         logger.debug(
             "\n\nA_CS:\n"
             + mat2txt(chop_array(A_CS, 1e-10))
@@ -500,7 +500,7 @@ def transform_matrix_extract_twiss(A: np.ndarray) -> (np.ndarray, np.ndarray):
         eta, alpha, beta, nu
 
     """
-    # njac, dnus = compute_A_CS(2, jac)
+    # njac, dnus = compute_A_CS_mat(2, jac)
     tmp = [jac2twiss(A[p : p + 2, p : p + 2]) for p in range(0, 4, 2)]
     twiss = np.array(tmp)
 
@@ -559,19 +559,10 @@ def compute_A(
         alpha: np.ndarray,
         beta: np.ndarray,
         desc: gtpsa.desc):
-    """Compute A from Twiss parameters.
-    """
-    A_mat = np.zeros((7, 7), dtype=float)
+    
     A = gtpsa.ss_vect_tpsa(desc, 1)
-    for k in range(2):
-        A_mat[2*k, 2*k]   = np.sqrt(beta[k])
-        A_mat[2*k+1, 2*k] = -alpha[k]/np.sqrt(beta[k])
-        A_mat[2*k+1, 2*k+1] = 1e0/np.sqrt(beta[k])
-    A_mat[ct_, ct_] = 1e0
-    A_mat[delta_, delta_] = 1e0
-    # Include dispersion.
-    for k in range(4):
-        A_mat[k, delta_] = eta[k]
+    A_mat = np.zeros([7, 7])
+    A_mat[0:6, 0:6] = compute_A_mat(eta, alpha, beta)
     A.set_jacobian(A_mat)
     return A
 
@@ -625,7 +616,7 @@ def compute_Twiss_along_lattice(
         # Zero the phase advance so that the fraction tune change is not
         # exceeding two pi
         Aj = A.jacobian()
-        rjac, _ = compute_A_CS(2, Aj[:6, :6])
+        rjac, _ = compute_A_CS_mat(2, Aj[:6, :6])
         rjac = np.pad(rjac, (0, 1))
         rjac[6, 6 ] = 1
         A.set_jacobian(rjac)
