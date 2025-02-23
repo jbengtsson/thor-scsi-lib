@@ -111,8 +111,9 @@ def compute_layout(lat_prop):
 def compute_orbit(s_ref, X_ref, Y_ref, p_x_ref, X, Y, k):
     Dx = X(s_ref[k]) - X_ref(s_ref[k])
     Dy = Y(s_ref[k]) - Y_ref(s_ref[k])
+    dxy = np.sqrt(Dx**2+Dy**2)
     dx = np.sqrt((Dx*np.sin(p_x_ref[k]))**2+(Dy*np.cos(p_x_ref[k]))**2)
-    return Dx, Dy, dx
+    return Dx, Dy, dxy, dx
 
 
 def prt_layout(file_name, s, X, Y, p_x):
@@ -129,12 +130,14 @@ def prt_orbit(s_ref, X_ref, Y_ref, p_x_ref, X, Y):
     file_name = "orbit.txt"
     file = open(file_name, "w")
 
-    print("# k      s            DX            DY            dx\n"
-          "#                     [m]           [m]           [m]", file=file)
+    print("# k      s            DX            DY            Dxy"
+          "            Dx\n"
+          "#                     [m]           [m]           [m]"
+          "            [m]", file=file)
     for k in range(len(s_ref)):
-        Dx, Dy, dx = compute_orbit(s_ref, X_ref, Y_ref, p_x_ref, X, Y, k)
-        print(f"{k:4d}  {s_ref[k]:9.5f}  {Dx:12.5e}  {Dy:12.5e}  {dx:12.5e}",
-              file=file)
+        Dx, Dy, dxy, dx = compute_orbit(s_ref, X_ref, Y_ref, p_x_ref, X, Y, k)
+        print(f"{k:4d}  {s_ref[k]:9.5f}  {Dx:12.5e}  {Dy:12.5e}   {dxy:12.5e}"
+              f"   {dx:12.5e}", file=file)
 
 
 # TPSA max order.
