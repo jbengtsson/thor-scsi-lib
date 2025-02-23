@@ -68,28 +68,58 @@ def compute_xi():
     sum = 0e0
         
 
+def compute_tp_map(M):
+    M_tp = new.ss_vect_tpsa()
+    M_tp.set_jacobian(np.transpose(M.jacobian()))
+    return M_tp
+
+
 gtpsa_prop.no = 1
 gtpsa_prop.desc = gtpsa.desc(gtpsa_prop.nv, gtpsa_prop.no)
+
+n_dof = 2
 
 cod_eps = 1e-15
 E_0     = 3.0e9
 
-A_max     = np.array([6e-3, 3e-3])
-beta_inj  = np.array([3.0, 3.0])
-delta_max = 3e-2
+eps_list = np.array([1e-6, 1e-6, 0e0])
+eta_0    = np.array([1e-3, -2e-3, 0.0, 0.0])
+alpha_0  = np.array([0.0, 0.0])
+beta_0   = np.array([0.1, 0.1])
+# beta_1 = 1 - 10 m.
+beta_1   = np.array([1.0, 1.0])
 
 home_dir = os.path.join(
     os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "MAX_IV")
-lat_name = sys.argv[1]
-file_name = os.path.join(home_dir, lat_name+".lat")
+# file_name = os.path.join(home_dir, sys.argv[1]+".lat")
 
-lat_prop = lp.lattice_properties_class(gtpsa_prop, file_name, E_0, cod_eps)
+# lat_prop = lp.lattice_properties_class(gtpsa_prop, file_name, E_0, cod_eps)
 
-lat_prop.prt_lat("lat_prop_lat.txt")
+# lat_prop.prt_lat("lat_prop_lat.txt")
 
-lat_prop._M = \
-    lo.compute_map(
-        lat_prop._lattice, lat_prop._model_state, desc=lat_prop._desc)
+# lat_prop._M = \
+#     lo.compute_map(
+#         lat_prop._lattice, lat_prop._model_state, desc=lat_prop._desc)
+
+Id = new.ss_vect_tpsa()
+eps = new.ss_vect_tpsa()
+Sigma = new.ss_vect_tpsa()
+tmp = new.ss_vect_tpsa()
+Id.set_identity()
+eps.set_zero()
+A_0 = lo.compute_A(eta_0, alpha_0, beta_0, gtpsa_prop.desc)
+A_0_tp = compute_tp_map(A_0)
+for k in range(2*n_dof):
+    eps.iloc[k] = eps_list[k//2]*Id.iloc[k]
+tmp.compose(A_0, eps)
+Sigma.compose(A_0_tp, tmp)
+print("\nA_0:", A_0)
+print("\nA_0^tp:", compute_tp_map(A_0))
+print("\neps_diag:", eps)
+print("\nSigma:", Sigma)
+
+assert False
+
 lat_prop.prt_M()
 eta, alpha, beta, nu = compute_Twiss(lat_prop._M)
 
