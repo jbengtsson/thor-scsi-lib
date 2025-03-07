@@ -15,7 +15,7 @@ class bend_class:
 
     # Private
 
-    def __init__(self, lat_prop, bend_list, phi_max, b_2_max):
+    def __init__(self, lat_prop, bend_list, phi_min, phi_max, b_2_max):
         self._lat_prop       = lat_prop
         self._bend_list      = bend_list
 
@@ -27,6 +27,7 @@ class bend_class:
         self._bend_phi_ratio = self.compute_phi_ratios()
         self._bend_b_2_ratio = self.compute_b_2_ratios()
 
+        self._phi_min        = phi_min
         self._phi_max        = phi_max
         self._b_2_max        = b_2_max
 
@@ -77,7 +78,7 @@ class bend_class:
 
     def get_bend_phi_prm(self):
         prm = self._bend_phi
-        bound = (-self._phi_max, self._phi_max)
+        bound = (self._phi_min, self._phi_max)
         return prm, bound
 
     def get_bend_b_2_prm(self):
@@ -134,9 +135,9 @@ class bend_class:
         print("    L     = {:8.5f}".format(self._bend_L_tot))
         print("    phi   = {:8.5f}".format(self._bend_phi))
         print("    b_2xL = {:8.5f}".format(self._bend_b_2xL))
-        print("\n    part   fraction   phi    fraction   b_2")
+        print("\n        part         fraction   phi    fraction   b_2")
         for k in range(len(self._bend_list)):
-            print("    {:5s} {:8.5f} {:8.5f} {:8.5f} {:8.5f}".
+            print("    {:15s} {:8.5f} {:8.5f} {:8.5f} {:8.5f}".
                   format(self._bend_list[k], self._bend_phi_ratio[k],
                          self._bend_phi*self._bend_phi_ratio[k],
                          self._bend_b_2_ratio[k],
@@ -279,7 +280,7 @@ class prm_class(bend_class):
             prm.append(p)
             bounds.append(b)
             if prt:
-                print("    {:12.5e} ({:3.1f}, {:3.1f})".
+                print("    {:12.5e} ({:4.2f}, {:4.2f})".
                       format(prm[k], bounds[k][0], bounds[k][1]))
         return np.array(prm), bounds
 
