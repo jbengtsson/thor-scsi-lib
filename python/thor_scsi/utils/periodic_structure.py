@@ -50,6 +50,14 @@ class periodic_structure_class:
         # Descriptor for Truncated Power Series Algebra variables.
         self._desc = gtpsa.desc(
             gtpsa_prop.nv, gtpsa_prop.no, gtpsa_prop.nv_prm, gtpsa_prop.no_prm)
+        to = 1
+        self._desc.truncate(to)
+        # .truncate(to) sets the new & returns the old to.
+        print()
+        print("\nperiodic_structure_class:\n  no = {:d} nv = {:d} to = {:d}".
+              format(self._desc.maximum_orders(0, 0),
+                     self._desc.number_of_variables(0, 0, 0),
+                     self._desc.truncate(to)))
 
         # Read in & parse lattice file.
         self._lattice = accelerator_from_config(file_name)
@@ -305,7 +313,7 @@ class periodic_structure_class:
 
         try:
             M = lo.compute_map(
-                self._lattice, self._model_state, desc=self._desc, tpsa_order=2)
+                self._lattice, self._model_state, desc=self._desc, no=2)
             stable, _, xi = \
                 lo.compute_nu_xi(self._desc, self._no, M)
             if not stable:

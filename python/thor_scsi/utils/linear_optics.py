@@ -43,16 +43,19 @@ def compute_map(
         *,
         t_map: gtpsa.ss_vect_tpsa = None,
         desc: gtpsa.desc = None,
-        tpsa_order: int = 1
+        no: int = 1
 ) -> gtpsa.ss_vect_tpsa:
     """Propagate an identity map through the accelerator
     """
+    if no != 1:
+        no_0 = desc.truncate(no)
     if t_map is None:
         assert desc is not None
-        t_map = gtpsa.ss_vect_tpsa(desc, tpsa_order)
+        t_map = gtpsa.ss_vect_tpsa(desc, no)
         t_map.set_identity()
-
     lat.propagate(model_state, t_map)
+    if no != 1:
+        desc.truncate(no_0)
     return t_map
 
 
@@ -536,7 +539,7 @@ def compute_map_and_diag(
          Rename phase space origin fix point
     """
     t_map = \
-        compute_map(lat, model_state, desc=desc, tpsa_order=1)
+        compute_map(lat, model_state, desc=desc, no=1)
     M = np.array(t_map.jacobian())
     logger.info("\ncompute_map_and_diag\nM:\n" + mat2txt(M))
 

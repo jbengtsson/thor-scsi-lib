@@ -26,7 +26,7 @@ import gtpsa
 ind = ind.index_class()
 
 eps_x_des   = 49e-12
-alpha_c_des = 5e-5
+alpha_c_des = 1e-4
 nu_uc_des   = [0.4, 0.1]
 nu_sp_des   = [2.89, 0.91]
 beta_des    = [5.0, 3.0]
@@ -358,11 +358,11 @@ class opt_sp_class:
             print("  dchi2(dx)           = {:9.3e}".format(dchi_2))
 
         if False:
-            self._phi_d2_2 = self.compute_phi_bend(self._d2_2_bend._bend_list)
-            dchi_2 = 1e-2*(self._phi_d2_2-1.6)**2
+            self._phi_1 = self.compute_phi_bend(self._d1_bend._bend_list)
+            dchi_2 = 1e-2*(self._phi_d1-1.2)**2
             chi_2 += dchi_2
             if prt:
-                print("  dchi2(phi_d2_2)     = {:9.3e}".format(dchi_2))
+                print("  dchi2(phi_d1)       = {:9.3e}".format(dchi_2))
 
         return chi_2
 
@@ -398,7 +398,7 @@ class opt_sp_class:
                 if not False:
                     print("\n{:3d} chi_2 = {:11.5e} ({:11.5e})".
                           format(self._n_iter, chi_2, self._chi_2_min))
-                    if not False:
+                    if False:
                         self.prt_dip()
                         self._prm_list.prt_prm(prm)
             else:
@@ -439,7 +439,8 @@ class opt_sp_class:
                             self._chi_2_min))
                         if not False:
                             self.prt_dip()
-                        self._prm_list.prt_prm(prm)
+                        if False:
+                            self._prm_list.prt_prm(prm)
 
             return chi_2
 
@@ -456,17 +457,19 @@ class opt_sp_class:
             print(f"\nconstraint_phi_lat: phi = {phi:10.3e}")
             return phi
 
-        def constraint_d1_min(prm):         
-            phi = self.compute_phi_bend(self._d1_bend._bend_list) - 1.1
+        def constraint_d1_min(prm):
+            phi_min = 1.1
+            phi = self.compute_phi_bend(self._d1_bend._bend_list) - phi_min
             print(f"\nconstraint_d1_min:  phi = {phi:10.3e}")
             return phi
 
         def constraint_d1_max(prm):         
-            phi = 1.5 - self.compute_phi_bend(self._d1_bend._bend_list)
+            phi_max = 1.5
+            phi = phi_max - self.compute_phi_bend(self._d1_bend._bend_list)
             print(f"\nconstraint_d1_max:  phi = {phi:10.3e}")
             return phi
 
-        if not True:
+        if True:
             constraints = ({"type": "eq",   "fun": constraint_phi_lat},
                            {"type": "ineq", "fun": constraint_d1_min},
                            {"type": "ineq", "fun": constraint_d1_max})
@@ -488,10 +491,9 @@ class opt_sp_class:
         # Methods with boundaries:
         #   L-BFGS-B, TNC, and SLSQP.
 
-        optimiser = "SLSQP"
+        optimiser = "TNC"
 
         if optimiser == "TNC":
-            print("\nbounds =\n", bounds)
             minimum = opt.minimize(
                 f_sp,
                 prm,
@@ -604,11 +606,11 @@ d2_2_list = ["d2_h2_sl_d0a_2", "d2_h2_sl_d0b_2", "d2_h2_sl_d0c_2",
              "d2_h2_sl_df4_2", "d2_h2_sl_df5_2"]
 
 # phi: [1.25, 1.5].
-d1_bend   = pc.bend_class(lat_prop, d1_list,   1.1, 1.5,  -10.0, 10.0)
+d1_bend   = pc.bend_class(lat_prop, d1_list)
 # phi: [1.5, 1.75].
-d2_bend   = pc.bend_class(lat_prop, d2_list,   1.5, 1.75, -10.0, 10.0)
+d2_bend   = pc.bend_class(lat_prop, d2_list)
 # phi: [1.5, 2.5].
-d2_2_bend = pc.bend_class(lat_prop, d2_2_list, 1.5, 2.5,  -10.0, 10.0)
+d2_2_bend = pc.bend_class(lat_prop, d2_2_list)
 
 b_3_list = ["s3_h2", "s4_h2"]
 
@@ -644,9 +646,9 @@ if step == 1:
         ("r1_h2",   "b_2",      -10.0, 10.0),
         ("r2_h2",   "b_2",      -10.0, 10.0),
         ("r3_h2",   "b_2",      -10.0, 10.0),
-        (d1_bend,   "b_2_bend", -1.0,   1.0),
-        (d2_bend,   "b_2_bend", -1.0,   1.0),
-        (d2_2_bend, "b_2_bend", -1.0,   1.0),
+        (d1_bend,   "b_2_bend", -1.5,   1.5),
+        (d2_bend,   "b_2_bend", -1.5,   1.5),
+        (d2_2_bend, "b_2_bend", -1.5,   1.5),
 
         ("r1_h2",   "phi",      -0.5,   0.5),
         ("r2_h2",   "phi",      -0.3,   0.0),
@@ -684,71 +686,71 @@ if step == 2:
         ("r2_h2",          "b_2", -10.0, 10.0),
         ("r3_h2",          "b_2", -10.0, 10.0),
 
-        ("d1_h2_sl_dm1",   "b_2",  -1.0,  1.0),
-        ("d1_h2_sl_dm2",   "b_2",  -1.0,  1.0),
-        ("d1_h2_sl_dm3",   "b_2",  -1.0,  1.0),
-        ("d1_h2_sl_dm4",   "b_2",  -1.0,  1.0),
-        ("d1_h2_sl_dm5",   "b_2",  -1.0,  1.0),
-        ("d1_h2_sl_ds0",   "b_2",  -1.0,  1.0),
-        ("d1_h2_sl_ds1",   "b_2",  -1.0,  1.0),
-        ("d1_h2_sl_ds2",   "b_2",  -1.0,  1.0),
-        ("d1_h2_sl_ds3",   "b_2",  -1.0,  1.0),
-        ("d1_h2_sl_ds4",   "b_2",  -1.0,  1.0),
-        ("d1_h2_sl_ds5",   "b_2",  -1.0,  1.0),
-        ("d1_h2_sl_ds6",   "b_2",  -1.0,  1.0),
+        ("d1_h2_sl_dm1",   "b_2",  -1.5,  1.5),
+        ("d1_h2_sl_dm2",   "b_2",  -1.5,  1.5),
+        ("d1_h2_sl_dm3",   "b_2",  -1.5,  1.5),
+        ("d1_h2_sl_dm4",   "b_2",  -1.5,  1.5),
+        ("d1_h2_sl_dm5",   "b_2",  -1.5,  1.5),
+        ("d1_h2_sl_ds0",   "b_2",  -1.5,  1.5),
+        ("d1_h2_sl_ds1",   "b_2",  -1.5,  1.5),
+        ("d1_h2_sl_ds2",   "b_2",  -1.5,  1.5),
+        ("d1_h2_sl_ds3",   "b_2",  -1.5,  1.5),
+        ("d1_h2_sl_ds4",   "b_2",  -1.5,  1.5),
+        ("d1_h2_sl_ds5",   "b_2",  -1.5,  1.5),
+        ("d1_h2_sl_ds6",   "b_2",  -1.5,  1.5),
 
-        ("d2_h2_sl_d0a",   "b_2",  -1.0,  1.0),
-        ("d2_h2_sl_d0b",   "b_2",  -1.0,  1.0),
-        ("d2_h2_sl_d0c",   "b_2",  -1.0,  1.0),
-        ("d2_h2_sl_df1",   "b_2",  -1.0,  1.0),
-        ("d2_h2_sl_df2",   "b_2",  -1.0,  1.0),
-        ("d2_h2_sl_df3",   "b_2",  -1.0,  1.0),
-        ("d2_h2_sl_df4",   "b_2",  -1.0,  1.0),
-        ("d2_h2_sl_df5",   "b_2",  -1.0,  1.0),
+        ("d2_h2_sl_d0a",   "b_2",  -1.5,  1.5),
+        ("d2_h2_sl_d0b",   "b_2",  -1.5,  1.5),
+        ("d2_h2_sl_d0c",   "b_2",  -1.5,  1.5),
+        ("d2_h2_sl_df1",   "b_2",  -1.5,  1.5),
+        ("d2_h2_sl_df2",   "b_2",  -1.5,  1.5),
+        ("d2_h2_sl_df3",   "b_2",  -1.5,  1.5),
+        ("d2_h2_sl_df4",   "b_2",  -1.5,  1.5),
+        ("d2_h2_sl_df5",   "b_2",  -1.5,  1.5),
 
-        ("d2_h2_sl_d0a_2", "b_2",  -1.0,  1.0),
-        ("d2_h2_sl_d0b_2", "b_2",  -1.0,  1.0),
-        ("d2_h2_sl_d0c_2", "b_2",  -1.0,  1.0),
-        ("d2_h2_sl_df1_2", "b_2",  -1.0,  1.0),
-        ("d2_h2_sl_df2_2", "b_2",  -1.0,  1.0),
-        ("d2_h2_sl_df3_2", "b_2",  -1.0,  1.0),
-        ("d2_h2_sl_df4_2", "b_2",  -1.0,  1.0),
-        ("d2_h2_sl_df5_2", "b_2",  -1.0,  1.0),
+        ("d2_h2_sl_d0a_2", "b_2",  -1.5,  1.5),
+        ("d2_h2_sl_d0b_2", "b_2",  -1.5,  1.5),
+        ("d2_h2_sl_d0c_2", "b_2",  -1.5,  1.5),
+        ("d2_h2_sl_df1_2", "b_2",  -1.5,  1.5),
+        ("d2_h2_sl_df2_2", "b_2",  -1.5,  1.5),
+        ("d2_h2_sl_df3_2", "b_2",  -1.5,  1.5),
+        ("d2_h2_sl_df4_2", "b_2",  -1.5,  1.5),
+        ("d2_h2_sl_df5_2", "b_2",  -1.5,  1.5),
 
         ("r1_h2",          "phi",  -0.5,   0.5),
         ("r2_h2",          "phi",  -0.3,   0.0),
         ("r3_h2",          "phi",  -0.3,   0.0),
 
-        ("d1_h2_sl_dm1",   "phi",  -1.0,  1.0),
-        ("d1_h2_sl_dm2",   "phi",  -1.0,  1.0),
-        ("d1_h2_sl_dm3",   "phi",  -1.0,  1.0),
-        ("d1_h2_sl_dm4",   "phi",  -1.0,  1.0),
-        ("d1_h2_sl_dm5",   "phi",  -1.0,  1.0),
-        ("d1_h2_sl_ds0",   "phi",  -1.0,  1.0),
-        ("d1_h2_sl_ds1",   "phi",  -1.0,  1.0),
-        ("d1_h2_sl_ds2",   "phi",  -1.0,  1.0),
-        ("d1_h2_sl_ds3",   "phi",  -1.0,  1.0),
-        ("d1_h2_sl_ds4",   "phi",  -1.0,  1.0),
-        ("d1_h2_sl_ds5",   "phi",  -1.0,  1.0),
-        ("d1_h2_sl_ds6",   "phi",  -1.0,  1.0),
+        ("d1_h2_sl_dm1",   "phi",  -1.5,  1.5),
+        ("d1_h2_sl_dm2",   "phi",  -1.5,  1.5),
+        ("d1_h2_sl_dm3",   "phi",  -1.5,  1.5),
+        ("d1_h2_sl_dm4",   "phi",  -1.5,  1.5),
+        ("d1_h2_sl_dm5",   "phi",  -1.5,  1.5),
+        ("d1_h2_sl_ds0",   "phi",  -1.5,  1.5),
+        ("d1_h2_sl_ds1",   "phi",  -1.5,  1.5),
+        ("d1_h2_sl_ds2",   "phi",  -1.5,  1.5),
+        ("d1_h2_sl_ds3",   "phi",  -1.5,  1.5),
+        ("d1_h2_sl_ds4",   "phi",  -1.5,  1.5),
+        ("d1_h2_sl_ds5",   "phi",  -1.5,  1.5),
+        ("d1_h2_sl_ds6",   "phi",  -1.5,  1.5),
 
-        ("d2_h2_sl_d0a",   "phi",  -1.0,  1.0),
-        ("d2_h2_sl_d0b",   "phi",  -1.0,  1.0),
-        ("d2_h2_sl_d0c",   "phi",  -1.0,  1.0),
-        ("d2_h2_sl_df1",   "phi",  -1.0,  1.0),
-        ("d2_h2_sl_df2",   "phi",  -1.0,  1.0),
-        ("d2_h2_sl_df3",   "phi",  -1.0,  1.0),
-        ("d2_h2_sl_df4",   "phi",  -1.0,  1.0),
-        ("d2_h2_sl_df5",   "phi",  -1.0,  1.0),
+        ("d2_h2_sl_d0a",   "phi",  -1.5,  1.5),
+        ("d2_h2_sl_d0b",   "phi",  -1.5,  1.5),
+        ("d2_h2_sl_d0c",   "phi",  -1.5,  1.5),
+        ("d2_h2_sl_df1",   "phi",  -1.5,  1.5),
+        ("d2_h2_sl_df2",   "phi",  -1.5,  1.5),
+        ("d2_h2_sl_df3",   "phi",  -1.5,  1.5),
+        ("d2_h2_sl_df4",   "phi",  -1.5,  1.5),
+        ("d2_h2_sl_df5",   "phi",  -1.5,  1.5),
 
-        ("d2_h2_sl_d0a_2", "phi",  -1.0,  1.0),
-        ("d2_h2_sl_d0b_2", "phi",  -1.0,  1.0),
-        ("d2_h2_sl_d0c_2", "phi",  -1.0,  1.0),
-        ("d2_h2_sl_df1_2", "phi",  -1.0,  1.0),
-        ("d2_h2_sl_df2_2", "phi",  -1.0,  1.0),
-        ("d2_h2_sl_df3_2", "phi",  -1.0,  1.0),
-        ("d2_h2_sl_df4_2", "phi",  -1.0,  1.0),
-        ("d2_h2_sl_df5_2", "phi",  -1.0,  1.0)
+        ("d2_h2_sl_d0a_2", "phi",  -1.5,  1.5),
+        ("d2_h2_sl_d0b_2", "phi",  -1.5,  1.5),
+        ("d2_h2_sl_d0c_2", "phi",  -1.5,  1.5),
+        ("d2_h2_sl_df1_2", "phi",  -1.5,  1.5),
+        ("d2_h2_sl_df2_2", "phi",  -1.5,  1.5),
+        ("d2_h2_sl_df3_2", "phi",  -1.5,  1.5),
+        ("d2_h2_sl_df4_2", "phi",  -1.5,  1.5),
+        ("d2_h2_sl_df5_2", "phi",  -1.5,  1.5)
    ]
 
     rb_list = ["r1_h2", "r2_h2", "r3_h2"]

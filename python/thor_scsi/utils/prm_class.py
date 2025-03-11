@@ -15,7 +15,7 @@ class bend_class:
 
     # Private
 
-    def __init__(self, lat_prop, bend_list, phi_min, phi_max, b_2_min, b_2_max):
+    def __init__(self, lat_prop, bend_list):
         self._lat_prop       = lat_prop
         self._bend_list      = bend_list
 
@@ -27,10 +27,10 @@ class bend_class:
         self._bend_phi_ratio = self.compute_phi_ratios()
         self._bend_b_2_ratio = self.compute_b_2_ratios()
 
-        self._phi_min        = phi_min
-        self._phi_max        = phi_max
-        self._b_2_min        = b_2_min
-        self._b_2_max        = b_2_max
+        self._phi_min        = np.nan
+        self._phi_max        = np.nan
+        self._b_2_min        = np.nan
+        self._b_2_max        = np.nan
 
     def __str__(self):
         return "bend"
@@ -264,8 +264,12 @@ class prm_class(bend_class):
                 b = (self._prm_list[k][2], self._prm_list[k][3])
             elif isinstance(self._prm_list[k][0], bend_class):
                 if self._prm_list[k][1] == "phi_bend":
+                    self._prm_list[k][0]._phi_min = self._prm_list[k][2]
+                    self._prm_list[k][0]._phi_max = self._prm_list[k][3]
                     p, b = self._prm_list[k][0].get_bend_phi_prm()
                 elif self._prm_list[k][1] == "b_2_bend":
+                    self._prm_list[k][0]._b_2_min = self._prm_list[k][2]
+                    self._prm_list[k][0]._b_2_max = self._prm_list[k][3]
                     p, b = self._prm_list[k][0].get_bend_b_2_prm()
                     self._prm_list[k][0].print()
                     print()

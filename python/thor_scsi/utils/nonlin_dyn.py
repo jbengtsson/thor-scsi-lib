@@ -148,7 +148,7 @@ class nonlin_dyn_class:
     def compute_map(self, lat_prop, no):
         self._M = lo.compute_map(
             lat_prop._lattice, lat_prop._model_state, desc=lat_prop._desc,
-            tpsa_order=no)
+            no=no)
 
     def zero_mult(self, lat_prop, n):
         # Zero multipoles.
