@@ -53,7 +53,6 @@ class periodic_structure_class:
         to = 1
         self._desc.truncate(to)
         # .truncate(to) sets the new & returns the old to.
-        print()
         print("\nperiodic_structure_class:\n  no = {:d} nv = {:d} to = {:d}".
               format(self._desc.maximum_orders(0, 0),
                      self._desc.number_of_variables(0, 0, 0),

@@ -387,9 +387,11 @@ class opt_sp_class:
                     raise ValueError
  
                 # Compute linear chromaticity.
+                lat_prop._desc.truncate(2)
                 self._nld.compute_map(lat_prop, 2)
                 stable, _, self._xi = lo.compute_nu_xi(
                     lat_prop._desc, lat_prop._no, self._nld._M)
+                lat_prop._desc.truncate(1)
                 if not stable:
                     print("\ncompute_nu_xi: unstable")
                     raise ValueError
