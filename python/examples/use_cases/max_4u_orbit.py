@@ -496,13 +496,10 @@ class opt_sp_class:
                 (-10.0, 10.0),
                 (-10.0, 10.0),
                 (-10.0, 10.0),
-                # ( -0.5,  0.5),
-                ( -0.5,  0.5),
-                ( -0.5,  0.5),
+                (-10.0, 10.0),
                 ( -0.3,  0.0),
                 ( -0.3,  0.0),
-                (  1.25, 1.5),
-                (  1.5,  1.75),
+                (  1.1,  1.5),
                 (  1.5,  1.75)
             ]
             print("\nbounds =\n", bounds)
@@ -640,7 +637,7 @@ d2_2_list = ["d2_h2_sl_d0a_2", "d2_h2_sl_d0b_2", "d2_h2_sl_d0c_2",
              "d2_h2_sl_df4_2", "d2_h2_sl_df5_2"]
 
 # phi: [1.25, 1.5].
-d1_bend = pc.bend_class(lat_prop, d1_list, 1.25, 1.5, b_2_max)
+d1_bend = pc.bend_class(lat_prop, d1_list, 1.1, 1.5, b_2_max)
 # phi: [3.0/2, 3.5/2].
 d2_bend = pc.bend_class(lat_prop, d2_list, 1.5, 1.75, b_2_max)
 d2_2_bend = pc.bend_class(lat_prop, d2_2_list, 1.5, 1.75, b_2_max)
@@ -683,24 +680,22 @@ if step == 1:
         ("b_2_bend", d2_bend),
         ("b_2_bend", d2_2_bend),
 
-        # ("q1_h2", "phi"),
-        ("q2_h2", "phi"),
         ("r1_h2", "phi"),
         ("r2_h2", "phi"),
         ("r3_h2", "phi"),
 
         ("phi_bend", d1_bend),
-        ("phi_bend", d2_bend),
-        ("phi_bend", d2_2_bend)
+        ("phi_bend", d2_bend)
+        # ("phi_bend", d2_2_bend)
    ]
 
     dprm_list = np.array([
         1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3,
-        1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3
+        1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3
     ])
 
-    sp_bend = pc.phi_lat_class(lat_prop, 2, "q1_h2")
-    rb_list = ["q1_h2", "q2_h2", "r1_h2", "r2_h2", "r3_h2"]
+    sp_bend = pc.phi_lat_class(lat_prop, 2, d2_2_bend)
+    rb_list = ["r1_h2", "r2_h2", "r3_h2"]
 if step == 2:
     weight = np.array([
         1e14,  # eps_x.
