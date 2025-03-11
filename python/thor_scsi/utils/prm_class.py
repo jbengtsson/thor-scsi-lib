@@ -15,7 +15,7 @@ class bend_class:
 
     # Private
 
-    def __init__(self, lat_prop, bend_list, phi_min, phi_max, b_2_max):
+    def __init__(self, lat_prop, bend_list, phi_min, phi_max, b_2_min, b_2_max):
         self._lat_prop       = lat_prop
         self._bend_list      = bend_list
 
@@ -29,6 +29,7 @@ class bend_class:
 
         self._phi_min        = phi_min
         self._phi_max        = phi_max
+        self._b_2_min        = b_2_min
         self._b_2_max        = b_2_max
 
     def __str__(self):
@@ -83,7 +84,7 @@ class bend_class:
 
     def get_bend_b_2_prm(self):
         prm = self._bend_b_2xL/self._bend_L_tot
-        bound = (-self._b_2_max, self._b_2_max)
+        bound = (self._b_2_min, self._b_2_max)
         return prm, bound
 
     def set_bend_dphi(self, prm):
@@ -221,9 +222,8 @@ class phi_list_class():
 class prm_class(bend_class):
     # Private
 
-    def __init__(self, lat_prop, prm_list, b_2_max):
+    def __init__(self, lat_prop, prm_list):
         self._lat_prop = lat_prop
-        self._b_2_max  = b_2_max
         self._prm_list = prm_list
 
         # Dictionary of parameter types and corresponding get functions.
@@ -256,18 +256,18 @@ class prm_class(bend_class):
             print("\nprm_class::get_prm:")
         for k in range(len(self._prm_list)):
             if prt:
-                print("  {:15s}".format(self._prm_list[k][0]), end="")
-            if type(self._prm_list[k][1]) == str:
+                print("  {:15s}".format(self._prm_list[k][1]), end="")
+            if type(self._prm_list[k][0]) == str:
                 p = \
                     self._get_prm_func_dict[self._prm_list[k][1]](
                         self._prm_list[k][0], 0)
-                b = (-self._b_2_max, self._b_2_max)
-            elif isinstance(self._prm_list[k][1], bend_class):
-                if self._prm_list[k][0] == "phi_bend":
-                    p, b = self._prm_list[k][1].get_bend_phi_prm()
-                elif self._prm_list[k][0] == "b_2_bend":
-                    p, b = self._prm_list[k][1].get_bend_b_2_prm()
-                    self._prm_list[k][1].print()
+                b = (self._prm_list[k][2], self._prm_list[k][3])
+            elif isinstance(self._prm_list[k][0], bend_class):
+                if self._prm_list[k][1] == "phi_bend":
+                    p, b = self._prm_list[k][0].get_bend_phi_prm()
+                elif self._prm_list[k][1] == "b_2_bend":
+                    p, b = self._prm_list[k][0].get_bend_b_2_prm()
+                    self._prm_list[k][0].print()
                     print()
                 else:
                     print("\nprm_class::get_prm - undefined parameter type:",
@@ -280,25 +280,25 @@ class prm_class(bend_class):
             prm.append(p)
             bounds.append(b)
             if prt:
-                print("    {:12.5e} ({:4.2f}, {:4.2f})".
+                print("    {:12.5e} ({:5.2f}, {:5.2f})".
                       format(prm[k], bounds[k][0], bounds[k][1]))
         return np.array(prm), bounds
 
     def set_prm(self, prm):
         for k in range(len(self._prm_list)):
             prm_name, prm_type = [self._prm_list[k][0], self._prm_list[k][1]]
-            if type(prm_type) == str:
+            if type(prm_name) == str:
                 self._set_prm_func_dict[prm_type](prm_name, prm[k])
-            elif isinstance(prm_type, bend_class):
-                if prm_name == "phi_bend":
-                    prm_type.set_bend_phi_scl(prm[k])
-                elif prm_name == "b_2_bend":
-                    prm_type.set_bend_b_2(prm[k])
+            elif isinstance(prm_name, bend_class):
+                if prm_type == "phi_bend":
+                    prm_name.set_bend_phi_scl(prm[k])
+                elif prm_type == "b_2_bend":
+                    prm_name.set_bend_b_2(prm[k])
                 else:
                     print("\nprm_class::set_prm - undefined parameter type:",
-                          prm_type)
+                          prm_name)
             else:
-                print("\nprm_class::set_prm - undefined parameter:", prm_type)
+                print("\nprm_class::set_prm - undefined parameter:", prm_name)
         
     def prt_prm(self, prm):
         n_prt = 5
@@ -421,13 +421,13 @@ def prt_lat(
     # Print family once.
     prt_list = []
     for k in range(len(prm_list._prm_list)):
-        if type(prm_list._prm_list[k][1]) == str:
+        if type(prm_list._prm_list[k][0]) == str:
             prt_list = \
                 prt_prm_func_dict[prm_list._prm_list[k][1]](
                     prm_list._prm_list[k][0], prt_list)
-        elif isinstance(prm_list._prm_list[k][1], bend_class):
+        elif isinstance(prm_list._prm_list[k][0], bend_class):
             prt_list = \
-                prt_bend(prm_list._prm_list[k][1], prt_list)
+                prt_bend(prm_list._prm_list[k][0], prt_list)
         else:
             print("\nprt_lat - undefined parameter:", prm_list._prm_list[k][1])
 
