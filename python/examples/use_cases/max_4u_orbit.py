@@ -124,8 +124,8 @@ class opt_sp_class:
     # Private
 
     def __init__(
-            self, lat_ref, lat_prop, prm_list, dprm_list, uc_list, sp_list,
-            weight, d1_bend, d2_bend, d2_2_bend, rb_list, eps_x_des, nu_uc_des,
+            self, lat_ref, lat_prop, prm_list, uc_list, sp_list, weight,
+            d1_bend, d2_bend, d2_2_bend, rb_list, eps_x_des, nu_uc_des,
             nu_sp_des, beta_des, dnu_des, nld):
 
         self._lat_prop       = lat_prop
@@ -377,21 +377,14 @@ class opt_sp_class:
         """Use Case: optimise super period.
         """
 
-        def compute_direc(dprm_list):
-            n = len(prm)
-            direc = np.zeros((n, n), dtype=float)
-            for k in range(n):
-                direc[k, k] = dprm_list[k]
-            return direc
-
         def f_sp(prm):
             self._n_iter += 1
             self._prm_list.set_prm(prm)
-            if d1_bend != []:
-                self._d1_bend.correct_bend_phi()
-            if d2_bend != []:
-                self._d2_bend.correct_bend_phi()
-            sp_bend.set_phi_lat()
+            # if d1_bend != []:
+            #     self._d1_bend.correct_bend_phi()
+            # if d2_bend != []:
+            #     self._d2_bend.correct_bend_phi()
+            # sp_bend.set_phi_lat()
 
             try:
                 # Compute Twiss parameters along the lattice.
@@ -473,13 +466,22 @@ class opt_sp_class:
         prm, bounds = self._prm_list.get_prm()
         f_sp(prm)
 
+        def constraint_eq(prm):
+            phi = \
+                2*prm[8] + 2*prm[9] + 8*prm[10] + 2*prm[11] + 8*prm[12]\
+                + 2*prm[13] - 18e0
+            print(f"\nconstraint_eq: phi = {phi:10.3e}")
+            return phi
+
+        constraints = ({"type": "eq", "fun": constraint_eq})
+
         # Methods:
         #   Nelder-Mead, Powell, CG, BFGS, Newton-CG, L-BFGS-B, TNC, COBYLA,
         #   SLSQP, trust-constr, dogleg, truct-ncg, trust-exact, trust-krylov.
         # Methods with boundaries:
         #   L-BFGS-B, TNC, and SLSQP.
 
-        optimiser = "TNC"
+        optimiser = "SLSQP"
         if optimiser == "TNC":
             f_tol = 1e-9
             g_tol = 1e-9
@@ -496,10 +498,11 @@ class opt_sp_class:
                 (-10.0, 10.0),
                 (-10.0, 10.0),
                 (-10.0, 10.0),
-                (-10.0, 10.0),
+                ( -0.5,  0.5),
                 ( -0.3,  0.0),
                 ( -0.3,  0.0),
                 (  1.1,  1.5),
+                (  1.5,  1.75),
                 (  1.5,  1.75)
             ]
             print("\nbounds =\n", bounds)
@@ -513,7 +516,7 @@ class opt_sp_class:
                          "maxfun": max_iter, "eps": eps}
             )
         if optimiser == "SLSQP":
-            f_tol = 1e-9
+            f_tol = 1e-10
 
             print("\nbounds =\n", bounds)
 
@@ -523,23 +526,8 @@ class opt_sp_class:
                 method="SLSQP",
                 # callback=prt_iter,
                 bounds = bounds,
-                options={"ftol": f_tol, "maxiter": max_iter, "eps": 1e-3}
-            )
-        elif optimiser == "Powell":
-            f_tol = 1e-6
-            x_tol = 1e-7
-
-            direc = compute_direc(dprm_list)
-
-            minimum = opt.minimize(
-                f_sp,
-                prm,
-                method="Powell",
-                # callback=prt_iter,
-                bounds = bounds,
-                options={"ftol": f_tol, "xtol": x_tol, "maxiter": max_iter,
-                         # "direc": direc
-                         }
+                options={"ftol": f_tol, "maxiter": max_iter, "eps": 1e-3},
+                constraints=constraints
             )
         elif optimiser == "CG":
             #   eps - step size.
@@ -683,92 +671,18 @@ if step == 1:
         ("r1_h2", "phi"),
         ("r2_h2", "phi"),
         ("r3_h2", "phi"),
-
         ("phi_bend", d1_bend),
-        ("phi_bend", d2_bend)
-        # ("phi_bend", d2_2_bend)
+        ("phi_bend", d2_bend),
+        ("phi_bend", d2_2_bend)
    ]
-
-    dprm_list = np.array([
-        1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3,
-        1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3
-    ])
 
     sp_bend = pc.phi_lat_class(lat_prop, 2, d2_2_bend)
     rb_list = ["r1_h2", "r2_h2", "r3_h2"]
-if step == 2:
-    weight = np.array([
-        1e14,  # eps_x.
-        1e4,   # alpha_c.
-        0e-15, # U_0.
-        1e1,   # etap_x_uc.
-        1e-3,  # alpha_uc.
-        1e-1,  # eta_x.
-        1e1,   # nu_uc_x.
-        1e1,   # nu_uc_y.
-        1e-3,  # dnu_x.
-        1e-3,  # dnu_y.
-        0e-7,  # nu_sp_x.
-        0e-7,  # nu_sp_y.
-        0e-6,  # beta_x.
-        0e-6,  # beta_y.
-        1e-7,  # xi.
-        1e-3   # orbit.
-    ])
-
-    prms = [
-        ("q1_h2", "b_2"),
-        ("q2_h2", "b_2"),
-        ("r1_h2", "b_2"),
-        ("r2_h2", "b_2"),
-        ("r3_h2", "b_2"),
-        ("r4_h2", "b_2"),
-        ("b_2_bend", d1_bend),
-        ("b_2_bend", d2_bend),
-
-        ("r1_h2", "phi"),
-        ("r2_h2", "phi"),
-        ("r3_h2", "phi"),
-        ("r4_h2", "phi"),
-
-        ("d1_h2_sl_ds6", "phi"),
-        ("d1_h2_sl_ds5", "phi"),
-        ("d1_h2_sl_ds4", "phi"),
-        ("d1_h2_sl_ds3", "phi"),
-        ("d1_h2_sl_ds2", "phi"),
-        ("d1_h2_sl_ds1", "phi"),
-        ("d1_h2_sl_ds0", "phi"),
-        ("d1_h2_sl_dm1", "phi"),
-        ("d1_h2_sl_dm2", "phi"),
-        ("d1_h2_sl_dm3", "phi"),
-        ("d1_h2_sl_dm4", "phi"),
-        ("d1_h2_sl_dm5", "phi"),
-
-        ("d2_h2_sl_d0a", "phi"),
-        ("d2_h2_sl_d0b", "phi"),
-        ("d2_h2_sl_d0c", "phi"),
-        ("d2_h2_sl_df1", "phi"),
-        ("d2_h2_sl_df2", "phi"),
-        ("d2_h2_sl_df3", "phi"),
-        ("d2_h2_sl_df4", "phi"),
-        ("d2_h2_sl_df5", "phi")
-   ]
-
-    dprm_list = np.array([
-        1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3,
-        1e-3, 1e-3, 1e-3, 1e-3,
-        1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3,
-        1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3,
-        1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3
-    ])
-
-    sp_bend = pc.phi_lat_class(lat_prop, 10, d2_bend)
-    rb_list = ["r1_h2", "r2_h2", "r3_h2", "r4_h2"]
 
 prm_list = pc.prm_class(lat_prop, prms, b_2_max)
 
 opt_sp = opt_sp_class(
-    lat_ref, lat_prop, prm_list, dprm_list, uc_list, sp_list, weight, d1_bend,
+    lat_ref, lat_prop, prm_list, uc_list, sp_list, weight, d1_bend,
     d2_bend, d2_2_bend, rb_list, eps_x_des, nu_uc_des, nu_sp_des, beta_des,
     dnu_des, nld)
 
