@@ -225,7 +225,7 @@ class opt_sp_class:
         print("\n    dx [mm]        = {:3.1f}".format(1e3*self._dx))
 
         print("\n    alpha_c        = [{:9.3e}, {:9.3e}] delta^ [%] = {:4.2f}".
-              format(self._alpha_c[1], self._alpha_c[2], delta_hat))
+              format(self._alpha_c[1], self._alpha_c[2], 1e2*delta_hat))
         print("    nu_uc          = [{:7.5f}, {:7.5f}] ([{:7.5f}, {:7.5f}])".
               format(self._nu_uc[ind.X], self._nu_uc[ind.Y],
                      self._nu_uc_des[ind.X], self._nu_uc_des[ind.Y]))
@@ -494,18 +494,8 @@ class opt_sp_class:
         # Methods with boundaries:
         #   L-BFGS-B, TNC, and SLSQP.
 
-        optimiser = "TNC"
+        optimiser = "SLSQP"
 
-        if optimiser == "TNC":
-            minimum = opt.minimize(
-                f_sp,
-                prm,
-                method="TNC",
-                # callback=prt_iter,
-                bounds = bounds,
-                options={"ftol": f_tol, "gtol": g_tol, "xtol": x_tol,
-                         "maxfun": max_iter, "eps": eps}
-            )
         if optimiser == "SLSQP":
             minimum = opt.minimize(
                 f_sp,
@@ -524,7 +514,8 @@ class opt_sp_class:
                 # callback=prt_iter,
                 jac=None,
                 options={"gtol": g_tol, "maxiter": max_iter,
-                         "eps": dprm_list}
+                         # "eps": dprm_list
+                         }
             )
 
         print("\n".join(minimum))
@@ -570,10 +561,10 @@ else:
     lat_prop.prt_M_rad()
 
 uc_list = []
-uc_list.append(lat_prop._lattice.find("d2_h2_sl_d0a_2", 0).index)
-uc_list.append(lat_prop._lattice.find("d2_h2_sl_d0a", 1).index)
+uc_list.append(lat_prop._lattice.find("d2_2_h2_sl_df0", 0).index)
+uc_list.append(lat_prop._lattice.find("d2_h2_sl_df0", 1).index)
 if True:
-    uc_list.append(lat_prop._lattice.find("d2_h2_sl_d0a", 3).index)
+    uc_list.append(lat_prop._lattice.find("d2_h2_sl_df0", 3).index)
 uc_list = np.array(uc_list)
 
 sp_list = np.zeros(3, dtype=int)
@@ -597,22 +588,18 @@ print("max orbit location                           loc = {:d}".
       format(sp_list[2]))
 
 d1_list = [
-    "d1_h2_sl_dm1", "d1_h2_sl_dm2", "d1_h2_sl_dm3", "d1_h2_sl_dm4",
-    "d1_h2_sl_dm5",
-    "d1_h2_sl_ds0", "d1_h2_sl_ds1", "d1_h2_sl_ds2", "d1_h2_sl_ds3",
-    "d1_h2_sl_ds4", "d1_h2_sl_ds5", "d1_h2_sl_ds6",
+    "d1_h2_sl_dm5", "d1_h2_sl_dm4", "d1_h2_sl_dm3", "d1_h2_sl_dm2",
+    "d1_h2_sl_dm1", "d1_h2_sl_d0", "d1_h2_sl_ds1", "d1_h2_sl_ds2",
+    "d1_h2_sl_ds3", "d1_h2_sl_ds4", "d1_h2_sl_ds5"
 ]
-d2_list = ["d2_h2_sl_d0a", "d2_h2_sl_d0b", "d2_h2_sl_d0c", "d2_h2_sl_df1",
-           "d2_h2_sl_df2", "d2_h2_sl_df3", "d2_h2_sl_df4", "d2_h2_sl_df5"]
-d2_2_list = ["d2_h2_sl_d0a_2", "d2_h2_sl_d0b_2", "d2_h2_sl_d0c_2",
-             "d2_h2_sl_df1_2", "d2_h2_sl_df2_2", "d2_h2_sl_df3_2",
-             "d2_h2_sl_df4_2", "d2_h2_sl_df5_2"]
+d2_list = ["d2_h2_sl_df0", "d2_h2_sl_df1", "d2_h2_sl_df2", "d2_h2_sl_df3",
+           "d2_h2_sl_df4", "d2_h2_sl_df5", "d2_h2_sl_df6"]
+d2_2_list = ["d2_2_h2_sl_df0", "d2_2_h2_sl_df1", "d2_2_h2_sl_df2",
+             "d2_2_h2_sl_df3", "d2_2_h2_sl_df4", "d2_2_h2_sl_df5",
+             "d2_2_h2_sl_df6"]
 
-# phi: [1.25, 1.5].
 d1_bend   = pc.bend_class(lat_prop, d1_list)
-# phi: [1.5, 1.75].
 d2_bend   = pc.bend_class(lat_prop, d2_list)
-# phi: [1.5, 2.5].
 d2_2_bend = pc.bend_class(lat_prop, d2_2_list)
 
 b_3_list = ["s3_h2", "s4_h2"]
@@ -626,7 +613,7 @@ step = 2;
 if step == 1:
     weight = np.array([
         1e15,  # eps_x.
-        1e2,   # alpha_c.
+        1e1,   # alpha_c.
         0e-15, # U_0.
         1e2,   # etap_x_uc.
         1e-2,  # alpha_uc.
@@ -639,7 +626,7 @@ if step == 1:
         0e-7,  # nu_sp_y.
         0e-6,  # beta_x.
         0e-6,  # beta_y.
-        1e-8,  # xi.
+        1e-9,  # xi.
         0e-3   # orbit.
     ])
 
@@ -689,71 +676,65 @@ if step == 2:
         ("r2_h2",          "b_2", -10.0, 10.0),
         ("r3_h2",          "b_2", -10.0, 10.0),
 
-        ("d1_h2_sl_dm1",   "b_2",  -1.5,  1.5),
-        ("d1_h2_sl_dm2",   "b_2",  -1.5,  1.5),
-        ("d1_h2_sl_dm3",   "b_2",  -1.5,  1.5),
-        ("d1_h2_sl_dm4",   "b_2",  -1.5,  1.5),
         ("d1_h2_sl_dm5",   "b_2",  -1.5,  1.5),
-        ("d1_h2_sl_ds0",   "b_2",  -1.5,  1.5),
+        ("d1_h2_sl_dm4",   "b_2",  -1.5,  1.5),
+        ("d1_h2_sl_dm3",   "b_2",  -1.5,  1.5),
+        ("d1_h2_sl_dm2",   "b_2",  -1.5,  1.5),
+        ("d1_h2_sl_dm1",   "b_2",  -1.5,  1.5),
+        ("d1_h2_sl_d0",    "b_2",  -1.5,  1.5),
         ("d1_h2_sl_ds1",   "b_2",  -1.5,  1.5),
         ("d1_h2_sl_ds2",   "b_2",  -1.5,  1.5),
         ("d1_h2_sl_ds3",   "b_2",  -1.5,  1.5),
         ("d1_h2_sl_ds4",   "b_2",  -1.5,  1.5),
         ("d1_h2_sl_ds5",   "b_2",  -1.5,  1.5),
-        ("d1_h2_sl_ds6",   "b_2",  -1.5,  1.5),
 
-        ("d2_h2_sl_d0a",   "b_2",  -1.5,  1.5),
-        ("d2_h2_sl_d0b",   "b_2",  -1.5,  1.5),
-        ("d2_h2_sl_d0c",   "b_2",  -1.5,  1.5),
+        ("d2_h2_sl_df0",   "b_2",  -1.5,  1.5),
         ("d2_h2_sl_df1",   "b_2",  -1.5,  1.5),
         ("d2_h2_sl_df2",   "b_2",  -1.5,  1.5),
         ("d2_h2_sl_df3",   "b_2",  -1.5,  1.5),
         ("d2_h2_sl_df4",   "b_2",  -1.5,  1.5),
         ("d2_h2_sl_df5",   "b_2",  -1.5,  1.5),
+        ("d2_h2_sl_df6",   "b_2",  -1.5,  1.5),
 
-        ("d2_h2_sl_d0a_2", "b_2",  -1.5,  1.5),
-        ("d2_h2_sl_d0b_2", "b_2",  -1.5,  1.5),
-        ("d2_h2_sl_d0c_2", "b_2",  -1.5,  1.5),
-        ("d2_h2_sl_df1_2", "b_2",  -1.5,  1.5),
-        ("d2_h2_sl_df2_2", "b_2",  -1.5,  1.5),
-        ("d2_h2_sl_df3_2", "b_2",  -1.5,  1.5),
-        ("d2_h2_sl_df4_2", "b_2",  -1.5,  1.5),
-        ("d2_h2_sl_df5_2", "b_2",  -1.5,  1.5),
+        ("d2_2_h2_sl_df0", "b_2",  -1.5,  1.5),
+        ("d2_2_h2_sl_df1", "b_2",  -1.5,  1.5),
+        ("d2_2_h2_sl_df2", "b_2",  -1.5,  1.5),
+        ("d2_2_h2_sl_df3", "b_2",  -1.5,  1.5),
+        ("d2_2_h2_sl_df4", "b_2",  -1.5,  1.5),
+        ("d2_2_h2_sl_df5", "b_2",  -1.5,  1.5),
+        ("d2_2_h2_sl_df6", "b_2",  -1.5,  1.5),
 
         ("r1_h2",          "phi",  -0.5,   0.5),
         ("r2_h2",          "phi",  -0.3,   0.0),
         ("r3_h2",          "phi",  -0.3,   0.0),
 
-        ("d1_h2_sl_dm1",   "phi",  -1.5,  1.5),
-        ("d1_h2_sl_dm2",   "phi",  -1.5,  1.5),
-        ("d1_h2_sl_dm3",   "phi",  -1.5,  1.5),
-        ("d1_h2_sl_dm4",   "phi",  -1.5,  1.5),
         ("d1_h2_sl_dm5",   "phi",  -1.5,  1.5),
-        ("d1_h2_sl_ds0",   "phi",  -1.5,  1.5),
+        ("d1_h2_sl_dm4",   "phi",  -1.5,  1.5),
+        ("d1_h2_sl_dm3",   "phi",  -1.5,  1.5),
+        ("d1_h2_sl_dm2",   "phi",  -1.5,  1.5),
+        ("d1_h2_sl_dm1",   "phi",  -1.5,  1.5),
+        ("d1_h2_sl_d0",    "phi",  -1.5,  1.5),
         ("d1_h2_sl_ds1",   "phi",  -1.5,  1.5),
         ("d1_h2_sl_ds2",   "phi",  -1.5,  1.5),
         ("d1_h2_sl_ds3",   "phi",  -1.5,  1.5),
         ("d1_h2_sl_ds4",   "phi",  -1.5,  1.5),
         ("d1_h2_sl_ds5",   "phi",  -1.5,  1.5),
-        ("d1_h2_sl_ds6",   "phi",  -1.5,  1.5),
 
-        ("d2_h2_sl_d0a",   "phi",  -1.5,  1.5),
-        ("d2_h2_sl_d0b",   "phi",  -1.5,  1.5),
-        ("d2_h2_sl_d0c",   "phi",  -1.5,  1.5),
+        ("d2_h2_sl_df0",   "phi",  -1.5,  1.5),
         ("d2_h2_sl_df1",   "phi",  -1.5,  1.5),
         ("d2_h2_sl_df2",   "phi",  -1.5,  1.5),
         ("d2_h2_sl_df3",   "phi",  -1.5,  1.5),
         ("d2_h2_sl_df4",   "phi",  -1.5,  1.5),
         ("d2_h2_sl_df5",   "phi",  -1.5,  1.5),
+        ("d2_h2_sl_df6",   "phi",  -1.5,  1.5),
 
-        ("d2_h2_sl_d0a_2", "phi",  -1.5,  1.5),
-        ("d2_h2_sl_d0b_2", "phi",  -1.5,  1.5),
-        ("d2_h2_sl_d0c_2", "phi",  -1.5,  1.5),
-        ("d2_h2_sl_df1_2", "phi",  -1.5,  1.5),
-        ("d2_h2_sl_df2_2", "phi",  -1.5,  1.5),
-        ("d2_h2_sl_df3_2", "phi",  -1.5,  1.5),
-        ("d2_h2_sl_df4_2", "phi",  -1.5,  1.5),
-        ("d2_h2_sl_df5_2", "phi",  -1.5,  1.5)
+        ("d2_2_h2_sl_df0", "phi",  -1.5,  1.5),
+        ("d2_2_h2_sl_df1", "phi",  -1.5,  1.5),
+        ("d2_2_h2_sl_df2", "phi",  -1.5,  1.5),
+        ("d2_2_h2_sl_df3", "phi",  -1.5,  1.5),
+        ("d2_2_h2_sl_df4", "phi",  -1.5,  1.5),
+        ("d2_2_h2_sl_df5", "phi",  -1.5,  1.5),
+        ("d2_2_h2_sl_df6", "phi",  -1.5,  1.5)
    ]
 
     rb_list = ["r1_h2", "r2_h2", "r3_h2"]
