@@ -3,18 +3,34 @@
 """
 
 
-import logging
-
-# Levels: DEBUG, INFO, WARNING, ERROR, and CRITICAL.
-logging.basicConfig(level="WARNING")
-logger = logging.getLogger("thor_scsi")
-
-from dataclasses import dataclass
 import os
+import sys
+from dataclasses import dataclass
+from typing import ClassVar
 
 import numpy as np
 
 from thor_scsi.utils import lattice_properties as lp, index_class as ind
+
+import gtpsa
+
+
+@dataclass
+class gtpsa_prop:
+    # GTPSA properties.
+    # Number of variables - phase-space coordinates & 1 for parameter
+    #dependence.
+    nv: ClassVar[int] = 6 + 1
+    # Max order.
+    no: ClassVar[int] = 1
+    # Number of parameters.
+    nv_prm: ClassVar[int] = 0
+    # Parameters max order.
+    no_prm: ClassVar[int] = 0
+    # Index.
+    named_index = gtpsa.IndexMapping(dict(x=0, px=1, y=2, py=3, delta=4, ct=5))
+    # Descriptor
+    desc : ClassVar[gtpsa.desc]
 
 
 def compute_scl_fact(lat_prop, bend_list):
@@ -31,19 +47,13 @@ def compute_scl_fact(lat_prop, bend_list):
 
 def set_phi_rb(lat_prop, phi_uc, bend_list, bend_scl, phi_rb):
     dphi = phi_uc/2e0 - phi_rb
-    lat_prop.set_phi_fam("qf1", phi_rb)
+    lat_prop.set_phi_fam("r3_h2", phi_rb)
     for k in range(len(bend_scl)):
         lat_prop.set_phi_fam(bend_list[k], bend_scl[k]*dphi)
 
 
-# Number of phase-space coordinates.
-nv = 7
-# Variables max order.
-no = 2
-# Number of parameters.
-nv_prm = 0
-# Parameters max order.
-no_prm = 0
+# TPSA max order.
+gtpsa_prop.no = 2
 
 cod_eps = 1e-15
 E_0     = 3.0e9
@@ -51,49 +61,53 @@ E_0     = 3.0e9
 ind = ind.index_class()
 
 home_dir = os.path.join(
-    os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "MAX_4U")
-# lat_name = "max_4u_uc"
-lat_name = "max_4u_sp_1"
-file_name = os.path.join(home_dir, lat_name+".lat")
+    os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "MAX_IV")
 
-lat_prop = \
-    lp.lattice_properties_class(nv, no, nv_prm, no_prm, file_name, E_0, cod_eps)
+file_name = os.path.join(home_dir, sys.argv[1]+".lat")
 
-lat_prop.get_types()
+lat_prop = lp.lattice_properties_class(gtpsa_prop, file_name, E_0, cod_eps)
 
-# Compute Twiss parameters along lattice.
-stable = lat_prop.comp_per_sol()
-print("\nCircumference [m]      = {:7.5f}".format(lat_prop.compute_circ()))
-print("Total bend angle [deg] = {:7.5f}".format(lat_prop.compute_phi_lat()))
-lat_prop.prt_M()
-if not stable:
-    print("\ncomp_per_sol - unstable")
-    assert False
-if not False:
-    lat_prop.plt_Twiss(lat_name+".png", not False)
+try:
+    # Compute Twiss parameters along lattice.
+    if not lat_prop.comp_per_sol():
+        print("\ncomp_per_sol: unstable")
+        raise ValueError
 
-lat_prop.prt_lat_param()
+    # Adjust RF phase for sign of alpha_c.
+    cav_loc = lat_prop._lattice.find("cav", 0)
+    if lat_prop._alpha_c >= 0e0:
+        cav_loc.set_phase(0.0)
+    else:
+        print("  alpha_c = {:10.3e} phi_rf = 180 deg".
+              format(lat_prop._alpha_c))
+        cav_loc.set_phase(180.0)
 
-lat_prop.prt_Twiss("twiss.txt")
-
-if not False:
-    # Compute radiation properties.
-    stable = lat_prop.compute_radiation()
-    if not stable:
-        print("\ncompute_radiation - unstable")
-        assert False
+   # Compute radiation properties.
+    if not lat_prop.compute_radiation():
+        print("\ncompute_radiation: unstable")
+        raise ValueError
+except ValueError:
+    exit
+else:
+    lat_prop.prt_lat_param()
     lat_prop.prt_rad()
+    lat_prop.prt_M()
     lat_prop.prt_M_rad()
+    if not False:
+        lat_prop.plt_Twiss(file_name+".png", not False)
+
+phi_uc    = 2.85890
+bend_list = ["d2_h2_sl_df0", "d2_h2_sl_df1", "d2_h2_sl_df2", "d2_h2_sl_df3",
+             "d2_h2_sl_df4", "d2_h2_sl_df5", "d2_h2_sl_df6"]
+
+bend_scl = compute_scl_fact(lat_prop, bend_list)
+
+loc = lat_prop._lattice.find("d2_h2_sl_df0", 0).index
+print(f"  loc = {loc:d}")
+phi, eps_x, J_x, J_z, alpha_c = \
+    lat_prop.unit_cell_rev_bend(
+        loc, 30, -0.8, set_phi_rb, phi_uc, bend_list, bend_scl)
 
 if not False:
-    phi_uc    = 3.0
-    bend_list = ["b1_0", "b1_1", "b1_2", "b1_3", "b1_4", "b1_5"]
-
-    bend_scl = compute_scl_fact(lat_prop, bend_list)
-
-    phi, eps_x, J_x, J_z, alpha_c = \
-        lat_prop.unit_cell_rev_bend(
-            15, -0.9, set_phi_rb, phi_uc, bend_list, bend_scl)
-
     lat_prop.plt_scan_phi_rb(
-        lat_name+"_phi_rb.png", phi, eps_x, J_x, J_z, alpha_c, True)
+        file_name+"_phi_rb.png", phi, eps_x, J_x, J_z, alpha_c, True)

@@ -126,6 +126,8 @@ class opt_sp_class:
             nu_sp_des, beta_des, dnu_des, nld):
 
         self._lat_prop       = lat_prop
+        self._rf_cav_name    = "cav"
+        self._cav_loc        = lat_prop._lattice.find(self._rf_cav_name, 0)
         self._nld            = nld
         self._prm_list       = prm_list
         self._uc_list        = uc_list
@@ -557,6 +559,15 @@ try:
         print("\ncomp_per_sol: unstable")
         raise ValueError
 
+    # Adjust RF phase for sign of alpha_c.
+    cav_loc = lat_prop._lattice.find("cav", 0)
+    if lat_prop._alpha_c >= 0e0:
+        cav_loc.set_phase(0.0)
+    else:
+        print("  alpha_c = {:10.3e} phi_rf = 180 deg".
+              format(lat_prop._alpha_c))
+        cav_loc.set_phase(180.0)
+
     # Compute radiation properties.
     if not lat_prop.compute_radiation():
         print("\ncompute_radiation: unstable")
@@ -621,7 +632,7 @@ nld = nld_class.nonlin_dyn_class(lat_prop, A_max, beta_inj, delta_max, b_3_list)
 nld.zero_mult(lat_prop, 3)
 nld.zero_mult(lat_prop, 4)
 
-step = 2;
+step = 1;
 
 if step == 1:
     weight = np.array([

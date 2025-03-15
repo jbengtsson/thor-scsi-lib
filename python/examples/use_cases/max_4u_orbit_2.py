@@ -26,7 +26,7 @@ import gtpsa
 ind = ind.index_class()
 
 eps_x_des   = 49e-12
-alpha_c_des = 1e-4
+alpha_c_des = -1e-4
 nu_uc_des   = [0.4, 0.1]
 nu_sp_des   = [2.89, 0.91]
 beta_des    = [5.0, 3.0]
@@ -126,6 +126,8 @@ class opt_sp_class:
             nu_sp_des, beta_des, dnu_des, nld):
 
         self._lat_prop       = lat_prop
+        self._rf_cav_name    = "cav"
+        self._cav_loc        = lat_prop._lattice.find(self._rf_cav_name, 0)
         self._nld            = nld
         self._prm_list       = prm_list
         self._uc_list        = uc_list
@@ -381,6 +383,14 @@ class opt_sp_class:
                     print("\ncomp_per_sol: unstable")
                     raise ValueError
 
+                # Adjust RF phase for sign of alpha_c.
+                if self._lat_prop._alpha_c >= 0e0:
+                    self._cav_loc.set_phase(0e0)
+                else:
+                    self._cav_loc.set_phase(180e0)
+                    print("\nopt_sp:  alpha_c = {:10.3e} => phi_rf = 180 deg".
+                          format(self._lat_prop._alpha_c))
+
                 # Compute radiation properties.
                 stable, stable_rad = self._lat_prop.compute_radiation()
                 if not stable or not stable_rad:
@@ -406,10 +416,6 @@ class opt_sp_class:
             else:
                 self._alpha_c = compute_alpha_c(self._nld._M)
                 lat_prop._desc.truncate(1)
-                if self._alpha_c[1] < 0e0:
-                    print("\nf_sp:\n  alpha_c = [{:9.3e}, {:9.3e}]".
-                          format(self._alpha_c[1], self._alpha_c[2]))
-                    assert False
                 _, _, _, self._nu_0 = self._lat_prop.get_Twiss(uc_list[0])
                 self._eta_list[0], self._alpha_list[0], _, self._nu_1 = \
                     self._lat_prop.get_Twiss(uc_list[1])
@@ -548,7 +554,16 @@ try:
         print("\ncomp_per_sol: unstable")
         raise ValueError
 
-    # Compute radiation properties.
+    # Adjust RF phase for sign of alpha_c.
+    cav_loc = lat_prop._lattice.find("cav", 0)
+    if lat_prop._alpha_c >= 0e0:
+        cav_loc.set_phase(0.0)
+    else:
+        print("  alpha_c = {:10.3e} phi_rf = 180 deg".
+              format(lat_prop._alpha_c))
+        cav_loc.set_phase(180.0)
+
+   # Compute radiation properties.
     if not lat_prop.compute_radiation():
         print("\ncompute_radiation: unstable")
         raise ValueError
@@ -608,12 +623,12 @@ nld = nld_class.nonlin_dyn_class(lat_prop, A_max, beta_inj, delta_max, b_3_list)
 nld.zero_mult(lat_prop, 3)
 nld.zero_mult(lat_prop, 4)
 
-step = 2;
+step = 1;
 
 if step == 1:
     weight = np.array([
         1e15,  # eps_x.
-        1e1,   # alpha_c.
+        1e2,   # alpha_c.
         0e-15, # U_0.
         1e2,   # etap_x_uc.
         1e-2,  # alpha_uc.
@@ -640,9 +655,9 @@ if step == 1:
         (d2_bend,   "b_2_bend", -1.5,   1.5),
         (d2_2_bend, "b_2_bend", -1.5,   1.5),
 
-        ("r1_h2",   "phi",      -0.5,   0.5),
-        ("r2_h2",   "phi",      -0.3,   0.0),
-        ("r3_h2",   "phi",      -0.3,   0.0),
+        # ("r1_h2",   "phi",      -0.5,   0.5),
+        # ("r2_h2",   "phi",      -0.3,   0.0),
+        # ("r3_h2",   "phi",      -0.3,   0.0),
         (d1_bend,   "phi_bend",  1.1,   1.5),
         (d2_bend,   "phi_bend",  1.5,   1.75),
         (d2_2_bend, "phi_bend",  1.5,   2.5)
