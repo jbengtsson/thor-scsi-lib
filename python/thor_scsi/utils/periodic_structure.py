@@ -83,8 +83,12 @@ class periodic_structure_class:
         return np.sum([elem.get_length() for elem in self._lattice])
 
     def compute_alpha_c(self):
-        self._alpha_c = \
-            self._M.iloc[ind.ct].getv(1)[ind.delta]/self.compute_circ()
+        C = self.compute_circ()
+        index = np.zeros(self._nv, int)
+        self._alpha_c = np.zeros(self._no+1)
+        for k in range(1, self._no+1):
+            index[ind.delta] = k
+            self._alpha_c[k] = self._M.ct.get(index)/C
 
     def get_type_code(self, elem):
         match type(elem):
@@ -326,8 +330,7 @@ class periodic_structure_class:
         print(f"  beta    = [{beta[ind.X]:5.3f}, {beta[ind.Y]:5.3f}]")
         print(f"  nu      = [{nu[ind.X]:18.16f}, {nu[ind.Y]:18.16f}]")
         print(f"  xi      = [{xi[ind.X]:7.5f}, {xi[ind.Y]:7.5f}]")
-        print(f"  alpha_c = {self._alpha_c:10.3e}")
-
+        print(f"  alpha_c = [{self._alpha_c[1]:9.3e}, {self._alpha_c[2]:9.3e}]")
 
     def prt_Twiss(self, file_name):
         """

@@ -539,7 +539,7 @@ def compute_map_and_diag(
          Rename phase space origin fix point
     """
     t_map = \
-        compute_map(lat, model_state, desc=desc, no=1)
+        compute_map(lat, model_state, desc=desc, no=2)
     M = np.array(t_map.jacobian())
     logger.info("\ncompute_map_and_diag\nM:\n" + mat2txt(M))
 

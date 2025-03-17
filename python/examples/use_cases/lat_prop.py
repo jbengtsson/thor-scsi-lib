@@ -41,15 +41,15 @@ class gtpsa_prop:
 def compute_optics(lat_prop):
     try:
         # Compute Twiss parameters along lattice.
+        lat_prop._desc.truncate(gtpsa_prop.no)
         if not lat_prop.comp_per_sol():
             print("\ncomp_per_sol: unstable")
             raise ValueError
 
         # Adjust RF phase for sign of alpha_c.
         print("\ncompute_optics:")
-        print("  alpha_c = {:10.3e}".format(lat_prop._alpha_c))
         cav_loc = lat_prop._lattice.find("cav", 0)
-        if lat_prop._alpha_c >= 0e0:
+        if lat_prop._alpha_c[1] >= 0e0:
             cav_loc.set_phase(0.0)
         else:
             print("  phi_rf  = 180 deg") 
@@ -66,7 +66,7 @@ def compute_optics(lat_prop):
 
 
 # TPSA max order.
-gtpsa_prop.no = 6
+gtpsa_prop.no = 2
 
 cod_eps = 1e-15
 E_0     = 3.0e9
