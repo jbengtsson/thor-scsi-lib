@@ -16,6 +16,7 @@ from typing import ClassVar
 import math
 import numpy as np
 
+from scipy.constants import c as c0
 from scipy.interpolate import CubicSpline
 
 import gtpsa
@@ -116,12 +117,16 @@ def compute_orbit(s_ref, X_ref, Y_ref, p_x_ref, X, Y, k):
     return Dx, Dy, dxy, dx
 
 
-def prt_layout(file_name, s, X, Y, p_x):
+def prt_layout(lat_prop, file_name, s, X, Y, p_x):
     file = open(file_name, "w")
 
     print("# k      s            X          Y         p_x\n"
           "#                    [m]        [m]       [rad]", file=file)
     for k in range(len(s)):
+        elem = lat_prop._lattice[k]
+        name = elem.name
+        L = elem.get_length()
+        phi = math.radians(get_phi(elem))
         print(f"{k:4d}  {s[k]:9.5f}  {X(s[k]):9.5f}  {Y(s[k]):9.5f}"
               f"  {p_x[k]:9.5f}", file=file)
 
@@ -140,6 +145,39 @@ def prt_orbit(s_ref, X_ref, Y_ref, p_x_ref, X, Y):
               f"   {dx:12.5e}", file=file)
 
 
+def prt_orbit_tab(lat_prop, X_ref, Y_ref, p_x_ref, X_cs, Y_cs):
+
+    def prt_name():
+        if type(elem) == ts.Drift:
+            print("Straight", file=file)
+        else:
+            print(f"{elem.name:s}", file=file)
+
+    file_name = "orbit_tab.txt"
+    file = open(file_name, "w")
+
+    Brho = lat_prop._model_state.Energy/c0
+    print("\n  Brho = {Brho:5.3f}")
+    s = 0.0
+    print("\n\n\tLattice type\tstandard\n\n", file=file)
+    print("\tName\tStart [m]\tCentre [m]\t End [m]\tLength [m]"
+          "\tBending angle [deg]\tBy @ x=0 [T]\tx [m]\ty [m]", file=file)
+    for k, elem in enumerate(lat_prop._lattice):
+        L = elem.get_length()
+        phi = math.radians(get_phi(elem))
+        if phi == 0.0:
+            B_y = 0.0
+        else:
+            B_y = Brho*L/phi
+        Dx, Dy, dxy, dx = compute_orbit(
+            s, X_ref, Y_ref, p_x_ref, X_cs, Y_cs, k)
+        prt_name()
+        print(f"\t{s:5.3f}\t{s+L/2.0:5.3f}\t{s+L:5.3f}\t{L:5.3f}"
+              f"\t{phi:9.7f}\t{B_y:11.9f}\t\t\t{Dx:8.6f}\t{Dy:8.6f}",
+              file=file)
+        s += s
+
+
 # TPSA max order.
 gtpsa_prop.no = 1
 
@@ -154,10 +192,11 @@ file_name = os.path.join(home_dir, sys.argv[1]+".lat")
 
 lat_ref = get_lat(file_name_ref, "lattice_ref_lat.txt", E_0)
 s_ref, X_ref, Y_ref, p_x_ref = compute_layout(lat_ref)
-prt_layout("lattice_ref_layout.txt", s_ref, X_ref, Y_ref, p_x_ref)
+prt_layout(lat_ref, "lattice_ref_layout.txt", s_ref, X_ref, Y_ref, p_x_ref)
 
 lat_prop = get_lat(file_name, "lattice_lat.txt", E_0)
-s, X, Y, p_x = compute_layout(lat_prop)
-prt_layout("lattice_layout.txt", s, X, Y, p_x)
+s, X_cs, Y_cs, p_x = compute_layout(lat_prop)
+prt_layout(lat_prop, "lattice_layout.txt", s, X_cs, Y_cs, p_x)
 
-prt_orbit(s_ref, X_ref, Y_ref, p_x_ref, X, Y)
+prt_orbit(s_ref, X_ref, Y_ref, p_x_ref, X_cs, Y_cs)
+prt_orbit_tab(lat_prop, X_ref, Y_ref, p_x_ref, X_cs, Y_cs)
