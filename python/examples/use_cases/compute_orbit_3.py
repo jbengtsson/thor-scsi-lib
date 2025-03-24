@@ -109,10 +109,6 @@ def compute_layout(lat_prop):
     return s_buf, X_cs, Y_cs
 
 
-def compute_orbit(s, X_cs, Y_cs):
-    return X_cs(s), Y_cs(s)
-
-
 def prt_layout(lat_prop, file_name, s, X_cs, Y_cs):
     file = open(file_name, "w")
 
@@ -133,8 +129,8 @@ def prt_orbit(s, X_cs, Y_cs):
 
     print("# k      s             X             Y\n"
           "#                     [m]           [m]", file=file)
-    for k in range(len(s_ref)):
-        print(f"{k:4d}  {s[k]:9.5f}  {X_cs(s):12.5e}  {Y_cs(s):12.5e}",
+    for k in range(len(s)):
+        print(f"{k:4d}  {s[k]:9.5f}  {X_cs(s[k]):12.5e}  {Y_cs(s[k]):12.5e}",
               file=file)
 
 
@@ -162,11 +158,10 @@ def prt_orbit_tab(lat_prop, X_cs, Y_cs):
                 B_y = 0e0
             else:
                 B_y = -Brho*phi/L
-            X, Y = compute_orbit(s, X_cs, Y_cs)
             prt_name()
             print(f"\t{s:6.4f}\t{s+L/2.0:6.4f}\t{s+L:6.4f}\t{L:6.4f}"
                   f"\t{math.degrees(phi):9.7f}\t{B_y:11.9f}"
-                  f"\t\t\t{-Dx:8.6f}\t{-Dy:8.6f}",
+                  f"\t\t\t{X_cs(s):8.6f}\t{Y_cs(s):8.6f}",
                   file=file)
             s += L
 
@@ -186,5 +181,5 @@ lat_prop = get_lat(file_name, "lattice_lat.txt", E_0)
 s, X_cs, Y_cs = compute_layout(lat_prop)
 prt_layout(lat_prop, "lattice_layout.txt", s, X_cs, Y_cs)
 
-prt_orbit(s_ref, X_cs, Y_cs)
+prt_orbit(s, X_cs, Y_cs)
 prt_orbit_tab(lat_prop, X_cs, Y_cs)
