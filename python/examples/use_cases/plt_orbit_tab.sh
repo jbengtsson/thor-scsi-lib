@@ -32,11 +32,10 @@ set style line 2 lt 1 lw 1 lc rgb "green"
 set style line 3 lt 1 lw 1 lc rgb "red"
 
 if (ps) set output file_name.".".(ext)
-set title "Orbit"
-set xlabel "s [m]"
-set ylabel "[mm]"
-plot file_name.".txt" using 2:(1e3*\$8) title "Dx" with lines ls 1, \
-     file_name.".txt" using 2:(1e3*\$9) title "Dy" with lines ls 3
+set title "Layout - Y(X)"
+set xlabel "X [m]"
+set ylabel "Y [m]"
+plot file_name.".txt" using 8:9 notitle w lines ls 1
 if (!ps) pause mouse "click on graph to cont.\n"
 
 
