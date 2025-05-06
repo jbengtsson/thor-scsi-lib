@@ -92,9 +92,12 @@ def get_lat(file_name, E_0):
 
 
 def get_phi(el):
-    L = el.get_length()
-    if el.get_curvature() is not None:
-        phi = math.degrees(L*el.get_curvature())
+    if (type(el) == ts.Bending) or (type(el) == ts.Quadrupole):
+        if el.get_curvature() is not None:
+            L = el.get_length()
+            phi = math.degrees(L*el.get_curvature())
+        else:
+            phi = 0e0
     else:
         phi = 0e0
     return phi
