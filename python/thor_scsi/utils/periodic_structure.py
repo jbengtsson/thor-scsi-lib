@@ -209,7 +209,7 @@ class periodic_structure_class:
     def plt_scan_phi_rb(self, file_name, phi, eps_x, J_x, J_z, alpha_c, plot):
         fig, (gr_1, gr_2) = plt.subplots(2)
 
-        fig.suptitle(r"Lattice Trade-Offs vs. Reverse Bend Angle")
+        fig.suptitle(r"Unit Dipole Cell Trade-Offs vs. Reverse Bend Angle")
 
         gr_1.set_title(
             r"$[\epsilon_x\left(\phi_{RB}\right)$"
