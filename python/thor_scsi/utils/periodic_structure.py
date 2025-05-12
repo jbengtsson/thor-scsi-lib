@@ -50,7 +50,7 @@ class periodic_structure_class:
         # Descriptor for Truncated Power Series Algebra variables.
         self._desc = gtpsa.desc(
             gtpsa_prop.nv, gtpsa_prop.no, gtpsa_prop.nv_prm, gtpsa_prop.no_prm)
-        to = 1
+        to = 2
         self._desc.truncate(to)
         # .truncate(to) sets the new & returns the old to.
         print("\nperiodic_structure_class:\n  no = {:d} nv = {:d} to = {:d}".
