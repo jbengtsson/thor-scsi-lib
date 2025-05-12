@@ -28,10 +28,10 @@ ind = ind.index_class()
 b_2_bend_max = 1.0
 b_2_max      = 10.0
 
-eps_x_des    = 49e-12
-alpha_c_des  = 5e-5
+eps_x_des    = 60e-12
+alpha_c_des  = 0.5e-4
 nu_uc_des    = [0.4, 0.1]
-nu_sp_des    = [2.89, 0.91]
+nu_sp_des    = [2.87, 1.1]
 beta_des     = [5.0, 3.0]
 dnu_des      = [0.75, 0.25]     # Phase advance across the straight.
 
@@ -267,85 +267,90 @@ class opt_sp_class:
         if prt:
             print("\n  dchi2(eps_x)        = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[1]*(self._lat_prop._alpha_c-alpha_c_des)**2
+        dchi_2 = weight[1]*1e0/self._alpha_c[1]**2
         chi_2 += dchi_2
         if prt:
-            print("  dchi2(alpha_c)      = {:9.3e}".format(dchi_2))
+            print("  dchi2(alpha^(1)_c)  = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[2]*self._lat_prop._U_0**2
+        dchi_2 = weight[2]*(self._alpha_c[2])**2
+        chi_2 += dchi_2
+        if prt:
+            print("  dchi2(alpha^(2)_c)  = {:9.3e}".format(dchi_2))
+
+        dchi_2 = weight[3]*self._lat_prop._U_0**2
         chi_2 += dchi_2
         if prt:
             print("  dchi2(U_0)          = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[3]*(self._eta_list[0][ind.px]**2
+        dchi_2 = weight[4]*(self._eta_list[0][ind.px]**2
                             +self._eta_list[1][ind.px]**2)
         chi_2 += dchi_2
         if prt:
             print("  dchi2(eta'_uc)      = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[4]*(
+        dchi_2 = weight[5]*(
             self._alpha_list[0][ind.X]**2+self._alpha_list[0][ind.Y]**2)
         chi_2 += dchi_2
         if prt:
             print("  dchi2(alpha_uc)     = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[4]*(
+        dchi_2 = weight[5]*(
             self._alpha_list[1][ind.X]**2+self._alpha_list[1][ind.Y]**2)
         chi_2 += dchi_2
         if prt:
             print("  dchi2(alpha_uc)     = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[5]*(self._nu_uc[ind.X]-self._nu_uc_des[ind.X])**2
+        dchi_2 = weight[6]*(self._nu_uc[ind.X]-self._nu_uc_des[ind.X])**2
         chi_2 += dchi_2
         if prt:
             print("  dchi2(nu_uc_x)      = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[6]*(self._nu_uc[ind.Y]-self._nu_uc_des[ind.Y])**2
+        dchi_2 = weight[7]*(self._nu_uc[ind.Y]-self._nu_uc_des[ind.Y])**2
         chi_2 += dchi_2
         if prt:
             print("  dchi2(nu_uc_y)      = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[7]*eta[ind.x]**2
+        dchi_2 = weight[8]*eta[ind.x]**2
         chi_2 += dchi_2
         if prt:
             print("  dchi2(eta_x)        = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[8]*(nu_sp[ind.X]-self._nu_sp_des[ind.X])**2
+        dchi_2 = weight[9]*(nu_sp[ind.X]-self._nu_sp_des[ind.X])**2
         chi_2 += dchi_2
         if prt:
             print("  dchi2(nu_sp_x)      = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[9]*(nu_sp[ind.Y]-self._nu_sp_des[ind.Y])**2
+        dchi_2 = weight[10]*(nu_sp[ind.Y]-self._nu_sp_des[ind.Y])**2
         chi_2 += dchi_2
         if prt:
             print("  dchi2(nu_sp_y)      = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[10]*(beta[ind.X]-self._beta_des[ind.X])**2
+        dchi_2 = weight[11]*(beta[ind.X]-self._beta_des[ind.X])**2
         chi_2 += dchi_2
         if prt:
             print("  dchi2(beta_x)       = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[11]*(beta[ind.Y]-self._beta_des[ind.Y])**2
+        dchi_2 = weight[12]*(beta[ind.Y]-self._beta_des[ind.Y])**2
         chi_2 += dchi_2
         if prt:
             print("  dchi2(beta_y)       = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[12]*(self._dnu[ind.X]-self._dnu_des[ind.X])**2
+        dchi_2 = weight[13]*(self._dnu[ind.X]-self._dnu_des[ind.X])**2
         chi_2 += dchi_2
         if prt:
             print("  dchi2(dnu_x)        = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[13]*(self._dnu[ind.Y]-self._dnu_des[ind.Y])**2
+        dchi_2 = weight[14]*(self._dnu[ind.Y]-self._dnu_des[ind.Y])**2
         chi_2 += dchi_2
         if prt:
             print("  dchi2(dnu_y)        = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[14]*(self._xi[ind.X]**2+self._xi[ind.Y]**2)
+        dchi_2 = weight[15]*(self._xi[ind.X]**2+self._xi[ind.Y]**2)
         chi_2 += dchi_2
         if prt:
             print("  dchi2(xi)           = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[15]*self._dx**2
+        dchi_2 = weight[16]*self._dx**2
         chi_2 += dchi_2
         if prt:
             print("  dchi2(dx)           = {:9.3e}".format(dchi_2))
@@ -535,16 +540,18 @@ print("max orbit location                           loc = {:d}".
 d1_list = [
     "d1_h2_sl_dm1", "d1_h2_sl_dm2", "d1_h2_sl_dm3", "d1_h2_sl_dm4",
     "d1_h2_sl_dm5",
-    "d1_h2_sl_ds0", "d1_h2_sl_ds1", "d1_h2_sl_ds2", "d1_h2_sl_ds3",
-    "d1_h2_sl_ds4", "d1_h2_sl_ds5", "d1_h2_sl_ds6",
+    "d1_h2_sl_d0", "d1_h2_sl_ds1", "d1_h2_sl_ds2", "d1_h2_sl_ds3",
+    "d1_h2_sl_ds4", "d1_h2_sl_ds5"
 ]
-d2_list = ["d2_h2_sl_d0a", "d2_h2_sl_d0b", "d2_h2_sl_d0c", "d2_h2_sl_df1",
-           "d2_h2_sl_df2", "d2_h2_sl_df3", "d2_h2_sl_df4", "d2_h2_sl_df5"]
+d2_list = [
+    "d2_h2_sl_df0", "d2_h2_sl_df1", "d2_h2_sl_df2", "d2_h2_sl_df3",
+    "d2_h2_sl_df4", "d2_h2_sl_df5", "d2_h2_sl_df6"
+]
 
 # phi: [1.25, 1.5].
-d1_bend = pc.bend_class(lat_prop, d1_list, 1.25, 1.5, b_2_max)
+d1_bend = pc.bend_class(lat_prop, d1_list)
 # phi: [3.0, 3.5].
-d2_bend = pc.bend_class(lat_prop, d2_list, 3.0, 3.5, b_2_max)
+d2_bend = pc.bend_class(lat_prop, d2_list)
 
 b_3_list = ["s3_h2", "s4_h2"]
 
@@ -552,39 +559,40 @@ nld = nld_class.nonlin_dyn_class(lat_prop, A_max, beta_inj, delta_max, b_3_list)
 nld.zero_mult(lat_prop, 3)
 nld.zero_mult(lat_prop, 4)
 
-step = 1;
+step = 2;
 
 if step == 1:
     weight = np.array([
-        1e16,  # eps_x.
-        1e4,   # alpha_c.
-        1e-15, # U_0.
-        1e2,   # etap_x_uc.
-        1e-2,  # alpha_uc.
-        1e1,   # nu_uc_x.
-        1e1,   # nu_uc_y.
-        1e2,   # eta_x.
-        1e-7,  # nu_sp_x.
-        1e-7,  # nu_sp_y.
-        1e-6,  # beta_x.
-        1e-6,  # beta_y.
-        1e-3,  # dnu_x.
-        0e-3,  # dnu_y.
-        1e-7,  # xi.
-        0e0    # orbit.
+        1e16,  # 0,  eps_x.
+        1e-13, # 1,  alpha^(1)_c.
+        1e2,   # 2,  alpha^(2)_c.
+        1e-15, # 3,  U_0.
+        1e2,   # 4,  etap_x_uc.
+        1e-2,  # 5,  alpha_uc.
+        1e0,   # 6,  nu_uc_x.
+        1e0,   # 7,  nu_uc_y.
+        1e1,   # 8,  eta_x.
+        0e-7,  # 9,  nu_sp_x.
+        0e-7,  # 10, nu_sp_y.
+        0e-6,  # 11, beta_x.
+        0e-6,  # 12, beta_y.
+        1e-3,  # 13, dnu_x.
+        0e-3,  # 14, dnu_y.
+        1e-7,  # 15, xi.
+        0e0    # 16, orbit.
     ])
 
     prms = [
-        ("q1_h2", "b_2"),
-        ("q2_h2", "b_2"),
-        ("r1_h2", "b_2"),
-        ("r2_h2", "b_2"),
+        ("q1_h2", "b_2", -10.0, 10.0),
+        ("q2_h2", "b_2", -10.0, 10.0),
+        ("r1_h2", "b_2", -10.0, 10.0),
+        ("r2_h2", "b_2", -10.0, 10.0),
 
-        ("b_2_bend", d2_bend),
-        ("b_2_bend", d1_bend),
+        (d1_bend,   "b_2_bend", -1.5,   1.5),
+        (d2_bend,   "b_2_bend", -1.5,   1.5),
 
-        ("phi_bend", d2_bend),
-        ("phi_bend", d1_bend),
+        (d1_bend,   "phi_bend",  1.1,   1.5),
+        (d2_bend,   "phi_bend",  1.5,   1.75),
    ]
 
     dprm_list = np.array([
@@ -598,54 +606,55 @@ if step == 1:
     rb = "r2_h2"
 elif step == 2:
     weight = np.array([
-        1e16,  # eps_x.
-        1e4,   # alpha_c.
-        1e-15, # U_0.
-        1e2,   # etap_x_uc.
-        1e-2,  # alpha_uc.
-        1e1,   # nu_uc_x.
-        1e1,   # nu_uc_y.
-        1e2,   # eta_x.
-        1e-7,  # nu_sp_x.
-        1e-7,  # nu_sp_y.
-        1e-6,  # beta_x.
-        1e-6,  # beta_y.
-        1e-3,  # dnu_x.
-        0e-3,  # dnu_y.
-        1e-7,  # xi.
-        0e0    # orbit.
+        1e16,  # 0,  eps_x.
+        1e-13, # 1,  alpha^(1)_c.
+        1e2,   # 2,  alpha^(2)_c.
+        1e-15, # 3,  U_0.
+        1e2,   # 4,  etap_x_uc.
+        1e-2,  # 5,  alpha_uc.
+        1e0,   # 6,  nu_uc_x.
+        1e0,   # 7,  nu_uc_y.
+        1e1,   # 8,  eta_x.
+        0e-7,  # 9,  nu_sp_x.
+        0e-7,  # 10, nu_sp_y.
+        0e-6,  # 11, beta_x.
+        0e-6,  # 12, beta_y.
+        1e-3,  # 13, dnu_x.
+        0e-3,  # 14, dnu_y.
+        1e-7,  # 15, xi.
+        0e0    # 16, orbit.
     ])
 
     prms = [
-        ("q1_h2", "b_2"),
-        ("q2_h2", "b_2"),
-        ("r1_h2", "b_2"),
-        ("r2_h2", "b_2"),
+        ("q1_h2", "b_2", -10.0, 10.0),
+        ("q2_h2", "b_2", -10.0, 10.0),
+        ("r1_h2", "b_2", -10.0, 10.0),
+        ("r2_h2", "b_2", -10.0, 10.0),
+        (d1_bend,   "b_2_bend", -1.5,   1.5),
+        (d2_bend,   "b_2_bend", -1.5,   1.5),
 
-        ("b_2_bend", d2_bend),
-        ("b_2_bend", d1_bend),
+        (d1_bend,   "b_2_bend", -1.5,   1.5),
+        (d2_bend,   "b_2_bend", -1.5,   1.5),
 
-        ("d1_h2_sl_ds6", "phi"),
-        ("d1_h2_sl_ds5", "phi"),
-        ("d1_h2_sl_ds4", "phi"),
-        ("d1_h2_sl_ds3", "phi"),
-        ("d1_h2_sl_ds2", "phi"),
-        ("d1_h2_sl_ds1", "phi"),
-        ("d1_h2_sl_ds0", "phi"),
-        ("d1_h2_sl_dm1", "phi"),
-        ("d1_h2_sl_dm2", "phi"),
-        ("d1_h2_sl_dm3", "phi"),
-        ("d1_h2_sl_dm4", "phi"),
-        ("d1_h2_sl_dm5", "phi"),
+        ("d1_h2_sl_ds5", "phi",  -1.5,  1.5),
+        ("d1_h2_sl_ds4", "phi",  -1.5,  1.5),
+        ("d1_h2_sl_ds3", "phi",  -1.5,  1.5),
+        ("d1_h2_sl_ds2", "phi",  -1.5,  1.5),
+        ("d1_h2_sl_ds1", "phi",  -1.5,  1.5),
+        ("d1_h2_sl_d0",  "phi",   -1.5,  1.5),
+        ("d1_h2_sl_dm1", "phi",  -1.5,  1.5),
+        ("d1_h2_sl_dm2", "phi",  -1.5,  1.5),
+        ("d1_h2_sl_dm3", "phi",  -1.5,  1.5),
+        ("d1_h2_sl_dm4", "phi",  -1.5,  1.5),
+        ("d1_h2_sl_dm5", "phi",  -1.5,  1.5),
 
-        ("d2_h2_sl_d0a", "phi"),
-        ("d2_h2_sl_d0b", "phi"),
-        ("d2_h2_sl_d0c", "phi"),
-        ("d2_h2_sl_df1", "phi"),
-        ("d2_h2_sl_df2", "phi"),
-        ("d2_h2_sl_df3", "phi"),
-        ("d2_h2_sl_df4", "phi"),
-        ("d2_h2_sl_df5", "phi")
+        ("d2_h2_sl_df0", "phi",  -1.5,  1.5),
+        ("d2_h2_sl_df1", "phi",  -1.5,  1.5),
+        ("d2_h2_sl_df2", "phi",  -1.5,  1.5),
+        ("d2_h2_sl_df3", "phi",  -1.5,  1.5),
+        ("d2_h2_sl_df4", "phi",  -1.5,  1.5),
+        ("d2_h2_sl_df5", "phi",  -1.5,  1.5),
+        ("d2_h2_sl_df6", "phi",  -1.5,  1.5)
     ]
 
     dprm_list = np.array([
@@ -818,7 +827,7 @@ elif step == 5:
         ("o3",      "b_4")
     ]
 
-prm_list = pc.prm_class(lat_prop, prms, b_2_max)
+prm_list = pc.prm_class(lat_prop, prms)
 
 opt_sp = opt_sp_class(
     lat_ref, lat_prop, prm_list, dprm_list, uc_list, sp_list, weight, d1_bend,
