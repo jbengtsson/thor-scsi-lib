@@ -41,7 +41,14 @@ class bend_class:
         # Compute total length.
         L = 0e0
         for k in range(len(self._bend_list)):
-            L += self._lat_prop.get_L_elem(self._bend_list[k], 0)
+            try:
+                elem_name = self._bend_list[k]
+                dL = self._lat_prop.get_L_elem(elem_name, 0)
+            except:
+                print(f"\ncompute_bend_phi: {elem_name:s}")
+                exit(1)
+            else:
+                L += dL
         return L
 
     def compute_bend_phi(self):
