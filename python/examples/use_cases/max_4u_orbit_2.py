@@ -576,17 +576,16 @@ else:
     lat_prop.prt_M_rad()
 
 uc_list = []
-uc_list.append(lat_prop._lattice.find("d2_2_h2_sl_df0", 0).index)
-uc_list.append(lat_prop._lattice.find("d2_h2_sl_df0", 1).index)
-if True:
-    uc_list.append(lat_prop._lattice.find("d2_h2_sl_df0", 3).index)
+uc_list.append(lat_prop._lattice.find("ucborder", 0).index)
+uc_list.append(lat_prop._lattice.find("ucborder", 1).index)
+uc_list.append(lat_prop._lattice.find("ucborder", 3).index)
 uc_list = np.array(uc_list)
 
 sp_list = np.zeros(3, dtype=int)
 sp_list[0] = lat_prop._lattice.find("lsborder", 0).index
 sp_list[1] = lat_prop._lattice.find("lsborder", 1).index
 # Achromat centre - from cubic spline list.
-sp_list[2] = 128
+sp_list[2] = lat_prop._lattice.find("d2_h2_sl_d0a", 5).index
 
 print("\nunit cell entrance           {:15s} loc = {:d}".
       format(lat_prop._lattice[uc_list[0]].name, uc_list[0]))
