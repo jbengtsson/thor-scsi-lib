@@ -176,7 +176,7 @@ def prt_orbit_tab(lat_prop, X_ref, Y_ref, X_cs, Y_cs):
 
 
 # TPSA max order.
-gtpsa_prop.no = 1
+gtpsa_prop.no = 2
 
 cod_eps = 1e-15
 E_0     = 3.0e9
