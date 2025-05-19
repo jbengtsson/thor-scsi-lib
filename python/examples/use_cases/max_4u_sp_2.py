@@ -571,7 +571,7 @@ if step == 1:
         1e-2,  # 5,  alpha_uc.
         1e0,   # 6,  nu_uc_x.
         1e0,   # 7,  nu_uc_y.
-        1e1,   # 8,  eta_x.
+        1e0,   # 8,  eta_x.
         0e-7,  # 9,  nu_sp_x.
         0e-7,  # 10, nu_sp_y.
         0e-6,  # 11, beta_x.
@@ -614,7 +614,7 @@ elif step == 2:
         1e-2,  # 5,  alpha_uc.
         1e0,   # 6,  nu_uc_x.
         1e0,   # 7,  nu_uc_y.
-        1e1,   # 8,  eta_x.
+        1e0,   # 8,  eta_x.
         0e-7,  # 9,  nu_sp_x.
         0e-7,  # 10, nu_sp_y.
         0e-6,  # 11, beta_x.
