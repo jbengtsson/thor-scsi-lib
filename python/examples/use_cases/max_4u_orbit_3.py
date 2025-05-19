@@ -551,17 +551,16 @@ else:
     lat_prop.prt_M_rad()
 
 uc_list = []
-uc_list.append(lat_prop._lattice.find("d2_h2_sl_d0a", 0).index)
-uc_list.append(lat_prop._lattice.find("d2_h2_sl_d0a", 2).index)
-if True:
-    uc_list.append(lat_prop._lattice.find("d2_h2_sl_d0a", 4).index)
+uc_list.append(lat_prop._lattice.find("ucborder", 0).index)
+uc_list.append(lat_prop._lattice.find("ucborder", 1).index)
+uc_list.append(lat_prop._lattice.find("ucborder", 3).index)
 uc_list = np.array(uc_list)
 
 sp_list = np.zeros(3, dtype=int)
 sp_list[0] = lat_prop._lattice.find("lsborder", 0).index
 sp_list[1] = lat_prop._lattice.find("lsborder", 1).index
 # Achromat centre - from cubic spline list.
-sp_list[2] = 128
+sp_list[2] = lat_prop._lattice.find("d2_h2_sl_d0a", 5).index
 
 print("\nunit cell entrance           {:15s} loc = {:d}".
       format(lat_prop._lattice[uc_list[0]].name, uc_list[0]))
@@ -624,18 +623,16 @@ if step == 1:
         ("q2_h2",   "b_2",      -10.0, 10.0),
         ("r1_h2",   "b_2",      -10.0, 10.0),
         ("r2_h2",   "b_2",      -10.0, 10.0),
-        ("r3_h2",   "b_2",      -10.0, 10.0),
         (d1_bend,   "b_2_bend", -1.5,   1.5),
         (d2_bend,   "b_2_bend", -1.5,   1.5),
 
         ("r1_h2",   "phi",      -0.5,   0.5),
         ("r2_h2",   "phi",      -0.3,   0.0),
-        ("r3_h2",   "phi",      -0.3,   0.0),
         (d1_bend,   "phi_bend",  1.1,   1.5),
         (d2_bend,   "phi_bend",  1.5,   1.75)
    ]
 
-    rb_list = ["r1_h2", "r2_h2", "r3_h2"]
+    rb_list = ["r1_h2", "r2_h2"]
 
 prm_list = pc.prm_class(lat_prop, prms)
 
