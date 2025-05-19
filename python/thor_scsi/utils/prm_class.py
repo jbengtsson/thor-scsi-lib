@@ -45,7 +45,8 @@ class bend_class:
                 elem_name = self._bend_list[k]
                 dL = self._lat_prop.get_L_elem(elem_name, 0)
             except:
-                print(f"\ncompute_bend_phi: {elem_name:s}")
+                print(f"\n*** compute_bend_phi - undefined element:"
+                      f" {elem_name:s}")
                 exit(1)
             else:
                 L += dL
