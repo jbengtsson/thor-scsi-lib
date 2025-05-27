@@ -29,9 +29,6 @@ class periodic_structure_class:
         self._lattice     = []
         self._type_code   = np.nan # Lattice elements type code.
         self._model_state = []
-        self._no          = gtpsa_prop.no
-        self._nv          = gtpsa_prop.nv
-        self._n_dof       = np.nan
 
         self._circ        = np.nan
         self._phi         = np.nan
@@ -50,13 +47,12 @@ class periodic_structure_class:
         # Descriptor for Truncated Power Series Algebra variables.
         self._desc = gtpsa.desc(
             gtpsa_prop.nv, gtpsa_prop.no, gtpsa_prop.nv_prm, gtpsa_prop.no_prm)
-        to = 2
-        self._desc.truncate(to)
+        self._desc.truncate(gtpsa_prop.to)
         # .truncate(to) sets the new & returns the old to.
         print("\nperiodic_structure_class:\n  no = {:d} nv = {:d} to = {:d}".
               format(self._desc.maximum_orders(0, 0),
                      self._desc.number_of_variables(0, 0, 0),
-                     self._desc.truncate(to)))
+                     self._desc.truncate(gtpsa_prop.to)))
 
         # Read in & parse lattice file.
         self._lattice = accelerator_from_config(file_name)
@@ -82,11 +78,11 @@ class periodic_structure_class:
     def compute_circ(self):
         return np.sum([elem.get_length() for elem in self._lattice])
 
-    def compute_alpha_c(self):
+    def compute_alpha_c(self, gtpsa_prop):
         C = self.compute_circ()
-        index = np.zeros(self._nv, int)
-        self._alpha_c = np.zeros(self._no+1)
-        for k in range(1, self._no+1):
+        index = np.zeros(gtpsa_prop.nv, int)
+        self._alpha_c = np.zeros(gtpsa_prop.no+1)
+        for k in range(1, gtpsa_prop.no+1):
             index[ind.delta] = k
             self._alpha_c[k] = self._M.ct.get(index)/C
 
@@ -306,7 +302,7 @@ class periodic_structure_class:
             ])
         return eta, alpha, beta, nu
 
-    def prt_lat_param(self):
+    def prt_lat_param(self, gtpsa_prop):
         eta = np.zeros(2)
         alpha = np.zeros(2)
         beta = np.zeros(2)
@@ -318,7 +314,7 @@ class periodic_structure_class:
             M = lo.compute_map(
                 self._lattice, self._model_state, desc=self._desc, no=2)
             stable, _, xi = \
-                lo.compute_nu_xi(self._desc, self._no, M)
+                lo.compute_nu_xi(self._desc, gtpsa_prop.no, M)
             if not stable:
                 raise ValueError
         except ValueError:
@@ -358,7 +354,7 @@ class periodic_structure_class:
         file.close()
         print("\nprt_Twiss - Twiss parameters saved as:", file_name)
 
-    def comp_per_sol(self):
+    def comp_per_sol(self, gtpsa_prop):
         """Compute the periodic solution for a super period.
         Degrees of freedom - RF cavity is off; i.e., coasting beam.
         """
@@ -370,8 +366,8 @@ class periodic_structure_class:
             lo.compute_map_and_diag(
                 self._n_dof, self._lattice, self._model_state, desc=self._desc)
         if stable:
-            self.compute_alpha_c()
-            A_map = gtpsa.ss_vect_tpsa(self._desc, self._no)
+            self.compute_alpha_c(gtpsa_prop)
+            A_map = gtpsa.ss_vect_tpsa(self._desc, gtpsa_prop.no)
             A_map.set_jacobian(self._A)
             self._Twiss = \
                 lo.compute_Twiss_along_lattice(

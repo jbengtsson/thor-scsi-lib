@@ -23,7 +23,8 @@ class MpoleInd(enum.IntEnum):
 class nonlin_dyn_class:
     # Private.
 
-    def __init__(self, lat_prop, A_max, beta_inj, delta_max, b_3_list):
+    def __init__(
+            self, gtpsa_prop, lat_prop, A_max, beta_inj, delta_max, b_3_list):
         self._A_max        = A_max
         self._beta_inj     = beta_inj
         self._delta_max    = delta_max
@@ -49,7 +50,7 @@ class nonlin_dyn_class:
 
         if b_3_list != []:
             self.compute_twoJ()
-            self.compute_Id_scl(lat_prop)
+            self.compute_Id_scl(gtpsa_prop, lat_prop)
         else:
             print("\nnonlin_dyn_class: b_3_list is empty")
 
@@ -114,10 +115,10 @@ class nonlin_dyn_class:
                 [self._A_max[ind.X]**2/self._beta_inj[ind.X],
                  self._A_max[ind.Y]**2/self._beta_inj[ind.Y]])
 
-    def compute_Id_scl(self, lat_prop):
+    def compute_Id_scl(self, gtpsa_prop, lat_prop):
         self._Id_scl = \
             gtpsa.ss_vect_tpsa(
-                lat_prop._desc, lat_prop._no,
+                lat_prop._desc, gtpsa_prop.no,
                 index_mapping=lat_prop._named_index)
         self._Id_scl.set_identity()
         for k in range(4):
@@ -125,13 +126,13 @@ class nonlin_dyn_class:
                 0e0, k+1, np.sqrt(self._twoJ[k//2]))
         self._Id_scl.delta.set_variable(0e0, 5, self._delta_max)
 
-    def compose_bs(self, lat_prop, h, map):
+    def compose_bs(self, gtpsa_prop, lat_prop, h, map):
         Id = \
             gtpsa.ss_vect_tpsa(
-            lat_prop._desc, lat_prop._no, index_mapping=lat_prop._named_index)
+            lat_prop._desc, gtpsa_prop.no, index_mapping=lat_prop._named_index)
         t_map = \
             gtpsa.ss_vect_tpsa(
-            lat_prop._desc, lat_prop._no, index_mapping=lat_prop._named_index)
+            lat_prop._desc, gtpsa_prop.no, index_mapping=lat_prop._named_index)
         t_map.x = h
         t_map.compose(t_map, map)
         return t_map.x 
@@ -159,13 +160,13 @@ class nonlin_dyn_class:
                or (type(el) == ts.Multipole):
                 el.get_multipoles().set_multipole(n, 0e0)
 
-    def compute_sext_resp_mat_num(self, lat_prop, b_3_list):
+    def compute_sext_resp_mat_num(self, gtpsa_prop, lat_prop, b_3_list):
         # Uses integrated sextupole strength.
         db_3xL = 1e-3
         n = len(b_3_list)
         A = np.zeros((2, n))
         self.compute_map(lat_prop, 2)
-        stable, _, xi = lo.compute_nu_xi(lat_prop._desc, lat_prop._no, self._M)
+        stable, _, xi = lo.compute_nu_xi(lat_prop._desc, gtpsa_prop.no, self._M)
         if stable:
             for k in range(n):
                 b_3xL = \
@@ -173,13 +174,13 @@ class nonlin_dyn_class:
                 lat_prop.set_b_nxL_fam(b_3_list[k], MpoleInd.sext, b_3xL-db_3xL)
                 self.compute_map(lat_prop, 2)
                 stable, _, xi_1 =  \
-                    lo.compute_nu_xi(lat_prop._desc, lat_prop._no, self._M)
+                    lo.compute_nu_xi(lat_prop._desc, gtpsa_prop.no, self._M)
                 if stable:
                     lat_prop.set_b_nxL_fam(
                         b_3_list[k], MpoleInd.sext, b_3xL+db_3xL)
                     self.compute_map(lat_prop, 2)
                     stable, _, xi_2 = \
-                        lo.compute_nu_xi(lat_prop._desc, lat_prop._no, self._M)
+                        lo.compute_nu_xi(lat_prop._desc, gtpsa_prop.no, self._M)
                     a_ij = (xi_2-xi_1)/(2e0*db_3xL)
                     A[ind.X, k] = a_ij[ind.X]
                     A[ind.Y, k] = a_ij[ind.Y]
@@ -208,32 +209,32 @@ class nonlin_dyn_class:
                 b_3_val.append(b_3)
 
             M = gtpsa.ss_vect_tpsa(
-                lat_prop._desc, lat_prop._no, lat_prop._nv,
+                lat_prop._desc, gtpsa_prop.no, lat_prop._nv,
             index_mapping=lat_prop._named_index)
             self.compute_map(lat_prop, 2)
             stable, _, xi = \
-                lo.compute_nu_xi(lat_prop._desc, lat_prop._no, self._M)
+                lo.compute_nu_xi(lat_prop._desc, gtpsa_prop.no, self._M)
 
         return stable, xi, np.array(b_3_val)
 
-    def compute_h(self, lat_prop):
-        h    = gtpsa.tpsa(lat_prop._desc, lat_prop._no)
-        self._h_re = gtpsa.tpsa(lat_prop._desc, lat_prop._no)
-        self._h_im = gtpsa.tpsa(lat_prop._desc, lat_prop._no)
+    def compute_h(self, gtpsa_prop, lat_prop):
+        h    = gtpsa.tpsa(lat_prop._desc, gtpsa_prop.no)
+        self._h_re = gtpsa.tpsa(lat_prop._desc, gtpsa_prop.no)
+        self._h_im = gtpsa.tpsa(lat_prop._desc, gtpsa_prop.no)
 
         self._M.M_to_h_DF(h)
         h.CtoR(self._h_re, self._h_im)
 
-    def compute_map_normal_form(self, lat_prop):
-        A_0        = gtpsa.ss_vect_tpsa(lat_prop._desc, lat_prop._no)
-        A_1        = gtpsa.ss_vect_tpsa(lat_prop._desc, lat_prop._no)
-        R          = gtpsa.ss_vect_tpsa(lat_prop._desc, lat_prop._no)
-        g          = gtpsa.tpsa(lat_prop._desc, lat_prop._no)
-        self._g_re = gtpsa.tpsa(lat_prop._desc, lat_prop._no)
-        self._g_im = gtpsa.tpsa(lat_prop._desc, lat_prop._no)
-        K          = gtpsa.tpsa(lat_prop._desc, lat_prop._no)
-        self._K_re = gtpsa.tpsa(lat_prop._desc, lat_prop._no)
-        self._K_im = gtpsa.tpsa(lat_prop._desc, lat_prop._no)
+    def compute_map_normal_form(self, gtpsa_prop, lat_prop):
+        A_0        = gtpsa.ss_vect_tpsa(lat_prop._desc, gtpsa_prop.no)
+        A_1        = gtpsa.ss_vect_tpsa(lat_prop._desc, gtpsa_prop.no)
+        R          = gtpsa.ss_vect_tpsa(lat_prop._desc, gtpsa_prop.no)
+        g          = gtpsa.tpsa(lat_prop._desc, gtpsa_prop.no)
+        self._g_re = gtpsa.tpsa(lat_prop._desc, gtpsa_prop.no)
+        self._g_im = gtpsa.tpsa(lat_prop._desc, gtpsa_prop.no)
+        K          = gtpsa.tpsa(lat_prop._desc, gtpsa_prop.no)
+        self._K_re = gtpsa.tpsa(lat_prop._desc, gtpsa_prop.no)
+        self._K_im = gtpsa.tpsa(lat_prop._desc, gtpsa_prop.no)
 
         self._M.Map_Norm(A_0, A_1, R, g, K)
         K.CtoR(self._K_re, self._K_im)
@@ -307,7 +308,7 @@ class nonlin_dyn_class:
             print("  {:s}  = {:10.3e}".
                   format(key, self._K_re_scl.get(self.K_geom_dict[key])))
             if key == "K_00220":
-                if lat_prop._no < 6:
+                if gtpsa_prop.no < 6:
                     break
                 else:
                     print()
@@ -317,7 +318,7 @@ class nonlin_dyn_class:
             print("  {:s}  = {:10.3e}".
                   format(key, self._K_re_scl.get(self.K_chrom_dict[key])))
             if key == "K_00112":
-                if lat_prop._no < 6:
+                if gtpsa_prop.no < 6:
                     break
                 else:
                     print()
