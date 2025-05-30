@@ -314,7 +314,7 @@ class periodic_structure_class:
             M = lo.compute_map(
                 gtpsa_prop, self._lattice, self._model_state)
             stable, _, xi = \
-                lo.compute_nu_xi(self._desc, gtpsa_prop.no, M)
+                lo.compute_nu_xi(gtpsa_prop, M)
             if not stable:
                 raise ValueError
         except ValueError:

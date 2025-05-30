@@ -146,10 +146,9 @@ class nonlin_dyn_class():
         map.delta.print("delta", eps)
         map.ct.print("ct", eps)
 
-    def compute_map(self, lat_prop, no):
+    def compute_map(self, gtpsa_prop, lat_prop):
         self._M = lo.compute_map(
-            lat_prop._lattice, lat_prop._model_state, desc=lat_prop._desc,
-            no=no)
+            gtpsa_prop, lat_prop._lattice, lat_prop._model_state)
 
     def zero_mult(self, lat_prop, n):
         # Zero multipoles.
@@ -329,8 +328,9 @@ class nonlin_dyn_class():
         ImM = gtpsa_prop.ss_vect_tpsa()
         # Workaround for compose with vector vs. map.
         D = gtpsa_prop.ss_vect_tpsa()
-        eta = gtpsa_prop.ss_vect_tpsa()
+        eta_k = gtpsa_prop.ss_vect_tpsa()
         ImM_inv = gtpsa_prop.ss_vect_tpsa()
+        eta = gtpsa_prop.tpsa()
         I.set_identity()
         print()
         for k in range(1, no+1):
@@ -341,19 +341,21 @@ class nonlin_dyn_class():
             D.px.set(ind_delta, 0e0, M.px.get(ind_delta))
             ImM_inv.pinv(I-M, [1, 1, 1, 1, 0, 0, 0])
             # D has only non-zero components for [x, p_x, 0, 0, 0, 0].
-            eta.compose(ImM_inv, D)
+            eta_k.compose(ImM_inv, D)
+            eta.set(ind_delta, 0e0, eta_k.x.get(ind_delta))
             print("eta^({:d})     = [{:22.15e}, {:22.15e}]".format(
-                k, eta.x.get(ind_delta), eta.px.get(ind_delta)))
+                k, eta_k.x.get(ind_delta), eta_k.px.get(ind_delta)))
             if not False:
                 # Validate.
                 eta_chx = gtpsa_prop.ss_vect_tpsa()
-                eta.delta.set([0, 0, 0, 0, 1], 0e0, 1e0)
-                eta_chx.compose(M, eta)
+                eta_k.delta.set([0, 0, 0, 0, 1], 0e0, 1e0)
+                eta_chx.compose(M, eta_k)
                 print("eta_chx^({:d}) = [{:22.15e}, {:22.15e}]".format(
                     k, eta_chx.x.get(ind_delta), eta_chx.px.get(ind_delta)))
-        eta, _, _, _ = lat_prop.get_Twiss(0)
+        eta_lin_opt, _, _, _ = lat_prop.get_Twiss(0)
         print("\neta^(1)     = [{:22.15e}, {:22.15e}]".format(
-            eta[ind.x], eta[ind.px]))
+            eta_lin_opt[ind.x], eta_lin_opt[ind.px]))
+        eta.print("eta")
         return eta
 
 

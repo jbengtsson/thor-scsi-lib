@@ -41,9 +41,6 @@ def compute_map(
         gtpsa_prop,
         lat: tslib.Accelerator,
         model_state: tslib.ConfigType,
-        *,
-        t_map: gtpsa.ss_vect_tpsa = None,
-        desc: gtpsa.desc = None
 ) -> gtpsa.ss_vect_tpsa:
     """Propagate an identity map through the accelerator
     """
@@ -173,14 +170,14 @@ def acos2_tpsa(sin, cos):
     return phi
 
 
-def compute_nu_xi(desc, tpsa_order, M):
+def compute_nu_xi(gtpsa_prop, M):
     """Compute tune & linear chromaticity from trace of Poincaré map:
           nu + xi * delta = arccos( Trace{M} / 2 ) / ( 2 * pi ).
     """
     stable = check_if_stable(2, M.jacobian())
     if stable:
         nu, xi = [np.zeros(2), np.zeros(2)]
-        M_delta = gtpsa.tpsa(desc, tpsa_order)
+        M_delta = gtpsa_prop.tpsa()
         for k in range(2):
             M_delta.clear()
             # J.B. 21/07/23.

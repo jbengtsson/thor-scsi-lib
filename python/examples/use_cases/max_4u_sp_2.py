@@ -44,6 +44,8 @@ class gtpsa_prop:
     nv: ClassVar[int] = 6 + 1
     # Max order.
     no: ClassVar[int] = 1
+    # Truncation order.
+    to: ClassVar[int] = 1
     # Number of parameters.
     nv_prm: ClassVar[int] = 0
     # Parameters max order.
@@ -52,6 +54,13 @@ class gtpsa_prop:
     named_index = gtpsa.IndexMapping(dict(x=0, px=1, y=2, py=3, delta=4, ct=5))
     # Descriptor
     desc : ClassVar[gtpsa.desc]
+
+    def tpsa():
+        return gtpsa.tpsa(gtpsa_prop.desc, gtpsa_prop.no)
+    def ctpsa():
+        return gtpsa.ctpsa(gtpsa_prop.desc, gtpsa_prop.no)
+    def ss_vect_tpsa():
+        return gtpsa.ss_vect_tpsa(gtpsa_prop.desc, gtpsa_prop.no)
 
 
 def get_phi(el):
@@ -150,6 +159,7 @@ class opt_sp_class:
         self._nu_0           = np.nan
         self._dnu            = np.nan
         self._xi             = np.nan
+        self._eta_nl         = gtpsa_prop.tpsa()
 
         self._chi_2_min      = 1e30
         self._n_iter         = -1
@@ -226,6 +236,8 @@ class opt_sp_class:
                      self._dnu_des[ind.X], dnu_des[ind.Y]))
         print("    xi             = [{:5.3f}, {:5.3f}]".
               format(self._xi[ind.X], self._xi[ind.Y]))
+        print("    eta^(2)_x      = {:9.3e}".format(
+            self._eta_nl.get([0, 0, 0, 0, 2])))
 
         if len(uc_list) == 2:
             print("\n    eta'_uc        = {:9.3e}".
@@ -350,10 +362,10 @@ class opt_sp_class:
         if prt:
             print("  dchi2(xi)           = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[16]*self._dx**2
+        dchi_2 = weight[16]*self._eta_nl.get([0, 0, 0, 0, 2])**2
         chi_2 += dchi_2
         if prt:
-            print("  dchi2(dx)           = {:9.3e}".format(dchi_2))
+            print("  dchi2(eta^(2)_x)    = {:9.3e}".format(dchi_2))
 
         return chi_2
 
@@ -373,7 +385,7 @@ class opt_sp_class:
 
             try:
                 # Compute Twiss parameters along the lattice.
-                if not self._lat_prop.comp_per_sol():
+                if not self._lat_prop.comp_per_sol(gtpsa_prop):
                     print("\ncomp_per_sol: unstable")
                     raise ValueError
 
@@ -384,12 +396,17 @@ class opt_sp_class:
                     raise ValueError
  
                 # Compute linear chromaticity.
-                self._nld.compute_map(lat_prop, 2)
+                self._nld.compute_map(gtpsa_prop, lat_prop)
                 stable, _, self._xi = \
-                    lo.compute_nu_xi(lat_prop._desc, lat_prop._no, self._nld._M)
+                    lo.compute_nu_xi(gtpsa_prop, self._nld._M)
                 if not stable:
                     print("\ncompute_nu_xi: unstable")
                     raise ValueError
+
+                # Compute 2nd order dispersion
+                self._eta_nl = nld.compute_eta(
+                    gtpsa_prop, lat_prop, lat_prop._M)
+
             except ValueError:
                 chi_2 = 1e30
                 if not False:
@@ -473,6 +490,8 @@ class opt_sp_class:
 
 # TPSA max order.
 gtpsa_prop.no = 2
+gtpsa_prop.to = gtpsa_prop.no
+gtpsa_prop.desc = gtpsa.desc(gtpsa_prop.nv, gtpsa_prop.no)
 
 cod_eps = 1e-10
 E_0     = 3.0e9
@@ -494,7 +513,7 @@ lat_prop.prt_lat("lat_prop_lat.txt")
 
 try:
     # Compute Twiss parameters along lattice.
-    if not lat_prop.comp_per_sol():
+    if not lat_prop.comp_per_sol(gtpsa_prop):
         print("\ncomp_per_sol: unstable")
         raise ValueError
 
@@ -505,7 +524,7 @@ try:
 except ValueError:
     exit
 else:
-    lat_prop.prt_lat_param()
+    lat_prop.prt_lat_param(gtpsa_prop)
     lat_prop.prt_rad()
     lat_prop.prt_M()
     lat_prop.prt_M_rad()
@@ -555,7 +574,8 @@ d2_bend = pc.bend_class(lat_prop, d2_list)
 
 b_3_list = ["s3_h2", "s4_h2"]
 
-nld = nld_class.nonlin_dyn_class(lat_prop, A_max, beta_inj, delta_max, b_3_list)
+nld = nld_class.nonlin_dyn_class(
+    gtpsa_prop, lat_prop, A_max, beta_inj, delta_max, b_3_list)
 nld.zero_mult(lat_prop, 3)
 nld.zero_mult(lat_prop, 4)
 
@@ -571,7 +591,7 @@ if step == 1:
         1e-2,  # 5,  alpha_uc.
         1e0,   # 6,  nu_uc_x.
         1e0,   # 7,  nu_uc_y.
-        1e0,   # 8,  eta_x.
+        1e1,   # 8,  eta_x.
         0e-7,  # 9,  nu_sp_x.
         0e-7,  # 10, nu_sp_y.
         0e-6,  # 11, beta_x.
@@ -579,7 +599,7 @@ if step == 1:
         1e-3,  # 13, dnu_x.
         0e-3,  # 14, dnu_y.
         1e-7,  # 15, xi.
-        0e0    # 16, orbit.
+        1e0    # 16, eta^(2)_x.
     ])
 
     prms = [
@@ -614,7 +634,7 @@ elif step == 2:
         1e-2,  # 5,  alpha_uc.
         1e0,   # 6,  nu_uc_x.
         1e0,   # 7,  nu_uc_y.
-        1e0,   # 8,  eta_x.
+        1e1,   # 8,  eta_x.
         0e-7,  # 9,  nu_sp_x.
         0e-7,  # 10, nu_sp_y.
         0e-6,  # 11, beta_x.
@@ -622,7 +642,7 @@ elif step == 2:
         1e-3,  # 13, dnu_x.
         0e-3,  # 14, dnu_y.
         1e-7,  # 15, xi.
-        0e0    # 16, orbit.
+        1e-2,  # 16, eta^(2)_x.
     ])
 
     prms = [
@@ -677,7 +697,8 @@ elif step == 3:
         1e-2,  # alpha_uc.
         1e1,   # nu_uc_x.
         1e1,   # nu_uc_y.
-        1e2,   # eta_x.
+        1e2,   # eta^(1)_x.
+        1e2,   # eta^(2)_x.
         1e-7,  # nu_sp_x.
         1e-7,  # nu_sp_y.
         1e-6,  # beta_x.
@@ -722,7 +743,8 @@ elif step == 4:
         1e-2,  # alpha_uc.
         1e-1,  # nu_uc_x.
         1e-1,  # nu_uc_y.
-        1e0,   # eta_x.
+        1e0,   # eta^(1)_x.
+        1e0,   # eta^(2)_x.
         1e-5,  # nu_sp_x.
         0e-3,  # nu_sp_y.
         1e-4,  # beta_x.
@@ -772,7 +794,8 @@ elif step == 5:
         1e-2,  # alpha_uc.
         0e0,   # nu_uc_x.
         0e0,   # nu_uc_y.
-        1e0,   # eta_x.
+        1e0,   # eta^(1)_x.
+        1e0,   # eta^(2)_x.
         0e-7,  # nu_sp_x.
         0e-3,  # nu_sp_y.
         0e-6,  # beta_x.
