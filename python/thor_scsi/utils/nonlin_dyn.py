@@ -20,7 +20,7 @@ class MpoleInd(enum.IntEnum):
     sext = 3
 
 
-class nonlin_dyn_class:
+class nonlin_dyn_class():
     # Private.
 
     def __init__(
@@ -322,6 +322,39 @@ class nonlin_dyn_class:
                     break
                 else:
                     print()
+
+    def compute_eta(self, gtpsa_prop, lat_prop, M):
+        no = 2
+        I = gtpsa_prop.ss_vect_tpsa()
+        ImM = gtpsa_prop.ss_vect_tpsa()
+        # Workaround for compose with vector vs. map.
+        D = gtpsa_prop.ss_vect_tpsa()
+        eta = gtpsa_prop.ss_vect_tpsa()
+        ImM_inv = gtpsa_prop.ss_vect_tpsa()
+        I.set_identity()
+        print()
+        for k in range(1, no+1):
+            ind_delta = [0, 0, 0, 0, k]
+            D.x.clear()
+            D.px.clear()
+            D.x.set(ind_delta, 0e0, M.x.get(ind_delta))
+            D.px.set(ind_delta, 0e0, M.px.get(ind_delta))
+            ImM_inv.pinv(I-M, [1, 1, 1, 1, 0, 0, 0])
+            # D has only non-zero components for [x, p_x, 0, 0, 0, 0].
+            eta.compose(ImM_inv, D)
+            print("eta^({:d})     = [{:22.15e}, {:22.15e}]".format(
+                k, eta.x.get(ind_delta), eta.px.get(ind_delta)))
+            if not False:
+                # Validate.
+                eta_chx = gtpsa_prop.ss_vect_tpsa()
+                eta.delta.set([0, 0, 0, 0, 1], 0e0, 1e0)
+                eta_chx.compose(M, eta)
+                print("eta_chx^({:d}) = [{:22.15e}, {:22.15e}]".format(
+                    k, eta_chx.x.get(ind_delta), eta_chx.px.get(ind_delta)))
+        eta, _, _, _ = lat_prop.get_Twiss(0)
+        print("\neta^(1)     = [{:22.15e}, {:22.15e}]".format(
+            eta[ind.x], eta[ind.px]))
+        return eta
 
 
 __all__ = [nonlin_dyn_class]

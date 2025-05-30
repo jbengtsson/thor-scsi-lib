@@ -47,7 +47,6 @@ class periodic_structure_class:
         # Descriptor for Truncated Power Series Algebra variables.
         self._desc = gtpsa.desc(
             gtpsa_prop.nv, gtpsa_prop.no, gtpsa_prop.nv_prm, gtpsa_prop.no_prm)
-        self._desc.truncate(gtpsa_prop.to)
         # .truncate(to) sets the new & returns the old to.
         print("\nperiodic_structure_class:\n  no = {:d} nv = {:d} to = {:d}".
               format(self._desc.maximum_orders(0, 0),
@@ -310,9 +309,10 @@ class periodic_structure_class:
         loc = len(self._lattice)-1
         eta, alpha, beta, nu = self.get_Twiss(loc)
 
+        # Compute nu & xi.
         try:
             M = lo.compute_map(
-                self._lattice, self._model_state, desc=self._desc, no=2)
+                gtpsa_prop, self._lattice, self._model_state)
             stable, _, xi = \
                 lo.compute_nu_xi(self._desc, gtpsa_prop.no, M)
             if not stable:
@@ -364,15 +364,15 @@ class periodic_structure_class:
 
         stable, self._M, self._nu, self._A = \
             lo.compute_map_and_diag(
-                self._n_dof, self._lattice, self._model_state, desc=self._desc)
+                gtpsa_prop, self._n_dof, self._lattice, self._model_state)
         if stable:
             self.compute_alpha_c(gtpsa_prop)
             A_map = gtpsa.ss_vect_tpsa(self._desc, gtpsa_prop.no)
             A_map.set_jacobian(self._A)
             self._Twiss = \
                 lo.compute_Twiss_along_lattice(
-                    self._n_dof, self._lattice, self._model_state, A=A_map,
-                    desc=self._desc, mapping=self._named_index)
+                    gtpsa_prop, self._n_dof, self._lattice, self._model_state,
+                    A=A_map, mapping=self._named_index)
         else:
             self._Twiss = np.nan
             print("\ncomp_per_sol: unstable")

@@ -39,11 +39,17 @@ class gtpsa_prop:
     # Descriptor
     desc : ClassVar[gtpsa.desc]
 
+    def tpsa():
+        return gtpsa.tpsa(gtpsa_prop.desc, gtpsa_prop.no)
+    def ctpsa():
+        return gtpsa.ctpsa(gtpsa_prop.desc, gtpsa_prop.no)
+    def ss_vect_tpsa():
+        return gtpsa.ss_vect_tpsa(gtpsa_prop.desc, gtpsa_prop.no)
+
 
 def compute_optics(gtpsa_prop, lat_prop):
     try:
         # Compute Twiss parameters along lattice.
-        lat_prop._desc.truncate(gtpsa_prop.no)
         if not lat_prop.comp_per_sol(gtpsa_prop):
             print("\ncomp_per_sol: unstable")
             raise ValueError
@@ -67,39 +73,9 @@ def compute_optics(gtpsa_prop, lat_prop):
         assert False
 
 
-class new():
-    def tpsa():
-        return gtpsa.tpsa(gtpsa_prop.desc, gtpsa_prop.no)
-    def ctpsa():
-        return gtpsa.ctpsa(gtpsa_prop.desc, gtpsa_prop.no)
-    def ss_vect_tpsa():
-        return gtpsa.ss_vect_tpsa(gtpsa_prop.desc, gtpsa_prop.no)
-
-
-def compute_dispersion(M):
-    n = 4
-    I = new.ss_vect_tpsa()
-    ImM = new.ss_vect_tpsa()
-    # Workaround for compose.
-    D = new.ss_vect_tpsa()
-    eta = new.ss_vect_tpsa()
-    ImM_inv = new.ss_vect_tpsa()
-
-    I.set_identity()
-    ind_delta = [0, 0, 0, 0, 1]
-    D.x.set([1, 0, 0, 0, 1], 0e0, M.x.get(ind_delta))
-    D.px.set([1, 0, 0, 0, 1], 0e0, M.px.get(ind_delta))
-    ImM_inv.pinv(I-M, [1, 1, 1, 1, 0, 0, 0])
-    eta.compose(ImM_inv, D)
-    eta.x.print("\neta.x:\n")
-    eta.px.print("\neta.px:\n")
-    eta_1, _, _, _ = lat_prop.get_Twiss(0)
-    print("\neta^(1): [{:10.3e}, {:10.3e}]".format(eta_1[0], eta_1[1]))
-    return
-
-
 # TPSA max order.
-gtpsa_prop.no = 3
+gtpsa_prop.no = 2
+gtpsa_prop.to = gtpsa_prop.no
 gtpsa_prop.desc = gtpsa.desc(gtpsa_prop.nv, gtpsa_prop.no)
 
 cod_eps = 1e-15
@@ -126,10 +102,9 @@ if False:
     nld.zero_mult(lat_prop, 4)
 
 compute_optics(gtpsa_prop, lat_prop)
-lat_prop._M.x.print("\nM.x:\n")
 
-compute_dispersion(lat_prop._M)
-exit
+nld.compute_eta(gtpsa_prop, lat_prop, lat_prop._M)
+
 
 lat_prop.prt_lat_param(gtpsa_prop)
 lat_prop.prt_rad()
