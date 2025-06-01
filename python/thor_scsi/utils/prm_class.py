@@ -140,10 +140,8 @@ class bend_class:
             self._lat_prop.set_b_n_fam(self._bend_list[k], quad, b_2)
 
     def print(self):
-        print(" bend_class:")
-        print("    L     = {:8.5f}".format(self._bend_L_tot))
-        print("    phi   = {:8.5f}".format(self._bend_phi))
-        print("    b_2xL = {:8.5f}".format(self._bend_b_2xL))
+        print(" L = {:8.5f} phi = {:8.5f} b_2xL = {:8.5f}".format(
+            self._bend_L_tot, self._bend_phi, self._bend_b_2xL))
         print("\n        part         fraction   phi    fraction   b_2")
         for k in range(len(self._bend_list)):
             print("    {:15s} {:8.5f} {:8.5f} {:8.5f} {:8.5f}".
@@ -267,11 +265,17 @@ class prm_class(bend_class):
             if prt:
                 print("  {:10s}".format(self._prm_list[k][1]), end="")
             if type(self._prm_list[k][0]) == str:
-                print(" {:10s}".format(self._prm_list[k][0]), end="")
+                if prt:
+                    print(" {:10s}".format(self._prm_list[k][0]), end="")
                 p = \
                     self._get_prm_func_dict[self._prm_list[k][1]](
                         self._prm_list[k][0], 0)
                 b = (self._prm_list[k][2], self._prm_list[k][3])
+                prm.append(p)
+                bounds.append(b)
+                if prt:
+                    print("    {:12.5e} ({:5.2f}, {:5.2f})".
+                      format(prm[k], bounds[k][0], bounds[k][1]))
             elif isinstance(self._prm_list[k][0], bend_class):
                 if self._prm_list[k][1] == "phi_bend":
                     self._prm_list[k][0]._phi_min = self._prm_list[k][2]
@@ -281,21 +285,21 @@ class prm_class(bend_class):
                     self._prm_list[k][0]._b_2_min = self._prm_list[k][2]
                     self._prm_list[k][0]._b_2_max = self._prm_list[k][3]
                     p, b = self._prm_list[k][0].get_bend_b_2_prm()
-                    self._prm_list[k][0].print()
-                    print()
                 else:
                     print("\nprm_class::get_prm - undefined parameter type:",
                           self._prm_list[k][1])
                     assert False
+                prm.append(p)
+                bounds.append(b)
+                if prt:
+                    print("", self._prm_list[k][0],
+                          "   {:12.5e} ({:5.2f}, {:5.2f})".format(
+                              prm[k], bounds[k][0], bounds[k][1]), end="")
+                    self._prm_list[k][0].print()
             else:
                 print("\nprm_class::get_prm - undefined parameter type:",
                       self._prm_list[k][1])
                 assert False
-            prm.append(p)
-            bounds.append(b)
-            if prt:
-                print("    {:12.5e} ({:5.2f}, {:5.2f})".
-                      format(prm[k], bounds[k][0], bounds[k][1]))
             print("----------------------------------------")
         return np.array(prm), bounds
 

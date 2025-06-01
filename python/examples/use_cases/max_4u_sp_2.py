@@ -31,7 +31,11 @@ b_2_max      = 10.0
 eps_x_des    = 60e-12
 alpha_c_des  = 0.5e-4
 nu_uc_des    = [0.4, 0.1]
-nu_sp_des    = [2.87, 1.1]
+if not True:
+    nu_sp_des    = [2.87, 1.1]
+else:
+    # With 4 unit dipole cells.
+    nu_sp_des    = [2.48, 1.05]
 beta_des     = [5.0, 3.0]
 dnu_des      = [0.75, 0.25]     # Phase advance across the straight.
 
@@ -280,15 +284,15 @@ class opt_sp_class:
 
         eta, alpha, nu_sp, beta = self._Twiss_sp
 
-        dchi_2 = weight[0]*(self._dphi)**2
+        dchi_2 = weight[0]*(self._lat_prop._eps[ind.X]-self._eps_x_des)**2
         chi_2 = dchi_2
         if prt:
-            print("\n  dchi2(dphi )        = {:9.3e}".format(dchi_2))
+            print("\n  dchi2(eps_x)        = {:9.3e}".format(dchi_2))
 
-        dchi_2 += weight[1]*(self._lat_prop._eps[ind.X]-self._eps_x_des)**2
+        dchi_2 += weight[1]*(self._dphi)**2
         chi_2 = dchi_2
         if prt:
-            print("  dchi2(eps_x)        = {:9.3e}".format(dchi_2))
+            print("  dchi2(dphi )        = {:9.3e}".format(dchi_2))
 
         dchi_2 = weight[2]*1e0/self._alpha_c[1]**2
         chi_2 += dchi_2
@@ -622,10 +626,10 @@ step = 1;
 
 if step == 1:
     weight = np.array([
-        1e-1,  # 0,  dphi.
-        1e16,  # 1,  eps_x.
+        1e14,  # 0,  eps_x.
+        1e-1,  # 1,  dphi.
         1e-15, # 2,  alpha^(1)_c.
-        1e3,   # 3,  alpha^(2)_c.
+        1e1,   # 3,  alpha^(2)_c.
         1e-15, # 4,  U_0.
         1e2,   # 5,  etap_x_uc.
         1e-2,  # 6,  alpha_uc.
@@ -633,7 +637,7 @@ if step == 1:
         1e-1,  # 8,  nu_uc_y.
         1e1,   # 9,  eta_x.
         0e-7,  # 10, nu_sp_x.
-        0e-7,  # 11, nu_sp_y.
+        1e-5,  # 11, nu_sp_y.
         0e-6,  # 12, beta_x.
         0e-6,  # 13, beta_y.
         0e-3,  # 14, dnu_x.
@@ -668,9 +672,6 @@ if step == 1:
     for k in range(len(prms)):
         dprm_list.append(eps)
     dprm_list = np.array(dprm_list)
-
-    # sp_bend = pc.phi_lat_class(lat_prop, 2, "r1_h2")
-    sp_bend = None
 elif step == 2:
     weight = np.array([
         1e16,  # 0,  eps_x.
@@ -741,9 +742,6 @@ elif step == 2:
         1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3,
         1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3
     ])
-
-    # sp_bend = pc.phi_lat_class(lat_prop, 2, "r1_h2")
-    sp_bend = None
 elif step == 2:
     weight = np.array([
         1e16,  # 0,  eps_x.
@@ -786,9 +784,6 @@ elif step == 2:
         1e-3, 1e-3,
         1e-3
     ])
-
-    # sp_bend = pc.phi_lat_class(lat_prop, 2, "r1_h2")
-    sp_bend = None
 elif step == 4:
     weight = np.array([
         1e15,  # eps_x.
