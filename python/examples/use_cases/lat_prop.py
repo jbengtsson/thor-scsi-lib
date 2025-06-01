@@ -103,7 +103,8 @@ if False:
 
 compute_optics(gtpsa_prop, lat_prop)
 
-nld.compute_eta(gtpsa_prop, lat_prop, lat_prop._M)
+eta = nld.compute_eta(gtpsa_prop, lat_prop, lat_prop._M)
+print("\n eta:\n", eta)
 
 
 lat_prop.prt_lat_param(gtpsa_prop)

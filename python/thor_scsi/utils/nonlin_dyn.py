@@ -323,6 +323,7 @@ class nonlin_dyn_class():
                     print()
 
     def compute_eta(self, gtpsa_prop, lat_prop, M):
+        prt = False
         no = 2
         I = gtpsa_prop.ss_vect_tpsa()
         ImM = gtpsa_prop.ss_vect_tpsa()
@@ -332,7 +333,8 @@ class nonlin_dyn_class():
         ImM_inv = gtpsa_prop.ss_vect_tpsa()
         eta = gtpsa_prop.tpsa()
         I.set_identity()
-        print()
+        if prt:
+            print()
         for k in range(1, no+1):
             ind_delta = [0, 0, 0, 0, k]
             D.x.clear()
@@ -343,19 +345,19 @@ class nonlin_dyn_class():
             # D has only non-zero components for [x, p_x, 0, 0, 0, 0].
             eta_k.compose(ImM_inv, D)
             eta.set(ind_delta, 0e0, eta_k.x.get(ind_delta))
-            print("eta^({:d})     = [{:22.15e}, {:22.15e}]".format(
+            if prt:
+                print("eta^({:d})     = [{:22.15e}, {:22.15e}]".format(
                 k, eta_k.x.get(ind_delta), eta_k.px.get(ind_delta)))
-            if not False:
                 # Validate.
                 eta_chx = gtpsa_prop.ss_vect_tpsa()
                 eta_k.delta.set([0, 0, 0, 0, 1], 0e0, 1e0)
                 eta_chx.compose(M, eta_k)
                 print("eta_chx^({:d}) = [{:22.15e}, {:22.15e}]".format(
                     k, eta_chx.x.get(ind_delta), eta_chx.px.get(ind_delta)))
-        eta_lin_opt, _, _, _ = lat_prop.get_Twiss(0)
-        print("\neta^(1)     = [{:22.15e}, {:22.15e}]".format(
-            eta_lin_opt[ind.x], eta_lin_opt[ind.px]))
-        eta.print("eta")
+                eta_lin_opt, _, _, _ = lat_prop.get_Twiss(0)
+                print("\neta^(1)     = [{:22.15e}, {:22.15e}]".format(
+                    eta_lin_opt[ind.x], eta_lin_opt[ind.px]))
+                eta.print("eta")
         return eta
 
 

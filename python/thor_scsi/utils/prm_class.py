@@ -329,7 +329,7 @@ def prt_lat(
         file_name,
         prm_list,
         *,
-        d1_bend: bend_class = None):
+        bend_list = None):
 # def prt_lat(lat_prop, file_name, prm_list):
     outf = open(file_name, 'w')
 
@@ -443,15 +443,16 @@ def prt_lat(
         else:
             print("\nprt_lat - undefined parameter:", prm_list._prm_list[k][1])
 
-    if (d1_bend != None) and (d1_bend != []):
-        if type(d1_bend) == str:
-            prt_list = \
-                prt_dip(d1_bend, prt_list)
-        elif isinstance(d1_bend, bend_class):
-            prt_list = \
-                prt_bend(d1_bend, prt_list)
-        else:
-            print("\nprt_lat - undefined parameter:", d1_bend._dip_prm)
+    if (bend_list != None) and (bend_list != []):
+        for bend in bend_list:
+            if type(bend) == str:
+                prt_list = \
+                    prt_dip(bend, prt_list)
+            elif isinstance(bend, bend_class):
+                prt_list = \
+                    prt_bend(bend, prt_list)
+            else:
+                print("\nprt_lat - undefined parameter:", bend._dip_prm)
 
     outf.close()
 
