@@ -33,7 +33,7 @@ class bend_class:
         self._b_2_max        = np.nan
 
     def __str__(self):
-        return "bend"
+        return "bend_class"
 
     # Public.
 
@@ -140,7 +140,7 @@ class bend_class:
             self._lat_prop.set_b_n_fam(self._bend_list[k], quad, b_2)
 
     def print(self):
-        print("  bend_class:")
+        print(" bend_class:")
         print("    L     = {:8.5f}".format(self._bend_L_tot))
         print("    phi   = {:8.5f}".format(self._bend_phi))
         print("    b_2xL = {:8.5f}".format(self._bend_b_2xL))
@@ -262,10 +262,12 @@ class prm_class(bend_class):
         bounds = []
         if prt:
             print("\nprm_class::get_prm:")
+        print("----------------------------------------")
         for k in range(len(self._prm_list)):
             if prt:
-                print("  {:15s}".format(self._prm_list[k][1]), end="")
+                print("  {:10s}".format(self._prm_list[k][1]), end="")
             if type(self._prm_list[k][0]) == str:
+                print(" {:10s}".format(self._prm_list[k][0]), end="")
                 p = \
                     self._get_prm_func_dict[self._prm_list[k][1]](
                         self._prm_list[k][0], 0)
@@ -294,6 +296,7 @@ class prm_class(bend_class):
             if prt:
                 print("    {:12.5e} ({:5.2f}, {:5.2f})".
                       format(prm[k], bounds[k][0], bounds[k][1]))
+            print("----------------------------------------")
         return np.array(prm), bounds
 
     def set_prm(self, prm):

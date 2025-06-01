@@ -268,8 +268,8 @@ class opt_sp_class:
         for phi in phi_bend:
             print("    phi_bend       = {:8.5f}".format(phi))
         for rb in self._rb_list:
-            print("    phi_rb         = {:8.5f}".format(
-                self._lat_prop.get_phi_elem(rb, 0)))
+            print("    {:10s}     = {:8.5f}".format(
+                rb, self._lat_prop.get_phi_elem(rb, 0)))
 
         self._lat_prop.prt_rad()
         self._prm_list.prt_prm(prm)
@@ -453,17 +453,17 @@ class opt_sp_class:
 
             return chi_2
 
-        max_iter = 1000
-        f_tol    = 1e-10
-        x_tol    = 1e-7
-        g_tol    = 1e-10
+        max_iter = 10000
+        f_tol    = 1e-6
+        x_tol    = 1e-6
+        g_tol    = 1e-6
 
         self._s_ref, self._X_ref, self._Y_ref, self._p_x_ref = \
             compute_layout(lat_ref)
 
         prm, bounds = self._prm_list.get_prm()
-        f_sp(prm)
         self._phi_sp = lat_prop.compute_phi_lat()
+        f_sp(prm)
 
         # Methods:
         #   Nelder-Mead, Powell, CG, BFGS, Newton-CG, L-BFGS-B, TNC, COBYLA,
@@ -506,7 +506,6 @@ class opt_sp_class:
             )
         elif optimiser == "CG":
             # eps - step size.
-            g_tol = 1e-12
 
             minimum = opt.minimize(
                 f_sp,
@@ -651,22 +650,24 @@ if step == 1:
         ("r2_h2", "b_2", -10.0, 10.0),
         ("r3_h2", "b_2", -10.0, 10.0),
 
-        (d1_bend,   "b_2_bend", -1.5,   1.5),
-        (d2_bend,   "b_2_bend", -1.5,   1.5),
-        (d3_bend,   "b_2_bend", -1.5,   1.5),
+        ("r1_h2", "phi", -0.2, 0.2),
+        ("r2_h2", "phi", -0.2, 0.0),
+        ("r3_h2", "phi", -0.2, 0.0),
 
-        (d1_bend,   "phi_bend",  1.1,   1.5),
-        (d2_bend,   "phi_bend",  1.5,   2.25),
-        (d3_bend,   "phi_bend",  1.5,   2.25),
+        (d1_bend, "b_2_bend", -1.5,  1.5),
+        (d2_bend, "b_2_bend", -1.5,  1.5),
+        (d3_bend, "b_2_bend", -1.5,  1.5),
+
+        (d1_bend, "phi_bend",  1.1,  1.5),
+        (d2_bend, "phi_bend",  1.5,  2.25),
+        (d3_bend, "phi_bend",  1.5,  2.25)
    ]
 
     eps = 1e-4
-    dprm_list = np.array([
-        eps, eps,
-        eps, eps, eps,
-        eps, eps, eps,
-        eps, eps, eps
-    ])
+    dprm_list = []
+    for k in range(len(prms)):
+        dprm_list.append(eps)
+    dprm_list = np.array(dprm_list)
 
     # sp_bend = pc.phi_lat_class(lat_prop, 2, "r1_h2")
     sp_bend = None
