@@ -205,7 +205,7 @@ class opt_sp_class:
     def compute_chi_2(self):
         prt = not False
 
-        eta, alpha, nu_sp, beta = self._Twiss_sp
+        eta, alpha, beta, nu_sp = self._Twiss_sp
 
         dchi_2 = weight[0]*(self._lat_prop._eps[ind.X]-self._eps_x_des)**2
         chi_2 = dchi_2
@@ -378,7 +378,7 @@ class opt_sp_class:
         max_iter = 10000
         f_tol    = 1e-6
         x_tol    = 1e-6
-        g_tol    = 1e-6
+        g_tol    = 1e-10
 
         prm, bounds = self._prm_list.get_prm()
         self._phi_sp = lat_prop.compute_phi_lat()
@@ -552,7 +552,7 @@ nld = nld_class.nonlin_dyn_class(
 nld.zero_mult(lat_prop, 3)
 nld.zero_mult(lat_prop, 4)
 
-step = 1;
+step = 2;
 
 if step == 1:
     weight = np.array([
@@ -567,7 +567,7 @@ if step == 1:
         1e-1,  # 8,  nu_uc_y.
         1e1,   # 9,  eta_x.
         0e-7,  # 10, nu_sp_x.
-        1e-1,  # 11, nu_sp_y.
+        0e-1,  # 11, nu_sp_y.
         0e-6,  # 12, beta_x.
         0e-6,  # 13, beta_y.
         0e-3,  # 14, dnu_x.
