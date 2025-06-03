@@ -31,11 +31,11 @@ b_2_max      = 10.0
 eps_x_des    = 60e-12
 alpha_c_des  = 0.5e-4
 nu_uc_des    = [0.4, 0.1]
-if not True:
-    nu_sp_des = [2.87, 1.1]
-else:
+nu_sp_des    = np.array([57.2/20.0, 20.75/20.0])
+# nu_sp_des    = np.array([57.2/20.0, 17.75/20.0])
+if False:
     # With 4 unit dipole cells.
-    nu_sp_des = [2.48, 0.85]
+    nu_sp_des -= nu_uc_des
 beta_des     = [5.0, 3.0]
 dnu_des      = [0.75, 0.25]     # Phase advance across the straight.
 
@@ -378,7 +378,7 @@ class opt_sp_class:
         max_iter = 10000
         f_tol    = 1e-6
         x_tol    = 1e-6
-        g_tol    = 1e-10
+        g_tol    = 1e-6
 
         prm, bounds = self._prm_list.get_prm()
         self._phi_sp = lat_prop.compute_phi_lat()
@@ -521,38 +521,60 @@ print("super period first sextupole {:15s} loc = {:d}".
 print("super period last sextupole  {:15s} loc = {:d}".
       format(lat_prop._lattice[sp_list[1]].name, sp_list[1]))
 
-d1_list = [
-    "d1_h2_sl_dm5", "d1_h2_sl_dm4", "d1_h2_sl_dm3", "d1_h2_sl_dm2",
-    "d1_h2_sl_dm1",
-    "d1_h2_sl_d0", "d1_h2_sl_ds1", "d1_h2_sl_ds2", "d1_h2_sl_ds3",
-    "d1_h2_sl_ds4", "d1_h2_sl_ds5"
-]
-d2_list = [
-    "d2_h2_sl_df0", "d2_h2_sl_df1", "d2_h2_sl_df2", "d2_h2_sl_df3",
-    "d2_h2_sl_df4", "d2_h2_sl_df5", "d2_h2_sl_df6"
-]
-d3_list = [
-    "d3_h2_sl_df0", "d3_h2_sl_df1", "d3_h2_sl_df2", "d3_h2_sl_df3",
-    "d3_h2_sl_df4", "d3_h2_sl_df5", "d3_h2_sl_df6"
-]
+lat = 2
 
-# phi: [1.15, 1.5].
-d1_bend = pc.bend_class(lat_prop, d1_list)
-# phi: [3.0, 3.5].
-d2_bend = pc.bend_class(lat_prop, d2_list)
-d3_bend = pc.bend_class(lat_prop, d3_list)
-bend_list = [d1_bend, d2_bend, d3_bend]
+if lat == 1:
+    # max_4u/m4U_250316_h03_01_01_01_tracy-2.
 
-rb_list = ["r1_h2", "r2_h2", "r3_h2"]
+    d1_list = [
+        "d1_h2_sl_dm5", "d1_h2_sl_dm4", "d1_h2_sl_dm3", "d1_h2_sl_dm2",
+        "d1_h2_sl_dm1",
+        "d1_h2_sl_d0", "d1_h2_sl_ds1", "d1_h2_sl_ds2", "d1_h2_sl_ds3",
+        "d1_h2_sl_ds4", "d1_h2_sl_ds5"
+    ]
+    d2_list = [
+        "d2_h2_sl_df0", "d2_h2_sl_df1", "d2_h2_sl_df2", "d2_h2_sl_df3",
+        "d2_h2_sl_df4", "d2_h2_sl_df5", "d2_h2_sl_df6"
+    ]
 
-b_3_list = ["s3_h2", "s4_h2"]
+    # phi: [1.15, 1.5].
+    d1_bend = pc.bend_class(lat_prop, d1_list)
+    # phi: [3.0, 3.5].
+    d2_bend = pc.bend_class(lat_prop, d2_list)
+    d3_bend = pc.bend_class(lat_prop, d3_list)
+    bend_list = [d1_bend, d2_bend, d3_bend]
+
+    rb_list = ["r1_h2", "r2_h2", "r3_h2"]
+    b_3_list = ["s3_h2", "s4_h2"]
+elif lat == 2:
+    # m4U_241223_h02_01_01_01_tracy_2.
+
+    d1_list = [
+        "d1_h2_sl_dm5", "d1_h2_sl_dm4", "d1_h2_sl_dm3", "d1_h2_sl_dm2",
+        "d1_h2_sl_dm1",
+        "d1_h2_sl_ds0", "d1_h2_sl_ds1", "d1_h2_sl_ds2", "d1_h2_sl_ds3",
+        "d1_h2_sl_ds4", "d1_h2_sl_ds5", "d1_h2_sl_ds6"
+    ]
+    d2_list = [
+        "d2_h2_sl_d0a", "d2_h2_sl_d0b", "d2_h2_sl_d0c", "d2_h2_sl_df1",
+        "d2_h2_sl_df2", "d2_h2_sl_df3", "d2_h2_sl_df4", "d2_h2_sl_df5"
+    ]
+
+    # phi: [1.15, 1.5].
+    d1_bend = pc.bend_class(lat_prop, d1_list)
+    # phi: [3.0, 3.5].
+    d2_bend = pc.bend_class(lat_prop, d2_list)
+    bend_list = [d1_bend, d2_bend]
+
+    rb_list = ["r1_h2", "r2_h2"]
+    b_3_list = ["s3_h2", "s4_h2"]
 
 nld = nld_class.nonlin_dyn_class(
     gtpsa_prop, lat_prop, A_max, beta_inj, delta_max, b_3_list)
 nld.zero_mult(lat_prop, 3)
 nld.zero_mult(lat_prop, 4)
 
-step = 2;
+step = 1;
 
 if step == 1:
     weight = np.array([
@@ -566,8 +588,8 @@ if step == 1:
         1e-1,  # 7,  nu_uc_x.
         1e-1,  # 8,  nu_uc_y.
         1e1,   # 9,  eta_x.
-        0e-7,  # 10, nu_sp_x.
-        0e-1,  # 11, nu_sp_y.
+        1e0,   # 10, nu_sp_x.
+        1e0,   # 11, nu_sp_y.
         0e-6,  # 12, beta_x.
         0e-6,  # 13, beta_y.
         0e-3,  # 14, dnu_x.
@@ -582,19 +604,19 @@ if step == 1:
 
         ("r1_h2", "b_2",      -10.0, 10.0),
         ("r2_h2", "b_2",      -10.0, 10.0),
-        ("r3_h2", "b_2",      -10.0, 10.0),
+        # ("r3_h2", "b_2",      -10.0, 10.0),
 
         (d1_bend, "b_2_bend", -1.5,  1.5),
         (d2_bend, "b_2_bend", -1.5,  1.5),
-        (d3_bend, "b_2_bend", -1.5,  1.5),
+        # (d3_bend, "b_2_bend", -1.5,  1.5),
 
         ("r1_h2", "phi",      -0.2, 0.2),
         ("r2_h2", "phi",      -0.2, 0.0),
-        ("r3_h2", "phi",      -0.2, 0.0),
+        # ("r3_h2", "phi",      -0.2, 0.0),
 
         (d1_bend, "phi_bend",  1.1,  1.5),
         (d2_bend, "phi_bend",  1.5,  2.25),
-        (d3_bend, "phi_bend",  1.5,  2.25)
+        # (d3_bend, "phi_bend",  1.5,  2.25)
    ]
 
     eps = 1e-3
