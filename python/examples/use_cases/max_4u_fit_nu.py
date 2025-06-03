@@ -32,7 +32,7 @@ eps_x_des    = 60e-12
 alpha_c_des  = 0.5e-4
 nu_uc_des    = np.array([0.4, 0.1])
 nu_sp_des    = np.array([2.85, 1.05])
-if not False:
+if False:
     # With 4 unit dipole cells.
     nu_sp_des -= nu_uc_des
 beta_des     = [5.0, 3.0]
@@ -377,7 +377,7 @@ class opt_sp_class:
         max_iter = 10000
         f_tol    = 1e-6
         x_tol    = 1e-6
-        g_tol    = 1e-10
+        g_tol    = 1e-6
 
         prm, bounds = self._prm_list.get_prm()
         self._phi_sp = lat_prop.compute_phi_lat()
@@ -587,7 +587,7 @@ prm = [
     (d3_bend, "b_2_bend", -1.5,  1.5)
 ]
 
-eps = 1e-4
+eps = 1e-3
 dprm_list = []
 for k in range(len(prm)):
     dprm_list.append(eps)
