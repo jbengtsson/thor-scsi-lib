@@ -129,7 +129,9 @@ class get_set_mpole_class:
         phi = 0e0
         for k in range(len(self._lattice)):
             if (type(self._lattice[k]) == ts.Bending) \
-               or (type(self._lattice[k]) == ts.Quadrupole):
+               or (type(self._lattice[k]) == ts.Quadrupole) \
+               or (type(self._lattice[k]) == ts.Sextupole) \
+               or (type(self._lattice[k]) == ts.Octupole):
                 dphi = self.get_phi_elem(self._lattice[k].name, 0)
                 phi += dphi
                 if prt:

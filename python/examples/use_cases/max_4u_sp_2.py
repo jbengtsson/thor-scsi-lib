@@ -29,11 +29,12 @@ b_2_bend_max = 1.0
 b_2_max      = 10.0
 
 eps_x_des    = 60e-12
-phi_1_des    = 1.5
+phi_1_des    = 1.4
 alpha_c_des  = 0.5e-4
 nu_uc_des    = [0.4, 0.1]
-nu_sp_des    = np.array([57.2/20.0, 20.75/20.0])
-# nu_sp_des    = np.array([57.2/20.0, 17.75/20.0])
+nu_sp_des    = np.array([57.2/20.0,  20.75/20.0])
+# nu_sp_des    = np.array([57.2/20.0,  17.75/20.0])
+# nu_sp_des    = np.array([57.47/20.0, 17.68/20.0])
 if False:
     # With 4 unit dipole cells.
     nu_sp_des -= nu_uc_des
@@ -95,7 +96,7 @@ class opt_sp_class:
 
     def __init__(
             self, lat_prop, prm_list, dprm_list, uc_list, sp_list, weight,
-            bend_list, rb_list, eps_x_des, phi_1_des, nu_uc_des, nu_sp_des,
+            bend_list, rbend_list, eps_x_des, phi_1_des, nu_uc_des, nu_sp_des,
             beta_des, dnu_des, nld):
 
         self._lat_prop       = lat_prop
@@ -105,7 +106,7 @@ class opt_sp_class:
         self._sp_list        = sp_list
         self._weight         = weight
         self._bend_list      = bend_list
-        self._rb_list        = rb_list
+        self._rbend_list     = rbend_list
         self._eps_x_des      = eps_x_des
         self._phi_1_des      = phi_1_des
         self._nu_uc_des      = nu_uc_des
@@ -138,17 +139,8 @@ class opt_sp_class:
 
     # Public.
 
-    def compute_phi_bend(self, bend_list):
-        phi = 0e0
-        for bend in bend_list:
-            phi += self._lat_prop.get_phi_elem(bend, 0)
-        return phi
-
     def prt_iter(self, prm, chi_2):
         eta, alpha, beta, nu_sp = self._Twiss_sp
-        phi_bend = []
-        for bend in self._bend_list:
-            phi_bend.append(self.compute_phi_bend(bend._bend_list))
 
         print("\n{:3d} chi_2 = {:9.3e} ({:9.3e})".format(
             self._n_iter, self._chi_2_min, chi_2-self._chi_2_min))
@@ -191,7 +183,7 @@ class opt_sp_class:
         for phi in self._phi_bend:
             print("    phi_bend       = {:8.5f}".format(phi))
         print()
-        for rb in self._rb_list:
+        for rb in self._rbend_list:
             print("    {:10s}     = {:8.5f}".format(
                 rb, self._lat_prop.get_phi_elem(rb, 0)))
 
@@ -400,7 +392,7 @@ class opt_sp_class:
         # Methods with constraints:
         #   SLSQP.
 
-        optimiser = "SLSQP"
+        optimiser = "CG"
         if optimiser == "TNC":
             minimum = opt.minimize(
                 f_sp,
@@ -429,7 +421,7 @@ class opt_sp_class:
                 method="SLSQP",
                 # callback=prt_iter,
                 bounds = bounds,
-                options={"ftol": f_tol, "maxiter": max_iter, "eps": 1e-3}
+                options={"ftol": f_tol, "maxiter": max_iter, "eps": 1e-4}
             )
         elif optimiser == "CG":
             # eps - step size.
@@ -465,14 +457,13 @@ def get_bends(lat):
             "d3_h2_sl_df4", "d3_h2_sl_df5", "d3_h2_sl_df6"
         ]
 
-        # phi: [1.15, 1.5].
         d1_bend = pc.bend_class(lat_prop, d1_list)
-        # phi: [3.0, 3.5].
         d2_bend = pc.bend_class(lat_prop, d2_list)
         d3_bend = pc.bend_class(lat_prop, d3_list)
         bend_list = [d1_bend, d2_bend, d3_bend]
 
-        rb_list = ["r1_h2", "r2_h2", "r3_h2"]
+        rbend_list = ["r1_h2", "r2_h2", "r3_h2"]
+
         b_3_list = ["s3_h2", "s4_h2"]
     elif lat == 2:
         # m4U_241223_h02_01_01_01_tracy_2.
@@ -488,16 +479,14 @@ def get_bends(lat):
             "d2_h2_sl_df2", "d2_h2_sl_df3", "d2_h2_sl_df4", "d2_h2_sl_df5"
         ]
 
-        # phi: [1.15, 1.5].
         d1_bend = pc.bend_class(lat_prop, d1_list)
-        # phi: [3.0, 3.5].
         d2_bend = pc.bend_class(lat_prop, d2_list)
         bend_list = [d1_bend, d2_bend]
 
-        rb_list = ["r1_h2", "r2_h2"]
+        rbend_list = ["r1_h2", "r2_h2"]
         b_3_list = ["s3_h2", "s4_h2"]
 
-    return bend_list, rb_list, b_3_list
+    return bend_list, rbend_list, b_3_list
 
 
 def get_prms(set, bend_list, eps):
@@ -514,14 +503,37 @@ def get_prms(set, bend_list, eps):
             (bend_list[1], "b_2_bend", -1.5,  1.5),
             (bend_list[2], "b_2_bend", -1.5,  1.5),
 
+            ("q1_h2",      "phi",      -0.2, 0.2),
+            ("q2_h2",      "phi",      -0.2, 0.2),
+
             ("r1_h2",      "phi",      -0.2,  0.2),
-            ("r2_h2",      "phi",      -0.2,  0.0),
-            ("r3_h2",      "phi",      -0.2,  0.0),
+            ("r2_h2",      "phi",      -0.2,  0.2),
+            ("r3_h2",      "phi",      -0.2,  0.2),
 
             (bend_list[0], "phi_bend",  1.4,  1.5),
             (bend_list[1], "phi_bend",  1.5,  3.0),
-            (bend_list[2], "phi_bend",  1.5,  2.5)
-       ]
+            (bend_list[2], "phi_bend",  1.5,  2.5),
+
+            ("s1_h2",      "b_2",     -10.0, 10.0),
+            ("s2_h2",      "b_2",     -10.0, 10.0),
+            ("s3_h2",      "b_2",     -10.0, 10.0),
+            ("s4_h2",      "b_2",     -10.0, 10.0),
+            ("s5_h2",      "b_2",     -10.0, 10.0),
+
+            ("o1_h2",      "b_2",     -10.0, 10.0),
+            ("o2_h2",      "b_2",     -10.0, 10.0),
+            ("o3_h2",      "b_2",     -10.0, 10.0),
+
+            ("s1_h2",      "phi",      -0.2, 0.2),
+            ("s2_h2",      "phi",      -0.2, 0.2),
+            ("s3_h2",      "phi",      -0.2, 0.2),
+            ("s4_h2",      "phi",      -0.2, 0.2),
+            ("s5_h2",      "phi",      -0.2, 0.2),
+
+            ("o1_h2",      "phi",      -0.2, 0.2),
+            ("o2_h2",      "phi",      -0.2, 0.2),
+            ("o3_h2",      "phi",      -0.2, 0.2)
+        ]
     elif set == 2:
         prm = [
             ("q1_h2",        "b_2",      -10.0, 10.0),
@@ -649,8 +661,8 @@ def get_prms(set, bend_list, eps):
 
 def get_weights():
     weight = np.array([
-        1e16,  # 0,  eps_x.
-        1e-4,  # 1,  phi_1
+        1e17,  # 0,  eps_x.
+        1e-2,  # 1,  phi_1
         1e-1,  # 2,  dphi.
         1e-14, # 3,  alpha^(1)_c.
         1e1,   # 4,  alpha^(2)_c.
@@ -664,7 +676,7 @@ def get_weights():
         1e0,   # 12, nu_sp_y.
         0e-6,  # 13, beta_x.
         0e-6,  # 14, beta_y.
-        1e-2,  # 15, dnu_x.
+        1e-3,  # 15, dnu_x.
         1e-3,  # 16, dnu_y.
         1e-7,  # 17, xi.
         1e-6   # 18, eta^(2)_x.
@@ -752,7 +764,7 @@ print("super period first sextupole {:15s} loc = {:d}".
 print("super period last sextupole  {:15s} loc = {:d}".
       format(lat_prop._lattice[sp_list[1]].name, sp_list[1]))
 
-bend_list, rb_list, b_3_list = get_bends(1)
+bend_list, rbend_list, b_3_list = get_bends(1)
 
 nld = nld_class.nonlin_dyn_class(
     gtpsa_prop, lat_prop, A_max, beta_inj, delta_max, b_3_list)
@@ -762,10 +774,11 @@ nld.zero_mult(lat_prop, 4)
 
 weight = get_weights()
 
-prm_list, dprm_list = get_prms(3, bend_list, 1e-3)
+prm_list, dprm_list = get_prms(1, bend_list, 1e-4)
 
 opt_sp = opt_sp_class(
-    lat_prop, prm_list, dprm_list, uc_list, sp_list, weight, bend_list, rb_list,
-    eps_x_des, phi_1_des, nu_uc_des, nu_sp_des, beta_des, dnu_des, nld)
+    lat_prop, prm_list, dprm_list, uc_list, sp_list, weight, bend_list,
+    rbend_list, eps_x_des, phi_1_des, nu_uc_des, nu_sp_des, beta_des, dnu_des,
+    nld)
 
 opt_sp.opt_sp()
