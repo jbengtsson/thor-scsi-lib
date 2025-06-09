@@ -88,8 +88,7 @@ def compute_alpha_c(map):
     index = np.zeros(gtpsa_prop.nv, int)
     alpha_c = np.zeros(gtpsa_prop.no+1)
     for k in range(1, gtpsa_prop.no+1):
-        index[ind.delta] = k
-        alpha_c[k] = map.ct.get(index)/C
+        alpha_c[k] = map.ct.get([0, 0, 0, 0, k])/C
     return alpha_c
 
 
