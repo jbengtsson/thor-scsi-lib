@@ -29,7 +29,9 @@ b_2_bend_max = 1.0
 b_2_max      = 10.0
 
 eps_x_des    = 60e-12
-phi_1_des    = 1.4
+phi_1_des    =  1.4
+phi_rb_1_des = -0.2
+b_2_des      =  2.0
 alpha_c_des  = 0.5e-4
 nu_uc_des    = [0.4, 0.1]
 nu_sp_des    = np.array([57.2/20.0,  20.75/20.0])
@@ -96,8 +98,8 @@ class opt_sp_class:
 
     def __init__(
             self, lat_prop, prm_list, dprm_list, uc_list, sp_list, weight,
-            bend_list, rbend_list, eps_x_des, phi_1_des, nu_uc_des, nu_sp_des,
-            beta_des, dnu_des, nld):
+            bend_list, rbend_list, eps_x_des, phi_1_des, phi_rb_1_des, b_2_des,
+            nu_uc_des, nu_sp_des, beta_des, dnu_des, nld):
 
         self._lat_prop       = lat_prop
         self._nld            = nld
@@ -109,12 +111,16 @@ class opt_sp_class:
         self._rbend_list     = rbend_list
         self._eps_x_des      = eps_x_des
         self._phi_1_des      = phi_1_des
+        self._phi_rb_1_des   = phi_rb_1_des
+        self._b_2_des        = b_2_des
         self._nu_uc_des      = nu_uc_des
         self._nu_sp_des      = nu_sp_des
         self._beta_des       = beta_des
         self._dnu_des        = dnu_des
 
         self._phi_bend       = np.zeros(3)
+        self._phi_rbend      = np.zeros(3)
+        self._b_2            = np.nan
         self._phi_sp_0       = np.nan
         self._phi_sp         = np.nan
         self._dphi           = np.nan
@@ -183,9 +189,11 @@ class opt_sp_class:
         for phi in self._phi_bend:
             print("    phi_bend       = {:8.5f}".format(phi))
         print()
-        for rb in self._rbend_list:
+        for k in range(len(self._rbend_list)):
             print("    {:10s}     = {:8.5f}".format(
-                rb, self._lat_prop.get_phi_elem(rb, 0)))
+                self._rbend_list[k], self._phi_rbend[k]))
+
+        print("\n    b_2            = {:8.5f}".format(self._b_2))
 
         self._lat_prop.prt_rad()
         self._prm_list.prt_prm(prm)
@@ -205,90 +213,100 @@ class opt_sp_class:
         if prt:
             print("  dchi2(phi_1)        = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[2]*(self._dphi)**2
+        dchi_2 = weight[2]*(self._phi_rbend[0]-self._phi_rb_1_des)**2
+        chi_2 += dchi_2
+        if prt:
+            print("  dchi2(phi_rb_1)     = {:9.3e}".format(dchi_2))
+
+        dchi_2 = weight[3]*(self._b_2-self._b_2_des)**2
+        chi_2 += dchi_2
+        if prt:
+            print("  dchi2(b_2)          = {:9.3e}".format(dchi_2))
+
+        dchi_2 = weight[4]*(self._dphi)**2
         chi_2 += dchi_2
         if prt:
             print("  dchi2(dphi)         = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[3]*1e0/self._alpha_c[1]**2
+        dchi_2 = weight[5]*1e0/self._alpha_c[1]**2
         chi_2 += dchi_2
         if prt:
             print("  dchi2(alpha^(1)_c)  = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[4]*(self._alpha_c[2])**2
+        dchi_2 = weight[6]*(self._alpha_c[2])**2
         chi_2 += dchi_2
         if prt:
             print("  dchi2(alpha^(2)_c)  = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[5]*self._lat_prop._U_0**2
+        dchi_2 = weight[7]*self._lat_prop._U_0**2
         chi_2 += dchi_2
         if prt:
             print("  dchi2(U_0)          = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[6]*(self._eta_list[0][ind.px]**2
+        dchi_2 = weight[8]*(self._eta_list[0][ind.px]**2
                             +self._eta_list[1][ind.px]**2)
         chi_2 += dchi_2
         if prt:
             print("  dchi2(eta'_uc)      = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[7]*(
+        dchi_2 = weight[9]*(
             self._alpha_list[0][ind.X]**2+self._alpha_list[0][ind.Y]**2
             +self._alpha_list[1][ind.X]**2+self._alpha_list[1][ind.Y]**2)
         chi_2 += dchi_2
         if prt:
             print("  dchi2(alpha_uc)     = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[8]*(self._nu_uc[ind.X]-self._nu_uc_des[ind.X])**2
+        dchi_2 = weight[10]*(self._nu_uc[ind.X]-self._nu_uc_des[ind.X])**2
         chi_2 += dchi_2
         if prt:
             print("  dchi2(nu_uc_x)      = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[9]*(self._nu_uc[ind.Y]-self._nu_uc_des[ind.Y])**2
+        dchi_2 = weight[11]*(self._nu_uc[ind.Y]-self._nu_uc_des[ind.Y])**2
         chi_2 += dchi_2
         if prt:
             print("  dchi2(nu_uc_y)      = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[10]*eta[ind.x]**2
+        dchi_2 = weight[12]*eta[ind.x]**2
         chi_2 += dchi_2
         if prt:
             print("  dchi2(eta_x)        = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[11]*(nu_sp[ind.X]-self._nu_sp_des[ind.X])**2
+        dchi_2 = weight[13]*(nu_sp[ind.X]-self._nu_sp_des[ind.X])**2
         chi_2 += dchi_2
         if prt:
             print("  dchi2(nu_sp_x)      = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[12]*(nu_sp[ind.Y]-self._nu_sp_des[ind.Y])**2
+        dchi_2 = weight[14]*(nu_sp[ind.Y]-self._nu_sp_des[ind.Y])**2
         chi_2 += dchi_2
         if prt:
             print("  dchi2(nu_sp_y)      = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[13]*(beta[ind.X]-self._beta_des[ind.X])**2
+        dchi_2 = weight[15]*(beta[ind.X]-self._beta_des[ind.X])**2
         chi_2 += dchi_2
         if prt:
             print("  dchi2(beta_x)       = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[14]*(beta[ind.Y]-self._beta_des[ind.Y])**2
+        dchi_2 = weight[16]*(beta[ind.Y]-self._beta_des[ind.Y])**2
         chi_2 += dchi_2
         if prt:
             print("  dchi2(beta_y)       = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[15]*(self._dnu[ind.X]-self._dnu_des[ind.X])**2
+        dchi_2 = weight[17]*(self._dnu[ind.X]-self._dnu_des[ind.X])**2
         chi_2 += dchi_2
         if prt:
             print("  dchi2(dnu_x)        = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[16]*(self._dnu[ind.Y]-self._dnu_des[ind.Y])**2
+        dchi_2 = weight[18]*(self._dnu[ind.Y]-self._dnu_des[ind.Y])**2
         chi_2 += dchi_2
         if prt:
             print("  dchi2(dnu_y)        = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[17]*(self._xi[ind.X]**2+self._xi[ind.Y]**2)
+        dchi_2 = weight[19]*(self._xi[ind.X]**2+self._xi[ind.Y]**2)
         chi_2 += dchi_2
         if prt:
             print("  dchi2(xi)           = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[18]*self._eta_nl.get([0, 0, 0, 0, 2])**2
+        dchi_2 = weight[20]*self._eta_nl.get([0, 0, 0, 0, 2])**2
         chi_2 += dchi_2
         if prt:
             print("  dchi2(eta^(2)_x)    = {:9.3e}".format(dchi_2))
@@ -308,6 +326,14 @@ class opt_sp_class:
 
             for k in range(len(self._bend_list)):
                 self._phi_bend[k] = self._bend_list[k].compute_bend_phi()
+
+            for k in range(len(self._rbend_list)):
+                self._phi_rbend[k] = \
+                    self._lat_prop.get_phi_elem(self._rbend_list[k], 0)
+
+            self._b_2 = \
+                self._bend_list[0].compute_bend_b_2xL() \
+                /self._bend_list[0].compute_bend_L_tot()
 
             try:
                 # Compute Twiss parameters along the lattice.
@@ -373,9 +399,9 @@ class opt_sp_class:
             return chi_2
 
         max_iter = 10000
-        f_tol    = 1e-8
-        x_tol    = 1e-8
-        g_tol    = 1e-8
+        f_tol    = 1e-7
+        x_tol    = 1e-7
+        g_tol    = 1e-7
 
         prm, bounds = self._prm_list.get_prm()
         if True:
@@ -503,36 +529,13 @@ def get_prms(set, bend_list, eps):
             (bend_list[1], "b_2_bend", -1.5,  1.5),
             (bend_list[2], "b_2_bend", -1.5,  1.5),
 
-            ("q1_h2",      "phi",      -0.2, 0.2),
-            ("q2_h2",      "phi",      -0.2, 0.2),
-
-            ("r1_h2",      "phi",      -0.2,  0.2),
+            ("r1_h2",      "phi",      -0.5,  0.5),
             ("r2_h2",      "phi",      -0.2,  0.2),
             ("r3_h2",      "phi",      -0.2,  0.2),
 
             (bend_list[0], "phi_bend",  1.4,  1.5),
             (bend_list[1], "phi_bend",  1.5,  3.0),
-            (bend_list[2], "phi_bend",  1.5,  2.5),
-
-            ("s1_h2",      "b_2",     -10.0, 10.0),
-            ("s2_h2",      "b_2",     -10.0, 10.0),
-            ("s3_h2",      "b_2",     -10.0, 10.0),
-            ("s4_h2",      "b_2",     -10.0, 10.0),
-            ("s5_h2",      "b_2",     -10.0, 10.0),
-
-            ("o1_h2",      "b_2",     -10.0, 10.0),
-            ("o2_h2",      "b_2",     -10.0, 10.0),
-            ("o3_h2",      "b_2",     -10.0, 10.0),
-
-            ("s1_h2",      "phi",      -0.2, 0.2),
-            ("s2_h2",      "phi",      -0.2, 0.2),
-            ("s3_h2",      "phi",      -0.2, 0.2),
-            ("s4_h2",      "phi",      -0.2, 0.2),
-            ("s5_h2",      "phi",      -0.2, 0.2),
-
-            ("o1_h2",      "phi",      -0.2, 0.2),
-            ("o2_h2",      "phi",      -0.2, 0.2),
-            ("o3_h2",      "phi",      -0.2, 0.2)
+            (bend_list[2], "phi_bend",  1.5,  2.5)
         ]
     elif set == 2:
         prm = [
@@ -662,24 +665,26 @@ def get_prms(set, bend_list, eps):
 def get_weights():
     weight = np.array([
         1e17,  # 0,  eps_x.
-        1e-2,  # 1,  phi_1
-        1e-1,  # 2,  dphi.
-        1e-14, # 3,  alpha^(1)_c.
-        1e1,   # 4,  alpha^(2)_c.
-        1e-15, # 5,  U_0.
-        1e2,   # 6,  etap_x_uc.
-        1e-2,  # 7,  alpha_uc.
-        1e-1,  # 8,  nu_uc_x.
-        1e-1,  # 9,  nu_uc_y.
-        1e2,   # 10, eta_x.
-        1e0,   # 11, nu_sp_x.
-        1e0,   # 12, nu_sp_y.
-        0e-6,  # 13, beta_x.
-        0e-6,  # 14, beta_y.
-        1e-3,  # 15, dnu_x.
-        1e-3,  # 16, dnu_y.
-        1e-7,  # 17, xi.
-        1e-6   # 18, eta^(2)_x.
+        1e-1,  # 1,  phi_1.
+        0e-6,  # 2,  phi_rb_1.
+        1e-6,  # 3,  b_2.
+        1e-1,  # 4,  dphi.
+        0e-14, # 5,  alpha^(1)_c.
+        0e1,   # 6,  alpha^(2)_c.
+        1e-15, # 7,  U_0.
+        1e2,   # 8,  etap_x_uc.
+        1e-2,  # 9,  alpha_uc.
+        1e-2,  # 10, nu_uc_x.
+        1e-2,  # 11, nu_uc_y.
+        1e2,   # 12, eta_x.
+        1e0,   # 13, nu_sp_x.
+        1e0,   # 14, nu_sp_y.
+        0e-6,  # 15, beta_x.
+        0e-6,  # 16, beta_y.
+        1e-3,  # 17, dnu_x.
+        1e-3,  # 18, dnu_y.
+        1e-7,  # 19, xi.
+        1e-6   # 20, eta^(2)_x.
     ])
 
     return weight
@@ -778,7 +783,7 @@ prm_list, dprm_list = get_prms(1, bend_list, 1e-4)
 
 opt_sp = opt_sp_class(
     lat_prop, prm_list, dprm_list, uc_list, sp_list, weight, bend_list,
-    rbend_list, eps_x_des, phi_1_des, nu_uc_des, nu_sp_des, beta_des, dnu_des,
-    nld)
+    rbend_list, eps_x_des, phi_1_des, phi_rb_1_des, b_2_des, nu_uc_des,
+    nu_sp_des, beta_des, dnu_des, nld)
 
 opt_sp.opt_sp()
