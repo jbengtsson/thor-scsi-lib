@@ -331,37 +331,29 @@ class opt_sp_class:
                 self._bend_list[0].compute_bend_b_2xL() \
                 /self._bend_list[0].compute_bend_L_tot()
 
-            try:
-                # Compute Twiss parameters along the lattice.
-                if not self._lat_prop.comp_per_sol(gtpsa_prop):
-                    print("\ncomp_per_sol: unstable")
-                    raise ValueError
-
-                # Compute radiation properties.
-                stable, stable_rad = self._lat_prop.compute_radiation()
-                if not stable or not stable_rad:
-                    print("\ncompute_radiation: unstable")
-                    raise ValueError
- 
-                # Compute linear chromaticity.
-                self._nld.compute_map(gtpsa_prop, lat_prop)
-                stable, _, self._xi = \
-                    lo.compute_nu_xi(gtpsa_prop, self._nld._M)
-                if not stable:
-                    print("\ncompute_nu_xi: unstable")
-                    raise ValueError
-
-                # Compute 2nd order dispersion
-                self._eta_nl = nld.compute_eta(
-                    gtpsa_prop, lat_prop, lat_prop._M)
-
-            except ValueError:
+            chi_2 = 0e0
+            # Compute Twiss parameters along the lattice.
+            stable = self._lat_prop.comp_per_sol(gtpsa_prop)
+            if not stable:
+                print("\ncomp_per_sol: unstable")
                 chi_2 = 1e30
-                if not False:
-                    print(f"\n{self._n_iter:3d} chi_2 = {chi_2:11.5e}",
-                          f"({self._chi_2_min:11.5e})")
-                    self._prm_list.prt_prm(prm)
-            else:
+            # Compute radiation properties.
+            stable, stable_rad = self._lat_prop.compute_radiation()
+            if not stable or not stable_rad:
+                print("\ncompute_radiation: unstable")
+                chi_2 = 1e30
+            # Compute linear chromaticity.
+            self._nld.compute_map(gtpsa_prop, lat_prop)
+            stable, _, self._xi = lo.compute_nu_xi(
+                gtpsa_prop, self._nld._M)
+            if not stable:
+                print("\ncompute_nu_xi: unstable")
+                chi_2 = 1e30
+             # Compute 2nd order dispersion
+            self._eta_nl = nld.compute_eta(
+                gtpsa_prop, lat_prop, lat_prop._M)
+
+            if chi_2 != 1e30:
                 self._alpha_c = compute_alpha_c(self._nld._M)
                 self._eta_list[0], self._alpha_list[0], _, self._nu_0 = \
                     self._lat_prop.get_Twiss(uc_list[0])
@@ -391,6 +383,11 @@ class opt_sp_class:
                         print(f"\n{self._n_iter:3d}",
                               f"dchi_2 = {chi_2-self._chi_2_min:9.3e}")
                         # self._prm_list.prt_prm(prm)
+            else:
+                if not False:
+                    print(f"\n{self._n_iter:3d} chi_2 = {chi_2:11.5e}",
+                          f"({self._chi_2_min:11.5e})")
+                    self._prm_list.prt_prm(prm)
 
             return chi_2
 
@@ -650,10 +647,7 @@ def get_prms(set, bend_list, eps):
 
     prm_list = pc.prm_class(lat_prop, prm)
 
-    dprm_list = []
-    for k in range(len(prm)):
-        dprm_list.append(eps)
-    dprm_list = np.array(dprm_list)
+    dprm_list = np.full(len(prm), eps)
 
     return prm_list, dprm_list
 
