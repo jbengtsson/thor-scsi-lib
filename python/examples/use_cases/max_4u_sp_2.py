@@ -148,52 +148,49 @@ class opt_sp_class:
     def prt_iter(self, prm, chi_2):
         eta, alpha, beta, nu_sp = self._Twiss_sp
 
-        print("\n{:3d} chi_2 = {:9.3e} ({:9.3e})".format(
-            self._n_iter, self._chi_2_min, chi_2-self._chi_2_min))
-        print("    eps_x [pm.rad] = {:5.3f} [{:5.3f}]".
-              format(1e12*self._lat_prop._eps[ind.X], 1e12*self._eps_x_des))
+        print(f"\n{self._n_iter:3d} chi_2 = {self._chi_2_min:9.3e}",
+              f"({chi_2-self._chi_2_min:9.3e})")
+        print(f"    eps_x [pm.rad] = {1e12*self._lat_prop._eps[ind.X]:5.3f}",
+              f"({1e12*self._eps_x_des:5.3f})")
 
-        print("\n    dphi [deg]     = {:9.3e}".format(self._dphi))
+        print(f"\n    dphi [deg]     = {self._dphi:9.3e}")
 
-        print("\n    alpha_c        = [{:9.3e}, {:9.3e}]".
-              format(self._alpha_c[1], self._alpha_c[2]))
-        print("    nu_uc          = [{:7.5f}, {:7.5f}] ([{:7.5f}, {:7.5f}])".
-              format(self._nu_uc[ind.X], self._nu_uc[ind.Y],
-                     self._nu_uc_des[ind.X], self._nu_uc_des[ind.Y]))
-        print("    nu_sp          = [{:7.5f}, {:7.5f}] ([{:7.5f}, {:7.5f}])".
-              format(nu_sp[ind.X], nu_sp[ind.Y], nu_sp_des[ind.X],
-                     nu_sp_des[ind.Y]))
-        print("    dnu            = [{:7.5f}, {:7.5f}] ([{:7.5f}, {:7.5f}])".
-              format(self._dnu[ind.X], self._dnu[ind.Y],
-                     self._dnu_des[ind.X], dnu_des[ind.Y]))
-        print("    xi             = [{:5.3f}, {:5.3f}]".
-              format(self._xi[ind.X], self._xi[ind.Y]))
-        print("    eta^(2)_x      = {:9.3e}".format(
-            self._eta_nl.get([0, 0, 0, 0, 2])))
+        print(f"\n    alpha_c        = [{self._alpha_c[1]:9.3e},",
+              f"{self._alpha_c[2]:9.3e}]")
+        print(f"    nu_uc          = [{self._nu_uc[ind.X]:7.5f},",
+              f"{self._nu_uc[ind.Y]:7.5f}] ([{self._nu_uc_des[ind.X]:7.5f},",
+              f"{self._nu_uc_des[ind.Y]:7.5f}])")
+        print(f"    nu_sp          = [{nu_sp[ind.X]:7.5f},",
+              f"{nu_sp[ind.Y]:7.5f}] ([{self._nu_sp_des[ind.X]:7.5f},",
+              f"{self._nu_sp_des[ind.Y]:7.5f}])")
+        print(f"    dnu            = [{self._dnu[ind.X]:7.5f},",
+              f"{self._dnu[ind.Y]:7.5f}] ([{self._dnu_des[ind.X]:7.5f},",
+              f"{self._dnu_des[ind.Y]:7.5f}])")
+        print(f"    xi             = [{self._xi[ind.X]:5.3f},",
+              f"{self._xi[ind.Y]:5.3f}]")
+        print(f"    eta^(2)_x      = {self._eta_nl.get([0, 0, 0, 0, 2]):9.3e}")
 
-        print("\n    eta'_uc        = {:9.3e} {:9.3e}".
-              format(self._eta_list[0][ind.px], self._eta_list[1][ind.px]))
-        print("    alpha_uc       = [{:9.3e}, {:9.3e}] [{:9.3e}, {:9.3e}]".
-              format(self._alpha_list[0][ind.X], self._alpha_list[0][ind.Y],
-                     self._alpha_list[1][ind.X], self._alpha_list[1][ind.Y]))
-        print("    eta_x          = {:9.3e}".format(eta[ind.x]))
-        print("    beta           = [{:7.5f}, {:7.5f}] ([{:7.5f}, {:7.5f}])".
-              format(beta[ind.X], beta[ind.Y], self._beta_des[ind.X],
-                    self._beta_des[ind.Y]))
+        print(f"\n    eta'_uc        = {self._eta_list[0][ind.px]:9.3e}",
+              f" {self._eta_list[1][ind.px]:9.3e}")
+        print(f"    alpha_uc       = [{self._alpha_list[0][ind.X]:9.3e},",
+              f"{self._alpha_list[0][ind.Y]:9.3e}]",
+              f"[{self._alpha_list[1][ind.X]:9.3e},",
+              f"{self._alpha_list[1][ind.Y]:9.3e}]")
+        print(f"    eta_x          = {eta[ind.x]:9.3e}")
+        print(f"    beta           = [{beta[ind.X]:7.5f}, {beta[ind.Y]:7.5f}]",
+              f"([{self._beta_des[ind.X]:7.5f}, {self._beta_des[ind.Y]:7.5f}])")
 
-        print("\n    phi_sp         = {:8.5f}".format(self._phi_sp))
-        print("    C [m]          = {:8.5f}".
-              format(self._lat_prop.compute_circ()))
+        print(f"\n    phi_sp         = {self._phi_sp:8.5f}")
+        print(f"    C [m]          = {self._lat_prop.compute_circ():8.5f}")
 
         print()
         for phi in self._phi_bend:
-            print("    phi_bend       = {:8.5f}".format(phi))
+            print(f"    phi_bend       = {phi:8.5f}")
         print()
-        for k in range(len(self._rbend_list)):
-            print("    {:10s}     = {:8.5f}".format(
-                self._rbend_list[k], self._phi_rbend[k]))
+        for k, rbend in enumerate(self._rbend_list):
+            print(f"    {rbend:10s}     = {self._phi_rbend[k]:8.5f}")
 
-        print("\n    b_2            = {:8.5f}".format(self._b_2))
+        print(f"\n    b_2            = {self._b_2:8.5f}")
 
         self._lat_prop.prt_rad()
         self._prm_list.prt_prm(prm)
@@ -206,110 +203,110 @@ class opt_sp_class:
         dchi_2 = weight[0]*(self._lat_prop._eps[ind.X]-self._eps_x_des)**2
         chi_2 = dchi_2
         if prt:
-            print("\n  dchi2(eps_x)        = {:9.3e}".format(dchi_2))
+            print(f"\n  dchi2(eps_x)        = {dchi_2:9.3e}")
 
         dchi_2 = weight[1]*(self._phi_bend[0]-self._phi_1_des)**2
         chi_2 += dchi_2
         if prt:
-            print("  dchi2(phi_1)        = {:9.3e}".format(dchi_2))
+            print(f"  dchi2(phi_1)        = {dchi_2:9.3e}")
 
         dchi_2 = weight[2]*(self._phi_rbend[0]-self._phi_rb_1_des)**2
         chi_2 += dchi_2
         if prt:
-            print("  dchi2(phi_rb_1)     = {:9.3e}".format(dchi_2))
+            print(f"  dchi2(phi_rb_1)     = {dchi_2:9.3e}")
 
         dchi_2 = weight[3]*(self._b_2-self._b_2_des)**2
         chi_2 += dchi_2
         if prt:
-            print("  dchi2(b_2)          = {:9.3e}".format(dchi_2))
+            print(f"  dchi2(b_2)          = {dchi_2:9.3e}")
 
         dchi_2 = weight[4]*(self._dphi)**2
         chi_2 += dchi_2
         if prt:
-            print("  dchi2(dphi)         = {:9.3e}".format(dchi_2))
+            print(f"  dchi2(dphi)         = {dchi_2:9.3e}")
 
         dchi_2 = weight[5]*1e0/self._alpha_c[1]**2
         chi_2 += dchi_2
         if prt:
-            print("  dchi2(alpha^(1)_c)  = {:9.3e}".format(dchi_2))
+            print(f"  dchi2(alpha^(1)_c)  = {dchi_2:9.3e}")
 
         dchi_2 = weight[6]*(self._alpha_c[2])**2
         chi_2 += dchi_2
         if prt:
-            print("  dchi2(alpha^(2)_c)  = {:9.3e}".format(dchi_2))
+            print(f"  dchi2(alpha^(2)_c)  = {dchi_2:9.3e}")
 
         dchi_2 = weight[7]*self._lat_prop._U_0**2
         chi_2 += dchi_2
         if prt:
-            print("  dchi2(U_0)          = {:9.3e}".format(dchi_2))
+            print(f"  dchi2(U_0)          = {dchi_2:9.3e}")
 
         dchi_2 = weight[8]*(self._eta_list[0][ind.px]**2
                             +self._eta_list[1][ind.px]**2)
         chi_2 += dchi_2
         if prt:
-            print("  dchi2(eta'_uc)      = {:9.3e}".format(dchi_2))
+            print(f"  dchi2(eta'_uc)      = {dchi_2:9.3e}")
 
         dchi_2 = weight[9]*(
             self._alpha_list[0][ind.X]**2+self._alpha_list[0][ind.Y]**2
             +self._alpha_list[1][ind.X]**2+self._alpha_list[1][ind.Y]**2)
         chi_2 += dchi_2
         if prt:
-            print("  dchi2(alpha_uc)     = {:9.3e}".format(dchi_2))
+            print(f"  dchi2(alpha_uc)     = {dchi_2:9.3e}")
 
         dchi_2 = weight[10]*(self._nu_uc[ind.X]-self._nu_uc_des[ind.X])**2
         chi_2 += dchi_2
         if prt:
-            print("  dchi2(nu_uc_x)      = {:9.3e}".format(dchi_2))
+            print(f"  dchi2(nu_uc_x)      = {dchi_2:9.3e}")
 
         dchi_2 = weight[11]*(self._nu_uc[ind.Y]-self._nu_uc_des[ind.Y])**2
         chi_2 += dchi_2
         if prt:
-            print("  dchi2(nu_uc_y)      = {:9.3e}".format(dchi_2))
+            print(f"  dchi2(nu_uc_y)      = {dchi_2:9.3e}")
 
         dchi_2 = weight[12]*eta[ind.x]**2
         chi_2 += dchi_2
         if prt:
-            print("  dchi2(eta_x)        = {:9.3e}".format(dchi_2))
+            print(f"  dchi2(eta_x)        = {dchi_2:9.3e}")
 
         dchi_2 = weight[13]*(nu_sp[ind.X]-self._nu_sp_des[ind.X])**2
         chi_2 += dchi_2
         if prt:
-            print("  dchi2(nu_sp_x)      = {:9.3e}".format(dchi_2))
+            print(f"  dchi2(nu_sp_x)      = {dchi_2:9.3e}")
 
         dchi_2 = weight[14]*(nu_sp[ind.Y]-self._nu_sp_des[ind.Y])**2
         chi_2 += dchi_2
         if prt:
-            print("  dchi2(nu_sp_y)      = {:9.3e}".format(dchi_2))
+            print(f"  dchi2(nu_sp_y)      = {dchi_2:9.3e}")
 
         dchi_2 = weight[15]*(beta[ind.X]-self._beta_des[ind.X])**2
         chi_2 += dchi_2
         if prt:
-            print("  dchi2(beta_x)       = {:9.3e}".format(dchi_2))
+            print(f"  dchi2(beta_x)       = {dchi_2:9.3e}")
 
         dchi_2 = weight[16]*(beta[ind.Y]-self._beta_des[ind.Y])**2
         chi_2 += dchi_2
         if prt:
-            print("  dchi2(beta_y)       = {:9.3e}".format(dchi_2))
+            print(f"  dchi2(beta_y)       = {dchi_2:9.3e}")
 
         dchi_2 = weight[17]*(self._dnu[ind.X]-self._dnu_des[ind.X])**2
         chi_2 += dchi_2
         if prt:
-            print("  dchi2(dnu_x)        = {:9.3e}".format(dchi_2))
+            print(f"  dchi2(dnu_x)        = {dchi_2:9.3e}")
 
         dchi_2 = weight[18]*(self._dnu[ind.Y]-self._dnu_des[ind.Y])**2
         chi_2 += dchi_2
         if prt:
-            print("  dchi2(dnu_y)        = {:9.3e}".format(dchi_2))
+            print(f"  dchi2(dnu_y)        = {dchi_2:9.3e}")
 
         dchi_2 = weight[19]*(self._xi[ind.X]**2+self._xi[ind.Y]**2)
         chi_2 += dchi_2
         if prt:
-            print("  dchi2(xi)           = {:9.3e}".format(dchi_2))
+            print(f"  dchi2(xi)           = {dchi_2:9.3e}")
 
         dchi_2 = weight[20]*self._eta_nl.get([0, 0, 0, 0, 2])**2
         chi_2 += dchi_2
         if prt:
-            print("  dchi2(eta^(2)_x)    = {:9.3e}".format(dchi_2))
+            print(f"  dchi2(eta^(2)_x)    = {dchi_2:9.3e}")
 
         return chi_2
 
@@ -324,12 +321,11 @@ class opt_sp_class:
             self._phi_sp = self._lat_prop.compute_phi_lat()
             self._dphi = self._phi_sp - self._phi_sp_0
 
-            for k in range(len(self._bend_list)):
-                self._phi_bend[k] = self._bend_list[k].compute_bend_phi()
+            for k, bend in enumerate(self._bend_list):
+                self._phi_bend[k] = bend.compute_bend_phi()
 
-            for k in range(len(self._rbend_list)):
-                self._phi_rbend[k] = \
-                    self._lat_prop.get_phi_elem(self._rbend_list[k], 0)
+            for k, bend in enumerate(self._rbend_list):
+                self._phi_rbend[k] = self._lat_prop.get_phi_elem(bend, 0)
 
             self._b_2 = \
                 self._bend_list[0].compute_bend_b_2xL() \
@@ -362,8 +358,8 @@ class opt_sp_class:
             except ValueError:
                 chi_2 = 1e30
                 if not False:
-                    print("\n{:3d} chi_2 = {:11.5e} ({:11.5e})".
-                          format(self._n_iter, chi_2, self._chi_2_min))
+                    print(f"\n{self._n_iter:3d} chi_2 = {chi_2:11.5e}",
+                          f"({self._chi_2_min:11.5e})")
                     self._prm_list.prt_prm(prm)
             else:
                 self._alpha_c = compute_alpha_c(self._nld._M)
@@ -389,11 +385,11 @@ class opt_sp_class:
                         bend_list=self._bend_list)
                     self._chi_2_min = min(chi_2, self._chi_2_min)
                 else:
-                    print("\n{:3d} chi_2 = {:9.3e} ({:9.3e})".format(
-                        self._n_iter, self._chi_2_min, chi_2-self._chi_2_min))
+                    print(f"\n{self._n_iter:3d} chi_2 = {self._chi_2_min:9.3e}",
+                          f"({chi_2-self._chi_2_min:9.3e})")
                     if False:
-                        print("\n{:3d} dchi_2 = {:9.3e}".
-                              format(self._n_iter, chi_2-self._chi_2_min))
+                        print(f"\n{self._n_iter:3d}",
+                              f"dchi_2 = {chi_2-self._chi_2_min:9.3e}")
                         # self._prm_list.prt_prm(prm)
 
             return chi_2
@@ -730,7 +726,7 @@ if False:
     print()
     prm_list._prm_list[0][0].print()
 
-    assert False
+    assert False, "\nCheck completed"
 
 try:
     # Compute Twiss parameters along lattice.
@@ -760,14 +756,14 @@ sp_list.append(lat_prop._lattice.find("lsborder", 0).index)
 sp_list.append(lat_prop._lattice.find("lsborder", 1).index)
 sp_list = np.array(sp_list)
 
-print("\nunit cell entrance           {:15s} loc = {:d}".
-      format(lat_prop._lattice[uc_list[0]].name, uc_list[0]))
-print("unit cell exit               {:15s} loc = {:d}".
-      format(lat_prop._lattice[uc_list[1]].name, uc_list[1]))
-print("super period first sextupole {:15s} loc = {:d}".
-      format(lat_prop._lattice[sp_list[0]].name, sp_list[0]))
-print("super period last sextupole  {:15s} loc = {:d}".
-      format(lat_prop._lattice[sp_list[1]].name, sp_list[1]))
+print(f"\nunit cell entrance           ",
+      f"{lat_prop._lattice[uc_list[0]].name:15s} loc = {uc_list[0]:d}")
+print(f"unit cell exit               {lat_prop._lattice[uc_list[1]].name:15s}",
+      f"loc = {uc_list[1]:d}")
+print(f"super period first sextupole {lat_prop._lattice[sp_list[0]].name:15s}",
+      f"loc = {sp_list[0]:d}")
+print(f"super period last sextupole  {lat_prop._lattice[sp_list[1]].name:15s}",
+      f" loc = {sp_list[1]:d}")
 
 bend_list, rbend_list, b_3_list = get_bends(1)
 
