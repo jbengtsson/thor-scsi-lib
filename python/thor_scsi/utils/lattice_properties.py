@@ -1,8 +1,10 @@
 """
 """
-import thor_scsi.lib as tslib
 
 import gtpsa
+
+import thor_scsi.lib as tslib
+
 from .accelerator import instrument_with_radiators
 import numpy as np
 from scipy.constants import c as c0
@@ -11,6 +13,7 @@ from dataclasses import dataclass
 from . import periodic_structure as ps, get_set_mpole as gs, index_class as ind
 from .closed_orbit import compute_closed_orbit
 from .linear_optics import compute_M_diag
+from . import tpsa_class as tpsa
 from .output import mat2txt, vec2txt
 
 import logging
@@ -30,12 +33,19 @@ class RadiationResult:
 
 
 class lattice_properties_class(
-        ps.periodic_structure_class, gs.get_set_mpole_class):
+        tpsa.tpsa_class, ps.periodic_structure_class, gs.get_set_mpole_class):
     # Private.
 
-    def __init__(self, gtpsa_prop, file_name, E_0, cod_eps):
+    def __init__(self, file_name, E_0, cod_eps, no):
+        self._no = no
+        self.to = self._no
+        self.desc = gtpsa.desc(self._nv, self._no)
+        ps.periodic_structure_class.__init__(self, file_name, E_0)
         # Initialise periodic_structure_class.
-        super().__init__(gtpsa_prop, file_name, E_0)
+        ps.periodic_structure_class.__init__(self, file_name, E_0)
+        # Initialise get_set_mpole_class.
+        gs.get_set_mpole_class.__init__(self)
+
         self._cod_eps       = cod_eps
         self._rad_del_kicks = []
         self._M_rad         = []       # ss_vect_tpsa.

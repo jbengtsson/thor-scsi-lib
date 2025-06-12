@@ -12,19 +12,16 @@ from thor_scsi.utils import index_class as ind, linear_optics as lo
 
 ind = ind.index_class()
 
-import gtpsa
-
 
 class MpoleInd(enum.IntEnum):
     quad = 2
     sext = 3
 
 
-class nonlin_dyn_class():
+class nonlin_dyn_class:
     # Private.
 
-    def __init__(
-            self, gtpsa_prop, lat_prop, A_max, beta_inj, delta_max, b_3_list):
+    def __init__(self, lat_prop, A_max, beta_inj, delta_max, b_3_list):
         self._A_max        = A_max
         self._beta_inj     = beta_inj
         self._delta_max    = delta_max
@@ -50,7 +47,7 @@ class nonlin_dyn_class():
 
         if b_3_list != []:
             self.compute_twoJ()
-            self.compute_Id_scl(gtpsa_prop, lat_prop)
+            self.compute_Id_scl(lat_prop)
         else:
             print("\nnonlin_dyn_class: b_3_list is empty")
 
@@ -115,24 +112,19 @@ class nonlin_dyn_class():
                 [self._A_max[ind.X]**2/self._beta_inj[ind.X],
                  self._A_max[ind.Y]**2/self._beta_inj[ind.Y]])
 
-    def compute_Id_scl(self, gtpsa_prop, lat_prop):
-        self._Id_scl = \
-            gtpsa.ss_vect_tpsa(
-                lat_prop._desc, gtpsa_prop.no,
-                index_mapping=lat_prop._named_index)
+    def compute_Id_scl(self, lat_prop):
+        self._Id_scl = lat_prop.ss_vect_tpsa()
         self._Id_scl.set_identity()
         for k in range(4):
             self._Id_scl.iloc[k].set_variable(
                 0e0, k+1, np.sqrt(self._twoJ[k//2]))
         self._Id_scl.delta.set_variable(0e0, 5, self._delta_max)
 
-    def compose_bs(self, gtpsa_prop, lat_prop, h, map):
+    def compose_bs(self, lat_prop, h, map):
         Id = \
-            gtpsa.ss_vect_tpsa(
-            lat_prop._desc, gtpsa_prop.no, index_mapping=lat_prop._named_index)
+            lat_prop.gtpsa.ss_vect_tpsa()
         t_map = \
-            gtpsa.ss_vect_tpsa(
-            lat_prop._desc, gtpsa_prop.no, index_mapping=lat_prop._named_index)
+            lat_prop.ss_vect_tpsa()
         t_map.x = h
         t_map.compose(t_map, map)
         return t_map.x 
@@ -146,9 +138,10 @@ class nonlin_dyn_class():
         map.delta.print("delta", eps)
         map.ct.print("ct", eps)
 
-    def compute_map(self, gtpsa_prop, lat_prop):
+    def compute_map(self, lat_prop):
         self._M = lo.compute_map(
-            gtpsa_prop, lat_prop._lattice, lat_prop._model_state)
+            lat_prop.desc, lat_prop._no, lat_prop._lattice,
+            lat_prop._model_state)
 
     def zero_mult(self, lat_prop, n):
         # Zero multipoles.
@@ -165,7 +158,7 @@ class nonlin_dyn_class():
         n = len(b_3_list)
         A = np.zeros((2, n))
         self.compute_map(lat_prop, 2)
-        stable, _, xi = lo.compute_nu_xi(lat_prop._desc, gtpsa_prop.no, self._M)
+        stable, _, xi = lo.compute_nu_xi(lat_prop.desc, gtpsa_prop.no, self._M)
         if stable:
             for k in range(n):
                 b_3xL = \
@@ -322,16 +315,16 @@ class nonlin_dyn_class():
                 else:
                     print()
 
-    def compute_eta(self, gtpsa_prop, lat_prop, M):
+    def compute_eta(self, lat_prop, M):
         prt = False
         no = 2
-        I = gtpsa_prop.ss_vect_tpsa()
-        ImM = gtpsa_prop.ss_vect_tpsa()
+        I = lat_prop.ss_vect_tpsa()
+        ImM = lat_prop.ss_vect_tpsa()
         # Workaround for compose with vector vs. map.
-        D = gtpsa_prop.ss_vect_tpsa()
-        eta_k = gtpsa_prop.ss_vect_tpsa()
-        ImM_inv = gtpsa_prop.ss_vect_tpsa()
-        eta = gtpsa_prop.tpsa()
+        D = lat_prop.ss_vect_tpsa()
+        eta_k = lat_prop.ss_vect_tpsa()
+        ImM_inv = lat_prop.ss_vect_tpsa()
+        eta = lat_prop.tpsa()
         I.set_identity()
         if prt:
             print()
@@ -349,7 +342,7 @@ class nonlin_dyn_class():
                 print("eta^({:d})     = [{:22.15e}, {:22.15e}]".format(
                 k, eta_k.x.get(ind_delta), eta_k.px.get(ind_delta)))
                 # Validate.
-                eta_chx = gtpsa_prop.ss_vect_tpsa()
+                eta_chx = lat_prop.ss_vect_tpsa()
                 eta_k.delta.set([0, 0, 0, 0, 1], 0e0, 1e0)
                 eta_chx.compose(M, eta_k)
                 print("eta_chx^({:d}) = [{:22.15e}, {:22.15e}]".format(

@@ -5,6 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 import gtpsa
+
 import thor_scsi.lib as ts
 
 from thor_scsi.factory import accelerator_from_config
@@ -21,10 +22,9 @@ ind = ind.index_class()
 class periodic_structure_class:
     # Private.
 
-    def __init__(self, gtpsa_prop, file_name, E_0):
+    def __init__(self, file_name, E_0):
 
         self._named_index = []
-        self._desc        = []
 
         self._lattice     = []
         self._type_code   = np.nan # Lattice elements type code.
@@ -45,13 +45,12 @@ class periodic_structure_class:
             gtpsa.IndexMapping(dict(x=0, px=1, y=2, py=3, delta=4, ct=5))
 
         # Descriptor for Truncated Power Series Algebra variables.
-        self._desc = gtpsa.desc(
-            gtpsa_prop.nv, gtpsa_prop.no, gtpsa_prop.nv_prm, gtpsa_prop.no_prm)
+        self._desc = gtpsa.desc(self._nv, self._no, self._nv_prm, self._no_prm)
         # .truncate(to) sets the new & returns the old to.
         print("\nperiodic_structure_class:\n  no = {:d} nv = {:d} to = {:d}".
               format(self._desc.maximum_orders(0, 0),
                      self._desc.number_of_variables(0, 0, 0),
-                     self._desc.truncate(gtpsa_prop.to)))
+                     self._desc.truncate(self.to)))
 
         # Read in & parse lattice file.
         self._lattice = accelerator_from_config(file_name)
@@ -77,11 +76,11 @@ class periodic_structure_class:
     def compute_circ(self):
         return np.sum([elem.get_length() for elem in self._lattice])
 
-    def compute_alpha_c(self, gtpsa_prop):
+    def compute_alpha_c(self, ):
         C = self.compute_circ()
-        index = np.zeros(gtpsa_prop.nv, int)
-        self._alpha_c = np.zeros(gtpsa_prop.no+1)
-        for k in range(1, gtpsa_prop.no+1):
+        index = np.zeros(self._nv, int)
+        self._alpha_c = np.zeros(self._no+1)
+        for k in range(1, self._no+1):
             index[ind.delta] = k
             self._alpha_c[k] = self._M.ct.get(index)/C
 
@@ -301,7 +300,7 @@ class periodic_structure_class:
             ])
         return eta, alpha, beta, nu
 
-    def prt_lat_param(self, gtpsa_prop):
+    def prt_lat_param(self):
         eta = np.zeros(2)
         alpha = np.zeros(2)
         beta = np.zeros(2)
@@ -312,9 +311,8 @@ class periodic_structure_class:
         # Compute nu & xi.
         try:
             M = lo.compute_map(
-                gtpsa_prop, self._lattice, self._model_state)
-            stable, _, xi = \
-                lo.compute_nu_xi(gtpsa_prop, M)
+                self.desc, self._no, self._lattice, self._model_state)
+            stable, _, xi = lo.compute_nu_xi(self.desc, self._no, M)
             if not stable:
                 raise ValueError
         except ValueError:
@@ -354,7 +352,7 @@ class periodic_structure_class:
         file.close()
         print("\nprt_Twiss - Twiss parameters saved as:", file_name)
 
-    def comp_per_sol(self, gtpsa_prop):
+    def comp_per_sol(self):
         """Compute the periodic solution for a super period.
         Degrees of freedom - RF cavity is off; i.e., coasting beam.
         """
@@ -364,15 +362,16 @@ class periodic_structure_class:
 
         stable, self._M, self._nu, self._A = \
             lo.compute_map_and_diag(
-                gtpsa_prop, self._n_dof, self._lattice, self._model_state)
+                self.desc, self._no, self._n_dof, self._lattice,
+                self._model_state)
         if stable:
-            self.compute_alpha_c(gtpsa_prop)
-            A_map = gtpsa.ss_vect_tpsa(self._desc, gtpsa_prop.no)
+            self.compute_alpha_c()
+            A_map = self.ss_vect_tpsa()
             A_map.set_jacobian(self._A)
             self._Twiss = \
                 lo.compute_Twiss_along_lattice(
-                    gtpsa_prop, self._n_dof, self._lattice, self._model_state,
-                    A=A_map, mapping=self._named_index)
+                    self._n_dof, self._lattice, self._model_state, A=A_map,
+                    mapping=self._named_index)
         else:
             self._Twiss = np.nan
             print("\ncomp_per_sol: unstable")

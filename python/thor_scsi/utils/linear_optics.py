@@ -38,13 +38,14 @@ X_, Y_, Z_ = [
 
 
 def compute_map(
-        gtpsa_prop,
+        desc: gtpsa.desc,
+        no: int,
         lat: tslib.Accelerator,
         model_state: tslib.ConfigType,
 ) -> gtpsa.ss_vect_tpsa:
     """Propagate an identity map through the accelerator
     """
-    t_map = gtpsa.ss_vect_tpsa(gtpsa_prop.desc, gtpsa_prop.no)
+    t_map = gtpsa.ss_vect_tpsa(desc, no)
     t_map.set_identity()
     lat.propagate(model_state, t_map)
     return t_map
@@ -170,14 +171,14 @@ def acos2_tpsa(sin, cos):
     return phi
 
 
-def compute_nu_xi(gtpsa_prop, M):
+def compute_nu_xi(desc, no, M):
     """Compute tune & linear chromaticity from trace of Poincaré map:
           nu + xi * delta = arccos( Trace{M} / 2 ) / ( 2 * pi ).
     """
     stable = check_if_stable(2, M.jacobian())
     if stable:
         nu, xi = [np.zeros(2), np.zeros(2)]
-        M_delta = gtpsa_prop.tpsa()
+        M_delta = gtpsa.tpsa(desc, no)
         for k in range(2):
             M_delta.clear()
             # J.B. 21/07/23.
@@ -518,7 +519,8 @@ def tps2twiss(tpsa: gtpsa.ss_vect_tpsa) -> (np.ndarray, np.ndarray):
 
 
 def compute_map_and_diag(
-        gtpsa_prop,
+        desc: gtpsa.desc,
+        no: int,
         n_dof: int,
         lat: tslib.Accelerator,
         model_state: tslib.ConfigType
@@ -529,7 +531,7 @@ def compute_map_and_diag(
          Rename phase space origin fix point
     """
     t_map = \
-        compute_map(gtpsa_prop, lat, model_state)
+        compute_map(desc, no, lat, model_state)
     M = np.array(t_map.jacobian())
     logger.info("\ncompute_map_and_diag\nM:\n" + mat2txt(M))
 
@@ -537,7 +539,7 @@ def compute_map_and_diag(
     if stable:
         A = np.pad(A, (0, 1))
         A[6, 6] = 1
-        Atest = gtpsa.ss_vect_tpsa(gtpsa_prop.desc, 1)
+        Atest = gtpsa.ss_vect_tpsa(desc, 1)
         Atest.set_zero()
         Atest.set_jacobian(A)
         lat.propagate(model_state, Atest)
@@ -561,7 +563,6 @@ def compute_A(
 
 
 def compute_Twiss_along_lattice(
-    gtpsa,
     n_dof: int,
     lat: tslib.Accelerator,
     model_state: tslib.ConfigType = None,
@@ -589,7 +590,7 @@ def compute_Twiss_along_lattice(
 
     if A is None:
         stable, _, A_mat = \
-            compute_map_and_diag(gtpsa, n_dof, lat, model_state)
+            compute_map_and_diag(n_dof, lat, model_state)
         A = gtpsa.ss_vect_tpsa(desc, 1)
         A.set_jacobian(A_mat)
         if not stable:
