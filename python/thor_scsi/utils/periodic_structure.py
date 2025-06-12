@@ -81,8 +81,7 @@ class periodic_structure_class:
         index = np.zeros(self._nv, int)
         self._alpha_c = np.zeros(self._no+1)
         for k in range(1, self._no+1):
-            index[ind.delta] = k
-            self._alpha_c[k] = self._M.ct.get(index)/C
+            self._alpha_c[k] = self._M.ct.get([0, 0, 0, 0, k])/C
 
     def get_type_code(self, elem):
         match type(elem):

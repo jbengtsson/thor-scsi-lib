@@ -12,15 +12,12 @@ from typing import ClassVar
 import math
 import numpy as np
 from scipy import optimize as opt
-from scipy.interpolate import CubicSpline
 
 import thor_scsi.lib as ts
 
 from thor_scsi.utils import lattice_properties as lp, index_class as ind, \
     linear_optics as lo, prm_class as pc, nonlin_dyn as nld_class
 from thor_scsi.utils.output import mat2txt, vec2txt
-
-import gtpsa
 
 
 ind = ind.index_class()
@@ -44,49 +41,28 @@ beta_des     = [5.0, 3.0]
 dnu_des      = [0.75, 0.25]     # Phase advance across the straight.
 
 
-def get_phi(el):
-    if (type(el) == ts.Bending) or (type(el) == ts.Quadrupole):
-        if el.get_curvature() is not None:
-            L = el.get_length()
-            phi = math.degrees(L*el.get_curvature())
-        else:
-            phi = 0e0
-    else:
-        phi = 0e0
-    return phi
-
-
-def compute_alpha_c(map):
-    C = lat_prop.compute_circ()
-    index = np.zeros(lat_prop._nv, int)
-    alpha_c = np.zeros(lat_prop._no+1)
-    for k in range(1, lat_prop._no+1):
-        alpha_c[k] = map.ct.get([0, 0, 0, 0, k])/C
-    return alpha_c
-
-
 class opt_sp_class:
     # Private
 
-    def __init__(self, lattice, s_loc, constraints, weights, params, dipoles):
+    def __init__(self, prm_class):
 
-        self._lat_prop       = lattice[0]
-        self._nld            = lattice[1]
-        self._prm_list       = params[0]
-        self._dprm_list      = params[1]
-        self._uc_list        = s_loc[0]
-        self._sp_list        = s_loc[1]
-        self._weights        = weights
-        self._bend_list      = dipoles[0]
-        self._rbend_list     = dipoles[1]
-        self._eps_x_des      = constraints[0]
-        self._phi_1_des      = constraints[1]
-        self._phi_rb_1_des   = constraints[2]
-        self._b_2_des        = constraints[3]
-        self._nu_uc_des      = constraints[4]
-        self._nu_sp_des      = constraints[5]
-        self._beta_des       = constraints[6]
-        self._dnu_des        = constraints[7]
+        self._lat_prop       = prm_class.lattice[0]
+        self._nld            = prm_class.lattice[1]
+        self._uc_list        = prm_class.s_loc[0]
+        self._sp_list        = prm_class.s_loc[1]
+        self._eps_x_des      = prm_class.constraints[0]
+        self._phi_1_des      = prm_class.constraints[1]
+        self._phi_rb_1_des   = prm_class.constraints[2]
+        self._b_2_des        = prm_class.constraints[3]
+        self._nu_uc_des      = prm_class.constraints[4]
+        self._nu_sp_des      = prm_class.constraints[5]
+        self._beta_des       = prm_class.constraints[6]
+        self._dnu_des        = prm_class.constraints[7]
+        self._weights        = prm_class.weights
+        self._bend_list      = prm_class.dipoles[0]
+        self._rbend_list     = prm_class.dipoles[1]
+        self._prm_list       = prm_class.params[0]
+        self._dprm_list      = prm_class.params[1]
 
         self._phi_bend       = np.zeros(3)
         self._phi_rbend      = np.zeros(3)
@@ -103,6 +79,7 @@ class opt_sp_class:
         self._dnu            = np.nan
         self._xi             = np.nan
         self._eta_nl         = lat_prop.tpsa()
+        self._constr         = {}
 
         self._chi_2_min      = 1e30
         self._n_iter         = -1
@@ -115,202 +92,164 @@ class opt_sp_class:
 
     # Public.
 
-    def prt_iter(self, prm, chi_2):
-        eta, alpha, beta, nu_sp = self._Twiss_sp
-
-        print(f"\n{self._n_iter:3d} chi_2 = {self._chi_2_min:9.3e}",
-              f"({chi_2-self._chi_2_min:9.3e})")
-        print(f"    eps_x [pm.rad] = {1e12*self._lat_prop._eps[ind.X]:5.3f}",
-              f"({1e12*self._eps_x_des:5.3f})")
-
-        print(f"\n    dphi [deg]     = {self._dphi:9.3e}")
-
-        print(f"\n    alpha_c        = [{self._alpha_c[1]:9.3e},",
-              f"{self._alpha_c[2]:9.3e}]")
-        print(f"    nu_uc          = [{self._nu_uc[ind.X]:7.5f},",
-              f"{self._nu_uc[ind.Y]:7.5f}] ([{self._nu_uc_des[ind.X]:7.5f},",
-              f"{self._nu_uc_des[ind.Y]:7.5f}])")
-        print(f"    nu_sp          = [{nu_sp[ind.X]:7.5f},",
-              f"{nu_sp[ind.Y]:7.5f}] ([{self._nu_sp_des[ind.X]:7.5f},",
-              f"{self._nu_sp_des[ind.Y]:7.5f}])")
-        print(f"    dnu            = [{self._dnu[ind.X]:7.5f},",
-              f"{self._dnu[ind.Y]:7.5f}] ([{self._dnu_des[ind.X]:7.5f},",
-              f"{self._dnu_des[ind.Y]:7.5f}])")
-        print(f"    xi             = [{self._xi[ind.X]:5.3f},",
-              f"{self._xi[ind.Y]:5.3f}]")
-        print(f"    eta^(2)_x      = {self._eta_nl.get([0, 0, 0, 0, 2]):9.3e}")
-
-        print(f"\n    eta'_uc        = {self._eta_list[0][ind.px]:9.3e}",
-              f" {self._eta_list[1][ind.px]:9.3e}")
-        print(f"    alpha_uc       = [{self._alpha_list[0][ind.X]:9.3e},",
-              f"{self._alpha_list[0][ind.Y]:9.3e}]",
-              f"[{self._alpha_list[1][ind.X]:9.3e},",
-              f"{self._alpha_list[1][ind.Y]:9.3e}]")
-        print(f"    eta_x          = {eta[ind.x]:9.3e}")
-        print(f"    beta           = [{beta[ind.X]:7.5f}, {beta[ind.Y]:7.5f}]",
-              f"([{self._beta_des[ind.X]:7.5f}, {self._beta_des[ind.Y]:7.5f}])")
-
-        print(f"\n    phi_sp         = {self._phi_sp:8.5f}")
-        print(f"    C [m]          = {self._lat_prop.compute_circ():8.5f}")
-
-        print()
-        for phi in self._phi_bend:
-            print(f"    phi_bend       = {phi:8.5f}")
-        print()
-        for k, rbend in enumerate(self._rbend_list):
-            print(f"    {rbend:10s}     = {self._phi_rbend[k]:8.5f}")
-
-        print(f"\n    b_2            = {self._b_2:8.5f}")
-
-        self._lat_prop.prt_rad()
-        self._prm_list.prt_prm(prm)
-
-    def compute_chi_2(self):
-        prt = not False
-
-        eta, alpha, beta, nu_sp = self._Twiss_sp
-
-        dchi_2 = weights[0]*(self._lat_prop._eps[ind.X]-self._eps_x_des)**2
-        chi_2 = dchi_2
-        if prt:
-            print(f"\n  dchi2(eps_x)        = {dchi_2:9.3e}")
-
-        dchi_2 = weights[1]*(self._phi_bend[0]-self._phi_1_des)**2
-        chi_2 += dchi_2
-        if prt:
-            print(f"  dchi2(phi_1)        = {dchi_2:9.3e}")
-
-        dchi_2 = weights[2]*(self._phi_rbend[0]-self._phi_rb_1_des)**2
-        chi_2 += dchi_2
-        if prt:
-            print(f"  dchi2(phi_rb_1)     = {dchi_2:9.3e}")
-
-        dchi_2 = weights[3]*(self._b_2-self._b_2_des)**2
-        chi_2 += dchi_2
-        if prt:
-            print(f"  dchi2(b_2)          = {dchi_2:9.3e}")
-
-        dchi_2 = weights[4]*(self._dphi)**2
-        chi_2 += dchi_2
-        if prt:
-            print(f"  dchi2(dphi)         = {dchi_2:9.3e}")
-
-        dchi_2 = weights[5]*1e0/self._alpha_c[1]**2
-        chi_2 += dchi_2
-        if prt:
-            print(f"  dchi2(alpha^(1)_c)  = {dchi_2:9.3e}")
-
-        dchi_2 = weights[6]*(self._alpha_c[2])**2
-        chi_2 += dchi_2
-        if prt:
-            print(f"  dchi2(alpha^(2)_c)  = {dchi_2:9.3e}")
-
-        dchi_2 = weights[7]*self._lat_prop._U_0**2
-        chi_2 += dchi_2
-        if prt:
-            print(f"  dchi2(U_0)          = {dchi_2:9.3e}")
-
-        dchi_2 = weights[8]*(self._eta_list[0][ind.px]**2
-                            +self._eta_list[1][ind.px]**2)
-        chi_2 += dchi_2
-        if prt:
-            print(f"  dchi2(eta'_uc)      = {dchi_2:9.3e}")
-
-        dchi_2 = weights[9]*(
-            self._alpha_list[0][ind.X]**2+self._alpha_list[0][ind.Y]**2
-            +self._alpha_list[1][ind.X]**2+self._alpha_list[1][ind.Y]**2)
-        chi_2 += dchi_2
-        if prt:
-            print(f"  dchi2(alpha_uc)     = {dchi_2:9.3e}")
-
-        dchi_2 = weights[10]*(self._nu_uc[ind.X]-self._nu_uc_des[ind.X])**2
-        chi_2 += dchi_2
-        if prt:
-            print(f"  dchi2(nu_uc_x)      = {dchi_2:9.3e}")
-
-        dchi_2 = weights[11]*(self._nu_uc[ind.Y]-self._nu_uc_des[ind.Y])**2
-        chi_2 += dchi_2
-        if prt:
-            print(f"  dchi2(nu_uc_y)      = {dchi_2:9.3e}")
-
-        dchi_2 = weights[12]*eta[ind.x]**2
-        chi_2 += dchi_2
-        if prt:
-            print(f"  dchi2(eta_x)        = {dchi_2:9.3e}")
-
-        dchi_2 = weights[13]*(nu_sp[ind.X]-self._nu_sp_des[ind.X])**2
-        chi_2 += dchi_2
-        if prt:
-            print(f"  dchi2(nu_sp_x)      = {dchi_2:9.3e}")
-
-        dchi_2 = weights[14]*(nu_sp[ind.Y]-self._nu_sp_des[ind.Y])**2
-        chi_2 += dchi_2
-        if prt:
-            print(f"  dchi2(nu_sp_y)      = {dchi_2:9.3e}")
-
-        dchi_2 = weights[15]*(beta[ind.X]-self._beta_des[ind.X])**2
-        chi_2 += dchi_2
-        if prt:
-            print(f"  dchi2(beta_x)       = {dchi_2:9.3e}")
-
-        dchi_2 = weights[16]*(beta[ind.Y]-self._beta_des[ind.Y])**2
-        chi_2 += dchi_2
-        if prt:
-            print(f"  dchi2(beta_y)       = {dchi_2:9.3e}")
-
-        dchi_2 = weights[17]*(self._dnu[ind.X]-self._dnu_des[ind.X])**2
-        chi_2 += dchi_2
-        if prt:
-            print(f"  dchi2(dnu_x)        = {dchi_2:9.3e}")
-
-        dchi_2 = weights[18]*(self._dnu[ind.Y]-self._dnu_des[ind.Y])**2
-        chi_2 += dchi_2
-        if prt:
-            print(f"  dchi2(dnu_y)        = {dchi_2:9.3e}")
-
-        dchi_2 = weights[19]*(self._xi[ind.X]**2+self._xi[ind.Y]**2)
-        chi_2 += dchi_2
-        if prt:
-            print(f"  dchi2(xi)           = {dchi_2:9.3e}")
-
-        dchi_2 = weights[20]*self._eta_nl.get([0, 0, 0, 0, 2])**2
-        chi_2 += dchi_2
-        if prt:
-            print(f"  dchi2(eta^(2)_x)    = {dchi_2:9.3e}")
-
-        return chi_2
-
     def opt_sp(self):
         """Use Case: optimise super period.
         """
 
-        def compute_lat_prop():
-            lat_stable = True
-            # Compute Twiss parameters along the lattice.
-            stable = self._lat_prop.comp_per_sol()
-            if not stable:
-                lat_stable = False
-                print("\ncomp_per_sol: unstable")
-            else:
-                # Compute radiation properties.
-                stable, stable_rad = self._lat_prop.compute_radiation()
-                if not stable or not stable_rad:
-                    lat_stable = False
-                    print("\ncompute_radiation: unstable")
-                else:
-                    # Compute linear chromaticity.
-                    self._nld.compute_map(lat_prop)
-                    stable, _, self._xi = lo.compute_nu_xi(
-                        lat_prop.desc, lat_prop._no, self._nld._M)
-                    if not stable:
-                        lat_stable = False
-                        print("\ncompute_nu_xi: unstable")
-                    else:
-                        # Compute 2nd order dispersion
-                        self._eta_nl = nld.compute_eta(lat_prop, lat_prop._M)
-            return lat_stable
-
         def f_sp(prm):
+
+#===============================================================================
+# Local functions.
+
+            def compute_lat_prop():
+                lat_stable = True
+                # Compute Twiss parameters along the lattice.
+                stable = self._lat_prop.comp_per_sol()
+                if not stable:
+                    lat_stable = False
+                    print("\ncomp_per_sol: unstable")
+                else:
+                    # Compute radiation properties.
+                    stable, stable_rad = self._lat_prop.compute_radiation()
+                    if not stable or not stable_rad:
+                        lat_stable = False
+                        print("\ncompute_radiation: unstable")
+                    else:
+                        # Compute linear chromaticity.
+                        self._nld.compute_map(lat_prop)
+                        stable, _, self._xi = lo.compute_nu_xi(
+                            lat_prop.desc, lat_prop._no, self._nld._M)
+                        if not stable:
+                            lat_stable = False
+                            print("\ncompute_nu_xi: unstable")
+                        else:
+                            # Compute 2nd order dispersion
+                            self._eta_nl = nld.compute_eta(
+                                lat_prop, lat_prop._M)
+                return lat_stable
+
+            def compute_constr():
+                eta, _, beta_sp, nu_sp = self._Twiss_sp
+
+                self._constr = {}
+                self._constr["eps_x"]       = (
+                    self._lat_prop._eps[ind.X]-self._eps_x_des)**2
+                self._constr["phi_1"]       = (
+                    self._phi_bend[0]-self._phi_1_des)**2
+                self._constr["phi_rb"]      = (
+                    self._phi_rbend[0]-self._phi_rb_1_des)**2
+                self._constr["b_2"]         = (self._b_2-self._b_2_des)**2
+                self._constr["dphi"]        = (self._dphi)**2
+                self._constr["alpha^(1)_c"] = 1e0/self._alpha_c[1]**2
+                self._constr["alpha^(2)_c"] = (self._alpha_c[2])**2
+                self._constr["U_0"] = self._lat_prop._U_0**2
+                self._constr["etap_x_uc"]   = (
+                    self._eta_list[0][ind.px]**2+self._eta_list[1][ind.px]**2)
+                self._constr["alpha_uc"]    = (
+                    self._alpha_list[0][ind.X]**2
+                    +self._alpha_list[0][ind.Y]**2
+                    +self._alpha_list[1][ind.X]**2
+                    +self._alpha_list[1][ind.Y]**2)
+                self._constr["nu_uc_x"]     = (
+                    self._nu_uc[ind.X]-self._nu_uc_des[ind.X])**2
+                self._constr["nu_uc_y"]     = (
+                    self._nu_uc[ind.Y]-self._nu_uc_des[ind.Y])**2
+                self._constr["eta_x"] = eta[ind.x]**2
+                self._constr["nu_sp_x"]     = (
+                    nu_sp[ind.X]-self._nu_sp_des[ind.X])**2
+                self._constr["nu_sp_y"]     = (
+                    nu_sp[ind.Y]-self._nu_sp_des[ind.Y])**2
+                self._constr["beta_x"]      = (
+                    beta_sp[ind.X]-self._beta_des[ind.X])**2
+                self._constr["beta_y"]      = (
+                    beta_sp[ind.Y]-self._beta_des[ind.Y])**2
+                self._constr["dnu_x"]       = (
+                    self._dnu[ind.X]-self._dnu_des[ind.X])**2
+                self._constr["dnu_y"]       = (
+                    self._dnu[ind.Y]-self._dnu_des[ind.Y])**2
+                self._constr["xi"]          = (
+                    self._xi[ind.X]**2+self._xi[ind.Y]**2)
+                self._constr["eta^(2)_x"]   = \
+                    self._eta_nl.get([0, 0, 0, 0, 2])**2
+
+            def compute_chi_2():
+                prt_len = 11
+                prt = not False
+
+                print(f"\ncompute_chi_2: len(weights) - len(constr) = "
+                      f"{len(self._weights)-len(self._constr):d}")
+                chi_2 = 0e0
+                for key in self._weights:
+                    dchi_2 = self._weights[key]*self._constr[key]
+                    chi_2 += dchi_2
+                    if prt:
+                        print(f"  dchi2({key:s})", end="")
+                        for k in range(prt_len-len(key)):
+                            print(" ", end="")
+                        print(f" = {dchi_2:9.3e}")
+
+                return chi_2
+
+            def prt_iter(prm, chi_2):
+                eta, alpha, beta, nu_sp = self._Twiss_sp
+
+                print(f"\n{self._n_iter:3d} chi_2 = {self._chi_2_min:9.3e}",
+                      f"({chi_2-self._chi_2_min:9.3e})")
+                print(f"    eps_x [pm.rad] = "
+                      f"{1e12*self._lat_prop._eps[ind.X]:5.3f}",
+                      f"({1e12*self._eps_x_des:5.3f})")
+
+                print(f"\n    dphi [deg]     = {self._dphi:9.3e}")
+
+                print(f"\n    alpha_c        = [{self._alpha_c[1]:9.3e},",
+                      f"{self._alpha_c[2]:9.3e}]")
+                print(f"    nu_uc          = [{self._nu_uc[ind.X]:7.5f},",
+                      f"{self._nu_uc[ind.Y]:7.5f}]"
+                      f" ([{self._nu_uc_des[ind.X]:7.5f},",
+                      f"{self._nu_uc_des[ind.Y]:7.5f}])")
+                print(f"    nu_sp          = [{nu_sp[ind.X]:7.5f},",
+                      f"{nu_sp[ind.Y]:7.5f}] ([{self._nu_sp_des[ind.X]:7.5f},",
+                      f"{self._nu_sp_des[ind.Y]:7.5f}])")
+                print(f"    dnu            = [{self._dnu[ind.X]:7.5f},",
+                      f"{self._dnu[ind.Y]:7.5f}]"
+                      f" ([{self._dnu_des[ind.X]:7.5f},",
+                      f"{self._dnu_des[ind.Y]:7.5f}])")
+                print(f"    xi             = [{self._xi[ind.X]:5.3f},",
+                      f"{self._xi[ind.Y]:5.3f}]")
+                print(f"    eta^(2)_x      = "
+                      f"{self._eta_nl.get([0, 0, 0, 0, 2]):9.3e}")
+
+                print(f"\n    eta'_uc        = "
+                      f"{self._eta_list[0][ind.px]:9.3e}",
+                      f" {self._eta_list[1][ind.px]:9.3e}")
+                print(f"    alpha_uc       = "
+                      f"[{self._alpha_list[0][ind.X]:9.3e},",
+                      f"{self._alpha_list[0][ind.Y]:9.3e}]",
+                      f"[{self._alpha_list[1][ind.X]:9.3e},",
+                      f"{self._alpha_list[1][ind.Y]:9.3e}]")
+                print(f"    eta_x          = {eta[ind.x]:9.3e}")
+                print(f"    beta           = "
+                      f"[{beta[ind.X]:7.5f}, {beta[ind.Y]:7.5f}]",
+                      f"([{self._beta_des[ind.X]:7.5f},"
+                      f"{self._beta_des[ind.Y]:7.5f}])")
+
+                print(f"\n    phi_sp         = {self._phi_sp:8.5f}")
+                print(f"    C [m]          = "
+                      f"{self._lat_prop.compute_circ():8.5f}")
+
+                print()
+                for phi in self._phi_bend:
+                    print(f"    phi_bend       = {phi:8.5f}")
+                print()
+                for k, rbend in enumerate(self._rbend_list):
+                    print(f"    {rbend:10s}     = {self._phi_rbend[k]:8.5f}")
+
+                print(f"\n    b_2            = {self._b_2:8.5f}")
+
+                self._lat_prop.prt_rad()
+                self._prm_list.prt_prm(prm)
+#===============================================================================
+
             self._n_iter += 1
             self._prm_list.set_prm(prm)
 
@@ -332,7 +271,7 @@ class opt_sp_class:
             lat_stable = compute_lat_prop()
 
             if lat_stable:
-                self._alpha_c = compute_alpha_c(self._nld._M)
+                self._alpha_c = self._lat_prop._alpha_c
                 self._eta_list[0], self._alpha_list[0], _, self._nu_0 = \
                     self._lat_prop.get_Twiss(uc_list[0])
                 self._eta_list[1], self._alpha_list[1], _, self._nu_1 = \
@@ -344,10 +283,12 @@ class opt_sp_class:
                 self._Twiss_sp = self._lat_prop.get_Twiss(-1)
                 self._dnu = 2e0*self._lat_prop.get_Twiss(sp_list[0])[3][:]
 
-                chi_2 = self.compute_chi_2()
+                compute_constr()
+
+                chi_2 = compute_chi_2()
 
                 if chi_2 < self._chi_2_min:
-                    self.prt_iter(prm, chi_2)
+                    prt_iter(prm, chi_2)
                     if False:
                         self._lat_prop.prt_Twiss("twiss.txt")
                     pc.prt_lat(
@@ -633,30 +574,29 @@ def get_prms(set, bend_list, eps):
 
 
 def get_weights():
-    weights = np.array([
-        1e19,  # 0,  eps_x.
-        1e0,   # 1,  phi_1.
-        0e-6,  # 2,  phi_rb_1.
-        1e-3,  # 3,  b_2.
-        1e-1,  # 4,  dphi.
-        0e-14, # 5,  alpha^(1)_c.
-        0e1,   # 6,  alpha^(2)_c.
-        1e-15, # 7,  U_0.
-        1e2,   # 8,  etap_x_uc.
-        1e-2,  # 9,  alpha_uc.
-        1e-2,  # 10, nu_uc_x.
-        1e-2,  # 11, nu_uc_y.
-        1e2,   # 12, eta_x.
-        1e0,   # 13, nu_sp_x.
-        1e0,   # 14, nu_sp_y.
-        0e-6,  # 15, beta_x.
-        0e-6,  # 16, beta_y.
-        1e-3,  # 17, dnu_x.
-        1e-3,  # 18, dnu_y.
-        1e-7,  # 19, xi.
-        1e-6   # 20, eta^(2)_x.
-    ])
-
+    weights = {
+        "eps_x"       : 1e18,
+        "phi_1"       : 1e-3,  
+        "phi_rb"      : 0e-3,  
+        "b_2"         : 0e-3, 
+        "dphi"        : 1e-1, 
+        "alpha^(1)_c" : 1e-13,  
+        "alpha^(2)_c" : 1e2,
+        "U_0"         : 1e-15,
+        "etap_x_uc"   : 1e2, 
+        "alpha_uc"    : 1e-2,
+        "nu_uc_x"     : 1e-2,
+        "nu_uc_y"     : 1e-2,
+        "eta_x"       : 1e2,
+        "nu_sp_x"     : 1e0, 
+        "nu_sp_y"     : 1e0,
+        "beta_x"      : 0e-6,
+        "beta_y"      : 0e-6,
+        "dnu_x"       : 1e-3,
+        "dnu_y"       : 1e-3,
+        "xi"          : 1e-7,
+        "eta^(2)_x"   : 1e-6 
+    }
     return weights
 
 
@@ -740,19 +680,20 @@ print(f"super period first sextupole {lat_prop._lattice[sp_list[0]].name:15s}",
 print(f"super period last sextupole  {lat_prop._lattice[sp_list[1]].name:15s}",
       f"loc = {sp_list[1]:d}")
 
+weight_list = get_weights()
 bend_list, rbend_list = get_bends(1)
-
-weights = get_weights()
-
 prm_list, dprm_list = get_prms(1, bend_list, 1e-4)
 
-lattice     = [lat_prop, nld]
-s_loc       = [uc_list, sp_list]
-constraints = [eps_x_des, phi_1_des, phi_rb_1_des, b_2_des, nu_uc_des,
-               nu_sp_des, beta_des, dnu_des]
-params      = [prm_list, dprm_list]
-dipoles     = [bend_list, rbend_list]
+@dataclass
+class prm_class:
+    lattice:     ClassVar[list] = [lat_prop, nld]
+    s_loc:       ClassVar[list] = [uc_list, sp_list]
+    constraints: ClassVar[list] = [eps_x_des, phi_1_des, phi_rb_1_des, b_2_des,
+                                   nu_uc_des, nu_sp_des, beta_des, dnu_des]
+    weights:     ClassVar[list] = weight_list
+    dipoles:     ClassVar[list] = [bend_list, rbend_list]
+    params:      ClassVar[list] = [prm_list, dprm_list]
 
-opt_sp = opt_sp_class(lattice, s_loc, constraints, weights, params, dipoles)
+opt_sp = opt_sp_class(prm_class)
 
 opt_sp.opt_sp()
