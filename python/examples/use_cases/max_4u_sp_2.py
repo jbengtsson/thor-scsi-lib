@@ -29,7 +29,7 @@ b_2_bend_max = 1.0
 b_2_max      = 10.0
 
 eps_x_des    = 60e-12
-phi_1_des    =  1.4
+phi_1_des    =  1.45
 phi_rb_1_des = -0.2
 b_2_des      =  2.0
 alpha_c_des  = 0.5e-4
@@ -313,6 +313,33 @@ class opt_sp_class:
         """Use Case: optimise super period.
         """
 
+        def compute_lat_prop():
+            lat_stable = True
+            # Compute Twiss parameters along the lattice.
+            stable = self._lat_prop.comp_per_sol(gtpsa_prop)
+            if not stable:
+                lat_stable = False
+                print("\ncomp_per_sol: unstable")
+            else:
+                # Compute radiation properties.
+                stable, stable_rad = self._lat_prop.compute_radiation()
+                if not stable or not stable_rad:
+                    lat_stable = False
+                    print("\ncompute_radiation: unstable")
+                else:
+                    # Compute linear chromaticity.
+                    self._nld.compute_map(gtpsa_prop, lat_prop)
+                    stable, _, self._xi = lo.compute_nu_xi(
+                        gtpsa_prop, self._nld._M)
+                    if not stable:
+                        lat_stable = False
+                        print("\ncompute_nu_xi: unstable")
+                    else:
+                        # Compute 2nd order dispersion
+                        self._eta_nl = nld.compute_eta(
+                            gtpsa_prop, lat_prop, lat_prop._M)
+            return lat_stable
+
         def f_sp(prm):
             self._n_iter += 1
             self._prm_list.set_prm(prm)
@@ -326,33 +353,15 @@ class opt_sp_class:
             for k, bend in enumerate(self._rbend_list):
                 self._phi_rbend[k] = self._lat_prop.get_phi_elem(bend, 0)
 
-            self._b_2 = \
-                self._bend_list[0].compute_bend_b_2xL() \
-                /self._bend_list[0].compute_bend_L_tot()
+            # self._b_2 = \
+            #     self._bend_list[0].compute_bend_b_2xL() \
+            #     /self._bend_list[0].compute_bend_L_tot()
 
-            chi_2 = 0e0
-            # Compute Twiss parameters along the lattice.
-            stable = self._lat_prop.comp_per_sol(gtpsa_prop)
-            if not stable:
-                print("\ncomp_per_sol: unstable")
-                chi_2 = 1e30
-            # Compute radiation properties.
-            stable, stable_rad = self._lat_prop.compute_radiation()
-            if not stable or not stable_rad:
-                print("\ncompute_radiation: unstable")
-                chi_2 = 1e30
-            # Compute linear chromaticity.
-            self._nld.compute_map(gtpsa_prop, lat_prop)
-            stable, _, self._xi = lo.compute_nu_xi(
-                gtpsa_prop, self._nld._M)
-            if not stable:
-                print("\ncompute_nu_xi: unstable")
-                chi_2 = 1e30
-             # Compute 2nd order dispersion
-            self._eta_nl = nld.compute_eta(
-                gtpsa_prop, lat_prop, lat_prop._M)
+            self._b_2 = self._lat_prop.get_b_n_elem("s1_h3", 0, 2)
 
-            if chi_2 != 1e30:
+            lat_stable = compute_lat_prop()
+
+            if lat_stable:
                 self._alpha_c = compute_alpha_c(self._nld._M)
                 self._eta_list[0], self._alpha_list[0], _, self._nu_0 = \
                     self._lat_prop.get_Twiss(uc_list[0])
@@ -383,6 +392,7 @@ class opt_sp_class:
                               f"dchi_2 = {chi_2-self._chi_2_min:9.3e}")
                         # self._prm_list.prt_prm(prm)
             else:
+                chi_2 = 1e30
                 if not False:
                     print(f"\n{self._n_iter:3d} chi_2 = {chi_2:11.5e}",
                           f"({self._chi_2_min:11.5e})")
@@ -461,18 +471,18 @@ def get_bends(lat):
         # max_4u/m4U_250316_h03_01_01_01_tracy-2.
 
         d1_list = [
-            "d1_h2_sl_dm5", "d1_h2_sl_dm4", "d1_h2_sl_dm3", "d1_h2_sl_dm2",
-            "d1_h2_sl_dm1",
-            "d1_h2_sl_d0", "d1_h2_sl_ds1", "d1_h2_sl_ds2", "d1_h2_sl_ds3",
-            "d1_h2_sl_ds4", "d1_h2_sl_ds5"
+            "d1_h3_sl_dm5", "d1_h3_sl_dm4", "d1_h3_sl_dm3", "d1_h3_sl_dm2",
+            "d1_h3_sl_dm1",
+            "d1_h3_sl_d0", "d1_h3_sl_ds1", "d1_h3_sl_ds2", "d1_h3_sl_ds3",
+            "d1_h3_sl_ds4", "d1_h3_sl_ds5"
         ]
         d2_list = [
-            "d2_h2_sl_df0", "d2_h2_sl_df1", "d2_h2_sl_df2", "d2_h2_sl_df3",
-            "d2_h2_sl_df4", "d2_h2_sl_df5", "d2_h2_sl_df6"
+            "d2_h3_sl_df0", "d2_h3_sl_df1", "d2_h3_sl_df2", "d2_h3_sl_df3",
+            "d2_h3_sl_df4", "d2_h3_sl_df5", "d2_h3_sl_df6"
         ]
         d3_list = [
-            "d3_h2_sl_df0", "d3_h2_sl_df1", "d3_h2_sl_df2", "d3_h2_sl_df3",
-            "d3_h2_sl_df4", "d3_h2_sl_df5", "d3_h2_sl_df6"
+            "d3_h3_sl_df0", "d3_h3_sl_df1", "d3_h3_sl_df2", "d3_h3_sl_df3",
+            "d3_h3_sl_df4", "d3_h3_sl_df5", "d3_h3_sl_df6"
         ]
 
         d1_bend = pc.bend_class(lat_prop, d1_list)
@@ -480,29 +490,29 @@ def get_bends(lat):
         d3_bend = pc.bend_class(lat_prop, d3_list)
         bend_list = [d1_bend, d2_bend, d3_bend]
 
-        rbend_list = ["r1_h2", "r2_h2", "r3_h2"]
+        rbend_list = ["r1_h3", "r2_h3", "r3_h3"]
 
-        b_3_list = ["s3_h2", "s4_h2"]
+        b_3_list = ["s3_h3", "s4_h3"]
     elif lat == 2:
         # m4U_241223_h02_01_01_01_tracy_2.
 
         d1_list = [
-            "d1_h2_sl_dm5", "d1_h2_sl_dm4", "d1_h2_sl_dm3", "d1_h2_sl_dm2",
-            "d1_h2_sl_dm1",
-            "d1_h2_sl_ds0", "d1_h2_sl_ds1", "d1_h2_sl_ds2", "d1_h2_sl_ds3",
-            "d1_h2_sl_ds4", "d1_h2_sl_ds5", "d1_h2_sl_ds6"
+            "d1_h3_sl_dm5", "d1_h3_sl_dm4", "d1_h3_sl_dm3", "d1_h3_sl_dm2",
+            "d1_h3_sl_dm1",
+            "d1_h3_sl_ds0", "d1_h3_sl_ds1", "d1_h3_sl_ds2", "d1_h3_sl_ds3",
+            "d1_h3_sl_ds4", "d1_h3_sl_ds5", "d1_h3_sl_ds6"
         ]
         d2_list = [
-            "d2_h2_sl_d0a", "d2_h2_sl_d0b", "d2_h2_sl_d0c", "d2_h2_sl_df1",
-            "d2_h2_sl_df2", "d2_h2_sl_df3", "d2_h2_sl_df4", "d2_h2_sl_df5"
+            "d2_h3_sl_d0a", "d2_h3_sl_d0b", "d2_h3_sl_d0c", "d2_h3_sl_df1",
+            "d2_h3_sl_df2", "d2_h3_sl_df3", "d2_h3_sl_df4", "d2_h3_sl_df5"
         ]
 
         d1_bend = pc.bend_class(lat_prop, d1_list)
         d2_bend = pc.bend_class(lat_prop, d2_list)
         bend_list = [d1_bend, d2_bend]
 
-        rbend_list = ["r1_h2", "r2_h2"]
-        b_3_list = ["s3_h2", "s4_h2"]
+        rbend_list = ["r1_h3", "r2_h3"]
+        b_3_list = ["s3_h3", "s4_h3"]
 
     return bend_list, rbend_list, b_3_list
 
@@ -510,20 +520,23 @@ def get_bends(lat):
 def get_prms(set, bend_list, eps):
     if set == 1:
         prm = [
-            ("q1_h2",      "b_2",     -10.0, 10.0),
-            ("q2_h2",      "b_2",     -10.0, 10.0),
+            ("q1_h3",      "b_2",     -10.0, 10.0),
+            ("q2_h3",      "b_2",     -10.0, 10.0),
 
-            ("r1_h2",      "b_2",     -10.0, 10.0),
-            ("r2_h2",      "b_2",     -10.0, 10.0),
-            ("r3_h2",      "b_2",     -10.0, 10.0),
+            ("r1_h3",      "b_2",     -10.0, 10.0),
+            ("r2_h3",      "b_2",     -10.0, 10.0),
+            ("r3_h3",      "b_2",     -10.0, 10.0),
+
+            ("o3_h3",      "b_2",    -10.0, 10.0),
+            ("s1_h3",      "b_2",    -10.0, 10.0),
 
             (bend_list[0], "b_2_bend", -1.5,  1.5),
             (bend_list[1], "b_2_bend", -1.5,  1.5),
             (bend_list[2], "b_2_bend", -1.5,  1.5),
 
-            ("r1_h2",      "phi",      -0.5,  0.5),
-            ("r2_h2",      "phi",      -0.2,  0.2),
-            ("r3_h2",      "phi",      -0.2,  0.2),
+            ("r1_h3",      "phi",      -0.5,  0.5),
+            ("r2_h3",      "phi",      -0.2,  0.2),
+            ("r3_h3",      "phi",      -0.2,  0.2),
 
             (bend_list[0], "phi_bend",  1.4,  1.5),
             (bend_list[1], "phi_bend",  1.5,  3.0),
@@ -531,117 +544,117 @@ def get_prms(set, bend_list, eps):
         ]
     elif set == 2:
         prm = [
-            ("q1_h2",        "b_2",      -10.0, 10.0),
-            ("q2_h2",        "b_2",      -10.0, 10.0),
+            ("q1_h3",        "b_2",      -10.0, 10.0),
+            ("q2_h3",        "b_2",      -10.0, 10.0),
 
-            ("r1_h2",        "b_2",      -10.0, 10.0),
-            ("r2_h2",        "b_2",      -10.0, 10.0),
-            ("r3_h2",        "b_2",      -10.0, 10.0),
+            ("r1_h3",        "b_2",      -10.0, 10.0),
+            ("r2_h3",        "b_2",      -10.0, 10.0),
+            ("r3_h3",        "b_2",      -10.0, 10.0),
 
             (bend_list[0],   "b_2_bend", -1.5,  1.5),
             (bend_list[1],   "b_2_bend", -1.5,  1.5),
             (bend_list[2],   "b_2_bend", -1.5,  1.5),
 
-            ("r1_h2",        "phi",      -0.2,  0.2),
-            ("r2_h2",        "phi",      -0.2,  0.0),
-            ("r3_h2",        "phi",      -0.2,  0.0),
+            ("r1_h3",        "phi",      -0.2,  0.2),
+            ("r2_h3",        "phi",      -0.2,  0.0),
+            ("r3_h3",        "phi",      -0.2,  0.0),
 
-            ("d1_h2_sl_dm5", "phi",      -1.5,  1.5),
-            ("d1_h2_sl_dm4", "phi",      -1.5,  1.5),
-            ("d1_h2_sl_dm3", "phi",      -1.5,  1.5),
-            ("d1_h2_sl_dm2", "phi",      -1.5,  1.5),
-            ("d1_h2_sl_dm1", "phi",      -1.5,  1.5),
-            ("d1_h2_sl_d0",  "phi",      -1.5,  1.5),
-            ("d1_h2_sl_ds1", "phi",      -1.5,  1.5),
-            ("d1_h2_sl_ds2", "phi",      -1.5,  1.5),
-            ("d1_h2_sl_ds3", "phi",      -1.5,  1.5),
-            ("d1_h2_sl_ds4", "phi",      -1.5,  1.5),
-            ("d1_h2_sl_ds5", "phi",      -1.5,  1.5),
+            ("d1_h3_sl_dm5", "phi",      -1.5,  1.5),
+            ("d1_h3_sl_dm4", "phi",      -1.5,  1.5),
+            ("d1_h3_sl_dm3", "phi",      -1.5,  1.5),
+            ("d1_h3_sl_dm2", "phi",      -1.5,  1.5),
+            ("d1_h3_sl_dm1", "phi",      -1.5,  1.5),
+            ("d1_h3_sl_d0",  "phi",      -1.5,  1.5),
+            ("d1_h3_sl_ds1", "phi",      -1.5,  1.5),
+            ("d1_h3_sl_ds2", "phi",      -1.5,  1.5),
+            ("d1_h3_sl_ds3", "phi",      -1.5,  1.5),
+            ("d1_h3_sl_ds4", "phi",      -1.5,  1.5),
+            ("d1_h3_sl_ds5", "phi",      -1.5,  1.5),
 
-            ("d2_h2_sl_df0", "phi",      -1.5,  1.5),
-            ("d2_h2_sl_df1", "phi",      -1.5,  1.5),
-            ("d2_h2_sl_df2", "phi",      -1.5,  1.5),
-            ("d2_h2_sl_df3", "phi",      -1.5,  1.5),
-            ("d2_h2_sl_df4", "phi",      -1.5,  1.5),
-            ("d2_h2_sl_df5", "phi",      -1.5,  1.5),
-            ("d2_h2_sl_df6", "phi",      -1.5,  1.5),
+            ("d2_h3_sl_df0", "phi",      -1.5,  1.5),
+            ("d2_h3_sl_df1", "phi",      -1.5,  1.5),
+            ("d2_h3_sl_df2", "phi",      -1.5,  1.5),
+            ("d2_h3_sl_df3", "phi",      -1.5,  1.5),
+            ("d2_h3_sl_df4", "phi",      -1.5,  1.5),
+            ("d2_h3_sl_df5", "phi",      -1.5,  1.5),
+            ("d2_h3_sl_df6", "phi",      -1.5,  1.5),
 
-            ("d3_h2_sl_df0", "phi",      -1.5,  1.5),
-            ("d3_h2_sl_df1", "phi",      -1.5,  1.5),
-            ("d3_h2_sl_df2", "phi",      -1.5,  1.5),
-            ("d3_h2_sl_df3", "phi",      -1.5,  1.5),
-            ("d3_h2_sl_df4", "phi",      -1.5,  1.5),
-            ("d3_h2_sl_df5", "phi",      -1.5,  1.5),
-            ("d3_h2_sl_df6", "phi",      -1.5,  1.5)
+            ("d3_h3_sl_df0", "phi",      -1.5,  1.5),
+            ("d3_h3_sl_df1", "phi",      -1.5,  1.5),
+            ("d3_h3_sl_df2", "phi",      -1.5,  1.5),
+            ("d3_h3_sl_df3", "phi",      -1.5,  1.5),
+            ("d3_h3_sl_df4", "phi",      -1.5,  1.5),
+            ("d3_h3_sl_df5", "phi",      -1.5,  1.5),
+            ("d3_h3_sl_df6", "phi",      -1.5,  1.5)
         ]
     elif set == 3:
         prm = [
-            ("q1_h2",        "b_2",    -10.0, 10.0),
-            ("q2_h2",        "b_2",    -10.0, 10.0),
+            ("q1_h3",        "b_2",    -10.0, 10.0),
+            ("q2_h3",        "b_2",    -10.0, 10.0),
 
-            ("r1_h2",        "b_2",    -10.0, 10.0),
-            ("r2_h2",        "b_2",    -10.0, 10.0),
-            ("r3_h2",        "b_2",    -10.0, 10.0),
+            ("r1_h3",        "b_2",    -10.0, 10.0),
+            ("r2_h3",        "b_2",    -10.0, 10.0),
+            ("r3_h3",        "b_2",    -10.0, 10.0),
 
-            ("d1_h2_sl_dm5", "b_2",    -10.0, 10.0),
-            ("d1_h2_sl_dm4", "b_2",    -10.0, 10.0),
-            ("d1_h2_sl_dm3", "b_2",    -10.0, 10.0),
-            ("d1_h2_sl_dm2", "b_2",    -10.0, 10.0),
-            ("d1_h2_sl_dm1", "b_2",    -10.0, 10.0),
-            ("d1_h2_sl_d0",  "b_2",    -10.0, 10.0),
-            ("d1_h2_sl_ds1", "b_2",    -10.0, 10.0),
-            ("d1_h2_sl_ds2", "b_2",    -10.0, 10.0),
-            ("d1_h2_sl_ds3", "b_2",    -10.0, 10.0),
-            ("d1_h2_sl_ds4", "b_2",    -10.0, 10.0),
-            ("d1_h2_sl_ds5", "b_2",    -10.0, 10.0),
+            ("d1_h3_sl_dm5", "b_2",    -10.0, 10.0),
+            ("d1_h3_sl_dm4", "b_2",    -10.0, 10.0),
+            ("d1_h3_sl_dm3", "b_2",    -10.0, 10.0),
+            ("d1_h3_sl_dm2", "b_2",    -10.0, 10.0),
+            ("d1_h3_sl_dm1", "b_2",    -10.0, 10.0),
+            ("d1_h3_sl_d0",  "b_2",    -10.0, 10.0),
+            ("d1_h3_sl_ds1", "b_2",    -10.0, 10.0),
+            ("d1_h3_sl_ds2", "b_2",    -10.0, 10.0),
+            ("d1_h3_sl_ds3", "b_2",    -10.0, 10.0),
+            ("d1_h3_sl_ds4", "b_2",    -10.0, 10.0),
+            ("d1_h3_sl_ds5", "b_2",    -10.0, 10.0),
 
-            ("d2_h2_sl_df0", "b_2",    -10.0, 10.0),
-            ("d2_h2_sl_df1", "b_2",    -10.0, 10.0),
-            ("d2_h2_sl_df2", "b_2",    -10.0, 10.0),
-            ("d2_h2_sl_df3", "b_2",    -10.0, 10.0),
-            ("d2_h2_sl_df4", "b_2",    -10.0, 10.0),
-            ("d2_h2_sl_df5", "b_2",    -10.0, 10.0),
-            ("d2_h2_sl_df6", "b_2",    -10.0, 10.0),
+            ("d2_h3_sl_df0", "b_2",    -10.0, 10.0),
+            ("d2_h3_sl_df1", "b_2",    -10.0, 10.0),
+            ("d2_h3_sl_df2", "b_2",    -10.0, 10.0),
+            ("d2_h3_sl_df3", "b_2",    -10.0, 10.0),
+            ("d2_h3_sl_df4", "b_2",    -10.0, 10.0),
+            ("d2_h3_sl_df5", "b_2",    -10.0, 10.0),
+            ("d2_h3_sl_df6", "b_2",    -10.0, 10.0),
 
-            ("d3_h2_sl_df0", "b_2",    -10.0, 10.0),
-            ("d3_h2_sl_df1", "b_2",    -10.0, 10.0),
-            ("d3_h2_sl_df2", "b_2",    -10.0, 10.0),
-            ("d3_h2_sl_df3", "b_2",    -10.0, 10.0),
-            ("d3_h2_sl_df4", "b_2",    -10.0, 10.0),
-            ("d3_h2_sl_df5", "b_2",    -10.0, 10.0),
-            ("d3_h2_sl_df6", "b_2",    -10.0, 10.0),
+            ("d3_h3_sl_df0", "b_2",    -10.0, 10.0),
+            ("d3_h3_sl_df1", "b_2",    -10.0, 10.0),
+            ("d3_h3_sl_df2", "b_2",    -10.0, 10.0),
+            ("d3_h3_sl_df3", "b_2",    -10.0, 10.0),
+            ("d3_h3_sl_df4", "b_2",    -10.0, 10.0),
+            ("d3_h3_sl_df5", "b_2",    -10.0, 10.0),
+            ("d3_h3_sl_df6", "b_2",    -10.0, 10.0),
 
-            ("r1_h2",        "phi",     -0.2,  0.2),
-            ("r2_h2",        "phi",     -0.2,  0.0),
-            ("r3_h2",        "phi",     -0.2,  0.0),
+            ("r1_h3",        "phi",     -0.2,  0.2),
+            ("r2_h3",        "phi",     -0.2,  0.0),
+            ("r3_h3",        "phi",     -0.2,  0.0),
 
-            ("d1_h2_sl_dm5", "phi",     -1.5,  1.5),
-            ("d1_h2_sl_dm4", "phi",     -1.5,  1.5),
-            ("d1_h2_sl_dm3", "phi",     -1.5,  1.5),
-            ("d1_h2_sl_dm2", "phi",     -1.5,  1.5),
-            ("d1_h2_sl_dm1", "phi",     -1.5,  1.5),
-            ("d1_h2_sl_d0",  "phi",     -1.5,  1.5),
-            ("d1_h2_sl_ds1", "phi",     -1.5,  1.5),
-            ("d1_h2_sl_ds2", "phi",     -1.5,  1.5),
-            ("d1_h2_sl_ds3", "phi",     -1.5,  1.5),
-            ("d1_h2_sl_ds4", "phi",     -1.5,  1.5),
-            ("d1_h2_sl_ds5", "phi",     -1.5,  1.5),
+            ("d1_h3_sl_dm5", "phi",     -1.5,  1.5),
+            ("d1_h3_sl_dm4", "phi",     -1.5,  1.5),
+            ("d1_h3_sl_dm3", "phi",     -1.5,  1.5),
+            ("d1_h3_sl_dm2", "phi",     -1.5,  1.5),
+            ("d1_h3_sl_dm1", "phi",     -1.5,  1.5),
+            ("d1_h3_sl_d0",  "phi",     -1.5,  1.5),
+            ("d1_h3_sl_ds1", "phi",     -1.5,  1.5),
+            ("d1_h3_sl_ds2", "phi",     -1.5,  1.5),
+            ("d1_h3_sl_ds3", "phi",     -1.5,  1.5),
+            ("d1_h3_sl_ds4", "phi",     -1.5,  1.5),
+            ("d1_h3_sl_ds5", "phi",     -1.5,  1.5),
 
-            ("d2_h2_sl_df0", "phi",     -1.5,  1.5),
-            ("d2_h2_sl_df1", "phi",     -1.5,  1.5),
-            ("d2_h2_sl_df2", "phi",     -1.5,  1.5),
-            ("d2_h2_sl_df3", "phi",     -1.5,  1.5),
-            ("d2_h2_sl_df4", "phi",     -1.5,  1.5),
-            ("d2_h2_sl_df5", "phi",     -1.5,  1.5),
-            ("d2_h2_sl_df6", "phi",     -1.5,  1.5),
+            ("d2_h3_sl_df0", "phi",     -1.5,  1.5),
+            ("d2_h3_sl_df1", "phi",     -1.5,  1.5),
+            ("d2_h3_sl_df2", "phi",     -1.5,  1.5),
+            ("d2_h3_sl_df3", "phi",     -1.5,  1.5),
+            ("d2_h3_sl_df4", "phi",     -1.5,  1.5),
+            ("d2_h3_sl_df5", "phi",     -1.5,  1.5),
+            ("d2_h3_sl_df6", "phi",     -1.5,  1.5),
 
-            ("d3_h2_sl_df0", "phi",     -1.5,  1.5),
-            ("d3_h2_sl_df1", "phi",     -1.5,  1.5),
-            ("d3_h2_sl_df2", "phi",     -1.5,  1.5),
-            ("d3_h2_sl_df3", "phi",     -1.5,  1.5),
-            ("d3_h2_sl_df4", "phi",     -1.5,  1.5),
-            ("d3_h2_sl_df5", "phi",     -1.5,  1.5),
-            ("d3_h2_sl_df6", "phi",     -1.5,  1.5)
+            ("d3_h3_sl_df0", "phi",     -1.5,  1.5),
+            ("d3_h3_sl_df1", "phi",     -1.5,  1.5),
+            ("d3_h3_sl_df2", "phi",     -1.5,  1.5),
+            ("d3_h3_sl_df3", "phi",     -1.5,  1.5),
+            ("d3_h3_sl_df4", "phi",     -1.5,  1.5),
+            ("d3_h3_sl_df5", "phi",     -1.5,  1.5),
+            ("d3_h3_sl_df6", "phi",     -1.5,  1.5)
         ]
 
     prm_list = pc.prm_class(lat_prop, prm)
@@ -653,10 +666,10 @@ def get_prms(set, bend_list, eps):
 
 def get_weights():
     weight = np.array([
-        1e17,  # 0,  eps_x.
-        1e-1,  # 1,  phi_1.
+        1e19,  # 0,  eps_x.
+        1e0,   # 1,  phi_1.
         0e-6,  # 2,  phi_rb_1.
-        1e-6,  # 3,  b_2.
+        1e-3,  # 3,  b_2.
         1e-1,  # 4,  dphi.
         0e-14, # 5,  alpha^(1)_c.
         0e1,   # 6,  alpha^(2)_c.
@@ -702,10 +715,10 @@ lat_prop.prt_lat("lat_prop_lat.txt")
 if False:
     # Check.
     d1_list = [
-        "d1_h2_sl_dm5", "d1_h2_sl_dm4", "d1_h2_sl_dm3", "d1_h2_sl_dm2",
-        "d1_h2_sl_dm1",
-        "d1_h2_sl_d0", "d1_h2_sl_ds1", "d1_h2_sl_ds2", "d1_h2_sl_ds3",
-        "d1_h2_sl_ds4", "d1_h2_sl_ds5"
+        "d1_h3_sl_dm5", "d1_h3_sl_dm4", "d1_h3_sl_dm3", "d1_h3_sl_dm2",
+        "d1_h3_sl_dm1",
+        "d1_h3_sl_d0", "d1_h3_sl_ds1", "d1_h3_sl_ds2", "d1_h3_sl_ds3",
+        "d1_h3_sl_ds4", "d1_h3_sl_ds5"
     ]
 
     d1_bend = pc.bend_class(lat_prop, d1_list)
@@ -740,8 +753,8 @@ else:
     lat_prop.prt_M_rad()
 
 uc_list = []
-uc_list.append(lat_prop._lattice.find("d2_h2_sl_df0", 0).index)
-uc_list.append(lat_prop._lattice.find("d3_h2_sl_df0", 1).index)
+uc_list.append(lat_prop._lattice.find("d2_h3_sl_df0", 0).index)
+uc_list.append(lat_prop._lattice.find("d3_h3_sl_df0", 1).index)
 uc_list = np.array(uc_list)
 
 sp_list = []
