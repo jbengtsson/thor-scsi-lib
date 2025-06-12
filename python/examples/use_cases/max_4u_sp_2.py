@@ -183,7 +183,7 @@ class opt_sp_class:
                     dchi_2 = self._weights[key]*self._constr[key]
                     chi_2 += dchi_2
                     if prt:
-                        print(f"  dchi2({key:s})", end="")
+                        print(f"  dchi_2({key:s})", end="")
                         for k in range(prt_len-len(key)):
                             print(" ", end="")
                         print(f" = {dchi_2:9.3e}")
