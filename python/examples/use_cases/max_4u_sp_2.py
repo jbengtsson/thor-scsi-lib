@@ -127,13 +127,13 @@ class opt_sp_class:
                 self._constr["eps_x"]       = (
                     self._lat_prop._eps[ind.X]
                     -self._des_val_list["eps_x_des"])**2
+                self._constr["dphi"]        = self._dphi**2
                 self._constr["phi_1"]       = (
                     self._phi_bend[0]-self._des_val_list["phi_1_des"])**2
                 self._constr["phi_rb"]      = (
                     self._phi_rbend[0]-self._des_val_list["phi_rb_1_des"])**2
                 self._constr["b_2"]         = (
                     self._b_2-self._des_val_list["b_2_des"])**2
-                self._constr["dphi"]        = self._dphi**2
                 self._constr["alpha^(1)_c"] = 1e0/self._alpha_c[1]**2
                 self._constr["alpha^(2)_c"] = (self._alpha_c[2])**2
                 self._constr["U_0"] = self._lat_prop._U_0**2
@@ -582,10 +582,10 @@ def get_prms(set, bend_list, eps):
 def get_weights():
     weights = {
         "eps_x"       : 1e18,
+        "dphi"        : 1e-1, 
         "phi_1"       : 0e-3,  
         "phi_rb"      : 0e-3,  
         "b_2"         : 0e-3, 
-        "dphi"        : 0e-1, 
         "alpha^(1)_c" : 1e-13,  
         "alpha^(2)_c" : 1e2,
         "U_0"         : 1e-15,
