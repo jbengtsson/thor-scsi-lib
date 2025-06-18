@@ -598,7 +598,7 @@ def get_weights():
         "nu_sp_y"     : 1e0,
         "beta_x"      : 0e-6,
         "beta_y"      : 0e-6,
-        "dnu_x"       : 1e-1,
+        "dnu_x"       : 1e-2,
         "dnu_y"       : 1e-2,
         "xi"          : 1e-7,
         "eta^(2)_x"   : 1e-6 
