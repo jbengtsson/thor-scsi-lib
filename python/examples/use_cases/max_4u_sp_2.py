@@ -31,7 +31,7 @@ design_val = {
     "phi_rb_1_des" : -0.2,
     "b_2_des"      : 2.0,
     "nu_uc_des"    : np.array([0.4, 0.1]),
-    "nu_sp_des"    : np.array([57.45/20.0,  20.35/20.0]),
+    "nu_sp_des"    : np.array([57.14/20.0,  20.27/20.0]),
     # "nu_sp_des"    : np.array([57.45/20.0,  17.35/20.0]),
     "beta_des"     : [5.0, 3.0],
     # Phase advance across the straight.
@@ -442,8 +442,8 @@ def get_prms(set, bend_list, eps):
             ("r2_h3",      "b_2",     -10.0, 10.0),
             ("r3_h3",      "b_2",     -10.0, 10.0),
 
-            ("o3_h3",      "b_2",    -10.0, 10.0),
-            ("s1_h3",      "b_2",    -10.0, 10.0),
+            # ("o3_h3",      "b_2",    -10.0, 10.0),
+            # ("s1_h3",      "b_2",    -10.0, 10.0),
 
             (bend_list[0], "b_2_bend", -1.5,  1.5),
             (bend_list[1], "b_2_bend", -1.5,  1.5),
@@ -581,7 +581,7 @@ def get_prms(set, bend_list, eps):
 
 def get_weights():
     weights = {
-        "eps_x"       : 1e18,
+        "eps_x"       : 1e17,
         "dphi"        : 1e-1, 
         "phi_1"       : 0e-3,  
         "phi_rb"      : 0e-3,  
@@ -598,8 +598,8 @@ def get_weights():
         "nu_sp_y"     : 1e0,
         "beta_x"      : 0e-6,
         "beta_y"      : 0e-6,
-        "dnu_x"       : 1e-3,
-        "dnu_y"       : 1e-3,
+        "dnu_x"       : 1e-1,
+        "dnu_y"       : 1e-2,
         "xi"          : 1e-7,
         "eta^(2)_x"   : 1e-6 
     }
