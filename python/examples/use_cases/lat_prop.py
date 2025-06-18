@@ -20,37 +20,10 @@ from thor_scsi.utils import lattice_properties as lp, nonlin_dyn as nld_cl, \
 ind = ind.index_class()
 
 
-@dataclass
-class gtpsa_prop:
-    # GTPSA properties.
-    # Number of variables - phase-space coordinates & 1 for parameter
-    #dependence.
-    nv: ClassVar[int] = 6 + 1
-    # Max order.
-    no: ClassVar[int] = 1
-    # Truncation order.
-    to: ClassVar[int] = 1
-    # Number of parameters.
-    nv_prm: ClassVar[int] = 0
-    # Parameters max order.
-    no_prm: ClassVar[int] = 0
-    # Index.
-    named_index = gtpsa.IndexMapping(dict(x=0, px=1, y=2, py=3, delta=4, ct=5))
-    # Descriptor
-    desc : ClassVar[gtpsa.desc]
-
-    def tpsa():
-        return gtpsa.tpsa(gtpsa_prop.desc, gtpsa_prop.no)
-    def ctpsa():
-        return gtpsa.ctpsa(gtpsa_prop.desc, gtpsa_prop.no)
-    def ss_vect_tpsa():
-        return gtpsa.ss_vect_tpsa(gtpsa_prop.desc, gtpsa_prop.no)
-
-
-def compute_optics(gtpsa_prop, lat_prop):
+def compute_optics(lat_prop):
     try:
         # Compute Twiss parameters along lattice.
-        if not lat_prop.comp_per_sol(gtpsa_prop):
+        if not lat_prop.comp_per_sol():
             print("\ncomp_per_sol: unstable")
             raise ValueError
 
@@ -73,11 +46,6 @@ def compute_optics(gtpsa_prop, lat_prop):
         assert False
 
 
-# TPSA max order.
-gtpsa_prop.no = 2
-gtpsa_prop.to = gtpsa_prop.no
-gtpsa_prop.desc = gtpsa.desc(gtpsa_prop.nv, gtpsa_prop.no)
-
 cod_eps = 1e-15
 E_0     = 3.0e9
 
@@ -90,24 +58,23 @@ home_dir = os.path.join(
 lat_name = sys.argv[1]
 file_name = os.path.join(home_dir, lat_name+".lat")
 
-lat_prop = lp.lattice_properties_class(gtpsa_prop, file_name, E_0, cod_eps)
+lat_prop = lp.lattice_properties_class(file_name, E_0, cod_eps, 2)
 
 lat_prop.prt_lat("lat_prop_lat.txt")
 
 b_3_list = ["s1", "s2", "s3", "s4"]
-nld = nld_cl.nonlin_dyn_class(
-    gtpsa_prop, lat_prop, A_max, beta_inj, delta_max, b_3_list)
+nld = nld_cl.nonlin_dyn_class(lat_prop, A_max, beta_inj, delta_max, b_3_list)
 if False:
     nld.zero_mult(lat_prop, 3)
     nld.zero_mult(lat_prop, 4)
 
-compute_optics(gtpsa_prop, lat_prop)
+compute_optics(lat_prop)
 
-eta = nld.compute_eta(gtpsa_prop, lat_prop, lat_prop._M)
+eta = nld.compute_eta(lat_prop, lat_prop._M)
 print("\n eta:\n", eta)
 
 
-lat_prop.prt_lat_param(gtpsa_prop)
+lat_prop.prt_lat_param()
 lat_prop.prt_rad()
 lat_prop.prt_M()
 lat_prop.prt_M_rad()
