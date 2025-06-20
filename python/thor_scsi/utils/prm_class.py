@@ -376,8 +376,8 @@ def prt_lat(
             print("{:5s}: Bending, L = {:7.5f}".format(fam_name, L), end="",
                   file=outf)
             print(", Phi = {:8.5f}".format(phi), end="", file=outf)
-            print(", Phi_1 = {:8.5f}".format(phi), end="", file=outf)
-            print(",\n    Phi_2 = {:8.5f}".format(phi), end="", file=outf)
+            print(", Phi_1 = {:8.5f}".format(phi_1), end="", file=outf)
+            print(",\n    Phi_2 = {:8.5f}".format(phi_2), end="", file=outf)
             if b_2 != 0e0:
                 print(", B_2 = {:8.5f}".format(b_2), end="", file=outf)
             print(", N = n_bend;", file=outf)
