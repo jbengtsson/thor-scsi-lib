@@ -27,11 +27,11 @@ b_2_max      = 10.0
 
 design_val = {
     "eps_x_des"    : 50e-12,
-    "phi_1_des"    : 1.45,
+    "phi_1_des"    : 1.3,
     "phi_rb_1_des" : -0.2,
     "b_2_des"      : 2.0,
     "nu_uc_des"    : np.array([0.4, 0.1]),
-    "nu_sp_des"    : np.array([58.20/20.0,  17.35/20.0]),
+    "nu_sp_des"    : np.array([58.17/20.0,  17.22/20.0]),
     # "nu_sp_des"    : np.array([58.14/20.0,  17.27/20.0]),
     # "nu_sp_des"    : np.array([57.14/20.0,  20.27/20.0]),
     "beta_des"     : [5.0, 3.0],
@@ -453,7 +453,7 @@ def get_bends(lat):
         d3_bend = pc.bend_class(lat_prop, d3_list)
         bend_list = [d1_bend, d2_bend, d3_bend]
 
-        rbend_list = ["r1_h2", "r2_h2"]
+        rbend_list = ["r1_h2", "r2_h2", "r3_h2"]
 
     return bend_list, rbend_list
 
@@ -461,24 +461,24 @@ def get_bends(lat):
 def get_prms(set, bend_list, eps):
     if set == 1:
         prm = [
-            ("q1_h3",      "b_2",     -10.0, 10.0),
-            ("q2_h3",      "b_2",     -10.0, 10.0),
+            ("q1_h2",      "b_2",     -10.0, 10.0),
+            ("q2_h2",      "b_2",     -10.0, 10.0),
 
-            ("r1_h3",      "b_2",     -10.0, 10.0),
-            ("r2_h3",      "b_2",     -10.0, 10.0),
-            ("r3_h3",      "b_2",     -10.0, 10.0),
+            ("r1_h2",      "b_2",     -10.0, 10.0),
+            ("r2_h2",      "b_2",     -10.0, 10.0),
+            ("r3_h2",      "b_2",     -10.0, 10.0),
 
             (bend_list[0], "b_2_bend", -1.5,  1.5),
             (bend_list[1], "b_2_bend", -1.5,  1.5),
             (bend_list[2], "b_2_bend", -1.5,  1.5),
 
-            ("r1_h3",      "phi",      -0.5,  0.5),
-            ("r2_h3",      "phi",      -0.2,  0.2),
-            ("r3_h3",      "phi",      -0.2,  0.2),
+            ("r1_h2",      "phi",      -0.3,  0.3),
+            ("r2_h2",      "phi",      -0.3,  0.3),
+            ("r3_h2",      "phi",      -0.3,  0.3),
 
-            (bend_list[0], "phi_bend",  1.4,  1.5),
-            (bend_list[1], "phi_bend",  1.5,  3.0),
-            (bend_list[2], "phi_bend",  1.5,  2.5)
+            (bend_list[0], "phi_bend",  0.0,  2.0),
+            (bend_list[1], "phi_bend",  0.0,  2.0),
+            (bend_list[2], "phi_bend",  0.0,  2.0)
         ]
     elif set == 2:
         prm = [
@@ -488,9 +488,9 @@ def get_prms(set, bend_list, eps):
             ("r1_h2",      "b_2",     -10.0, 10.0),
             ("r2_h2",      "b_2",     -10.0, 10.0),
 
-            (bend_list[0], "b_2_bend", -1.5,  1.5),
-            (bend_list[1], "b_2_bend", -1.5,  1.5),
-            (bend_list[2], "b_2_bend", -1.5,  1.5),
+            (bend_list[0], "b_2_bend",  0.0,  2.0),
+            (bend_list[1], "b_2_bend",  0.0,  2.0),
+            (bend_list[2], "b_2_bend",  0.0,  2.0),
 
             ("r1_h2",      "phi",      -0.5,  0.5),
             ("r2_h2",      "phi",      -0.2,  0.2),
@@ -519,7 +519,7 @@ def get_prms(set, bend_list, eps):
             (bend_list[2], "phi_bend",  1.5,  2.5)
         ]
     elif set == 4:
-        prm = [
+        prm = [x
             ("q1_h3",        "b_2",      -10.0, 10.0),
             ("q2_h3",        "b_2",      -10.0, 10.0),
 
@@ -642,9 +642,9 @@ def get_prms(set, bend_list, eps):
 
 def get_weights():
     weights = {
-        "eps_x"       : 1e17,
+        "eps_x"       : 1e18,
         "dphi"        : 1e-1, 
-        "phi_1"       : 0e-3,  
+        "phi_1"       : 1e-2,  
         "phi_rb"      : 0e-3,  
         "b_2"         : 0e-3, 
         "alpha^(1)_c" : 1e-14,  
@@ -659,7 +659,7 @@ def get_weights():
         "nu_sp_y"     : 1e0,
         "beta_x"      : 0e-6,
         "beta_y"      : 0e-6,
-        "dnu_x"       : 1e-3,
+        "dnu_x"       : 0.1*1e-3,
         "dnu_y"       : 1e-3,
         "xi"          : 1e-7,
         "eta^(2)_x"   : 1e-6 
@@ -747,7 +747,7 @@ print(f"super period last sextupole  {lat_prop._lattice[sp_list[1]].name:15s}",
 
 weight_list = get_weights()
 bend_list, rbend_list = get_bends(3)
-prm_list, dprm_list = get_prms(2, bend_list, 1e-4)
+prm_list, dprm_list = get_prms(1, bend_list, 1e-4)
 
 @dataclass
 class prm_class:
