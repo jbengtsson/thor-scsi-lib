@@ -57,8 +57,8 @@ class opt_sp_class:
         self._prm_list       = prm_class.params[0]
         self._dprm_list      = prm_class.params[1]
 
-        self._phi_bend       = np.zeros(3)
-        self._phi_rbend      = np.zeros(3)
+        self._phi_bend       = np.zeros(len(self._bend_list))
+        self._phi_rbend      = np.zeros(len(self._bend_list))
         self._b_2            = np.nan
         self._phi_sp_0       = np.nan
         self._phi_sp         = np.nan
@@ -247,10 +247,16 @@ class opt_sp_class:
 
                 print()
                 for k, phi in enumerate(self._phi_bend):
-                    print(f"    phi_bend_{k+1:1d}     = {phi:8.5f}")
+                    b_2 = \
+                        self._bend_list[k].compute_bend_b_2xL() \
+                        /self._bend_list[k].compute_bend_L_tot()
+                    print(f"    phi_bend_{k+1:1d}     = "
+                          f"[{phi:8.5f}, {b_2:8.5f}]")
                 print()
                 for k, rbend in enumerate(self._rbend_list):
                     print(f"    {rbend:10s}     = {self._phi_rbend[k]:8.5f}")
+
+                print("\n    b_3            =", self._nld._b_3_list)
 
                 print(f"\n    b_2            = {self._b_2:8.5f}")
 
@@ -431,6 +437,25 @@ def get_bends(lat):
 
         rbend_list = ["r1_h3", "r2_h3"]
     elif lat == 3:
+        # m4U_250527_h02_13_02_01_tracy-2.
+
+        d1_list = [
+            "d1_h2_sl_dm5", "d1_h2_sl_dm4", "d1_h2_sl_dm3", "d1_h2_sl_dm2",
+            "d1_h2_sl_dm1",
+            "d1_h2_sl_ds0", "d1_h2_sl_ds1", "d1_h2_sl_ds2", "d1_h2_sl_ds3",
+            "d1_h2_sl_ds4", "d1_h2_sl_ds5", "d1_h2_sl_ds6"
+        ]
+        d2_list = [
+            "d2_h2_sl_d0a", "d2_h2_sl_d0b", "d2_h2_sl_d0c", "d2_h2_sl_df1",
+            "d2_h2_sl_df2", "d2_h2_sl_df3", "d2_h2_sl_df4", "d2_h2_sl_df5"
+        ]
+
+        d1_bend = pc.bend_class(lat_prop, d1_list)
+        d2_bend = pc.bend_class(lat_prop, d2_list)
+        bend_list = [d1_bend, d2_bend]
+
+        rbend_list = ["r1_h2", "r2_h2"]
+    elif lat == 4:
         # m4U_250610_h02_16_02_01_tracy_2.
 
         d1_list = [
@@ -490,14 +515,12 @@ def get_prms(set, bend_list, eps):
 
             (bend_list[0], "b_2_bend",  0.0,  2.0),
             (bend_list[1], "b_2_bend",  0.0,  2.0),
-            (bend_list[2], "b_2_bend",  0.0,  2.0),
 
             ("r1_h2",      "phi",      -0.5,  0.5),
             ("r2_h2",      "phi",      -0.2,  0.2),
 
             (bend_list[0], "phi_bend",  1.4,  1.5),
-            (bend_list[1], "phi_bend",  1.5,  3.0),
-            (bend_list[2], "phi_bend",  1.5,  2.5)
+            (bend_list[1], "phi_bend",  1.5,  3.0)
         ]
     elif set == 3:
         prm = [
@@ -682,7 +705,7 @@ file_name = os.path.join(home_dir, sys.argv[1]+".lat")
 lat_prop = lp.lattice_properties_class(file_name, E_0, cod_eps, 2)
 lat_prop.prt_lat("lat_prop_lat.txt")
 
-b_3_list = ["s3_h3", "s4_h3"]
+b_3_list = ["s1_h3", "s2_h3", "s3_h3", "s4_h3"]
 nld = nld_class.nonlin_dyn_class(lat_prop, A_max, beta_inj, delta_max, b_3_list)
 
 nld.zero_mult(lat_prop, 3)
@@ -730,6 +753,8 @@ else:
 
 # uc_list = np.array(lat_prop._lattice.find("d2_h3_sl_df0", 0).index)
 # uc_list = np.append(uc_list, lat_prop._lattice.find("d3_h3_sl_df0", 1).index)
+# uc_list = np.array(lat_prop._lattice.find("d2_h2_sl_d0a", 0).index)
+# uc_list = np.append(uc_list, lat_prop._lattice.find("d2_h2_sl_d0a", 1).index)
 uc_list = np.array(lat_prop._lattice.find("d2_h2_sl_d0a", 0).index)
 uc_list = np.append(uc_list, lat_prop._lattice.find("d3_h2_sl_d0a", 1).index)
 
@@ -746,7 +771,7 @@ print(f"super period last sextupole  {lat_prop._lattice[sp_list[1]].name:15s}",
       f"loc = {sp_list[1]:d}")
 
 weight_list = get_weights()
-bend_list, rbend_list = get_bends(3)
+bend_list, rbend_list = get_bends(4)
 prm_list, dprm_list = get_prms(1, bend_list, 1e-4)
 
 @dataclass
