@@ -279,8 +279,7 @@ class opt_sp_class:
         for k, rbend in enumerate(self._rbend_list):
             print(f"    {rbend:10s}     = {self._phi_rbend[k]:8.5f}")
 
-        print("\n    b_3            =", self._nld._b_3_list)
-
+        print(f"\n    b_3            =", self._nld._b_3_list)
         print(f"\n    b_2            = {self._b_2:8.5f}")
 
         self._lat_prop.prt_rad()
@@ -310,14 +309,13 @@ class opt_sp_class:
                     print(f"\n{self._n_iter:3d}",
                           f"dchi_2 = {chi_2-self._chi_2_min:9.3e}")
                     # self._prm_list.prt_prm(prm)
+            return chi_2
         else:
-            chi_2 = 1e30
             if not False:
                 print(f"\n{self._n_iter:3d} chi_2 = {chi_2:11.5e}",
                       f"({self._chi_2_min:11.5e})")
                 self._prm_list.prt_prm(prm)
-
-        return chi_2
+            return 1e30
 
     def opt_sp(self):
         """Use Case: optimise super period.
