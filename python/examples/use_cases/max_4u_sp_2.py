@@ -309,13 +309,14 @@ class opt_sp_class:
                     print(f"\n{self._n_iter:3d}",
                           f"dchi_2 = {chi_2-self._chi_2_min:9.3e}")
                     # self._prm_list.prt_prm(prm)
-            return chi_2
         else:
+            chi_2 = 1e30
             if not False:
                 print(f"\n{self._n_iter:3d} chi_2 = {chi_2:11.5e}",
                       f"({self._chi_2_min:11.5e})")
                 self._prm_list.prt_prm(prm)
-            return 1e30
+
+        return chi_2
 
     def opt_sp(self):
         """Use Case: optimise super period.
@@ -370,94 +371,66 @@ class opt_sp_class:
 
 
 def get_bends(lat):
-    if lat == 1:
+    bend_lists = {
         # max_4u/m4U_250316_h03_01_01_01_tracy-2.
-
-        d1_list = [
-            "d1_h3_sl_dm5", "d1_h3_sl_dm4", "d1_h3_sl_dm3", "d1_h3_sl_dm2",
-            "d1_h3_sl_dm1",
-            "d1_h3_sl_d0", "d1_h3_sl_ds1", "d1_h3_sl_ds2", "d1_h3_sl_ds3",
-            "d1_h3_sl_ds4", "d1_h3_sl_ds5"
-        ]
-        d2_list = [
-            "d2_h3_sl_df0", "d2_h3_sl_df1", "d2_h3_sl_df2", "d2_h3_sl_df3",
-            "d2_h3_sl_df4", "d2_h3_sl_df5", "d2_h3_sl_df6"
-        ]
-        d3_list = [
-            "d3_h3_sl_df0", "d3_h3_sl_df1", "d3_h3_sl_df2", "d3_h3_sl_df3",
-            "d3_h3_sl_df4", "d3_h3_sl_df5", "d3_h3_sl_df6"
-        ]
-
-        d1_bend = pc.bend_class(lat_prop, d1_list)
-        d2_bend = pc.bend_class(lat_prop, d2_list)
-        d3_bend = pc.bend_class(lat_prop, d3_list)
-        bend_list = [d1_bend, d2_bend, d3_bend]
-
-        rbend_list = ["r1_h3", "r2_h3", "r3_h3"]
-    elif lat == 2:
+        "lat_1": {
+            "bend_list": [
+                ["d1_h3_sl_dm5", "d1_h3_sl_dm4", "d1_h3_sl_dm3", "d1_h3_sl_dm2",
+                 "d1_h3_sl_dm1", "d1_h3_sl_d0", "d1_h3_sl_ds1", "d1_h3_sl_ds2",
+                 "d1_h3_sl_ds3", "d1_h3_sl_ds4", "d1_h3_sl_ds5"],
+                ["d2_h3_sl_df0", "d2_h3_sl_df1", "d2_h3_sl_df2", "d2_h3_sl_df3",
+                 "d2_h3_sl_df4", "d2_h3_sl_df5", "d2_h3_sl_df6"],
+                ["d3_h3_sl_df0", "d3_h3_sl_df1", "d3_h3_sl_df2", "d3_h3_sl_df3",
+                 "d3_h3_sl_df4", "d3_h3_sl_df5", "d3_h3_sl_df6"]
+            ],
+            "rbend_list": ["r1_h3", "r2_h3", "r3_h3"]
+        },
         # m4U_241223_h02_01_01_01_tracy_2.
-
-        d1_list = [
-            "d1_h3_sl_dm5", "d1_h3_sl_dm4", "d1_h3_sl_dm3", "d1_h3_sl_dm2",
-            "d1_h3_sl_dm1",
-            "d1_h3_sl_ds0", "d1_h3_sl_ds1", "d1_h3_sl_ds2", "d1_h3_sl_ds3",
-            "d1_h3_sl_ds4", "d1_h3_sl_ds5", "d1_h3_sl_ds6"
-        ]
-        d2_list = [
-            "d2_h3_sl_d0a", "d2_h3_sl_d0b", "d2_h3_sl_d0c", "d2_h3_sl_df1",
-            "d2_h3_sl_df2", "d2_h3_sl_df3", "d2_h3_sl_df4", "d2_h3_sl_df5"
-        ]
-
-        d1_bend = pc.bend_class(lat_prop, d1_list)
-        d2_bend = pc.bend_class(lat_prop, d2_list)
-        bend_list = [d1_bend, d2_bend]
-
-        rbend_list = ["r1_h3", "r2_h3"]
-    elif lat == 3:
+        "lat_2": {
+            "bend_list": [
+                ["d1_h3_sl_dm5", "d1_h3_sl_dm4", "d1_h3_sl_dm3", "d1_h3_sl_dm2",
+                 "d1_h3_sl_dm1", "d1_h3_sl_ds0", "d1_h3_sl_ds1", "d1_h3_sl_ds2",
+                 "d1_h3_sl_ds3", "d1_h3_sl_ds4", "d1_h3_sl_ds5", "d1_h3_sl_ds6"
+                 ],
+                ["d2_h3_sl_d0a", "d2_h3_sl_d0b", "d2_h3_sl_d0c", "d2_h3_sl_df1",
+                 "d2_h3_sl_df2", "d2_h3_sl_df3", "d2_h3_sl_df4", "d2_h3_sl_df5"]
+            ],
+            "rbend_list": ["r1_h3", "r2_h3"]
+        },
         # m4U_250527_h02_13_02_01_tracy-2.
-
-        d1_list = [
-            "d1_h2_sl_dm5", "d1_h2_sl_dm4", "d1_h2_sl_dm3", "d1_h2_sl_dm2",
-            "d1_h2_sl_dm1",
-            "d1_h2_sl_ds0", "d1_h2_sl_ds1", "d1_h2_sl_ds2", "d1_h2_sl_ds3",
-            "d1_h2_sl_ds4", "d1_h2_sl_ds5", "d1_h2_sl_ds6"
-        ]
-        d2_list = [
-            "d2_h2_sl_d0a", "d2_h2_sl_d0b", "d2_h2_sl_d0c", "d2_h2_sl_df1",
-            "d2_h2_sl_df2", "d2_h2_sl_df3", "d2_h2_sl_df4", "d2_h2_sl_df5"
-        ]
-
-        d1_bend = pc.bend_class(lat_prop, d1_list)
-        d2_bend = pc.bend_class(lat_prop, d2_list)
-        bend_list = [d1_bend, d2_bend]
-
-        rbend_list = ["r1_h2", "r2_h2"]
-    elif lat == 4:
+        "lat_3": {
+            "bend_list": [
+                ["d1_h2_sl_dm5", "d1_h2_sl_dm4", "d1_h2_sl_dm3", "d1_h2_sl_dm2",
+                 "d1_h2_sl_dm1", "d1_h2_sl_ds0", "d1_h2_sl_ds1", "d1_h2_sl_ds2",
+                 "d1_h2_sl_ds3", "d1_h2_sl_ds4", "d1_h2_sl_ds5",
+                 "d1_h2_sl_ds6"],
+                ["d2_h2_sl_d0a", "d2_h2_sl_d0b", "d2_h2_sl_d0c", "d2_h2_sl_df1",
+                 "d2_h2_sl_df2", "d2_h2_sl_df3", "d2_h2_sl_df4", "d2_h2_sl_df5"]
+            ],
+            "rbend_list": ["r1_h2", "r2_h2"]
+        },
         # m4U_250610_h02_16_02_01_tracy_2.
+        "lat_4": {
+            "bend_list": [
+                ["d1_h2_sl_dm5", "d1_h2_sl_dm4", "d1_h2_sl_dm3", "d1_h2_sl_dm2",
+                 "d1_h2_sl_dm1", "d1_h2_sl_ds0", "d1_h2_sl_ds1", "d1_h2_sl_ds2",
+                 "d1_h2_sl_ds3", "d1_h2_sl_ds4", "d1_h2_sl_ds5",
+                 "d1_h2_sl_ds6"],
+                ["d2_h2_sl_d0a", "d2_h2_sl_d0b", "d2_h2_sl_d0c", "d2_h2_sl_df1",
+                 "d2_h2_sl_df2", "d2_h2_sl_df3", "d2_h2_sl_df4",
+                 "d2_h2_sl_df5"],
+                ["d3_h2_sl_d0a", "d3_h2_sl_d0b", "d3_h2_sl_d0c", "d3_h2_sl_df1",
+                 "d3_h2_sl_df2", "d3_h2_sl_df3", "d3_h2_sl_df4", "d3_h2_sl_df5"]
+            ],
+            "rbend_list": ["r1_h2", "r2_h2", "r3_h2"]
+        }
+    }
 
-        d1_list = [
-            "d1_h2_sl_dm5", "d1_h2_sl_dm4", "d1_h2_sl_dm3", "d1_h2_sl_dm2",
-            "d1_h2_sl_dm1",
-            "d1_h2_sl_ds0", "d1_h2_sl_ds1", "d1_h2_sl_ds2", "d1_h2_sl_ds3",
-            "d1_h2_sl_ds4", "d1_h2_sl_ds5", "d1_h2_sl_ds6"
-        ]
-        d2_list = [
-            "d2_h2_sl_d0a", "d2_h2_sl_d0b", "d2_h2_sl_d0c", "d2_h2_sl_df1",
-            "d2_h2_sl_df2", "d2_h2_sl_df3", "d2_h2_sl_df4", "d2_h2_sl_df5"
-        ]
-        d3_list = [
-            "d3_h2_sl_d0a", "d3_h2_sl_d0b", "d3_h2_sl_d0c", "d3_h2_sl_df1",
-            "d3_h2_sl_df2", "d3_h2_sl_df3", "d3_h2_sl_df4", "d3_h2_sl_df5"
-        ]
+    bend_list = []
+    for k, b_list in enumerate(bend_lists[lat]["bend_list"]):
+        bend_list.append(pc.bend_class(lat_prop, b_list))
 
-        d1_bend = pc.bend_class(lat_prop, d1_list)
-        d2_bend = pc.bend_class(lat_prop, d2_list)
-        d3_bend = pc.bend_class(lat_prop, d3_list)
-        bend_list = [d1_bend, d2_bend, d3_bend]
-
-        rbend_list = ["r1_h2", "r2_h2", "r3_h2"]
-
-    return bend_list, rbend_list
+    return bend_list, bend_lists[lat]["rbend_list"]
 
 
 def get_prms(set, bend_list, eps):
@@ -728,12 +701,19 @@ else:
     lat_prop.prt_M()
     lat_prop.prt_M_rad()
 
+dip_type = 3
+prm_type = 2
+
 # uc_list = np.array(lat_prop._lattice.find("d2_h3_sl_df0", 0).index)
 # uc_list = np.append(uc_list, lat_prop._lattice.find("d3_h3_sl_df0", 1).index)
-# uc_list = np.array(lat_prop._lattice.find("d2_h2_sl_d0a", 0).index)
-# uc_list = np.append(uc_list, lat_prop._lattice.find("d2_h2_sl_d0a", 1).index)
-uc_list = np.array(lat_prop._lattice.find("d2_h2_sl_d0a", 0).index)
-uc_list = np.append(uc_list, lat_prop._lattice.find("d3_h2_sl_d0a", 1).index)
+if dip_type == 3:
+    uc_list = np.array(lat_prop._lattice.find("d2_h2_sl_d0a", 0).index)
+    uc_list = np.append(uc_list, lat_prop._lattice.find("d2_h2_sl_d0a", 2)
+                        .index)
+else:
+    uc_list = np.array(lat_prop._lattice.find("d2_h2_sl_d0a", 0).index)
+    uc_list = np.append(uc_list, lat_prop._lattice.find("d3_h2_sl_d0a", 1)
+                        .index)
 
 sp_list = np.array(lat_prop._lattice.find("lsborder", 0).index)
 sp_list = np.append(sp_list, lat_prop._lattice.find("lsborder", 1).index)
@@ -748,8 +728,8 @@ print(f"super period last sextupole  {lat_prop._lattice[sp_list[1]].name:15s}",
       f"loc = {sp_list[1]:d}")
 
 weight_list = get_weights()
-bend_list, rbend_list = get_bends(4)
-prm_list, dprm_list = get_prms(1, bend_list, 1e-4)
+bend_list, rbend_list = get_bends("lat_3")
+prm_list, dprm_list = get_prms(prm_type, bend_list, 1e-4)
 
 @dataclass
 class prm_class:
