@@ -94,7 +94,7 @@ tokens = (
     'PLUS', 'MINUS', 'TIMES', 'DIVIDE',
     'EQUALS',
     'LPAREN', 'RPAREN',
-    'PRINT',
+    'PRINT'
 )
 
 # Regular expression rules
