@@ -78,8 +78,10 @@ class GLPSLexer(Lexer):
         self.lineno += 1
 
     def error(self, t):
-        msg = f"Invalid character {t.value[0]!r} at line {t.lineno}"
-        self.index += 1
+        line = self.lineno
+        col = self.index - self.line_start
+        msg = f"Invalid character {t.value[0]!r} at line {line}, column {col}"
+        self.index += 1 # Skip invalid character.
         glps_error(None, None, msg)
 
 
@@ -117,7 +119,7 @@ class GLPSParser(Parser):
     # Updated element rule requiring optional properties with leading comma
     @_('IDENT ":" IDENT opt_properties ";"')
     def element(self, p):
-        glps_add_element(self.ctxt, p[0], p[1], p.opt_properties)
+        glps_add_element(self.ctxt, p.IDENT0, p.IDENT1, p.opt_properties)
 
     # opt_properties is empty or starts with a comma followed by property_list
     @_('')
