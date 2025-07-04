@@ -89,7 +89,7 @@ class GLPSLexer(Lexer):
         glps_error(None, None, msg)
 
 class QuoteLexer(Lexer):
-    tokens = { 'STR' }
+    tokens = { STR }
     ignore = ''
 
     def __init__(self, outer):
@@ -99,7 +99,7 @@ class QuoteLexer(Lexer):
     def quote_STR(self, t):
         self.begin('INITIAL')
         t.type = 'STR'
-        t.value = glps_string_alloc(self.msg._quoted_str)
+        t.value = glps_string_alloc(self.lexer._quoted_str)
         return t
 
     @_(r'[^\"\n\r]+')
@@ -112,7 +112,10 @@ class QuoteLexer(Lexer):
 
     @_(r'.')
     def quote_error_general(self, t):
-        glps_error(None, None, f"Invalid character in string: {t.value[0]!r}")
+        glps_error(
+            None, None,
+            f"Unterminated string at line {t.lineno},"
+            f" near {repr(self.lexer._quoted_str)}")
 
 
 class GLPSParser(Parser):
@@ -128,7 +131,7 @@ class GLPSParser(Parser):
 
     @_('')
     def file(self, p):
-        pass
+        return self.ctxt
 
     @_('entry file')
     def file(self, p):
@@ -198,7 +201,7 @@ class GLPSParser(Parser):
         return glps_add_value(self.ctxt, glps_expr_vector, p.expr_list)
 
     @_('')
-    def expr_list(self, p): return []
+    def expr_list(self, p): return self.ctxt
 
     @_('expr')
     def expr_list(self, p): return [p.expr]
@@ -233,8 +236,7 @@ if __name__ == "__main__":
     lexer = GLPSLexer()
     parser = GLPSParser(ctxt=context)
 
-    home_dir = os.path.join(
-        os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "MAX_IV")
+    home_dir = Path.home() / "Nextcloud" / "thor_scsi" / "JB" / "MAX_IV"
 
     if len(sys.argv) < 2:
         print("Usage: script.py <filename>")
