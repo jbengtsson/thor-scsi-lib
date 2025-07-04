@@ -4,13 +4,50 @@ import sys
 from sly import Lexer, Parser
 
 
-from sly import Lexer
+# Dummy placeholders for external functions and types:
+# Replace these with your actual implementations
 
-def glps_string_alloc(text): return text
-def glps_error(scanner, context, msg, *args): raise SyntaxError(msg % args)
+def glps_string_alloc(text):
+    return text
+
+def glps_error(scanner, context, msg, *args):
+    raise SyntaxError(msg % args)
+
+def glps_assign(context, key, value):
+    print(f"[assign] {key} = {value}")
+    context['assignments'][key] = value
+
+def glps_add_element(context, cat, name, props):
+    print(f"[element] {cat}:{name} with props {props}")
+    context['elements'].append(
+        {'category': cat, 'name': name, 'properties': props})
+
+def glps_call1(context, func, arg):
+    print(f"[func] {func}({arg})")
+    context['functions'].append({'func': func, 'arg': arg})
+
+def glps_command(context, cmd):
+    print(f"[command] {cmd}")
+    context['commands'].append(cmd)
+
+def glps_expr_number(val): return {'type': 'number', 'value': val}
+def glps_expr_string(val): return {'type': 'string', 'value': val}
+def glps_expr_var(val): return {'type': 'var', 'name': val}
+def glps_expr_vector(vec): return {'type': 'vector', 'items': vec}
+
+def glps_add_value(context, kind_func, value):
+    return kind_func(value)
+
+def glps_add_op(context, op, arity, args):
+    return {'type': 'op', 'op': op, 'args': args}
+
+def glps_append_kv(context, kvlist, kv):
+    kvlist.insert(0, kv)
+    return kvlist
+
 
 class GLPSLexer(Lexer):
-    tokens = { 'KEYWORD', 'NUM', 'STR' }
+    tokens = { IDENT, NUM, STR }
     literals = { '=', ':', ';', '(', ')', '[', ']', ',', '+', '-', '*', '/' }
     ignore = ' \t'
     ignore_comment = r'\#[^\n]*'
@@ -21,9 +58,10 @@ class GLPSLexer(Lexer):
 
     def __init__(self):
         self._quoted_str = ""
+        self.quote = QuoteLexer()
 
     @_(r'[A-Za-z_][A-Za-z0-9_:]*')
-    def KEYWORD(self, t):
+    def IDENT(self, t):
         t.value = glps_string_alloc(t.value)
         return t
 
@@ -51,6 +89,7 @@ class GLPSLexer(Lexer):
         msg = f"Invalid character {t.value[0]!r} at line {t.lineno}, column {col}"
         glps_error(None, None, msg)
 
+
 class QuoteLexer(Lexer):
     tokens = { 'STR' }
     ignore = ''
@@ -74,11 +113,14 @@ class QuoteLexer(Lexer):
     def quote_error_general(self, t):
         glps_error(None, None, f"Invalid character in string: {t.value[0]!r}")
 
-# ==== Parser ====
 
 class GLPSParser(Parser):
     tokens = GLPSLexer.tokens
-    precedence = (('left', '+', '-'), ('left', '*', '/'), ('right', 'NEG'))
+    precedence = (
+        ('left', '+', '-'),
+        ('left', '*', '/'),
+        ('right', 'NEG')
+    )
 
     def __init__(self, ctxt):
         self.ctxt = ctxt
@@ -88,26 +130,27 @@ class GLPSParser(Parser):
         pass
 
     @_('entry file')
-    def file(self, p): pass
+    def file(self, p):
+        return None
 
     @_('assignment', 'element', 'func', 'command')
     def entry(self, p): pass
 
-    @_('KEYWORD "=" expr ";"')
+    @_('IDENT "=" expr ";"')
     def assignment(self, p):
-        glps_assign(self.ctxt, p.KEYWORD, p.expr)
+        glps_assign(self.ctxt, p.IDENT, p.expr)
 
-    @_('KEYWORD ":" KEYWORD properties ";"')
+    @_('IDENT ":" IDENT properties ";"')
     def element(self, p):
-        glps_add_element(self.ctxt, p.KEYWORD0, p.KEYWORD1, p.properties)
+        glps_add_element(self.ctxt, p.IDENT0, p.IDENT1, p.properties)
 
-    @_('KEYWORD "(" expr ")" ";"')
+    @_('IDENT "(" expr ")" ";"')
     def func(self, p):
-        glps_call1(self.ctxt, p.KEYWORD, p.expr)
+        glps_call1(self.ctxt, p.IDENT, p.expr)
 
-    @_('KEYWORD ";"')
+    @_('IDENT ";"')
     def command(self, p):
-        glps_command(self.ctxt, p.KEYWORD)
+        glps_command(self.ctxt, p.IDENT)
 
     @_('')
     def properties(self, p):
@@ -117,9 +160,9 @@ class GLPSParser(Parser):
     def properties(self, p):
         return glps_append_kv(self.ctxt, p.properties, p.property)
 
-    @_('KEYWORD "=" expr')
+    @_('IDENT "=" expr')
     def property(self, p):
-        return {'key': p.KEYWORD, 'value': p.expr}
+        return {'key': p.IDENT, 'value': p.expr}
 
     @_('NUM')
     def expr(self, p):
@@ -129,9 +172,9 @@ class GLPSParser(Parser):
     def expr(self, p):
         return glps_add_value(self.ctxt, glps_expr_string, p.STR)
 
-    @_('KEYWORD')
+    @_('IDENT')
     def expr(self, p):
-        return glps_add_value(self.ctxt, glps_expr_var, p.KEYWORD)
+        return glps_add_value(self.ctxt, glps_expr_var, p.IDENT)
 
     @_('expr "+" expr',
        'expr "-" expr',
@@ -173,44 +216,6 @@ class GLPSParser(Parser):
             print("Syntax error: unexpected end of input")
         raise SyntaxError("Parsing failed")
 
-# ==== Function Backends ====
-
-def glps_string_alloc(text): return text
-def glps_error(scanner, context, msg, *args): raise SyntaxError(msg % args)
-
-def glps_assign(context, key, value):
-    print(f"[assign] {key} = {value}")
-    context['assignments'][key] = value
-
-def glps_add_element(context, cat, name, props):
-    print(f"[element] {cat}:{name} with props {props}")
-    context['elements'].append(
-        {'category': cat, 'name': name, 'properties': props})
-
-def glps_call1(context, func, arg):
-    print(f"[func] {func}({arg})")
-    context['functions'].append({'func': func, 'arg': arg})
-
-def glps_command(context, cmd):
-    print(f"[command] {cmd}")
-    context['commands'].append(cmd)
-
-def glps_expr_number(val): return {'type': 'number', 'value': val}
-def glps_expr_string(val): return {'type': 'string', 'value': val}
-def glps_expr_var(val): return {'type': 'var', 'name': val}
-def glps_expr_vector(vec): return {'type': 'vector', 'items': vec}
-
-def glps_add_value(context, kind_func, value):
-    return kind_func(value)
-
-def glps_add_op(context, op, arity, args):
-    return {'type': 'op', 'op': op, 'args': args}
-
-def glps_append_kv(context, kvlist, kv):
-    kvlist.insert(0, kv)
-    return kvlist
-
-# ==== Runner ====
 
 if __name__ == "__main__":
 
@@ -231,21 +236,30 @@ if __name__ == "__main__":
     home_dir = os.path.join(
         os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "MAX_IV")
 
+    if len(sys.argv) < 2:
+        print("Usage: script.py <filename>")
+        sys.exit(1)
+
     file_name = os.path.join(home_dir, sys.argv[1]+".lat")
 
-    if False:
-        text = 'a = 123;'
-    else:
-        try:
-            with open(file_name, "r") as file:
-                text = file.read()
-        except FileNotFoundError:
-            print(f"File {file_name} not found")
-            sys.exit(1)
+    try:
+        with open(file_name, "r") as file:
+            text = file.read()
+    except FileNotFoundError:
+        print(f"File {file_name} not found")
+        sys.exit(1)
 
     try:
-        parser.parse(lexer.tokenize(text))
-        print("\nParsed context:")
-        print(context)
+        result = parser.parse(lexer.tokenize(text))
+        print("\nParsed context\n\nassignments:")
+        print(context['assignments'])
+        print("\nelements:")
+        print(context['elements'])
+        print("\nfunctions:")
+        print(context['functions'])
+        print("\ncommands:")
+        print(context['commands'])
+        print("\nParse Tree:")
+        print(result)
     except SyntaxError as e:
         print(f"Syntax error: {e}")
