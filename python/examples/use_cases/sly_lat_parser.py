@@ -1,6 +1,8 @@
 
 import os
 import sys
+from pathlib import Path
+
 from sly import Lexer, Parser
 
 
@@ -58,7 +60,7 @@ class GLPSLexer(Lexer):
 
     def __init__(self):
         self._quoted_str = ""
-        self.quote = QuoteLexer()
+        self.quote = QuoteLexer(self)
 
     @_(r'[A-Za-z_][A-Za-z0-9_:]*')
     def IDENT(self, t):
@@ -83,27 +85,26 @@ class GLPSLexer(Lexer):
         self.begin('quote')
 
     def error(self, t):
-        pos = t.index
-        line_start = self.text.rfind('\n', 0, pos) + 1
-        col = pos - line_start + 1
-        msg = f"Invalid character {t.value[0]!r} at line {t.lineno}, column {col}"
+        msg = f"Invalid character {t.value[0]!r} at line {t.lineno}"
         glps_error(None, None, msg)
-
 
 class QuoteLexer(Lexer):
     tokens = { 'STR' }
     ignore = ''
 
+    def __init__(self, outer):
+        self.lexer = outer  # reference to GLPSLexer instance
+
     @_(r'\"')
     def quote_STR(self, t):
         self.begin('INITIAL')
         t.type = 'STR'
-        t.value = glps_string_alloc(self._quoted_str)
+        t.value = glps_string_alloc(self.msg._quoted_str)
         return t
 
     @_(r'[^\"\n\r]+')
     def quote_text(self, t):
-        self._quoted_str += t.value
+        self.lexer._quoted_str += t.value
 
     @_(r'[\n\r]')
     def quote_error(self, t):
@@ -131,7 +132,8 @@ class GLPSParser(Parser):
 
     @_('entry file')
     def file(self, p):
-        return None
+        # Return parse tree.
+        return self.ctxt
 
     @_('assignment', 'element', 'func', 'command')
     def entry(self, p): pass
@@ -228,8 +230,6 @@ if __name__ == "__main__":
 
     # Assign the quote lexer subclass to the main lexer class attribute
 
-    GLPSLexer.quote = QuoteLexer
-
     lexer = GLPSLexer()
     parser = GLPSParser(ctxt=context)
 
@@ -240,7 +240,7 @@ if __name__ == "__main__":
         print("Usage: script.py <filename>")
         sys.exit(1)
 
-    file_name = os.path.join(home_dir, sys.argv[1]+".lat")
+    file_name = Path(home_dir) / (sys.argv[1]+".lat")
 
     try:
         with open(file_name, "r") as file:
@@ -259,7 +259,5 @@ if __name__ == "__main__":
         print(context['functions'])
         print("\ncommands:")
         print(context['commands'])
-        print("\nParse Tree:")
-        print(result)
     except SyntaxError as e:
         print(f"Syntax error: {e}")
