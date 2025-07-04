@@ -12,7 +12,9 @@ def glps_string_alloc(text):
     return text
 
 def glps_error(scanner, context, msg, *args):
-    raise SyntaxError(msg % args)
+    if args:
+        msg = msg % args
+    raise SyntaxError(msg)
 
 def glps_assign(context, key, value):
     print(f"[assign] {key} = {value}")
@@ -49,6 +51,10 @@ class GLPSLexer(Lexer):
     ignore = ' \t'
     ignore_comment = r'\#[^\n]*'
 
+    def __init__(self):
+        super().__init__()
+        self.line_start = 0  # Track start index of current line
+
     @_(r'[A-Za-z_][A-Za-z0-9_]*')
     def IDENT(self, t):
         t.value = glps_string_alloc(t.value)
@@ -76,6 +82,7 @@ class GLPSLexer(Lexer):
     @_(r'\n')
     def ignore_newline(self, t):
         self.lineno += 1
+        self.line_start = self.index  # update start index of line
 
     def error(self, t):
         line = self.lineno
@@ -98,15 +105,15 @@ class GLPSParser(Parser):
 
     @_('entries')
     def file(self, p):
-        return self.ctxt
-
-    @_('entry')
-    def entries(self, p):
-        return [p.entry]
+        return {'context': self.ctxt, 'entries': p.entries}
 
     @_('entry entries')
     def entries(self, p):
         return [p.entry] + p.entries
+
+    @_('entry')
+    def entries(self, p):
+        return [p.entry]
 
     @_('assignment', 'element', 'func', 'command')
     def entry(self, p):
@@ -115,11 +122,13 @@ class GLPSParser(Parser):
     @_('IDENT "=" expr ";"')
     def assignment(self, p):
         glps_assign(self.ctxt, p.IDENT, p.expr)
+        return ('assign', p.IDENT, p.expr)
 
     # Updated element rule requiring optional properties with leading comma
     @_('IDENT ":" IDENT opt_properties ";"')
     def element(self, p):
         glps_add_element(self.ctxt, p.IDENT0, p.IDENT1, p.opt_properties)
+        return ('element', p.IDENT0, p.IDENT1, p.opt_properties)
 
     # opt_properties is empty or starts with a comma followed by property_list
     @_('')
@@ -146,10 +155,12 @@ class GLPSParser(Parser):
     @_('IDENT "(" expr ")" ";"')
     def func(self, p):
         glps_call1(self.ctxt, p.IDENT, p.expr)
+        return ('func', p.IDENT, p.expr)
 
     @_('IDENT ";"')
     def command(self, p):
         glps_command(self.ctxt, p.IDENT)
+        return ('command', p.IDENT)
 
     @_('NUM')
     def expr(self, p):
