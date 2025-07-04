@@ -48,7 +48,9 @@ def glps_add_op(context, op, arity, args):
 class GLPSLexer(Lexer):
     tokens = { 'IDENT', 'NUM', 'STR' }
     literals = { '=', ':', ';', '(', ')', '[', ']', ',', '+', '-', '*', '/' }
+    # Ignore white space.
     ignore = ' \t'
+    # Ignore everything from "#" to end-of-line.
     ignore_comment = r'\#[^\n]*'
 
     def __init__(self):
@@ -79,19 +81,21 @@ class GLPSLexer(Lexer):
             glps_error(None, None, f"Invalid string escape: {e}")
         return t
 
-    @_(r'\n')
+    @_(r'\n+')
     def ignore_newline(self, t):
-        self.lineno += 1
-        self.line_start = self.index  # update start index of line
+        self.lineno += t.value.count('\n')
+        self.line_start = t.index + 1
 
     def error(self, t):
         line = self.lineno
-        col = self.index - self.line_start
+        col = t.index - self.line_start if hasattr(t, 'index') else 0
         msg = f"Invalid character {t.value[0]!r} at line {line}, column {col}"
-        self.index += 1 # Skip invalid character.
+        # Skip the invalid character by advancing the lexer position manually
+        # Skip invalid character to avoid infinte loops.
+        self.index = t.index + 1
         glps_error(None, None, msg)
 
-
+        
 class GLPSParser(Parser):
     tokens = GLPSLexer.tokens
     precedence = (
@@ -100,8 +104,9 @@ class GLPSParser(Parser):
         ('right', 'NEG')
     )
 
-    def __init__(self, ctxt):
+    def __init__(self, ctxt, lexer):
         self.ctxt = ctxt
+        self.lexer = lexer  # Save lexer reference for error reporting.
 
     @_('entries')
     def file(self, p):
@@ -124,22 +129,19 @@ class GLPSParser(Parser):
         glps_assign(self.ctxt, p.IDENT, p.expr)
         return ('assign', p.IDENT, p.expr)
 
-    # Updated element rule requiring optional properties with leading comma
-    @_('IDENT ":" IDENT opt_properties ";"')
+    # No optional properties.
+    @_('IDENT ":" IDENT ";"')
     def element(self, p):
-        glps_add_element(self.ctxt, p.IDENT0, p.IDENT1, p.opt_properties)
-        return ('element', p.IDENT0, p.IDENT1, p.opt_properties)
+        glps_add_element(self.ctxt, p.IDENT0, p.IDENT1, [])
+        return ('element', p.IDENT0, p.IDENT1, [])
 
-    # opt_properties is empty or starts with a comma followed by property_list
-    @_('')
-    def opt_properties(self, p):
-        return []
+    # Leading comma required for optional properties.
+    @_('IDENT ":" IDENT "," property_list ";"')
+    def element(self, p):
+        glps_add_element(self.ctxt, p.IDENT0, p.IDENT1, p.property_list)
+        return ('element', p.IDENT0, p.IDENT1, p.property_list)
 
-    @_('"," property_list')
-    def opt_properties(self, p):
-        return p.property_list
-
-    # property_list is one or more properties separated by commas
+    # Property_list is a comma separated list with one or more properties.
     @_('property')
     def property_list(self, p):
         return [p.property]
@@ -205,12 +207,18 @@ class GLPSParser(Parser):
         if p:
             value = getattr(p, 'value', None)
             line = getattr(p, 'lineno', None)
+            col = None
+            if hasattr(p, 'lexpos') and self.lexer \
+               and hasattr(self.lexer, 'line_start'):
+                col = p.lexpos - self.lexer.line_start + 1  # +1 for 1-based column
             msg = f"Syntax error at token '{value}' (type {p.type})"
             if line is not None:
                 msg += f" on line {line}"
-            print(msg)
+            if col is not None:
+                msg += f", column {col}"
         else:
-            print("Syntax error: unexpected end of input")
+            msg = "Syntax error: unexpected end of input"
+        print(msg)
         raise SyntaxError(msg)
 
 
@@ -226,7 +234,7 @@ if __name__ == "__main__":
     # Assign the quote lexer subclass to the main lexer class attribute
 
     lexer = GLPSLexer()
-    parser = GLPSParser(ctxt=context)
+    parser = GLPSParser(ctxt=context, lexer=lexer)
 
     home_dir = Path.home() / "Nextcloud" / "thor_scsi" / "JB" / "MAX_IV"
 
