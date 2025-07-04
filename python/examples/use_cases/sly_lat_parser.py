@@ -24,15 +24,19 @@ def glps_assign(ctxt, key, value):
     ctxt['assignments'][key] = value
 
 def glps_add_element(ctxt, name, type, props):
+    if props is None:
+        props = []
+    if not isinstance(props, list):
+        raise TypeError(f"props should be a list, got {type(props).__name__}")
     if prt:
         print(f"[element] {name}:{type} with props {props}")
     ctxt['elements'].append(
         {'name': name, 'type': type, 'properties': props})
 
-def glps_add_line(ctxt, key1, key2, line_list):
+def glps_add_line(ctxt, name, key2, line_list):
     if prt:
-        print(f"line: {key1}:{key2} = {line_list}")
-    # ctxt['line'].append([key1] = line_list
+        print(f"[line] {name}:{key2} = {line_list}")
+    ctxt['lines'][name] = line_list
 
 def glps_call1(ctxt, func, arg):
     if prt:
@@ -60,7 +64,7 @@ def glps_add_op(ctxt, op, arity, args):
 glps_expr_number = 'number'
 glps_expr_vector = 'vector'
 glps_expr_string = 'string'
-glps_expr_var    = 'var'
+glps_expr_var    = 'elem'
 
 
 class GLPSLexer(Lexer):
@@ -102,14 +106,15 @@ class GLPSLexer(Lexer):
     @_(r'\n+')
     def ignore_newline(self, t):
         self.lineno += t.value.count('\n')
+        # self.line_start = self.index
         self.line_start = t.index + len(t.value)
 
     def error(self, t):
         line = self.lineno
-        col = t.index - self.line_start
+        col = t.lexpos - self.line_start
         msg = f"Invalid character {t.value[0]!r} at line {line}, column {col}"
         # Skip invalid character to avoid infinte loops.
-        self.index = t.index + 1
+        self.index = t.lexpos + 1
         glps_error(None, None, msg)
 
         
@@ -241,28 +246,26 @@ class GLPSParser(Parser):
         return [p.expr] + p.expr_list
 
     def error(self, p):
-        # With proper handling for missing semicolons.
         if p:
             value = getattr(p, 'value', None)
-            line = getattr(p, 'lineno', None)
-            col = None
-            if hasattr(p, 'lexpos') and self.lexer \
-               and hasattr(self.lexer, 'line_start'):
-                col = p.lexpos - self.lexer.line_start + 1
+            line = getattr(p, 'lineno', 'unknown')
+            col = '?'
 
-            # Detect common error: missing semicolon before next keyword.
-            if p.type in {'IDENT'} and value and isinstance(value, str):
-                # likely places before a semicolon.
-                expected_prev_tokens = ['=', ')', '"]']
+            # Try to get column number if possible
+            if hasattr(p, 'lexpos') and hasattr(self.lexer, 'line_start'):
+                try:
+                    col = p.lexpos - self.lexer.line_start + 1
+                except Exception:
+                    col = '?'
+
+            # Heuristic: check if it's a missing semicolon before IDENT
+            if p.type == 'IDENT' and isinstance(value, str):
                 msg = f"Syntax error: possible missing semicolon before " \
-                f"'{value}'"
+                    f"'{value}'"
             else:
                 msg = f"Syntax error at token '{value}' (type {p.type})"
 
-            if line is not None:
-                msg += f" on line {line}"
-            if col is not None:
-                msg += f", column {col}"
+            msg += f" on line {line}, column {col}"
         else:
             msg = "Syntax error: unexpected end of input"
 
@@ -270,23 +273,43 @@ class GLPSParser(Parser):
         raise SyntaxError(msg)
 
 
-def prt_ctxt():
-    print("\nParsed context\n\nassignments:")
-    for a in context['assignments']:
+
+def prt_assign(assign):
+    print("\nassignments:")
+    for a in assign:
         print(f"  {a:15s} {context['assignments'][a][1]:10.3e}")
+
+
+def prt_elem(elem):
     print("\nelements:")
-    for e in context['elements']:
-        print(f"  {e["name"]:15s} {e["type"]:10s}", end="")
-        if len(e["properties"]) != 0:
-            print(f" {e["properties"][0]["key"]:10s}", end="")
-            if isinstance(e["properties"][0]["value"], tuple):
-                print(f" {e["properties"][0]["value"][1]:10.3e}")
+    for e in elem:
+        print(f"  {e['name']:15s} {e['type']:10s}", end="")
+        if len(e['properties']) != 0:
+            print(f" {e['properties'][0]['key']:10s}", end="")
+            if isinstance(e['properties'][0]['value'], tuple):
+                print(f" {e['properties'][0]['value'][1]:10.3e}")
             else:
                 print()
         else:
             print()
-    print("\nline:")
-    print(context['line'])
+
+
+def prt_line(line):
+    n_prt = 5
+    print("\nlines:")
+    for l in line:
+        print(f"{l:15s}\n   ", end="")
+        for k, e in enumerate(line[l]):
+            print(f" {e[1]}", end="")
+            if (k+1) % n_prt == 0:
+                print("\n   ", end="")
+        print()
+
+
+def prt_ctxt(context):
+    prt_assign(context['assignments'])
+    prt_elem(context['elements'])
+    prt_line(context['lines'])
     print("\nfunctions:")
     print(context['functions'])
     print("\ncommands:")
@@ -299,7 +322,7 @@ if __name__ == "__main__":
     context = {
         'assignments': {},
         'elements':    [],
-        'line':        [],
+        'lines':       {},
         'functions':   [],
         'commands':    []
     }
@@ -329,7 +352,14 @@ if __name__ == "__main__":
 
     try:
         result = parser.parse(lexer.tokenize(text))
+        if False:
+            print("\nAssignments:")
+            for a in context['assignments']:
+                print(f"{a:15s} {context['assignments'][a]}")
+                print("\nLines:")
+                for l in context['lines']:
+                    print(f"\n {l:15s} {context['lines'][l]}")
         if not False:
-            prt_ctxt()
+            prt_ctxt(context)
     except SyntaxError as e:
         print(f"Syntax error: {e}")
