@@ -129,6 +129,7 @@ class GLPSParser(Parser):
     def command(self, p):
         glps_command(self.ctxt, p.IDENT)
 
+    # Require leading comma for the parameter list.
     @_('')
     def properties(self, p):
         return []
@@ -179,7 +180,7 @@ class GLPSParser(Parser):
     # "[]" guaranteed to have at least one expression.
     # @_('')
     # def expr_list(self, p):
-    #     return []
+    #     return glps_add_value(self.ctxt, glps_expr_vector, [])
 
     @_('expr')
     def expr_list(self, p):
