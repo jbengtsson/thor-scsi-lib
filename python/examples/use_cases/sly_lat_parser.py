@@ -42,10 +42,6 @@ def glps_add_value(context, kind_func, value):
 def glps_add_op(context, op, arity, args):
     return {'type': 'op', 'op': op, 'args': args}
 
-def glps_append_kv(context, kvlist, kv):
-    kvlist.insert(0, kv)
-    return kvlist
-
 
 class GLPSLexer(Lexer):
     tokens = { IDENT, NUM, STR }
@@ -117,9 +113,32 @@ class GLPSParser(Parser):
     def assignment(self, p):
         glps_assign(self.ctxt, p.IDENT, p.expr)
 
-    @_('IDENT ":" IDENT properties ";"')
+    # Updated element rule requiring optional properties with leading comma
+    @_('IDENT ":" IDENT opt_properties ";"')
     def element(self, p):
-        glps_add_element(self.ctxt, p[0], p[1], p.properties)
+        glps_add_element(self.ctxt, p[0], p[1], p.opt_properties)
+
+    # opt_properties is empty or starts with a comma followed by property_list
+    @_('')
+    def opt_properties(self, p):
+        return []
+
+    @_('"," property_list')
+    def opt_properties(self, p):
+        return p.property_list
+
+    # property_list is one or more properties separated by commas
+    @_('property')
+    def property_list(self, p):
+        return [p.property]
+
+    @_('property "," property_list')
+    def property_list(self, p):
+        return [p.property] + p.property_list
+
+    @_('IDENT "=" expr')
+    def property(self, p):
+        return {'key': p.IDENT, 'value': p.expr}
 
     @_('IDENT "(" expr ")" ";"')
     def func(self, p):
@@ -128,23 +147,6 @@ class GLPSParser(Parser):
     @_('IDENT ";"')
     def command(self, p):
         glps_command(self.ctxt, p.IDENT)
-
-    # Require leading comma for the parameter list.
-    @_('')
-    def properties(self, p):
-        return []
-
-    @_('"," property')
-    def properties(self, p):
-        return [p.property]
-
-    @_('"," property properties')
-    def properties(self, p):
-        return [p.property] + p.properties
-
-    @_('IDENT "=" expr')
-    def property(self, p):
-        return {'key': p.IDENT, 'value': p.expr}
 
     @_('NUM')
     def expr(self, p):
@@ -176,11 +178,6 @@ class GLPSParser(Parser):
     @_('"[" expr_list "]"')
     def expr(self, p):
         return glps_add_value(self.ctxt, glps_expr_vector, p.expr_list)
-
-    # "[]" guaranteed to have at least one expression.
-    # @_('')
-    # def expr_list(self, p):
-    #     return glps_add_value(self.ctxt, glps_expr_vector, [])
 
     @_('expr')
     def expr_list(self, p):
