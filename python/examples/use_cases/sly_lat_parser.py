@@ -49,7 +49,7 @@ class GLPSLexer(Lexer):
     ignore = ' \t'
     ignore_comment = r'\#[^\n]*'
 
-    @_(r'[A-Za-z_][A-Za-z0-9_:]*')
+    @_(r'[A-Za-z_][A-Za-z0-9_]*')
     def IDENT(self, t):
         t.value = glps_string_alloc(t.value)
         return t
@@ -106,11 +106,9 @@ class GLPSParser(Parser):
     def entries(self, p):
         return [p.entry] + p.entries
 
-    @_('assignment')
-    @_('element')
-    @_('func')
-    @_('command')
-    def entry(self, p): pass
+    @_('assignment', 'element', 'func', 'command')
+    def entry(self, p):
+        return p[0]
 
     @_('IDENT "=" expr ";"')
     def assignment(self, p):
