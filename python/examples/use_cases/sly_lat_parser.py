@@ -135,8 +135,7 @@ class GLPSParser(Parser):
 
     @_('entry file')
     def file(self, p):
-        # Return parse tree.
-        return self.ctxt
+        return p.file
 
     @_('assignment', 'element', 'func', 'command')
     def entry(self, p): pass
@@ -201,13 +200,16 @@ class GLPSParser(Parser):
         return glps_add_value(self.ctxt, glps_expr_vector, p.expr_list)
 
     @_('')
-    def expr_list(self, p): return self.ctxt
+    def expr_list(self, p):
+        return []
 
     @_('expr')
-    def expr_list(self, p): return [p.expr]
+    def expr_list(self, p):
+        return [p.expr]
 
     @_('expr "," expr_list')
-    def expr_list(self, p): return [p.expr] + p.expr_list
+    def expr_list(self, p):
+        return [p.expr] + p.expr_list
 
     def error(self, p):
         if p:
