@@ -129,13 +129,17 @@ class GLPSParser(Parser):
     def __init__(self, ctxt):
         self.ctxt = ctxt
 
-    @_('')
+    @_('entries')
     def file(self, p):
         return self.ctxt
 
-    @_('entry file')
-    def file(self, p):
-        return p.file
+    @_('')
+    def entries(self, p):
+        pass  # empty file is allowed
+
+    @_('entry entries')
+    def entries(self, p):
+        pass  # we don’t need to return anything for now
 
     @_('assignment', 'element', 'func', 'command')
     def entry(self, p): pass
