@@ -44,7 +44,7 @@ def glps_add_op(context, op, arity, args):
 
 
 class GLPSLexer(Lexer):
-    tokens = { IDENT, NUM, STR }
+    tokens = { 'IDENT', 'NUM', 'STR' }
     literals = { '=', ':', ';', '(', ')', '[', ']', ',', '+', '-', '*', '/' }
     ignore = ' \t'
     ignore_comment = r'\#[^\n]*'
@@ -106,7 +106,10 @@ class GLPSParser(Parser):
     def entries(self, p):
         return [p.entry] + p.entries
 
-    @_('assignment', 'element', 'func', 'command')
+    @_('assignment')
+    @_('element')
+    @_('func')
+    @_('command')
     def entry(self, p): pass
 
     @_('IDENT "=" expr ";"')
