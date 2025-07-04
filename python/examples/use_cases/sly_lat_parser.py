@@ -102,6 +102,14 @@ class QuoteLexer(Lexer):
         t.value = glps_string_alloc(self.lexer._quoted_str)
         return t
 
+    # Explicitly disalow escape sequences.
+    @_(r'\\.')
+    def quote_escape_error(self, t):
+        glps_error(
+            None, None,
+            f"Escape sequences are not allowed (found '{t.value}')"
+            f" at line {t.lineno}")
+
     @_(r'[^\"\n\r]+')
     def quote_text(self, t):
         self.lexer._quoted_str += t.value
@@ -255,13 +263,14 @@ if __name__ == "__main__":
 
     try:
         result = parser.parse(lexer.tokenize(text))
-        print("\nParsed context\n\nassignments:")
-        print(context['assignments'])
-        print("\nelements:")
-        print(context['elements'])
-        print("\nfunctions:")
-        print(context['functions'])
-        print("\ncommands:")
-        print(context['commands'])
+        if False:
+            print("\nParsed context\n\nassignments:")
+            print(context['assignments'])
+            print("\nelements:")
+            print(context['elements'])
+            print("\nfunctions:")
+            print(context['functions'])
+            print("\ncommands:")
+            print(context['commands'])
     except SyntaxError as e:
         print(f"Syntax error: {e}")
