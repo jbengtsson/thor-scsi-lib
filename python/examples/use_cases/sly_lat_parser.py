@@ -8,6 +8,8 @@ from sly import Lexer, Parser
 # Dummy placeholders for external functions and types:
 # Replace these with your actual implementations
 
+prt = False
+
 def glps_string_alloc(text):
     return text
 
@@ -17,23 +19,29 @@ def glps_error(scanner, ctxt, msg, *args):
     raise SyntaxError(msg)
 
 def glps_assign(ctxt, key, value):
-    print(f"[assign] {key} = {value}")
+    if prt:
+        print(f"[assign] {key} = {value}")
     ctxt['assignments'][key] = value
 
-def glps_add_element(ctxt, cat, name, props):
-    print(f"[element] {cat}:{name} with props {props}")
+def glps_add_element(ctxt, name, type, props):
+    if prt:
+        print(f"[element] {name}:{type} with props {props}")
     ctxt['elements'].append(
-        {'category': cat, 'name': name, 'properties': props})
+        {'name': name, 'type': type, 'properties': props})
 
 def glps_add_line(ctxt, key1, key2, line_list):
-    print(f"Add line: {key1}:{key2} = {line_list}")
+    if prt:
+        print(f"line: {key1}:{key2} = {line_list}")
+    # ctxt['line'].append([key1] = line_list
 
 def glps_call1(ctxt, func, arg):
-    print(f"[func] {func}({arg})")
+    if prt:
+        print(f"[func] {func}({arg})")
     ctxt['functions'].append({'func': func, 'arg': arg})
 
 def glps_command(ctxt, cmd):
-    print(f"[command] {cmd}")
+    if prt:
+        print(f"[command] {cmd}")
     ctxt['commands'].append(cmd)
 
 def glps_append_expr(ctxt, expr_list, expr):
@@ -262,6 +270,30 @@ class GLPSParser(Parser):
         raise SyntaxError(msg)
 
 
+def prt_ctxt():
+    print("\nParsed context\n\nassignments:")
+    for a in context['assignments']:
+        print(f"  {a:15s} {context['assignments'][a][1]:10.3e}")
+    print("\nelements:")
+    for e in context['elements']:
+        print(f"  {e["name"]:15s} {e["type"]:10s}", end="")
+        if len(e["properties"]) != 0:
+            print(f" {e["properties"][0]["key"]:10s}", end="")
+            if isinstance(e["properties"][0]["value"], tuple):
+                print(f" {e["properties"][0]["value"][1]:10.3e}")
+            else:
+                print()
+        else:
+            print()
+    print("\nline:")
+    print(context['line'])
+    print("\nfunctions:")
+    print(context['functions'])
+    print("\ncommands:")
+    print(context['commands'])
+
+
+
 if __name__ == "__main__":
 
     context = {
@@ -297,16 +329,7 @@ if __name__ == "__main__":
 
     try:
         result = parser.parse(lexer.tokenize(text))
-        if False:
-            print("\nParsed context\n\nassignments:")
-            print(context['assignments'])
-            print("\nelements:")
-            print(context['elements'])
-            print("\nline:")
-            print(context['line'])
-            print("\nfunctions:")
-            print(context['functions'])
-            print("\ncommands:")
-            print(context['commands'])
+        if not False:
+            prt_ctxt()
     except SyntaxError as e:
         print(f"Syntax error: {e}")
