@@ -11,38 +11,48 @@ from sly import Lexer, Parser
 def glps_string_alloc(text):
     return text
 
-def glps_error(scanner, context, msg, *args):
+def glps_error(scanner, ctxt, msg, *args):
     if args:
         msg = msg % args
     raise SyntaxError(msg)
 
-def glps_assign(context, key, value):
+def glps_assign(ctxt, key, value):
     print(f"[assign] {key} = {value}")
-    context['assignments'][key] = value
+    ctxt['assignments'][key] = value
 
-def glps_add_element(context, cat, name, props):
+def glps_add_element(ctxt, cat, name, props):
     print(f"[element] {cat}:{name} with props {props}")
-    context['elements'].append(
+    ctxt['elements'].append(
         {'category': cat, 'name': name, 'properties': props})
 
-def glps_call1(context, func, arg):
+def glps_add_line(ctxt, key1, key2, line_list):
+    print(f"Add line: {key1}:{key2} = {line_list}")
+
+def glps_call1(ctxt, func, arg):
     print(f"[func] {func}({arg})")
-    context['functions'].append({'func': func, 'arg': arg})
+    ctxt['functions'].append({'func': func, 'arg': arg})
 
-def glps_command(context, cmd):
+def glps_command(ctxt, cmd):
     print(f"[command] {cmd}")
-    context['commands'].append(cmd)
+    ctxt['commands'].append(cmd)
 
-def glps_expr_number(val): return {'type': 'number', 'value': val}
-def glps_expr_string(val): return {'type': 'string', 'value': val}
-def glps_expr_var(val): return {'type': 'var', 'name': val}
-def glps_expr_vector(vec): return {'type': 'vector', 'items': vec}
+def glps_append_expr(ctxt, expr_list, expr):
+    if expr_list is None:
+        expr_list = []
+    expr_list.insert(0, expr)  # emulate right-recursion order
+    return expr_list
 
-def glps_add_value(context, kind_func, value):
-    return kind_func(value)
+def glps_add_value(ctxt, type_, val):
+    return (type_, val)
 
-def glps_add_op(context, op, arity, args):
+def glps_add_op(ctxt, op, arity, args):
     return {'type': 'op', 'op': op, 'args': args}
+
+# Types for demonstration:
+glps_expr_number = 'number'
+glps_expr_vector = 'vector'
+glps_expr_string = 'string'
+glps_expr_var    = 'var'
 
 
 class GLPSLexer(Lexer):
@@ -72,9 +82,9 @@ class GLPSLexer(Lexer):
 
     @_(r'\"([^\"\\\n\r]|\\.)*\"')
     def STR(self, t):
-        raw = t.value[1:-1]  # strip the quotes
+        raw = t.value[1:-1]  # strip the quotes.
         try:
-            # Decode escape sequences manually
+            # Decode escape sequences manually.
             t.value = glps_string_alloc(
                 bytes(raw, "utf-8").decode("unicode_escape"))
         except Exception as e:
@@ -84,13 +94,12 @@ class GLPSLexer(Lexer):
     @_(r'\n+')
     def ignore_newline(self, t):
         self.lineno += t.value.count('\n')
-        self.line_start = t.index + 1
+        self.line_start = t.index + len(t.value)
 
     def error(self, t):
         line = self.lineno
-        col = t.index - self.line_start if hasattr(t, 'index') else 0
+        col = t.index - self.line_start
         msg = f"Invalid character {t.value[0]!r} at line {line}, column {col}"
-        # Skip the invalid character by advancing the lexer position manually
         # Skip invalid character to avoid infinte loops.
         self.index = t.index + 1
         glps_error(None, None, msg)
@@ -120,7 +129,7 @@ class GLPSParser(Parser):
     def entries(self, p):
         return [p.entry]
 
-    @_('assignment', 'element', 'func', 'command')
+    @_('assignment', 'element', 'line', 'func', 'command')
     def entry(self, p):
         return p[0]
 
@@ -129,17 +138,20 @@ class GLPSParser(Parser):
         glps_assign(self.ctxt, p.IDENT, p.expr)
         return ('assign', p.IDENT, p.expr)
 
-    # No optional properties.
-    @_('IDENT ":" IDENT ";"')
-    def element(self, p):
-        glps_add_element(self.ctxt, p.IDENT0, p.IDENT1, [])
-        return ('element', p.IDENT0, p.IDENT1, [])
-
     # Leading comma required for optional properties.
-    @_('IDENT ":" IDENT "," property_list ";"')
+    @_('IDENT ":" IDENT property_opt ";"')
     def element(self, p):
-        glps_add_element(self.ctxt, p.IDENT0, p.IDENT1, p.property_list)
-        return ('element', p.IDENT0, p.IDENT1, p.property_list)
+        props = p.property_opt if p.property_opt is not None else []
+        glps_add_element(self.ctxt, p.IDENT0, p.IDENT1, props)
+        return ('element', p.IDENT0, p.IDENT1, props)
+
+    @_('"," property_list')
+    def property_opt(self, p):
+        return p.property_list
+
+    @_('')
+    def property_opt(self, p):
+        return []
 
     # Property_list is a comma separated list with one or more properties.
     @_('property')
@@ -154,6 +166,11 @@ class GLPSParser(Parser):
     def property(self, p):
         return {'key': p.IDENT, 'value': p.expr}
 
+    @_('IDENT ":" IDENT "=" "(" line_list ")" ";"')
+    def line(self, p):
+        glps_add_line(self.ctxt, p.IDENT0, p.IDENT1, p.line_list)
+        return (p.IDENT0, p.IDENT1, p.line_list)
+
     @_('IDENT "(" expr ")" ";"')
     def func(self, p):
         glps_call1(self.ctxt, p.IDENT, p.expr)
@@ -163,6 +180,18 @@ class GLPSParser(Parser):
     def command(self, p):
         glps_command(self.ctxt, p.IDENT)
         return ('command', p.IDENT)
+
+    @_('')
+    def line_list(self, p):
+        return None
+
+    @_('expr')
+    def line_list(self, p):
+        return glps_append_expr(self.ctxt, None, p.expr)
+
+    @_('expr "," line_list')
+    def line_list(self, p):
+        return glps_append_expr(self.ctxt, p.line_list, p.expr)
 
     @_('NUM')
     def expr(self, p):
@@ -204,20 +233,31 @@ class GLPSParser(Parser):
         return [p.expr] + p.expr_list
 
     def error(self, p):
+        # With proper handling for missing semicolons.
         if p:
             value = getattr(p, 'value', None)
             line = getattr(p, 'lineno', None)
             col = None
             if hasattr(p, 'lexpos') and self.lexer \
                and hasattr(self.lexer, 'line_start'):
-                col = p.lexpos - self.lexer.line_start + 1  # +1 for 1-based column
-            msg = f"Syntax error at token '{value}' (type {p.type})"
+                col = p.lexpos - self.lexer.line_start + 1
+
+            # Detect common error: missing semicolon before next keyword.
+            if p.type in {'IDENT'} and value and isinstance(value, str):
+                # likely places before a semicolon.
+                expected_prev_tokens = ['=', ')', '"]']
+                msg = f"Syntax error: possible missing semicolon before " \
+                f"'{value}'"
+            else:
+                msg = f"Syntax error at token '{value}' (type {p.type})"
+
             if line is not None:
                 msg += f" on line {line}"
             if col is not None:
                 msg += f", column {col}"
         else:
             msg = "Syntax error: unexpected end of input"
+
         print(msg)
         raise SyntaxError(msg)
 
@@ -226,9 +266,10 @@ if __name__ == "__main__":
 
     context = {
         'assignments': {},
-        'elements': [],
-        'functions': [],
-        'commands': []
+        'elements':    [],
+        'line':        [],
+        'functions':   [],
+        'commands':    []
     }
 
     # Assign the quote lexer subclass to the main lexer class attribute
@@ -238,11 +279,14 @@ if __name__ == "__main__":
 
     home_dir = Path.home() / "Nextcloud" / "thor_scsi" / "JB" / "MAX_IV"
 
-    if len(sys.argv) < 2:
-        print("Usage: script.py <filename>")
+    if len(sys.argv) != 2:
+        print("Usage: script.py <file name without extension>")
         sys.exit(1)
 
     file_name = Path(home_dir) / (sys.argv[1]+".lat")
+    if not file_name.exists():
+        print(f"File not found: {file_name}")
+        sys.exit(1)
 
     try:
         with open(file_name, "r") as file:
@@ -258,6 +302,8 @@ if __name__ == "__main__":
             print(context['assignments'])
             print("\nelements:")
             print(context['elements'])
+            print("\nline:")
+            print(context['line'])
             print("\nfunctions:")
             print(context['functions'])
             print("\ncommands:")
