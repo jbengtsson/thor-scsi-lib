@@ -138,9 +138,9 @@ class opt_sp_class:
     def compute_constr(self):
         self._alpha_c = self._lat_prop._alpha_c
         self._eta_list[0], self._alpha_list[0], _, self._nu_0 = \
-            self._lat_prop.get_Twiss(uc_list[0])
+            self._lat_prop.get_Twiss(self._uc_list[0])
         self._eta_list[1], self._alpha_list[1], _, self._nu_1 = \
-            self._lat_prop.get_Twiss(uc_list[1])
+            self._lat_prop.get_Twiss(self._uc_list[1])
         self._nu_uc = self._nu_1 - self._nu_0
         if True or (len(uc_list) == 3):
             self._eta_list[1], self._alpha_list[1], _, _ = \
@@ -207,7 +207,7 @@ class opt_sp_class:
             if constr_len-weights_len != 0:
                 print(f"\ncompute_chi_2() - len(constr) != "
                       f"len(weights): {constr_len:d} {weights_len:d}")
-                assert False, "compute_chi_2()"
+                raise ValueError("Number of constraints != weights.")
             self._first = False
 
         chi_2 = 0e0
