@@ -347,8 +347,6 @@ if __name__ == "__main__":
         'commands':    {}
     }
 
-    # Assign the quote lexer subclass to the main lexer class attribute
-
     lexer = GLPSLexer()
     parser = GLPSParser(ctxt=context, lexer=lexer)
 
@@ -372,13 +370,6 @@ if __name__ == "__main__":
 
     try:
         result = parser.parse(lexer.tokenize(text))
-        if False:
-            print("\nAssignments:")
-            for a in context['assignments']:
-                print(f"{a:15s} {context['assignments'][a]}")
-                print("\nLines:")
-                for l in context['lines']:
-                    print(f"\n {l:15s} {context['lines'][l]}")
         if not False:
             prt_ctxt(context)
     except SyntaxError as e:
