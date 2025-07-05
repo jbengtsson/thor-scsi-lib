@@ -275,8 +275,6 @@ class opt_sp_class:
 
         print()
         for k, phi in enumerate(self._phi_bend):
-            # Check for empty bend list.
-            if len(self._bend_list[k]._bend_list):
                 b_2 = \
                     self._bend_list[k].compute_bend_b_2xL() \
                     /self._bend_list[k].compute_bend_L_tot()
@@ -378,9 +376,9 @@ class opt_sp_class:
 
 
 def get_bends(lat):
-    bend_lists = {
+    if lat == 1:
         # max_4u/m4U_250316_h03_01_01_01_tracy-2.
-        "lat_1": {
+        bend_lists = {
             "bend_list": [
                 ["d1_h3_sl_dm5", "d1_h3_sl_dm4", "d1_h3_sl_dm3", "d1_h3_sl_dm2",
                  "d1_h3_sl_dm1", "d1_h3_sl_d0", "d1_h3_sl_ds1", "d1_h3_sl_ds2",
@@ -391,9 +389,10 @@ def get_bends(lat):
                  "d3_h3_sl_df4", "d3_h3_sl_df5", "d3_h3_sl_df6"]
             ],
             "rbend_list": ["r1_h3", "r2_h3", "r3_h3"]
-        },
+        }
+    elif lat == 2:
         # m4U_241223_h02_01_01_01_tracy_2.
-        "lat_2": {
+        bend_lists = {
             "bend_list": [
                 ["d1_h3_sl_dm5", "d1_h3_sl_dm4", "d1_h3_sl_dm3", "d1_h3_sl_dm2",
                  "d1_h3_sl_dm1", "d1_h3_sl_ds0", "d1_h3_sl_ds1", "d1_h3_sl_ds2",
@@ -402,12 +401,12 @@ def get_bends(lat):
                 ["d2_h3_sl_d0a", "d2_h3_sl_d0b", "d2_h3_sl_d0c", "d2_h3_sl_df1",
                  "d2_h3_sl_df2", "d2_h3_sl_df3", "d2_h3_sl_df4",
                  "d2_h3_sl_df5"],
-                []
             ],
             "rbend_list": ["r1_h3", "r2_h3"]
-        },
+        }
+    elif lat == 3:
         # m4U_250527_h02_13_02_01_tracy-2.
-        "lat_3": {
+        bend_lists = {
             "bend_list": [
                 ["d1_h2_sl_dm5", "d1_h2_sl_dm4", "d1_h2_sl_dm3", "d1_h2_sl_dm2",
                  "d1_h2_sl_dm1", "d1_h2_sl_ds0", "d1_h2_sl_ds1", "d1_h2_sl_ds2",
@@ -416,12 +415,12 @@ def get_bends(lat):
                 ["d2_h2_sl_d0a", "d2_h2_sl_d0b", "d2_h2_sl_d0c", "d2_h2_sl_df1",
                  "d2_h2_sl_df2", "d2_h2_sl_df3", "d2_h2_sl_df4",
                  "d2_h2_sl_df5"],
-                []
             ],
             "rbend_list": ["r1_h2", "r2_h2"]
-        },
+        }
+    elif lat == 4:
         # m4U_250610_h02_16_02_01_tracy_2.
-        "lat_4": {
+        bend_lists = {
             "bend_list": [
                 ["d1_h2_sl_dm5", "d1_h2_sl_dm4", "d1_h2_sl_dm3", "d1_h2_sl_dm2",
                  "d1_h2_sl_dm1", "d1_h2_sl_ds0", "d1_h2_sl_ds1", "d1_h2_sl_ds2",
@@ -435,18 +434,17 @@ def get_bends(lat):
             ],
             "rbend_list": ["r1_h2", "r2_h2", "r3_h2"]
         }
-    }
 
     bend_list = []
-    for b_list in bend_lists[lat]["bend_list"]:
+    for b_list in bend_lists["bend_list"]:
         bend_list.append(pc.bend_class(lat_prop, b_list))
 
-    return bend_list, bend_lists[lat]["rbend_list"]
+    return bend_list, bend_lists["rbend_list"]
 
 
-def get_prms(set, bend_list, eps):
-    prms = {
-        "prm_1": [
+def get_prms(prm_type, bend_list, eps):
+    if prm_type == 1:
+        prm = [
             ("q1_h2",        "b_2",      prm_range["b_2"]),
             ("q2_h2",        "b_2",      prm_range["b_2"]),
 
@@ -465,8 +463,9 @@ def get_prms(set, bend_list, eps):
             ("r1_h2",        "phi",      prm_range["phi_rbend"]),
             ("r2_h2",        "phi",      prm_range["phi_rbend"]),
             ("r3_h2",        "phi",      prm_range["phi_rbend"])
-        ],
-        "prm_2": [
+        ]
+    elif prm_type == 2:
+        prm = [
             ("q1_h2",        "b_2",      prm_range["b_2"]),
             ("q2_h2",        "b_2",      prm_range["b_2"]),
 
@@ -481,8 +480,9 @@ def get_prms(set, bend_list, eps):
 
             ("r1_h2",        "phi",      [-0.5,  0.5]),
             ("r2_h2",        "phi",      [-0.2,  0.2])
-        ],
-        "prm_3": [
+        ]
+    elif prm_type == 3:
+        prm = [
             ("q1_h2",        "b_2",      prm_range["b_2"]),
             ("q2_h2",        "b_2",      prm_range["b_2"]),
 
@@ -499,8 +499,9 @@ def get_prms(set, bend_list, eps):
 
             ("r1_h2",        "phi",      prm_range["phi_rbend"]),
             ("r2_h2",        "phi",      prm_range["phi_rbend"]),
-        ],
-        "prm_4": [
+        ]
+    elif prm_type == 4:
+        prm = [
             ("q1_h3",        "b_2",      prm_range["b_2"]),
             ("q2_h3",        "b_2",      prm_range["b_2"]),
 
@@ -543,8 +544,9 @@ def get_prms(set, bend_list, eps):
             ("r1_h3",        "phi",      [-0.2,  0.2]),
             ("r2_h3",        "phi",      [-0.2,  0.0]),
             ("r3_h3",        "phi",      [-0.2,  0.0])
-        ],
-        "prm_5": [
+        ]
+    elif prm_type == 5:
+        prm = [
             ("q1_h3",        "b_2",      prm_range["b_2"]),
             ("q2_h3",        "b_2",      prm_range["b_2"]),
 
@@ -612,11 +614,10 @@ def get_prms(set, bend_list, eps):
             ("r2_h3",        "phi",      [-0.2,  0.0]),
             ("r3_h3",        "phi",      [-0.2,  0.0])
         ]
-    }
 
-    prm_list = pc.prm_class(lat_prop, prms[set])
+    prm_list = pc.prm_class(lat_prop, prm)
 
-    dprm_list = np.full(len(prms[set]), eps)
+    dprm_list = np.full(len(prm), eps)
 
     return prm_list, dprm_list
 
@@ -682,12 +683,12 @@ lat_prop.prt_rad()
 lat_prop.prt_M()
 lat_prop.prt_M_rad()
 
-dip_type = "lat_3"
-prm_type = "prm_2"
+dip_type = 3
+prm_type = 2
 
 # uc_list = np.array(lat_prop._lattice.find("d2_h3_sl_df0", 0).index)
 # uc_list = np.append(uc_list, lat_prop._lattice.find("d3_h3_sl_df0", 1).index)
-if dip_type == "lat_3":
+if dip_type == 3:
     uc_list = np.array(lat_prop._lattice.find("d2_h2_sl_d0a", 0).index)
     uc_list = np.append(uc_list, lat_prop._lattice.find("d2_h2_sl_d0a", 2)
                         .index)
