@@ -8,7 +8,7 @@ from sly import Lexer, Parser
 # Dummy placeholders for external functions and types:
 # Replace these with your actual implementations
 
-prt = False
+debug = False
 
 def glps_string_alloc(text):
     return text
@@ -19,7 +19,7 @@ def glps_error(scanner, ctxt, msg, *args):
     raise SyntaxError(msg)
 
 def glps_assign(ctxt, key, value):
-    if prt:
+    if debug:
         print(f"[assign] {key} = {value}")
     ctxt['assignments'][key] = value
 
@@ -28,25 +28,25 @@ def glps_add_element(ctxt, name, type, props):
         props = []
     if not isinstance(props, list):
         raise TypeError(f"props should be a list, got {type(props).__name__}")
-    if prt:
+    if debug:
         print(f"[element] {name}:{type} with props {props}")
     ctxt['elements'].append(
         {'name': name, 'type': type, 'properties': props})
 
 def glps_add_line(ctxt, name, key2, line_list):
-    if prt:
+    if debug:
         print(f"[line] {name}:{key2} = {line_list}")
     ctxt['lines'][name] = line_list
 
 def glps_call1(ctxt, func, arg):
-    if prt:
+    if debug:
         print(f"[func] {func}({arg})")
     ctxt['functions'].append({'func': func, 'arg': arg})
 
-def glps_command(ctxt, cmd):
-    if prt:
-        print(f"[command] {cmd}")
-    ctxt['commands'].append(cmd)
+def glps_command(ctxt, cmd, arg):
+    if debug:
+        print(f"[command] {cmd}: {arg}")
+    ctxt['commands'][cmd] = arg
 
 def glps_append_expr(ctxt, expr_list, expr):
     if expr_list is None:
@@ -68,7 +68,7 @@ glps_expr_var    = 'elem'
 
 
 class GLPSLexer(Lexer):
-    tokens = { 'IDENT', 'NUM', 'STR' }
+    tokens = { 'IDENT', 'NUM', 'STR', 'USE' }
     literals = { '=', ':', ';', '(', ')', '[', ']', ',', '+', '-', '*', '/' }
     # Ignore white space.
     ignore = ' \t'
@@ -81,6 +81,8 @@ class GLPSLexer(Lexer):
 
     @_(r'[A-Za-z_][A-Za-z0-9_]*')
     def IDENT(self, t):
+        if t.value.upper() == "USE":
+            t.type = 'USE'
         t.value = glps_string_alloc(t.value)
         return t
 
@@ -189,10 +191,16 @@ class GLPSParser(Parser):
         glps_call1(self.ctxt, p.IDENT, p.expr)
         return ('func', p.IDENT, p.expr)
 
-    @_('IDENT ";"')
+    @_('USE ":" IDENT ";"')
     def command(self, p):
-        glps_command(self.ctxt, p.IDENT)
-        return ('command', p.IDENT)
+        glps_command(self.ctxt, p.USE, p.IDENT)
+        return ('command', p.USE, p.IDENT)
+
+    # No IDENT without an argument.
+    # @_('IDENT ";"')
+    # def command(self, p):
+    #     glps_command(self.ctxt, p.IDENT, '')
+    #     return ('command', p.IDENT)
 
     @_('')
     def line_list(self, p):
@@ -274,42 +282,54 @@ class GLPSParser(Parser):
 
 
 
-def prt_assign(assign):
+def prt_assigns(assign):
     print("\nassignments:")
     for a in assign:
-        print(f"  {a:15s} {context['assignments'][a][1]:10.3e}")
-
+        # print(f"  {a:15s} {context['assignments'][a][1]:10.3e}")
+        print(f"  {a:15s} {context['assignments'][a]}")
 
 def prt_elem(elem):
-    print("\nelements:")
-    for e in elem:
-        print(f"  {e['name']:15s} {e['type']:10s}", end="")
-        if len(e['properties']) != 0:
-            print(f" {e['properties'][0]['key']:10s}", end="")
-            if isinstance(e['properties'][0]['value'], tuple):
-                print(f" {e['properties'][0]['value'][1]:10.3e}")
-            else:
-                print()
+    print(f"  {elem['name']:15s} {elem['type']:10s}", end="")
+    if len(elem['properties']) != 0:
+        print(f" {elem['properties'][0]['key']:10s}", end="")
+        if isinstance(elem['properties'][0]['value'], tuple):
+            print(f" {elem['properties'][0]['value'][1]:10.3e}")
         else:
             print()
+    else:
+        print()
 
+def prt_elems(elem):
+    print("\nelements:")
+    for e in elem:
+        prt_elem(e)
 
-def prt_line(line):
+def prt_lines(line):
     n_prt = 5
     print("\nlines:")
     for l in line:
         print(f"{l:15s}\n   ", end="")
         for k, e in enumerate(line[l]):
-            print(f" {e[1]}", end="")
-            if (k+1) % n_prt == 0:
-                print("\n   ", end="")
+            if k < n_prt:
+                # Check for reverse elements.
+                if isinstance(e, tuple):
+                    print(f" {e[1]}", end="")
+                else:
+                    print(f" -()", end="")
+            elif k == n_prt:
+                print("\n    ...\n   ", end="")
+            elif k >= len(line[l])-n_prt:
+                # Check for reverse elements.
+                if isinstance(e, tuple):
+                    print(f" {e[1]}", end="")
+                else:
+                    print(f" -()", end="")
         print()
 
-
 def prt_ctxt(context):
-    prt_assign(context['assignments'])
-    prt_elem(context['elements'])
-    prt_line(context['lines'])
+    prt_assigns(context['assignments'])
+    prt_elems(context['elements'])
+    prt_lines(context['lines'])
     print("\nfunctions:")
     print(context['functions'])
     print("\ncommands:")
@@ -324,7 +344,7 @@ if __name__ == "__main__":
         'elements':    [],
         'lines':       {},
         'functions':   [],
-        'commands':    []
+        'commands':    {}
     }
 
     # Assign the quote lexer subclass to the main lexer class attribute
