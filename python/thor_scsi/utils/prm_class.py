@@ -289,7 +289,7 @@ class prm_class(bend_class):
                 p = \
                     self._get_prm_func_dict[self._prm_list[k][1]](
                         self._prm_list[k][0], 0)
-                b = (self._prm_list[k][2], self._prm_list[k][3])
+                b = (self._prm_list[k][2][0], self._prm_list[k][2][1])
                 prm.append(p)
                 bounds.append(b)
                 if prt:
@@ -297,12 +297,12 @@ class prm_class(bend_class):
                       format(prm[k], bounds[k][0], bounds[k][1]))
             elif isinstance(self._prm_list[k][0], bend_class):
                 if self._prm_list[k][1] == "phi_bend":
-                    self._prm_list[k][0]._phi_min = self._prm_list[k][2]
-                    self._prm_list[k][0]._phi_max = self._prm_list[k][3]
+                    self._prm_list[k][0]._phi_min = self._prm_list[k][2][0]
+                    self._prm_list[k][0]._phi_max = self._prm_list[k][2][1]
                     p, b = self._prm_list[k][0].get_bend_phi_prm()
                 elif self._prm_list[k][1] == "b_2_bend":
-                    self._prm_list[k][0]._b_2_min = self._prm_list[k][2]
-                    self._prm_list[k][0]._b_2_max = self._prm_list[k][3]
+                    self._prm_list[k][0]._b_2_min = self._prm_list[k][2][0]
+                    self._prm_list[k][0]._b_2_max = self._prm_list[k][2][1]
                     p, b = self._prm_list[k][0].get_bend_b_2_prm()
                 else:
                     print("\nprm_class::get_prm - undefined parameter type:",
