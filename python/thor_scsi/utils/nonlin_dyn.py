@@ -22,6 +22,7 @@ class nonlin_dyn_class:
     # Private.
 
     def __init__(self, lat_prop, A_max, beta_inj, delta_max, b_3_list):
+        self._lat_prop     = lat_prop
         self._A_max        = A_max
         self._beta_inj     = beta_inj
         self._delta_max    = delta_max
@@ -47,7 +48,7 @@ class nonlin_dyn_class:
 
         if b_3_list != []:
             self.compute_twoJ()
-            self.compute_Id_scl(lat_prop)
+            self.compute_Id_scl()
         else:
             print("\nnonlin_dyn_class: b_3_list is empty")
 
@@ -112,19 +113,19 @@ class nonlin_dyn_class:
                 [self._A_max[ind.X]**2/self._beta_inj[ind.X],
                  self._A_max[ind.Y]**2/self._beta_inj[ind.Y]])
 
-    def compute_Id_scl(self, lat_prop):
-        self._Id_scl = lat_prop.ss_vect_tpsa()
+    def compute_Id_scl(self):
+        self._Id_scl = self._lat_prop.ss_vect_tpsa()
         self._Id_scl.set_identity()
         for k in range(4):
             self._Id_scl.iloc[k].set_variable(
                 0e0, k+1, np.sqrt(self._twoJ[k//2]))
         self._Id_scl.delta.set_variable(0e0, 5, self._delta_max)
 
-    def compose_bs(self, lat_prop, h, map):
+    def compose_bs(self, h, map):
         Id = \
-            lat_prop.gtpsa.ss_vect_tpsa()
+            self._lat_prop.gtpsa.ss_vect_tpsa()
         t_map = \
-            lat_prop.ss_vect_tpsa()
+            self._lat_prop.ss_vect_tpsa()
         t_map.x = h
         t_map.compose(t_map, map)
         return t_map.x 
@@ -138,41 +139,41 @@ class nonlin_dyn_class:
         map.delta.print("delta", eps)
         map.ct.print("ct", eps)
 
-    def compute_map(self, lat_prop):
+    def compute_map(self):
         self._M = lo.compute_map(
-            lat_prop.desc, lat_prop._no, lat_prop._lattice,
-            lat_prop._model_state)
+            self._lat_prop.desc, self._lat_prop._no, self._lat_prop._lattice,
+            self._lat_prop._model_state)
 
-    def zero_mult(self, lat_prop, n):
+    def zero_mult(self, n):
         # Zero multipoles.
         print("\nZeroing multipoles: n = {:d}".format(n))
-        for el in lat_prop._lattice:
+        for el in self._lat_prop._lattice:
             if (type(el) == ts.Bending) or (type(el) == ts.Quadrupole) \
                or (type(el) == ts.Sextupole) or (type(el) == ts.Octupole) \
                or (type(el) == ts.Multipole):
                 el.get_multipoles().set_multipole(n, 0e0)
 
-    def compute_sext_resp_mat_num(self, gtpsa_prop, lat_prop, b_3_list):
+    def compute_sext_resp_mat_num(self, gtpsa_prop, b_3_list):
         # Uses integrated sextupole strength.
         db_3xL = 1e-3
         n = len(b_3_list)
         A = np.zeros((2, n))
-        self.compute_map(lat_prop, 2)
-        stable, _, xi = lo.compute_nu_xi(lat_prop.desc, gtpsa_prop.no, self._M)
+        self.compute_map(2)
+        stable, _, xi = lo.compute_nu_xi(self._lat_prop.desc, gtpsa_prop.no, self._M)
         if stable:
             for k in range(n):
                 b_3xL = \
-                    lat_prop.get_b_nxL_elem(b_3_list[k], 0, MpoleInd.sext)
-                lat_prop.set_b_nxL_fam(b_3_list[k], MpoleInd.sext, b_3xL-db_3xL)
-                self.compute_map(lat_prop, 2)
+                    self._lat_prop.get_b_nxL_elem(b_3_list[k], 0, MpoleInd.sext)
+                self._lat_prop.set_b_nxL_fam(b_3_list[k], MpoleInd.sext, b_3xL-db_3xL)
+                self.compute_map(2)
                 stable, _, xi_1 =  \
-                    lo.compute_nu_xi(lat_prop._desc, gtpsa_prop.no, self._M)
+                    lo.compute_nu_xi(self._lat_prop._desc, gtpsa_prop.no, self._M)
                 if stable:
-                    lat_prop.set_b_nxL_fam(
+                    self._lat_prop.set_b_nxL_fam(
                         b_3_list[k], MpoleInd.sext, b_3xL+db_3xL)
-                    self.compute_map(lat_prop, 2)
+                    self.compute_map(2)
                     stable, _, xi_2 = \
-                        lo.compute_nu_xi(lat_prop._desc, gtpsa_prop.no, self._M)
+                        lo.compute_nu_xi(self._lat_prop._desc, gtpsa_prop.no, self._M)
                     a_ij = (xi_2-xi_1)/(2e0*db_3xL)
                     A[ind.X, k] = a_ij[ind.X]
                     A[ind.Y, k] = a_ij[ind.Y]
@@ -182,10 +183,10 @@ class nonlin_dyn_class:
         else:
              return False, np.nan, np.nan
 
-    def set_xi(self, lat_prop, xi_x, xi_y):
+    def set_xi(self, xi_x, xi_y):
         n = len(self._b_3_list)
 
-        stable, xi, A = self.compute_sext_resp_mat_num(lat_prop, self._b_3_list)
+        stable, xi, A = self.compute_sext_resp_mat_num(self._b_3_list)
         if stable:
             A_inv = la.pinv(A)
             db_3xL = A_inv @ (-xi)
@@ -193,40 +194,40 @@ class nonlin_dyn_class:
             b_3_val = []
             for k in range(n):
                 b_3xL = \
-                    lat_prop.get_b_nxL_elem(self._b_3_list[k], 0, MpoleInd.sext)
-                lat_prop.set_b_nxL_fam(
+                    self._lat_prop.get_b_nxL_elem(self._b_3_list[k], 0, MpoleInd.sext)
+                self._lat_prop.set_b_nxL_fam(
                     self._b_3_list[k], MpoleInd.sext, b_3xL+db_3xL[k])
                 b_3 = \
-                    lat_prop.get_b_n_elem(self._b_3_list[k], 0, MpoleInd.sext)
+                    self._lat_prop.get_b_n_elem(self._b_3_list[k], 0, MpoleInd.sext)
                 b_3_val.append(b_3)
 
             M = gtpsa.ss_vect_tpsa(
-                lat_prop._desc, gtpsa_prop.no, lat_prop._nv,
-            index_mapping=lat_prop._named_index)
-            self.compute_map(lat_prop, 2)
+                self._lat_prop._desc, gtpsa_prop.no, self._lat_prop._nv,
+            index_mapping=self._lat_prop._named_index)
+            self.compute_map(2)
             stable, _, xi = \
-                lo.compute_nu_xi(lat_prop._desc, gtpsa_prop.no, self._M)
+                lo.compute_nu_xi(self._lat_prop._desc, gtpsa_prop.no, self._M)
 
         return stable, xi, np.array(b_3_val)
 
-    def compute_h(self, gtpsa_prop, lat_prop):
-        h    = gtpsa.tpsa(lat_prop._desc, gtpsa_prop.no)
-        self._h_re = gtpsa.tpsa(lat_prop._desc, gtpsa_prop.no)
-        self._h_im = gtpsa.tpsa(lat_prop._desc, gtpsa_prop.no)
+    def compute_h(self, gtpsa_prop):
+        h    = gtpsa.tpsa(self._lat_prop._desc, gtpsa_prop.no)
+        self._h_re = gtpsa.tpsa(self._lat_prop._desc, gtpsa_prop.no)
+        self._h_im = gtpsa.tpsa(self._lat_prop._desc, gtpsa_prop.no)
 
         self._M.M_to_h_DF(h)
         h.CtoR(self._h_re, self._h_im)
 
-    def compute_map_normal_form(self, gtpsa_prop, lat_prop):
-        A_0        = gtpsa.ss_vect_tpsa(lat_prop._desc, gtpsa_prop.no)
-        A_1        = gtpsa.ss_vect_tpsa(lat_prop._desc, gtpsa_prop.no)
-        R          = gtpsa.ss_vect_tpsa(lat_prop._desc, gtpsa_prop.no)
-        g          = gtpsa.tpsa(lat_prop._desc, gtpsa_prop.no)
-        self._g_re = gtpsa.tpsa(lat_prop._desc, gtpsa_prop.no)
-        self._g_im = gtpsa.tpsa(lat_prop._desc, gtpsa_prop.no)
-        K          = gtpsa.tpsa(lat_prop._desc, gtpsa_prop.no)
-        self._K_re = gtpsa.tpsa(lat_prop._desc, gtpsa_prop.no)
-        self._K_im = gtpsa.tpsa(lat_prop._desc, gtpsa_prop.no)
+    def compute_map_normal_form(self, gtpsa_prop):
+        A_0        = gtpsa.ss_vect_tpsa(self._lat_prop._desc, gtpsa_prop.no)
+        A_1        = gtpsa.ss_vect_tpsa(self._lat_prop._desc, gtpsa_prop.no)
+        R          = gtpsa.ss_vect_tpsa(self._lat_prop._desc, gtpsa_prop.no)
+        g          = gtpsa.tpsa(self._lat_prop._desc, gtpsa_prop.no)
+        self._g_re = gtpsa.tpsa(self._lat_prop._desc, gtpsa_prop.no)
+        self._g_im = gtpsa.tpsa(self._lat_prop._desc, gtpsa_prop.no)
+        K          = gtpsa.tpsa(self._lat_prop._desc, gtpsa_prop.no)
+        self._K_re = gtpsa.tpsa(self._lat_prop._desc, gtpsa_prop.no)
+        self._K_im = gtpsa.tpsa(self._lat_prop._desc, gtpsa_prop.no)
 
         self._M.Map_Norm(A_0, A_1, R, g, K)
         K.CtoR(self._K_re, self._K_im)
@@ -241,14 +242,14 @@ class nonlin_dyn_class:
             rms += h.get(h_dict[key])**2
         return np.sqrt(rms)
 
-    def compute_nl(self, lat_prop):
-        self.compute_h(lat_prop)
-        self.compute_map_normal_form(lat_prop)
+    def compute_nl(self):
+        self.compute_h()
+        self.compute_map_normal_form()
 
-        self._h_re_scl = self.compose_bs(lat_prop, self._h_re, self._Id_scl)
-        self._h_im_scl = self.compose_bs(lat_prop, self._h_im, self._Id_scl)
-        self._K_re_scl = self.compose_bs(lat_prop, self._K_re, self._Id_scl)
-        self._K_im_scl = self.compose_bs(lat_prop, self._K_im, self._Id_scl)
+        self._h_re_scl = self.compose_bs(self._h_re, self._Id_scl)
+        self._h_im_scl = self.compose_bs(self._h_im, self._Id_scl)
+        self._K_re_scl = self.compose_bs(self._K_re, self._Id_scl)
+        self._K_im_scl = self.compose_bs(self._K_im, self._Id_scl)
 
         self.scl_h(self._h_re_scl, self.h_scl_dict, self.h_dict)
         self.scl_h(self._h_im_scl, self.h_scl_dict, self.h_dict)
@@ -266,7 +267,7 @@ class nonlin_dyn_class:
 
         self._K_re_scl_rms = np.sqrt(K_geom**2+K_chrom**2)
 
-    def prt_nl(self, lat_prop):
+    def prt_nl(self):
         print("\n  nu = [{:7.5f}, {:7.5f}]".format(
             -self._K_re.get([1, 1, 0, 0, 0, 0, 0])/np.pi,
             -self._K_re.get([0, 0, 1, 1, 0, 0, 0])/np.pi))
@@ -315,16 +316,16 @@ class nonlin_dyn_class:
                 else:
                     print()
 
-    def compute_eta(self, lat_prop, M):
+    def compute_eta(self, M):
         prt = False
         no = 2
-        I = lat_prop.ss_vect_tpsa()
-        ImM = lat_prop.ss_vect_tpsa()
+        I = self._lat_prop.ss_vect_tpsa()
+        ImM = self._lat_prop.ss_vect_tpsa()
         # Workaround for compose with vector vs. map.
-        D = lat_prop.ss_vect_tpsa()
-        eta_k = lat_prop.ss_vect_tpsa()
-        ImM_inv = lat_prop.ss_vect_tpsa()
-        eta = lat_prop.tpsa()
+        D = self._lat_prop.ss_vect_tpsa()
+        eta_k = self._lat_prop.ss_vect_tpsa()
+        ImM_inv = self._lat_prop.ss_vect_tpsa()
+        eta = self._lat_prop.tpsa()
         I.set_identity()
         if prt:
             print()
@@ -342,12 +343,12 @@ class nonlin_dyn_class:
                 print("eta^({:d})     = [{:22.15e}, {:22.15e}]".format(
                 k, eta_k.x.get(ind_delta), eta_k.px.get(ind_delta)))
                 # Validate.
-                eta_chx = lat_prop.ss_vect_tpsa()
+                eta_chx = self._lat_prop.ss_vect_tpsa()
                 eta_k.delta.set([0, 0, 0, 0, 1], 0e0, 1e0)
                 eta_chx.compose(M, eta_k)
                 print("eta_chx^({:d}) = [{:22.15e}, {:22.15e}]".format(
                     k, eta_chx.x.get(ind_delta), eta_chx.px.get(ind_delta)))
-                eta_lin_opt, _, _, _ = lat_prop.get_Twiss(0)
+                eta_lin_opt, _, _, _ = self._lat_prop.get_Twiss(0)
                 print("\neta^(1)     = [{:22.15e}, {:22.15e}]".format(
                     eta_lin_opt[ind.x], eta_lin_opt[ind.px]))
                 eta.print("eta")

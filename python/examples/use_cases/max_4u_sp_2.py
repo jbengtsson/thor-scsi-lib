@@ -104,15 +104,15 @@ class opt_sp_class:
             return False
 
         # Compute linear chromaticity.
-        self._nld.compute_map(lat_prop)
+        self._nld.compute_map()
         stable, _, self._xi = lo.compute_nu_xi(
-            lat_prop.desc, lat_prop._no, self._nld._M)
+            self._lat_prop.desc, self._lat_prop._no, self._nld._M)
         if not stable:
             print("\ncompute_nu_xi: unstable")
             return False
 
         # Compute 2nd order dispersion
-        self._eta_nl = nld.compute_eta(lat_prop, lat_prop._M)
+        self._eta_nl = nld.compute_eta(self._lat_prop._M)
         return True
 
     def compute_prop(self):
@@ -338,7 +338,7 @@ class opt_sp_class:
         if True:
             self._phi_sp_0 = 18.0
         else:
-            self._phi_sp_0 = lat_prop.compute_phi_lat()
+            self._phi_sp_0 = self._lat_prop.compute_phi_lat()
         self.f_sp(prm)
 
         # Methods:
@@ -438,7 +438,7 @@ def get_bends(lat):
     }
 
     bend_list = []
-    for k, b_list in enumerate(bend_lists[lat]["bend_list"]):
+    for b_list in bend_lists[lat]["bend_list"]:
         bend_list.append(pc.bend_class(lat_prop, b_list))
 
     return bend_list, bend_lists[lat]["rbend_list"]
@@ -666,8 +666,8 @@ lat_prop.prt_lat("lat_prop_lat.txt")
 b_3_list = ["s1_h3", "s2_h3", "s3_h3", "s4_h3"]
 nld = nld_class.nonlin_dyn_class(lat_prop, A_max, beta_inj, delta_max, b_3_list)
 
-nld.zero_mult(lat_prop, 3)
-nld.zero_mult(lat_prop, 4)
+nld.zero_mult(3)
+nld.zero_mult(4)
 
 # Compute Twiss parameters along lattice.
 if not lat_prop.comp_per_sol():
