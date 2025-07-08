@@ -274,7 +274,7 @@ class opt_sp_class:
         if prt:
             print("\n  dchi2(eps_x)        = {:9.3e}".format(dchi_2))
 
-        dchi_2 = weight[1]*(self._lat_prop._alpha_c-alpha_c_des)**2
+        dchi_2 = weight[1]*(self._lat_prop._alpha_c[1]-alpha_c_des)**2
         chi_2 += dchi_2
         if prt:
             print("  dchi2(alpha_c)      = {:9.3e}".format(dchi_2))
@@ -452,7 +452,7 @@ class opt_sp_class:
         f_sp(prm)
 
         def constraint_eq(prm):
-            phi = 2*prm[7] + 2*prm[8] + 8*prm[9] + 2*prm[10] + 10*prm[11] - 18e0
+            phi = 2*prm[6] + 10*prm[7] + 2*prm[8] + 10*prm[9] - 18e0
             print(f"\nconstraint_eq: phi = {phi:10.3e}")
             return phi
 
