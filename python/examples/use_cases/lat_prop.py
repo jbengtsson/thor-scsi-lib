@@ -70,7 +70,7 @@ if False:
 
 compute_optics(lat_prop)
 
-eta = nld.compute_eta(lat_prop, lat_prop._M)
+eta = nld.compute_eta(lat_prop._M)
 print("\n eta:\n", eta)
 
 
