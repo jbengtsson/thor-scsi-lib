@@ -46,7 +46,7 @@ design_val = {
 
 
 class opt_sp_class:
-    # Private
+    # Private.
 
     def __init__(self, prm_class: pc.prm_class) -> None:
         self._first          = True
