@@ -54,7 +54,7 @@ beta_inj  = np.array([3.0, 3.0])
 delta_max = 3e-2
 
 home_dir = os.path.join(
-    os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "MAX_IV")
+    os.environ["HOME"], "Nextcloud", "thor_scsi", "JB")
 lat_name = sys.argv[1]
 file_name = os.path.join(home_dir, lat_name+".lat")
 

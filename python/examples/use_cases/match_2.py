@@ -89,7 +89,7 @@ def match_straight(
 
         # returns Twiss parameters [alpha, beta, eta] and dnu
         Twiss_k = cs.compute_Twiss_A(A0.jacobian())
-        # todo: sum to twiis
+        # todo: sum to Twiss.
         for k in range(3):
             chi_2 += weight[k] * np.sum((Twiss_k[k] - Twiss_1_design[k]) ** 2)
 
