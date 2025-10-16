@@ -169,6 +169,7 @@ def compute_Twiss_A(A):
         beta[k] = A[k2][k2] ** 2 + A[k2][k2 + 1] ** 2
     dnu = compute_dnu(n_dof, A)
 
+    # Return as list - inhomogeneous shape.
     return np.array(eta), np.array(alpha), np.array(beta), np.array(dnu)
 
 
