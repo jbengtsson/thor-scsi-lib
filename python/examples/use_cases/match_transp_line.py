@@ -26,18 +26,13 @@ from thor_scsi.utils.output import mat2txt, vec2txt
 ind = ind.index_class()
 
 
-prm_range = {
-    "phi" : [  0.0,  2.0],
-    "b_2" : [-10.0, 10.0]
-}
-
 # Desired linear optics at the exit: alpha, beta, [eta_x, eta'_x].
 Twiss_design = np.array([[0.0, 0.0], [0.0, 0.0], [10.0, 10.0]])
 
 # Linear optics at the entrance.
-Twiss_entrance = np.array([[0.03975, 0.00], [0.0, 0.0], [4.26798, 2.43610]])
+Twiss_entrance = np.array([[3.88154e-02, 0.0], [0.0, 0.0], [4.26224, 2.43395]])
 
-weights = np.array([1e3, 1e0, 1e-2]) 
+weights = np.array([[1e6, 1e7], [1e2, 1e2], [1e-4, 1e-4]]) 
 
 
 class transp_line_class:
@@ -63,7 +58,7 @@ class transp_line_class:
 
         self._chi_2_min   = 1e30
         self._n_iter      = -1
-        self._file_name   = "opt_sp.txt"
+        self._file_name   = "match_prm.txt"
 
     # Public.
 
@@ -97,7 +92,7 @@ class transp_line_class:
         if prt:
             print()
         for k in range(self._Twiss_k_len):
-            dchi_2 = self._weights[k]*np.sum(
+            dchi_2 = np.sum(self._weights[k]*
                 (self._Twiss_k[k]-Twiss_design[k])**2)
             chi_2 += dchi_2
             if prt:
@@ -143,7 +138,7 @@ class transp_line_class:
 
     def match(self) -> opt.OptimizeResult:
         max_iter = 10000
-        f_tol    = 1e-7
+        f_tol    = 1e-5
         x_tol    = 1e-7
         g_tol    = 1e-7
 
@@ -175,7 +170,7 @@ class transp_line_class:
                 "ftol": f_tol, "maxiter": max_iter, "eps": 1e-4}}
             }
 
-        method = "CG"
+        method = "SLSQP"
         
         minimum = opt.minimize(
             self.f_match,
@@ -192,10 +187,18 @@ class transp_line_class:
 
 def get_prms(eps):
     prm = [
-        ("B0",  "b_2", prm_range["b_2"]),
-        ("B1",  "b_2", prm_range["b_2"]),
-        ("QD1", "b_2", prm_range["b_2"]),
-        ("QF2", "b_2", prm_range["b_2"])
+        ("D2",  "L",   [0.1-0.05, 0.1+0.1]),
+        ("D3",  "L",   [0.1-0.07, 0.1+0.05]),
+        ("D4",  "L",   [0.25-0.1, 0.25+0.1]),
+
+        # ("B2",  "phi", [2.17-1.0, 2.17+0.7]),
+        # ("B3",  "phi", [0.59-0.59, 0.59+0.8]),
+
+        ("QF2", "b_2", [-10.0, 10.0]),
+        ("B2",  "b_2", [-10.0, 10.0]),
+        ("B3",  "b_2", [-10.0, 10.0]),
+        ("QD1", "b_2", [-10.0, 10.0]),
+        ("QF3", "b_2", [-10.0, 10.0])
     ]
 
     prm_list = pc.prm_class(lat_prop, prm)
