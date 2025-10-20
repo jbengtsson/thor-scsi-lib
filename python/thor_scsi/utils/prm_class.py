@@ -16,21 +16,22 @@ class bend_class:
     # Private
 
     def __init__(self, lat_prop, bend_list):
-        self._lat_prop         = lat_prop
-        self._bend_list        = bend_list
+        self._lat_prop             = lat_prop
+        self._bend_list            = bend_list
 
-        self._bend_L_tot       = self.compute_bend_L_tot()
+        self._bend_L_tot           = self.compute_bend_L_tot()
 
-        self._bend_phi         = self.compute_bend_phi()
-        self._bend_b_2xL       = self.compute_bend_b_2xL()
+        self._bend_phi             = self.compute_bend_phi()
+        self._bend_b_2xL           = self.compute_bend_b_2xL()
 
-        self._bend_phi_ratio   = self.compute_phi_ratios()
-        self._bend_b_2xL_ratio = self.compute_b_2_ratios()
+        self._bend_phi_ratio       = self.compute_phi_ratios()
+        self._bend_b_2xL_ratio     = self.compute_b_2_ratios()
+        self._bend_phiob_2xL_ratio = self.compute_phiob_2xL_ratios()
 
-        self._phi_min          = np.nan
-        self._phi_max          = np.nan
-        self._b_2_min          = np.nan
-        self._b_2_max          = np.nan
+        self._phi_min              = np.nan
+        self._phi_max              = np.nan
+        self._b_2_min              = np.nan
+        self._b_2_max              = np.nan
 
     def __str__(self):
         return "bend_class"
@@ -75,11 +76,27 @@ class bend_class:
         return np.array(self._bend_phi_ratio)
 
     def compute_b_2_ratios(self):
-        # Compute b_2 ratios.
+        # Compute b_2xL ratios.
         self._bend_b_2xL_ratio = []
         for k in range(len(self._bend_list)):
-           b_2xL = self._lat_prop.get_b_nxL_elem(self._bend_list[k], 0, quad)
-           self._bend_b_2xL_ratio.append(b_2xL/self._bend_b_2xL)
+            b_2xL = self._lat_prop.get_b_nxL_elem(self._bend_list[k], 0, quad)
+            self._bend_b_2xL_ratio.append(b_2xL/self._bend_b_2xL)
+        return np.array(self._bend_b_2xL_ratio)
+
+    def compute_phiob_2xL_ratios(self):
+        # Compute phiob_2xL ratios.
+        prt = False
+        self._bend_phiob_2xL_ratio = []
+        for k in range(len(self._bend_list)):
+            L_k = self._lat_prop.get_L_elem(self._bend_list[k], 0)
+            phi = self._lat_prop.get_phi_elem(self._bend_list[k], 0)
+            b_2xL = self._lat_prop.get_b_nxL_elem(self._bend_list[k], 0, quad)
+            self._bend_phiob_2xL_ratio.append(phi*np.pi/(180e0*b_2xL))
+            if prt:
+                print(f"compute_phiob_2xL_ratios: "
+                      f"{self._bend_list[k]:10s} {L_k:7.5f} {phi:8.5f}"
+                      f" {b_2xL:8.5f}"
+                      f" {self._bend_phiob_2xL_ratio[-1]:12.5e}")
         return np.array(self._bend_b_2xL_ratio)
 
     def get_bend_phi(self):
@@ -136,6 +153,22 @@ class bend_class:
         for k in range(len(self._bend_list)):
             L_k = self._lat_prop.get_L_elem(self._bend_list[k], 0)
             b_2 = self._bend_b_2xL_ratio[k]*self._bend_b_2xL/L_k
+            if prt:
+                print("  {:15s} {:8.5f}".format(self._bend_list[k], b_2))
+            self._lat_prop.set_b_n_fam(self._bend_list[k], quad, b_2)
+
+    def set_bend_phiob_2(self, prm):
+        prt = not False
+        self._bend_phi = prm
+        self._bend_b_2xL = prm*self._bend_L_tot
+        if prt:
+            print("\nset_bend_b_2\n  prm = {:7.5f} bend_b_2xL = {:7.5f}\n".
+                  format(prm, self._bend_b_2xL))
+        for k in range(len(self._bend_list)):
+            self._lat_prop.set_phi_fam(
+                self._bend_list[k], self._bend_phi_ratio[k]*prm)
+            L_k = self._lat_prop.get_L_elem(self._bend_list[k], 0)
+            b_2 = prm/(self._bend_phiob_2xL_ratio[k]*L_k)
             if prt:
                 print("  {:15s} {:8.5f}".format(self._bend_list[k], b_2))
             self._lat_prop.set_b_n_fam(self._bend_list[k], quad, b_2)
@@ -293,7 +326,7 @@ class prm_class(bend_class):
                 prm.append(p)
                 bounds.append(b)
                 if prt:
-                    print("    {:12.5e} ({:5.2f}, {:5.2f})".
+                    print("    prm = {:12.5e} range = [{:5.2f}, {:5.2f}]".
                       format(prm[k], bounds[k][0], bounds[k][1]))
             elif isinstance(self._prm_list[k][0], bend_class):
                 if self._prm_list[k][1] == "phi_bend":
@@ -304,6 +337,10 @@ class prm_class(bend_class):
                     self._prm_list[k][0]._b_2_min = self._prm_list[k][2][0]
                     self._prm_list[k][0]._b_2_max = self._prm_list[k][2][1]
                     p, b = self._prm_list[k][0].get_bend_b_2_prm()
+                elif self._prm_list[k][1] == "phiob_2_bend":
+                    self._prm_list[k][0]._b_2_min = self._prm_list[k][2][0]
+                    self._prm_list[k][0]._b_2_max = self._prm_list[k][2][1]
+                    p, b = self._prm_list[k][0].get_bend_phi_prm()
                 else:
                     print("\nprm_class::get_prm - undefined parameter type:",
                           self._prm_list[k][1])
@@ -312,8 +349,8 @@ class prm_class(bend_class):
                 bounds.append(b)
                 if prt:
                     print("", self._prm_list[k][0],
-                          "   {:12.5e} ({:5.2f}, {:5.2f})".format(
-                              prm[k], bounds[k][0], bounds[k][1]), end="")
+                          "   prm = {:12.5e} range = [{:5.2f}, {:5.2f}]".
+                          format(prm[k], bounds[k][0], bounds[k][1]), end="")
                     self._prm_list[k][0].print()
             else:
                 print("\nprm_class::get_prm - undefined parameter type:",
@@ -332,6 +369,8 @@ class prm_class(bend_class):
                     prm_name.set_bend_phi(prm[k])
                 elif prm_type == "b_2_bend":
                     prm_name.set_bend_b_2(prm[k])
+                elif prm_type == "phiob_2_bend":
+                    prm_name.set_bend_phiob_2(prm[k])
                 else:
                     print("\nprm_class::set_prm - undefined parameter type:",
                           prm_name)
