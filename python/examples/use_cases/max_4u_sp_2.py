@@ -26,7 +26,7 @@ prm_range = {
     "phi":       [  0.0,  2.0],
     "phi_rbend": [ -0.3,  0.3],
     "b_2":       [-10.0, 10.0],
-    "b_2_bend":  [ -1.5, -1.5]
+    "b_2_bend":  [ -1.5,  1.5]
 }
 
 design_val = {
@@ -46,7 +46,7 @@ design_val = {
 
 
 class opt_sp_class:
-    # Private
+    # Private.
 
     def __init__(self, prm_class: pc.prm_class) -> None:
         self._first          = True
