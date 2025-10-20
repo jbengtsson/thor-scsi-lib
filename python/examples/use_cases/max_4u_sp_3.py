@@ -26,7 +26,7 @@ prm_range = {
     "phi":       [  0.0,  2.0],
     "phi_rbend": [ -0.3,  0.3],
     "b_2":       [-10.0, 10.0],
-    "b_2_bend":  [ -1.5, -1.5]
+    "b_2_bend":  [ -1.5,  1.5]
 }
 
 design_val = {
@@ -357,7 +357,7 @@ class opt_sp_class:
                 "ftol": f_tol, "maxiter": max_iter, "eps": 1e-4}}
             }
 
-        method = "CG"
+        method = "SLSQP"
         
         minimum = opt.minimize(
             self.f_sp,
@@ -372,8 +372,8 @@ class opt_sp_class:
         print("\n".join(minimum))
 
 
-def get_bends(lat):
-    if lat == 1:
+def get_bends(dip_type):
+    if dip_type == 1:
         # max_4u/m4U_250316_h03_01_01_01_tracy-2.
         bend_lists = {
             "bend_list": [
@@ -387,7 +387,7 @@ def get_bends(lat):
             ],
             "rbend_list": ["r1_h3", "r2_h3", "r3_h3"]
         }
-    elif lat == 2:
+    elif dip_type == 2:
         # m4U_241223_h02_01_01_01_tracy_2.
         bend_lists = {
             "bend_list": [
@@ -401,7 +401,7 @@ def get_bends(lat):
             ],
             "rbend_list": ["r1_h3", "r2_h3"]
         }
-    elif lat == 3:
+    elif dip_type == 3:
         # m4U_250527_h02_13_02_01_tracy-2.
         bend_lists = {
             "bend_list": [
@@ -415,7 +415,7 @@ def get_bends(lat):
             ],
             "rbend_list": ["r1_h2", "r2_h2"]
         }
-    elif lat == 4:
+    elif dip_type == 4:
         # m4U_250610_h02_16_02_01_tracy_2.
         bend_lists = {
             "bend_list": [
@@ -466,17 +466,17 @@ def get_prms(prm_type, bend_list, eps):
             ("q1_h2",        "b_2",      prm_range["b_2"]),
             ("q2_h2",        "b_2",      prm_range["b_2"]),
 
-            (bend_list[0],   "b_2_bend", prm_range["phi"]),
-            (bend_list[1],   "b_2_bend", prm_range["phi"]),
+            (bend_list[0],   "b_2_bend", prm_range["b_2_bend"]),
+            (bend_list[1],   "b_2_bend", prm_range["b_2_bend"]),
 
-            (bend_list[0],   "phi_bend", [1.4,  1.5]),
+            (bend_list[0],   "phi_bend", [1.29,  1.5]),
             (bend_list[1],   "phi_bend", [1.5,  3.0]),
 
             ("r1_h2",        "b_2",      prm_range["b_2"]),
             ("r2_h2",        "b_2",      prm_range["b_2"]),
 
             ("r1_h2",        "phi",      [-0.5,  0.5]),
-            ("r2_h2",        "phi",      [-0.2,  0.2])
+            ("r2_h2",        "phi",      prm_range["phi_rbend"])
         ]
     elif prm_type == 3:
         prm = [
