@@ -475,7 +475,7 @@ def get_prms(prm_type, bend_list, eps):
             ("r1_h2",        "b_2",      prm_range["b_2"]),
             ("r2_h2",        "b_2",      prm_range["b_2"]),
 
-            ("r1_h2",        "phi",      [-0.5,  0.5]),
+            # ("r1_h2",        "phi",      [-0.5,  0.5]),
             ("r2_h2",        "phi",      prm_range["phi_rbend"])
         ]
     elif prm_type == 3:
@@ -621,15 +621,15 @@ def get_prms(prm_type, bend_list, eps):
 
 def get_weights():
     weights = {
-        "eps_x"       : 1e17,
+        "eps_x"       : 1e1*1e17,
         "dphi"        : 1e-1, 
         "phi_1"       : 0e-2,  
         "phi_rb"      : 0e-3,  
         "b_2"         : 0e-3, 
-        "alpha^(1)_c" : 1e-14,  
+        "alpha^(1)_c" : 1e1*1e-14,  
         "alpha^(2)_c" : 1e1,
         "U_0"         : 1e-15,
-        "etap_x_uc"   : 1e2, 
+        "etap_x_uc"   : 1e-1*1e2, 
         "alpha_uc"    : 1e-1,
         "nu_uc_x"     : 1e-2,
         "nu_uc_y"     : 1e-2,
