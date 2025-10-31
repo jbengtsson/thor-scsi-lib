@@ -30,7 +30,7 @@ ind = ind.index_class()
 Twiss_design = np.array([[0.0, 0.0], [0.0, 0.0], [10.0, 10.0]])
 
 # Linear optics at the entrance.
-Twiss_entrance = np.array([[3.88154e-02, 0.0], [0.0, 0.0], [4.26224, 2.43395]])
+Twiss_entrance = np.array([[3.88154e-02, 0.0], [0.0, 0.0], [4.68525, 2.46836]])
 
 weights = np.array([[1e6, 1e7], [1e2, 1e2], [1e-4, 1e-4]]) 
 
