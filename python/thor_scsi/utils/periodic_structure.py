@@ -378,7 +378,8 @@ class periodic_structure_class:
         return stable
 
     def unit_cell_rev_bend(
-            self, loc, n_step, phi_min, set_phi_rb, phi_b, bend_list, bend_scl):
+            self, rb_name, loc, n_step, phi_min, set_phi_rb, phi_b, bend_list,
+            bend_scl):
         phi_rb = 0e0
         phi_step = phi_min/n_step
         phi_rb_buf = []
@@ -390,7 +391,7 @@ class periodic_structure_class:
               "     nu_x     nu_y"
               "\n  [deg]   [deg]  [nm.rad]                            [m]")
         for k in range(n_step):
-            set_phi_rb(self, phi_b, bend_list, bend_scl, phi_rb)
+            set_phi_rb(self, rb_name, phi_b, bend_list, bend_scl, phi_rb)
             stable = self.comp_per_sol()
             Twiss = self.get_Twiss(loc)
             eta_x = Twiss[0][ind.x]
