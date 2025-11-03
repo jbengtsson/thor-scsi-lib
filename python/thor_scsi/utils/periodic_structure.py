@@ -395,27 +395,27 @@ class periodic_structure_class:
             Twiss = self.get_Twiss(loc)
             eta_x = Twiss[0][ind.x]
             self.compute_alpha_c()
-            if self._alpha_c >= 0e0:
+            if self._alpha_c[1] >= 0e0:
                 self.set_RF_cav_phase("cav", 0.0)
             else:
                 self.set_RF_cav_phase("cav", 180.0)
-            stable = self.compute_radiation()
-            if stable:
+            stable, stable_rad = self.compute_radiation()
+            if stable and stable_rad:
                 phi_rb_buf.append(abs(phi_rb))
                 eps_x_buf.append(self._eps[ind.X])
                 J_x_buf.append(self._J[ind.X])
                 J_z_buf.append(self._J[ind.Z])
-                alpha_c_buf.append(self._alpha_c)
+                alpha_c_buf.append(self._alpha_c[1])
                 print("{:7.3f}  {:5.3f}    {:5.1f}    {:4.2f} {:5.2f} {:10.3e}"
                       " {:10.3e}  {:7.5f}  {:7.5f}".
                       format(
                           phi_rb, self.compute_phi_lat(), 1e12*self._eps[ind.X],
-                          self._J[ind.X], self._J[ind.Z], self._alpha_c, eta_x,
+                          self._J[ind.X], self._J[ind.Z], self._alpha_c[1], eta_x,
                           self._nu[ind.X], self._nu[ind.Y]))
             else:
                 self.compute_alpha_c()
                 print("unit_cell_rev_bend: unstable alpha_c = {:10.3e}".
-                      format(self._alpha_c))
+                      format(self._alpha_c[1]))
             phi_rb += phi_step
         return \
             np.array(phi_rb_buf), np.array(eps_x_buf), np.array(J_x_buf), \

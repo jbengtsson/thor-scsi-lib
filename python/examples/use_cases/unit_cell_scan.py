@@ -2,39 +2,14 @@
      Parametric scans/evaluations for a unit cell.
 """
 
-
-import logging
-
-# Levels: DEBUG, INFO, WARNING, ERROR, and CRITICAL.
-logging.basicConfig(level="WARNING")
-logger = logging.getLogger("thor_scsi")
-
-
 import os
+import sys
 from dataclasses import dataclass
 from typing import ClassVar
 
-from thor_scsi.utils import lattice_properties as lp
-
 import gtpsa
 
-
-@dataclass
-class gtpsa_prop:
-    # GTPSA properties.
-    # Number of variables - phase-space coordinates & 1 for parameter
-    #dependence.
-    nv: ClassVar[int] = 6 + 1
-    # Max order.
-    no: ClassVar[int] = 1
-    # Number of parameters.
-    nv_prm: ClassVar[int] = 0
-    # Parameters max order.
-    no_prm: ClassVar[int] = 0
-    # Index.
-    named_index = gtpsa.IndexMapping(dict(x=0, px=1, y=2, py=3, delta=4, ct=5))
-    # Descriptor
-    desc : ClassVar[gtpsa.desc]
+from thor_scsi.utils import lattice_properties as lp
 
 
 def set_phi_rb_bessy_iii(lat_prop, phi_rb):
@@ -50,25 +25,16 @@ def set_phi_rb_bessy_iii(lat_prop, phi_rb):
     lat_prop.set_phi_fam("b1", 4.25-2.0*phi_rb, True)
 
 
-# TPSA max order.
-gtpsa_prop.no = 2
-
 cod_eps = 1e-15
 E_0     = 2.5e9
 
-if True:
-    home_dir = os.path.join(
-        os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "BESSY-III",
-        "ipac_2024")
-    file_name = os.path.join(home_dir, "2024Mar.lat")
-else:
-    home_dir = os.path.join(
-        os.environ["HOME"], "accSoft", "thor_scsi-lib", "python", "examples",
-        "lattices")
-    file_name = os.path.join(home_dir, "2024Mar.lat")
+home_dir = os.path.join(
+    os.environ["HOME"], "Nextcloud", "thor_scsi", "JB")
 
-lat_prop = \
-    lp.lattice_properties_class(gtpsa_prop, file_name, E_0, cod_eps)
+lat_name = sys.argv[1]
+file_name = os.path.join(home_dir, lat_name+".lat")
+
+lat_prop = lp.lattice_properties_class(file_name, E_0, cod_eps, 2)
 
 # Compute Twiss parameters along lattice.
 stable = lat_prop.comp_per_sol()
