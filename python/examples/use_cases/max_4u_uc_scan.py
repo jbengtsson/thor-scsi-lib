@@ -1,18 +1,12 @@
 """Use Case:
-     Parametric scans/evaluations for a unit cell.
+     Parametric unit dipole cell properties vs. Reverse Bend angle.
 """
 
 
 import os
 import sys
-from dataclasses import dataclass
-from typing import ClassVar
-
-import numpy as np
 
 from thor_scsi.utils import lattice_properties as lp, index_class as ind
-
-import gtpsa
 
 
 def set_phi_rb(lat_prop, rb_name, phi_uc, bend_list, bend_scl, phi_rb):
