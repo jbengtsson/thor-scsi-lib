@@ -1,0 +1,16 @@
+certifi==2025.6.15
+cffi==1.17.1
+contourpy==1.2.0
+cycler==0.12.1
+fonttools==4.49.0
+gtpsa==0.0.0
+kiwisolver==1.4.5
+matplotlib==3.8.3
+numpy==2.3.1
+packaging==25.0
+pillow==10.2.0
+pybind11==2.13.6
+pycparser==2.22
+pyparsing==3.1.1
+scipy==1.16.0
+thor_scsi==0.0.0
