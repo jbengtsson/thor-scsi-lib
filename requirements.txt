@@ -6,11 +6,12 @@ fonttools==4.49.0
 gtpsa==0.0.0
 kiwisolver==1.4.5
 matplotlib==3.8.3
-numpy==2.3.1
+numpy==1.26.4
+xarray==2024.10.0
 packaging==25.0
-pillow==10.2.0
+pillow>=10.3.0
 pybind11==2.13.6
 pycparser==2.22
 pyparsing==3.1.1
-scipy==1.16.0
+scipy==1.14.1
 thor_scsi==0.0.0
