@@ -25,7 +25,7 @@ ind = ind.index_class()
 
 prm_range = {
     "phi":       [  0.0,  2.0],
-    "phi_rbend": [ -0.3,  0.3],
+    "phi_rbend": [ -0.5,  0.0],
     "b_2":       [-10.0, 10.0],
     "b_2_bend":  [ -1.5,  1.5]
 }
@@ -470,7 +470,7 @@ def get_prms(prm_type, bend_list, eps):
             (bend_list[0],   "b_2_bend", prm_range["b_2_bend"]),
             (bend_list[1],   "b_2_bend", prm_range["b_2_bend"]),
 
-            (bend_list[0],   "phi_bend", [1.29,  1.5]),
+            (bend_list[0],   "phi_bend", [0.5,  1.5]),
             (bend_list[1],   "phi_bend", [1.5,  3.0]),
 
             ("r1_h2",        "b_2",      prm_range["b_2"]),
@@ -622,12 +622,12 @@ def get_prms(prm_type, bend_list, eps):
 
 def get_weights():
     weights = {
-        "eps_x"       : 1e1*1e17,
+        "eps_x"       : 1e2*1e17,
         "dphi"        : 1e-1, 
         "phi_1"       : 0e-2,  
         "phi_rb"      : 0e-3,  
         "b_2"         : 0e-3, 
-        "alpha^(1)_c" : 1e1*1e-14,  
+        "alpha^(1)_c" : 1e0*1e-14,  
         "alpha^(2)_c" : 1e1,
         "U_0"         : 1e-15,
         "etap_x_uc"   : 1e-1*1e2, 
