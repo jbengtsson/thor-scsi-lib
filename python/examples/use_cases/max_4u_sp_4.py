@@ -31,7 +31,7 @@ prm_range = {
 }
 
 design_val = {
-    "eps_x_des"    : 50e-12,
+    "eps_x_des"    : 40e-12,
     "phi_1_des"    : 1.3,
     "phi_rb_1_des" : -0.2,
     "b_2_des"      : 2.0,
@@ -167,7 +167,9 @@ class opt_sp_class:
             "alpha^(1)_c": 1e0/self._alpha_c[1]**2,
             "alpha^(2)_c": (self._alpha_c[2])**2,
             "U_0":         self._lat_prop._U_0**2,
-            "etap_x_uc":   (self._eta_list[0][ind.px]**2
+            "eta_x_uc":    (self._eta_list[0][ind.x]**2
+                            +self._eta_list[1][ind.x]**2),
+            "eta'_x_uc":   (self._eta_list[0][ind.px]**2
                             +self._eta_list[1][ind.px]**2),
             "alpha_uc":    (self._alpha_list[0][ind.X]**2
                             + self._alpha_list[0][ind.Y]**2
@@ -254,7 +256,10 @@ class opt_sp_class:
         print(f"    eta^(2)_x      = "
               f"{self._eta_nl.get([0, 0, 0, 0, 2]):9.3e}")
 
-        print(f"\n    eta'_uc        = "
+        print(f"\n    eta_uc         = "
+              f"{self._eta_list[0][ind.x]:9.3e}"
+              f" {self._eta_list[1][ind.x]:9.3e}")
+        print(f"    eta'_uc        = "
               f"{self._eta_list[0][ind.px]:9.3e}"
               f" {self._eta_list[1][ind.px]:9.3e}")
         print(f"    alpha_uc       = "
@@ -285,6 +290,7 @@ class opt_sp_class:
 
         print(f"\n    b_3            =", self._nld._b_3_list)
         print(f"\n    b_2            = {self._b_2:8.5f}")
+
 
         self._lat_prop.prt_rad()
         self._prm_list.prt_prm(prm)
@@ -412,7 +418,7 @@ def get_bends(dip_type):
                  "d1_h2_sl_ds6"],
                 ["d2_h2_sl_d0a", "d2_h2_sl_d0b", "d2_h2_sl_d0c", "d2_h2_sl_df1",
                  "d2_h2_sl_df2", "d2_h2_sl_df3", "d2_h2_sl_df4",
-                 "d2_h2_sl_df5"],
+                 "d2_h2_sl_df5"]
             ],
             "rbend_list": ["r1_h2", "r2_h2"]
         }
@@ -476,8 +482,9 @@ def get_prms(prm_type, bend_list, eps):
             ("r1_h2",        "b_2",      prm_range["b_2"]),
             ("r2_h2",        "b_2",      prm_range["b_2"]),
 
-            # ("r1_h2",        "phi",      [-0.5,  0.5]),
-            ("r2_h2",        "phi",      prm_range["phi_rbend"])
+            ("r2_h2",        "phi",      prm_range["phi_rbend"]),
+            ("lego",         "phi",      [-1.0,  1.0]),
+            ("lego",         "b_2",      prm_range["b_2"])
         ]
     elif prm_type == 3:
         prm = [
@@ -622,15 +629,16 @@ def get_prms(prm_type, bend_list, eps):
 
 def get_weights():
     weights = {
-        "eps_x"       : 1e2*1e17,
+        "eps_x"       : 1e3*1e17,
         "dphi"        : 1e-1, 
         "phi_1"       : 0e-2,  
         "phi_rb"      : 0e-3,  
         "b_2"         : 0e-3, 
-        "alpha^(1)_c" : 1e0*1e-14,  
+        "alpha^(1)_c" : 1e-1*1e-14,  
         "alpha^(2)_c" : 1e1,
         "U_0"         : 1e-15,
-        "etap_x_uc"   : 1e-1*1e2, 
+        "eta_x_uc"    : 1e1, 
+        "eta'_x_uc"   : 1e-1*1e2, 
         "alpha_uc"    : 1e-1,
         "nu_uc_x"     : 1e-2,
         "nu_uc_y"     : 1e-2,
@@ -721,5 +729,4 @@ class prm_class:
     params:      ClassVar[list] = [prm_list, dprm_list]
 
 opt_sp = opt_sp_class(prm_class)
-
 opt_sp.opt_sp()
