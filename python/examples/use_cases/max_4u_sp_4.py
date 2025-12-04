@@ -364,7 +364,7 @@ class opt_sp_class:
                 "ftol": f_tol, "maxiter": max_iter, "eps": 1e-4}}
             }
 
-        method = "SLSQP"
+        method = "TNC"
         
         minimum = opt.minimize(
             self.f_sp,
@@ -507,18 +507,18 @@ def get_prms(prm_type, bend_list, eps):
             ("d1_h2_sl_ds5", "b_2", prm_range["b_2"]),
             ("d1_h2_sl_ds6", "b_2", prm_range["b_2"]),
 
-            ("d1_h2_sl_dm5", "phi", [-0.5, 0.5]),
-            ("d1_h2_sl_dm4", "phi", [-0.5, 0.5]),
-            ("d1_h2_sl_dm3", "phi", [-0.5, 0.5]),
-            ("d1_h2_sl_dm2", "phi", [-0.5, 0.5]),
-            ("d1_h2_sl_dm1", "phi", [-0.5, 0.5]),
-            ("d1_h2_sl_ds0", "phi", [-0.5, 0.5]),
-            ("d1_h2_sl_ds1", "phi", [-0.5, 0.5]),
-            ("d1_h2_sl_ds2", "phi", [-0.5, 0.5]),
-            ("d1_h2_sl_ds3", "phi", [-0.5, 0.5]),
-            ("d1_h2_sl_ds4", "phi", [-0.5, 0.5]),
-            ("d1_h2_sl_ds5", "phi", [-0.5, 0.5]),
-            ("d1_h2_sl_ds6", "phi", [-0.5, 0.5]),
+            ("d1_h2_sl_dm5", "phi", [-1.0, 1.0]),
+            ("d1_h2_sl_dm4", "phi", [-1.0, 1.0]),
+            ("d1_h2_sl_dm3", "phi", [-1.0, 1.0]),
+            ("d1_h2_sl_dm2", "phi", [-1.0, 1.0]),
+            ("d1_h2_sl_dm1", "phi", [-1.0, 1.0]),
+            ("d1_h2_sl_ds0", "phi", [-1.0, 1.0]),
+            ("d1_h2_sl_ds1", "phi", [-1.0, 1.0]),
+            ("d1_h2_sl_ds2", "phi", [-1.0, 1.0]),
+            ("d1_h2_sl_ds3", "phi", [-1.0, 1.0]),
+            ("d1_h2_sl_ds4", "phi", [-1.0, 1.0]),
+            ("d1_h2_sl_ds5", "phi", [-1.0, 1.0]),
+            ("d1_h2_sl_ds6", "phi", [-1.0, 1.0]),
 
             ("d2_h2_sl_d0a", "b_2", prm_range["b_2"]),
             ("d2_h2_sl_d0b", "b_2", prm_range["b_2"]),
@@ -529,14 +529,14 @@ def get_prms(prm_type, bend_list, eps):
             ("d2_h2_sl_df4", "b_2", prm_range["b_2"]),
             ("d2_h2_sl_df5", "b_2", prm_range["b_2"]),
 
-            ("d2_h2_sl_d0a", "phi", [-0.5, 0.5]),
-            ("d2_h2_sl_d0b", "phi", [-0.5, 0.5]),
-            ("d2_h2_sl_d0c", "phi", [-0.5, 0.5]),
-            ("d2_h2_sl_df1", "phi", [-0.5, 0.5]),
-            ("d2_h2_sl_df2", "phi", [-0.5, 0.5]),
-            ("d2_h2_sl_df3", "phi", [-0.5, 0.5]),
-            ("d2_h2_sl_df4", "phi", [-0.5, 0.5]),
-            ("d2_h2_sl_df5", "phi", [-0.5, 0.5]),
+            ("d2_h2_sl_d0a", "phi", [-1.0, 1.0]),
+            ("d2_h2_sl_d0b", "phi", [-1.0, 1.0]),
+            ("d2_h2_sl_d0c", "phi", [-1.0, 1.0]),
+            ("d2_h2_sl_df1", "phi", [-1.0, 1.0]),
+            ("d2_h2_sl_df2", "phi", [-1.0, 1.0]),
+            ("d2_h2_sl_df3", "phi", [-1.0, 1.0]),
+            ("d2_h2_sl_df4", "phi", [-1.0, 1.0]),
+            ("d2_h2_sl_df5", "phi", [-1.0, 1.0]),
 
             ("r2_h2",        "b_2", prm_range["b_2"]),
             ("r2_h2",        "phi", prm_range["phi_rbend"])
@@ -747,7 +747,7 @@ lat_prop.prt_M()
 lat_prop.prt_M_rad()
 
 dip_type = 3
-prm_type = 3
+prm_type = 2
 
 # uc_list = np.array(lat_prop._lattice.find("d2_h3_sl_df0", 0).index)
 # uc_list = np.append(uc_list, lat_prop._lattice.find("d3_h3_sl_df0", 1).index)
