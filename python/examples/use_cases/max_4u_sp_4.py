@@ -655,6 +655,8 @@ def get_weights():
     return weights
 
 
+no = 2
+
 cod_eps = 1e-10
 E_0     = 3.0e9
 
@@ -667,7 +669,7 @@ home_dir = os.path.join(
 
 file_name = os.path.join(home_dir, sys.argv[1]+".lat")
 
-lat_prop = lp.lattice_properties_class(file_name, E_0, cod_eps, 2)
+lat_prop = lp.lattice_properties_class(file_name, E_0, cod_eps, no)
 lat_prop.prt_lat("lat_prop_lat.txt")
 
 b_3_list = ["s1_h3", "s2_h3", "s3_h3", "s4_h3"]

@@ -51,7 +51,7 @@ class opt_uc_class:
 
         self._lat_prop     = prm_class.lattice[0]
         self._nld          = prm_class.lattice[1]
-        self._uc_centre      = prm_class.s_loc
+        self._uc_centre    = prm_class.s_loc
         self._des_val_list = prm_class.design_vals
         self._weights      = prm_class.weights
         self._bend_list    = prm_class.dipoles[0]
@@ -318,6 +318,8 @@ def get_weights():
     return weights
 
 
+no = 2
+
 cod_eps   = 1e-15
 E_0       = 3.0e9
 
@@ -329,7 +331,7 @@ home_dir = os.path.join(
     os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "MAX_IV")
 file_name = os.path.join(home_dir, sys.argv[1]+".lat")
 
-lat_prop = lp.lattice_properties_class(file_name, E_0, cod_eps, 2)
+lat_prop = lp.lattice_properties_class(file_name, E_0, cod_eps, no)
 
 lat_prop.prt_lat("max_4u_uc_lat.txt")
 
