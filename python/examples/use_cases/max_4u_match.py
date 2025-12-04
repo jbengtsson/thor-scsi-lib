@@ -13,257 +13,348 @@ from typing import Tuple
 import numpy as np
 from scipy import optimize as opt
 
-import gtpsa
-
 import thor_scsi.lib as ts
 
 from thor_scsi.utils import lattice_properties as lp, get_set_mpole as gs, \
     index_class as ind, linear_optics as lo, prm_class as pc, \
-    courant_snyder as cs
+    courant_snyder as cs, tpsa_class as tpsa
 from thor_scsi.utils.output import mat2txt, vec2txt
 
 
 ind = ind.index_class()
 
-phi_max      = 0.85
-b_2_bend_max = 1.0
-b_2_max      = 10.0
+prm_range = {
+    "phi"       : [  0.0,  2.0],
+    "phi_rbend" : [ -0.5,  0.0],
+    "b_2"       : [-10.0, 10.0],
+    "b_2_bend"  : [ -1.5,  1.5]
+}
 
-eta_des   = [0.0, 0.0]   # [eta_x, eta'_x] at the centre of the straight.
-alpha_des = [0.0, 0.0]   # Alpha_x,y at the centre of the straight.
-beta_des  = [5.0, 3.0]   # Beta_x,y at the centre of the straight.
-dnu_des   = [0.5, 0.25]  # Phase advance across the straight.
-
-
-@dataclass
-class gtpsa_prop:
-    # GTPSA properties.
-    # Number of variables - phase-space coordinates & 1 for parameter
-    #dependence.
-    nv: ClassVar[int] = 6 + 1
-    # Max order.
-    no: ClassVar[int] = 1
-    # Number of parameters.
-    nv_prm: ClassVar[int] = 0
-    # Parameters max order.
-    no_prm: ClassVar[int] = 0
-    # Index.
-    named_index = gtpsa.IndexMapping(dict(x=0, px=1, y=2, py=3, delta=4, ct=5))
-    # Descriptor
-    desc : ClassVar[gtpsa.desc]
+design_val = {
+    "eta_des"   : [0.0, 0.0], # [eta_x, eta'_x] at the centre of the straight.
+    "alpha_des" : [0.0, 0.0], # Alpha_x,y at the centre of the straight.
+    "beta_des"  : [5.0, 3.0], # Beta_x,y at the centre of the straight.
+    "dnu_des"   : [0.5, 0.25] # Phase advance across the straight.
+}
 
 
-def compute_periodic_cell(lat_prop, uc_list):
-    M = gtpsa.ss_vect_tpsa(lat_prop._desc, 1)
-    M.set_identity()
-    # The 3rd argument is the 1st element index & the 4th the number of elements
-    # to propagate across.
-    lat_prop._lattice.propagate(
-        lat_prop._model_state, M, uc_list[0], uc_list[1]-uc_list[0]+1)
-    stable, nu, A, A_inv, _ = lo.compute_M_diag(2, M.jacobian())
-    eta, Twiss = lo.transform_matrix_extract_twiss(A)
-    alpha = np.array((Twiss[ind.X][0], Twiss[ind.Y][0]))
-    beta = np.array((Twiss[ind.X][1], Twiss[ind.Y][1]))
-    Twiss = eta, alpha, beta
-    print("\ncompute_periodic_cell:")
-    lat_prop.prt_Twiss_param(Twiss)
-    return Twiss, A
+class opt_match_class:
+    # Private.
 
+    def __init__(self, prm_class: pc.prm_class) -> None:
+        self._first        = True
 
-def match_straight(
-        lat_prop, prm_list, uc_list, sp_list, weight, d1_bend, d2_bend, sp_bend,
-        Twiss_des, rb):
-    chi_2_min = 1e30
-    n_iter    = 0
-    A0        = gtpsa.ss_vect_tpsa(lat_prop._desc, 1)
+        self._A0           = lat_prop.ss_vect_tpsa()
+        self._A_7x7        = lat_prop.ss_vect_tpsa()
+        self._A            = np.nan
+        self._lat_prop     = prm_class.lattice
+        self._uc_centre    = prm_class.s_loc
+        self._des_val_list = prm_class.design_vals
+        self._weights      = prm_class.weights
+        self._bend_list    = prm_class.dipoles[0]
+        self._rbend_list   = prm_class.dipoles[1]
+        self._prm_list     = prm_class.params[0]
+        self._dprm_list    = prm_class.params[1]
 
-    def prt_iter(prm, chi_2, Twiss_des, Twiss_k):
+        self._phi_bend     = np.zeros(len(self._bend_list))
+        self._phi_rbend    = np.zeros(len(self._bend_list))
 
-        def compute_phi_bend(lat_prop, bend_list):
-            phi = 0e0
-            for k in range(len(bend_list)):
-                phi += lat_prop.get_phi_elem(bend_list[k], 0)
-            return phi
+        self._phi_sp       = np.nan
+        self._dphi         = np.nan
 
-        phi = lat_prop.compute_phi_lat()
-        if d1_bend != []:
-            phi_d1 = compute_phi_bend(lat_prop, d1_bend._bend_list)
-        if d2_bend != []:
-            phi_d2 = compute_phi_bend(lat_prop, d2_bend._bend_list)
-        phi_rb = lat_prop.get_phi_elem(rb, 0)
+        self._b_2          = np.nan
 
-        print("\n{:4d} chi_2 = {:9.3e}".format(n_iter, chi_2))
-        print("    [eta_x, eta'_x] = "+
-              "[{:10.3e}, {:10.3e}] ([{:10.3e}, {:10.3e}])".
-              format(Twiss_k[0][ind.x], Twiss_k[0][ind.px],
-                     Twiss_des[0][ind.x], Twiss_des[0][ind.px]))
-        print("    alpha           = "
-              +"[{:10.3e}, {:10.3e}] ([{:10.3e}, {:10.3e}])".
-              format(Twiss_k[1][ind.X], Twiss_k[1][ind.Y],
-                     Twiss_des[1][ind.X], Twiss_des[1][ind.Y]))
-        print("    beta            = "+
-              "[{:8.5f}, {:10.5f}]   ([{:8.5f}, {:8.5f}])".
-              format(Twiss_k[2][ind.X], Twiss_k[2][ind.Y],
-                     Twiss_des[2][ind.X], Twiss_des[2][ind.Y]))
-        print("    dnu             = "+
-              "[{:8.5f}, {:10.5f}]   ([{:8.5f}, {:8.5f}])".
-              format(Twiss_k[3][ind.X], Twiss_k[3][ind.Y],
-                     Twiss_des[3][ind.X], Twiss_des[3][ind.Y]))
-        print("\n    phi_sp          = {:8.5f}".format(phi))
-        print("    C [m]           = {:8.5f}".format(lat_prop.compute_circ()))
-        if d2_bend != []:
-            print("\n    phi_d2          = {:8.5f}".format(phi_d2))
-        if d1_bend != []:
-            print("    phi_d1          = {:8.5f}".format(phi_d1))
-        print("    phi_rb          = {:8.5f}".format(phi_rb))
-        prm_list.prt_prm(prm)
+        self._nu           = np.nan
+        self._Twiss_k      = np.nan
+        self._eta_centre   = np.nan
+        self._xi           = np.nan
 
-    def compute_chi_2_Twiss(Twiss_des, Twiss_k):
-        prt = not False
+        self._constr       = {}
 
-        dchi_2 = weight[0]*(Twiss_k[0][ind.x]-Twiss_des[0][ind.x])**2
-        if prt:
-            print("\n  dchi2(eta_x)    = {:9.3e}".format(dchi_2))
-        chi_2 = dchi_2
+        self._chi_2_min    = 1e30
+        self._n_iter       = -1
+        self._file_name    = "opt_match.txt"
 
-        dchi_2 = weight[0]*(Twiss_k[0][ind.px]-Twiss_des[0][ind.px])**2
-        if prt:
-            print("  dchi2(eta'_x)   = {:9.3e}".format(dchi_2))
-        chi_2 += dchi_2
+    # Public.
 
-        dchi_2 = weight[1]*(Twiss_k[1][ind.X]-Twiss_des[1][ind.X])**2
-        if prt:
-            print("  dchi2(alpha_x)  = {:9.3e}".format(dchi_2))
-        chi_2 += dchi_2
+    def compute_periodic_cell(self, lat_prop, uc_list):
+        M = lat_prop.ss_vect_tpsa()
+        M.set_identity()
+        # The 3rd argument is the 1st element index & the 4th the number of
+        # elements to propagate across.
+        lat_prop._lattice.propagate(
+            lat_prop._model_state, M, uc_list[0], uc_list[1]-uc_list[0]+1)
+        stable, nu, A, A_inv, _ = lo.compute_M_diag(2, M.jacobian())
+        eta, Twiss = lo.transform_matrix_extract_twiss(A)
+        alpha = np.array((Twiss[ind.X][0], Twiss[ind.Y][0]))
+        beta = np.array((Twiss[ind.X][1], Twiss[ind.Y][1]))
+        Twiss = eta, alpha, beta
+        print("\ncompute_periodic_cell:")
+        lat_prop.prt_Twiss_param(Twiss)
+        return Twiss, A
 
-        dchi_2 = weight[1]*(Twiss_k[1][ind.Y]-Twiss_des[1][ind.Y])**2
-        if prt:
-            print("  dchi2(alpha_y)  = {:9.3e}".format(dchi_2))
-        chi_2 += dchi_2
+    def compute_prop(self) -> bool:
+        self._phi_sp = self._lat_prop.compute_phi_lat()
+        self._dphi = self._phi_sp - self._phi_sp_0
 
-        dchi_2 = weight[2]*(Twiss_k[2][ind.X]-Twiss_des[2][ind.X])**2
-        if prt:
-            print("  dchi2(beta_x)   = {:9.3e}".format(dchi_2))
-        chi_2 += dchi_2
-
-        dchi_2 = weight[3]*(Twiss_k[2][ind.Y]-Twiss_des[2][ind.Y])**2
-        if prt:
-            print("  dchi2(beta_y)   = {:9.3e}".format(dchi_2))
-        chi_2 += dchi_2
-
-        dchi_2 = weight[4]*(Twiss_k[3][ind.X]-Twiss_des[3][ind.X])**2
-        if prt:
-            print("  dchi2(dnu_x)    = {:9.3e}".format(dchi_2))
-        chi_2 += dchi_2
-
-        dchi_2 = weight[5]*(Twiss_k[3][ind.Y]-Twiss_des[3][ind.Y])**2
-        if prt:
-            print("  dchi2(dnu_y)    = {:9.3e}".format(dchi_2))
-        chi_2 += dchi_2
-
-        return chi_2
-
-    def compute_chi_2(A0, Twiss_des):
-
-        A1 = _copy.copy(A0)
+        A1 = _copy.copy(self._A0)
         lat_prop._lattice.propagate(
             lat_prop._model_state, A1, uc_list[1]+1, sp_list[1]-uc_list[1])
-        Twiss_k = cs.compute_Twiss_A(A1.jacobian())
+        self._Twiss_k = cs.compute_Twiss_A(A1.jacobian())
 
-        A1 = _copy.copy(A0)
+        A1 = _copy.copy(self._A0)
         lat_prop._lattice.propagate(
             lat_prop._model_state, A1, uc_list[1]+1, sp_list[0]-uc_list[1])
-        _, _, _, dnu = cs.compute_Twiss_A(A1.jacobian())
-        Twiss_k[3][:] = 2e0*(Twiss_k[3][:]-dnu[:])
+        _, _, _, self._dnu = cs.compute_Twiss_A(A1.jacobian())
+        self._Twiss_k[3][:] = 2e0*(self._Twiss_k[3][:]-self._dnu[:])
 
-        chi_2 = compute_chi_2_Twiss(Twiss_des, Twiss_k)
+    def compute_constr(self) -> bool:
+        self._constr = {
+            "eta_x":   (self._Twiss_k[0][ind.x]
+                        -self._des_val_list["eta_des"][ind.x])**2,
+            "eta'_x":  (self._Twiss_k[0][ind.px]
+                        -self._des_val_list["eta_des"][ind.px])**2,
+            "alpha_x": (self._Twiss_k[1][ind.X]
+                        -self._des_val_list["alpha_des"][ind.X])**2,
+            "alpha_y": (self._Twiss_k[1][ind.Y]
+                        -self._des_val_list["alpha_des"][ind.Y])**2,
+            "beta_x":  (self._Twiss_k[2][ind.X]
+                        -self._des_val_list["beta_des"][ind.X])**2,
+            "beta_y":  (self._Twiss_k[2][ind.Y]
+                        -self._des_val_list["beta_des"][ind.Y])**2,
+            "dnu_x":   (self._Twiss_k[3][ind.X]
+                        -self._des_val_list["dnu_des"][ind.X])**2,
+            "dnu_y":   (self._Twiss_k[3][ind.Y]
+                        -self._des_val_list["dnu_des"][ind.Y])**2
+        }
 
-        return chi_2, Twiss_k
+    def compute_chi_2(self) -> float:
+        self.compute_constr()
 
-    def f_match(prm):
-        nonlocal chi_2_min, n_iter, A0, Twiss_des
+        prt_len = 11
+        prt = not False
 
-        n_iter += 1
-        prm_list.set_prm(prm)
-        if d1_bend != []:
-            d1_bend.correct_bend_phi()
-        if d2_bend != []:
-            d2_bend.correct_bend_phi()
-        if sp_bend != []:
-            sp_bend.set_phi_lat()
+        if self._first:
+            constr_len = len(self._constr)
+            weights_len = len(self._weights)
+            if constr_len-weights_len != 0:
+                print(f"\ncompute_chi_2() - len(constr) != "
+                      f"len(weights): {constr_len:d} {weights_len:d}")
+                raise ValueError("Number of constraints != weights.")
+            self._first = False
 
-        chi_2, Twiss_k = compute_chi_2(A0, Twiss_des)
-        if chi_2 < chi_2_min:
-            prt_iter(prm, chi_2, Twiss_des, Twiss_k)
-            pc.prt_lat(lat_prop, "match_lat_k.txt", prm_list, d1_bend=d1_bend)
-            chi_2_min = min(chi_2, chi_2_min)
-
-            # Problematic => system not time invariant.
-            _, A = compute_periodic_cell(lat_prop, uc_list)
-            A0.set_jacobian(A_7x7)
-        else:
-            print("\n{:3d} {:9.3e} ({:9.3e})".
-                  format(n_iter, chi_2, chi_2-chi_2_min))
-            prm_list.prt_prm(prm)
+        chi_2 = 0e0
+        if prt:
+            print()
+        for key in self._weights:
+            dchi_2 = self._weights[key]*self._constr[key]
+            chi_2 += dchi_2
+            if prt:
+                print(f"  dchi_2({key:s})", end="")
+                for k in range(prt_len-len(key)):
+                    print(" ", end="")
+                print(f" = {dchi_2:9.3e}")
 
         return chi_2
 
-    max_iter = 1000
-    f_tol    = 1e-4
-    g_tol    = 1e-4
-    x_tol    = 1e-5
+    def prt_iter(self, prm, chi_2) -> None:
+        print(f"\n{self._n_iter:3d} chi_2 = {self._chi_2_min:9.3e}",
+              f"({chi_2-self._chi_2_min:9.3e})")
+        print(f"    [eta_x, eta'_x]    = "
+              f"[{self._Twiss_k[0][ind.x]:10.3e}"
+              f", {self._Twiss_k[0][ind.px]:10.3e}] "
+              f"([{self._des_val_list["eta_des"][ind.x]:10.3e}"
+              f", {self._des_val_list["eta_des"][ind.px]:10.3e}])")
+        print(f"    [alpha_x, alpha_y] = "
+              f"[{self._Twiss_k[1][ind.x]:10.3e}"
+              f", {self._Twiss_k[1][ind.px]:10.3e}] "
+              f"([{self._des_val_list["alpha_des"][ind.x]:10.3e}"
+              f", {self._des_val_list["alpha_des"][ind.px]:10.3e}])")
+        print(f"    [beta_x, beta_y]   = "
+              f"[{self._Twiss_k[2][ind.x]:5.3f}"
+              f", {self._Twiss_k[2][ind.px]:5.3f}] "
+              f"([{self._des_val_list["beta_des"][ind.x]:5.3f}"
+              f", {self._des_val_list["beta_des"][ind.px]:5.3f}])")
+        print(f"    [dnu_x, dnu_y]     = "
+              f"[{self._Twiss_k[3][ind.x]:5.3f}"
+              f", {self._Twiss_k[3][ind.px]:5.3f}] "
+              f"([{self._des_val_list["dnu_des"][ind.x]:5.3f}"
+              f", {self._des_val_list["dnu_des"][ind.px]:5.3f}])")
 
-    Twiss_0, A = compute_periodic_cell(lat_prop, uc_list)
+        print(f"\n    phi_sp         = {self._phi_sp:8.5f}")
+        print(f"    C [m]          = "
+              f"{self._lat_prop.compute_circ():8.5f}")
 
-    print("\nmatch_straight:\n\nEntrance:")
-    lat_prop.prt_Twiss_param(Twiss_0)
+        print()
+        for k, phi in enumerate(self._phi_bend):
+                b_2 = \
+                    self._bend_list[k].compute_bend_b_2xL() \
+                    /self._bend_list[k].compute_bend_L_tot()
+                print(f"    phi_bend_{k+1:1d}     = "
+                      f"[{phi:8.5f}, {b_2:8.5f}]")
+        print()
+        for k, rbend in enumerate(self._rbend_list):
+            print(f"    {rbend:10s}     = {self._phi_rbend[k]:8.5f}")
 
-    A0.set_zero()
-    A_7x7 = np.zeros((7, 7))
-    A_7x7[:6, :6] = A
-    A0.set_jacobian(A_7x7)
+        self._prm_list.prt_prm(prm)
 
-    prm, bounds = prm_list.get_prm()
+    def f_match(self, prm: np.ndarray) -> float:
+        self._n_iter += 1
+        self._prm_list.set_prm(prm)
 
-    # Methods:
-    #   Nelder-Mead, Powell, CG, BFGS, Newton-CG, L-BFGS-B, TNC, COBYLA,
-    #   SLSQP, trust-constr, dogleg, truct-ncg, trust-exact, trust-krylov.
+        self.compute_prop()
 
-    if not True:
+        chi_2 = self.compute_chi_2()
+
+        if chi_2 < self._chi_2_min:
+            self.prt_iter(prm, chi_2)
+            if False:
+                self._lat_prop.prt_Twiss("twiss.txt")
+            pc.prt_lat(
+                self._lat_prop, self._file_name, self._prm_list,
+                bend_list=self._bend_list)
+            self._chi_2_min = min(chi_2, self._chi_2_min)
+ 
+            # Problematic => system not time invariant.
+            _, A = self.compute_periodic_cell(lat_prop, uc_list)
+            self._A0.set_jacobian(self._A_7x7)
+        else:
+            print(f"\n{self._n_iter:3d} chi_2 = {self._chi_2_min:9.3e}",
+                  f"({chi_2-self._chi_2_min:9.3e})")
+            if False:
+                print(f"\n{self._n_iter:3d}",
+                      f"dchi_2 = {chi_2-self._chi_2_min:9.3e}")
+                # self._prm_list.prt_prm(prm)
+
+        return chi_2
+
+    def opt_match(self) -> opt.OptimizeResult:
+        """Use Case: optimise super period.
+        """
+
+        max_iter = 10000
+        f_tol    = 1e-7
+        x_tol    = 1e-7
+        g_tol    = 1e-7
+
+        Twiss_0, self._A = self.compute_periodic_cell(lat_prop, uc_list)
+
+        print("\nmatch_straight:\n\nEntrance:")
+        lat_prop.prt_Twiss_param(Twiss_0)
+
+        self._A0.set_zero()
+        self._A_7x7 = np.zeros((7, 7))
+        self._A_7x7[:6, :6] = self._A
+        self._A0.set_jacobian(self._A_7x7)
+
+        prm, bounds = self._prm_list.get_prm()
+        if True:
+            self._phi_sp_0 = 18.0
+        else:
+            self._phi_sp_0 = self._lat_prop.compute_phi_lat()
+        self.f_match(prm)
+
+        # Methods:
+        #   Nelder-Mead, Powell, CG, BFGS, Newton-CG, L-BFGS-B, TNC, COBYLA,
+        #   SLSQP, trust-constr, dogleg, truct-ncg, trust-exact, trust-krylov.
+        # Methods with boundaries:
+        #   L-BFGS-B, TNC, and SLSQP.
+        # Methods with constraints:
+        #   SLSQP.
+
+        opt_dict = {
+            "CG": {"options": {
+                "gtol": g_tol, "maxiter": max_iter, "eps": self._dprm_list}},
+            "TNC": {"options": {
+                "ftol": f_tol, "gtol": g_tol, "xtol": x_tol, "maxfun": max_iter,
+                "eps": 1e-3}},
+            "BFGS": {"options": {
+                "ftol": f_tol, "gtol": g_tol, "maxiter": max_iter,
+                "eps": 1e-5}},
+            "SLSQP": {"options": {
+                "ftol": f_tol, "maxiter": max_iter, "eps": 1e-4}}
+            }
+
+        method = "SLSQP"
+        
         minimum = opt.minimize(
-            f_match,
+            self.f_match,
             prm,
-            method="Powell",
-            # callback=prt_iter,
-            bounds = bounds,
-            options={"ftol": f_tol, "xtol": x_tol, "maxiter": max_iter}
-        )
-    else:
-        minimum = opt.minimize(
-            f_match,
-            prm,
-            method="CG",
+            method=method,
             # callback=prt_iter,
             jac=None,
             bounds = bounds,
-            options={"gtol": g_tol, "maxiter": max_iter}
+            options=opt_dict[method]["options"]
         )
 
-    print("\n".join(minimum))
+        print("\n".join(minimum))
 
 
-# TPSA max order.
-gtpsa_prop.no = 2
+def get_bends():
+    bend_lists = {
+        "bend_list": [
+            ["d1_h2_sl_dm5", "d1_h2_sl_dm4", "d1_h2_sl_dm3", "d1_h2_sl_dm2",
+             "d1_h2_sl_dm1", "d1_h2_sl_ds0", "d1_h2_sl_ds1", "d1_h2_sl_ds2",
+             "d1_h2_sl_ds3", "d1_h2_sl_ds4", "d1_h2_sl_ds5",
+             "d1_h2_sl_ds6"],
+        ],
+        "rbend_list": ["r2_h2"]
+    }
+
+    bend_list = []
+    for b_list in bend_lists["bend_list"]:
+        bend_list.append(pc.bend_class(lat_prop, b_list))
+
+    return bend_list, bend_lists["rbend_list"]
+
+
+def get_prms(bend_list, eps):
+    prm = [
+        ("q1_h2", "b_2", prm_range["b_2"]),
+        ("q2_h2", "b_2", prm_range["b_2"]),
+        ("r1_h2", "b_2", prm_range["b_2"]),
+        ("lego", "b_2", prm_range["b_2"]),
+        ("lego", "phi", [-0.5, 0.5]),
+        (bend_list[0], "b_2_bend", prm_range["b_2_bend"]),
+        (bend_list[0], "phi_bend", [0.5,  1.5]),
+   ]
+
+    prm_list = pc.prm_class(lat_prop, prm)
+
+    dprm_list = np.full(len(prm), eps)
+
+    return prm_list, dprm_list
+
+
+def get_weights():
+    weights = {
+        "eta_x"   : 1e3,  # eta_x at the centre of the straight.
+        "eta'_x"  : 1e3,  # eta'_x at the centre of the straight.
+        "alpha_x" : 1e0,  # alpha_x at the centre of the straight.
+        "alpha_y" : 1e0,  # alpha_y at the centre of the straight.
+        "beta_x"  : 1e-3, # beta_x at the centre of the straight.
+        "beta_y"  : 1e-3, # beta_y at the centre of the straight.
+        "dnu_x"   : 0e-4, # dnu_x across the straight.
+        "dnu_y"   : 0e-4  # dnu_y across the straight.
+    }
+    return weights
+
+
+no = 1
 
 cod_eps = 1e-15
 E_0     = 3.0e9
+
+A_max     = np.array([6e-3, 3e-3])
+delta_max = 3e-2
+beta_inj  = np.array([3.0, 3.0])
 
 home_dir = os.path.join(
     os.environ["HOME"], "Nextcloud", "thor_scsi", "JB", "MAX_IV")
 lat_name = sys.argv[1]
 file_name = os.path.join(home_dir, lat_name+".lat")
 
-lat_prop = lp.lattice_properties_class(gtpsa_prop, file_name, E_0, cod_eps)
+lat_prop = lp.lattice_properties_class(file_name, E_0, cod_eps, no)
 
 lat_prop.prt_lat("max_4u_match_lat.txt")
 
@@ -284,78 +375,20 @@ print("super period last sextupole  {:5s} loc = {:d}".
 print("super period exit            {:5s} loc = {:d}".
       format(lat_prop._lattice[sp_list[1]].name, sp_list[1]))
 
-Twiss_des = np.array([eta_des, alpha_des, beta_des, dnu_des])
+np.set_printoptions(formatter={"float": "{:10.3e}".format})
 
-# Weights.
-weight = np.array([
-    1e2,  # [eta_x, eta'_x] at the centre of the straight.
-    1e0,  # alpha at the centre of the straight.
-    1e-3, # beta_x at the centre of the straight.
-    1e-3, # beta_y at the centre of the straight.
-    0e-4, # dnu_x across the straight.
-    0e-4  # dnu_y across the straight.
-])
+weight_list = get_weights()
+bend_list, rbend_list = get_bends()
+prm_list, dprm_list = get_prms(bend_list, 1e-4)
 
-d1_list = [
-    "d1_f1_sl_ds6", "d1_f1_sl_ds5", "d1_f1_sl_ds4", "d1_f1_sl_ds3",
-    "d1_f1_sl_ds2", "d1_f1_sl_ds1", "d1_f1_sl_ds0",
-    "d1_f1_sl_dm1", "d1_f1_sl_dm2", "d1_f1_sl_dm3", "d1_f1_sl_dm4",
-    "d1_f1_sl_dm5"
-]
-d1_bend = pc.bend_class(lat_prop, d1_list, phi_max, b_2_max)
+@dataclass
+class prm_class:
+    lattice:     ClassVar[list] = lat_prop
+    s_loc:       ClassVar[list] = [uc_list, sp_list]
+    design_vals: ClassVar[dict] = design_val
+    weights:     ClassVar[list] = weight_list
+    dipoles:     ClassVar[list] = [bend_list, rbend_list]
+    params:      ClassVar[list] = [prm_list, dprm_list]
 
-if not False:
-    d2_list = []
-    d2_bend = []
-else:
-    d2_list = ["d2_f1_sl_d0a", "d2_f1_sl_d0b", "d2_f1_sl_d0c", "d2_f1_sl_df1",
-               "d2_f1_sl_df2", "d2_f1_sl_df3", "d2_f1_sl_df4", "d2_f1_sl_df5"]
-    d2_bend = pc.bend_class(lat_prop, d2_list, phi_max, b_2_max)
-
-# Remark:
-# The local bend angles are treated as parameters - but maintaining the total.
-# However, this will change periodic solution for the horizontal dipspersion
-# for the unit dipole cells.
-# Hence, an iterative approach is required.
-
-prms = [
-    ("q1_f1", "b_2"),
-    ("q2_f1", "b_2"),
-    ("q3_f1", "b_2"),
-
-    ("b_2_bend", d1_bend),
-
-    ("dsim", "phi"),
-
-    # ("d1_f1_sl_ds6", "phi"),
-    # ("d1_f1_sl_ds5", "phi"),
-    # ("d1_f1_sl_ds4", "phi"),
-    # ("d1_f1_sl_ds3", "phi"),
-    # ("d1_f1_sl_ds2", "phi"),
-    # ("d1_f1_sl_ds1", "phi"),
-    # ("d1_f1_sl_ds0", "phi"),
-    # ("d1_f1_sl_dm1", "phi"),
-    # ("d1_f1_sl_dm2", "phi"),
-    # ("d1_f1_sl_dm3", "phi"),
-    # ("d1_f1_sl_dm4", "phi"),
-    # ("d1_f1_sl_dm5", "phi")
-]
-
-sp_bend = pc.phi_lat_class(lat_prop, 2, d1_bend)
-
-dprm_list = np.array([
-    1e-3, 1e-3, 1e-3,
-    1e-3,
-    1e-3, 1e-3,
-    # 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3,
-    # 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3
-])
-
-prm_list = pc.prm_class(lat_prop, prms, b_2_max)
-
-rb = "r1_f1"
-
-match_straight(
-    lat_prop, prm_list, uc_list, sp_list, weight, d1_bend, d2_bend, sp_bend,
-    Twiss_des,
-    rb)
+opt_match = opt_match_class(prm_class)
+opt_match.opt_match()
