@@ -36,6 +36,7 @@ design_val = {
     "phi_rb_1_des" : -0.2,
     "b_2_des"      : 2.0,
     "nu_uc_des"    : np.array([3.0/7.0, 1.0/7.0]),
+    "eta_x_uc_des" : -1e-3,
     "nu_sp_des"    : np.array([58.20/20.0,  17.28/20.0]),
     # "nu_sp_des"    : np.array([58.14/20.0,  17.27/20.0]),
     # "nu_sp_des"    : np.array([57.14/20.0,  20.27/20.0]),
@@ -165,10 +166,12 @@ class opt_sp_class:
                             -self._des_val_list["phi_rb_1_des"])**2,
             "b_2":         (self._b_2-self._des_val_list["b_2_des"])**2,
             "alpha^(1)_c": 1e0/self._alpha_c[1]**2,
-            "alpha^(2)_c": (self._alpha_c[2])**2,
+            "alpha^(2)_c": self._alpha_c[2]**2,
             "U_0":         self._lat_prop._U_0**2,
-            "eta_x_uc":    (self._eta_list[0][ind.x]**2
-                            +self._eta_list[1][ind.x]**2),
+            "eta_x_uc":    ((self._eta_list[0][ind.x]
+                             -self._des_val_list["eta_x_uc_des"])**2
+                            +(self._eta_list[1][ind.x]
+                              -self._des_val_list["eta_x_uc_des"]))**2,
             "eta'_x_uc":   (self._eta_list[0][ind.px]**2
                             +self._eta_list[1][ind.px]**2),
             "alpha_uc":    (self._alpha_list[0][ind.X]**2
@@ -364,7 +367,7 @@ class opt_sp_class:
                 "ftol": f_tol, "maxiter": max_iter, "eps": 1e-4}}
             }
 
-        method = "TNC"
+        method = "SLSQP"
         
         minimum = opt.minimize(
             self.f_sp,
@@ -488,7 +491,11 @@ def get_prms(prm_type, bend_list, eps):
         prm = [
             ("q1_h2",        "b_2", prm_range["b_2"]),
             ("q2_h2",        "b_2", prm_range["b_2"]),
+            ("q1_h2",        "phi", [-1.0, 1.0]),
+            ("q2_h2",        "phi", [-1.0, 1.0]),
+
             ("r1_h2",        "b_2", prm_range["b_2"]),
+
             ("lego",         "phi", [-1.0, 1.0]),
             ("lego",         "b_2", prm_range["b_2"]),
 
@@ -675,10 +682,10 @@ def get_weights():
         "phi_1"       : 0e-2,  
         "phi_rb"      : 0e-3,  
         "b_2"         : 0e-3, 
-        "alpha^(1)_c" : 1e-13,  
+        "alpha^(1)_c" : 1e1*1e-13,  
         "alpha^(2)_c" : 1e1,
         "U_0"         : 1e-15,
-        "eta_x_uc"    : 1e1, 
+        "eta_x_uc"    : 1e7, 
         "eta'_x_uc"   : 1e-1*1e2, 
         "alpha_uc"    : 1e-1,
         "nu_uc_x"     : 1e-2,
@@ -690,7 +697,7 @@ def get_weights():
         "beta_y"      : 0e-6,
         "dnu_x"       : 1e-3,
         "dnu_y"       : 1e-3,
-        "xi"          : 1e-6,
+        "xi"          : 1e-1*1e-6,
         "eta^(2)_x"   : 1e-6 
     }
     return weights

@@ -28,8 +28,8 @@ file_name = os.path.join(home_dir, sys.argv[1]+".lat")
 
 lat_prop = lp.lattice_properties_class(file_name, E_0, cod_eps, 2)
 
-bend_list = ["d2_h2_sl_d0a", "d2_h2_sl_d0b", "d2_h2_sl_d0c", "d2_h2_sl_df1",
-             "d2_h2_sl_df2", "d2_h2_sl_df3", "d2_h2_sl_df4", "d2_h2_sl_df5"]
+bend_list = ["d2_h2_sl_d0a", "d2_h2_sl_d0c", "d2_h2_sl_df1",
+             "d2_h2_sl_df3", "d2_h2_sl_df4", "d2_h2_sl_df5"]
 # Reverse Bend name.
 rb_name = "r2_h2"
 # Location for eta_x(phi_RB) - centre of dipole unit cell.
