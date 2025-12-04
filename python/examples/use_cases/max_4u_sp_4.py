@@ -279,11 +279,11 @@ class opt_sp_class:
 
         print()
         for k, phi in enumerate(self._phi_bend):
-                b_2 = \
+                self._b_2 = \
                     self._bend_list[k].compute_bend_b_2xL() \
                     /self._bend_list[k].compute_bend_L_tot()
                 print(f"    phi_bend_{k+1:1d}     = "
-                      f"[{phi:8.5f}, {b_2:8.5f}]")
+                      f"[{phi:8.5f}, {self._b_2:8.5f}]")
         print()
         for k, rbend in enumerate(self._rbend_list):
             print(f"    {rbend:10s}     = {self._phi_rbend[k]:8.5f}")
@@ -412,13 +412,11 @@ def get_bends(dip_type):
         # m4U_250527_h02_13_02_01_tracy-2.
         bend_lists = {
             "bend_list": [
-                ["d1_h2_sl_dm5", "d1_h2_sl_dm4", "d1_h2_sl_dm3", "d1_h2_sl_dm2",
-                 "d1_h2_sl_dm1", "d1_h2_sl_ds0", "d1_h2_sl_ds1", "d1_h2_sl_ds2",
-                 "d1_h2_sl_ds3", "d1_h2_sl_ds4", "d1_h2_sl_ds5",
-                 "d1_h2_sl_ds6"],
-                ["d2_h2_sl_d0a", "d2_h2_sl_d0b", "d2_h2_sl_d0c", "d2_h2_sl_df1",
-                 "d2_h2_sl_df2", "d2_h2_sl_df3", "d2_h2_sl_df4",
-                 "d2_h2_sl_df5"]
+                ["d1_h2_sl_dm5", "d1_h2_sl_dm3", "d1_h2_sl_dm2",
+                 "d1_h2_sl_ds0", "d1_h2_sl_ds1", "d1_h2_sl_ds2",
+                 "d1_h2_sl_ds3", "d1_h2_sl_ds5"],
+                ["d2_h2_sl_d0a", "d2_h2_sl_d0c", "d2_h2_sl_df1",
+                 "d2_h2_sl_df3", "d2_h2_sl_df4", "d2_h2_sl_df5"]
             ],
             "rbend_list": ["r1_h2", "r2_h2"]
         }
@@ -491,52 +489,40 @@ def get_prms(prm_type, bend_list, eps):
             ("q1_h2",        "b_2", prm_range["b_2"]),
             ("q2_h2",        "b_2", prm_range["b_2"]),
             ("r1_h2",        "b_2", prm_range["b_2"]),
-            ("lego",         "phi", [-1.0,  1.0]),
+            ("lego",         "phi", [-1.0, 1.0]),
             ("lego",         "b_2", prm_range["b_2"]),
 
             ("d1_h2_sl_dm5", "b_2", prm_range["b_2"]),
-            ("d1_h2_sl_dm4", "b_2", prm_range["b_2"]),
             ("d1_h2_sl_dm3", "b_2", prm_range["b_2"]),
             ("d1_h2_sl_dm2", "b_2", prm_range["b_2"]),
-            ("d1_h2_sl_dm1", "b_2", prm_range["b_2"]),
             ("d1_h2_sl_ds0", "b_2", prm_range["b_2"]),
             ("d1_h2_sl_ds1", "b_2", prm_range["b_2"]),
             ("d1_h2_sl_ds2", "b_2", prm_range["b_2"]),
             ("d1_h2_sl_ds3", "b_2", prm_range["b_2"]),
-            ("d1_h2_sl_ds4", "b_2", prm_range["b_2"]),
             ("d1_h2_sl_ds5", "b_2", prm_range["b_2"]),
-            ("d1_h2_sl_ds6", "b_2", prm_range["b_2"]),
 
-            ("d1_h2_sl_dm5", "phi", [-1.0, 1.0]),
-            ("d1_h2_sl_dm4", "phi", [-1.0, 1.0]),
-            ("d1_h2_sl_dm3", "phi", [-1.0, 1.0]),
-            ("d1_h2_sl_dm2", "phi", [-1.0, 1.0]),
-            ("d1_h2_sl_dm1", "phi", [-1.0, 1.0]),
-            ("d1_h2_sl_ds0", "phi", [-1.0, 1.0]),
-            ("d1_h2_sl_ds1", "phi", [-1.0, 1.0]),
-            ("d1_h2_sl_ds2", "phi", [-1.0, 1.0]),
-            ("d1_h2_sl_ds3", "phi", [-1.0, 1.0]),
-            ("d1_h2_sl_ds4", "phi", [-1.0, 1.0]),
-            ("d1_h2_sl_ds5", "phi", [-1.0, 1.0]),
-            ("d1_h2_sl_ds6", "phi", [-1.0, 1.0]),
-
+            ("d1_h2_sl_dm5", "phi", [-1.5, 1.5]),
+            ("d1_h2_sl_dm3", "phi", [-1.5, 1.5]),
+            ("d1_h2_sl_dm2", "phi", [-1.5, 1.5]),
+            ("d1_h2_sl_ds0", "phi", [-1.5, 1.5]),
+            ("d1_h2_sl_ds1", "phi", [-1.5, 1.5]),
+            ("d1_h2_sl_ds2", "phi", [-1.5, 1.5]),
+            ("d1_h2_sl_ds3", "phi", [-1.5, 1.5]),
+            ("d1_h2_sl_ds5", "phi", [-1.5, 1.5]),
+ 
             ("d2_h2_sl_d0a", "b_2", prm_range["b_2"]),
-            ("d2_h2_sl_d0b", "b_2", prm_range["b_2"]),
             ("d2_h2_sl_d0c", "b_2", prm_range["b_2"]),
             ("d2_h2_sl_df1", "b_2", prm_range["b_2"]),
-            ("d2_h2_sl_df2", "b_2", prm_range["b_2"]),
             ("d2_h2_sl_df3", "b_2", prm_range["b_2"]),
             ("d2_h2_sl_df4", "b_2", prm_range["b_2"]),
             ("d2_h2_sl_df5", "b_2", prm_range["b_2"]),
 
-            ("d2_h2_sl_d0a", "phi", [-1.0, 1.0]),
-            ("d2_h2_sl_d0b", "phi", [-1.0, 1.0]),
-            ("d2_h2_sl_d0c", "phi", [-1.0, 1.0]),
-            ("d2_h2_sl_df1", "phi", [-1.0, 1.0]),
-            ("d2_h2_sl_df2", "phi", [-1.0, 1.0]),
-            ("d2_h2_sl_df3", "phi", [-1.0, 1.0]),
-            ("d2_h2_sl_df4", "phi", [-1.0, 1.0]),
-            ("d2_h2_sl_df5", "phi", [-1.0, 1.0]),
+            ("d2_h2_sl_d0a", "phi", [-1.5, 1.5]),
+            ("d2_h2_sl_d0c", "phi", [-1.5, 1.5]),
+            ("d2_h2_sl_df1", "phi", [-1.5, 1.5]),
+            ("d2_h2_sl_df3", "phi", [-1.5, 1.5]),
+            ("d2_h2_sl_df4", "phi", [-1.5, 1.5]),
+            ("d2_h2_sl_df5", "phi", [-1.5, 1.5]),
 
             ("r2_h2",        "b_2", prm_range["b_2"]),
             ("r2_h2",        "phi", prm_range["phi_rbend"])
@@ -747,7 +733,7 @@ lat_prop.prt_M()
 lat_prop.prt_M_rad()
 
 dip_type = 3
-prm_type = 2
+prm_type = 3
 
 # uc_list = np.array(lat_prop._lattice.find("d2_h3_sl_df0", 0).index)
 # uc_list = np.append(uc_list, lat_prop._lattice.find("d3_h3_sl_df0", 1).index)

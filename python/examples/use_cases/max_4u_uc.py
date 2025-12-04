@@ -63,8 +63,12 @@ class opt_uc_class:
         self._phi_rbend    = np.zeros(len(self._bend_list))
 
         self._b_2          = np.nan
+        self._phi_sp_0     = np.nan
+        self._phi_sp       = np.nan
+        self._dphi         = np.nan
 
         self._nu_uc        = np.nan
+        self._alpha_c      = np.nan
         self._eta_centre   = np.nan
         self._xi           = np.nan
 
@@ -113,19 +117,22 @@ class opt_uc_class:
         return lat_stable
 
     def compute_constr(self) -> bool:
+        self._alpha_c = self._lat_prop._alpha_c
         self._eta_centre, _, _, _ = self._lat_prop.get_Twiss(self._uc_centre)
         Twiss_sp = self._lat_prop.get_Twiss(-1)
         _, _, _, self._nu_uc = Twiss_sp
 
         self._constr = {
-            "eps_x":   (self._lat_prop._eps[ind.X]
-                        -self._des_val_list["eps_x_des"])**2,
-            "nu_uc_x": (self._nu_uc[ind.X]
-                        -self._des_val_list["nu_uc_des"][ind.X])**2,
-            "nu_uc_y": (self._nu_uc[ind.Y]
-                        -self._des_val_list["nu_uc_des"][ind.Y])**2,
-            "eta_x":   self._eta_centre[ind.x]**2,
-            "xi":      self._xi[ind.X]**2 + self._xi[ind.Y]**2
+            "eps_x"       : (self._lat_prop._eps[ind.X]
+                             -self._des_val_list["eps_x_des"])**2,
+            "dphi"        : self._dphi**2,
+            "alpha^(1)_c" : 1e0/self._alpha_c[1]**2,
+            "nu_uc_x"     : (self._nu_uc[ind.X]
+                             -self._des_val_list["nu_uc_des"][ind.X])**2,
+            "nu_uc_y"     : (self._nu_uc[ind.Y]
+                             -self._des_val_list["nu_uc_des"][ind.Y])**2,
+            "eta_x"       : self._eta_centre[ind.x]**2,
+            "xi"          : self._xi[ind.X]**2 + self._xi[ind.Y]**2
         }
 
     def compute_chi_2(self) -> float:
@@ -164,6 +171,11 @@ class opt_uc_class:
               f"{1e12*self._lat_prop._eps[ind.X]:5.3f} "
               f"({1e12*self._des_val_list["eps_x_des"]:5.3f})")
 
+        print(f"\n    dphi [deg]     = {self._dphi:9.3e}")
+
+        print("\n    alpha_c (multipoles zeroed)\n"
+              f"                   = [{self._alpha_c[1]:9.3e}, "
+              f"{self._alpha_c[2]:9.3e}]")
         print(f"    nu_uc          = [{self._nu_uc[ind.X]:7.5f}, "
               f"{self._nu_uc[ind.Y]:7.5f}] "
               f"([{self._des_val_list["nu_uc_des"][ind.X]:7.5f}, "
@@ -178,11 +190,11 @@ class opt_uc_class:
 
         print()
         for k, phi in enumerate(self._phi_bend):
-                b_2 = \
+                self._b_2 = \
                     self._bend_list[k].compute_bend_b_2xL() \
                     /self._bend_list[k].compute_bend_L_tot()
                 print(f"    phi_bend_{k+1:1d}     = "
-                      f"[{phi:8.5f}, {b_2:8.5f}]")
+                      f"[{phi:8.5f}, {self._b_2:8.5f}]")
         print()
         for k, rbend in enumerate(self._rbend_list):
             print(f"    {rbend:10s}     = {self._phi_rbend[k]:8.5f}")
@@ -234,10 +246,7 @@ class opt_uc_class:
         g_tol    = 1e-7
 
         prm, bounds = self._prm_list.get_prm()
-        if True:
-            self._phi_sp_0 = 18.0
-        else:
-            self._phi_sp_0 = self._lat_prop.compute_phi_lat()
+        self._phi_sp_0 = self._lat_prop.compute_phi_lat()
         self.f_sp(prm)
 
         # Methods:
@@ -279,9 +288,8 @@ class opt_uc_class:
 def get_bends():
     bend_lists = {
         "bend_list": [
-            ["d2_h2_sl_d0a", "d2_h2_sl_d0b", "d2_h2_sl_d0c", "d2_h2_sl_df1",
-             "d2_h2_sl_df2", "d2_h2_sl_df3", "d2_h2_sl_df4",
-             "d2_h2_sl_df5"]
+            ["d2_h2_sl_d0a", "d2_h2_sl_d0c", "d2_h2_sl_df1",
+             "d2_h2_sl_df3", "d2_h2_sl_df4", "d2_h2_sl_df5"]
         ],
         "rbend_list": ["r2_h2"]
     }
@@ -293,12 +301,32 @@ def get_bends():
     return bend_list, bend_lists["rbend_list"]
 
 
-def get_prms(bend_list, eps):
-    prm = [
-        (bend_list[0], "b_2_bend", prm_range["b_2_bend"]),
-        ("r2_h2", "b_2", prm_range["b_2"]),
-        ("r2_h2", "phi", [-0.6,  0.0])
-    ]
+def get_prms(prm_type, bend_list, eps):
+    if prm_type == 1:
+        prm = [
+            (bend_list[0], "b_2_bend", prm_range["b_2_bend"]),
+            ("r2_h2", "b_2", prm_range["b_2"]),
+            ("r2_h2", "phi", [-0.6,  0.0])
+        ]
+    elif prm_type == 2:
+        prm = [
+            ("d2_h2_sl_d0a", "b_2", prm_range["b_2"]),
+            ("d2_h2_sl_d0c", "b_2", prm_range["b_2"]),
+            ("d2_h2_sl_df1", "b_2", prm_range["b_2"]),
+             ("d2_h2_sl_df3", "b_2", prm_range["b_2"]),
+            ("d2_h2_sl_df4", "b_2", prm_range["b_2"]),
+            ("d2_h2_sl_df5", "b_2", prm_range["b_2"]),
+
+            ("d2_h2_sl_d0a", "phi", [-1.0, 1.0]),
+            ("d2_h2_sl_d0c", "phi", [-1.0, 1.0]),
+            ("d2_h2_sl_df1", "phi", [-1.0, 1.0]),
+            ("d2_h2_sl_df3", "phi", [-1.0, 1.0]),
+            ("d2_h2_sl_df4", "phi", [-1.0, 1.0]),
+            ("d2_h2_sl_df5", "phi", [-1.0, 1.0]),
+
+            ("r2_h2", "b_2", prm_range["b_2"]),
+            ("r2_h2", "phi", [-0.6,  0.0])
+        ]
 
     prm_list = pc.prm_class(lat_prop, prm)
 
@@ -309,11 +337,13 @@ def get_prms(bend_list, eps):
 
 def get_weights():
     weights = {
-        "eps_x"   : 1e16,
-        "nu_uc_x" : 1e0,
-        "nu_uc_y" : 1e0,
-        "eta_x"   : 1e-1,
-        "xi"      : 1e-6
+        "eps_x"       : 1e15,
+        "dphi"        : 1e-1, 
+        "alpha^(1)_c" : 1e-14,  
+        "nu_uc_x"     : 1e-1,
+        "nu_uc_y"     : 1e0,
+        "eta_x"       : 1e-1,
+        "xi"          : 1e-6
     }
     return weights
 
@@ -360,9 +390,11 @@ lat_prop.prt_rad()
 lat_prop.prt_M()
 lat_prop.prt_M_rad()
 
+prm_type = 2
+
 weight_list = get_weights()
 bend_list, rbend_list = get_bends()
-prm_list, dprm_list = get_prms(bend_list, 1e-4)
+prm_list, dprm_list = get_prms(prm_type, bend_list, 1e-4)
 
 @dataclass
 class prm_class:
