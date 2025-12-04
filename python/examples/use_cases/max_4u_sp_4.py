@@ -31,11 +31,11 @@ prm_range = {
 }
 
 design_val = {
-    "eps_x_des"    : 40e-12,
+    "eps_x_des"    : 35e-12,
     "phi_1_des"    : 1.3,
     "phi_rb_1_des" : -0.2,
     "b_2_des"      : 2.0,
-    "nu_uc_des"    : np.array([0.4, 0.1]),
+    "nu_uc_des"    : np.array([3.0/7.0, 1.0/7.0]),
     "nu_sp_des"    : np.array([58.20/20.0,  17.28/20.0]),
     # "nu_sp_des"    : np.array([58.14/20.0,  17.27/20.0]),
     # "nu_sp_des"    : np.array([57.14/20.0,  20.27/20.0]),
@@ -472,21 +472,76 @@ def get_prms(prm_type, bend_list, eps):
         prm = [
             ("q1_h2",        "b_2",      prm_range["b_2"]),
             ("q2_h2",        "b_2",      prm_range["b_2"]),
+            ("r1_h2",        "b_2",      prm_range["b_2"]),
+            ("lego",         "phi",      [-1.0, 1.0]),
+            ("lego",         "b_2",      prm_range["b_2"]),
 
             (bend_list[0],   "b_2_bend", prm_range["b_2_bend"]),
             (bend_list[1],   "b_2_bend", prm_range["b_2_bend"]),
 
-            (bend_list[0],   "phi_bend", [0.5,  1.5]),
-            (bend_list[1],   "phi_bend", [1.5,  3.0]),
+            (bend_list[0],   "phi_bend", [0.5, 1.5]),
+            (bend_list[1],   "phi_bend", [1.5, 3.0]),
 
-            ("r1_h2",        "b_2",      prm_range["b_2"]),
             ("r2_h2",        "b_2",      prm_range["b_2"]),
 
-            ("r2_h2",        "phi",      prm_range["phi_rbend"]),
-            ("lego",         "phi",      [-1.0,  1.0]),
-            ("lego",         "b_2",      prm_range["b_2"])
+            ("r2_h2",        "phi",      prm_range["phi_rbend"])
         ]
     elif prm_type == 3:
+        prm = [
+            ("q1_h2",        "b_2", prm_range["b_2"]),
+            ("q2_h2",        "b_2", prm_range["b_2"]),
+            ("r1_h2",        "b_2", prm_range["b_2"]),
+            ("lego",         "phi", [-1.0,  1.0]),
+            ("lego",         "b_2", prm_range["b_2"]),
+
+            ("d1_h2_sl_dm5", "b_2", prm_range["b_2"]),
+            ("d1_h2_sl_dm4", "b_2", prm_range["b_2"]),
+            ("d1_h2_sl_dm3", "b_2", prm_range["b_2"]),
+            ("d1_h2_sl_dm2", "b_2", prm_range["b_2"]),
+            ("d1_h2_sl_dm1", "b_2", prm_range["b_2"]),
+            ("d1_h2_sl_ds0", "b_2", prm_range["b_2"]),
+            ("d1_h2_sl_ds1", "b_2", prm_range["b_2"]),
+            ("d1_h2_sl_ds2", "b_2", prm_range["b_2"]),
+            ("d1_h2_sl_ds3", "b_2", prm_range["b_2"]),
+            ("d1_h2_sl_ds4", "b_2", prm_range["b_2"]),
+            ("d1_h2_sl_ds5", "b_2", prm_range["b_2"]),
+            ("d1_h2_sl_ds6", "b_2", prm_range["b_2"]),
+
+            ("d1_h2_sl_dm5", "phi", [-0.5, 0.5]),
+            ("d1_h2_sl_dm4", "phi", [-0.5, 0.5]),
+            ("d1_h2_sl_dm3", "phi", [-0.5, 0.5]),
+            ("d1_h2_sl_dm2", "phi", [-0.5, 0.5]),
+            ("d1_h2_sl_dm1", "phi", [-0.5, 0.5]),
+            ("d1_h2_sl_ds0", "phi", [-0.5, 0.5]),
+            ("d1_h2_sl_ds1", "phi", [-0.5, 0.5]),
+            ("d1_h2_sl_ds2", "phi", [-0.5, 0.5]),
+            ("d1_h2_sl_ds3", "phi", [-0.5, 0.5]),
+            ("d1_h2_sl_ds4", "phi", [-0.5, 0.5]),
+            ("d1_h2_sl_ds5", "phi", [-0.5, 0.5]),
+            ("d1_h2_sl_ds6", "phi", [-0.5, 0.5]),
+
+            ("d2_h2_sl_d0a", "b_2", prm_range["b_2"]),
+            ("d2_h2_sl_d0b", "b_2", prm_range["b_2"]),
+            ("d2_h2_sl_d0c", "b_2", prm_range["b_2"]),
+            ("d2_h2_sl_df1", "b_2", prm_range["b_2"]),
+            ("d2_h2_sl_df2", "b_2", prm_range["b_2"]),
+            ("d2_h2_sl_df3", "b_2", prm_range["b_2"]),
+            ("d2_h2_sl_df4", "b_2", prm_range["b_2"]),
+            ("d2_h2_sl_df5", "b_2", prm_range["b_2"]),
+
+            ("d2_h2_sl_d0a", "phi", [-0.5, 0.5]),
+            ("d2_h2_sl_d0b", "phi", [-0.5, 0.5]),
+            ("d2_h2_sl_d0c", "phi", [-0.5, 0.5]),
+            ("d2_h2_sl_df1", "phi", [-0.5, 0.5]),
+            ("d2_h2_sl_df2", "phi", [-0.5, 0.5]),
+            ("d2_h2_sl_df3", "phi", [-0.5, 0.5]),
+            ("d2_h2_sl_df4", "phi", [-0.5, 0.5]),
+            ("d2_h2_sl_df5", "phi", [-0.5, 0.5]),
+
+            ("r2_h2",        "b_2", prm_range["b_2"]),
+            ("r2_h2",        "phi", prm_range["phi_rbend"])
+        ]
+    elif prm_type == 4:
         prm = [
             ("q1_h2",        "b_2",      prm_range["b_2"]),
             ("q2_h2",        "b_2",      prm_range["b_2"]),
@@ -505,7 +560,7 @@ def get_prms(prm_type, bend_list, eps):
             ("r1_h2",        "phi",      prm_range["phi_rbend"]),
             ("r2_h2",        "phi",      prm_range["phi_rbend"]),
         ]
-    elif prm_type == 4:
+    elif prm_type == 5:
         prm = [
             ("q1_h3",        "b_2",      prm_range["b_2"]),
             ("q2_h3",        "b_2",      prm_range["b_2"]),
@@ -550,7 +605,7 @@ def get_prms(prm_type, bend_list, eps):
             ("r2_h3",        "phi",      [-0.2,  0.0]),
             ("r3_h3",        "phi",      [-0.2,  0.0])
         ]
-    elif prm_type == 5:
+    elif prm_type == 6:
         prm = [
             ("q1_h3",        "b_2",      prm_range["b_2"]),
             ("q2_h3",        "b_2",      prm_range["b_2"]),
@@ -629,12 +684,12 @@ def get_prms(prm_type, bend_list, eps):
 
 def get_weights():
     weights = {
-        "eps_x"       : 1e3*1e17,
+        "eps_x"       : 1e1*1e17,
         "dphi"        : 1e-1, 
         "phi_1"       : 0e-2,  
         "phi_rb"      : 0e-3,  
         "b_2"         : 0e-3, 
-        "alpha^(1)_c" : 1e-1*1e-14,  
+        "alpha^(1)_c" : 1e-13,  
         "alpha^(2)_c" : 1e1,
         "U_0"         : 1e-15,
         "eta_x_uc"    : 1e1, 
@@ -643,13 +698,13 @@ def get_weights():
         "nu_uc_x"     : 1e-2,
         "nu_uc_y"     : 1e-2,
         "eta_x"       : 1e2,
-        "nu_sp_x"     : 1e0, 
-        "nu_sp_y"     : 1e0,
+        "nu_sp_x"     : 0e0, 
+        "nu_sp_y"     : 0e0,
         "beta_x"      : 0e-6,
         "beta_y"      : 0e-6,
         "dnu_x"       : 1e-3,
         "dnu_y"       : 1e-3,
-        "xi"          : 1e-7,
+        "xi"          : 1e-6,
         "eta^(2)_x"   : 1e-6 
     }
     return weights
@@ -692,7 +747,7 @@ lat_prop.prt_M()
 lat_prop.prt_M_rad()
 
 dip_type = 3
-prm_type = 2
+prm_type = 3
 
 # uc_list = np.array(lat_prop._lattice.find("d2_h3_sl_df0", 0).index)
 # uc_list = np.append(uc_list, lat_prop._lattice.find("d3_h3_sl_df0", 1).index)
