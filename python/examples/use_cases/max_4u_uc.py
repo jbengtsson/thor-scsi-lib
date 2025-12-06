@@ -285,7 +285,7 @@ class opt_uc_class:
         print("\n".join(minimum))
 
 
-def get_bends():
+def get_bends(lat_prop):
     bend_lists = {
         "bend_list": [
             ["d2_h2_sl_d0a", "d2_h2_sl_d0c", "d2_h2_sl_df1",
@@ -301,7 +301,7 @@ def get_bends():
     return bend_list, bend_lists["rbend_list"]
 
 
-def get_prms(prm_type, bend_list, eps):
+def get_prms(prm_type, lat_prop, bend_list, eps):
     if prm_type == 1:
         prm = [
             (bend_list[0], "b_2_bend", prm_range["b_2_bend"]),
@@ -393,8 +393,8 @@ lat_prop.prt_M_rad()
 prm_type = 2
 
 weight_list = get_weights()
-bend_list, rbend_list = get_bends()
-prm_list, dprm_list = get_prms(prm_type, bend_list, 1e-4)
+bend_list, rbend_list = get_bends(lat_prop)
+prm_list, dprm_list = get_prms(prm_type, lat_prop, bend_list, 1e-4)
 
 @dataclass
 class prm_class:

@@ -382,7 +382,7 @@ class opt_sp_class:
         print("\n".join(minimum))
 
 
-def get_bends(dip_type):
+def get_bends(dip_type, lat_prop):
     if dip_type == 1:
         # max_4u/m4U_250316_h03_01_01_01_tracy-2.
         bend_lists = {
@@ -447,7 +447,7 @@ def get_bends(dip_type):
     return bend_list, bend_lists["rbend_list"]
 
 
-def get_prms(prm_type, bend_list, eps):
+def get_prms(prm_type, lat_prop, bend_list, eps):
     if prm_type == 1:
         prm = [
             ("q1_h2",        "b_2",      prm_range["b_2"]),
@@ -766,8 +766,8 @@ print(f"super period last sextupole  {lat_prop._lattice[sp_list[1]].name:15s}",
       f"loc = {sp_list[1]:d}")
 
 weight_list = get_weights()
-bend_list, rbend_list = get_bends(dip_type)
-prm_list, dprm_list = get_prms(prm_type, bend_list, 1e-4)
+bend_list, rbend_list = get_bends(dip_type, lat_prop)
+prm_list, dprm_list = get_prms(prm_type, lat_prop, bend_list, 1e-4)
 
 @dataclass
 class prm_class:
