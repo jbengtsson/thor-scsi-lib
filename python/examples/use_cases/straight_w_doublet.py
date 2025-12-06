@@ -24,25 +24,27 @@ from thor_scsi.utils.output import vec2txt
 ind = ind.index_class()
 
 prms_range = {
-    "phi":       [  0.0,  5.0],
-    "phi_rbend": [ -0.5,  0.0],
+    "phi":       [ -5.0,  5.0],
+    "phi_rbend": [ -5.0,  5.0],
     "b_2":       [-10.0, 10.0],
-    "b_2_bend":  [ -1.5,  1.5]
+    "b_2_bend":  [-10.0, 10.0]
 }
 
 design_vals = {
     "eps_x_des" : 50e-12,
-    "eta_x_des" : 1e-4
+    "eta_x_des" : 1.0,
+    "beta_des"  : [10.0, 2.0]
 }
 
 eps_prms = 1e-4
 
 weights = {
     "eps_x"   : 1e-1,
+    "dphi"    : 1e-1, 
     "alpha_c" : 1e-1,
+    "eta_x"   : 1e-1,
     "beta_x"  : 1e-1,
     "beta_y"  : 1e0,
-    "eta_x"   : 1e-1,
     "xi"      : 1e-6
 }
 
@@ -118,16 +120,21 @@ class opt_straight_class:
     def compute_constr(self) -> bool:
         self._alpha_c = self._lat_prop._alpha_c
         self._eta_centre, _, _, _ = self._lat_prop.get_Twiss(self._uc_centre)
-        Twiss_sp = self._lat_prop.get_Twiss(-1)
-        _, _, _, self._nu_uc = Twiss_sp
+        Twiss = self._lat_prop.get_Twiss(-1)
+        _, _, beta, _ = Twiss
 
         self._constr = {
-            "eps_x"       : (self._lat_prop._eps[ind.X]
+            "eps_x"   : (self._lat_prop._eps[ind.X]
                              -self._des_val_list["eps_x_des"])**2,
-            "dphi"        : self._dphi**2,
-            "alpha^(1)_c" : 1e0/self._alpha_c[1]**2,
-            "eta_x"       : self._eta_centre[ind.x]**2,
-            "xi"          : self._xi[ind.X]**2 + self._xi[ind.Y]**2
+            "dphi"    : self._dphi**2,
+            "alpha_c" : 1e0/self._alpha_c[1]**2,
+            "eta_x"   : (self._eta_centre[ind.x]
+                             -self._des_val_list["eta_x_des"])**2,
+            "beta_x"  : (beta[ind.X]
+                             -self._des_val_list["beta_des"][ind.X])**2,
+            "beta_y"  : (beta[ind.Y]
+                             -self._des_val_list["beta_des"][ind.Y])**2,
+            "xi"      : self._xi[ind.X]**2 + self._xi[ind.Y]**2
         }
 
     def compute_chi_2(self) -> float:
@@ -171,10 +178,6 @@ class opt_straight_class:
         print("\n    alpha_c (multipoles zeroed)\n"
               f"                   = [{self._alpha_c[1]:9.3e}, "
               f"{self._alpha_c[2]:9.3e}]")
-        print(f"    nu_uc          = [{self._nu_uc[ind.X]:7.5f}, "
-              f"{self._nu_uc[ind.Y]:7.5f}] "
-              f"([{self._des_val_list["nu_uc_des"][ind.X]:7.5f}, "
-              f"{self._des_val_list["nu_uc_des"][ind.Y]:7.5f}])")
         print(f"    eta_x          = {self._eta_centre[ind.x]:9.3e}")
         print(f"    xi             = [{self._xi[ind.X]:5.3f}, "
               f"{self._xi[ind.Y]:5.3f}]")
@@ -280,7 +283,7 @@ class opt_straight_class:
 no = 2
 
 cod_eps   = 1e-15
-E_0       = 3.0e9
+E_0       = 2.5e9
 
 A_max     = np.array([6e-3, 3e-3])
 delta_max = 3e-2
