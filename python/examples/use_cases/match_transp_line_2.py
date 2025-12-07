@@ -26,13 +26,25 @@ from thor_scsi.utils.output import mat2txt, vec2txt
 ind = ind.index_class()
 
 
-# Desired linear optics at the exit: alpha, beta, [eta_x, eta'_x].
-Twiss_design = np.array([[0.0, 0.0], [0.0, 0.0], [10.0, 10.0]])
+# Desired linear optics at the exit:
+Twiss_design = {
+    "eta"   : [0.0, 0.0],  # [eta_x, eta'_x].
+    "alpha" : [0.0, 0.0],  # alpha.
+    "beta"  : [10.0, 10.0] # beta.
+}
 
 # Linear optics at the entrance.
-Twiss_entrance = np.array([[3.88154e-02, 0.0], [0.0, 0.0], [4.68525, 2.46836]])
+Twiss_entrance = {
+    "eta"   : [3.88154e-02, 0.0], # [eta_x, eta'_x].
+    "alpha" : [0.0, 0.0],         # alpha.
+    "beta"  : [4.26224, 2.43395]  # beta.
+}
 
-weights = np.array([[1e6, 1e7], [1e2, 1e2], [1e-4, 1e-4]]) 
+weights = {
+    "eta"   : [1e6,  1e7],  # [eta_x, eta'_x].
+    "alpha" : [1e2,  1e2],  # alpha.
+    "beta"  : [1e-4, 1e-4]  # beta.
+}
 
 
 class transp_line_class:
