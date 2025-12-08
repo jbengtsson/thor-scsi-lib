@@ -46,6 +46,7 @@ class opt_straight_class:
         self._phi_tot      = np.nan
         self._dphi         = np.nan
 
+        self._length       = np.nan
         self._alpha_c      = np.nan
         self._eta_entr     = np.nan
         self._alpha_entr   = np.nan
@@ -96,6 +97,9 @@ class opt_straight_class:
         return lat_stable
 
     def compute_constr(self) -> bool:
+        prm_name = self._prm_list._prm_list[0][0]
+        L = lat_prop._lattice.find(prm_name, 0).get_length()
+        self._length = 2e0*L
         self._alpha_c = self._lat_prop._alpha_c
         self._eta_centre, _, self._beta_centre, _ = \
             self._lat_prop.get_Twiss(self._uc_centre)
@@ -103,10 +107,11 @@ class opt_straight_class:
             self._lat_prop.get_Twiss(-1)
 
         self._constr = {
-            "eps_x"   : (self._lat_prop._eps[ind.X]
-                         -self._des_val_list["eps_x_des"])**2,
-            "dphi"    : self._dphi**2,
-            "alpha_c" : 1e0/self._alpha_c[1]**2,
+            "length"       : (self._length-self._des_val_list["length"])**2,
+            "eps_x"        : (self._lat_prop._eps[ind.X]
+                              -self._des_val_list["eps_x_des"])**2,
+            "dphi"         : self._dphi**2,
+            "alpha_c"      : 1e0/self._alpha_c[1]**2,
             "eta_x_entr"   : (self._eta_entr[ind.x]
                               -self._des_val_list["eta_x_entr_des"])**2,
             "beta_x_entr"  : (self._beta_entr[ind.X]
@@ -115,15 +120,15 @@ class opt_straight_class:
             "beta_y_entr"  : (self._beta_entr[ind.Y]
                               -self._des_val_list["beta_entr_des"]
                               [ind.Y])**2,
-            "eta_x_centre"     : (self._eta_centre[ind.x]
-                                  -self._des_val_list["eta_x_centre_des"])**2,
-            "beta_x_centre"    : (self._beta_centre[ind.X]
-                                  -self._des_val_list["beta_centre_des"]
-                                  [ind.X])**2,
-            "beta_y_centre"    : (self._beta_centre[ind.Y]
-                                  -self._des_val_list["beta_centre_des"]
-                                  [ind.Y])**2,
-            "xi"               : self._xi[ind.X]**2 + self._xi[ind.Y]**2
+            "eta_x_centre" : (self._eta_centre[ind.x]
+                              -self._des_val_list["eta_x_centre_des"])**2,
+            "beta_x_centre" : (self._beta_centre[ind.X]
+                               -self._des_val_list["beta_centre_des"]
+                               [ind.X])**2,
+            "beta_y_centre" : (self._beta_centre[ind.Y]
+                               -self._des_val_list["beta_centre_des"]
+                               [ind.Y])**2,
+            "xi"            : self._xi[ind.X]**2 + self._xi[ind.Y]**2
         }
 
     def compute_chi_2(self) -> float:
@@ -168,6 +173,8 @@ class opt_straight_class:
               f"                   = [{self._alpha_c[1]:9.3e}, "
               f"{self._alpha_c[2]:9.3e}]")
 
+        print(f"    length         = {self._length:6.3f}                 "
+              f" ({self._des_val_list["length"]:5.3f})")
         print(f"    eta_x_entr     = {self._eta_entr[ind.x]:10.3e}"
               f"             "
               f" ({self._des_val_list["eta_x_entr_des"]:9.3e})")
@@ -292,10 +299,6 @@ def init():
     cod_eps   = 1e-15
     E_0       = 2.5e9
 
-    A_max     = np.array([6e-3, 3e-3])
-    delta_max = 3e-2
-    beta_inj  = np.array([3.0, 3.0])
-
     home_dir = os.path.join(
         os.environ["HOME"], "Nextcloud", "thor_scsi", "JB")
     file_name = os.path.join(home_dir, sys.argv[1]+".lat")
@@ -303,16 +306,6 @@ def init():
     lat_prop = lp.lattice_properties_class(file_name, E_0, cod_eps, no)
 
     lat_prop.prt_lat("Twiss_lat.txt")
-
-    str_centre = lat_prop._lattice.find("D5", 0).index
-    print("\nunit cell centre {:5s} loc = {:d}".
-          format(lat_prop._lattice[str_centre].name, str_centre))
-
-    np.set_printoptions(formatter={"float": "{:10.3e}".format})
-
-    b_3_list = []
-    nld = nld_class.nonlin_dyn_class(
-        lat_prop, A_max, beta_inj, delta_max, b_3_list)
 
     # Compute Twiss parameters along lattice.
     if not lat_prop.comp_per_sol():
@@ -327,12 +320,24 @@ def init():
     lat_prop.prt_M()
     lat_prop.prt_M_rad()
 
-    return lat_prop, nld, b_3_list, str_centre
+    return lat_prop
 
 
-def define_system(lat_prop, str_centre):
+def define_system(lat_prop):
+    A_max     = np.array([6e-3, 3e-3])
+    delta_max = 3e-2
+    beta_inj  = np.array([3.0, 3.0])
+
     # Epsilon for numerical evalutation of the Jacobian. 
     eps_prms = 1e-4
+
+    str_centre = lat_prop._lattice.find("D5", 0).index
+    print("straight centre {:5s} loc = {:d}".
+          format(lat_prop._lattice[str_centre].name, str_centre))
+
+    b_3_list = []
+    nld = nld_class.nonlin_dyn_class(
+        lat_prop, A_max, beta_inj, delta_max, b_3_list)
 
     # Parameter ranges.
     prms_range = {
@@ -344,6 +349,7 @@ def define_system(lat_prop, str_centre):
 
     # Design values.
     design_val_list = {
+        "length"           : 3.0,
         "eps_x_des"        : 150e-12,
         "eta_x_entr_des"   : 3.88154e-02,
         "beta_entr_des"    : [4.26224, 2.43395],
@@ -359,6 +365,7 @@ def define_system(lat_prop, str_centre):
 
     # Parameters.
     prms = [
+        ("D5",         "L",        [0.4, 1.5]),
         (bend_list[0], "phi_bend", prms_range["phi"]),
         (bend_list[0], "b_2_bend", prms_range["b_2_bend"]),
         ("QF2",        "b_2",      prms_range["b_2"]),
@@ -371,6 +378,7 @@ def define_system(lat_prop, str_centre):
 
     # Weights for least-square minimisation.
     weight_list = {
+        "length"        : 1e-3,
         "eps_x"         : 1e17,
         "dphi"          : 0e0, 
         "alpha_c"       : 1e-11,
@@ -400,8 +408,8 @@ def define_system(lat_prop, str_centre):
 
 
 # Main program.
-lat_prop, nld, b_3_list, str_centre = init()
-opt_straight = define_system(lat_prop, str_centre)
+lat_prop = init()
+opt_straight = define_system(lat_prop)
 
 # Optimise.
 opt_straight.opt_straight()
