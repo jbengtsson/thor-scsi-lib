@@ -87,6 +87,7 @@ class opt_straight_class:
         return True
 
     def compute_prop(self) -> bool:
+        # Compute lattice properties for the constraints.
         self._phi_tot = self._lat_prop.compute_phi_lat()
         self._dphi = self._phi_tot - self._phi_tot_0
 
@@ -98,6 +99,7 @@ class opt_straight_class:
         return lat_stable
 
     def compute_constr(self) -> bool:
+        # Compute the least-square constraints.
         prm_name = self._prm_list._prm_list[0][0]
         L = lat_prop._lattice.find(prm_name, 0).get_length()
         self._length = 2e0*L
@@ -150,6 +152,7 @@ class opt_straight_class:
         chi_2 = 0e0
         if prt:
             print()
+        # Compute the least-square.
         for key in self._weights:
             dchi_2 = self._weights[key]*self._constr[key]
             chi_2 += dchi_2
@@ -162,6 +165,7 @@ class opt_straight_class:
         return chi_2
 
     def prt_iter(self, prm, chi_2) -> None:
+        # Print the results for the iteration.
         print(f"\n{self._n_iter:3d} chi_2 = {self._chi_2_min:9.3e}",
               f"({chi_2-self._chi_2_min:9.3e})")
         print(f"    eps_x [pm.rad] = "
@@ -212,7 +216,8 @@ class opt_straight_class:
         self._lat_prop.prt_rad()
         self._prm_list.prt_prm(prm)
 
-    def f_sp(self, prm: np.ndarray) -> float:
+    def f_straight(self, prm: np.ndarray) -> float:
+        # Least-square function.
         self._n_iter += 1
         self._prm_list.set_prm(prm)
 
@@ -245,8 +250,7 @@ class opt_straight_class:
         return chi_2
 
     def opt_straight(self) -> opt.OptimizeResult:
-        """Use Case: optimise super period.
-        """
+        # Optimiser.
 
         max_iter = 10000
         f_tol    = 1e-7
@@ -255,7 +259,7 @@ class opt_straight_class:
 
         prm, bounds = self._prm_list.get_prm()
         self._phi_tot_0 = self._lat_prop.compute_phi_lat()
-        self.f_sp(prm)
+        self.f_straight(prm)
 
         # Methods:
         #   Nelder-Mead, Powell, CG, BFGS, Newton-CG, L-BFGS-B, TNC, COBYLA,
@@ -281,7 +285,7 @@ class opt_straight_class:
         method = "TNC"
         
         minimum = opt.minimize(
-            self.f_sp,
+            self.f_straight,
             prm,
             method=method,
             # callback=prt_iter,
@@ -417,7 +421,7 @@ def define_system(lat_prop):
         "xi"            : 1e-7
     }
 
-    # Package the system.
+    # Package the system of constrants & parameters.
     @dataclass
     class prm_class:
         prm_tol:     ClassVar[float] = eps_prm  
