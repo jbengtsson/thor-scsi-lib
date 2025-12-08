@@ -278,7 +278,7 @@ class opt_straight_class:
                 "ftol": f_tol, "maxiter": max_iter, "eps": self._prm_tol}}
             }
 
-        method = "SLSQP"
+        method = "TNC"
         
         minimum = opt.minimize(
             self.f_sp,
@@ -297,8 +297,8 @@ def init():
     # TPSA order - i.e., include linear chromaticity.
     no = 2
 
-    cod_eps   = 1e-15
-    E_0       = 2.5e9
+    cod_eps = 1e-15
+    E_0     = 2.5e9
 
     home_dir = os.path.join(
         os.environ["HOME"], "Nextcloud", "thor_scsi", "JB")
@@ -407,13 +407,13 @@ def define_system(lat_prop):
         "length"        : 1e-3,
         "eps_x"         : 1e14,
         "dphi"          : 0e0,
-        "alpha_c"       : 1e-15,
+        "alpha_c"       : 1e-13,
         "eta_x_entr"    : 1e3,
         "beta_x_entr"   : 1e-2,
         "beta_y_entr"   : 1e-2,
         "eta_x_centre"  : 1e2,
-        "beta_x_centre" : 1e-3,
-        "beta_y_centre" : 1e-3,
+        "beta_x_centre" : 1e-6,
+        "beta_y_centre" : 1e-6,
         "xi"            : 1e-7
     }
 
@@ -428,7 +428,7 @@ def define_system(lat_prop):
         dipoles:     ClassVar[list]  = [bend_list]
         params:      ClassVar[list]  = [prm_list, dprm_list]
 
-    # And generate the object.
+    # Generate the corresponding object.
     opt_straight = opt_straight_class(prm_class)
 
     return opt_straight
