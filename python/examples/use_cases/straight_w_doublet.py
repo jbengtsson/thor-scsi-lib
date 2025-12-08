@@ -168,22 +168,22 @@ class opt_straight_class:
               f"                   = [{self._alpha_c[1]:9.3e}, "
               f"{self._alpha_c[2]:9.3e}]")
 
-        print(f"    eta_x_entr     = {self._eta_entr[ind.x]:9.3e}"
-              f"              "
+        print(f"    eta_x_entr     = {self._eta_entr[ind.x]:10.3e}"
+              f"             "
               f" ({self._des_val_list["eta_x_entr_des"]:9.3e})")
         print(f"    beta_entr      = "
               f"[{self._beta_entr[ind.X]:5.3f}"
               f", {self._beta_entr[ind.Y]:5.3f}]          "
               f"([{self._des_val_list["beta_entr_des"][ind.X]:5.3f}, "
               f"{self._des_val_list["beta_entr_des"][ind.Y]:5.3f}])")
-        print(f"    eta_x_centre   = {self._eta_centre[ind.x]:9.3e}"
-              f"               "
+        print(f"    eta_x_centre   = {self._eta_centre[ind.x]:10.3e}"
+              f"              "
               f"({self._des_val_list["eta_x_centre_des"]:9.3e})")
         print(f"    beta_centre    = "
-              f"[{self._beta_centre[ind.X]:5.3f}"
-              f", {self._beta_centre[ind.Y]:5.3f}]         "
-              f"([{self._des_val_list["beta_centre_des"][ind.X]:5.3f}, "
-              f"{self._des_val_list["beta_centre_des"][ind.Y]:5.3f}])")
+              f"[{self._beta_centre[ind.X]:6.3f}"
+              f", {self._beta_centre[ind.Y]:6.3f}]        "
+              f"([{self._des_val_list["beta_centre_des"][ind.X]:6.3f}, "
+              f"{self._des_val_list["beta_centre_des"][ind.Y]:6.3f}])")
         print(f"    xi             = [{self._xi[ind.X]:5.3f}, "
               f"{self._xi[ind.Y]:5.3f}]")
 
@@ -347,7 +347,7 @@ def define_system(lat_prop, str_centre):
         "eps_x_des"        : 150e-12,
         "eta_x_entr_des"   : 3.88154e-02,
         "beta_entr_des"    : [4.26224, 2.43395],
-        "eta_x_centre_des" : 1.0,
+        "eta_x_centre_des" : 0.0,
         "beta_centre_des"  : [10.0, 2.0]
     }
 
@@ -371,16 +371,16 @@ def define_system(lat_prop, str_centre):
 
     # Weights for least-square minimisation.
     weight_list = {
-        "eps_x"         : 1e20,
-        "dphi"          : 1e0, 
-        "alpha_c"       : 1e-9,
+        "eps_x"         : 1e17,
+        "dphi"          : 0e0, 
+        "alpha_c"       : 1e-11,
         "eta_x_entr"    : 1e3,
         "beta_x_entr"   : 1e-2,
         "beta_y_entr"   : 1e-2,
-        "eta_x_centre"  : 0.0,
-        "beta_x_centre" : 1e-2,
-        "beta_y_centre" : 1e-2,
-        "xi"            : 1e-2
+        "eta_x_centre"  : 1e-2,
+        "beta_x_centre" : 0e-2,
+        "beta_y_centre" : 0e-2,
+        "xi"            : 1e-4
     }
 
     # Package the system.
