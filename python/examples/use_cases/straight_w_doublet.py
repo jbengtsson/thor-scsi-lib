@@ -177,49 +177,52 @@ class opt_straight_class:
 
         return chi_2
 
+    def prt_single(self, name, val, n_space, fmt="8.5f"):
+        print(f"{name:19s}= {format(val, fmt)}")
+
+    def prt_pair(self, name, vals, fmt="8.5f"):
+        print(f"{name:19s}= [{format(vals[0], fmt)}, {format(vals[1], fmt)}]")
+
+    def prt_single_des(self, name, val, des_val, n_space, fmt="8.5f"):
+        print(f"{name:19s}= {format(val, fmt)}"
+              f"{'{:{}s}'.format('', n_space)}"
+              f"({format(des_val, fmt)})")
+
+    def prt_pair_des(self, name, vals, des_vals, fmt="8.5f"):
+        print(f"{name:19s}= [{format(vals[0], fmt)}, {format(vals[1], fmt)}]"
+              f"{' ':4s}"
+              f"([{format(des_vals[0], fmt)}, {format(des_vals[1], fmt)}])")
+
     def prt_iter(self, prm, chi_2) -> None:
         # Print the results for the iteration.
         print(f"\n{self._n_iter:3d} chi_2 = {self._chi_2_min:9.3e}",
               f"({chi_2-self._chi_2_min:9.3e})")
-        print(f"    eps_x [pm.rad] = "
-              f"{1e12*self._lat_prop._eps[ind.X]:5.3f} "
-              f"({1e12*self._des_val['eps_x_des']:5.3f})")
-
-        print(f"\n    dphi [deg]     = {self._dphi:9.3e}")
-
-        print("\n    alpha_c (multipoles zeroed)\n"
-              f"                   = [{self._alpha_c[1]:9.3e}, "
-              f"{self._alpha_c[2]:9.3e}]")
-
-        print(f"\n    length         = {self._length:6.3f}                 "
-              f" ({self._des_val['length']:5.3f})")
-        print(f"    nu             = [{self._nu[ind.X]:7.5f}, "
-              f"{self._nu[ind.Y]:7.5f}]      "
-              f"([{self._des_val['nu_des'][ind.X]:7.5f}, "
-              f"{self._des_val['nu_des'][ind.Y]:7.5f}])")
-        print(f"    eta_x_entr     = {self._eta_entr[ind.x]:10.3e}"
-              f"             "
-              f" ({self._des_val['eta_x_entr_des']:9.3e})")
-        print(f"    beta_entr      = "
-              f"[{self._beta_entr[ind.X]:5.3f}"
-              f", {self._beta_entr[ind.Y]:5.3f}]          "
-              f"([{self._des_val['beta_entr_des'][ind.X]:5.3f}, "
-              f"{self._des_val['beta_entr_des'][ind.Y]:5.3f}])")
-        print(f"    eta_x_centre   = {self._eta_centre[ind.x]:10.3e}"
-              f"              "
-              f"({self._des_val['eta_x_centre_des']:9.3e})")
-        print(f"    beta_centre    = "
-              f"[{self._beta_centre[ind.X]:6.3f}"
-              f", {self._beta_centre[ind.Y]:6.3f}]        "
-              f"([{self._des_val['beta_centre_des'][ind.X]:6.3f}, "
-              f"{self._des_val['beta_centre_des'][ind.Y]:6.3f}])")
-        print(f"    xi             = [{self._xi[ind.X]:5.3f}, "
-              f"{self._xi[ind.Y]:5.3f}]")
-
-        print(f"\n    phi_tot        = {self._phi_tot:8.5f}")
-        print(f"    C [m]          = "
-              f"{self._lat_prop.compute_circ():8.5f}")
-
+        print()
+        self.prt_single_des(
+            "    eps_x [pm.rad]", 1e12*self._lat_prop._eps[ind.X],
+            1e12*self._des_val['eps_x_des'], 17, "7.3f")
+        print()
+        self.prt_single("    dphi [deg]", self._dphi, 15, "9.3e")
+        print()
+        alpha_c = np.array([self._alpha_c[1], self._alpha_c[2]])
+        self.prt_pair("    alpha^(k)_c", alpha_c, "9.3e")
+        print()
+        self.prt_single_des(
+            "    length", self._length, self._des_val['length'], 16)
+        self.prt_pair_des("    nu", self._nu, self._des_val['nu_des'])
+        self.prt_single_des("    eta_x_entr", self._eta_entr[ind.x],
+                            self._des_val['eta_x_entr_des'], 14, "10.3e")
+        self.prt_pair_des(
+            "    beta_entr", self._beta_entr, self._des_val['beta_entr_des'])
+        self.prt_single_des(
+            "    eta_x_centre", self._eta_centre[ind.x],
+            self._des_val['eta_x_centre_des'], 14, "10.3e")
+        self.prt_pair_des("    beta_centre", self._beta_centre,
+                          self._des_val['beta_centre_des'])
+        self.prt_pair("    xi", self._xi)
+        print()
+        self.prt_single("    phi_tot", self._phi_tot, 16)
+        self.prt_single("    C [m]", self._lat_prop.compute_circ(), 16)
         print()
         for k, phi in enumerate(self._phi_bend):
                 self._b_2 = \
@@ -227,9 +230,7 @@ class opt_straight_class:
                     /self._bend_list[k].compute_bend_L_tot()
                 print(f"    phi_bend_{k+1:1d}     = "
                       f"[{phi:8.5f}, {self._b_2:8.5f}]")
-
         print(f"\n    b_3            =", self._nld._b_3_list)
-
         self._lat_prop.prt_rad()
         self._prm_list.prt_prm(prm)
 
@@ -459,7 +460,7 @@ def define_system(lat_prop):
     class prm_class:
         # Max number of iterations, parameter Precision, and optimal function
         # precision.
-        opt_prm: ClassVar[list] = [10000, 1e-5, 1e-7, eps_Jacob]
+        opt_prm: ClassVar[list] = [10000, 1e-5, 1e-6, eps_Jacob]
         lattice: ClassVar[list] = [lat_prop, nld]
         s_loc:   ClassVar[list] = [str_start, str_centre, str_end]
         des_val: ClassVar[dict] = design_values
