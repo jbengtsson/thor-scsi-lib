@@ -39,6 +39,7 @@ class opt_straight_class:
         self._max_iter    = prm_class.opt_prm[0]
         self._prm_tol     = prm_class.opt_prm[1]
         self._f_tol       = prm_class.opt_prm[2]
+        self._eps_Jacob   = prm_class.opt_prm[3]
         self._weights     = prm_class.weights
         self._bend_list   = prm_class.dipoles[0]
         self._prm_list    = prm_class.params[0]
@@ -269,11 +270,6 @@ class opt_straight_class:
     def opt_straight(self) -> opt.OptimizeResult:
         # Optimiser.
 
-        max_iter = self._max_iter
-        f_tol    = self._f_tol
-        x_tol    = self._f_tol
-        g_tol    = self._f_tol
-
         prm, bounds = self._prm_list.get_prm()
         self._phi_tot_0 = self._lat_prop.compute_phi_lat()
         self.f_straight(prm)
@@ -287,19 +283,29 @@ class opt_straight_class:
         #   SLSQP.
 
         opt_dict = {
+            # Without boundaries.
             "CG": {"options": {
-                "gtol": g_tol, "maxiter": max_iter, "eps": self._dprm_list}},
-            "TNC": {"options": {
-                "ftol": f_tol, "gtol": g_tol, "xtol": x_tol, "maxfun": max_iter,
-                "eps": self._prm_tol}},
+                "maxiter": self._max_iter, "gtol": self._f_tol,
+                "eps": self._eps_Jacob}},
             "BFGS": {"options": {
-                "ftol": f_tol, "gtol": g_tol, "maxiter": max_iter,
+                "maxiter": self._max_iter,
+                "gtol": self._f_tol, "xrtol": self._prm_tol,
+                "eps": self._prm_tol}},
+            # With boundaries.
+            "L-BFGS-B": {"options": {
+                "maxiter": self._max_iter,
+                "ftol": self._f_tol, "gtol": self._f_tol,
                 "eps": self._prm_tol}},
             "SLSQP": {"options": {
-                "ftol": f_tol, "maxiter": max_iter, "eps": self._prm_tol}}
-            }
+                "ftol": self._f_tol, "maxiter": self._max_iter,
+                "eps": self._eps_Jacob}},
+            "TNC": {"options": {
+                "maxfun": self._max_iter, "ftol": self._f_tol,
+                "gtol": self._f_tol, "xtol": self._prm_tol,
+                "eps": self._eps_Jacob}}
+        }
 
-        method = "SLSQP"
+        method = "L-BFGS-B"
         
         minimum = opt.minimize(
             self.f_straight,
@@ -455,7 +461,7 @@ def define_system(lat_prop):
     class prm_class:
         # Max number of iterations, parameter Precision, and optimal function
         # precision.
-        opt_prm: ClassVar[float] = [10000, 1e-5, 1e-8]
+        opt_prm: ClassVar[float] = [10000, 1e-5, 1e-8, eps_Jacob]
         lattice: ClassVar[list]  = [lat_prop, nld]
         s_loc:   ClassVar[list]  = [str_start, str_centre, str_end]
         des_val: ClassVar[dict]  = design_values
