@@ -32,9 +32,13 @@ class opt_straight_class:
 
         self._lat_prop     = prm_class.lattice[0]
         self._nld          = prm_class.lattice[1]
-        self._uc_centre    = prm_class.s_loc
-        self._des_val_list = prm_class.design_vals
-        self._prm_tol      = prm_class.prm_tol
+        self._str_start    = prm_class.s_loc[0]
+        self._str_centre   = prm_class.s_loc[1]
+        self._str_end      = prm_class.s_loc[2]
+        self._des_val_list = prm_class.des_val
+        self._max_iter     = prm_class.opt_prm[0]
+        self._prm_tol      = prm_class.opt_prm[1]
+        self._f_tol        = prm_class.opt_prm[2]
         self._weights      = prm_class.weights
         self._bend_list    = prm_class.dipoles[0]
         self._prm_list     = prm_class.params[0]
@@ -47,6 +51,7 @@ class opt_straight_class:
         self._phi_tot      = np.nan
         self._dphi         = np.nan
 
+        self._nu           = np.nan
         self._length       = np.nan
         self._alpha_c      = np.nan
         self._eta_entr     = np.nan
@@ -100,16 +105,24 @@ class opt_straight_class:
 
     def compute_constr(self) -> bool:
         # Compute the least-square constraints.
+        # 1st parameter is length
         prm_name = self._prm_list._prm_list[0][0]
         L = lat_prop._lattice.find(prm_name, 0).get_length()
         self._length = 2e0*L
         self._alpha_c = self._lat_prop._alpha_c
+        self._, _, _, nu_0 = self._lat_prop.get_Twiss(self._str_start)
+        self._, _, _, nu_1 = self._lat_prop.get_Twiss(self._str_end)
+        self._nu =  nu_1 - nu_0
         self._eta_centre, _, self._beta_centre, _ = \
-            self._lat_prop.get_Twiss(self._uc_centre)
+            self._lat_prop.get_Twiss(self._str_centre)
         self._eta_entr, self._alpha_entr, self._beta_entr, _ = \
             self._lat_prop.get_Twiss(-1)
 
         self._constr = {
+            "nu_x"         : (self._nu[ind.X]
+                              -self._des_val_list["nu_des"][ind.X])**2,
+            "nu_y"         : (self._nu[ind.Y]
+                              -self._des_val_list["nu_des"][ind.Y])**2,
             "length"       : (self._length-self._des_val_list["length"])**2,
             "eps_x"        : (self._lat_prop._eps[ind.X]
                               -self._des_val_list["eps_x_des"])**2,
@@ -172,14 +185,18 @@ class opt_straight_class:
               f"{1e12*self._lat_prop._eps[ind.X]:5.3f} "
               f"({1e12*self._des_val_list["eps_x_des"]:5.3f})")
 
-        print(f"\n    dphi [deg]   = {self._dphi:9.3e}")
+        print(f"\n    dphi [deg]     = {self._dphi:9.3e}")
 
         print("\n    alpha_c (multipoles zeroed)\n"
               f"                   = [{self._alpha_c[1]:9.3e}, "
               f"{self._alpha_c[2]:9.3e}]")
 
-        print(f"    length         = {self._length:6.3f}                 "
+        print(f"\n    length         = {self._length:6.3f}                 "
               f" ({self._des_val_list["length"]:5.3f})")
+        print(f"    nu             = [{self._nu[ind.X]:7.5f}, "
+              f"{self._nu[ind.Y]:7.5f}]      "
+              f"([{self._des_val_list["nu_des"][ind.X]:7.5f}, "
+              f"{self._des_val_list["nu_des"][ind.Y]:7.5f}])")
         print(f"    eta_x_entr     = {self._eta_entr[ind.x]:10.3e}"
               f"             "
               f" ({self._des_val_list["eta_x_entr_des"]:9.3e})")
@@ -252,10 +269,10 @@ class opt_straight_class:
     def opt_straight(self) -> opt.OptimizeResult:
         # Optimiser.
 
-        max_iter = 10000
-        f_tol    = 1e-7
-        x_tol    = 1e-7
-        g_tol    = 1e-7
+        max_iter = self._max_iter
+        f_tol    = self._f_tol
+        x_tol    = self._f_tol
+        g_tol    = self._f_tol
 
         prm, bounds = self._prm_list.get_prm()
         self._phi_tot_0 = self._lat_prop.compute_phi_lat()
@@ -282,7 +299,7 @@ class opt_straight_class:
                 "ftol": f_tol, "maxiter": max_iter, "eps": self._prm_tol}}
             }
 
-        method = "TNC"
+        method = "SLSQP"
         
         minimum = opt.minimize(
             self.f_straight,
@@ -333,14 +350,15 @@ def define_system(lat_prop):
     delta_max = 3e-2
     beta_inj  = np.array([3.0, 3.0])
 
-    # Precision for parameters.
-    eps_prm = 1e-3
-    # Epsilon for numerical evalutation of the Jacobian. 
-    eps_Jacob = 1e-4
-
+    str_start = lat_prop._lattice.find("QF2", 0).index-1
     str_centre = lat_prop._lattice.find("D5", 0).index
-    print("straight centre {:5s} loc = {:d}".
+    str_end = lat_prop._lattice.find("QF2", 1).index
+    print("Straight start {:5s} loc = {:d}".
+          format(lat_prop._lattice[str_start].name, str_start))
+    print("Straight centre {:5s} loc = {:d}".
           format(lat_prop._lattice[str_centre].name, str_centre))
+    print("Straigth end {:5s} loc = {:d}".
+          format(lat_prop._lattice[str_end].name, str_end))
 
     b_3_list = []
     nld = nld_class.nonlin_dyn_class(
@@ -354,7 +372,8 @@ def define_system(lat_prop):
     }
 
     # Design values.
-    design_val_list = {
+    design_values = {
+        "nu_des"           : [0.9, 0.3],
         "length"           : 5.0,
         "eps_x_des"        : 150e-12,
         "eta_x_entr_des"   : 3.88155e-02,
@@ -380,11 +399,12 @@ def define_system(lat_prop):
             ("QD1",        "b_2",      prms_range["b_2"])
         ]
     else:
+        # Straight should be 1st parameter.
         prms = [
-            ("D5",   "L",   [0.4, 3.0]),
-            ("D2",   "L",   [0.10, 0.25]),
-            ("D3",   "L",   [0.10, 0.25]),
-            ("D4",   "L",   [0.10, 0.25]),
+            ("D5",   "L",   [0.4,  3.0]),
+            # ("D2",   "L",   [0.10, 0.25]),
+            # ("D3",   "L",   [0.10, 0.25]),
+            # ("D4",   "L",   [0.10, 0.25]),
 
             ("B2_1", "phi", prms_range["phi"]),
             ("B2_2", "phi", prms_range["phi"]),
@@ -399,12 +419,13 @@ def define_system(lat_prop):
             ("B2_5", "b_2", prms_range["b_2_bend"]),
 
             ("QF2",  "b_2", prms_range["b_2"]),
-            ("QF3",  "b_2", prms_range["b_2"]),
-            ("QD1",  "b_2", prms_range["b_2"])
-        ]
+            ("QD1",  "b_2", prms_range["b_2"]),
+            ("QF3",  "b_2", prms_range["b_2"])
 
-    prm_list = pc.prm_class(lat_prop, prms)
-    dprm_list = np.full(len(prms), eps_Jacob)
+            # ("QF2",  "L",   [0.2, 0.3]),
+            # ("QF3",  "L",   [0.2, 0.3]),
+            # ("QD1",  "L",   [0.2, 0.3])
+        ]
 
     # Weights for least-square minimisation.
     weight_list = {
@@ -412,25 +433,35 @@ def define_system(lat_prop):
         "eps_x"         : 1e14,
         "dphi"          : 0e0,
         "alpha_c"       : 1e-13,
-        "eta_x_entr"    : 1e3,
-        "beta_x_entr"   : 1e-2,
-        "beta_y_entr"   : 1e-2,
-        "eta_x_centre"  : 1e2,
-        "beta_x_centre" : 1e-6,
-        "beta_y_centre" : 1e-6,
+        "nu_x"          : 0e-3,
+        "nu_y"          : 0e-3,
+        "eta_x_entr"    : 1e4,
+        "beta_x_entr"   : 1e-3,
+        "beta_y_entr"   : 1e-3,
+        "eta_x_centre"  : 1e1,
+        "beta_x_centre" : 1e-8,
+        "beta_y_centre" : 1e-8,
         "xi"            : 1e-7
     }
 
-    # Package the system of constrants & parameters.
+    # Epsilon for numerical evalutation of the Jacobian. 
+    eps_Jacob = 1e-4
+
+    prm_list = pc.prm_class(lat_prop, prms)
+    dprm_list = np.full(len(prms), eps_Jacob)
+
+   # Package the system constrants & parameters.
     @dataclass
     class prm_class:
-        prm_tol:     ClassVar[float] = eps_prm  
-        lattice:     ClassVar[list]  = [lat_prop, nld]
-        s_loc:       ClassVar[list]  = str_centre
-        design_vals: ClassVar[dict]  = design_val_list
-        weights:     ClassVar[list]  = weight_list
-        dipoles:     ClassVar[list]  = [bend_list]
-        params:      ClassVar[list]  = [prm_list, dprm_list]
+        # Max number of iterations, parameter Precision, and optimal function
+        # precision.
+        opt_prm: ClassVar[float] = [10000, 1e-5, 1e-8]
+        lattice: ClassVar[list]  = [lat_prop, nld]
+        s_loc:   ClassVar[list]  = [str_start, str_centre, str_end]
+        des_val: ClassVar[dict]  = design_values
+        weights: ClassVar[list]  = weight_list
+        dipoles: ClassVar[list]  = [bend_list]
+        params:  ClassVar[list]  = [prm_list, dprm_list]
 
     # Generate the corresponding object.
     opt_straight = opt_straight_class(prm_class)
