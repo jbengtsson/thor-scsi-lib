@@ -35,6 +35,71 @@ For installation instructions see `install.rst`_
 .. _`install.rst` : install.rst
 
 
+macOS arm64 quickstart
+----------------------
+
+Tested on Apple Silicon with Homebrew. Installs EPICS Base + PVA, libomp, Python
+deps, and builds thor-scsi with EPICS/PVA/Python/OpenMP enabled.
+
+Prereqs (Homebrew)::
+
+    brew install cmake ninja armadillo boost flex bison doxygen graphviz libomp
+
+EPICS Base + PVA (outside the repo)::
+
+    git clone --branch 7.0 https://github.com/epics-base/epics-base.git ~/epics-base
+    (cd ~/epics-base && make -j$(sysctl -n hw.ncpu))
+
+    mkdir -p ~/modules
+    git clone https://github.com/epics-base/pvDataCPP.git    ~/modules/pvData
+    git clone https://github.com/epics-base/pvAccessCPP.git ~/modules/pvAccess
+    git clone https://github.com/epics-base/pva2pva.git     ~/modules/pva2pva
+
+    cat > ~/modules/pvData/configure/RELEASE <<'EOF'
+    EPICS_BASE=~/epics-base
+    EOF
+    (cd ~/modules/pvData && make -j$(sysctl -n hw.ncpu))
+
+    cat > ~/modules/pvAccess/configure/RELEASE <<'EOF'
+    EPICS_BASE=~/epics-base
+    PVDATA=~/modules/pvData
+    PVACCESS_BUILD_PYTHON=NO
+    EOF
+    (cd ~/modules/pvAccess && make -j$(sysctl -n hw.ncpu))
+
+    cat > ~/modules/pva2pva/configure/RELEASE <<'EOF'
+    EPICS_BASE=~/epics-base
+    PVDATA=~/modules/pvData
+    PVACCESS=~/modules/pvAccess
+    EOF
+    (cd ~/modules/pva2pva && make -j$(sysctl -n hw.ncpu))
+
+Python extras (optional but recommended)::
+
+    python3 -m pip install --user --break-system-packages numpy
+
+Configure & build (from repo root)::
+
+    mkdir -p build && cd build
+    cmake -DUSE_PYTHON_FLAME=ON -DNEED_PYTHON=ON \
+      -DTRY_EPICS=ON \
+      -DEPICS_BASE_DIR=~/epics-base \
+      -DEPICS_HOST_ARCH=darwin-aarch64 \
+      -DEPICS_TARGET_ARCH=darwin-aarch64 \
+      -DEPICS_TARGET_ARCHS="darwin-aarch64;darwin-aarch64-debug" \
+      -DEPICS_TARGET_CLASS=Darwin \
+      -DEPICS_TARGET_CLASSES="Darwin;posix;default" \
+      -DEPICS_TARGET_COMPILER=clang \
+      -DEPICS_MODULE_PATH=~/modules \
+      ..
+    cmake --build .
+
+Notes:
+- OpenMP enabled via Homebrew libomp (AppleClang).
+- Doxygen+dot installed; docs will build if you run the doc target.
+- nosetests check is skipped automatically on Python >= 3.12 (nose incompatible).
+
+
 To run the demo/test program
 ----------------------------
 
