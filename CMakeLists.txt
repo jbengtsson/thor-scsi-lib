@@ -20,6 +20,19 @@ set(Boost_NO_BOOST_CMAKE OFF CACHE BOOL "Prefer FindBoost over config packages" 
 set(Boost_ADDITIONAL_VERSIONS "1.89.0" "1.89")
 set(Boost_ADDITIONAL_VERSIONS "1.89.0;1.89" CACHE STRING "Known Boost versions" FORCE)
 
+# OpenMP (AppleClang needs libomp from Homebrew)
+set(OpenMP_ROOT "/opt/homebrew/opt/libomp" CACHE PATH "OpenMP root path")
+set(OPENMP_ROOT "/opt/homebrew/opt/libomp" CACHE PATH "OpenMP root path (upper)")
+list(APPEND CMAKE_PREFIX_PATH "/opt/homebrew/opt/libomp")
+if(APPLE AND CMAKE_C_COMPILER_ID STREQUAL "AppleClang")
+  set(OpenMP_C_FLAGS "-Xpreprocessor -fopenmp" CACHE STRING "" FORCE)
+  set(OpenMP_CXX_FLAGS "-Xpreprocessor -fopenmp" CACHE STRING "" FORCE)
+  set(OpenMP_C_LIB_NAMES "omp" CACHE STRING "" FORCE)
+  set(OpenMP_CXX_LIB_NAMES "omp" CACHE STRING "" FORCE)
+  set(OpenMP_omp_LIBRARY "/opt/homebrew/opt/libomp/lib/libomp.dylib" CACHE FILEPATH "" FORCE)
+  include_directories("/opt/homebrew/opt/libomp/include")
+endif()
+
 # MacOS - set RPATH entries.
 set(CMAKE_BUILD_RPATH "${CMAKE_SOURCE_DIR}/local/lib")
 set(CMAKE_INSTALL_RPATH "${CMAKE_SOURCE_DIR}/local/lib")
