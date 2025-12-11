@@ -65,8 +65,11 @@ namespace thor_scsi::elements {
 		}
 
 		inline void setMainMultipoleStrength(const Config &config){
-			const double_type K = config.get<double>("B_2", 0.0);
-			// Watch the apersand ...
+			const int n = this->getMainMultipoleNumber();
+			const auto key = std::string("B_") + std::to_string(n);
+			// Allow tests to provide generic "K" as well
+			const double_type K = config.get<double>(key,
+			                                         config.get<double>("K", 0.0));
 			this->setMainMultipoleStrength(K);
 		}
 
@@ -75,9 +78,10 @@ namespace thor_scsi::elements {
 			this->getMultipoles()->setMultipole(n, mul);
 		}
 
-		inline void setMainMultipoleStrength
-		(const Config &config, const int n){
-			double K = config.get<double>("B_2", 0.0);
+		inline void setMainMultipoleStrength(const Config &config, const int n){
+			const auto key = std::string("B_") + std::to_string(n);
+			const double_type K = config.get<double>(key,
+			                                         config.get<double>("K", 0.0));
 			this->setMainMultipoleStrength(K);
 		}
 
@@ -103,7 +107,10 @@ namespace thor_scsi::elements {
 		}
 
 		inline void setMultipoleStrength(const Config &config){
-			const double_type K = config.get<double>("B_2", 0.0);
+			const int n = this->getMainMultipoleNumber();
+			const auto key = std::string("B_") + std::to_string(n);
+			const double_type K = config.get<double>(key,
+			                                         config.get<double>("K", 0.0));
 			this->setMainMultipoleStrength(K);
 		}
 	};

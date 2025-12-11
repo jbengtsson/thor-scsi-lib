@@ -126,7 +126,6 @@ inline T get_p_s(const thor_scsi::core::ConfigType &conf, const gtpsa::ss_vect<T
 	//template<>
 	template<typename T>
 	static inline double get_dI_eta(const gtpsa::ss_vect<T> &A){
-#warning "optimise dI eta"
 		arma::mat jac = A.jacobian();
 		return jac(x_, delta_);
 	}

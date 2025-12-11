@@ -82,6 +82,7 @@ Configure & build (from repo root)::
 
     mkdir -p build && cd build
     cmake -DUSE_PYTHON_FLAME=ON -DNEED_PYTHON=ON \
+      -DPYTHON_EXECUTABLE=/opt/homebrew/bin/python3 \
       -DTRY_EPICS=ON \
       -DEPICS_BASE_DIR=~/epics-base \
       -DEPICS_HOST_ARCH=darwin-aarch64 \
@@ -91,6 +92,7 @@ Configure & build (from repo root)::
       -DEPICS_TARGET_CLASSES="Darwin;posix;default" \
       -DEPICS_TARGET_COMPILER=clang \
       -DEPICS_MODULE_PATH=~/modules \
+      -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
       ..
     cmake --build .
 
@@ -98,6 +100,7 @@ Notes:
 - OpenMP enabled via Homebrew libomp (AppleClang).
 - Doxygen+dot installed; docs will build if you run the doc target.
 - nosetests check is skipped automatically on Python >= 3.12 (nose incompatible).
+- If you use a different Python, point `-DPYTHON_EXECUTABLE=` to it.
 
 
 To run the demo/test program

@@ -36,7 +36,7 @@ namespace thor_scsi::elements {
 		 */
 	public:
 		inline BendingTypeWithKnob(const Config &config) : ClassicalMagnetWithKnob<C>(config){
-			const double gradient = config.get<double>("B_2", 0.0);
+			const double gradient = config.get<double>("B_2", config.get<double>("K", 0.0));
 			this->getMultipoles()->setMultipole(2, gradient);
 
 			/* set pirho */
@@ -51,7 +51,7 @@ namespace thor_scsi::elements {
 		}
 
 		inline int getMainMultipoleNumber(void) const override final {
-			return 1;
+			return 2;
 		};
 		inline bool isSkew(void) const override final {
 			return false;

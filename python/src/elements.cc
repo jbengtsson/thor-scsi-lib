@@ -21,7 +21,6 @@ namespace tse = thor_scsi::elements;
 namespace tsc = thor_scsi::core;
 namespace py = pybind11;
 
-#warning "implement using cdbl properly (templating  elemtype  etc)"
 using cdbl = std::complex<double>;
 using cdbl_intern = std::complex<double>;
 

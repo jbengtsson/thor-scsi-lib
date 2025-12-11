@@ -12,12 +12,12 @@ namespace thor_scsi::elements {
 			: ClassicalMagnetWithKnob<C> (config)
 			{
 				this->setMainMultipoleStrength(config);
-				const double b_3 = config.get<double>("B_3");
+				const double b_3 = config.get<double>("B_3", config.get<double>("K", 0.0));
 				this->getMultipoles()->setMultipole(3, b_3);
 			}
 
 		inline int getMainMultipoleNumber(void) const override final {
-			return 2;
+			return 3;
 		};
 		inline bool isSkew(void) const override final {
 			return false;

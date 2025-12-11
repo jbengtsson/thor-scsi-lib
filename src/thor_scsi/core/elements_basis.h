@@ -30,7 +30,6 @@ namespace thor_scsi::core {
         protected:
 		// using double_type = typename C::double_type;
 		using double_type = double;
-#warning "not yet supporting PL as tpsa"
 		double PL = 0.0;                        ///< Length[m].
 
         private:
