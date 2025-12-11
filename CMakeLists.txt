@@ -1,7 +1,37 @@
-cmake_minimum_required(VERSION 3.0.0)
+cmake_minimum_required(VERSION 3.16)
+
+if(POLICY CMP0148)
+  # allow legacy FindPythonInterp/FindPythonLibs modules
+  cmake_policy(SET CMP0148 OLD)
+  set(CMAKE_POLICY_DEFAULT_CMP0148 OLD)
+endif()
+if(POLICY CMP0167)
+  # keep classic FindBoost behavior to avoid config-package issues
+  cmake_policy(SET CMP0167 OLD)
+  set(CMAKE_POLICY_DEFAULT_CMP0167 OLD)
+endif()
 
 project("thor_scsi" LANGUAGES CXX Fortran)
 
+set(Boost_NO_WARN_NEW ON)
+set(Boost_NO_BOOST_CMAKE OFF)
+set(Boost_NO_WARN_NEW ON CACHE BOOL "Silence Boost new-version warnings" FORCE)
+set(Boost_NO_BOOST_CMAKE OFF CACHE BOOL "Prefer FindBoost over config packages" FORCE)
+set(Boost_ADDITIONAL_VERSIONS "1.89.0" "1.89")
+set(Boost_ADDITIONAL_VERSIONS "1.89.0;1.89" CACHE STRING "Known Boost versions" FORCE)
+
+# OpenMP (AppleClang needs libomp from Homebrew)
+set(OpenMP_ROOT "/opt/homebrew/opt/libomp" CACHE PATH "OpenMP root path")
+set(OPENMP_ROOT "/opt/homebrew/opt/libomp" CACHE PATH "OpenMP root path (upper)")
+list(APPEND CMAKE_PREFIX_PATH "/opt/homebrew/opt/libomp")
+if(APPLE AND CMAKE_C_COMPILER_ID STREQUAL "AppleClang")
+  set(OpenMP_C_FLAGS "-Xpreprocessor -fopenmp" CACHE STRING "" FORCE)
+  set(OpenMP_CXX_FLAGS "-Xpreprocessor -fopenmp" CACHE STRING "" FORCE)
+  set(OpenMP_C_LIB_NAMES "omp" CACHE STRING "" FORCE)
+  set(OpenMP_CXX_LIB_NAMES "omp" CACHE STRING "" FORCE)
+  set(OpenMP_omp_LIBRARY "/opt/homebrew/opt/libomp/lib/libomp.dylib" CACHE FILEPATH "" FORCE)
+  include_directories("/opt/homebrew/opt/libomp/include")
+endif()
 
 # MacOS - set RPATH entries.
 set(CMAKE_BUILD_RPATH "${CMAKE_SOURCE_DIR}/local/lib")

@@ -154,7 +154,6 @@ void tse::quad_fringe
 (const tsc::ConfigType &conf, const P b2, gtpsa::ss_vect<T> &ps)
 {
   //T u, p_s;
-#warning "disabled quad fringe for tpsa parameter dependence"
 #if 0
   T u = b2/(12e0*(1e0+ps[delta_]));
   T p_s = u/(1e0+ps[delta_]);
@@ -357,9 +356,14 @@ tse::FieldKickKnobbed<C>::FieldKickKnobbed
   this->setNumberOfIntegrationSteps(config.get<double>("N"));
   this->setLength(config.get<double>("L"));
 
-  this->setBendingAngle(config.get<double>("Phi", 0.0));
-  this->setEntranceAngle(config.get<double>("Phi_1", 0.0));
-  this->setExitAngle(config.get<double>("Phi_2", 0.0));
+  // Accept legacy keys T/T1/T2 as well as Phi/Phi_1/Phi_2
+  const double phi  = config.get<double>("Phi",  config.get<double>("T",  0.0));
+  const double phi1 = config.get<double>("Phi_1",config.get<double>("T1", 0.0));
+  const double phi2 = config.get<double>("Phi_2",config.get<double>("T2", 0.0));
+
+  this->setBendingAngle(phi);
+  this->setEntranceAngle(phi1);
+  this->setExitAngle(phi2);
   this->integ4O.setParent(this);
 }
 
@@ -444,12 +448,10 @@ void tse::FieldKickKnobbed<C>::_quadFringe
     throw thor_scsi::NotImplemented
       ("Quadfringe only works with multipoles as field interpolators");
   }
-#warning "Not calling gradient but doing direct look up"
   // T Gy=0e0, Gx=0e0;
   // should be checked how to implement
   // muls->gradient(ps[x_], ps[y_], &Gx, &Gy);
   const complex_type C2 = muls->getMultipole(2);
-#warning "Disabled quad fringe for tpsa"
   //tse::quad_fringe(conf, C2.real(), ps);
 
   /*
@@ -490,7 +492,6 @@ thinKickAndRadiate
   auto rad = this->getRadiationDelegate();
   if(rad){
     THOR_SCSI_LOG(DEBUG) <<  "Delegating to computing radiation" << " \n";
-#warning "radiation: check how to instantiate val_z for tpsa?"
     T val_z(ps[0]);
     val_z = 0e0;
     std::array<T, 3> B = {BxoBrho, ByoBrho + h_bend, val_z};

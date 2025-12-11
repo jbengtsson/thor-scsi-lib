@@ -201,14 +201,12 @@ namespace thor_scsi::core {
 		inline void backwardStep1(gtpsa::ss_vect<T> & ps){
 			// Reverse of GtoL, with inverted Euclidian.
 			// Simplified p_rot.
-#warning "Investigate sign of backward step 1 versus forward step2! "
             T dpr = gtpsa::same_as_instance(ps[px_]);
             to_base_type(&this->c0, &dpr);
 			ps[px_] -= dpr;
 		}
 		template<typename T>
 		inline void backwardStep2(gtpsa::ss_vect<T> & ps){
-#warning "Investigate sign of forward step 1 versus backward step2 ! "
 			// Rotated p_rot.
             T dpx = gtpsa::same_as_instance(ps[px_]);
             T dpy = gtpsa::same_as_instance(ps[py_]);
