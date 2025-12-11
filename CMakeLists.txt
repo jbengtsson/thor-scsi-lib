@@ -13,6 +13,12 @@ endif()
 
 project("thor_scsi" LANGUAGES CXX Fortran)
 
+set(Boost_NO_WARN_NEW ON)
+set(Boost_NO_BOOST_CMAKE OFF)
+set(Boost_NO_WARN_NEW ON CACHE BOOL "Silence Boost new-version warnings" FORCE)
+set(Boost_NO_BOOST_CMAKE OFF CACHE BOOL "Prefer FindBoost over config packages" FORCE)
+set(Boost_ADDITIONAL_VERSIONS "1.89.0" "1.89")
+set(Boost_ADDITIONAL_VERSIONS "1.89.0;1.89" CACHE STRING "Known Boost versions" FORCE)
 
 # MacOS - set RPATH entries.
 set(CMAKE_BUILD_RPATH "${CMAKE_SOURCE_DIR}/local/lib")
