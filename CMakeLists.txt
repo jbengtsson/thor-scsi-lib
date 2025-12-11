@@ -1,5 +1,16 @@
 cmake_minimum_required(VERSION 3.16)
 
+if(POLICY CMP0148)
+  # allow legacy FindPythonInterp/FindPythonLibs modules
+  cmake_policy(SET CMP0148 OLD)
+  set(CMAKE_POLICY_DEFAULT_CMP0148 OLD)
+endif()
+if(POLICY CMP0167)
+  # keep classic FindBoost behavior to avoid config-package issues
+  cmake_policy(SET CMP0167 OLD)
+  set(CMAKE_POLICY_DEFAULT_CMP0167 OLD)
+endif()
+
 project("thor_scsi" LANGUAGES CXX Fortran)
 
 
