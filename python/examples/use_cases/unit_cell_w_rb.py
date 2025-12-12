@@ -28,44 +28,37 @@ class opt_straight_class:
     # Private.
 
     def __init__(self, prm_class: pc.prm_class) -> None:
-        self._first       = True
+        self._first     = True
 
-        self._lat_prop    = prm_class.lattice[0]
-        self._nld         = prm_class.lattice[1]
-        self._str_start   = prm_class.s_loc[0]
-        self._str_centre  = prm_class.s_loc[1]
-        self._str_end     = prm_class.s_loc[2]
-        self._des_val     = prm_class.des_val
-        self._max_iter    = prm_class.opt_prm[0]
-        self._prm_tol     = prm_class.opt_prm[1]
-        self._f_tol       = prm_class.opt_prm[2]
-        self._eps_Jacob   = prm_class.opt_prm[3]
-        self._weights     = prm_class.weights
-        self._bend_list   = prm_class.dipoles[0]
-        self._prm_list    = prm_class.params
+        self._lat_prop  = prm_class.lattice[0]
+        self._nld       = prm_class.lattice[1]
+        self._str_start = prm_class.s_loc[0]
+        self._str_end   = prm_class.s_loc[1]
+        self._des_val   = prm_class.des_val
+        self._max_iter  = prm_class.opt_prm[0]
+        self._prm_tol   = prm_class.opt_prm[1]
+        self._f_tol     = prm_class.opt_prm[2]
+        self._eps_Jacob = prm_class.opt_prm[3]
+        self._weights   = prm_class.weights
+        self._bend_list = prm_class.dipoles[0]
+        self._prm_list  = prm_class.params
 
-        self._phi_bend    = np.zeros(len(self._bend_list))
+        self._phi_bend  = np.zeros(len(self._bend_list))
 
-        self._b_2         = None
-        self._phi_tot_0   = None
-        self._phi_tot     = None
-        self._dphi        = None
+        self._b_2       = None
+        self._phi_tot_0 = None
+        self._phi_tot   = None
+        self._dphi      = None
 
-        self._nu          = None
-        self._length      = None
-        self._alpha_c     = None
-        self._eta_entr    = None
-        self._alpha_entr  = None
-        self._beta_entr   = None
-        self._eta_centre  = None
-        self._beta_centre = None
-        self._xi          = None
+        self._nu        = None
+        self._alpha_c   = None
+        self._xi        = None
 
-        self._constr      = {}
+        self._constr    = {}
 
-        self._chi_2_min   = 1e30
-        self._n_iter      = -1
-        self._file_name   = "opt_straight.txt"
+        self._chi_2_min = 1e30
+        self._n_iter    = -1
+        self._file_name = "opt_unit_cell.txt"
 
     # Public.
 
@@ -106,45 +99,19 @@ class opt_straight_class:
     def compute_constr(self):
         # Compute the least-square constraints.
         # 1st parameter is length
-        prm_name = self._prm_list._prm_list[0][0]
-        L = self._lat_prop._lattice.find(prm_name, 0).get_length()
-        self._length = 2e0*L
         self._alpha_c = self._lat_prop._alpha_c
         self._, _, _, nu_0 = self._lat_prop.get_Twiss(self._str_start)
         self._, _, _, nu_1 = self._lat_prop.get_Twiss(self._str_end)
         self._nu =  nu_1 - nu_0
-        self._eta_centre, _, self._beta_centre, _ = \
-            self._lat_prop.get_Twiss(self._str_centre)
-        self._eta_entr, self._alpha_entr, self._beta_entr, _ = \
-            self._lat_prop.get_Twiss(-1)
 
         self._constr = {
-            "nu_x"         : (self._nu[ind.X]
-                              -self._des_val['nu_des'][ind.X])**2,
-            "nu_y"         : (self._nu[ind.Y]
-                              -self._des_val['nu_des'][ind.Y])**2,
-            "length"       : (self._length-self._des_val['length'])**2,
-            "eps_x"        : (self._lat_prop._eps[ind.X]
-                              -self._des_val['eps_x_des'])**2,
-            "dphi"         : self._dphi**2,
-            "alpha_c"      : 1e0/self._alpha_c[1]**2,
-            "eta_x_entr"   : (self._eta_entr[ind.x]
-                              -self._des_val['eta_x_entr_des'])**2,
-            "beta_x_entr"  : (self._beta_entr[ind.X]
-                              -self._des_val['beta_entr_des']
-                              [ind.X])**2,
-            "beta_y_entr"  : (self._beta_entr[ind.Y]
-                              -self._des_val['beta_entr_des']
-                              [ind.Y])**2,
-            "eta_x_centre" : (self._eta_centre[ind.x]
-                              -self._des_val['eta_x_centre_des'])**2,
-            "beta_x_centre" : (self._beta_centre[ind.X]
-                               -self._des_val['beta_centre_des']
-                               [ind.X])**2,
-            "beta_y_centre" : (self._beta_centre[ind.Y]
-                               -self._des_val['beta_centre_des']
-                               [ind.Y])**2,
-            "xi"            : self._xi[ind.X]**2 + self._xi[ind.Y]**2
+            "eps_x"   : (self._lat_prop._eps[ind.X]
+                         -self._des_val['eps_x_des'])**2,
+            "alpha_c" : (self._alpha_c[1]-self._des_val['alpha_c_des'])**2,
+            "dphi"    : self._dphi**2,
+            "nu_x"    : (self._nu[ind.X]-self._des_val['nu_des'][ind.X])**2,
+            "nu_y"    : (self._nu[ind.Y]-self._des_val['nu_des'][ind.Y])**2,
+            "xi"       : self._xi[ind.X]**2 + self._xi[ind.Y]**2
         }
 
     def compute_chi_2(self) -> float:
@@ -207,19 +174,9 @@ class opt_straight_class:
         alpha_c = np.array([self._alpha_c[1], self._alpha_c[2]])
         self.prt_pair("    alpha^(k)_c", alpha_c, "9.3e")
         print()
-        self.prt_single_des(
-            "    length", self._length, self._des_val['length'], 16)
         self.prt_pair_des("    nu", self._nu, self._des_val['nu_des'])
-        self.prt_single_des("    eta_x_entr", self._eta_entr[ind.x],
-                            self._des_val['eta_x_entr_des'], 14, "10.3e")
-        self.prt_pair_des(
-            "    beta_entr", self._beta_entr, self._des_val['beta_entr_des'])
-        self.prt_single_des(
-            "    eta_x_centre", self._eta_centre[ind.x],
-            self._des_val['eta_x_centre_des'], 14, "10.3e")
-        self.prt_pair_des("    beta_centre", self._beta_centre,
-                          self._des_val['beta_centre_des'])
-        self.prt_pair("    xi", self._xi)
+        print(f"    xi             = [{self._xi[ind.X]:5.3f}, "
+              f"{self._xi[ind.Y]:5.3f}]")
         print()
         self.prt_single("    phi_tot", self._phi_tot, 16)
         self.prt_single("    C [m]", self._lat_prop.compute_circ(), 16)
@@ -356,13 +313,10 @@ def define_system(lat_prop):
     delta_max = 3e-2
     beta_inj  = np.array([3.0, 3.0])
 
-    str_start = lat_prop._lattice.find("QF2", 0).index-1
-    str_centre = lat_prop._lattice.find("D5", 0).index
-    str_end = lat_prop._lattice.find("QF2", 1).index
+    str_start = lat_prop._lattice.find("Start", 0).index
+    str_end = lat_prop._lattice.find("End", 0).index
     print("Straight start {:5s} loc = {:d}".
           format(lat_prop._lattice[str_start].name, str_start))
-    print("Straight centre {:5s} loc = {:d}".
-          format(lat_prop._lattice[str_centre].name, str_centre))
     print("Straigth end {:5s} loc = {:d}".
           format(lat_prop._lattice[str_end].name, str_end))
 
@@ -372,24 +326,20 @@ def define_system(lat_prop):
 
     # Parameter ranges.
     prms_range = {
-        "phi":       [ -5.0,  5.0],
-        "b_2":       [-10.0, 10.0],
-        "b_2_bend":  [-10.0, 10.0]
+        "phi":      [ -5.0,  5.0],
+        "b_2":      [-10.0, 10.0],
+        "b_2_bend": [-10.0, 10.0]
     }
 
     # Design values.
     design_values = {
-        "nu_des"           : [0.9, 0.3],
-        "length"           : 5.0,
-        "eps_x_des"        : 150e-12,
-        "eta_x_entr_des"   : 3.88155e-02,
-        "beta_entr_des"    : [4.26217, 2.43390],
-        "eta_x_centre_des" : 0.0,
-        "beta_centre_des"  : [10.0, 2.0]
+        "eps_x_des"   : 300e-12,
+        "alpha_c_des" : 1e-3,
+        "nu_des"      : [0.0, 0.0]
     }
 
     # Varying bend radius dipole.
-    bend_lists = [["B2_1", "B2_2", "B2_3", "B2_4", "B2_5"]]
+    bend_lists = [["B1_1", "B1_2", "B1_3", "B1_4", "B1_5"]]
 
     bend_list = []
     bend_list.append(pc.bend_class(lat_prop, bend_lists[0]))
@@ -397,61 +347,45 @@ def define_system(lat_prop):
     # Parameters.
     if False:
         prms = [
-            ("D5",         "L",        [0.4, 3.0]),
+            # ("D1",         "L",        [0.4, 3.0]),
             (bend_list[0], "phi_bend", prms_range["phi"]),
             (bend_list[0], "b_2_bend", prms_range["b_2_bend"]),
-            ("QF2",        "b_2",      prms_range["b_2"]),
-            ("QF3",        "b_2",      prms_range["b_2"]),
-            ("QD1",        "b_2",      prms_range["b_2"])
+            ("QF1",        "b_2",      prms_range["b_2"]),
+            ("QF1",        "phi",      [-1.0, 0.1])
         ]
     else:
-        # Straight should be 1st parameter.
         prms = [
-            ("D5",   "L",   [0.4,  3.0]),
-            # ("D2",   "L",   [0.10, 0.25]),
-            # ("D3",   "L",   [0.10, 0.25]),
-            # ("D4",   "L",   [0.10, 0.25]),
+            ("B1_1", "phi", prms_range["phi"]),
+            ("B1_2", "phi", prms_range["phi"]),
+            ("B1_3", "phi", prms_range["phi"]),
+            ("B1_4", "phi", prms_range["phi"]),
+            ("B1_5", "phi", prms_range["phi"]),
 
-            ("B2_1", "phi", prms_range["phi"]),
-            ("B2_2", "phi", prms_range["phi"]),
-            ("B2_3", "phi", prms_range["phi"]),
-            ("B2_4", "phi", prms_range["phi"]),
-            ("B2_5", "phi", prms_range["phi"]),
+            ("B1_1", "b_2", prms_range["b_2_bend"]),
+            ("B1_2", "b_2", prms_range["b_2_bend"]),
+            ("B1_3", "b_2", prms_range["b_2_bend"]),
+            ("B1_4", "b_2", prms_range["b_2_bend"]),
+            ("B1_5", "b_2", prms_range["b_2_bend"]),
 
-            ("B2_1", "b_2", prms_range["b_2_bend"]),
-            ("B2_2", "b_2", prms_range["b_2_bend"]),
-            ("B2_3", "b_2", prms_range["b_2_bend"]),
-            ("B2_4", "b_2", prms_range["b_2_bend"]),
-            ("B2_5", "b_2", prms_range["b_2_bend"]),
+            ("QF1",  "b_2", prms_range["b_2"]),
+            ("QF1",  "phi", [-1.0, 0.1]),
 
-            ("QF2",  "b_2", prms_range["b_2"]),
-            ("QD1",  "b_2", prms_range["b_2"]),
-            ("QF3",  "b_2", prms_range["b_2"])
-
-            # ("QF2",  "L",   [0.2, 0.3]),
-            # ("QF3",  "L",   [0.2, 0.3]),
-            # ("QD1",  "L",   [0.2, 0.3])
+            # ("QF1",  "L",   [0.2, 0.3]),
+            # ("D1",   "L",   [0.05, 0.15])
         ]
 
     # Weights for least-square minimisation.
     weight_list = {
-        "length"        : 1e-3,
-        "eps_x"         : 1e14,
-        "dphi"          : 0e0,
-        "alpha_c"       : 1e-13,
-        "nu_x"          : 0e-3,
-        "nu_y"          : 0e-3,
-        "eta_x_entr"    : 1e3,
-        "beta_x_entr"   : 1e-3,
-        "beta_y_entr"   : 1e-3,
-        "eta_x_centre"  : 1e1,
-        "beta_x_centre" : 1e-7,
-        "beta_y_centre" : 1e-7,
-        "xi"            : 1e-7
+        "eps_x"   : 1e14,
+        "alpha_c" : 1e3,
+        "dphi"    : 1e-2*1e-3,
+        "nu_x"    : 0e-3,
+        "nu_y"    : 0e-3,
+        "xi"      : 1e-9
     }
 
     # Epsilon for numerical evalutation of the Jacobian. 
-    eps_Jacob = 1e-4
+    eps_Jacob = 1e-5
 
     prm_list = pc.prm_class(lat_prop, prms)
 
@@ -462,7 +396,7 @@ def define_system(lat_prop):
         # precision.
         opt_prm: ClassVar[list] = [10000, 1e-5, 1e-6, eps_Jacob]
         lattice: ClassVar[list] = [lat_prop, nld]
-        s_loc:   ClassVar[list] = [str_start, str_centre, str_end]
+        s_loc:   ClassVar[list] = [str_start, str_end]
         des_val: ClassVar[dict] = design_values
         weights: ClassVar[list] = weight_list
         dipoles: ClassVar[list] = [bend_list]

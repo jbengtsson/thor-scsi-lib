@@ -382,8 +382,10 @@ def define_system(lat_prop):
         "nu_des"           : [0.9, 0.3],
         "length"           : 5.0,
         "eps_x_des"        : 150e-12,
-        "eta_x_entr_des"   : 3.88155e-02,
-        "beta_entr_des"    : [4.26217, 2.43390],
+        # "eta_x_entr_des"   : 3.88155e-02,
+        # "beta_entr_des"    : [4.26217, 2.43390],
+        "eta_x_entr_des"   : 0.0399,
+        "beta_entr_des"    : [3.92926, 2.29034],
         "eta_x_centre_des" : 0.0,
         "beta_centre_des"  : [10.0, 2.0]
     }
