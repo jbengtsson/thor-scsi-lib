@@ -80,7 +80,11 @@ class bend_class:
         self._bend_b_2xL_ratio = []
         for k in range(len(self._bend_list)):
             b_2xL = self._lat_prop.get_b_nxL_elem(self._bend_list[k], 0, quad)
-            self._bend_b_2xL_ratio.append(b_2xL/self._bend_b_2xL)
+            if self._bend_b_2xL != 0e0:
+                ratio = b_2xL/self._bend_b_2xL
+            else:
+                ratio = 0e0
+            self._bend_b_2xL_ratio.append(ratio)
         return np.array(self._bend_b_2xL_ratio)
 
     def compute_phiob_2xL_ratios(self):
@@ -91,7 +95,11 @@ class bend_class:
             L_k = self._lat_prop.get_L_elem(self._bend_list[k], 0)
             phi = self._lat_prop.get_phi_elem(self._bend_list[k], 0)
             b_2xL = self._lat_prop.get_b_nxL_elem(self._bend_list[k], 0, quad)
-            self._bend_phiob_2xL_ratio.append(phi*np.pi/(180e0*b_2xL))
+            if b_2xL != 0e0:
+                ratio = phi*np.pi/(180e0*b_2xL)
+            else:
+                ratio = 0e0
+            self._bend_phiob_2xL_ratio.append(ratio)
             if prt:
                 print(f"compute_phiob_2xL_ratios: "
                       f"{self._bend_list[k]:10s} {L_k:7.5f} {phi:8.5f}"
