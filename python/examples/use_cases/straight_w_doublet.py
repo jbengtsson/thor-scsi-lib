@@ -65,7 +65,7 @@ class opt_straight_class:
 
         self._chi_2_min   = 1e30
         self._n_iter      = -1
-        self._file_name   = "opt_straight.txt"
+        self._file_name   = "straight_w_doublet.txt"
 
     # Public.
 
@@ -199,7 +199,7 @@ class opt_straight_class:
               f"({chi_2-self._chi_2_min:9.3e})")
         print()
         self.prt_single_des(
-            "    eps_x [pm.rad]", 1e12*self._lat_prop._eps[ind.X],
+            "    eps_x [nm.rad]", 1e9*self._lat_prop._eps[ind.X],
             1e12*self._des_val['eps_x_des'], 17, "7.3f")
         print()
         self.prt_single("    dphi [deg]", self._dphi, 15, "9.3e")

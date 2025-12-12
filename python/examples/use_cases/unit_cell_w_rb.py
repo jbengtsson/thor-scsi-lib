@@ -46,7 +46,6 @@ class opt_straight_class:
         self._phi_bend  = np.zeros(len(self._bend_list))
 
         self._b_2       = None
-        self._phi_tot_0 = None
         self._phi_tot   = None
         self._dphi      = None
 
@@ -58,7 +57,7 @@ class opt_straight_class:
 
         self._chi_2_min = 1e30
         self._n_iter    = -1
-        self._file_name = "opt_unit_cell.txt"
+        self._file_name = "unit_cell_w_rb.txt"
 
     # Public.
 
@@ -87,7 +86,7 @@ class opt_straight_class:
     def compute_prop(self) -> bool:
         # Compute lattice properties for the constraints.
         self._phi_tot = self._lat_prop.compute_phi_lat()
-        self._dphi = self._phi_tot - self._phi_tot_0
+        self._dphi = self._phi_tot - self._des_val['phi_tot_des']
 
         for k, bend in enumerate(self._bend_list):
             self._phi_bend[k] = bend.compute_bend_phi()
@@ -166,8 +165,8 @@ class opt_straight_class:
               f"({chi_2-self._chi_2_min:9.3e})")
         print()
         self.prt_single_des(
-            "    eps_x [pm.rad]", 1e12*self._lat_prop._eps[ind.X],
-            1e12*self._des_val['eps_x_des'], 17, "7.3f")
+            "    eps_x [nm.rad]", 1e9*self._lat_prop._eps[ind.X],
+            1e9*self._des_val['eps_x_des'], 17, "7.3f")
         print()
         self.prt_single("    dphi [deg]", self._dphi, 15, "9.3e")
         print()
@@ -182,11 +181,13 @@ class opt_straight_class:
         self.prt_single("    C [m]", self._lat_prop.compute_circ(), 16)
         print()
         for k, phi in enumerate(self._phi_bend):
-                self._b_2 = \
-                    self._bend_list[k].compute_bend_b_2xL() \
-                    /self._bend_list[k].compute_bend_L_tot()
-                print(f"    phi_bend_{k+1:1d}     = "
-                      f"[{phi:8.5f}, {self._b_2:8.5f}]")
+            L_b = self._bend_list[k].compute_bend_L_tot()
+            self._b_2 = \
+                self._bend_list[k].compute_bend_b_2xL()/L_b
+            rho = L_b/np.deg2rad(phi) 
+            print(f"    phi_bend_{k+1:1d}     : L = {L_b:7.5f}"
+                  f" phi = {phi:8.5f}, rho = {rho:8.5f}"
+                  f" b_2 = {self._b_2:8.5f}")
         print(f"\n    b_3            =", self._nld._b_3_list)
         self._lat_prop.prt_rad()
         self._prm_list.prt_prm(prm)
@@ -228,8 +229,6 @@ class opt_straight_class:
         # Optimiser.
 
         prm, bounds = self._prm_list.get_prm()
-        # Initial total bend angle.
-        self._phi_tot_0 = self._lat_prop.compute_phi_lat()
         self.f_straight(prm)
 
         # Methods:
@@ -263,7 +262,7 @@ class opt_straight_class:
                 "eps": self._eps_Jacob}}
         }
 
-        method = "TNC"
+        method = "SLSQP"
         
         minimum = opt.minimize(
             self.f_straight, prm, method=method,
@@ -333,8 +332,9 @@ def define_system(lat_prop):
 
     # Design values.
     design_values = {
-        "eps_x_des"   : 300e-12,
-        "alpha_c_des" : 1e-3,
+        "phi_tot_des" : 6.0,
+        "eps_x_des"   : 0.9e-9,
+        "alpha_c_des" : 2e-3,
         "nu_des"      : [0.0, 0.0]
     }
 
@@ -351,7 +351,7 @@ def define_system(lat_prop):
             (bend_list[0], "phi_bend", prms_range["phi"]),
             (bend_list[0], "b_2_bend", prms_range["b_2_bend"]),
             ("QF1",        "b_2",      prms_range["b_2"]),
-            ("QF1",        "phi",      [-1.0, 0.1])
+            ("QF1",        "phi",      [-1.0, 0.0])
         ]
     else:
         prms = [
@@ -361,14 +361,16 @@ def define_system(lat_prop):
             ("B1_4", "phi", prms_range["phi"]),
             ("B1_5", "phi", prms_range["phi"]),
 
-            ("B1_1", "b_2", prms_range["b_2_bend"]),
-            ("B1_2", "b_2", prms_range["b_2_bend"]),
-            ("B1_3", "b_2", prms_range["b_2_bend"]),
-            ("B1_4", "b_2", prms_range["b_2_bend"]),
-            ("B1_5", "b_2", prms_range["b_2_bend"]),
+            # ("B1_1", "b_2", prms_range["b_2_bend"]),
+            # ("B1_2", "b_2", prms_range["b_2_bend"]),
+            # ("B1_3", "b_2", prms_range["b_2_bend"]),
+            # ("B1_4", "b_2", prms_range["b_2_bend"]),
+            # ("B1_5", "b_2", prms_range["b_2_bend"]),
 
             ("QF1",  "b_2", prms_range["b_2"]),
-            ("QF1",  "phi", [-1.0, 0.1]),
+            # ("QF1",  "phi", [-1.0, 0.0]),
+
+            ("QD1_H", "b_2", prms_range["b_2"]),
 
             # ("QF1",  "L",   [0.2, 0.3]),
             # ("D1",   "L",   [0.05, 0.15])
@@ -376,12 +378,12 @@ def define_system(lat_prop):
 
     # Weights for least-square minimisation.
     weight_list = {
-        "eps_x"   : 1e14,
+        "eps_x"   : 1e1*1e15,
         "alpha_c" : 1e3,
-        "dphi"    : 1e-2*1e-3,
+        "dphi"    : 1e-2,
         "nu_x"    : 0e-3,
         "nu_y"    : 0e-3,
-        "xi"      : 1e-9
+        "xi"      : 1e-3
     }
 
     # Epsilon for numerical evalutation of the Jacobian. 
@@ -394,7 +396,7 @@ def define_system(lat_prop):
     class prm_class:
         # Max number of iterations, parameter Precision, and optimal function
         # precision.
-        opt_prm: ClassVar[list] = [10000, 1e-5, 1e-6, eps_Jacob]
+        opt_prm: ClassVar[list] = [10000, 1e-6, 1e-7, eps_Jacob]
         lattice: ClassVar[list] = [lat_prop, nld]
         s_loc:   ClassVar[list] = [str_start, str_end]
         des_val: ClassVar[dict] = design_values
