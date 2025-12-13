@@ -155,9 +155,9 @@ class opt_straight_class:
               f"{'{:{}s}'.format('', n_space)}"
               f"({format(des_val, fmt)})")
 
-    def prt_pair_des(self, name, vals, des_vals, fmt="8.5f"):
+    def prt_pair_des(self, name, vals, des_vals, n_space, fmt="8.5f"):
         print(f"{name:19s}= [{format(vals[0], fmt)}, {format(vals[1], fmt)}]"
-              f"{' ':4s}"
+              f"{'{:{}s}'.format('', n_space)}"
               f"([{format(des_vals[0], fmt)}, {format(des_vals[1], fmt)}])")
 
     def prt_iter(self, prm, chi_2) -> None:
@@ -167,20 +167,21 @@ class opt_straight_class:
         print()
         self.prt_single_des(
             "    eps_x [nm.rad]", 1e9*self._lat_prop._eps[ind.X],
-            1e9*self._des_val['eps_x_des'], 17, "7.3f")
+            1e9*self._des_val['eps_x_des'], 19, "5.3f")
         print()
         self.prt_single("    dphi [deg]", self._dphi, 15, "9.3e")
         print()
         alpha_c = np.array([self._alpha_c[1], self._alpha_c[2]])
         self.prt_pair_des("    alpha^(k)_c", alpha_c,
-                          self._des_val['alpha_c_des'])
+                          self._des_val['alpha_c_des'], 2, "9.3e")
         print()
-        self.prt_pair_des("    nu", self._nu, self._des_val['nu_des'])
+        self.prt_pair_des("    nu", self._nu, self._des_val['nu_des'], 6,
+                          "7.5f")
         print(f"    xi             = [{self._xi[ind.X]:5.3f}, "
               f"{self._xi[ind.Y]:5.3f}]")
         print()
         self.prt_single_des("    phi_tot", self._phi_tot,
-                          self._des_val['phi_tot_des'], 17, "7.3f")
+                          self._des_val['phi_tot_des'], 19, "5.3f")
         self.prt_single("    C [m]", self._lat_prop.compute_circ(), 16)
         print()
         for k, phi in enumerate(self._phi_bend):
@@ -284,7 +285,7 @@ def init():
     no = 2
 
     cod_eps = 1e-15
-    E_0     = 2.5e9
+    E_0     = 2.0e9
 
     home_dir = os.path.join(
         os.environ["HOME"], "Nextcloud", "thor_scsi", "JB")
