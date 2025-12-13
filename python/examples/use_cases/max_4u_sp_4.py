@@ -36,6 +36,7 @@ design_val = {
     "phi_rb_1_des" : -0.2,
     "b_2_des"      : 2.0,
     "nu_uc_des"    : np.array([3.0/7.0, 1.0/7.0]),
+    # "eta_x_uc_des" : 0.0,
     "eta_x_uc_des" : -1e-3,
     "nu_sp_des"    : np.array([58.20/20.0,  17.28/20.0]),
     # "nu_sp_des"    : np.array([58.14/20.0,  17.27/20.0]),
@@ -413,16 +414,30 @@ def get_bends(dip_type, lat_prop):
         }
     elif dip_type == 3:
         # m4U_250527_h02_13_02_01_tracy-2.
-        bend_lists = {
-            "bend_list": [
-                ["d1_h2_sl_dm5", "d1_h2_sl_dm3", "d1_h2_sl_dm2",
-                 "d1_h2_sl_ds0", "d1_h2_sl_ds1", "d1_h2_sl_ds2",
-                 "d1_h2_sl_ds3", "d1_h2_sl_ds5"],
-                ["d2_h2_sl_d0a", "d2_h2_sl_d0c", "d2_h2_sl_df1",
-                 "d2_h2_sl_df3", "d2_h2_sl_df4", "d2_h2_sl_df5"]
-            ],
-            "rbend_list": ["r1_h2", "r2_h2"]
-        }
+        if True:
+            bend_lists = {
+                "bend_list": [
+                    ["d1_h2_sl_dm5", "d1_h2_sl_dm4", "d1_h2_sl_dm3",
+                     "d1_h2_sl_dm2", "d1_h2_sl_dm1", "d1_h2_sl_ds0",
+                     "d1_h2_sl_ds1", "d1_h2_sl_ds2", "d1_h2_sl_ds3",
+                     "d1_h2_sl_ds4", "d1_h2_sl_ds5", "d1_h2_sl_ds6"],
+                    ["d2_h2_sl_d0a", "d2_h2_sl_d0b", "d2_h2_sl_d0c",
+                     "d2_h2_sl_df1", "d2_h2_sl_df2", "d2_h2_sl_df3",
+                     "d2_h2_sl_df4", "d2_h2_sl_df5"]
+                ],
+                "rbend_list": ["r1_h2", "r2_h2"]
+            }
+        else:
+            bend_lists = {
+                "bend_list": [
+                    ["d1_h2_sl_dm5", "d1_h2_sl_dm3", "d1_h2_sl_dm2",
+                     "d1_h2_sl_ds0", "d1_h2_sl_ds1", "d1_h2_sl_ds2",
+                     "d1_h2_sl_ds3", "d1_h2_sl_ds5"],
+                    ["d2_h2_sl_d0a", "d2_h2_sl_d0c", "d2_h2_sl_df1",
+                     "d2_h2_sl_df3", "d2_h2_sl_df4", "d2_h2_sl_df5"]
+                ],
+                "rbend_list": ["r1_h2", "r2_h2"]
+            }
     elif dip_type == 4:
         # m4U_250610_h02_16_02_01_tracy_2.
         bend_lists = {
@@ -682,11 +697,11 @@ def get_weights():
         "phi_1"       : 0e-2,  
         "phi_rb"      : 0e-3,  
         "b_2"         : 0e-3, 
-        "alpha^(1)_c" : 1e1*1e-13,  
+        "alpha^(1)_c" : 1e1*1e-14,  
         "alpha^(2)_c" : 1e1,
         "U_0"         : 1e-15,
-        "eta_x_uc"    : 1e7, 
-        "eta'_x_uc"   : 1e-1*1e2, 
+        "eta_x_uc"    : 1e1*1e2, 
+        "eta'_x_uc"   : 1e2, 
         "alpha_uc"    : 1e-1,
         "nu_uc_x"     : 1e-2,
         "nu_uc_y"     : 1e-2,

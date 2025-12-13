@@ -11,7 +11,7 @@ import thor_scsi.lib as ts
 
 class MultipoleIndex(enum.IntEnum):
     quadrupole = 2
-    sextupole = 3
+    sextupole  = 3
 
 
 class get_set_mpole_class:
@@ -56,20 +56,20 @@ class get_set_mpole_class:
 
     def get_phi_1_elem(self, fam_name, kid_num):
         b = self._lattice.find(fam_name, kid_num)
-        return math.degrees(b.get_entrance_angle())
+        return np.rad2deg(b.get_entrance_angle())
 
     def get_phi_2_elem(self, fam_name, kid_num):
         b = self._lattice.find(fam_name, kid_num)
-        return math.degrees(b.get_exit_angle())
+        return np.rad2deg(b.get_exit_angle())
 
     def get_phi_elem(self, fam_name, kid_num):
         b = self._lattice.find(fam_name, kid_num)
-        return math.degrees(b.get_length() * b.get_curvature())
+        return np.rad2deg(b.get_length() * b.get_curvature())
 
     def set_phi_elem(self, fam_name, kid_num, phi):
         b = self._lattice.find(fam_name, kid_num)
         L = b.get_length()
-        h = math.radians(phi)/L
+        h = np.deg2rad(phi)/L
         b.set_curvature(h)
 
     def set_phi_fam(self, fam_name, phi):
@@ -82,7 +82,7 @@ class get_set_mpole_class:
         L = b.get_length()
         # phi [rad].
         phi = L*b.get_curvature()
-        h = (phi+math.radians(dphi))/L
+        h = (phi+np.deg2rad(dphi))/L
         b.set_curvature(h)
 
     def set_dphi_fam(self, fam_name, dphi):
@@ -90,26 +90,35 @@ class get_set_mpole_class:
         for k in range(n_kid):
             self.set_dphi_elem(fam_name, k, dphi)
 
-    def get_h_elem(self, fam_name, kid_num):
+    def get_rho_elem(self, fam_name, kid_num):
         b = self._lattice.find(fam_name, kid_num)
-        return b.get_curvature()
+        one_o_rho = b.get_curvature()
+        if one_o_rho != 0e0:
+            rho = 1e0/b.get_curvature()
+        else:
+            rho = 0e0
+        return rho
 
-    def set_h_elem(self, fam_name, kid_num, h):
-        # Keep phi constant - adjust length.
-        if h != 0e0:
+    def set_rho_elem(self, fam_name, kid_num, rho):
+        # Keep phi constant - adjust lengtrho.
+        if rho != 0e0:
             b = self._lattice.find(fam_name, kid_num)
             L = b.get_length()
-            phi = L*b.get_curvature()
-            b.set_curvature(h)
+            one_o_rho = b.get_curvature()
+            if one_o_rho == 0e0:
+                print("\nset_rho_elem: magnet curvature is zero")
+                assert False
+            phi = L*one_o_rho
+            b.set_curvature(1e0/rho)
             L = phi/b.get_curvature()
             b.set_length(L)
         else:
-            print("set_h_elem - h is zero!\n")
+            print("set_rho_elem - rho is zero!\n")
 
-    def set_h_fam(self, fam_name, h):
+    def set_rho_fam(self, fam_name, rho):
         n_kid = len(self._lattice.elements_with_name(fam_name))
         for k in range(n_kid):
-            self.set_h_elem(fam_name, k, h)
+            self.set_rho_elem(fam_name, k, rho)
 
     def set_phi_rect_elem(self, fam_name, kid_num, phi):
         self.set_phi_elem(fam_name, k, phi)

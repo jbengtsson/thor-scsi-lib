@@ -47,7 +47,8 @@ def compute_optics(lat_prop):
 
 
 cod_eps = 1e-15
-E_0     = 3.0e9
+E_0     = 2.5e9
+print(f"\nBeam energy set to E_0 [GeV] = {1e-9*E_0:5.3f}")
 
 A_max     = np.array([6e-3, 3e-3])
 beta_inj  = np.array([3.0, 3.0])

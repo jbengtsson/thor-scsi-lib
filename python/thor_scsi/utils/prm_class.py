@@ -110,6 +110,9 @@ class bend_class:
     def get_bend_phi(self):
         return self._bend_phi
 
+    def get_bend_rho(self):
+        return self._bend_L_tot/np.deg2rad(self._bend_phi)
+
     def get_bend_phi_prm(self):
         prm = self._bend_phi
         bound = (self._phi_min, self._phi_max)
@@ -135,6 +138,10 @@ class bend_class:
         for k in range(len(self._bend_list)):
             self._lat_prop.set_phi_fam(
                 self._bend_list[k], self._bend_phi_ratio[k]*prm)
+
+    def set_bend_rho(sel, prm):
+        phi = np.rad2deg(self._bend_L_tot/prm)
+        set_bend_phi(phi)
 
     def correct_bend_phi(self):
         # Maintain total bend angle.
@@ -297,7 +304,7 @@ class prm_class(bend_class):
             "L":   self._lat_prop.get_L_elem,
             "L_b": self._lat_prop.get_L_elem,
             "phi": self._lat_prop.get_phi_elem,
-            "h":   self._lat_prop.get_h_elem,
+            "rho": self._lat_prop.get_rho_elem,
             "b_2": self._lat_prop.get_b_2_elem,
             "b_3": self._lat_prop.get_b_3_elem,
             "b_4": self._lat_prop.get_b_4_elem}
@@ -307,7 +314,7 @@ class prm_class(bend_class):
             "L":   self._lat_prop.set_L_fam,
             "L_b": self._lat_prop.set_L_bend_fam,
             "phi": self._lat_prop.set_phi_fam,
-            "h":   self._lat_prop.set_h_fam,
+            "rho": self._lat_prop.set_rho_fam,
             "b_2": self._lat_prop.set_b_2_fam,
             "b_3": self._lat_prop.set_b_3_fam,
             "b_4": self._lat_prop.set_b_4_fam}
@@ -340,6 +347,10 @@ class prm_class(bend_class):
                 if self._prm_list[k][1] == "phi_bend":
                     self._prm_list[k][0]._phi_min = self._prm_list[k][2][0]
                     self._prm_list[k][0]._phi_max = self._prm_list[k][2][1]
+                    p, b = self._prm_list[k][0].get_bend_phi_prm()
+                elif self._prm_list[k][1] == "rho_bend":
+                    self._prm_list[k][0]._rho_min = self._prm_list[k][2][0]
+                    self._prm_list[k][0]._rho_max = self._prm_list[k][2][1]
                     p, b = self._prm_list[k][0].get_bend_phi_prm()
                 elif self._prm_list[k][1] == "b_2_bend":
                     self._prm_list[k][0]._b_2_min = self._prm_list[k][2][0]
@@ -375,6 +386,8 @@ class prm_class(bend_class):
             elif isinstance(prm_name, bend_class):
                 if prm_type == "phi_bend":
                     prm_name.set_bend_phi(prm[k])
+                elif prm_type == "rho_bend":
+                    prm_name.set_bend_rho(prm[k])
                 elif prm_type == "b_2_bend":
                     prm_name.set_bend_b_2(prm[k])
                 elif prm_type == "phiob_2_bend":
@@ -420,14 +433,14 @@ def prt_lat(
             phi_1 = lat_prop.get_phi_1_elem(fam_name, 0)
             phi_2 = lat_prop.get_phi_1_elem(fam_name, 0)
             b_2 = lat_prop.get_b_n_elem(fam_name, 0, quad)
-            print("{:5s}: Bending, L = {:7.5f}".format(fam_name, L), end="",
-                  file=outf)
-            print(", Phi = {:8.5f}".format(phi), end="", file=outf)
-            print(", Phi_1 = {:8.5f}".format(phi_1), end="", file=outf)
-            print(",\n    Phi_2 = {:8.5f}".format(phi_2), end="", file=outf)
+            rho = lat_prop.get_rho_elem(fam_name, 0)
+            print(f"{fam_name:5s}: Bending, L = {L:7.5f}", end="", file=outf)
+            print(f", Phi = {phi:8.5f}", end="", file=outf)
+            print(f", Phi_1 = {phi_1:8.5f}", end="", file=outf)
+            print(f",\n    Phi_2 = {phi_2:8.5f}", end="", file=outf)
             if b_2 != 0e0:
-                print(", B_2 = {:8.5f}".format(b_2), end="", file=outf)
-            print(", N = n_bend;", file=outf)
+                print(f", B_2 = {b_2:8.5f}", end="", file=outf)
+            print(f", N = n_bend; # rho = {rho:7.3f}", file=outf)
         return prt_list
 
     def prt_bend(bend, prt_list):
@@ -493,7 +506,7 @@ def prt_lat(
         "L":   prt_drift,
         "L_b": prt_dip,
         "phi": prt_dip,
-        "h": prt_dip,
+        "rho": prt_dip,
         "b_2": prt_quad,
         "b_3": prt_sext,
         "b_4": prt_oct

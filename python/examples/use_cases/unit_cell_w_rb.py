@@ -106,7 +106,8 @@ class opt_straight_class:
         self._constr = {
             "eps_x"   : (self._lat_prop._eps[ind.X]
                          -self._des_val['eps_x_des'])**2,
-            "alpha_c" : (self._alpha_c[1]-self._des_val['alpha_c_des'])**2,
+            "alpha_c" : (self._alpha_c[1]
+                         -self._des_val['alpha_c_des'][0])**2,
             "dphi"    : self._dphi**2,
             "nu_x"    : (self._nu[ind.X]-self._des_val['nu_des'][ind.X])**2,
             "nu_y"    : (self._nu[ind.Y]-self._des_val['nu_des'][ind.Y])**2,
@@ -171,13 +172,15 @@ class opt_straight_class:
         self.prt_single("    dphi [deg]", self._dphi, 15, "9.3e")
         print()
         alpha_c = np.array([self._alpha_c[1], self._alpha_c[2]])
-        self.prt_pair("    alpha^(k)_c", alpha_c, "9.3e")
+        self.prt_pair_des("    alpha^(k)_c", alpha_c,
+                          self._des_val['alpha_c_des'])
         print()
         self.prt_pair_des("    nu", self._nu, self._des_val['nu_des'])
         print(f"    xi             = [{self._xi[ind.X]:5.3f}, "
               f"{self._xi[ind.Y]:5.3f}]")
         print()
-        self.prt_single("    phi_tot", self._phi_tot, 16)
+        self.prt_single_des("    phi_tot", self._phi_tot,
+                          self._des_val['phi_tot_des'], 17, "7.3f")
         self.prt_single("    C [m]", self._lat_prop.compute_circ(), 16)
         print()
         for k, phi in enumerate(self._phi_bend):
@@ -326,6 +329,7 @@ def define_system(lat_prop):
     # Parameter ranges.
     prms_range = {
         "phi":      [ -5.0,  5.0],
+        "rho":      [  6.0, 11.0],
         "b_2":      [-10.0, 10.0],
         "b_2_bend": [-10.0, 10.0]
     }
@@ -334,8 +338,9 @@ def define_system(lat_prop):
     design_values = {
         "phi_tot_des" : 6.0,
         "eps_x_des"   : 0.9e-9,
-        "alpha_c_des" : 2e-3,
-        "nu_des"      : [0.0, 0.0]
+        "alpha_c_des" : [2.5e-3, 0.0],
+        "nu_des"      : [0.0, 0.0],
+        "sigma_delta" : 0.5e-3
     }
 
     # Varying bend radius dipole.
@@ -347,19 +352,19 @@ def define_system(lat_prop):
     # Parameters.
     if False:
         prms = [
-            # ("D1",         "L",        [0.4, 3.0]),
             (bend_list[0], "phi_bend", prms_range["phi"]),
             (bend_list[0], "b_2_bend", prms_range["b_2_bend"]),
             ("QF1",        "b_2",      prms_range["b_2"]),
             ("QF1",        "phi",      [-1.0, 0.0])
+            # ("D1",         "L",        [0.4, 3.0]),
         ]
     else:
         prms = [
-            ("B1_1", "phi", prms_range["phi"]),
-            ("B1_2", "phi", prms_range["phi"]),
-            ("B1_3", "phi", prms_range["phi"]),
-            ("B1_4", "phi", prms_range["phi"]),
-            ("B1_5", "phi", prms_range["phi"]),
+            ("B1_1", "rho", prms_range["rho"]),
+            ("B1_2", "rho", prms_range["rho"]),
+            ("B1_3", "rho", prms_range["rho"]),
+            ("B1_4", "rho", prms_range["rho"]),
+            ("B1_5", "rho", prms_range["rho"]),
 
             # ("B1_1", "b_2", prms_range["b_2_bend"]),
             # ("B1_2", "b_2", prms_range["b_2_bend"]),

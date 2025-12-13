@@ -121,6 +121,8 @@ class opt_uc_class:
         self._eta_centre, _, _, _ = self._lat_prop.get_Twiss(self._uc_centre)
         Twiss_sp = self._lat_prop.get_Twiss(-1)
         _, _, _, self._nu_uc = Twiss_sp
+        for k in range(2):
+            self._nu_uc[k] -= np.floor(self._nu_uc[k])
 
         self._constr = {
             "eps_x"       : (self._lat_prop._eps[ind.X]
@@ -286,13 +288,23 @@ class opt_uc_class:
 
 
 def get_bends(lat_prop):
-    bend_lists = {
-        "bend_list": [
-            ["d2_h2_sl_d0a", "d2_h2_sl_d0c", "d2_h2_sl_df1",
-             "d2_h2_sl_df3", "d2_h2_sl_df4", "d2_h2_sl_df5"]
-        ],
-        "rbend_list": ["r2_h2"]
-    }
+    if True:
+        bend_lists = {
+            "bend_list": [
+                ["d2_h2_sl_d0a", "d2_h2_sl_d0b", "d2_h2_sl_d0c",
+                 "d2_h2_sl_df1", "d2_h2_sl_df2", "d2_h2_sl_df3",
+                 "d2_h2_sl_df4", "d2_h2_sl_df5"]
+            ],
+            "rbend_list": ["r2_h2"]
+        }
+    else:
+        bend_lists = {
+            "bend_list": [
+                ["d2_h2_sl_d0a", "d2_h2_sl_d0c", "d2_h2_sl_df1",
+                 "d2_h2_sl_df3", "d2_h2_sl_df4", "d2_h2_sl_df5"]
+            ],
+            "rbend_list": ["r2_h2"]
+        }
 
     bend_list = []
     for b_list in bend_lists["bend_list"]:
@@ -311,15 +323,19 @@ def get_prms(prm_type, lat_prop, bend_list, eps):
     elif prm_type == 2:
         prm = [
             ("d2_h2_sl_d0a", "b_2", prm_range["b_2"]),
+            ("d2_h2_sl_d0b", "b_2", prm_range["b_2"]),
             ("d2_h2_sl_d0c", "b_2", prm_range["b_2"]),
             ("d2_h2_sl_df1", "b_2", prm_range["b_2"]),
-             ("d2_h2_sl_df3", "b_2", prm_range["b_2"]),
+            ("d2_h2_sl_df2", "b_2", prm_range["b_2"]),
+            ("d2_h2_sl_df3", "b_2", prm_range["b_2"]),
             ("d2_h2_sl_df4", "b_2", prm_range["b_2"]),
             ("d2_h2_sl_df5", "b_2", prm_range["b_2"]),
 
             ("d2_h2_sl_d0a", "phi", [-1.0, 1.0]),
+            ("d2_h2_sl_d0b", "phi", [-1.0, 1.0]),
             ("d2_h2_sl_d0c", "phi", [-1.0, 1.0]),
             ("d2_h2_sl_df1", "phi", [-1.0, 1.0]),
+            ("d2_h2_sl_df2", "phi", [-1.0, 1.0]),
             ("d2_h2_sl_df3", "phi", [-1.0, 1.0]),
             ("d2_h2_sl_df4", "phi", [-1.0, 1.0]),
             ("d2_h2_sl_df5", "phi", [-1.0, 1.0]),
