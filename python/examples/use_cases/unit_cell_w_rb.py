@@ -28,36 +28,37 @@ class opt_straight_class:
     # Private.
 
     def __init__(self, prm_class: pc.prm_class) -> None:
-        self._first     = True
+        self._first       = True
 
-        self._lat_prop  = prm_class.lattice[0]
-        self._nld       = prm_class.lattice[1]
-        self._str_start = prm_class.s_loc[0]
-        self._str_end   = prm_class.s_loc[1]
-        self._des_val   = prm_class.des_val
-        self._max_iter  = prm_class.opt_prm[0]
-        self._prm_tol   = prm_class.opt_prm[1]
-        self._f_tol     = prm_class.opt_prm[2]
-        self._eps_Jacob = prm_class.opt_prm[3]
-        self._weights   = prm_class.weights
-        self._bend_list = prm_class.dipoles[0]
-        self._prm_list  = prm_class.params
+        self._lat_prop    = prm_class.lattice[0]
+        self._nld         = prm_class.lattice[1]
+        self._str_start   = prm_class.s_loc[0]
+        self._str_end     = prm_class.s_loc[1]
+        self._des_val     = prm_class.des_val
+        self._max_iter    = prm_class.opt_prm[0]
+        self._prm_tol     = prm_class.opt_prm[1]
+        self._f_tol       = prm_class.opt_prm[2]
+        self._eps_Jacob   = prm_class.opt_prm[3]
+        self._weights     = prm_class.weights
+        self._bend_list   = prm_class.dipoles[0]
+        self._prm_list    = prm_class.params
 
-        self._phi_bend  = np.zeros(len(self._bend_list))
+        self._phi_bend    = np.zeros(len(self._bend_list))
 
-        self._b_2       = None
-        self._phi_tot   = None
-        self._dphi      = None
+        self._b_2         = None
+        self._phi_tot     = None
+        self._dphi        = None
 
-        self._nu        = None
-        self._alpha_c   = None
-        self._xi        = None
+        self._nu          = None
+        self._alpha_c     = None
+        self._sigma_delta = None
+        self._xi          = None
 
-        self._constr    = {}
+        self._constr      = {}
 
-        self._chi_2_min = 1e30
-        self._n_iter    = -1
-        self._file_name = "unit_cell_w_rb.txt"
+        self._chi_2_min   = 1e30
+        self._n_iter      = -1
+        self._file_name   = "unit_cell_w_rb.txt"
 
     # Public.
 
@@ -102,16 +103,19 @@ class opt_straight_class:
         self._, _, _, nu_0 = self._lat_prop.get_Twiss(self._str_start)
         self._, _, _, nu_1 = self._lat_prop.get_Twiss(self._str_end)
         self._nu =  nu_1 - nu_0
+        self._sigma_delta = self._lat_prop._sigma_delta
 
         self._constr = {
-            "eps_x"   : (self._lat_prop._eps[ind.X]
-                         -self._des_val['eps_x_des'])**2,
-            "alpha_c" : (self._alpha_c[1]
-                         -self._des_val['alpha_c_des'][0])**2,
-            "dphi"    : self._dphi**2,
-            "nu_x"    : (self._nu[ind.X]-self._des_val['nu_des'][ind.X])**2,
-            "nu_y"    : (self._nu[ind.Y]-self._des_val['nu_des'][ind.Y])**2,
-            "xi"       : self._xi[ind.X]**2 + self._xi[ind.Y]**2
+            "eps_x"       : (self._lat_prop._eps[ind.X]
+                             -self._des_val['eps_x_des'])**2,
+            "alpha_c"     : (self._alpha_c[1]
+                             -self._des_val['alpha_c_des'][0])**2,
+            "sigma_delta" : (self._lat_prop._sigma_delta
+                             -self._des_val['sigma_delta'])**2,
+            "dphi"        : self._dphi**2,
+            "nu_x"        : (self._nu[ind.X]-self._des_val['nu_des'][ind.X])**2,
+            "nu_y"        : (self._nu[ind.Y]-self._des_val['nu_des'][ind.Y])**2,
+            "xi"          : self._xi[ind.X]**2 + self._xi[ind.Y]**2
         }
 
     def compute_chi_2(self) -> float:
@@ -174,6 +178,8 @@ class opt_straight_class:
         alpha_c = np.array([self._alpha_c[1], self._alpha_c[2]])
         self.prt_pair_des("    alpha^(k)_c", alpha_c,
                           self._des_val['alpha_c_des'], 2, "9.3e")
+        self.prt_single_des("    sigma_delta", self._sigma_delta,
+                          self._des_val['sigma_delta'], 15, "9.3e")
         print()
         self.prt_pair_des("    nu", self._nu, self._des_val['nu_des'], 6,
                           "7.5f")
@@ -181,8 +187,8 @@ class opt_straight_class:
               f"{self._xi[ind.Y]:5.3f}]")
         print()
         self.prt_single_des("    phi_tot", self._phi_tot,
-                          self._des_val['phi_tot_des'], 19, "5.3f")
-        self.prt_single("    C [m]", self._lat_prop.compute_circ(), 16)
+                          self._des_val['phi_tot_des'], 18, "5.3f")
+        self.prt_single("    C [m]", self._lat_prop.compute_circ(), 16, "5.3f")
         print()
         for k, phi in enumerate(self._phi_bend):
             L_b = self._bend_list[k].compute_bend_L_tot()
@@ -330,16 +336,16 @@ def define_system(lat_prop):
     # Parameter ranges.
     prms_range = {
         "phi":      [ -5.0,  5.0],
-        "rho":      [  6.0, 11.0],
+        "rho":      [  1.0, 15.0],
         "b_2":      [-10.0, 10.0],
         "b_2_bend": [-10.0, 10.0]
     }
 
     # Design values.
     design_values = {
-        "phi_tot_des" : 6.0,
+        "phi_tot_des" : 5.0,
         "eps_x_des"   : 0.9e-9,
-        "alpha_c_des" : [2.5e-3, 0.0],
+        "alpha_c_des" : [2.0e-3, 0.0],
         "nu_des"      : [0.0, 0.0],
         "sigma_delta" : 0.5e-3
     }
@@ -367,29 +373,31 @@ def define_system(lat_prop):
             ("B1_4", "rho", prms_range["rho"]),
             ("B1_5", "rho", prms_range["rho"]),
 
-            # ("B1_1", "b_2", prms_range["b_2_bend"]),
-            # ("B1_2", "b_2", prms_range["b_2_bend"]),
-            # ("B1_3", "b_2", prms_range["b_2_bend"]),
-            # ("B1_4", "b_2", prms_range["b_2_bend"]),
-            # ("B1_5", "b_2", prms_range["b_2_bend"]),
+            ("B1_1", "b_2", prms_range["b_2_bend"]),
+            ("B1_2", "b_2", prms_range["b_2_bend"]),
+            ("B1_3", "b_2", prms_range["b_2_bend"]),
+            ("B1_4", "b_2", prms_range["b_2_bend"]),
+            ("B1_5", "b_2", prms_range["b_2_bend"]),
 
             ("QF1",  "b_2", prms_range["b_2"]),
-            # ("QF1",  "phi", [-1.0, 0.0]),
+            ("QF1",  "phi", [-1.0, 0.0]),
 
             ("QD1_H", "b_2", prms_range["b_2"]),
 
             # ("QF1",  "L",   [0.2, 0.3]),
-            # ("D1",   "L",   [0.05, 0.15])
+            ("D1",   "L",   [0.05, 0.15]),
+            ("D2",   "L",   [0.05, 0.3])
         ]
 
     # Weights for least-square minimisation.
     weight_list = {
-        "eps_x"   : 1e1*1e15,
-        "alpha_c" : 1e3,
-        "dphi"    : 1e-2,
-        "nu_x"    : 0e-3,
-        "nu_y"    : 0e-3,
-        "xi"      : 1e-3
+        "eps_x"       : 1e15,
+        "alpha_c"     : 1e1*1e4,
+        "sigma_delta" : 1e4,
+        "dphi"        : 1e-2*1e-2,
+        "nu_x"        : 0e-3,
+        "nu_y"        : 0e-3,
+        "xi"          : 1e0*1e-3
     }
 
     # Epsilon for numerical evalutation of the Jacobian. 
