@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0.0)
+cmake_minimum_required(VERSION 3.5...4.0)
 
 project("thor_scsi" LANGUAGES CXX Fortran)
 
@@ -48,7 +48,7 @@ endif()
 
 find_package(Armadillo REQUIRED)
 
-find_package(PythonInterp 3)
+find_package(Python3 REQUIRED COMPONENTS Interpreter)
 # find_package(Java REQUIRED)
 # message(STATUS "Java include dirs" ${JAVA_INCLUDE_PATH})
 # find_package(JNI REQUIRED)
