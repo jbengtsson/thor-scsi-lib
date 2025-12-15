@@ -321,7 +321,7 @@ One solution can be to define the directory in LD_LIBRARY_PATH e.g.:
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/path/to/install/to/lib/
 
 
-MAC OS
+macOS
 ~~~~~~
 One solution can be to define the directory in LD_LIBRARY_PATH e.g.:
 
@@ -330,6 +330,20 @@ One solution can be to define the directory in LD_LIBRARY_PATH e.g.:
 
     export DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH:/path/to/install/to/lib/
 
+
+Python 3.12 is required to install SciPy via wheels.
+Python 3.13+ currently requires building SciPy from source and is
+not supported due to OpenMP toolchain limitations.
+
+
+Quick sanity check
+~~~~~~~~~~~~~~~~~~
+
+python - <<'EOF'
+import numpy, scipy, matplotlib, xarray
+print("NumPy:", numpy.__version__)
+print("SciPy:", scipy.__version__)
+EOF
 
 
 Documentation
