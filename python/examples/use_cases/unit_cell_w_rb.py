@@ -394,7 +394,7 @@ def define_system(lat_prop):
         "eps_x"       : 1e15,
         "alpha_c"     : 1e1*1e4,
         "sigma_delta" : 1e4,
-        "dphi"        : 1e-2*1e-2,
+        "dphi"        : 1e-4*1e-2,
         "nu_x"        : 0e-3,
         "nu_y"        : 0e-3,
         "xi"          : 1e0*1e-3
