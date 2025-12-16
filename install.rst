@@ -72,18 +72,11 @@ MAC currently fails. A fix is currently worked on.
 Getting ready to build
 ----------------------
 
-create a directory "build"
+create a directory "build" and change to this directory
 
 .. code:: shell
 
-   mkdir build
-
-
-then change to this directory
-
-.. code:: shell
-
-  cd build
+   mkdir build && cd build
 
 
 then in this directory execute
