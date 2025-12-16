@@ -75,14 +75,18 @@ create a directory "build" and change to this directory
 
 .. code:: shell
 
-   mkdir build && cd build
+   mkdir build
 
 
 then execute
 
 .. code:: shell
 
-  cmake ..
+  cmake -S . -B build \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DNEED_EPICS=OFF \
+  -DUSE_PYTHON_FLAME=OFF \
+  -DBISON_EXECUTABLE=$(brew --prefix bison)/bin/bison
 
 
 This will create the build file. Typically this is a make file. In
