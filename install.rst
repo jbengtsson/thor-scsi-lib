@@ -68,7 +68,6 @@ This repository currently does not support (llvm/clang). Thus build on
 MAC currently fails. A fix is currently worked on.
 
 
-
 Getting ready to build
 ----------------------
 
@@ -79,7 +78,7 @@ create a directory "build" and change to this directory
    mkdir build && cd build
 
 
-then in this directory execute
+then execute
 
 .. code:: shell
 
