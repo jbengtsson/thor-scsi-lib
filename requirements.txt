@@ -1,3 +1,6 @@
+# Use Python 3.12 for the virtual environment -
+# i.e., when SciPY publishes wheels for 3.14.
+
 certifi==2025.6.15
 cffi==1.17.1
 contourpy==1.2.0
