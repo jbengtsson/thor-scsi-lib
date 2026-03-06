@@ -35,7 +35,7 @@ design_val = {
     "phi_1_des"    : 1.45,
     "phi_rb_1_des" : -0.2,
     "b_2_des"      : 2.0,
-    "nu_uc_des"    : np.array([3.0/7.0, 1.0/7.0]),
+    "nu_uc_des"    : np.array([0.4, 0.1]),
     "eta_x_uc_des" : 0.0,
     # "eta_x_uc_des" : -1e-3,
     "nu_sp_des"    : np.array([58.20/20.0,  17.28/20.0]),
@@ -569,8 +569,8 @@ def get_prms(prm_type, lat_prop, bend_list, eps):
         prm = [
             ("q1_n1",        "b_2", prm_range["b_2"]),
             ("q2_n1",        "b_2", prm_range["b_2"]),
-            ("q1_n1",        "phi", [-1.0, 1.0]),
-            ("q2_n1",        "phi", [-1.0, 1.0]),
+            # ("q1_n1",        "phi", [-1.0, 1.0]),
+            # ("q2_n1",        "phi", [-1.0, 1.0]),
 
             ("r1_n1",        "b_2", prm_range["b_2"]),
 
@@ -765,16 +765,16 @@ def get_weights():
         "eta_x_uc"    : 0*1e2, 
         "eta'_x_uc"   : 0.1*1e2, 
         "alpha_uc"    : 1e-1,
-        "nu_uc_x"     : 1e-2,
-        "nu_uc_y"     : 1e-2,
+        "nu_uc_x"     : 1e2*1e-2,
+        "nu_uc_y"     : 1e2*1e-2,
         "eta_x"       : 1e-1*1e2,
-        "nu_sp_x"     : 0e0, 
-        "nu_sp_y"     : 0e0,
+        "nu_sp_x"     : 1e-1, 
+        "nu_sp_y"     : 1e-1,
         "beta_x"      : 0e-6,
         "beta_y"      : 0e-6,
         "dnu_x"       : 1e-3,
         "dnu_y"       : 1e-3,
-        "xi"          : 1e1*1e-6,
+        "xi"          : 1e-6,
         "eta^(2)_x"   : 1e-6 
     }
     return weights
