@@ -26,13 +26,17 @@ from thor_scsi.utils.output import mat2txt, vec2txt
 ind = ind.index_class()
 
 
-# Desired linear optics at the exit: alpha, beta, [eta_x, eta'_x].
-Twiss_design = np.array([[0.0, 0.0], [0.0, 0.0], [10.0, 10.0]])
+# Linear optics at the entrance: [eta_x, eta'_x], alpha, beta.
+Twiss_entrance = np.array([[2.01212e-02, 0.0], [0.0, 0.0], [0.16097, 3.28148]])
 
-# Linear optics at the entrance.
-Twiss_entrance = np.array([[5.19744e-02, 0.0], [0.0, 0.0], [4.28596, 2.43637]])
+# Desired linear optics at the exit.
+Twiss_design = np.array([[0.0, 0.0], [0.0, 0.0], [1.5430, 8.95048]])
 
-weights = np.array([[1e6, 1e7], [1e2, 1e2], [1e-4, 1e-4]]) 
+weights = np.array([
+    [1e5, 1e5],
+    [1e0, 1e0],
+    [1e-1, 1e-1]
+]) 
 
 
 class transp_line_class:
@@ -187,18 +191,22 @@ class transp_line_class:
 
 def get_prms(eps):
     prm = [
-        ("D2",  "L",   [0.1-0.05, 0.1+0.1]),
-        ("D3",  "L",   [0.1-0.07, 0.1+0.05]),
-        ("D4",  "L",   [0.25-0.1, 0.25+0.1]),
-
-        # ("B2",  "phi", [2.17-1.0, 2.17+0.7]),
-        # ("B3",  "phi", [0.59-0.59, 0.59+0.8]),
-
+        ("D2",  "L",   [0.05, 0.3]),
         ("QF2", "b_2", [-10.0, 10.0]),
-        ("B2",  "b_2", [-10.0, 10.0]),
-        ("B3",  "b_2", [-10.0, 10.0]),
+
+        ("D3",  "L",   [0.25, 0.4]),
         ("QD1", "b_2", [-10.0, 10.0]),
-        ("QF3", "b_2", [-10.0, 10.0])
+
+        ("D4",  "L",   [0.25, 0.4]),
+        ("QF3", "b_2", [-10.0, 10.0]),
+
+        ("B01",  "phi", [0.0, 4.0]),
+        # ("B01",  "L",   [0.2, 0.4]),
+        ("B01",  "b_2", [-10.0, 10.0]),
+
+        ("B11",  "phi", [0.0, 3.0]),
+        # ("B11",  "L",   [0.05, 0.15]),
+        ("B11",  "b_2", [-10.0, 10.0]),
     ]
 
     prm_list = pc.prm_class(lat_prop, prm)
