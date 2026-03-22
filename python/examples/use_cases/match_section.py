@@ -28,16 +28,16 @@ ind = ind.index_class()
 
 # Desired linear optics at the exit:
 Twiss_design = {
-    "eta"   : [0.0, 0.0],  # [eta_x, eta'_x].
-    "alpha" : [0.0, 0.0],  # alpha.
-    "beta"  : [10.0, 10.0] # beta.
+    "eta"   : [0.0, 0.0],        # [eta_x, eta'_x].
+    "alpha" : [0.0, 0.0],        # alpha.
+    "beta"  : [1.54303, 8.95048] # beta.
 }
 
 # Linear optics at the entrance.
 Twiss_entrance = {
-    "eta"   : [3.88154e-02, 0.0], # [eta_x, eta'_x].
+    "eta"   : [1.95062e-02, 0.0], # [eta_x, eta'_x].
     "alpha" : [0.0, 0.0],         # alpha.
-    "beta"  : [4.26224, 2.43395]  # beta.
+    "beta"  : [0.15431, 5.04570]  # beta.
 }
 
 weights = {
@@ -199,18 +199,10 @@ class transp_line_class:
 
 def get_prms(eps):
     prm = [
-        ("D2",  "L",   [0.1-0.05, 0.1+0.1]),
-        ("D3",  "L",   [0.1-0.07, 0.1+0.05]),
-        ("D4",  "L",   [0.25-0.1, 0.25+0.1]),
-
-        # ("B2",  "phi", [2.17-1.0, 2.17+0.7]),
-        # ("B3",  "phi", [0.59-0.59, 0.59+0.8]),
+        # ("D2",  "L",   [0.1-0.05, 0.1+0.1]),
 
         ("QF2", "b_2", [-10.0, 10.0]),
         ("B2",  "b_2", [-10.0, 10.0]),
-        ("B3",  "b_2", [-10.0, 10.0]),
-        ("QD1", "b_2", [-10.0, 10.0]),
-        ("QF3", "b_2", [-10.0, 10.0])
     ]
 
     prm_list = pc.prm_class(lat_prop, prm)
@@ -231,6 +223,9 @@ file_name = os.path.join(home_dir, sys.argv[1]+".lat")
 
 lat_prop = lp.lattice_properties_class(file_name, E_0, cod_eps, no)
 lat_prop.prt_lat("lat_prop_lat.txt")
+
+print(Twiss_entrance)
+assert False
 
 A_0 = lo.compute_A(
     Twiss_entrance[0], Twiss_entrance[1], Twiss_entrance[2], lat_prop._desc)

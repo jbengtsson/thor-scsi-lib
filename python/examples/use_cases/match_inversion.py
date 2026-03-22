@@ -27,7 +27,7 @@ ind = ind.index_class()
 
 
 # Linear optics at the entrance: [eta_x, eta'_x], alpha, beta.
-Twiss_entrance = np.array([[2.01212e-02, 0.0], [0.0, 0.0], [0.16097, 3.28148]])
+Twiss_entrance = np.array([[1.95062e-02, 0.0], [0.0, 0.0], [0.15431, 5.04570]])
 
 # Desired linear optics at the exit.
 Twiss_design = np.array([[0.0, 0.0], [0.0, 0.0], [1.5430, 8.95048]])
