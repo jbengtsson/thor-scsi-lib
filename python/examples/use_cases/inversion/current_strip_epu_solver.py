@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-current_strip_epu_57_solver_3.py
+current_strip_epu_57_solver_9.py
 
 Self-contained current-strip correction prototype for the supplied EPU57
 RADIA kick map.
@@ -15,16 +15,35 @@ Key corrections relative to current_strip_epu_57_solver_2.py
        theta_x(strip) = - integral(B_y ds) / (B rho)
        theta_y(strip) = + integral(B_x ds) / (B rho)
 4. The complete corrected 2D kick map is exported.
-5. Raw and corrected horizontal/vertical kick maps are saved as compact,
-   aligned paired 3D surface plots; --show displays both figures.
+5. Horizontal and vertical kick maps are combined side-by-side in one raw
+   3D figure and one corrected 3D figure; --show displays both figures.
 6. Filled-contour 2D kick-map PNGs are not generated. The two 1D diagnostic
    cuts are retained.
 7. --x-range-mm and --y-range-mm optionally limit the displayed ranges
    to ±X mm and ±Y mm without changing the fit, currents, or exported
    full kick map.
-8. The paired 3D view follows the supplied gnuplot setting:
-       set view 50, 348, 1, 1
-9. The script has no dependency on the missing
+8. --kick-scale multiplies both input kick components before fitting,
+   correction, plotting, metrics, and export; its default is 1.0.
+9. The 3D colour and z ranges autoscale independently from the displayed
+   data by default. --color-scale shared restores the earlier common,
+   symmetric raw/corrected component scales.
+10. Both panels in both paired figures use one shared oblique camera. The
+    defaults are elevation 20 degrees and azimuth -45 degrees, which keep
+    both x and y directions visible. --elevation-deg and --azimuth-deg
+    override these values and are applied identically to every panel.
+11. Before every 3D plot, x and y coordinates are sorted into ascending
+    order and the kick matrix is reordered consistently.  This is essential
+    because the RADIA file stores y from positive to negative values.
+12. Each paired raw/corrected plot is rendered from a fresh, isolated
+    Figure object in batch mode. The horizontal and vertical panels are
+    independent Axes3D objects inside that figure and share only the explicit
+    camera and geometry settings.
+13. --projection and --box-aspect-x/y/z control the 3D geometry.
+    The defaults use orthographic projection and box aspect
+    (2.5, 1.8, 0.85). The larger y aspect reflects Gnuplot's independent
+    axis normalization and prevents the theta_y surface from appearing
+    artificially edge-on.
+14. The script has no dependency on the missing
    current_strip_poisson_solver.py module.
 
 Model limitations
@@ -55,10 +74,16 @@ if "--show" not in sys.argv:
     matplotlib.use("Agg")
 
 import matplotlib.pyplot as plt
+from matplotlib.backends.backend_agg import FigureCanvasAgg
+from matplotlib.figure import Figure
 import numpy as np
 from scipy.optimize import lsq_linear
 
 MU0 = 4.0e-7 * np.pi
+
+RELEASE_ID = "EPU57-SOLVER-9-PAIRED-KICKMAPS"
+PLOT_ELEVATION_DEG = 20.0
+PLOT_AZIMUTH_DEG = -45.0
 
 
 @dataclass(frozen=True)
@@ -384,6 +409,88 @@ def crop_vertical_range(
     return y_m[mask], values[mask, ...]
 
 
+
+def canonicalize_plot_grid(
+    x_m: np.ndarray,
+    y_m: np.ndarray,
+    values: np.ndarray,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Return an ascending x/y grid with values reordered consistently.
+
+    RADIA kick maps commonly list y from positive to negative values.  A
+    canonical ascending grid avoids reverse polygon ordering in mplot3d and
+    keeps the rendered surface orientation consistent with the axis frame.
+    """
+    x = np.asarray(x_m, dtype=float)
+    y = np.asarray(y_m, dtype=float)
+    z = np.asarray(values, dtype=float)
+
+    if z.shape != (y.size, x.size):
+        raise ValueError(
+            "values must have shape (len(y_m), len(x_m)); "
+            f"got {z.shape}, expected {(y.size, x.size)}"
+        )
+
+    x_order = np.argsort(x, kind="stable")
+    y_order = np.argsort(y, kind="stable")
+
+    x_sorted = x[x_order]
+    y_sorted = y[y_order]
+    z_sorted = z[np.ix_(y_order, x_order)]
+
+    if np.any(np.diff(x_sorted) <= 0.0):
+        raise ValueError("x coordinates must be strictly increasing")
+    if np.any(np.diff(y_sorted) <= 0.0):
+        raise ValueError("y coordinates must be strictly increasing")
+
+    return x_sorted, y_sorted, z_sorted
+
+
+def _make_2d_figure(keep_open: bool = False):
+    """Create a fully fresh 2D figure.
+
+    In batch mode we avoid pyplot figure state entirely by constructing a
+    standalone Figure with its own Agg canvas.  This guarantees that the
+    next plot starts from a clean graphics state.
+    """
+    if keep_open:
+        figure = plt.figure(figsize=(8, 5))
+        axes = figure.add_subplot(111)
+        return figure, axes
+
+    figure = Figure(figsize=(8, 5))
+    FigureCanvasAgg(figure)
+    axes = figure.add_subplot(111)
+    return figure, axes
+
+
+def _make_3d_pair_figure(keep_open: bool = False):
+    """Create a fresh paired 3D figure with two independent panels."""
+    if keep_open:
+        figure = plt.figure(figsize=(13.5, 5.6))
+    else:
+        figure = Figure(figsize=(13.5, 5.6))
+        FigureCanvasAgg(figure)
+
+    theta_x_axes = figure.add_axes(
+        (0.035, 0.10, 0.39, 0.82), projection="3d"
+    )
+    theta_x_color_axes = figure.add_axes((0.435, 0.24, 0.015, 0.52))
+
+    theta_y_axes = figure.add_axes(
+        (0.535, 0.10, 0.39, 0.82), projection="3d"
+    )
+    theta_y_color_axes = figure.add_axes((0.935, 0.24, 0.015, 0.52))
+
+    return (
+        figure,
+        theta_x_axes,
+        theta_x_color_axes,
+        theta_y_axes,
+        theta_y_color_axes,
+    )
+
+
 def plot_map(
     x_m: np.ndarray,
     y_m: np.ndarray,
@@ -399,8 +506,7 @@ def plot_map(
     x_grid, y_grid = np.meshgrid(x_plot_m * 1.0e3, y_m * 1.0e3)
     levels = np.linspace(-symmetric_limit_urad, symmetric_limit_urad, 41)
 
-    figure = plt.figure(figsize=(8, 5))
-    axes = figure.add_subplot(111)
+    figure, axes = _make_2d_figure()
     contour = axes.contourf(
         x_grid,
         y_grid,
@@ -414,7 +520,10 @@ def plot_map(
     axes.set_ylabel("y [mm]")
     figure.tight_layout()
     figure.savefig(output_path, dpi=180)
-    plt.close(figure)
+    try:
+        plt.close(figure)
+    except Exception:
+        pass
 
 
 def plot_cut(
@@ -426,8 +535,7 @@ def plot_cut(
     ylabel: str,
     output_path: Path,
 ) -> None:
-    figure = plt.figure(figsize=(8, 5))
-    axes = figure.add_subplot(111)
+    figure, axes = _make_2d_figure()
     axes.plot(coordinate_mm, raw_urad, label="raw")
     axes.plot(coordinate_mm, corrected_urad, label="corrected")
     axes.set_title(title)
@@ -437,140 +545,243 @@ def plot_cut(
     axes.legend()
     figure.tight_layout()
     figure.savefig(output_path, dpi=180)
-    plt.close(figure)
+    try:
+        plt.close(figure)
+    except Exception:
+        pass
 
 
 
-def plot_kickmaps_3d(
+
+def colour_and_z_limits(
+    values: np.ndarray,
+    shared_limit: float,
+    mode: str,
+):
+    """
+    Return a Matplotlib normalizer and z-axis limits.
+
+    auto:
+        Colour limits follow the finite displayed data.  If the data span
+        zero, TwoSlopeNorm keeps zero at the neutral centre of the diverging
+        colour map.  The z axis follows the same data with 5% visual padding.
+    shared:
+        Use the earlier symmetric component-wise limit, shared between raw
+        and corrected figures.
+    """
+    finite = np.asarray(values, dtype=float)
+    finite = finite[np.isfinite(finite)]
+    if finite.size == 0:
+        raise ValueError("Cannot autoscale a plot with no finite values")
+
+    if mode == "shared":
+        limit = float(shared_limit)
+        if not np.isfinite(limit) or limit <= 0.0:
+            limit = max(float(np.max(np.abs(finite))), np.finfo(float).eps)
+        normalizer = matplotlib.colors.Normalize(vmin=-limit, vmax=limit)
+        return normalizer, -limit, limit
+
+    if mode != "auto":
+        raise ValueError(f"Unknown colour-scale mode: {mode!r}")
+
+    data_min = float(np.min(finite))
+    data_max = float(np.max(finite))
+
+    if data_min == data_max:
+        reference = max(abs(data_min), 1.0e-12)
+        colour_pad = 0.05 * reference
+        vmin = data_min - colour_pad
+        vmax = data_max + colour_pad
+    else:
+        vmin = data_min
+        vmax = data_max
+
+    if vmin < 0.0 < vmax:
+        normalizer = matplotlib.colors.TwoSlopeNorm(
+            vmin=vmin,
+            vcenter=0.0,
+            vmax=vmax,
+        )
+    else:
+        normalizer = matplotlib.colors.Normalize(vmin=vmin, vmax=vmax)
+
+    span = vmax - vmin
+    z_pad = 0.05 * span if span > 0.0 else max(abs(vmin), 1.0) * 0.05
+    return normalizer, vmin - z_pad, vmax + z_pad
+
+def _prepare_3d_component(
+    x_m: np.ndarray,
+    y_m: np.ndarray,
+    values_urad: np.ndarray,
+    x_range_mm: float | None,
+    y_range_mm: float | None,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Crop, sort, and convert one kick component for 3D plotting."""
+    x_plot_m, values_plot_urad = crop_horizontal_range(
+        x_m, values_urad, x_range_mm
+    )
+    y_plot_m, values_plot_urad = crop_vertical_range(
+        y_m, values_plot_urad, y_range_mm
+    )
+    x_plot_m, y_plot_m, values_plot_urad = canonicalize_plot_grid(
+        x_plot_m,
+        y_plot_m,
+        values_plot_urad,
+    )
+    x_grid_mm, y_grid_mm = np.meshgrid(
+        x_plot_m * 1.0e3,
+        y_plot_m * 1.0e3,
+        indexing="xy",
+    )
+    return x_grid_mm, y_grid_mm, values_plot_urad * 1.0e-3
+
+
+def _draw_3d_component(
+    figure,
+    axes,
+    color_axes,
+    x_grid_mm: np.ndarray,
+    y_grid_mm: np.ndarray,
+    values_mrad: np.ndarray,
+    title: str,
+    shared_limit_urad: float,
+    color_scale: str,
+    elevation_deg: float,
+    azimuth_deg: float,
+    projection: str,
+    box_aspect_x: float,
+    box_aspect_y: float,
+    box_aspect_z: float,
+) -> None:
+    """Draw one kick component into an already-created 3D panel."""
+    normalizer, z_min_mrad, z_max_mrad = colour_and_z_limits(
+        values_mrad,
+        shared_limit=shared_limit_urad * 1.0e-3,
+        mode=color_scale,
+    )
+
+    surface = axes.plot_surface(
+        x_grid_mm,
+        y_grid_mm,
+        values_mrad,
+        cmap="turbo",
+        norm=normalizer,
+        linewidth=0.0,
+        antialiased=True,
+        rcount=values_mrad.shape[0],
+        ccount=values_mrad.shape[1],
+    )
+
+    axes.set_title(title, pad=2.0, fontsize=13)
+    axes.set_xlabel("x [mm]", labelpad=3.0)
+    axes.set_ylabel("y [mm]", labelpad=3.0)
+    axes.set_zlabel("")
+    axes.set_xlim(float(np.min(x_grid_mm)), float(np.max(x_grid_mm)))
+    axes.set_ylim(float(np.min(y_grid_mm)), float(np.max(y_grid_mm)))
+    axes.set_zlim(z_min_mrad, z_max_mrad)
+    axes.set_proj_type(projection)
+    axes.view_init(
+        elev=elevation_deg,
+        azim=azimuth_deg,
+        roll=0.0,
+        vertical_axis="z",
+    )
+    axes.set_box_aspect((box_aspect_x, box_aspect_y, box_aspect_z))
+    axes.tick_params(axis="both", labelsize=8, pad=0)
+
+    for axis in (axes.xaxis, axes.yaxis, axes.zaxis):
+        axis.pane.set_facecolor((1.0, 1.0, 1.0, 0.0))
+        axis.pane.set_edgecolor((0.55, 0.55, 0.55, 0.55))
+
+    colorbar = figure.colorbar(surface, cax=color_axes)
+    colorbar.ax.tick_params(labelsize=8, pad=2)
+
+
+def plot_kickmaps_3d_pair(
     x_m: np.ndarray,
     y_m: np.ndarray,
     theta_x_urad: np.ndarray,
     theta_y_urad: np.ndarray,
     output_path: Path,
-    theta_x_limit_urad: float,
-    theta_y_limit_urad: float,
+    theta_x_shared_limit_urad: float,
+    theta_y_shared_limit_urad: float,
+    figure_title: str,
     x_range_mm: float | None = None,
     y_range_mm: float | None = None,
+    color_scale: str = "auto",
+    elevation_deg: float = 20.0,
+    azimuth_deg: float = -45.0,
+    projection: str = "ortho",
+    box_aspect_x: float = 2.5,
+    box_aspect_y: float = 1.8,
+    box_aspect_z: float = 0.85,
     keep_open: bool = False,
 ):
-    """
-    Save aligned paired 3D surfaces for theta_x and theta_y.
-
-    The two panels use identical geometry and fixed axes positions. Raw and
-    corrected figures share the same component-specific z and colour limits,
-    allowing direct before/after comparison.
-    """
-    x_plot_m, theta_x_plot_urad = crop_horizontal_range(
-        x_m, theta_x_urad, x_range_mm
+    """Save paired horizontal and vertical 3D kick-map panels."""
+    theta_x_grid = _prepare_3d_component(
+        x_m,
+        y_m,
+        theta_x_urad,
+        x_range_mm,
+        y_range_mm,
     )
-    _, theta_y_plot_urad = crop_horizontal_range(
-        x_m, theta_y_urad, x_range_mm
-    )
-    y_plot_m, theta_x_plot_urad = crop_vertical_range(
-        y_m, theta_x_plot_urad, y_range_mm
-    )
-    _, theta_y_plot_urad = crop_vertical_range(
-        y_m, theta_y_plot_urad, y_range_mm
+    theta_y_grid = _prepare_3d_component(
+        x_m,
+        y_m,
+        theta_y_urad,
+        x_range_mm,
+        y_range_mm,
     )
 
-    x_grid_mm, y_grid_mm = np.meshgrid(
-        x_plot_m * 1.0e3,
-        y_plot_m * 1.0e3,
+    (
+        figure,
+        theta_x_axes,
+        theta_x_color_axes,
+        theta_y_axes,
+        theta_y_color_axes,
+    ) = _make_3d_pair_figure(keep_open=keep_open)
+
+    _draw_3d_component(
+        figure,
+        theta_x_axes,
+        theta_x_color_axes,
+        *theta_x_grid,
+        title=r"$\theta_x$ [mrad]",
+        shared_limit_urad=theta_x_shared_limit_urad,
+        color_scale=color_scale,
+        elevation_deg=elevation_deg,
+        azimuth_deg=azimuth_deg,
+        projection=projection,
+        box_aspect_x=box_aspect_x,
+        box_aspect_y=box_aspect_y,
+        box_aspect_z=box_aspect_z,
+    )
+    _draw_3d_component(
+        figure,
+        theta_y_axes,
+        theta_y_color_axes,
+        *theta_y_grid,
+        title=r"$\theta_y$ [mrad]",
+        shared_limit_urad=theta_y_shared_limit_urad,
+        color_scale=color_scale,
+        elevation_deg=elevation_deg,
+        azimuth_deg=azimuth_deg,
+        projection=projection,
+        box_aspect_x=box_aspect_x,
+        box_aspect_y=box_aspect_y,
+        box_aspect_z=box_aspect_z,
     )
 
-    # Explicit positions keep the two 3D axes and colour bars aligned,
-    # independent of tick-label widths or the two different kick scales.
-    figure = plt.figure(figsize=(10.8, 4.6))
-    axes_positions = (
-        (0.035, 0.12, 0.405, 0.80),
-        (0.535, 0.12, 0.405, 0.80),
-    )
-    colorbar_positions = (
-        (0.450, 0.31, 0.014, 0.38),
-        (0.950, 0.31, 0.014, 0.38),
-    )
-
-    panels = (
-        (
-            theta_x_plot_urad * 1.0e-3,
-            r"$\theta_x$ [mrad]",
-            theta_x_limit_urad * 1.0e-3,
-        ),
-        (
-            theta_y_plot_urad * 1.0e-3,
-            r"$\theta_y$ [mrad]",
-            theta_y_limit_urad * 1.0e-3,
-        ),
-    )
-
-    for (
-        values_mrad,
-        panel_title,
-        limit_mrad,
-        axes_position,
-        colorbar_position,
-    ) in zip(
-        (panel[0] for panel in panels),
-        (panel[1] for panel in panels),
-        (panel[2] for panel in panels),
-        axes_positions,
-        colorbar_positions,
-    ):
-        axes = figure.add_axes(axes_position, projection="3d")
-
-        normalizer = matplotlib.colors.Normalize(
-            vmin=-limit_mrad,
-            vmax=limit_mrad,
-        )
-        surface = axes.plot_surface(
-            x_grid_mm,
-            y_grid_mm,
-            values_mrad,
-            cmap="turbo",
-            norm=normalizer,
-            linewidth=0.0,
-            antialiased=True,
-            rcount=values_mrad.shape[0],
-            ccount=values_mrad.shape[1],
-        )
-
-        axes.set_title(panel_title, pad=1.0, fontsize=12)
-        axes.set_xlabel("x [mm]", labelpad=2.0)
-        axes.set_ylabel("y [mm]", labelpad=2.0)
-        axes.set_zlabel("")
-
-        axes.set_xlim(
-            float(np.min(x_grid_mm)),
-            float(np.max(x_grid_mm)),
-        )
-        axes.set_ylim(
-            float(np.min(y_grid_mm)),
-            float(np.max(y_grid_mm)),
-        )
-        axes.set_zlim(-limit_mrad, limit_mrad)
-
-        # This compact orthographic view follows the supplied reference:
-        # long x span, shallow y span, and matching panel baselines.
-        axes.set_proj_type("ortho")
-        # Gnuplot reference: set view 50, 348, 1, 1
-        axes.view_init(elev=50.0, azim=348.0)
-        axes.set_box_aspect((2.50, 0.80, 0.85))
-        axes.tick_params(axis="both", labelsize=8, pad=0)
-
-        for axis in (axes.xaxis, axes.yaxis, axes.zaxis):
-            axis.pane.set_facecolor((1.0, 1.0, 1.0, 0.0))
-            axis.pane.set_edgecolor((0.55, 0.55, 0.55, 0.55))
-
-        color_axes = figure.add_axes(colorbar_position)
-        colorbar = figure.colorbar(surface, cax=color_axes)
-        colorbar.ax.tick_params(labelsize=8, pad=2)
-
+    figure.suptitle(figure_title, y=0.985, fontsize=13)
     figure.savefig(output_path, dpi=180, bbox_inches="tight")
 
     if keep_open:
         return figure
 
-    plt.close(figure)
+    try:
+        plt.close(figure)
+    except Exception:
+        pass
     return None
 
 def main() -> None:
@@ -580,6 +791,16 @@ def main() -> None:
     parser.add_argument("--kick", type=Path, required=True)
     parser.add_argument("--out-prefix", type=Path, default=Path("epu57_fixed"))
     parser.add_argument("--bRho", type=float, default=10.0)
+    parser.add_argument(
+        "--kick-scale",
+        type=float,
+        default=1.0,
+        metavar="FACTOR",
+        help=(
+            "multiply both input kick components by FACTOR before fitting, "
+            "correction, plotting, metrics, and export (default: 1.0)"
+        ),
+    )
     parser.add_argument("--gap", type=float, default=0.016)
     parser.add_argument(
         "--length",
@@ -615,10 +836,69 @@ def main() -> None:
         ),
     )
     parser.add_argument(
+        "--color-scale",
+        choices=("auto", "shared"),
+        default="auto",
+        help=(
+            "3D colour/z scaling: 'auto' uses each displayed panel's data "
+            "(default); 'shared' uses common symmetric raw/corrected scales"
+        ),
+    )
+    parser.add_argument(
+        "--elevation-deg",
+        type=float,
+        default=PLOT_ELEVATION_DEG,
+        metavar="DEG",
+        help=(
+            "common elevation angle for all 3D panels "
+            f"(default: {PLOT_ELEVATION_DEG:g} degrees)"
+        ),
+    )
+    parser.add_argument(
+        "--azimuth-deg",
+        type=float,
+        default=PLOT_AZIMUTH_DEG,
+        metavar="DEG",
+        help=(
+            "common azimuth angle for all 3D panels "
+            f"(default: {PLOT_AZIMUTH_DEG:g} degrees)"
+        ),
+    )
+    parser.add_argument(
+        "--projection",
+        choices=("ortho", "persp"),
+        default="ortho",
+        help=(
+            "common 3D projection for both panels "
+            "(default: ortho, closest to Gnuplot)"
+        ),
+    )
+    parser.add_argument(
+        "--box-aspect-x",
+        type=float,
+        default=2.5,
+        metavar="VALUE",
+        help="common 3D box aspect in x (default: 2.5)",
+    )
+    parser.add_argument(
+        "--box-aspect-y",
+        type=float,
+        default=1.8,
+        metavar="VALUE",
+        help="common 3D box aspect in y (default: 1.8)",
+    )
+    parser.add_argument(
+        "--box-aspect-z",
+        type=float,
+        default=0.85,
+        metavar="VALUE",
+        help="common 3D box aspect in z (default: 0.85)",
+    )
+    parser.add_argument(
         "--show",
         action="store_true",
         help=(
-            "display the raw and corrected paired 3D kick-map figures "
+            "display the paired raw and corrected 3D kick-map figures "
             "after saving them"
         ),
     )
@@ -626,12 +906,41 @@ def main() -> None:
 
     if arguments.bRho <= 0.0:
         raise ValueError("bRho must be positive")
+    if not np.isfinite(arguments.kick_scale) or arguments.kick_scale <= 0.0:
+        raise ValueError("kick-scale must be finite and positive")
     if arguments.x_range_mm is not None and arguments.x_range_mm <= 0.0:
         raise ValueError("x-range-mm must be positive")
     if arguments.y_range_mm is not None and arguments.y_range_mm <= 0.0:
         raise ValueError("y-range-mm must be positive")
+    if not np.isfinite(arguments.elevation_deg):
+        raise ValueError("elevation-deg must be finite")
+    if not np.isfinite(arguments.azimuth_deg):
+        raise ValueError("azimuth-deg must be finite")
+    for name, value in (
+        ("box-aspect-x", arguments.box_aspect_x),
+        ("box-aspect-y", arguments.box_aspect_y),
+        ("box-aspect-z", arguments.box_aspect_z),
+    ):
+        if not np.isfinite(value) or value <= 0.0:
+            raise ValueError(f"{name} must be finite and positive")
 
-    kick_map = load_kick_map(arguments.kick)
+    plot_elevation_deg = arguments.elevation_deg
+    plot_azimuth_deg = arguments.azimuth_deg
+
+    kick_map_unscaled = load_kick_map(arguments.kick)
+    kick_map = KickMap(
+        length_m=kick_map_unscaled.length_m,
+        x_m=kick_map_unscaled.x_m,
+        y_m=kick_map_unscaled.y_m,
+        theta_x_urad=(
+            arguments.kick_scale * kick_map_unscaled.theta_x_urad
+        ),
+        theta_y_urad=(
+            arguments.kick_scale * kick_map_unscaled.theta_y_urad
+        ),
+        # Integrated B^2 is not a kick angle and is intentionally unscaled.
+        b2_t2m=kick_map_unscaled.b2_t2m,
+    )
     strip_length_m = (
         kick_map.length_m
         if arguments.length is None
@@ -716,6 +1025,9 @@ def main() -> None:
         prefix.name + "_corrected_kickmap.dat"
     )
     metrics_path = prefix.with_name(prefix.name + "_metrics.txt")
+    plot_manifest_path = prefix.with_name(
+        prefix.name + "_plot_manifest.txt"
+    )
 
     np.savetxt(
         currents_path,
@@ -785,7 +1097,7 @@ def main() -> None:
         prefix.with_name(prefix.name + "_theta_y_centerline_cut.png"),
     )
 
-    raw_3d_figure = plot_kickmaps_3d(
+    raw_kickmaps_3d_figure = plot_kickmaps_3d_pair(
         kick_map.x_m,
         kick_map.y_m,
         kick_map.theta_x_urad,
@@ -793,11 +1105,19 @@ def main() -> None:
         prefix.with_name(prefix.name + "_raw_kickmaps_3d.png"),
         theta_x_limit,
         theta_y_limit,
+        "EPU57 kick maps before current-strip correction",
         x_range_mm=arguments.x_range_mm,
         y_range_mm=arguments.y_range_mm,
+        color_scale=arguments.color_scale,
+        elevation_deg=plot_elevation_deg,
+        azimuth_deg=plot_azimuth_deg,
+        projection=arguments.projection,
+        box_aspect_x=arguments.box_aspect_x,
+        box_aspect_y=arguments.box_aspect_y,
+        box_aspect_z=arguments.box_aspect_z,
         keep_open=arguments.show,
     )
-    corrected_3d_figure = plot_kickmaps_3d(
+    corrected_kickmaps_3d_figure = plot_kickmaps_3d_pair(
         kick_map.x_m,
         kick_map.y_m,
         theta_x_corrected_urad,
@@ -805,17 +1125,27 @@ def main() -> None:
         prefix.with_name(prefix.name + "_corrected_kickmaps_3d.png"),
         theta_x_limit,
         theta_y_limit,
+        "EPU57 kick maps after current-strip correction",
         x_range_mm=arguments.x_range_mm,
         y_range_mm=arguments.y_range_mm,
+        color_scale=arguments.color_scale,
+        elevation_deg=plot_elevation_deg,
+        azimuth_deg=plot_azimuth_deg,
+        projection=arguments.projection,
+        box_aspect_x=arguments.box_aspect_x,
+        box_aspect_y=arguments.box_aspect_y,
+        box_aspect_z=arguments.box_aspect_z,
         keep_open=arguments.show,
     )
 
     if arguments.show:
         plt.show()
-        if raw_3d_figure is not None:
-            plt.close(raw_3d_figure)
-        if corrected_3d_figure is not None:
-            plt.close(corrected_3d_figure)
+        for figure in (
+            raw_kickmaps_3d_figure,
+            corrected_kickmaps_3d_figure,
+        ):
+            if figure is not None:
+                plt.close(figure)
 
     raw_theta_x_rms = float(
         np.sqrt(
@@ -839,9 +1169,18 @@ def main() -> None:
     )
 
     metrics = (
+        f"release_id={RELEASE_ID}\n"
         f"input_file={arguments.kick}\n"
         f"grid_shape={kick_map.theta_x_urad.shape}\n"
         f"length_m={kick_map.length_m:.12g}\n"
+        f"kick_scale={arguments.kick_scale:.12g}\n"
+        f"color_scale={arguments.color_scale}\n"
+        f"plot_elevation_deg={plot_elevation_deg:.12g}\n"
+        f"plot_azimuth_deg={plot_azimuth_deg:.12g}\n"
+        f"projection={arguments.projection}\n"
+        f"box_aspect_x={arguments.box_aspect_x:.12g}\n"
+        f"box_aspect_y={arguments.box_aspect_y:.12g}\n"
+        f"box_aspect_z={arguments.box_aspect_z:.12g}\n"
         f"raw_theta_x_y0_min_urad="
         f"{np.min(kick_map.theta_x_urad[middle_y_index, :]):.12g}\n"
         f"raw_theta_x_y0_max_urad="
@@ -862,7 +1201,22 @@ def main() -> None:
     )
     metrics_path.write_text(metrics, encoding="utf-8", newline="\n")
 
+    plot_manifest = (
+        f"release_id={RELEASE_ID}\n"
+        f"raw_kickmaps_file={prefix.name}_raw_kickmaps_3d.png\n"
+        f"corrected_kickmaps_file="
+        f"{prefix.name}_corrected_kickmaps_3d.png\n"
+        f"plot_elevation_deg={plot_elevation_deg:.12g}\n"
+        f"plot_azimuth_deg={plot_azimuth_deg:.12g}\n"
+    )
+    plot_manifest_path.write_text(
+        plot_manifest,
+        encoding="utf-8",
+        newline="\n",
+    )
+
     print(metrics, end="")
+    print(plot_manifest, end="")
 
 
 if __name__ == "__main__":
