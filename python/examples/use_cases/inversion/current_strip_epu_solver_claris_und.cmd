@@ -1,10 +1,12 @@
-python current_strip_epu_solver_v8.py \
+python current_strip_epu_solver.py \
 --kick /Users/johan/git/tracy-3.5_dev/projects/in/lattice/inversion/claris/claris_und_kickmap.txt \
 --beam-energy 3e9 \
 --units 'Tˆ2m^2' \
 --kick-scale 1.0 \
---x-range-mm 10 \
---y-range-mm 10 \
+--x-range-m 5e-3 \
+--y-range-m 5e-3 \
+--strip-layout horizontal \
+--gap 15e-3 \
 --horizontal-weight 1.0 \
 --vertical-weight 0.0 \
 --strips-per-plane 11 \
