@@ -1,0 +1,16 @@
+python current_strip_epu_solver_v8.py \
+--kick /Users/johan/git/tracy-3.5_dev/projects/in/lattice/NSLS-II/epu57/epu57v2lvg16kickmap2pure.dat \
+--beam-energy 3e9 \
+--units 'microrad' \
+--kick-scale 1.0 \
+--x-range-mm 20 \
+--y-range-mm 4 \
+--horizontal-weight 1.0 \
+--vertical-weight 0.0 \
+--strips-per-plane 21 \
+--width 2e-3 \
+--limit 25.0 \
+--target-mode full \
+--max-fit-relative-rms 0.5 \
+--out-prefix claris_und_fixed \
+--show

@@ -1,0 +1,12 @@
+python current_strip_epu_solver_v5.py \
+--kick /Users/johan/git/tracy-3.5_dev/projects/in/lattice/inversion/claris/claris_und_kickmap.txt \
+--kick-scale 1.0 \
+--x-range-mm 10 \
+--y-range-mm 10 \
+--horizontal-weight 1.0 \
+--vertical-weight 0.0 \
+--strips-per-plane 11 \
+--limit 100.0 \
+--max-fit-relative-rms 0.40 \
+--out-prefix epu57_fixed \
+--show

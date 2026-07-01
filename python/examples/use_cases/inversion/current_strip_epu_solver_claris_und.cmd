@@ -1,0 +1,16 @@
+python current_strip_epu_solver_v8.py \
+--kick /Users/johan/git/tracy-3.5_dev/projects/in/lattice/inversion/claris/claris_und_kickmap.txt \
+--beam-energy 3e9 \
+--units 'Tˆ2m^2' \
+--kick-scale 1.0 \
+--x-range-mm 10 \
+--y-range-mm 10 \
+--horizontal-weight 1.0 \
+--vertical-weight 0.0 \
+--strips-per-plane 11 \
+--width 0.5e-3 \
+--limit 100.0 \
+--target-mode nonlinear \
+--max-fit-relative-rms 0.95 \
+--out-prefix claris_und_fixed \
+--show
