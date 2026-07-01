@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-current_strip_epu_solver_v11.py
+current_strip_epu_solver_v12.py
 
 Self-contained current-strip correction prototype for the supplied EPU57
 RADIA kick map.
@@ -72,13 +72,12 @@ Key corrections relative to current_strip_epu_57_solver_2.py
     relative component weights in the joint least-squares objective.  The
     weights are normalized by their maximum and each component is normalized
     by its number of sampled cut points.  Defaults remain (1, 0).
-21. --target-mode nonlinear (the default) projects both the constant
-    steering term and linear gradient out of each target cut and every
-    strip-response column, so only nonlinear kick components are optimized.
-    --target-mode full restores the complete full-kick objective, including
-    constant, linear, and nonlinear components.  The exported map remains the
-    complete physical map and its affine coefficients are recorded for later
-    lattice correction.
+21. --target-mode nonlinear (the default) removes a two-dimensional affine
+    plane from each kick component over the selected model aperture, so only
+    nonlinear target components are optimized.  --target-mode full fits the
+    complete two-dimensional maps, including constant, linear, and nonlinear
+    components.  The exported map remains the complete physical map and its
+    affine-plane coefficients are recorded for later lattice correction.
 22. --units {microrad,T^2m^2} explicitly defines the two kick-block units.
     For T^2m^2 input the angular kick is C/(B rho)^2.  --beam-energy computes
     the electron rigidity from total energy and replaces --bRho entirely.
@@ -99,6 +98,12 @@ Key corrections relative to current_strip_epu_57_solver_2.py
 26. The former millimetre-valued --x-range-mm and --y-range-mm options are
     replaced by --x-range-m and --y-range-m.  The default x half-range is
     0.020 m; y remains unrestricted unless explicitly supplied.
+27. The optimization objective now uses every kick-map point inside the
+    selected two-dimensional model aperture.  In nonlinear mode an affine
+    plane a + b*x + c*y is removed from each target component; the complete
+    strip response is retained in the solve so generated affine fields are
+    penalized rather than left unconstrained.  Full-map RMS safeguards reject
+    corrections that improve cuts while worsening either two-dimensional map.
 
 Model limitations
 -----------------
@@ -142,7 +147,7 @@ MU0 = 4.0e-7 * np.pi
 SPEED_OF_LIGHT_M_S = 299_792_458.0
 ELECTRON_REST_ENERGY_EV = 510_998.95
 
-RELEASE_ID = "EPU57-SOLVER-22-METRE-MODEL-APERTURE"
+RELEASE_ID = "CURRENT-STRIP-SOLVER-23-FULL-2D-OBJECTIVE"
 PLOT_ELEVATION_DEG = 20.0
 PLOT_AZIMUTH_DEG = -45.0
 
@@ -211,6 +216,17 @@ class AffineDecomposition:
     residual: np.ndarray
     offset: np.ndarray
     slope_per_m: np.ndarray
+
+
+@dataclass(frozen=True)
+class AffinePlaneDecomposition:
+    """Least-squares affine-plane decomposition over transverse points."""
+
+    fitted: np.ndarray
+    residual: np.ndarray
+    offset: np.ndarray
+    slope_x_per_m: np.ndarray
+    slope_y_per_m: np.ndarray
 
 
 def _number_after(lines: list[str], label: str) -> float:
@@ -746,6 +762,67 @@ def affine_decomposition(
     )
 
 
+def affine_plane_decomposition(
+    points_xy_m: np.ndarray,
+    values: np.ndarray,
+) -> AffinePlaneDecomposition:
+    """Split values into a 2D affine plane and its nonlinear residual.
+
+    The first axis of ``values`` must match ``points_xy_m``.  For a vector,
+    this fits ``a + b*x + c*y``.  For a matrix, the same orthogonal projection
+    is applied independently to every column.  Coordinate normalization keeps
+    the least-squares design well conditioned while the returned slopes are
+    expressed per metre.
+    """
+    points = np.asarray(points_xy_m, dtype=float)
+    array = np.asarray(values, dtype=float)
+    if points.ndim != 2 or points.shape[1] != 2 or points.shape[0] < 3:
+        raise ValueError("affine-plane projection requires at least three 2D points")
+    if array.shape[0] != points.shape[0]:
+        raise ValueError("the first values axis must match the affine-plane points")
+    if not np.all(np.isfinite(points)) or not np.all(np.isfinite(array)):
+        raise ValueError("affine-plane projection inputs must be finite")
+
+    x = points[:, 0]
+    y = points[:, 1]
+    x_scale_m = max(float(np.max(np.abs(x))), float(np.ptp(x)))
+    y_scale_m = max(float(np.max(np.abs(y))), float(np.ptp(y)))
+    if x_scale_m <= 0.0 or y_scale_m <= 0.0:
+        raise ValueError("affine-plane points must span both x and y")
+
+    design = np.column_stack(
+        [
+            np.ones(points.shape[0], dtype=float),
+            x / x_scale_m,
+            y / y_scale_m,
+        ]
+    )
+    original_shape = array.shape
+    flattened = array.reshape(points.shape[0], -1)
+    coefficients, _, rank, _ = np.linalg.lstsq(design, flattened, rcond=None)
+    if rank < 3:
+        raise ValueError("affine-plane design is rank deficient")
+    fitted_flat = design @ coefficients
+    residual_flat = flattened - fitted_flat
+
+    column_scale = np.max(np.abs(flattened), axis=0)
+    tolerance = (
+        256.0
+        * np.finfo(float).eps
+        * np.maximum(column_scale, np.finfo(float).tiny)
+    )
+    residual_flat[np.abs(residual_flat) <= tolerance] = 0.0
+
+    trailing_shape = original_shape[1:]
+    return AffinePlaneDecomposition(
+        fitted=fitted_flat.reshape(original_shape),
+        residual=residual_flat.reshape(original_shape),
+        offset=coefficients[0].reshape(trailing_shape),
+        slope_x_per_m=(coefficients[1] / x_scale_m).reshape(trailing_shape),
+        slope_y_per_m=(coefficients[2] / y_scale_m).reshape(trailing_shape),
+    )
+
+
 def root_mean_square(values: np.ndarray) -> float:
     array = np.asarray(values, dtype=float)
     if array.size == 0 or not np.all(np.isfinite(array)):
@@ -804,7 +881,7 @@ def write_corrected_kick_map(
     kick_scale: float,
 ) -> None:
     with path.open("w", encoding="utf-8", newline="\n") as stream:
-        stream.write("# Corrected EPU57 current-strip kick map\n")
+        stream.write("# Corrected current-strip kick map\n")
         stream.write("# Right-handed x,y,s convention; beam along +s\n")
         stream.write(f"# Source kick units: {source_units}\n")
         stream.write(f"# Electron total beam energy [eV]: {beam_energy_ev:.12g}\n")
@@ -1491,10 +1568,9 @@ def main() -> None:
         choices=("nonlinear", "full"),
         default="nonlinear",
         help=(
-            "fit target: 'nonlinear' removes constant steering and linear "
-            "gradient terms from both kick cuts and response columns, so "
-            "only nonlinear components are optimized (default); 'full' "
-            "fits the complete cuts, including constant and linear terms"
+            "fit target over the full selected 2D aperture: 'nonlinear' "
+            "removes a + b*x + c*y from each kick component (default); "
+            "'full' fits the complete 2D maps including affine terms"
         ),
     )
     parser.add_argument(
@@ -1612,9 +1688,41 @@ def main() -> None:
         default=1.0,
         metavar="FACTOR",
         help=(
-            "minimum accepted raw/corrected horizontal y=0 RMS ratio on "
-            "the active target basis (nonlinear residual or full cut); "
+            "minimum accepted raw/corrected horizontal full-2D RMS ratio on "
+            "the active target basis (nonlinear residual or full map); "
             "default: 1.0"
+        ),
+    )
+    parser.add_argument(
+        "--min-vertical-rms-reduction-factor",
+        type=float,
+        default=1.0,
+        metavar="FACTOR",
+        help=(
+            "minimum accepted raw/corrected vertical full-2D RMS ratio on "
+            "the active target basis (nonlinear residual or full map); "
+            "default: 1.0"
+        ),
+    )
+    parser.add_argument(
+        "--min-full-map-rms-reduction-factor",
+        type=float,
+        default=1.0,
+        metavar="FACTOR",
+        help=(
+            "minimum raw/corrected RMS ratio required independently for both "
+            "complete 2D kick components, regardless of fit weights "
+            "(default: 1.0, so neither map may worsen)"
+        ),
+    )
+    parser.add_argument(
+        "--min-full-map-peak-reduction-factor",
+        type=float,
+        default=0.0,
+        metavar="FACTOR",
+        help=(
+            "optional minimum raw/corrected absolute-peak ratio for both 2D "
+            "kick maps; 0 disables the peak gate (default: 0)"
         ),
     )
     parser.add_argument(
@@ -1795,11 +1903,28 @@ def main() -> None:
     else:
         effective_max_fit_relative_rms = arguments.max_fit_relative_rms
         max_fit_relative_rms_source = "user"
-    if not np.isfinite(arguments.min_horizontal_rms_reduction_factor) or (
-        arguments.min_horizontal_rms_reduction_factor <= 0.0
+    for name, value in (
+        (
+            "min-horizontal-rms-reduction-factor",
+            arguments.min_horizontal_rms_reduction_factor,
+        ),
+        (
+            "min-vertical-rms-reduction-factor",
+            arguments.min_vertical_rms_reduction_factor,
+        ),
+        (
+            "min-full-map-rms-reduction-factor",
+            arguments.min_full_map_rms_reduction_factor,
+        ),
+    ):
+        if not np.isfinite(value) or value <= 0.0:
+            raise ValueError(f"{name} must be finite and positive")
+    if (
+        not np.isfinite(arguments.min_full_map_peak_reduction_factor)
+        or arguments.min_full_map_peak_reduction_factor < 0.0
     ):
         raise ValueError(
-            "min-horizontal-rms-reduction-factor must be finite and positive"
+            "min-full-map-peak-reduction-factor must be finite and non-negative"
         )
     if not np.isfinite(arguments.current_bound_tolerance) or not (
         0.0 <= arguments.current_bound_tolerance < 1.0
@@ -1898,39 +2023,20 @@ def main() -> None:
         dtype=int,
     )
 
-    raw_theta_x_y0_complete = zero_coordinate_cut(
-        kick_map.y_m,
-        kick_map.theta_x_urad,
-        axis=0,
-        coordinate_name="y",
+    # Restrict both kick components to the requested two-dimensional model
+    # aperture.  These arrays, rather than only the two centreline cuts, define
+    # the optimization objective and the acceptance metrics.
+    model_x_m, raw_theta_x_model_x = crop_horizontal_range(
+        kick_map.x_m, kick_map.theta_x_urad, arguments.x_range_m
     )
-    raw_theta_y_x0_complete = zero_coordinate_cut(
-        kick_map.x_m,
-        kick_map.theta_y_urad,
-        axis=1,
-        coordinate_name="x",
+    _, raw_theta_y_model_x = crop_horizontal_range(
+        kick_map.x_m, kick_map.theta_y_urad, arguments.x_range_m
     )
-    model_x_m, raw_theta_x_model_values = crop_horizontal_range(
-        kick_map.x_m,
-        raw_theta_x_y0_complete.values,
-        arguments.x_range_m,
+    model_y_m, raw_theta_x_model = crop_vertical_range(
+        kick_map.y_m, raw_theta_x_model_x, arguments.y_range_m
     )
-    model_y_m, raw_theta_y_model_column = crop_vertical_range(
-        kick_map.y_m,
-        raw_theta_y_x0_complete.values[:, np.newaxis],
-        arguments.y_range_m,
-    )
-    raw_theta_x_y0 = ZeroCut(
-        values=raw_theta_x_model_values,
-        method=raw_theta_x_y0_complete.method,
-        lower_coordinate_m=raw_theta_x_y0_complete.lower_coordinate_m,
-        upper_coordinate_m=raw_theta_x_y0_complete.upper_coordinate_m,
-    )
-    raw_theta_y_x0 = ZeroCut(
-        values=raw_theta_y_model_column[:, 0],
-        method=raw_theta_y_x0_complete.method,
-        lower_coordinate_m=raw_theta_y_x0_complete.lower_coordinate_m,
-        upper_coordinate_m=raw_theta_y_x0_complete.upper_coordinate_m,
+    _, raw_theta_y_model = crop_vertical_range(
+        kick_map.y_m, raw_theta_y_model_x, arguments.y_range_m
     )
     if model_x_m.size < 2:
         raise ValueError(
@@ -1943,68 +2049,59 @@ def main() -> None:
             "increase --y-range-m"
         )
 
-    # Fit one physical current vector to independently weighted horizontal
-    # and vertical cancellation targets, using only the requested model
-    # aperture. Dividing each block by sqrt(N) makes the weights component-
-    # level coefficients rather than implicit multipliers of point count:
-    #     objective = w_x*mean(r_x^2) + w_y*mean(r_y^2).
-    horizontal_fit_points = np.column_stack(
-        [model_x_m, np.zeros_like(model_x_m)]
+    model_x_grid, model_y_grid = np.meshgrid(model_x_m, model_y_m)
+    model_points = np.column_stack(
+        [model_x_grid.ravel(), model_y_grid.ravel()]
     )
-    vertical_fit_points = np.column_stack(
-        [np.zeros_like(model_y_m), model_y_m]
-    )
-    response_iy_midplane = response_matrix(
+    response_iy_model = response_matrix(
         strips,
-        horizontal_fit_points,
+        model_points,
         component="Iy",
         quadrature_order=arguments.quadrature_order,
     )
-    response_ix_centerline = response_matrix(
+    response_ix_model = response_matrix(
         strips,
-        vertical_fit_points,
+        model_points,
         component="Ix",
         quadrature_order=arguments.quadrature_order,
     )
 
-    raw_theta_x_midplane_rad = raw_theta_x_y0.values * 1.0e-6
-    raw_theta_y_centerline_rad = raw_theta_y_x0.values * 1.0e-6
+    raw_theta_x_model_flat_urad = raw_theta_x_model.ravel()
+    raw_theta_y_model_flat_urad = raw_theta_y_model.ravel()
+    target_iy_tm = (
+        beam_rigidity_tm * raw_theta_x_model_flat_urad * 1.0e-6
+    )
+    target_ix_tm = (
+        -beam_rigidity_tm * raw_theta_y_model_flat_urad * 1.0e-6
+    )
 
-    # theta_x(strip) = -Iy/(B rho), so cancellation requires
-    # Iy_target = +(B rho) * theta_x(raw).
-    target_iy_tm = beam_rigidity_tm * raw_theta_x_midplane_rad
-    # theta_y(strip) = +Ix/(B rho), so cancellation requires
-    # Ix_target = -(B rho) * theta_y(raw).
-    target_ix_tm = -beam_rigidity_tm * raw_theta_y_centerline_rad
+    raw_theta_x_plane = affine_plane_decomposition(
+        model_points, raw_theta_x_model_flat_urad
+    )
+    raw_theta_y_plane = affine_plane_decomposition(
+        model_points, raw_theta_y_model_flat_urad
+    )
+    target_iy_plane = affine_plane_decomposition(model_points, target_iy_tm)
+    target_ix_plane = affine_plane_decomposition(model_points, target_ix_tm)
 
-    raw_theta_x_affine = affine_decomposition(
-        model_x_m, raw_theta_x_y0.values
-    )
-    raw_theta_y_affine = affine_decomposition(
-        model_y_m, raw_theta_y_x0.values
-    )
-    target_iy_affine = affine_decomposition(model_x_m, target_iy_tm)
-    target_ix_affine = affine_decomposition(model_y_m, target_ix_tm)
-    response_iy_affine = affine_decomposition(
-        model_x_m, response_iy_midplane
-    )
-    response_ix_affine = affine_decomposition(
-        model_y_m, response_ix_centerline
-    )
     if arguments.target_mode == "nonlinear":
-        fit_target_iy_tm = target_iy_affine.residual
-        fit_response_iy = response_iy_affine.residual
-        horizontal_fit_basis = "constant_and_linear_removed"
-        fit_target_ix_tm = target_ix_affine.residual
-        fit_response_ix = response_ix_affine.residual
-        vertical_fit_basis = "constant_and_linear_removed"
+        # The target contains only the nonlinear remainder, while the complete
+        # physical response is retained.  Orthogonality of the affine-plane
+        # projection means this also penalizes any affine field generated by
+        # the fitted strips instead of leaving it unconstrained.
+        fit_target_iy_tm = target_iy_plane.residual
+        fit_target_ix_tm = target_ix_plane.residual
+        fit_response_iy = response_iy_model
+        fit_response_ix = response_ix_model
+        horizontal_fit_basis = "full_2d_constant_and_linear_plane_removed"
+        vertical_fit_basis = "full_2d_constant_and_linear_plane_removed"
     else:
         fit_target_iy_tm = target_iy_tm
         fit_target_ix_tm = target_ix_tm
-        fit_response_iy = response_iy_midplane
-        fit_response_ix = response_ix_centerline
-        horizontal_fit_basis = "full_cut"
-        vertical_fit_basis = "full_cut"
+        fit_response_iy = response_iy_model
+        fit_response_ix = response_ix_model
+        horizontal_fit_basis = "full_2d_complete_map"
+        vertical_fit_basis = "full_2d_complete_map"
 
     fit_weight_scale = max(
         arguments.horizontal_weight,
@@ -2035,7 +2132,6 @@ def main() -> None:
 
     weighted_fit_response = np.vstack(weighted_response_blocks)
     weighted_fit_target = np.concatenate(weighted_target_blocks)
-
     current_solution = solve_currents(
         response=weighted_fit_response,
         target=weighted_fit_target,
@@ -2044,9 +2140,10 @@ def main() -> None:
     )
     currents_a = current_solution.currents_a
 
+    # Evaluate the fitted current distribution on the complete input grid for
+    # export and diagnostics outside the fitted model aperture.
     x_grid, y_grid = np.meshgrid(kick_map.x_m, kick_map.y_m)
     all_points = np.column_stack([x_grid.ravel(), y_grid.ravel()])
-
     response_iy_full = response_matrix(
         strips,
         all_points,
@@ -2059,7 +2156,6 @@ def main() -> None:
         component="Ix",
         quadrature_order=arguments.quadrature_order,
     )
-
     strip_iy_tm = (response_iy_full @ currents_a).reshape(x_grid.shape)
     strip_ix_tm = (response_ix_full @ currents_a).reshape(x_grid.shape)
 
@@ -2075,6 +2171,63 @@ def main() -> None:
         + 1.0e6 * strip_ix_tm / beam_rigidity_tm
     )
 
+    _, corrected_theta_x_model_x = crop_horizontal_range(
+        kick_map.x_m, theta_x_corrected_urad, arguments.x_range_m
+    )
+    _, corrected_theta_y_model_x = crop_horizontal_range(
+        kick_map.x_m, theta_y_corrected_urad, arguments.x_range_m
+    )
+    _, corrected_theta_x_model = crop_vertical_range(
+        kick_map.y_m, corrected_theta_x_model_x, arguments.y_range_m
+    )
+    _, corrected_theta_y_model = crop_vertical_range(
+        kick_map.y_m, corrected_theta_y_model_x, arguments.y_range_m
+    )
+    corrected_theta_x_model_flat_urad = corrected_theta_x_model.ravel()
+    corrected_theta_y_model_flat_urad = corrected_theta_y_model.ravel()
+    corrected_theta_x_plane = affine_plane_decomposition(
+        model_points, corrected_theta_x_model_flat_urad
+    )
+    corrected_theta_y_plane = affine_plane_decomposition(
+        model_points, corrected_theta_y_model_flat_urad
+    )
+
+    # Preserve the centreline diagnostics and plots, but do not use them as
+    # the optimization objective.
+    raw_theta_x_y0_complete = zero_coordinate_cut(
+        kick_map.y_m,
+        kick_map.theta_x_urad,
+        axis=0,
+        coordinate_name="y",
+    )
+    raw_theta_y_x0_complete = zero_coordinate_cut(
+        kick_map.x_m,
+        kick_map.theta_y_urad,
+        axis=1,
+        coordinate_name="x",
+    )
+    _, raw_theta_x_model_values = crop_horizontal_range(
+        kick_map.x_m,
+        raw_theta_x_y0_complete.values,
+        arguments.x_range_m,
+    )
+    _, raw_theta_y_model_column = crop_vertical_range(
+        kick_map.y_m,
+        raw_theta_y_x0_complete.values[:, np.newaxis],
+        arguments.y_range_m,
+    )
+    raw_theta_x_y0 = ZeroCut(
+        values=raw_theta_x_model_values,
+        method=raw_theta_x_y0_complete.method,
+        lower_coordinate_m=raw_theta_x_y0_complete.lower_coordinate_m,
+        upper_coordinate_m=raw_theta_x_y0_complete.upper_coordinate_m,
+    )
+    raw_theta_y_x0 = ZeroCut(
+        values=raw_theta_y_model_column[:, 0],
+        method=raw_theta_y_x0_complete.method,
+        lower_coordinate_m=raw_theta_y_x0_complete.lower_coordinate_m,
+        upper_coordinate_m=raw_theta_y_x0_complete.upper_coordinate_m,
+    )
     corrected_theta_x_y0_complete = zero_coordinate_cut(
         kick_map.y_m,
         theta_x_corrected_urad,
@@ -2109,32 +2262,33 @@ def main() -> None:
         lower_coordinate_m=corrected_theta_y_x0_complete.lower_coordinate_m,
         upper_coordinate_m=corrected_theta_y_x0_complete.upper_coordinate_m,
     )
+    raw_theta_x_affine = affine_decomposition(model_x_m, raw_theta_x_y0.values)
+    raw_theta_y_affine = affine_decomposition(model_y_m, raw_theta_y_x0.values)
     corrected_theta_x_affine = affine_decomposition(
         model_x_m, corrected_theta_x_y0.values
     )
     corrected_theta_y_affine = affine_decomposition(
         model_y_m, corrected_theta_y_x0.values
     )
+
     fit_prediction_iy_tm = fit_response_iy @ currents_a
-    fit_residual_iy_tm = fit_prediction_iy_tm - fit_target_iy_tm
     fit_prediction_ix_tm = fit_response_ix @ currents_a
+    fit_residual_iy_tm = fit_prediction_iy_tm - fit_target_iy_tm
     fit_residual_ix_tm = fit_prediction_ix_tm - fit_target_ix_tm
-    full_prediction_iy_tm = response_iy_midplane @ currents_a
+    full_prediction_iy_tm = response_iy_model @ currents_a
+    full_prediction_ix_tm = response_ix_model @ currents_a
     full_residual_iy_tm = full_prediction_iy_tm - target_iy_tm
-    full_prediction_ix_tm = response_ix_centerline @ currents_a
     full_residual_ix_tm = full_prediction_ix_tm - target_ix_tm
 
     horizontal_fit_target_rms_tm = root_mean_square(fit_target_iy_tm)
     horizontal_fit_residual_rms_tm = root_mean_square(fit_residual_iy_tm)
     horizontal_fit_relative_rms = relative_rms_residual(
-        fit_residual_iy_tm,
-        fit_target_iy_tm,
+        fit_residual_iy_tm, fit_target_iy_tm
     )
     vertical_fit_target_rms_tm = root_mean_square(fit_target_ix_tm)
     vertical_fit_residual_rms_tm = root_mean_square(fit_residual_ix_tm)
     vertical_fit_relative_rms = relative_rms_residual(
-        fit_residual_ix_tm,
-        fit_target_ix_tm,
+        fit_residual_ix_tm, fit_target_ix_tm
     )
     horizontal_full_fit_relative_rms = relative_rms_residual(
         full_residual_iy_tm, target_iy_tm
@@ -2175,16 +2329,59 @@ def main() -> None:
         )
     )
 
-    raw_theta_x_rms = root_mean_square(raw_theta_x_y0.values)
-    corrected_theta_x_rms = root_mean_square(corrected_theta_x_y0.values)
-    horizontal_rms_reduction_factor, horizontal_ratio_status = (
-        safe_reduction_factor(raw_theta_x_rms, corrected_theta_x_rms)
+    # Full two-dimensional performance metrics on the fitted model aperture.
+    raw_theta_x_model_rms = root_mean_square(raw_theta_x_model_flat_urad)
+    corrected_theta_x_model_rms = root_mean_square(
+        corrected_theta_x_model_flat_urad
     )
-    raw_theta_x_nonlinear_rms = root_mean_square(
-        raw_theta_x_affine.residual
+    raw_theta_y_model_rms = root_mean_square(raw_theta_y_model_flat_urad)
+    corrected_theta_y_model_rms = root_mean_square(
+        corrected_theta_y_model_flat_urad
     )
+    (
+        full_map_theta_x_rms_reduction_factor,
+        full_map_theta_x_rms_reduction_status,
+    ) = safe_reduction_factor(
+        raw_theta_x_model_rms, corrected_theta_x_model_rms
+    )
+    (
+        full_map_theta_y_rms_reduction_factor,
+        full_map_theta_y_rms_reduction_status,
+    ) = safe_reduction_factor(
+        raw_theta_y_model_rms, corrected_theta_y_model_rms
+    )
+    raw_theta_x_model_peak = float(
+        np.max(np.abs(raw_theta_x_model_flat_urad))
+    )
+    corrected_theta_x_model_peak = float(
+        np.max(np.abs(corrected_theta_x_model_flat_urad))
+    )
+    raw_theta_y_model_peak = float(
+        np.max(np.abs(raw_theta_y_model_flat_urad))
+    )
+    corrected_theta_y_model_peak = float(
+        np.max(np.abs(corrected_theta_y_model_flat_urad))
+    )
+    (
+        full_map_theta_x_peak_reduction_factor,
+        full_map_theta_x_peak_reduction_status,
+    ) = safe_reduction_factor(
+        raw_theta_x_model_peak, corrected_theta_x_model_peak
+    )
+    (
+        full_map_theta_y_peak_reduction_factor,
+        full_map_theta_y_peak_reduction_status,
+    ) = safe_reduction_factor(
+        raw_theta_y_model_peak, corrected_theta_y_model_peak
+    )
+
+    raw_theta_x_nonlinear_rms = root_mean_square(raw_theta_x_plane.residual)
     corrected_theta_x_nonlinear_rms = root_mean_square(
-        corrected_theta_x_affine.residual
+        corrected_theta_x_plane.residual
+    )
+    raw_theta_y_nonlinear_rms = root_mean_square(raw_theta_y_plane.residual)
+    corrected_theta_y_nonlinear_rms = root_mean_square(
+        corrected_theta_y_plane.residual
     )
     (
         horizontal_nonlinear_rms_reduction_factor,
@@ -2192,7 +2389,32 @@ def main() -> None:
     ) = safe_reduction_factor(
         raw_theta_x_nonlinear_rms, corrected_theta_x_nonlinear_rms
     )
+    (
+        vertical_nonlinear_rms_reduction_factor,
+        vertical_nonlinear_ratio_status,
+    ) = safe_reduction_factor(
+        raw_theta_y_nonlinear_rms, corrected_theta_y_nonlinear_rms
+    )
 
+    # Legacy centreline diagnostics remain available in the metrics.
+    raw_theta_x_rms = root_mean_square(raw_theta_x_y0.values)
+    corrected_theta_x_rms = root_mean_square(corrected_theta_x_y0.values)
+    horizontal_rms_reduction_factor, horizontal_ratio_status = (
+        safe_reduction_factor(raw_theta_x_rms, corrected_theta_x_rms)
+    )
+    raw_theta_x_y0_nonlinear_rms = root_mean_square(
+        raw_theta_x_affine.residual
+    )
+    corrected_theta_x_y0_nonlinear_rms = root_mean_square(
+        corrected_theta_x_affine.residual
+    )
+    (
+        horizontal_y0_nonlinear_rms_reduction_factor,
+        horizontal_y0_nonlinear_ratio_status,
+    ) = safe_reduction_factor(
+        raw_theta_x_y0_nonlinear_rms,
+        corrected_theta_x_y0_nonlinear_rms,
+    )
     raw_theta_y_peak = float(np.max(np.abs(raw_theta_y_x0.values)))
     corrected_theta_y_peak = float(
         np.max(np.abs(corrected_theta_y_x0.values))
@@ -2208,7 +2430,7 @@ def main() -> None:
     )
     (
         vertical_nonlinear_peak_reduction_factor,
-        vertical_nonlinear_ratio_status,
+        vertical_nonlinear_peak_reduction_status,
     ) = safe_reduction_factor(
         raw_theta_y_nonlinear_peak, corrected_theta_y_nonlinear_peak
     )
@@ -2217,16 +2439,28 @@ def main() -> None:
         horizontal_acceptance_reduction_factor = (
             horizontal_nonlinear_rms_reduction_factor
         )
-        horizontal_acceptance_ratio_status = (
-            horizontal_nonlinear_ratio_status
+        vertical_acceptance_reduction_factor = (
+            vertical_nonlinear_rms_reduction_factor
         )
-        horizontal_acceptance_rms_basis = "constant_and_linear_removed"
+        horizontal_acceptance_ratio_status = horizontal_nonlinear_ratio_status
+        vertical_acceptance_ratio_status = vertical_nonlinear_ratio_status
+        horizontal_acceptance_rms_basis = "full_2d_affine_plane_removed"
+        vertical_acceptance_rms_basis = "full_2d_affine_plane_removed"
     else:
         horizontal_acceptance_reduction_factor = (
-            horizontal_rms_reduction_factor
+            full_map_theta_x_rms_reduction_factor
         )
-        horizontal_acceptance_ratio_status = horizontal_ratio_status
-        horizontal_acceptance_rms_basis = "full_cut"
+        vertical_acceptance_reduction_factor = (
+            full_map_theta_y_rms_reduction_factor
+        )
+        horizontal_acceptance_ratio_status = (
+            full_map_theta_x_rms_reduction_status
+        )
+        vertical_acceptance_ratio_status = (
+            full_map_theta_y_rms_reduction_status
+        )
+        horizontal_acceptance_rms_basis = "full_2d_complete_map"
+        vertical_acceptance_rms_basis = "full_2d_complete_map"
 
     bound_margin_a = arguments.limit * arguments.current_bound_tolerance
     bound_threshold_a = arguments.limit - bound_margin_a
@@ -2248,10 +2482,40 @@ def main() -> None:
         < arguments.min_horizontal_rms_reduction_factor
     ):
         acceptance_failures.append(
-            "horizontal RMS reduction factor "
+            "horizontal active-basis 2D RMS reduction factor "
             f"{horizontal_acceptance_reduction_factor:.6g} is below "
             f"{arguments.min_horizontal_rms_reduction_factor:.6g}"
         )
+    if arguments.vertical_weight > 0.0 and (
+        vertical_acceptance_reduction_factor
+        < arguments.min_vertical_rms_reduction_factor
+    ):
+        acceptance_failures.append(
+            "vertical active-basis 2D RMS reduction factor "
+            f"{vertical_acceptance_reduction_factor:.6g} is below "
+            f"{arguments.min_vertical_rms_reduction_factor:.6g}"
+        )
+    for component, reduction in (
+        ("horizontal", full_map_theta_x_rms_reduction_factor),
+        ("vertical", full_map_theta_y_rms_reduction_factor),
+    ):
+        if reduction < arguments.min_full_map_rms_reduction_factor:
+            acceptance_failures.append(
+                f"{component} full-map RMS reduction factor "
+                f"{reduction:.6g} is below "
+                f"{arguments.min_full_map_rms_reduction_factor:.6g}"
+            )
+    if arguments.min_full_map_peak_reduction_factor > 0.0:
+        for component, reduction in (
+            ("horizontal", full_map_theta_x_peak_reduction_factor),
+            ("vertical", full_map_theta_y_peak_reduction_factor),
+        ):
+            if reduction < arguments.min_full_map_peak_reduction_factor:
+                acceptance_failures.append(
+                    f"{component} full-map peak reduction factor "
+                    f"{reduction:.6g} is below "
+                    f"{arguments.min_full_map_peak_reduction_factor:.6g}"
+                )
 
     if acceptance_failures:
         acceptance_status = "FAILED"
@@ -2307,7 +2571,9 @@ def main() -> None:
         f"target_mode={arguments.target_mode}\n"
         f"horizontal_fit_basis={horizontal_fit_basis}\n"
         f"vertical_fit_basis={vertical_fit_basis}\n"
-        f"affine_projection_basis=constant_plus_linear_coordinate\n"
+        f"fit_domain=full_2d_model_aperture\n"
+        f"fit_point_count={model_points.shape[0]}\n"
+        f"affine_projection_basis_2d=constant_plus_x_plus_y\n"
         f"normalized_horizontal_weight="
         f"{normalized_horizontal_weight:.12g}\n"
         f"normalized_vertical_weight="
@@ -2361,19 +2627,22 @@ def main() -> None:
         f"{horizontal_rms_reduction_factor:.12g}\n"
         f"horizontal_rms_reduction_status={horizontal_ratio_status}\n"
         f"raw_theta_x_y0_nonlinear_rms_urad="
-        f"{raw_theta_x_nonlinear_rms:.12g}\n"
+        f"{raw_theta_x_y0_nonlinear_rms:.12g}\n"
         f"corrected_theta_x_y0_nonlinear_rms_urad="
-        f"{corrected_theta_x_nonlinear_rms:.12g}\n"
-        f"horizontal_nonlinear_rms_reduction_factor="
-        f"{horizontal_nonlinear_rms_reduction_factor:.12g}\n"
-        f"horizontal_nonlinear_rms_reduction_status="
-        f"{horizontal_nonlinear_ratio_status}\n"
+        f"{corrected_theta_x_y0_nonlinear_rms:.12g}\n"
+        f"horizontal_y0_nonlinear_rms_reduction_factor="
+        f"{horizontal_y0_nonlinear_rms_reduction_factor:.12g}\n"
+        f"horizontal_y0_nonlinear_rms_reduction_status="
+        f"{horizontal_y0_nonlinear_ratio_status}\n"
         f"horizontal_acceptance_rms_basis="
         f"{horizontal_acceptance_rms_basis}\n"
         f"horizontal_acceptance_reduction_factor="
         f"{horizontal_acceptance_reduction_factor:.12g}\n"
         f"horizontal_acceptance_reduction_status="
         f"{horizontal_acceptance_ratio_status}\n"
+        f"vertical_acceptance_rms_basis={vertical_acceptance_rms_basis}\n"
+        f"vertical_acceptance_reduction_factor={vertical_acceptance_reduction_factor:.12g}\n"
+        f"vertical_acceptance_reduction_status={vertical_acceptance_ratio_status}\n"
         f"raw_theta_y_x0_peak_urad={raw_theta_y_peak:.12g}\n"
         f"corrected_theta_y_x0_peak_urad="
         f"{corrected_theta_y_peak:.12g}\n"
@@ -2388,6 +2657,38 @@ def main() -> None:
         f"{vertical_nonlinear_peak_reduction_factor:.12g}\n"
         f"vertical_nonlinear_peak_reduction_status="
         f"{vertical_nonlinear_ratio_status}\n"
+        f"raw_theta_x_model_2d_rms_urad={raw_theta_x_model_rms:.12g}\n"
+        f"corrected_theta_x_model_2d_rms_urad={corrected_theta_x_model_rms:.12g}\n"
+        f"full_map_theta_x_rms_reduction_factor={full_map_theta_x_rms_reduction_factor:.12g}\n"
+        f"full_map_theta_x_rms_reduction_status={full_map_theta_x_rms_reduction_status}\n"
+        f"raw_theta_y_model_2d_rms_urad={raw_theta_y_model_rms:.12g}\n"
+        f"corrected_theta_y_model_2d_rms_urad={corrected_theta_y_model_rms:.12g}\n"
+        f"full_map_theta_y_rms_reduction_factor={full_map_theta_y_rms_reduction_factor:.12g}\n"
+        f"full_map_theta_y_rms_reduction_status={full_map_theta_y_rms_reduction_status}\n"
+        f"raw_theta_x_model_2d_peak_urad={raw_theta_x_model_peak:.12g}\n"
+        f"corrected_theta_x_model_2d_peak_urad={corrected_theta_x_model_peak:.12g}\n"
+        f"full_map_theta_x_peak_reduction_factor={full_map_theta_x_peak_reduction_factor:.12g}\n"
+        f"full_map_theta_x_peak_reduction_status={full_map_theta_x_peak_reduction_status}\n"
+        f"raw_theta_y_model_2d_peak_urad={raw_theta_y_model_peak:.12g}\n"
+        f"corrected_theta_y_model_2d_peak_urad={corrected_theta_y_model_peak:.12g}\n"
+        f"full_map_theta_y_peak_reduction_factor={full_map_theta_y_peak_reduction_factor:.12g}\n"
+        f"full_map_theta_y_peak_reduction_status={full_map_theta_y_peak_reduction_status}\n"
+        f"raw_theta_x_model_2d_nonlinear_rms_urad={raw_theta_x_nonlinear_rms:.12g}\n"
+        f"corrected_theta_x_model_2d_nonlinear_rms_urad={corrected_theta_x_nonlinear_rms:.12g}\n"
+        f"raw_theta_y_model_2d_nonlinear_rms_urad={raw_theta_y_nonlinear_rms:.12g}\n"
+        f"corrected_theta_y_model_2d_nonlinear_rms_urad={corrected_theta_y_nonlinear_rms:.12g}\n"
+        f"raw_theta_x_affine_plane_offset_urad={float(raw_theta_x_plane.offset):.12g}\n"
+        f"raw_theta_x_affine_plane_gradient_x_urad_per_mm={float(raw_theta_x_plane.slope_x_per_m) * 1.0e-3:.12g}\n"
+        f"raw_theta_x_affine_plane_gradient_y_urad_per_mm={float(raw_theta_x_plane.slope_y_per_m) * 1.0e-3:.12g}\n"
+        f"corrected_theta_x_affine_plane_offset_urad={float(corrected_theta_x_plane.offset):.12g}\n"
+        f"corrected_theta_x_affine_plane_gradient_x_urad_per_mm={float(corrected_theta_x_plane.slope_x_per_m) * 1.0e-3:.12g}\n"
+        f"corrected_theta_x_affine_plane_gradient_y_urad_per_mm={float(corrected_theta_x_plane.slope_y_per_m) * 1.0e-3:.12g}\n"
+        f"raw_theta_y_affine_plane_offset_urad={float(raw_theta_y_plane.offset):.12g}\n"
+        f"raw_theta_y_affine_plane_gradient_x_urad_per_mm={float(raw_theta_y_plane.slope_x_per_m) * 1.0e-3:.12g}\n"
+        f"raw_theta_y_affine_plane_gradient_y_urad_per_mm={float(raw_theta_y_plane.slope_y_per_m) * 1.0e-3:.12g}\n"
+        f"corrected_theta_y_affine_plane_offset_urad={float(corrected_theta_y_plane.offset):.12g}\n"
+        f"corrected_theta_y_affine_plane_gradient_x_urad_per_mm={float(corrected_theta_y_plane.slope_x_per_m) * 1.0e-3:.12g}\n"
+        f"corrected_theta_y_affine_plane_gradient_y_urad_per_mm={float(corrected_theta_y_plane.slope_y_per_m) * 1.0e-3:.12g}\n"
         f"solver_status={current_solution.status}\n"
         f"solver_message={current_solution.message}\n"
         f"solver_cost={current_solution.cost:.12g}\n"
@@ -2417,6 +2718,9 @@ def main() -> None:
         f"max_fit_relative_rms_source={max_fit_relative_rms_source}\n"
         f"min_horizontal_rms_reduction_factor="
         f"{arguments.min_horizontal_rms_reduction_factor:.12g}\n"
+        f"min_vertical_rms_reduction_factor={arguments.min_vertical_rms_reduction_factor:.12g}\n"
+        f"min_full_map_rms_reduction_factor={arguments.min_full_map_rms_reduction_factor:.12g}\n"
+        f"min_full_map_peak_reduction_factor={arguments.min_full_map_peak_reduction_factor:.12g}\n"
         f"current_bound_tolerance="
         f"{arguments.current_bound_tolerance:.12g}\n"
         f"current_bound_active_count={current_bound_active_count}\n"
@@ -2547,7 +2851,7 @@ def main() -> None:
             theta_x_plot_raw = raw_theta_x_affine.residual
             theta_x_plot_corrected = corrected_theta_x_affine.residual
             theta_x_plot_title = (
-                "Horizontal nonlinear kick on y = 0 "
+                "Horizontal nonlinear centreline diagnostic on y = 0 "
                 "(constant and gradient removed)"
             )
         else:
@@ -2573,7 +2877,7 @@ def main() -> None:
             theta_y_plot_raw = raw_theta_y_affine.residual
             theta_y_plot_corrected = corrected_theta_y_affine.residual
             theta_y_plot_title = (
-                "Vertical nonlinear kick on x = 0 "
+                "Vertical nonlinear centreline diagnostic on x = 0 "
                 "(constant and gradient removed)"
             )
         else:
@@ -2603,7 +2907,7 @@ def main() -> None:
             raw_3d_path,
             theta_x_limit,
             theta_y_limit,
-            "EPU57 kick maps before current-strip correction",
+            "Kick maps before current-strip correction",
             x_range_m=arguments.x_range_m,
             y_range_m=arguments.y_range_m,
             color_scale=arguments.color_scale,
@@ -2623,7 +2927,7 @@ def main() -> None:
             corrected_3d_path,
             theta_x_limit,
             theta_y_limit,
-            "EPU57 kick maps after current-strip correction",
+            "Kick maps after current-strip correction",
             x_range_m=arguments.x_range_m,
             y_range_m=arguments.y_range_m,
             color_scale=arguments.color_scale,
@@ -2671,6 +2975,8 @@ def main() -> None:
             f"horizontal_weight={arguments.horizontal_weight:.12g}\n"
             f"vertical_weight={arguments.vertical_weight:.12g}\n"
             f"target_mode={arguments.target_mode}\n"
+            f"fit_domain=full_2d_model_aperture\n"
+            f"fit_point_count={model_points.shape[0]}\n"
             f"horizontal_fit_basis={horizontal_fit_basis}\n"
             f"vertical_fit_basis={vertical_fit_basis}\n"
             f"normalized_horizontal_weight="

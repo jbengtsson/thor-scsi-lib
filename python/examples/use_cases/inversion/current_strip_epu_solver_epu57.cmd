@@ -3,16 +3,17 @@ python current_strip_epu_solver.py \
 --beam-energy 3e9 \
 --units 'microrad' \
 --kick-scale 1.0 \
---x-range-m 30e-3 \
---y-range-m 5e-3 \
+--x-range-m 20e-3 \
+--y-range-m 4e-3 \
 --strip-layout horizontal \
 --strips-per-plane 21 \
+--horizontal-strip-range-mm 20 \
 --gap 16e-3 \
 --width 2e-3 \
 --limit 25.0 \
 --horizontal-weight 1.0 \
 --vertical-weight 0.0 \
---target-mode full \
+--target-mode nonlinear \
 --max-fit-relative-rms 0.5 \
 --out-prefix claris_und_fixed \
 --show
