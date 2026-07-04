@@ -3,18 +3,17 @@
 
 This refactor preserves the V12 numerical model while separating configuration,
 geometry, solving, diagnostics, acceptance, and output publication into small
-testable units.  It also supports both standard ``--help`` and a dedicated
-``help [OPTION]`` command.
+testable units. It supports both standard ``--help`` and a dedicated
+``help [OPTION]`` command. All command-line range and geometry lengths are
+expressed in metres.
 """
 from __future__ import annotations
 
 import argparse
 import csv
-import os
 import re
 import sys
 import tempfile
-from collections import OrderedDict
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -31,7 +30,7 @@ from scipy.optimize import lsq_linear
 MU0 = 4.0e-7 * np.pi
 SPEED_OF_LIGHT_M_S = 299_792_458.0
 ELECTRON_REST_ENERGY_EV = 510_998.95
-RELEASE_ID = "CURRENT-STRIP-SOLVER-25-HELP-COMMAND"
+RELEASE_ID = "CURRENT-STRIP-SOLVER-27-COMPONENT-REFACTOR"
 PLOT_ELEVATION_DEG = 20.0
 PLOT_AZIMUTH_DEG = -45.0
 
@@ -105,6 +104,19 @@ class AffinePlaneDecomposition:
     offset: np.ndarray
     slope_x_per_m: np.ndarray
     slope_y_per_m: np.ndarray
+
+
+@dataclass
+class ComponentState:
+    """Static component metadata plus computed per-component run state."""
+
+    key: str
+    label: str
+    raw_map: np.ndarray
+    response_component: str
+    target_sign: float
+    correction_sign: float
+    weight: float
 
 def _number_after(lines: list[str], label: str) -> float:
     pattern = re.compile(label, re.IGNORECASE)
@@ -345,6 +357,33 @@ def _uniform_strip_centres(
         )
     return centres, pitch_m
 
+def _append_strip_family(
+    strips: list[Strip],
+    centres_m: np.ndarray,
+    *,
+    family: str,
+    sheets: tuple[tuple[str, float], tuple[str, float]],
+    fixed_centre_m: float,
+    width_m: float,
+    thickness_m: float,
+    length_m: float,
+) -> None:
+    horizontal = family == "horizontal"
+    for sheet, sign in sheets:
+        for coordinate in centres_m:
+            coordinate_m = float(coordinate)
+            strips.append(Strip(
+                x_m=coordinate_m if horizontal else float(sign * fixed_centre_m),
+                y_m=float(sign * fixed_centre_m) if horizontal else coordinate_m,
+                size_x_m=width_m if horizontal else thickness_m,
+                size_y_m=thickness_m if horizontal else width_m,
+                length_m=length_m,
+                family=family,
+                sheet=sheet,
+                coordinate_m=coordinate_m,
+            ))
+
+
 def make_strip_arrays(
     layout: str,
     horizontal_half_span_m: float,
@@ -358,108 +397,70 @@ def make_strip_arrays(
     length_m: float,
     side_gap_source: str,
 ) -> tuple[list[Strip], StripGeometry]:
-    """Build horizontal top/bottom and/or vertical left/right strip sheets.
-
-    All conductors run longitudinally along +s.  For the horizontal family,
-    strip centres vary in x and the broad cross-section dimension is x.  For
-    the vertical family, strip centres vary in y and the same rectangular
-    cross-section is rotated by 90 degrees, so its broad dimension is y.
-    """
+    """Build horizontal top/bottom and/or vertical left/right strip sheets."""
     if layout not in {"horizontal", "vertical", "both"}:
         raise ValueError(f"unknown strip layout: {layout!r}")
-    if min(width_m, thickness_m, length_m) <= 0.0:
-        raise ValueError("strip width, thickness, and length must be positive")
-    if not all(np.isfinite(v) for v in (width_m, thickness_m, length_m)):
-        raise ValueError("strip dimensions must be finite")
+    dimensions = (width_m, thickness_m, length_m)
+    if not all(np.isfinite(value) and value > 0.0 for value in dimensions):
+        raise ValueError("strip width, thickness, and length must be finite and positive")
 
     strips: list[Strip] = []
-    horizontal_pitch_m = float("nan")
-    vertical_pitch_m = float("nan")
-    horizontal_count = 0
-    vertical_count = 0
+    horizontal_count = vertical_count = 0
+    horizontal_pitch_m = vertical_pitch_m = float("nan")
 
     if layout in {"horizontal", "both"}:
-        if (
-            not np.isfinite(top_bottom_clear_gap_m)
-            or top_bottom_clear_gap_m <= 0.0
-        ):
+        if not np.isfinite(top_bottom_clear_gap_m) or top_bottom_clear_gap_m <= 0.0:
             raise ValueError("top/bottom clear gap must be finite and positive")
-        x_centres, horizontal_pitch_m = _uniform_strip_centres(
-            horizontal_half_span_m,
-            horizontal_count_per_plane,
-            width_m,
+        centres, horizontal_pitch_m = _uniform_strip_centres(
+            horizontal_half_span_m, horizontal_count_per_plane, width_m,
             "horizontal-array",
         )
         horizontal_count = horizontal_count_per_plane
-        y_centre = top_bottom_clear_gap_m / 2.0 + thickness_m / 2.0
-        for sheet, sign in (("top", +1.0), ("bottom", -1.0)):
-            for coordinate in x_centres:
-                strips.append(
-                    Strip(
-                        x_m=float(coordinate),
-                        y_m=float(sign * y_centre),
-                        size_x_m=width_m,
-                        size_y_m=thickness_m,
-                        length_m=length_m,
-                        family="horizontal",
-                        sheet=sheet,
-                        coordinate_m=float(coordinate),
-                    )
-                )
+        _append_strip_family(
+            strips,
+            centres,
+            family="horizontal",
+            sheets=(("top", +1.0), ("bottom", -1.0)),
+            fixed_centre_m=top_bottom_clear_gap_m / 2.0 + thickness_m / 2.0,
+            width_m=width_m,
+            thickness_m=thickness_m,
+            length_m=length_m,
+        )
 
     if layout in {"vertical", "both"}:
-        if (
-            not np.isfinite(left_right_clear_gap_m)
-            or left_right_clear_gap_m <= 0.0
-        ):
+        if not np.isfinite(left_right_clear_gap_m) or left_right_clear_gap_m <= 0.0:
             raise ValueError("left/right clear gap must be finite and positive")
-        y_centres, vertical_pitch_m = _uniform_strip_centres(
-            vertical_half_span_m,
-            vertical_count_per_plane,
-            width_m,
+        centres, vertical_pitch_m = _uniform_strip_centres(
+            vertical_half_span_m, vertical_count_per_plane, width_m,
             "vertical-array",
         )
         vertical_count = vertical_count_per_plane
-        x_centre = left_right_clear_gap_m / 2.0 + thickness_m / 2.0
-        for sheet, sign in (("right", +1.0), ("left", -1.0)):
-            for coordinate in y_centres:
-                strips.append(
-                    Strip(
-                        x_m=float(sign * x_centre),
-                        y_m=float(coordinate),
-                        size_x_m=thickness_m,
-                        size_y_m=width_m,
-                        length_m=length_m,
-                        family="vertical",
-                        sheet=sheet,
-                        coordinate_m=float(coordinate),
-                    )
-                )
+        _append_strip_family(
+            strips,
+            centres,
+            family="vertical",
+            sheets=(("right", +1.0), ("left", -1.0)),
+            fixed_centre_m=left_right_clear_gap_m / 2.0 + thickness_m / 2.0,
+            width_m=width_m,
+            thickness_m=thickness_m,
+            length_m=length_m,
+        )
 
     if not strips:
         raise ValueError("strip layout produced no conductors")
-
-    geometry = StripGeometry(
+    nan = float("nan")
+    return strips, StripGeometry(
         layout=layout,
         horizontal_count_per_plane=horizontal_count,
         vertical_count_per_plane=vertical_count,
-        horizontal_half_span_m=(
-            horizontal_half_span_m if horizontal_count else float("nan")
-        ),
-        vertical_half_span_m=(
-            vertical_half_span_m if vertical_count else float("nan")
-        ),
+        horizontal_half_span_m=horizontal_half_span_m if horizontal_count else nan,
+        vertical_half_span_m=vertical_half_span_m if vertical_count else nan,
         horizontal_pitch_m=horizontal_pitch_m,
         vertical_pitch_m=vertical_pitch_m,
-        top_bottom_clear_gap_m=(
-            top_bottom_clear_gap_m if horizontal_count else float("nan")
-        ),
-        left_right_clear_gap_m=(
-            left_right_clear_gap_m if vertical_count else float("nan")
-        ),
+        top_bottom_clear_gap_m=top_bottom_clear_gap_m if horizontal_count else nan,
+        left_right_clear_gap_m=left_right_clear_gap_m if vertical_count else nan,
         side_gap_source=side_gap_source if vertical_count else "not_applicable",
     )
-    return strips, geometry
 
 def response_matrix(
     strips: list[Strip],
@@ -568,48 +569,22 @@ def solve_currents(
         iterations=(None if result.nit is None else int(result.nit)),
     )
 
-def affine_decomposition(
-    coordinate_m: np.ndarray,
+def _project_least_squares(
+    design: np.ndarray,
     values: np.ndarray,
-) -> AffineDecomposition:
-    """Split values into least-squares affine and nonlinear parts.
-
-    The first axis of ``values`` must correspond to ``coordinate_m``.  For a
-    vector, this fits ``a + b*q``.  For a matrix, the same projection is
-    applied independently to every column.  Removing the affine part from
-    both the target and each response column makes the nonlinear objective
-    invariant to constant steering and linear-gradient components.
-    """
-    coordinate = np.asarray(coordinate_m, dtype=float)
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, int]:
+    """Project the leading values axis onto a least-squares design matrix."""
     array = np.asarray(values, dtype=float)
-
-    if coordinate.ndim != 1 or coordinate.size < 2:
-        raise ValueError("affine projection requires at least two coordinates")
-    if not np.all(np.isfinite(coordinate)) or not np.all(np.isfinite(array)):
-        raise ValueError("affine projection inputs must be finite")
-    if array.shape[0] != coordinate.size:
-        raise ValueError(
-            "the first values axis must match the affine-fit coordinate"
-        )
-    if np.ptp(coordinate) <= 0.0:
-        raise ValueError("affine-fit coordinates must span a nonzero interval")
-
-    coordinate_scale_m = float(np.max(np.abs(coordinate)))
-    if coordinate_scale_m == 0.0:
-        coordinate_scale_m = float(np.ptp(coordinate))
-    normalized_coordinate = coordinate / coordinate_scale_m
-    design = np.column_stack(
-        [np.ones(coordinate.size, dtype=float), normalized_coordinate]
-    )
+    if array.shape[0] != design.shape[0]:
+        raise ValueError("the first values axis must match the projection design")
+    if not np.all(np.isfinite(design)) or not np.all(np.isfinite(array)):
+        raise ValueError("projection inputs must be finite")
 
     original_shape = array.shape
-    flattened = array.reshape(coordinate.size, -1)
-    coefficients, _, _, _ = np.linalg.lstsq(design, flattened, rcond=None)
+    flattened = array.reshape(design.shape[0], -1)
+    coefficients, _, rank, _ = np.linalg.lstsq(design, flattened, rcond=None)
     fitted_flat = design @ coefficients
     residual_flat = flattened - fitted_flat
-
-    # An exactly affine target should become an exact numerical zero rather
-    # than a machine-epsilon residual that can make a relative error ill posed.
     column_scale = np.max(np.abs(flattened), axis=0)
     tolerance = (
         256.0
@@ -617,72 +592,63 @@ def affine_decomposition(
         * np.maximum(column_scale, np.finfo(float).tiny)
     )
     residual_flat[np.abs(residual_flat) <= tolerance] = 0.0
-
-    trailing_shape = original_shape[1:]
-    return AffineDecomposition(
-        fitted=fitted_flat.reshape(original_shape),
-        residual=residual_flat.reshape(original_shape),
-        offset=coefficients[0].reshape(trailing_shape),
-        slope_per_m=(coefficients[1] / coordinate_scale_m).reshape(
-            trailing_shape
-        ),
+    return (
+        fitted_flat.reshape(original_shape),
+        residual_flat.reshape(original_shape),
+        coefficients,
+        int(rank),
     )
+
+
+def affine_decomposition(
+    coordinate_m: np.ndarray,
+    values: np.ndarray,
+) -> AffineDecomposition:
+    """Split values into a least-squares line and nonlinear residual."""
+    coordinate = np.asarray(coordinate_m, dtype=float)
+    if coordinate.ndim != 1 or coordinate.size < 2:
+        raise ValueError("affine projection requires at least two coordinates")
+    if not np.all(np.isfinite(coordinate)) or np.ptp(coordinate) <= 0.0:
+        raise ValueError("affine-fit coordinates must be finite and span an interval")
+
+    scale_m = float(np.max(np.abs(coordinate))) or float(np.ptp(coordinate))
+    design = np.column_stack(
+        [np.ones(coordinate.size, dtype=float), coordinate / scale_m]
+    )
+    fitted, residual, coefficients, _ = _project_least_squares(design, values)
+    trailing_shape = np.asarray(values).shape[1:]
+    return AffineDecomposition(
+        fitted=fitted,
+        residual=residual,
+        offset=coefficients[0].reshape(trailing_shape),
+        slope_per_m=(coefficients[1] / scale_m).reshape(trailing_shape),
+    )
+
 
 def affine_plane_decomposition(
     points_xy_m: np.ndarray,
     values: np.ndarray,
 ) -> AffinePlaneDecomposition:
-    """Split values into a 2D affine plane and its nonlinear residual.
-
-    The first axis of ``values`` must match ``points_xy_m``.  For a vector,
-    this fits ``a + b*x + c*y``.  For a matrix, the same orthogonal projection
-    is applied independently to every column.  Coordinate normalization keeps
-    the least-squares design well conditioned while the returned slopes are
-    expressed per metre.
-    """
+    """Split values into ``a + b*x + c*y`` and a nonlinear residual."""
     points = np.asarray(points_xy_m, dtype=float)
-    array = np.asarray(values, dtype=float)
     if points.ndim != 2 or points.shape[1] != 2 or points.shape[0] < 3:
         raise ValueError("affine-plane projection requires at least three 2D points")
-    if array.shape[0] != points.shape[0]:
-        raise ValueError("the first values axis must match the affine-plane points")
-    if not np.all(np.isfinite(points)) or not np.all(np.isfinite(array)):
-        raise ValueError("affine-plane projection inputs must be finite")
-
-    x = points[:, 0]
-    y = points[:, 1]
+    x, y = points.T
     x_scale_m = max(float(np.max(np.abs(x))), float(np.ptp(x)))
     y_scale_m = max(float(np.max(np.abs(y))), float(np.ptp(y)))
     if x_scale_m <= 0.0 or y_scale_m <= 0.0:
         raise ValueError("affine-plane points must span both x and y")
 
     design = np.column_stack(
-        [
-            np.ones(points.shape[0], dtype=float),
-            x / x_scale_m,
-            y / y_scale_m,
-        ]
+        [np.ones(points.shape[0], dtype=float), x / x_scale_m, y / y_scale_m]
     )
-    original_shape = array.shape
-    flattened = array.reshape(points.shape[0], -1)
-    coefficients, _, rank, _ = np.linalg.lstsq(design, flattened, rcond=None)
+    fitted, residual, coefficients, rank = _project_least_squares(design, values)
     if rank < 3:
         raise ValueError("affine-plane design is rank deficient")
-    fitted_flat = design @ coefficients
-    residual_flat = flattened - fitted_flat
-
-    column_scale = np.max(np.abs(flattened), axis=0)
-    tolerance = (
-        256.0
-        * np.finfo(float).eps
-        * np.maximum(column_scale, np.finfo(float).tiny)
-    )
-    residual_flat[np.abs(residual_flat) <= tolerance] = 0.0
-
-    trailing_shape = original_shape[1:]
+    trailing_shape = np.asarray(values).shape[1:]
     return AffinePlaneDecomposition(
-        fitted=fitted_flat.reshape(original_shape),
-        residual=residual_flat.reshape(original_shape),
+        fitted=fitted,
+        residual=residual,
         offset=coefficients[0].reshape(trailing_shape),
         slope_x_per_m=(coefficients[1] / x_scale_m).reshape(trailing_shape),
         slope_y_per_m=(coefficients[2] / y_scale_m).reshape(trailing_shape),
@@ -728,7 +694,7 @@ def publish_staged_outputs(
             "Output staging is incomplete: " + ", ".join(str(path) for path in missing)
         )
     for staged_path, final_path in zip(staged_paths, final_paths):
-        os.replace(staged_path, final_path)
+        staged_path.replace(final_path)
 
 def write_corrected_kick_map(
     path: Path,
@@ -780,52 +746,43 @@ def write_corrected_kick_map(
                 kick_map.b2_t2m,
             )
 
-def crop_horizontal_range(
-    x_m: np.ndarray,
+def _crop_coordinate_range(
+    coordinates_m: np.ndarray,
     values: np.ndarray,
-    x_range_m: float | None,
+    limit_m: float | None,
+    *,
+    axis: int,
+    coordinate_name: str,
 ) -> tuple[np.ndarray, np.ndarray]:
-    """
-    Crop arrays to |x| <= x_range_m, with the limit expressed in metres.
-
-    The solver and exported kick map always retain the complete input grid.
-    """
-    if x_range_m is None:
-        return x_m, values
-    if x_range_m <= 0.0:
-        raise ValueError("x_range_m must be positive")
-
-    limit_m = x_range_m
-    mask = np.abs(x_m) <= limit_m + 1.0e-15
+    """Crop one values axis to a symmetric coordinate interval in metres."""
+    if limit_m is None:
+        return coordinates_m, values
+    if limit_m <= 0.0:
+        raise ValueError(f"{coordinate_name}_range must be positive")
+    mask = np.abs(coordinates_m) <= limit_m + 1.0e-15
     if not np.any(mask):
         raise ValueError(
-            f"No kick-map x coordinates lie within ±{x_range_m:g} m"
+            f"No kick-map {coordinate_name} coordinates lie within ±{limit_m:g} m"
         )
-    return x_m[mask], values[..., mask]
+    selection = [slice(None)] * np.ndim(values)
+    selection[axis] = mask
+    return coordinates_m[mask], values[tuple(selection)]
+
+
+def crop_horizontal_range(
+    x_m: np.ndarray, values: np.ndarray, x_range_m: float | None
+) -> tuple[np.ndarray, np.ndarray]:
+    return _crop_coordinate_range(
+        x_m, values, x_range_m, axis=-1, coordinate_name="x"
+    )
+
 
 def crop_vertical_range(
-    y_m: np.ndarray,
-    values: np.ndarray,
-    y_range_m: float | None,
+    y_m: np.ndarray, values: np.ndarray, y_range_m: float | None
 ) -> tuple[np.ndarray, np.ndarray]:
-    """
-    Crop arrays to |y| <= y_range_m, with the limit expressed in metres.
-
-    The solver and exported kick map always retain the complete input grid.
-    The first axis of values is assumed to correspond to y.
-    """
-    if y_range_m is None:
-        return y_m, values
-    if y_range_m <= 0.0:
-        raise ValueError("y_range_m must be positive")
-
-    limit_m = y_range_m
-    mask = np.abs(y_m) <= limit_m + 1.0e-15
-    if not np.any(mask):
-        raise ValueError(
-            f"No kick-map y coordinates lie within ±{y_range_m:g} m"
-        )
-    return y_m[mask], values[mask, ...]
+    return _crop_coordinate_range(
+        y_m, values, y_range_m, axis=0, coordinate_name="y"
+    )
 
 def canonicalize_plot_grid(
     x_m: np.ndarray,
@@ -924,10 +881,7 @@ def plot_cut(
     axes.legend()
     figure.tight_layout()
     figure.savefig(output_path, dpi=180)
-    try:
-        plt.close(figure)
-    except Exception:
-        pass
+    plt.close(figure)
 
 def write_strip_currents_csv(
     path: Path,
@@ -1020,8 +974,8 @@ def plot_strip_currents_representative_planes(
     strips: list[Strip],
     currents_a: np.ndarray,
     output_path: Path,
-    horizontal_range_mm: float,
-    vertical_range_mm: float,
+    horizontal_range_m: float,
+    vertical_range_m: float,
     keep_open: bool = False,
 ):
     """Plot one representative plane for each enabled array family."""
@@ -1029,11 +983,11 @@ def plot_strip_currents_representative_planes(
     panel_specs: list[tuple[str, str, str, str, float]] = []
     if "horizontal" in families:
         panel_specs.append(
-            ("horizontal", "top", "bottom", "strip-centre x [mm]", horizontal_range_mm)
+            ("horizontal", "top", "bottom", "strip-centre x [mm]", horizontal_range_m)
         )
     if "vertical" in families:
         panel_specs.append(
-            ("vertical", "right", "left", "strip-centre y [mm]", vertical_range_mm)
+            ("vertical", "right", "left", "strip-centre y [mm]", vertical_range_m)
         )
     if not panel_specs:
         raise ValueError("No strip-current family is available for plotting")
@@ -1045,7 +999,7 @@ def plot_strip_currents_representative_planes(
         FigureCanvasAgg(figure)
 
     symmetry: dict[str, tuple[float, float]] = {}
-    for panel_index, (family, positive, negative, xlabel, limit_mm) in enumerate(
+    for panel_index, (family, positive, negative, xlabel, limit_m) in enumerate(
         panel_specs, start=1
     ):
         axes = figure.add_subplot(1, len(panel_specs), panel_index)
@@ -1067,7 +1021,7 @@ def plot_strip_currents_representative_planes(
         )
         axes.set_xlabel(xlabel)
         axes.set_ylabel("current [A]")
-        axes.set_xlim(-limit_mm, limit_mm)
+        axes.set_xlim(-limit_m * 1.0e3, limit_m * 1.0e3)
         axes.grid(alpha=0.3)
         symmetry[family] = (max_mismatch, rms_mismatch)
 
@@ -1077,10 +1031,7 @@ def plot_strip_currents_representative_planes(
 
     if keep_open:
         return figure, symmetry
-    try:
-        plt.close(figure)
-    except Exception:
-        pass
+    plt.close(figure)
     return None, symmetry
 
 def colour_and_z_limits(
@@ -1306,11 +1257,16 @@ def plot_kickmaps_3d_pair(
     if keep_open:
         return figure
 
-    try:
-        plt.close(figure)
-    except Exception:
-        pass
+    plt.close(figure)
     return None
+
+
+def _add_arguments(
+    group: argparse._ArgumentGroup,
+    specs: list[tuple[tuple[str, ...], dict[str, Any]]],
+) -> None:
+    for flags, options in specs:
+        group.add_argument(*flags, **options)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -1324,96 +1280,93 @@ def build_parser() -> argparse.ArgumentParser:
             "  %(prog)s --help               standard argparse help"
         ),
     )
-
-    io = parser.add_argument_group("input and output")
-    io.add_argument("--kick", type=Path, required=True)
-    io.add_argument("--out-prefix", type=Path, default=Path("epu57_fixed"))
-    io.add_argument(
-        "--units", type=parse_kick_units, choices=("microrad", "T^2m^2"),
-        default="microrad",
-        help="input kick units: microrad (default) or T^2m^2",
-    )
-    io.add_argument(
-        "--beam-energy", "--beam_energy", "-beam_energy",
-        dest="beam_energy_ev", type=float, required=True, metavar="EV",
-        help="electron total energy in eV",
-    )
-    io.add_argument(
-        "--kick-scale", type=float, default=1.0, metavar="FACTOR",
-        help="additional dimensionless kick multiplier (default: 1)",
-    )
-
-    objective = parser.add_argument_group("fit objective")
-    objective.add_argument("--horizontal-weight", type=float, default=1.0)
-    objective.add_argument("--vertical-weight", type=float, default=0.0)
-    objective.add_argument(
-        "--target-mode", choices=("nonlinear", "full"), default="nonlinear",
-        help="nonlinear removes a+b*x+c*y; full fits the complete 2D maps",
-    )
-    objective.add_argument("--ridge", type=float, default=1.0e-5)
-    objective.add_argument("--limit", type=float, default=6.0)
-    objective.add_argument("--quadrature-order", type=int, default=4)
-
-    geometry = parser.add_argument_group("strip geometry")
-    geometry.add_argument(
-        "--strip-layout", choices=("horizontal", "vertical", "both"),
-        default="horizontal",
-    )
-    geometry.add_argument("--gap", type=float, default=0.016)
-    geometry.add_argument("--side-gap", type=float, default=None, metavar="M")
-    geometry.add_argument("--length", type=float, default=None)
-    geometry.add_argument(
-        "--strips-per-plane", "--horizontal-strips-per-plane",
-        dest="strips_per_plane", type=int, default=21, metavar="N",
-    )
-    geometry.add_argument(
-        "--horizontal-strip-range-mm", type=float, default=20.0, metavar="MM"
-    )
-    geometry.add_argument(
-        "--vertical-strips-per-plane", type=int, default=None, metavar="N"
-    )
-    geometry.add_argument(
-        "--vertical-strip-range-mm", type=float, default=None, metavar="MM"
-    )
-    geometry.add_argument("--width", type=float, default=2.0e-3)
-    geometry.add_argument("--thickness", type=float, default=0.3e-3)
-
-    aperture = parser.add_argument_group("model aperture")
-    aperture.add_argument("--x-range-m", type=float, default=0.020, metavar="M")
-    aperture.add_argument("--y-range-m", type=float, default=None, metavar="M")
-
-    acceptance = parser.add_argument_group("acceptance")
-    acceptance.add_argument(
-        "--max-fit-relative-rms", type=float, default=None, metavar="FRACTION"
-    )
-    acceptance.add_argument(
-        "--min-horizontal-rms-reduction-factor", type=float, default=1.0
-    )
-    acceptance.add_argument(
-        "--min-vertical-rms-reduction-factor", type=float, default=1.0
-    )
-    acceptance.add_argument(
-        "--min-full-map-rms-reduction-factor", type=float, default=1.0
-    )
-    acceptance.add_argument(
-        "--min-full-map-peak-reduction-factor", type=float, default=0.0
-    )
-    acceptance.add_argument(
-        "--current-bound-tolerance", type=float, default=1.0e-6
-    )
-
-    plot = parser.add_argument_group("plotting")
-    plot.add_argument("--color-scale", choices=("auto", "shared"), default="auto")
-    plot.add_argument("--elevation-deg", type=float, default=PLOT_ELEVATION_DEG)
-    plot.add_argument("--azimuth-deg", type=float, default=PLOT_AZIMUTH_DEG)
-    plot.add_argument("--projection", choices=("ortho", "persp"), default="ortho")
-    plot.add_argument("--box-aspect-x", type=float, default=2.5)
-    plot.add_argument("--box-aspect-y", type=float, default=1.8)
-    plot.add_argument("--box-aspect-z", type=float, default=0.85)
-    plot.add_argument("--show", action="store_true")
+    groups = {
+        name: parser.add_argument_group(name)
+        for name in (
+            "input and output",
+            "fit objective",
+            "strip geometry",
+            "model aperture",
+            "acceptance",
+            "plotting",
+        )
+    }
+    _add_arguments(groups["input and output"], [
+        (("--kick",), dict(type=Path, required=True)),
+        (("--out-prefix",), dict(type=Path, default=Path("epu57_fixed"))),
+        (("--units",), dict(
+            type=parse_kick_units, choices=("microrad", "T^2m^2"),
+            default="microrad",
+            help="input kick units: microrad (default) or T^2m^2",
+        )),
+        (("--beam-energy", "--beam_energy", "-beam_energy"), dict(
+            dest="beam_energy_ev", type=float, required=True, metavar="EV",
+            help="electron total energy in eV",
+        )),
+        (("--kick-scale",), dict(
+            type=float, default=1.0, metavar="FACTOR",
+            help="additional dimensionless kick multiplier (default: 1)",
+        )),
+    ])
+    _add_arguments(groups["fit objective"], [
+        (("--horizontal-weight",), dict(type=float, default=1.0)),
+        (("--vertical-weight",), dict(type=float, default=0.0)),
+        (("--target-mode",), dict(
+            choices=("nonlinear", "full"), default="nonlinear",
+            help="nonlinear removes a+b*x+c*y; full fits the complete 2D maps",
+        )),
+        (("--ridge",), dict(type=float, default=1.0e-5)),
+        (("--limit",), dict(type=float, default=6.0)),
+        (("--quadrature-order",), dict(type=int, default=4)),
+    ])
+    _add_arguments(groups["strip geometry"], [
+        (("--strip-layout",), dict(choices=("horizontal", "vertical", "both"), default="horizontal")),
+        (("--gap",), dict(type=float, default=0.016)),
+        (("--side-gap",), dict(type=float, default=None, metavar="M")),
+        (("--length",), dict(type=float, default=None)),
+        (("--strips-per-plane", "--horizontal-strips-per-plane"), dict(
+            dest="strips_per_plane", type=int, default=21, metavar="N",
+        )),
+        (("--horizontal-strip-range",), dict(
+            type=float, default=0.020, metavar="M",
+            help="outermost horizontal strip-centre positions ±M in metres",
+        )),
+        (("--vertical-strips-per-plane",), dict(type=int, default=None, metavar="N")),
+        (("--vertical-strip-range",), dict(
+            type=float, default=None, metavar="M",
+            help=("outermost vertical strip-centre positions ±M in metres; "
+                  "defaults to --horizontal-strip-range"),
+        )),
+        (("--width",), dict(type=float, default=2.0e-3)),
+        (("--thickness",), dict(type=float, default=0.3e-3)),
+    ])
+    _add_arguments(groups["model aperture"], [
+        (("--x-range",), dict(type=float, default=0.020, metavar="M", help="model half-aperture |x| <= M in metres")),
+        (("--y-range",), dict(
+            type=float, default=None, metavar="M",
+            help=("model half-aperture |y| <= M in metres; "
+                  "default uses the full input grid"),
+        )),
+    ])
+    _add_arguments(groups["acceptance"], [
+        (("--max-fit-relative-rms",), dict(type=float, default=None, metavar="FRACTION")),
+        (("--min-horizontal-rms-reduction-factor",), dict(type=float, default=1.0)),
+        (("--min-vertical-rms-reduction-factor",), dict(type=float, default=1.0)),
+        (("--min-full-map-rms-reduction-factor",), dict(type=float, default=1.0)),
+        (("--min-full-map-peak-reduction-factor",), dict(type=float, default=0.0)),
+        (("--current-bound-tolerance",), dict(type=float, default=1.0e-6)),
+    ])
+    _add_arguments(groups["plotting"], [
+        (("--color-scale",), dict(choices=("auto", "shared"), default="auto")),
+        (("--elevation-deg",), dict(type=float, default=PLOT_ELEVATION_DEG)),
+        (("--azimuth-deg",), dict(type=float, default=PLOT_AZIMUTH_DEG)),
+        (("--projection",), dict(choices=("ortho", "persp"), default="ortho")),
+        (("--box-aspect-x",), dict(type=float, default=2.5)),
+        (("--box-aspect-y",), dict(type=float, default=1.8)),
+        (("--box-aspect-z",), dict(type=float, default=0.85)),
+        (("--show",), dict(action="store_true")),
+    ])
     return parser
-
-
 
 def _option_action(
     parser: argparse.ArgumentParser, topic: str
@@ -1496,15 +1449,25 @@ def _require_finite(
         raise ValueError(f"{name} must be non-negative")
 
 
+def _validate_fields(
+    args: argparse.Namespace,
+    names: tuple[str, ...],
+    **constraints: bool,
+) -> None:
+    for name in names:
+        _require_finite(
+            name.replace("_", "-"), getattr(args, name), **constraints
+        )
+
+
 def validate_arguments(args: argparse.Namespace) -> argparse.Namespace:
-    for name in ("kick_scale", "x_range_m", "gap", "width", "thickness", "limit"):
-        _require_finite(name.replace("_", "-"), getattr(args, name), positive=True)
-    _require_finite("y-range-m", args.y_range_m, positive=True, allow_none=True)
-    _require_finite("side-gap", args.side_gap, positive=True, allow_none=True)
-    _require_finite("length", args.length, positive=True, allow_none=True)
-    _require_finite("ridge", args.ridge, nonnegative=True)
-    _require_finite("horizontal-weight", args.horizontal_weight, nonnegative=True)
-    _require_finite("vertical-weight", args.vertical_weight, nonnegative=True)
+    _validate_fields(
+        args, ("kick_scale", "x_range", "gap", "width", "thickness", "limit"),
+        positive=True,
+    )
+    _validate_fields(args, ("y_range", "side_gap", "length"), positive=True, allow_none=True)
+    _validate_fields(args, ("ridge",), nonnegative=True)
+    _validate_fields(args, ("horizontal_weight", "vertical_weight"), nonnegative=True)
     if args.horizontal_weight == args.vertical_weight == 0.0:
         raise ValueError("at least one kick weight must be positive")
     if args.strips_per_plane < 1 or args.quadrature_order < 1:
@@ -1518,57 +1481,39 @@ def validate_arguments(args: argparse.Namespace) -> argparse.Namespace:
     if args.effective_vertical_strips_per_plane < 1:
         raise ValueError("vertical-strips-per-plane must be positive")
 
-    _require_finite(
-        "horizontal-strip-range-mm", args.horizontal_strip_range_mm, positive=True
-    )
-    args.effective_horizontal_strip_range_mm = args.horizontal_strip_range_mm
-    args.effective_vertical_strip_range_mm = (
-        args.horizontal_strip_range_mm
-        if args.vertical_strip_range_mm is None
-        else args.vertical_strip_range_mm
+    _validate_fields(args, ("horizontal_strip_range",), positive=True)
+    args.effective_horizontal_strip_range = args.horizontal_strip_range
+    args.effective_vertical_strip_range = (
+        args.horizontal_strip_range
+        if args.vertical_strip_range is None
+        else args.vertical_strip_range
     )
     _require_finite(
-        "vertical-strip-range-mm", args.effective_vertical_strip_range_mm,
-        positive=True,
+        "vertical-strip-range", args.effective_vertical_strip_range, positive=True
     )
 
-    _require_finite(
-        "max-fit-relative-rms", args.max_fit_relative_rms,
-        nonnegative=True, allow_none=True,
+    _validate_fields(args, ("max_fit_relative_rms",), nonnegative=True, allow_none=True)
+    args.effective_max_fit_relative_rms = (
+        0.15 if args.target_mode == "nonlinear" else 0.05
+    ) if args.max_fit_relative_rms is None else args.max_fit_relative_rms
+    args.max_fit_relative_rms_source = (
+        "target_mode_default" if args.max_fit_relative_rms is None else "user"
     )
-    if args.max_fit_relative_rms is None:
-        args.effective_max_fit_relative_rms = (
-            0.15 if args.target_mode == "nonlinear" else 0.05
-        )
-        args.max_fit_relative_rms_source = "target_mode_default"
-    else:
-        args.effective_max_fit_relative_rms = args.max_fit_relative_rms
-        args.max_fit_relative_rms_source = "user"
 
-    for name in (
+    _validate_fields(args, (
         "min_horizontal_rms_reduction_factor",
         "min_vertical_rms_reduction_factor",
         "min_full_map_rms_reduction_factor",
-    ):
-        _require_finite(name.replace("_", "-"), getattr(args, name), positive=True)
-    _require_finite(
-        "min-full-map-peak-reduction-factor",
-        args.min_full_map_peak_reduction_factor,
-        nonnegative=True,
-    )
-    _require_finite(
-        "current-bound-tolerance", args.current_bound_tolerance,
-        nonnegative=True,
-    )
+    ), positive=True)
+    _validate_fields(args, (
+        "min_full_map_peak_reduction_factor", "current_bound_tolerance"
+    ), nonnegative=True)
     if args.current_bound_tolerance >= 1.0:
         raise ValueError("current-bound-tolerance must lie in [0, 1)")
 
-    for name in ("elevation_deg", "azimuth_deg"):
-        _require_finite(name.replace("_", "-"), getattr(args, name))
-    for name in ("box_aspect_x", "box_aspect_y", "box_aspect_z"):
-        _require_finite(name.replace("_", "-"), getattr(args, name), positive=True)
+    _validate_fields(args, ("elevation_deg", "azimuth_deg"))
+    _validate_fields(args, ("box_aspect_x", "box_aspect_y", "box_aspect_z"), positive=True)
     return args
-
 
 def _crop_2d(
     x_m: np.ndarray,
@@ -1590,29 +1535,33 @@ def _format_value(value: Any) -> str:
     return str(value)
 
 
-def _kv_text(items: OrderedDict[str, Any] | dict[str, Any]) -> str:
+def _kv_text(items: dict[str, Any]) -> str:
     return "".join(f"{key}={_format_value(value)}\n" for key, value in items.items())
 
 
 class CurrentStripWorkflow:
-    """Orchestrate one correction run while keeping physics helpers pure."""
+    """Run one correction while keeping the two kick components symmetric."""
 
-    OUTPUT_SUFFIXES = (
-        "_strip_currents.csv",
-        "_strip_currents_one_plane.png",
-        "_corrected_kickmap.dat",
-        "_metrics.txt",
-        "_plot_manifest.txt",
-        "_theta_x_midplane_cut.png",
-        "_theta_y_centerline_cut.png",
-        "_raw_kickmaps_3d.png",
-        "_corrected_kickmaps_3d.png",
-    )
+    OUTPUT_SUFFIXES = {
+        "currents": "_strip_currents.csv",
+        "currents_plot": "_strip_currents_one_plane.png",
+        "corrected_map": "_corrected_kickmap.dat",
+        "metrics": "_metrics.txt",
+        "manifest": "_plot_manifest.txt",
+        "theta_x_cut": "_theta_x_midplane_cut.png",
+        "theta_y_cut": "_theta_y_centerline_cut.png",
+        "raw_3d": "_raw_kickmaps_3d.png",
+        "corrected_3d": "_corrected_kickmaps_3d.png",
+    }
 
     def __init__(self, args: argparse.Namespace):
         self.args = validate_arguments(args)
-        self.metrics: OrderedDict[str, Any] = OrderedDict()
+        self.metrics: dict[str, Any] = {}
         self.acceptance_failures: list[str] = []
+
+    @property
+    def components(self) -> tuple[ComponentState, ComponentState]:
+        return self.theta_x, self.theta_y
 
     def run(self) -> None:
         self._prepare()
@@ -1625,7 +1574,7 @@ class CurrentStripWorkflow:
             raise RuntimeError(
                 "Correction acceptance failed: " + "; ".join(self.acceptance_failures)
             )
-        manifest_text = self._write_outputs(metrics_text)
+        manifest_text = self._write_outputs()
         print(_kv_text(self.metrics), end="")
         print(manifest_text, end="")
 
@@ -1646,36 +1595,56 @@ class CurrentStripWorkflow:
             self.input_to_urad_scale * raw.theta_y_urad,
             raw.b2_t2m,
         )
-        self.maximum_map_x_m = float(np.max(np.abs(self.kick_map.x_m)))
-        self.maximum_map_y_m = float(np.max(np.abs(self.kick_map.y_m)))
-        self.model_y_half_span_m = (
-            self.maximum_map_y_m if a.y_range_m is None else a.y_range_m
+        self.theta_x = ComponentState(
+            key="x",
+            label="horizontal",
+            raw_map=self.kick_map.theta_x_urad,
+            response_component="Iy",
+            target_sign=+1.0,
+            correction_sign=-1.0,
+            weight=a.horizontal_weight,
         )
-        self.model_y_range_source = (
-            "complete_input_y_grid" if a.y_range_m is None else "user"
+        self.theta_y = ComponentState(
+            key="y",
+            label="vertical",
+            raw_map=self.kick_map.theta_y_urad,
+            response_component="Ix",
+            target_sign=-1.0,
+            correction_sign=+1.0,
+            weight=a.vertical_weight,
         )
 
-        if a.strip_layout in {"horizontal", "both"} and a.gap / 2.0 <= self.model_y_half_span_m:
-            raise ValueError(
-                "The top/bottom gap must enclose the model y aperture"
-            )
+        maximum_map_y_m = float(np.max(np.abs(self.kick_map.y_m)))
+        self.model_y_half_span_m = (
+            maximum_map_y_m if a.y_range is None else a.y_range
+        )
+        self.model_y_range_source = (
+            "complete_input_y_grid" if a.y_range is None else "user"
+        )
+        if (
+            a.strip_layout in {"horizontal", "both"}
+            and a.gap / 2.0 <= self.model_y_half_span_m
+        ):
+            raise ValueError("The top/bottom gap must enclose the model y aperture")
+
         if a.side_gap is None:
-            self.effective_side_gap_m = 2.0 * (a.x_range_m + a.width)
+            self.effective_side_gap_m = 2.0 * (a.x_range + a.width)
             self.side_gap_source = "auto_model_x_range_plus_one_width_margin"
         else:
             self.effective_side_gap_m = a.side_gap
             self.side_gap_source = "user"
-        if a.strip_layout in {"vertical", "both"} and self.effective_side_gap_m / 2.0 <= a.x_range_m:
-            raise ValueError(
-                "The left/right gap must enclose the model x aperture"
-            )
+        if (
+            a.strip_layout in {"vertical", "both"}
+            and self.effective_side_gap_m / 2.0 <= a.x_range
+        ):
+            raise ValueError("The left/right gap must enclose the model x aperture")
 
         strip_length_m = self.kick_map.length_m if a.length is None else a.length
         self.strips, self.strip_geometry = make_strip_arrays(
             layout=a.strip_layout,
-            horizontal_half_span_m=a.effective_horizontal_strip_range_mm * 1.0e-3,
+            horizontal_half_span_m=a.effective_horizontal_strip_range,
             horizontal_count_per_plane=a.strips_per_plane,
-            vertical_half_span_m=a.effective_vertical_strip_range_mm * 1.0e-3,
+            vertical_half_span_m=a.effective_vertical_strip_range,
             vertical_count_per_plane=a.effective_vertical_strips_per_plane,
             width_m=a.width,
             thickness_m=a.thickness,
@@ -1684,22 +1653,22 @@ class CurrentStripWorkflow:
             length_m=strip_length_m,
             side_gap_source=self.side_gap_source,
         )
-        self.horizontal_indices = np.asarray(
-            [i for i, strip in enumerate(self.strips) if strip.family == "horizontal"],
-            dtype=int,
-        )
-        self.vertical_indices = np.asarray(
-            [i for i, strip in enumerate(self.strips) if strip.family == "vertical"],
-            dtype=int,
-        )
+        self.horizontal_indices = self._strip_indices("horizontal")
+        self.vertical_indices = self._strip_indices("vertical")
 
-        self.model_x_m, self.model_y_m, self.raw_theta_x_model = _crop_2d(
-            self.kick_map.x_m, self.kick_map.y_m, self.kick_map.theta_x_urad,
-            a.x_range_m, a.y_range_m,
+        self.model_x_m, self.model_y_m, self.theta_x.model_map = _crop_2d(
+            self.kick_map.x_m,
+            self.kick_map.y_m,
+            self.theta_x.raw_map,
+            a.x_range,
+            a.y_range,
         )
-        _, _, self.raw_theta_y_model = _crop_2d(
-            self.kick_map.x_m, self.kick_map.y_m, self.kick_map.theta_y_urad,
-            a.x_range_m, a.y_range_m,
+        _, _, self.theta_y.model_map = _crop_2d(
+            self.kick_map.x_m,
+            self.kick_map.y_m,
+            self.theta_y.raw_map,
+            a.x_range,
+            a.y_range,
         )
         if self.model_x_m.size < 2 or self.model_y_m.size < 2:
             raise ValueError("The model aperture must contain at least two x and y points")
@@ -1708,306 +1677,282 @@ class CurrentStripWorkflow:
         self.model_points = np.column_stack(
             [model_x_grid.ravel(), model_y_grid.ravel()]
         )
-        self.response_iy_model = response_matrix(
-            self.strips, self.model_points, "Iy", a.quadrature_order
-        )
-        self.response_ix_model = response_matrix(
-            self.strips, self.model_points, "Ix", a.quadrature_order
-        )
-        self.raw_theta_x_flat = self.raw_theta_x_model.ravel()
-        self.raw_theta_y_flat = self.raw_theta_y_model.ravel()
-        self.target_iy_tm = self.beam_rigidity_tm * self.raw_theta_x_flat * 1.0e-6
-        self.target_ix_tm = -self.beam_rigidity_tm * self.raw_theta_y_flat * 1.0e-6
-        self.raw_theta_x_plane = affine_plane_decomposition(
-            self.model_points, self.raw_theta_x_flat
-        )
-        self.raw_theta_y_plane = affine_plane_decomposition(
-            self.model_points, self.raw_theta_y_flat
-        )
-        target_iy_plane = affine_plane_decomposition(self.model_points, self.target_iy_tm)
-        target_ix_plane = affine_plane_decomposition(self.model_points, self.target_ix_tm)
-        if a.target_mode == "nonlinear":
-            self.fit_target_iy_tm = target_iy_plane.residual
-            self.fit_target_ix_tm = target_ix_plane.residual
-            self.horizontal_fit_basis = "full_2d_constant_and_linear_plane_removed"
-            self.vertical_fit_basis = "full_2d_constant_and_linear_plane_removed"
-        else:
-            self.fit_target_iy_tm = self.target_iy_tm
-            self.fit_target_ix_tm = self.target_ix_tm
-            self.horizontal_fit_basis = "full_2d_complete_map"
-            self.vertical_fit_basis = "full_2d_complete_map"
-        self.fit_response_iy = self.response_iy_model
-        self.fit_response_ix = self.response_ix_model
+        weight_scale = max(component.weight for component in self.components)
+        self.total_normalized_fit_weight = 0.0
+        for component in self.components:
+            component.response_model = response_matrix(
+                self.strips,
+                self.model_points,
+                component.response_component,
+                a.quadrature_order,
+            )
+            component.raw_flat = component.model_map.ravel()
+            component.target_tm = (
+                component.target_sign
+                * self.beam_rigidity_tm
+                * component.raw_flat
+                * 1.0e-6
+            )
+            component.raw_plane = affine_plane_decomposition(
+                self.model_points, component.raw_flat
+            )
+            target_plane = affine_plane_decomposition(
+                self.model_points, component.target_tm
+            )
+            if a.target_mode == "nonlinear":
+                component.fit_target_tm = target_plane.residual
+                component.fit_basis = "full_2d_constant_and_linear_plane_removed"
+            else:
+                component.fit_target_tm = component.target_tm
+                component.fit_basis = "full_2d_complete_map"
+            component.normalized_weight = component.weight / weight_scale
+            self.total_normalized_fit_weight += component.normalized_weight
 
-        weight_scale = max(a.horizontal_weight, a.vertical_weight)
-        self.normalized_horizontal_weight = a.horizontal_weight / weight_scale
-        self.normalized_vertical_weight = a.vertical_weight / weight_scale
-        self.total_normalized_fit_weight = (
-            self.normalized_horizontal_weight + self.normalized_vertical_weight
+    def _strip_indices(self, family: str) -> np.ndarray:
+        return np.asarray(
+            [i for i, strip in enumerate(self.strips) if strip.family == family],
+            dtype=int,
         )
 
     def _solve(self) -> None:
         a = self.args
         response_blocks: list[np.ndarray] = []
         target_blocks: list[np.ndarray] = []
-        for weight, response, target in (
-            (self.normalized_horizontal_weight, self.fit_response_iy, self.fit_target_iy_tm),
-            (self.normalized_vertical_weight, self.fit_response_ix, self.fit_target_ix_tm),
-        ):
-            if weight > 0.0:
-                scale = np.sqrt(weight / target.size)
-                response_blocks.append(scale * response)
-                target_blocks.append(scale * target)
+        for component in self.components:
+            if component.normalized_weight > 0.0:
+                scale = np.sqrt(
+                    component.normalized_weight / component.fit_target_tm.size
+                )
+                response_blocks.append(scale * component.response_model)
+                target_blocks.append(scale * component.fit_target_tm)
         self.current_solution = solve_currents(
-            np.vstack(response_blocks), np.concatenate(target_blocks), a.ridge, a.limit
+            np.vstack(response_blocks),
+            np.concatenate(target_blocks),
+            a.ridge,
+            a.limit,
         )
         self.currents_a = self.current_solution.currents_a
 
         x_grid, y_grid = np.meshgrid(self.kick_map.x_m, self.kick_map.y_m)
         all_points = np.column_stack([x_grid.ravel(), y_grid.ravel()])
-        response_iy_full = response_matrix(
-            self.strips, all_points, "Iy", a.quadrature_order
-        )
-        response_ix_full = response_matrix(
-            self.strips, all_points, "Ix", a.quadrature_order
-        )
-        strip_iy_tm = (response_iy_full @ self.currents_a).reshape(x_grid.shape)
-        strip_ix_tm = (response_ix_full @ self.currents_a).reshape(x_grid.shape)
-        self.theta_x_corrected_urad = (
-            self.kick_map.theta_x_urad - 1.0e6 * strip_iy_tm / self.beam_rigidity_tm
-        )
-        self.theta_y_corrected_urad = (
-            self.kick_map.theta_y_urad + 1.0e6 * strip_ix_tm / self.beam_rigidity_tm
-        )
+        for component in self.components:
+            response_full = response_matrix(
+                self.strips,
+                all_points,
+                component.response_component,
+                a.quadrature_order,
+            )
+            strip_field_tm = (response_full @ self.currents_a).reshape(x_grid.shape)
+            component.corrected_map = component.raw_map + (
+                component.correction_sign
+                * 1.0e6
+                * strip_field_tm
+                / self.beam_rigidity_tm
+            )
 
-    def _model_cut(self, values: np.ndarray, component: str) -> ZeroCut:
+    def _model_cut(self, values: np.ndarray, component: ComponentState) -> ZeroCut:
         a = self.args
-        if component == "x":
+        if component.key == "x":
             complete = zero_coordinate_cut(self.kick_map.y_m, values, 0, "y")
             _, cropped = crop_horizontal_range(
-                self.kick_map.x_m, complete.values, a.x_range_m
+                self.kick_map.x_m, complete.values, a.x_range
             )
         else:
             complete = zero_coordinate_cut(self.kick_map.x_m, values, 1, "x")
             _, column = crop_vertical_range(
-                self.kick_map.y_m, complete.values[:, np.newaxis], a.y_range_m
+                self.kick_map.y_m, complete.values[:, np.newaxis], a.y_range
             )
             cropped = column[:, 0]
         return ZeroCut(
-            cropped, complete.method,
-            complete.lower_coordinate_m, complete.upper_coordinate_m,
+            cropped,
+            complete.method,
+            complete.lower_coordinate_m,
+            complete.upper_coordinate_m,
         )
 
     def _analyse(self) -> None:
         a = self.args
-        _, _, self.corrected_theta_x_model = _crop_2d(
-            self.kick_map.x_m, self.kick_map.y_m, self.theta_x_corrected_urad,
-            a.x_range_m, a.y_range_m,
-        )
-        _, _, self.corrected_theta_y_model = _crop_2d(
-            self.kick_map.x_m, self.kick_map.y_m, self.theta_y_corrected_urad,
-            a.x_range_m, a.y_range_m,
-        )
-        self.corrected_theta_x_flat = self.corrected_theta_x_model.ravel()
-        self.corrected_theta_y_flat = self.corrected_theta_y_model.ravel()
-        self.corrected_theta_x_plane = affine_plane_decomposition(
-            self.model_points, self.corrected_theta_x_flat
-        )
-        self.corrected_theta_y_plane = affine_plane_decomposition(
-            self.model_points, self.corrected_theta_y_flat
-        )
+        for component in self.components:
+            _, _, component.corrected_model = _crop_2d(
+                self.kick_map.x_m,
+                self.kick_map.y_m,
+                component.corrected_map,
+                a.x_range,
+                a.y_range,
+            )
+            component.corrected_flat = component.corrected_model.ravel()
+            component.corrected_plane = affine_plane_decomposition(
+                self.model_points, component.corrected_flat
+            )
+            component.raw_cut = self._model_cut(component.raw_map, component)
+            component.corrected_cut = self._model_cut(
+                component.corrected_map, component
+            )
+            coordinate = self.model_x_m if component.key == "x" else self.model_y_m
+            component.raw_affine = affine_decomposition(
+                coordinate, component.raw_cut.values
+            )
+            component.corrected_affine = affine_decomposition(
+                coordinate, component.corrected_cut.values
+            )
 
-        self.raw_theta_x_y0 = self._model_cut(self.kick_map.theta_x_urad, "x")
-        self.raw_theta_y_x0 = self._model_cut(self.kick_map.theta_y_urad, "y")
-        self.corrected_theta_x_y0 = self._model_cut(self.theta_x_corrected_urad, "x")
-        self.corrected_theta_y_x0 = self._model_cut(self.theta_y_corrected_urad, "y")
-        self.raw_theta_x_affine = affine_decomposition(
-            self.model_x_m, self.raw_theta_x_y0.values
-        )
-        self.raw_theta_y_affine = affine_decomposition(
-            self.model_y_m, self.raw_theta_y_x0.values
-        )
-        self.corrected_theta_x_affine = affine_decomposition(
-            self.model_x_m, self.corrected_theta_x_y0.values
-        )
-        self.corrected_theta_y_affine = affine_decomposition(
-            self.model_y_m, self.corrected_theta_y_x0.values
-        )
+            component.fit_prediction_tm = (
+                component.response_model @ self.currents_a
+            )
+            component.fit_residual_tm = (
+                component.fit_prediction_tm - component.fit_target_tm
+            )
+            full_residual = (
+                component.response_model @ self.currents_a - component.target_tm
+            )
+            component.fit_target_rms_tm = root_mean_square(
+                component.fit_target_tm
+            )
+            component.fit_residual_rms_tm = root_mean_square(
+                component.fit_residual_tm
+            )
+            component.fit_relative_rms = relative_rms_residual(
+                component.fit_residual_tm, component.fit_target_tm
+            )
+            component.full_fit_relative_rms = relative_rms_residual(
+                full_residual, component.target_tm
+            )
 
-        self.fit_prediction_iy_tm = self.fit_response_iy @ self.currents_a
-        self.fit_prediction_ix_tm = self.fit_response_ix @ self.currents_a
-        self.fit_residual_iy_tm = self.fit_prediction_iy_tm - self.fit_target_iy_tm
-        self.fit_residual_ix_tm = self.fit_prediction_ix_tm - self.fit_target_ix_tm
-        full_residual_iy = self.response_iy_model @ self.currents_a - self.target_iy_tm
-        full_residual_ix = self.response_ix_model @ self.currents_a - self.target_ix_tm
-
-        self.horizontal_fit_target_rms_tm = root_mean_square(self.fit_target_iy_tm)
-        self.horizontal_fit_residual_rms_tm = root_mean_square(self.fit_residual_iy_tm)
-        self.horizontal_fit_relative_rms = relative_rms_residual(
-            self.fit_residual_iy_tm, self.fit_target_iy_tm
-        )
-        self.vertical_fit_target_rms_tm = root_mean_square(self.fit_target_ix_tm)
-        self.vertical_fit_residual_rms_tm = root_mean_square(self.fit_residual_ix_tm)
-        self.vertical_fit_relative_rms = relative_rms_residual(
-            self.fit_residual_ix_tm, self.fit_target_ix_tm
-        )
-        self.horizontal_full_fit_relative_rms = relative_rms_residual(
-            full_residual_iy, self.target_iy_tm
-        )
-        self.vertical_full_fit_relative_rms = relative_rms_residual(
-            full_residual_ix, self.target_ix_tm
-        )
         self.fit_target_rms_tm = self._weighted_rms(
-            self.horizontal_fit_target_rms_tm, self.vertical_fit_target_rms_tm
+            self.theta_x.fit_target_rms_tm,
+            self.theta_y.fit_target_rms_tm,
         )
         self.fit_residual_rms_tm = self._weighted_rms(
-            self.horizontal_fit_residual_rms_tm, self.vertical_fit_residual_rms_tm
+            self.theta_x.fit_residual_rms_tm,
+            self.theta_y.fit_residual_rms_tm,
         )
         self.fit_relative_rms = (
-            0.0 if self.fit_target_rms_tm == self.fit_residual_rms_tm == 0.0
-            else float("inf") if self.fit_target_rms_tm == 0.0
+            0.0
+            if self.fit_target_rms_tm == self.fit_residual_rms_tm == 0.0
+            else float("inf")
+            if self.fit_target_rms_tm == 0.0
             else self.fit_residual_rms_tm / self.fit_target_rms_tm
         )
-
         self._compute_map_metrics()
         self._compute_centerline_metrics()
         self._evaluate_acceptance()
 
     def _weighted_rms(self, horizontal: float, vertical: float) -> float:
-        return float(np.sqrt(
-            (
-                self.normalized_horizontal_weight * horizontal**2
-                + self.normalized_vertical_weight * vertical**2
-            ) / self.total_normalized_fit_weight
-        ))
+        return float(
+            np.sqrt(
+                (
+                    self.theta_x.normalized_weight * horizontal**2
+                    + self.theta_y.normalized_weight * vertical**2
+                )
+                / self.total_normalized_fit_weight
+            )
+        )
 
-    def _reduction(self, raw: float, corrected: float, prefix: str) -> None:
+    @staticmethod
+    def _set_reduction(
+        owner: Any, prefix: str, raw: float, corrected: float
+    ) -> None:
         factor, status = safe_reduction_factor(raw, corrected)
-        setattr(self, f"{prefix}_factor", factor)
-        setattr(self, f"{prefix}_status", status)
+        setattr(owner, f"{prefix}_factor", factor)
+        setattr(owner, f"{prefix}_status", status)
 
     def _compute_map_metrics(self) -> None:
-        self.raw_theta_x_model_rms = root_mean_square(self.raw_theta_x_flat)
-        self.corrected_theta_x_model_rms = root_mean_square(self.corrected_theta_x_flat)
-        self.raw_theta_y_model_rms = root_mean_square(self.raw_theta_y_flat)
-        self.corrected_theta_y_model_rms = root_mean_square(self.corrected_theta_y_flat)
-        self._reduction(
-            self.raw_theta_x_model_rms, self.corrected_theta_x_model_rms,
-            "full_map_theta_x_rms_reduction",
-        )
-        self._reduction(
-            self.raw_theta_y_model_rms, self.corrected_theta_y_model_rms,
-            "full_map_theta_y_rms_reduction",
-        )
-        self.raw_theta_x_model_peak = float(np.max(np.abs(self.raw_theta_x_flat)))
-        self.corrected_theta_x_model_peak = float(
-            np.max(np.abs(self.corrected_theta_x_flat))
-        )
-        self.raw_theta_y_model_peak = float(np.max(np.abs(self.raw_theta_y_flat)))
-        self.corrected_theta_y_model_peak = float(
-            np.max(np.abs(self.corrected_theta_y_flat))
-        )
-        self._reduction(
-            self.raw_theta_x_model_peak, self.corrected_theta_x_model_peak,
-            "full_map_theta_x_peak_reduction",
-        )
-        self._reduction(
-            self.raw_theta_y_model_peak, self.corrected_theta_y_model_peak,
-            "full_map_theta_y_peak_reduction",
-        )
-        self.raw_theta_x_nonlinear_rms = root_mean_square(
-            self.raw_theta_x_plane.residual
-        )
-        self.corrected_theta_x_nonlinear_rms = root_mean_square(
-            self.corrected_theta_x_plane.residual
-        )
-        self.raw_theta_y_nonlinear_rms = root_mean_square(
-            self.raw_theta_y_plane.residual
-        )
-        self.corrected_theta_y_nonlinear_rms = root_mean_square(
-            self.corrected_theta_y_plane.residual
-        )
-        self._reduction(
-            self.raw_theta_x_nonlinear_rms, self.corrected_theta_x_nonlinear_rms,
-            "horizontal_nonlinear_rms_reduction",
-        )
-        self._reduction(
-            self.raw_theta_y_nonlinear_rms, self.corrected_theta_y_nonlinear_rms,
-            "vertical_nonlinear_rms_reduction",
-        )
+        for component in self.components:
+            component.raw_model_rms = root_mean_square(component.raw_flat)
+            component.corrected_model_rms = root_mean_square(
+                component.corrected_flat
+            )
+            self._set_reduction(
+                component,
+                "map_rms_reduction",
+                component.raw_model_rms,
+                component.corrected_model_rms,
+            )
+            component.raw_model_peak = float(np.max(np.abs(component.raw_flat)))
+            component.corrected_model_peak = float(
+                np.max(np.abs(component.corrected_flat))
+            )
+            self._set_reduction(
+                component,
+                "map_peak_reduction",
+                component.raw_model_peak,
+                component.corrected_model_peak,
+            )
+            component.raw_nonlinear_rms = root_mean_square(
+                component.raw_plane.residual
+            )
+            component.corrected_nonlinear_rms = root_mean_square(
+                component.corrected_plane.residual
+            )
+            self._set_reduction(
+                component,
+                "nonlinear_rms_reduction",
+                component.raw_nonlinear_rms,
+                component.corrected_nonlinear_rms,
+            )
 
     def _compute_centerline_metrics(self) -> None:
-        self.raw_theta_x_rms = root_mean_square(self.raw_theta_x_y0.values)
-        self.corrected_theta_x_rms = root_mean_square(
-            self.corrected_theta_x_y0.values
+        x = self.theta_x
+        x.raw_centerline_rms = root_mean_square(x.raw_cut.values)
+        x.corrected_centerline_rms = root_mean_square(x.corrected_cut.values)
+        self._set_reduction(
+            x,
+            "centerline_rms_reduction",
+            x.raw_centerline_rms,
+            x.corrected_centerline_rms,
         )
-        self._reduction(
-            self.raw_theta_x_rms, self.corrected_theta_x_rms,
-            "horizontal_rms_reduction",
+        x.raw_centerline_nonlinear_rms = root_mean_square(x.raw_affine.residual)
+        x.corrected_centerline_nonlinear_rms = root_mean_square(
+            x.corrected_affine.residual
         )
-        self.raw_theta_x_y0_nonlinear_rms = root_mean_square(
-            self.raw_theta_x_affine.residual
+        self._set_reduction(
+            x,
+            "centerline_nonlinear_rms_reduction",
+            x.raw_centerline_nonlinear_rms,
+            x.corrected_centerline_nonlinear_rms,
         )
-        self.corrected_theta_x_y0_nonlinear_rms = root_mean_square(
-            self.corrected_theta_x_affine.residual
+
+        y = self.theta_y
+        y.raw_centerline_peak = float(np.max(np.abs(y.raw_cut.values)))
+        y.corrected_centerline_peak = float(np.max(np.abs(y.corrected_cut.values)))
+        self._set_reduction(
+            y,
+            "centerline_peak_reduction",
+            y.raw_centerline_peak,
+            y.corrected_centerline_peak,
         )
-        self._reduction(
-            self.raw_theta_x_y0_nonlinear_rms,
-            self.corrected_theta_x_y0_nonlinear_rms,
-            "horizontal_y0_nonlinear_rms_reduction",
+        y.raw_centerline_nonlinear_peak = float(
+            np.max(np.abs(y.raw_affine.residual))
         )
-        self.raw_theta_y_peak = float(np.max(np.abs(self.raw_theta_y_x0.values)))
-        self.corrected_theta_y_peak = float(
-            np.max(np.abs(self.corrected_theta_y_x0.values))
+        y.corrected_centerline_nonlinear_peak = float(
+            np.max(np.abs(y.corrected_affine.residual))
         )
-        self._reduction(
-            self.raw_theta_y_peak, self.corrected_theta_y_peak,
-            "vertical_peak_reduction",
-        )
-        self.raw_theta_y_nonlinear_peak = float(
-            np.max(np.abs(self.raw_theta_y_affine.residual))
-        )
-        self.corrected_theta_y_nonlinear_peak = float(
-            np.max(np.abs(self.corrected_theta_y_affine.residual))
-        )
-        self._reduction(
-            self.raw_theta_y_nonlinear_peak,
-            self.corrected_theta_y_nonlinear_peak,
-            "vertical_nonlinear_peak_reduction",
+        self._set_reduction(
+            y,
+            "centerline_nonlinear_peak_reduction",
+            y.raw_centerline_nonlinear_peak,
+            y.corrected_centerline_nonlinear_peak,
         )
 
     def _evaluate_acceptance(self) -> None:
         a = self.args
-        if a.target_mode == "nonlinear":
-            self.horizontal_acceptance_reduction_factor = (
-                self.horizontal_nonlinear_rms_reduction_factor
-            )
-            self.vertical_acceptance_reduction_factor = (
-                self.vertical_nonlinear_rms_reduction_factor
-            )
-            self.horizontal_acceptance_reduction_status = (
-                self.horizontal_nonlinear_rms_reduction_status
-            )
-            self.vertical_acceptance_reduction_status = (
-                self.vertical_nonlinear_rms_reduction_status
-            )
-            self.horizontal_acceptance_rms_basis = "full_2d_affine_plane_removed"
-            self.vertical_acceptance_rms_basis = "full_2d_affine_plane_removed"
-        else:
-            self.horizontal_acceptance_reduction_factor = (
-                self.full_map_theta_x_rms_reduction_factor
-            )
-            self.vertical_acceptance_reduction_factor = (
-                self.full_map_theta_y_rms_reduction_factor
-            )
-            self.horizontal_acceptance_reduction_status = (
-                self.full_map_theta_x_rms_reduction_status
-            )
-            self.vertical_acceptance_reduction_status = (
-                self.full_map_theta_y_rms_reduction_status
-            )
-            self.horizontal_acceptance_rms_basis = "full_2d_complete_map"
-            self.vertical_acceptance_rms_basis = "full_2d_complete_map"
+        for component in self.components:
+            if a.target_mode == "nonlinear":
+                component.acceptance_reduction_factor = (
+                    component.nonlinear_rms_reduction_factor
+                )
+                component.acceptance_reduction_status = (
+                    component.nonlinear_rms_reduction_status
+                )
+                component.acceptance_rms_basis = "full_2d_affine_plane_removed"
+            else:
+                component.acceptance_reduction_factor = (
+                    component.map_rms_reduction_factor
+                )
+                component.acceptance_reduction_status = (
+                    component.map_rms_reduction_status
+                )
+                component.acceptance_rms_basis = "full_2d_complete_map"
 
         bound_threshold = a.limit * (1.0 - a.current_bound_tolerance)
         active = np.abs(self.currents_a) >= bound_threshold
@@ -2021,54 +1966,56 @@ class CurrentStripWorkflow:
                 f"fit relative RMS {self.fit_relative_rms:.6g} exceeds "
                 f"{a.effective_max_fit_relative_rms:.6g}"
             )
-        component_checks = (
-            ("horizontal", a.horizontal_weight,
-             self.horizontal_acceptance_reduction_factor,
-             a.min_horizontal_rms_reduction_factor),
-            ("vertical", a.vertical_weight,
-             self.vertical_acceptance_reduction_factor,
-             a.min_vertical_rms_reduction_factor),
+        component_minima = (
+            (self.theta_x, a.min_horizontal_rms_reduction_factor),
+            (self.theta_y, a.min_vertical_rms_reduction_factor),
         )
-        for name, weight, value, minimum in component_checks:
-            if weight > 0.0 and value < minimum:
+        for component, minimum in component_minima:
+            if (
+                component.weight > 0.0
+                and component.acceptance_reduction_factor < minimum
+            ):
                 self.acceptance_failures.append(
-                    f"{name} active-basis 2D RMS reduction factor "
-                    f"{value:.6g} is below {minimum:.6g}"
+                    f"{component.label} active-basis 2D RMS reduction factor "
+                    f"{component.acceptance_reduction_factor:.6g} is below "
+                    f"{minimum:.6g}"
                 )
-        for name, value in (
-            ("horizontal", self.full_map_theta_x_rms_reduction_factor),
-            ("vertical", self.full_map_theta_y_rms_reduction_factor),
-        ):
-            if value < a.min_full_map_rms_reduction_factor:
+        for component in self.components:
+            if component.map_rms_reduction_factor < a.min_full_map_rms_reduction_factor:
                 self.acceptance_failures.append(
-                    f"{name} full-map RMS reduction factor {value:.6g} is below "
+                    f"{component.label} full-map RMS reduction factor "
+                    f"{component.map_rms_reduction_factor:.6g} is below "
                     f"{a.min_full_map_rms_reduction_factor:.6g}"
                 )
         if a.min_full_map_peak_reduction_factor > 0.0:
-            for name, value in (
-                ("horizontal", self.full_map_theta_x_peak_reduction_factor),
-                ("vertical", self.full_map_theta_y_peak_reduction_factor),
-            ):
-                if value < a.min_full_map_peak_reduction_factor:
+            for component in self.components:
+                if (
+                    component.map_peak_reduction_factor
+                    < a.min_full_map_peak_reduction_factor
+                ):
                     self.acceptance_failures.append(
-                        f"{name} full-map peak reduction factor {value:.6g} is below "
+                        f"{component.label} full-map peak reduction factor "
+                        f"{component.map_peak_reduction_factor:.6g} is below "
                         f"{a.min_full_map_peak_reduction_factor:.6g}"
                     )
         self.acceptance_status = (
-            "FAILED" if self.acceptance_failures
-            else "ACCEPTED_LIMIT_SATURATED" if self.current_bound_active_count
+            "FAILED"
+            if self.acceptance_failures
+            else "ACCEPTED_LIMIT_SATURATED"
+            if self.current_bound_active_count
             else "ACCEPTED"
         )
 
     def _build_metrics(self) -> None:
         a, g, s = self.args, self.strip_geometry, self.current_solution
+        x, y = self.components
         m = self.metrics
-        add = m.__setitem__
-        base_items = [
-            ("release_id", RELEASE_ID), ("input_file", a.kick),
+        m.update([
+            ("release_id", RELEASE_ID),
+            ("input_file", a.kick),
             ("grid_shape", self.kick_map.theta_x_urad.shape),
-            ("model_domain_source", "x_range_m_and_y_range_m"),
-            ("model_x_requested_half_span_m", a.x_range_m),
+            ("model_domain_source", "x_range_and_y_range"),
+            ("model_x_requested_half_span_m", a.x_range),
             ("model_x_point_count", self.model_x_m.size),
             ("model_x_min_m", np.min(self.model_x_m)),
             ("model_x_max_m", np.max(self.model_x_m)),
@@ -2079,130 +2026,122 @@ class CurrentStripWorkflow:
             ("model_y_max_m", np.max(self.model_y_m)),
             ("export_grid_scope", "complete_input_grid"),
             ("length_m", self.kick_map.length_m),
-            ("input_kick_units", a.units), ("beam_energy_eV", a.beam_energy_ev),
+            ("input_kick_units", a.units),
+            ("beam_energy_eV", a.beam_energy_ev),
             ("electron_rest_energy_eV", ELECTRON_REST_ENERGY_EV),
             ("beam_momentum_eV_c", self.beam_momentum_ev_c),
             ("beam_rigidity_Tm", self.beam_rigidity_tm),
             ("input_to_urad_scale", self.input_to_urad_scale),
             ("kick_scale", a.kick_scale),
             ("horizontal_weight", a.horizontal_weight),
-            ("vertical_weight", a.vertical_weight), ("target_mode", a.target_mode),
-            ("horizontal_fit_basis", self.horizontal_fit_basis),
-            ("vertical_fit_basis", self.vertical_fit_basis),
+            ("vertical_weight", a.vertical_weight),
+            ("target_mode", a.target_mode),
+            ("horizontal_fit_basis", x.fit_basis),
+            ("vertical_fit_basis", y.fit_basis),
             ("fit_domain", "full_2d_model_aperture"),
             ("fit_point_count", self.model_points.shape[0]),
             ("affine_projection_basis_2d", "constant_plus_x_plus_y"),
-            ("normalized_horizontal_weight", self.normalized_horizontal_weight),
-            ("normalized_vertical_weight", self.normalized_vertical_weight),
+            ("normalized_horizontal_weight", x.normalized_weight),
+            ("normalized_vertical_weight", y.normalized_weight),
             ("fit_weighting", "max_normalized_component_weight_times_mean_squared_residual"),
-            ("color_scale", a.color_scale), ("plot_elevation_deg", a.elevation_deg),
-            ("plot_azimuth_deg", a.azimuth_deg), ("projection", a.projection),
-            ("box_aspect_x", a.box_aspect_x), ("box_aspect_y", a.box_aspect_y),
+            ("color_scale", a.color_scale),
+            ("plot_elevation_deg", a.elevation_deg),
+            ("plot_azimuth_deg", a.azimuth_deg),
+            ("projection", a.projection),
+            ("box_aspect_x", a.box_aspect_x),
+            ("box_aspect_y", a.box_aspect_y),
             ("box_aspect_z", a.box_aspect_z),
-        ]
-        for key, value in base_items:
-            add(key, value)
+        ])
 
-        for prefix, cut in (("theta_x_y0", self.raw_theta_x_y0),
-                            ("theta_y_x0", self.raw_theta_y_x0)):
-            add(f"{prefix}_cut_method", cut.method)
-            add(f"{prefix}_bracket_lower_m", cut.lower_coordinate_m)
-            add(f"{prefix}_bracket_upper_m", cut.upper_coordinate_m)
-        for key, value in (
-            ("raw_theta_x_y0_min_urad", np.min(self.raw_theta_x_y0.values)),
-            ("raw_theta_x_y0_max_urad", np.max(self.raw_theta_x_y0.values)),
-            ("raw_theta_y_x0_min_urad", np.min(self.raw_theta_y_x0.values)),
-            ("raw_theta_y_x0_max_urad", np.max(self.raw_theta_y_x0.values)),
+        for prefix, cut in (("theta_x_y0", x.raw_cut), ("theta_y_x0", y.raw_cut)):
+            m.update([
+                (f"{prefix}_cut_method", cut.method),
+                (f"{prefix}_bracket_lower_m", cut.lower_coordinate_m),
+                (f"{prefix}_bracket_upper_m", cut.upper_coordinate_m),
+            ])
+        m.update([
+            ("raw_theta_x_y0_min_urad", np.min(x.raw_cut.values)),
+            ("raw_theta_x_y0_max_urad", np.max(x.raw_cut.values)),
+            ("raw_theta_y_x0_min_urad", np.min(y.raw_cut.values)),
+            ("raw_theta_y_x0_max_urad", np.max(y.raw_cut.values)),
+        ])
+
+        for prefix, decomposition in (
+            ("raw_theta_x_affine", x.raw_affine),
+            ("corrected_theta_x_affine", x.corrected_affine),
+            ("raw_theta_y_affine", y.raw_affine),
+            ("corrected_theta_y_affine", y.corrected_affine),
         ):
-            add(key, value)
+            m.update([
+                (f"{prefix}_offset_urad", float(decomposition.offset)),
+                (f"{prefix}_gradient_urad_per_mm", float(decomposition.slope_per_m) * 1.0e-3),
+            ])
 
-        affine_items = [
-            ("raw_theta_x_affine", self.raw_theta_x_affine),
-            ("corrected_theta_x_affine", self.corrected_theta_x_affine),
-            ("raw_theta_y_affine", self.raw_theta_y_affine),
-            ("corrected_theta_y_affine", self.corrected_theta_y_affine),
-        ]
-        for prefix, decomposition in affine_items:
-            add(f"{prefix}_offset_urad", float(decomposition.offset))
-            add(
-                f"{prefix}_gradient_urad_per_mm",
-                float(decomposition.slope_per_m) * 1.0e-3,
-            )
+        m.update([
+            ("raw_theta_x_y0_rms_urad", x.raw_centerline_rms),
+            ("corrected_theta_x_y0_rms_urad", x.corrected_centerline_rms),
+            ("horizontal_rms_reduction_factor", x.centerline_rms_reduction_factor),
+            ("horizontal_rms_reduction_status", x.centerline_rms_reduction_status),
+            ("raw_theta_x_y0_nonlinear_rms_urad", x.raw_centerline_nonlinear_rms),
+            ("corrected_theta_x_y0_nonlinear_rms_urad", x.corrected_centerline_nonlinear_rms),
+            ("horizontal_y0_nonlinear_rms_reduction_factor", x.centerline_nonlinear_rms_reduction_factor),
+            ("horizontal_y0_nonlinear_rms_reduction_status", x.centerline_nonlinear_rms_reduction_status),
+            ("horizontal_acceptance_rms_basis", x.acceptance_rms_basis),
+            ("horizontal_acceptance_reduction_factor", x.acceptance_reduction_factor),
+            ("horizontal_acceptance_reduction_status", x.acceptance_reduction_status),
+            ("vertical_acceptance_rms_basis", y.acceptance_rms_basis),
+            ("vertical_acceptance_reduction_factor", y.acceptance_reduction_factor),
+            ("vertical_acceptance_reduction_status", y.acceptance_reduction_status),
+            ("raw_theta_y_x0_peak_urad", y.raw_centerline_peak),
+            ("corrected_theta_y_x0_peak_urad", y.corrected_centerline_peak),
+            ("vertical_peak_reduction_factor", y.centerline_peak_reduction_factor),
+            ("vertical_peak_reduction_status", y.centerline_peak_reduction_status),
+            ("raw_theta_y_x0_nonlinear_peak_urad", y.raw_centerline_nonlinear_peak),
+            ("corrected_theta_y_x0_nonlinear_peak_urad", y.corrected_centerline_nonlinear_peak),
+            ("vertical_nonlinear_peak_reduction_factor", y.centerline_nonlinear_peak_reduction_factor),
+            ("vertical_nonlinear_peak_reduction_status", y.centerline_nonlinear_peak_reduction_status),
+        ])
 
-        diagnostic_items = [
-            ("raw_theta_x_y0_rms_urad", self.raw_theta_x_rms),
-            ("corrected_theta_x_y0_rms_urad", self.corrected_theta_x_rms),
-            ("horizontal_rms_reduction_factor", self.horizontal_rms_reduction_factor),
-            ("horizontal_rms_reduction_status", self.horizontal_rms_reduction_status),
-            ("raw_theta_x_y0_nonlinear_rms_urad", self.raw_theta_x_y0_nonlinear_rms),
-            ("corrected_theta_x_y0_nonlinear_rms_urad", self.corrected_theta_x_y0_nonlinear_rms),
-            ("horizontal_y0_nonlinear_rms_reduction_factor", self.horizontal_y0_nonlinear_rms_reduction_factor),
-            ("horizontal_y0_nonlinear_rms_reduction_status", self.horizontal_y0_nonlinear_rms_reduction_status),
-            ("horizontal_acceptance_rms_basis", self.horizontal_acceptance_rms_basis),
-            ("horizontal_acceptance_reduction_factor", self.horizontal_acceptance_reduction_factor),
-            ("horizontal_acceptance_reduction_status", self.horizontal_acceptance_reduction_status),
-            ("vertical_acceptance_rms_basis", self.vertical_acceptance_rms_basis),
-            ("vertical_acceptance_reduction_factor", self.vertical_acceptance_reduction_factor),
-            ("vertical_acceptance_reduction_status", self.vertical_acceptance_reduction_status),
-            ("raw_theta_y_x0_peak_urad", self.raw_theta_y_peak),
-            ("corrected_theta_y_x0_peak_urad", self.corrected_theta_y_peak),
-            ("vertical_peak_reduction_factor", self.vertical_peak_reduction_factor),
-            ("vertical_peak_reduction_status", self.vertical_peak_reduction_status),
-            ("raw_theta_y_x0_nonlinear_peak_urad", self.raw_theta_y_nonlinear_peak),
-            ("corrected_theta_y_x0_nonlinear_peak_urad", self.corrected_theta_y_nonlinear_peak),
-            ("vertical_nonlinear_peak_reduction_factor", self.vertical_nonlinear_peak_reduction_factor),
-            ("vertical_nonlinear_peak_reduction_status", self.vertical_nonlinear_peak_reduction_status),
-        ]
-        for key, value in diagnostic_items:
-            add(key, value)
-
-        map_items = [
-            ("raw_theta_x_model_2d_rms_urad", self.raw_theta_x_model_rms),
-            ("corrected_theta_x_model_2d_rms_urad", self.corrected_theta_x_model_rms),
-            ("full_map_theta_x_rms_reduction_factor", self.full_map_theta_x_rms_reduction_factor),
-            ("full_map_theta_x_rms_reduction_status", self.full_map_theta_x_rms_reduction_status),
-            ("raw_theta_y_model_2d_rms_urad", self.raw_theta_y_model_rms),
-            ("corrected_theta_y_model_2d_rms_urad", self.corrected_theta_y_model_rms),
-            ("full_map_theta_y_rms_reduction_factor", self.full_map_theta_y_rms_reduction_factor),
-            ("full_map_theta_y_rms_reduction_status", self.full_map_theta_y_rms_reduction_status),
-            ("raw_theta_x_model_2d_peak_urad", self.raw_theta_x_model_peak),
-            ("corrected_theta_x_model_2d_peak_urad", self.corrected_theta_x_model_peak),
-            ("full_map_theta_x_peak_reduction_factor", self.full_map_theta_x_peak_reduction_factor),
-            ("full_map_theta_x_peak_reduction_status", self.full_map_theta_x_peak_reduction_status),
-            ("raw_theta_y_model_2d_peak_urad", self.raw_theta_y_model_peak),
-            ("corrected_theta_y_model_2d_peak_urad", self.corrected_theta_y_model_peak),
-            ("full_map_theta_y_peak_reduction_factor", self.full_map_theta_y_peak_reduction_factor),
-            ("full_map_theta_y_peak_reduction_status", self.full_map_theta_y_peak_reduction_status),
-            ("raw_theta_x_model_2d_nonlinear_rms_urad", self.raw_theta_x_nonlinear_rms),
-            ("corrected_theta_x_model_2d_nonlinear_rms_urad", self.corrected_theta_x_nonlinear_rms),
-            ("raw_theta_y_model_2d_nonlinear_rms_urad", self.raw_theta_y_nonlinear_rms),
-            ("corrected_theta_y_model_2d_nonlinear_rms_urad", self.corrected_theta_y_nonlinear_rms),
-        ]
-        for key, value in map_items:
-            add(key, value)
-
-        for component, raw_plane, corrected_plane in (
-            ("theta_x", self.raw_theta_x_plane, self.corrected_theta_x_plane),
-            ("theta_y", self.raw_theta_y_plane, self.corrected_theta_y_plane),
+        for measure, raw_attr, corrected_attr, factor_attr in (
+            ("rms", "raw_model_rms", "corrected_model_rms", "map_rms_reduction"),
+            ("peak", "raw_model_peak", "corrected_model_peak", "map_peak_reduction"),
         ):
-            for label, plane in (("raw", raw_plane), ("corrected", corrected_plane)):
-                prefix = f"{label}_{component}_affine_plane"
-                add(f"{prefix}_offset_urad", float(plane.offset))
-                add(f"{prefix}_gradient_x_urad_per_mm", float(plane.slope_x_per_m) * 1.0e-3)
-                add(f"{prefix}_gradient_y_urad_per_mm", float(plane.slope_y_per_m) * 1.0e-3)
+            for axis, component in (("x", x), ("y", y)):
+                m.update([
+                    (f"raw_theta_{axis}_model_2d_{measure}_urad", getattr(component, raw_attr)),
+                    (f"corrected_theta_{axis}_model_2d_{measure}_urad", getattr(component, corrected_attr)),
+                    (f"full_map_theta_{axis}_{measure}_reduction_factor", getattr(component, f"{factor_attr}_factor")),
+                    (f"full_map_theta_{axis}_{measure}_reduction_status", getattr(component, f"{factor_attr}_status")),
+                ])
+        for axis, component in (("x", x), ("y", y)):
+            m.update([
+                (f"raw_theta_{axis}_model_2d_nonlinear_rms_urad", component.raw_nonlinear_rms),
+                (f"corrected_theta_{axis}_model_2d_nonlinear_rms_urad", component.corrected_nonlinear_rms),
+            ])
 
-        solve_items = [
-            ("solver_status", s.status), ("solver_message", s.message),
-            ("solver_cost", s.cost), ("solver_optimality", s.optimality),
+        for axis, component in (("x", x), ("y", y)):
+            for label, plane in (("raw", component.raw_plane), ("corrected", component.corrected_plane)):
+                prefix = f"{label}_theta_{axis}_affine_plane"
+                m.update([
+                    (f"{prefix}_offset_urad", float(plane.offset)),
+                    (f"{prefix}_gradient_x_urad_per_mm", float(plane.slope_x_per_m) * 1.0e-3),
+                    (f"{prefix}_gradient_y_urad_per_mm", float(plane.slope_y_per_m) * 1.0e-3),
+                ])
+
+        m.update([
+            ("solver_status", s.status),
+            ("solver_message", s.message),
+            ("solver_cost", s.cost),
+            ("solver_optimality", s.optimality),
             ("solver_iterations", s.iterations),
-            ("horizontal_fit_target_rms_Tm", self.horizontal_fit_target_rms_tm),
-            ("horizontal_fit_residual_rms_Tm", self.horizontal_fit_residual_rms_tm),
-            ("horizontal_fit_relative_rms", self.horizontal_fit_relative_rms),
-            ("vertical_fit_target_rms_Tm", self.vertical_fit_target_rms_tm),
-            ("vertical_fit_residual_rms_Tm", self.vertical_fit_residual_rms_tm),
-            ("vertical_fit_relative_rms", self.vertical_fit_relative_rms),
-            ("horizontal_full_fit_relative_rms", self.horizontal_full_fit_relative_rms),
-            ("vertical_full_fit_relative_rms", self.vertical_full_fit_relative_rms),
+            ("horizontal_fit_target_rms_Tm", x.fit_target_rms_tm),
+            ("horizontal_fit_residual_rms_Tm", x.fit_residual_rms_tm),
+            ("horizontal_fit_relative_rms", x.fit_relative_rms),
+            ("vertical_fit_target_rms_Tm", y.fit_target_rms_tm),
+            ("vertical_fit_residual_rms_Tm", y.fit_residual_rms_tm),
+            ("vertical_fit_relative_rms", y.fit_relative_rms),
+            ("horizontal_full_fit_relative_rms", x.full_fit_relative_rms),
+            ("vertical_full_fit_relative_rms", y.full_fit_relative_rms),
             ("fit_target_rms_Tm", self.fit_target_rms_tm),
             ("fit_residual_rms_Tm", self.fit_residual_rms_tm),
             ("fit_relative_rms", self.fit_relative_rms),
@@ -2216,127 +2155,134 @@ class CurrentStripWorkflow:
             ("current_bound_active_count", self.current_bound_active_count),
             ("current_bound_active_fraction", self.current_bound_active_fraction),
             ("acceptance_status", self.acceptance_status),
-        ]
-        for key, value in solve_items:
-            add(key, value)
-
-        geometry_items = [
             ("strip_layout", g.layout),
             ("horizontal_array_enabled", int(self.horizontal_indices.size > 0)),
             ("vertical_array_enabled", int(self.vertical_indices.size > 0)),
             ("horizontal_strips_per_plane", g.horizontal_count_per_plane),
-            ("horizontal_strip_range_option_mm", a.effective_horizontal_strip_range_mm),
+            ("horizontal_strip_range_option_m", a.effective_horizontal_strip_range),
             ("vertical_strips_per_plane", g.vertical_count_per_plane),
-            ("horizontal_strip_half_span_mm", g.horizontal_half_span_m * 1.0e3),
-            ("vertical_strip_half_span_mm", g.vertical_half_span_m * 1.0e3),
-            ("horizontal_strip_pitch_mm", g.horizontal_pitch_m * 1.0e3),
-            ("vertical_strip_pitch_mm", g.vertical_pitch_m * 1.0e3),
-            ("top_bottom_clear_gap_mm", g.top_bottom_clear_gap_m * 1.0e3),
-            ("left_right_clear_gap_mm", g.left_right_clear_gap_m * 1.0e3),
+            ("horizontal_strip_half_span_m", g.horizontal_half_span_m),
+            ("vertical_strip_half_span_m", g.vertical_half_span_m),
+            ("horizontal_strip_pitch_m", g.horizontal_pitch_m),
+            ("vertical_strip_pitch_m", g.vertical_pitch_m),
+            ("top_bottom_clear_gap_m", g.top_bottom_clear_gap_m),
+            ("left_right_clear_gap_m", g.left_right_clear_gap_m),
             ("side_gap_source", g.side_gap_source),
-            ("strip_width_mm", a.width * 1.0e3),
-            ("strip_thickness_mm", a.thickness * 1.0e3),
+            ("strip_width_m", a.width),
+            ("strip_thickness_m", a.thickness),
             ("total_strip_count", len(self.strips)),
             ("max_abs_current_A", np.max(np.abs(self.currents_a))),
             ("max_abs_horizontal_array_current_A", self._family_max(self.horizontal_indices)),
             ("max_abs_vertical_array_current_A", self._family_max(self.vertical_indices)),
-        ]
-        for key, value in geometry_items:
-            add(key, value)
+        ])
 
     def _family_max(self, indices: np.ndarray) -> float:
-        return float(np.max(np.abs(self.currents_a[indices]))) if indices.size else float("nan")
+        return (
+            float(np.max(np.abs(self.currents_a[indices])))
+            if indices.size
+            else float("nan")
+        )
 
-    def _write_outputs(self, metrics_text: str) -> str:
+    def _output_paths(self, prefix: Path) -> dict[str, Path]:
+        return {
+            name: prefix.with_name(prefix.name + suffix)
+            for name, suffix in self.OUTPUT_SUFFIXES.items()
+        }
+
+    def _write_outputs(self) -> str:
         a = self.args
+        x, y = self.components
         prefix = a.out_prefix
         prefix.parent.mkdir(parents=True, exist_ok=True)
-        final_paths = [prefix.with_name(prefix.name + suffix) for suffix in self.OUTPUT_SUFFIXES]
+        final_paths = self._output_paths(prefix)
         with tempfile.TemporaryDirectory(
             dir=prefix.parent, prefix=f".{prefix.name}_staging_"
         ) as staging_directory:
-            staging_prefix = Path(staging_directory) / prefix.name
-            staged_paths = [
-                staging_prefix.with_name(staging_prefix.name + suffix)
-                for suffix in self.OUTPUT_SUFFIXES
-            ]
-            (
-                currents_path, currents_plot_path, corrected_map_path,
-                metrics_path, manifest_path, theta_x_cut_path,
-                theta_y_cut_path, raw_3d_path, corrected_3d_path,
-            ) = staged_paths
-            write_strip_currents_csv(currents_path, self.strips, self.currents_a)
+            paths = self._output_paths(Path(staging_directory) / prefix.name)
+            write_strip_currents_csv(paths["currents"], self.strips, self.currents_a)
             currents_figure, symmetry = plot_strip_currents_representative_planes(
-                self.strips, self.currents_a, currents_plot_path,
-                a.effective_horizontal_strip_range_mm,
-                a.effective_vertical_strip_range_mm,
+                self.strips,
+                self.currents_a,
+                paths["currents_plot"],
+                a.effective_horizontal_strip_range,
+                a.effective_vertical_strip_range,
                 keep_open=a.show,
             )
             write_corrected_kick_map(
-                corrected_map_path, self.kick_map,
-                self.theta_x_corrected_urad, self.theta_y_corrected_urad,
-                source_units=a.units, beam_energy_ev=a.beam_energy_ev,
-                beam_rigidity_tm=self.beam_rigidity_tm, kick_scale=a.kick_scale,
+                paths["corrected_map"],
+                self.kick_map,
+                x.corrected_map,
+                y.corrected_map,
+                source_units=a.units,
+                beam_energy_ev=a.beam_energy_ev,
+                beam_rigidity_tm=self.beam_rigidity_tm,
+                kick_scale=a.kick_scale,
             )
 
             if a.target_mode == "nonlinear":
-                x_raw, x_corrected = (
-                    self.raw_theta_x_affine.residual,
-                    self.corrected_theta_x_affine.residual,
+                cut_values = (
+                    x.raw_affine.residual,
+                    x.corrected_affine.residual,
+                    y.raw_affine.residual,
+                    y.corrected_affine.residual,
                 )
-                y_raw, y_corrected = (
-                    self.raw_theta_y_affine.residual,
-                    self.corrected_theta_y_affine.residual,
-                )
-                x_title = (
+                titles = (
                     "Horizontal nonlinear centreline diagnostic on y = 0 "
-                    "(constant and gradient removed)"
-                )
-                y_title = (
+                    "(constant and gradient removed)",
                     "Vertical nonlinear centreline diagnostic on x = 0 "
-                    "(constant and gradient removed)"
+                    "(constant and gradient removed)",
                 )
             else:
-                x_raw, x_corrected = self.raw_theta_x_y0.values, self.corrected_theta_x_y0.values
-                y_raw, y_corrected = self.raw_theta_y_x0.values, self.corrected_theta_y_x0.values
-                x_title = "Horizontal kick on the horizontal mid-plane (y = 0)"
-                y_title = "Vertical kick on the vertical centreline (x = 0)"
-            plot_cut(
-                self.model_x_m * 1.0e3, x_raw, x_corrected, x_title,
-                "x [mm]", "θx [µrad]", theta_x_cut_path,
-            )
-            plot_cut(
-                self.model_y_m * 1.0e3, y_raw, y_corrected, y_title,
-                "y [mm]", "θy [µrad]", theta_y_cut_path,
-            )
+                cut_values = (
+                    x.raw_cut.values,
+                    x.corrected_cut.values,
+                    y.raw_cut.values,
+                    y.corrected_cut.values,
+                )
+                titles = (
+                    "Horizontal kick on the horizontal mid-plane (y = 0)",
+                    "Vertical kick on the vertical centreline (x = 0)",
+                )
+            for coordinate, raw_values, corrected_values, title, xlabel, ylabel, path in (
+                (self.model_x_m * 1.0e3, *cut_values[:2], titles[0], "x [mm]", "θx [µrad]", paths["theta_x_cut"]),
+                (self.model_y_m * 1.0e3, *cut_values[2:], titles[1], "y [mm]", "θy [µrad]", paths["theta_y_cut"]),
+            ):
+                plot_cut(
+                    coordinate, raw_values, corrected_values,
+                    title, xlabel, ylabel, path,
+                )
 
-            theta_x_limit = max(
-                float(np.max(np.abs(self.raw_theta_x_model))),
-                float(np.max(np.abs(self.corrected_theta_x_model))),
-            )
-            theta_y_limit = max(
-                float(np.max(np.abs(self.raw_theta_y_model))),
-                float(np.max(np.abs(self.corrected_theta_y_model))),
+            shared_limits = (
+                max(float(np.max(np.abs(x.model_map))), float(np.max(np.abs(x.corrected_model)))),
+                max(float(np.max(np.abs(y.model_map))), float(np.max(np.abs(y.corrected_model)))),
             )
             plot_args = dict(
-                x_range_m=a.x_range_m, y_range_m=a.y_range_m,
-                color_scale=a.color_scale, elevation_deg=a.elevation_deg,
-                azimuth_deg=a.azimuth_deg, projection=a.projection,
-                box_aspect_x=a.box_aspect_x, box_aspect_y=a.box_aspect_y,
-                box_aspect_z=a.box_aspect_z, keep_open=a.show,
+                x_range_m=a.x_range,
+                y_range_m=a.y_range,
+                color_scale=a.color_scale,
+                elevation_deg=a.elevation_deg,
+                azimuth_deg=a.azimuth_deg,
+                projection=a.projection,
+                box_aspect_x=a.box_aspect_x,
+                box_aspect_y=a.box_aspect_y,
+                box_aspect_z=a.box_aspect_z,
+                keep_open=a.show,
             )
-            raw_figure = plot_kickmaps_3d_pair(
-                self.kick_map.x_m, self.kick_map.y_m,
-                self.kick_map.theta_x_urad, self.kick_map.theta_y_urad,
-                raw_3d_path, theta_x_limit, theta_y_limit,
-                "Kick maps before current-strip correction", **plot_args,
-            )
-            corrected_figure = plot_kickmaps_3d_pair(
-                self.kick_map.x_m, self.kick_map.y_m,
-                self.theta_x_corrected_urad, self.theta_y_corrected_urad,
-                corrected_3d_path, theta_x_limit, theta_y_limit,
-                "Kick maps after current-strip correction", **plot_args,
-            )
+            map_figures = []
+            for name, theta_x, theta_y, title in (
+                ("raw_3d", x.raw_map, y.raw_map, "Kick maps before current-strip correction"),
+                ("corrected_3d", x.corrected_map, y.corrected_map, "Kick maps after current-strip correction"),
+            ):
+                map_figures.append(plot_kickmaps_3d_pair(
+                    self.kick_map.x_m,
+                    self.kick_map.y_m,
+                    theta_x,
+                    theta_y,
+                    paths[name],
+                    *shared_limits,
+                    title,
+                    **plot_args,
+                ))
 
             for family in ("horizontal", "vertical"):
                 max_mismatch, rms_mismatch = symmetry.get(
@@ -2344,58 +2290,69 @@ class CurrentStripWorkflow:
                 )
                 self.metrics[f"{family}_sheet_symmetry_max_abs_mismatch_A"] = max_mismatch
                 self.metrics[f"{family}_sheet_symmetry_rms_mismatch_A"] = rms_mismatch
-            metrics_text = _kv_text(self.metrics)
-            metrics_path.write_text(metrics_text, encoding="utf-8", newline="\n")
-
-            manifest = self._build_manifest()
-            manifest_text = _kv_text(manifest)
-            manifest_path.write_text(manifest_text, encoding="utf-8", newline="\n")
+            paths["metrics"].write_text(
+                _kv_text(self.metrics), encoding="utf-8", newline="\n"
+            )
+            manifest_text = _kv_text(self._build_manifest())
+            paths["manifest"].write_text(
+                manifest_text, encoding="utf-8", newline="\n"
+            )
             if a.show:
                 plt.show()
-                for figure in (currents_figure, raw_figure, corrected_figure):
+                for figure in (currents_figure, *map_figures):
                     if figure is not None:
                         plt.close(figure)
-            publish_staged_outputs(staged_paths, final_paths)
+            publish_staged_outputs(
+                list(paths.values()), list(final_paths.values())
+            )
         return manifest_text
 
-    def _build_manifest(self) -> OrderedDict[str, Any]:
+    def _build_manifest(self) -> dict[str, Any]:
         a, g = self.args, self.strip_geometry
-        return OrderedDict([
-            ("release_id", RELEASE_ID), ("acceptance_status", self.acceptance_status),
-            ("model_x_half_span_m", a.x_range_m),
-            ("model_y_half_span_m", self.model_y_half_span_m),
-            ("model_x_point_count", self.model_x_m.size),
-            ("model_y_point_count", self.model_y_m.size),
-            ("export_grid_scope", "complete_input_grid"),
-            ("input_kick_units", a.units), ("beam_energy_eV", a.beam_energy_ev),
-            ("beam_rigidity_Tm", self.beam_rigidity_tm),
-            ("input_to_urad_scale", self.input_to_urad_scale),
-            ("kick_scale", a.kick_scale),
-            ("horizontal_weight", a.horizontal_weight),
-            ("vertical_weight", a.vertical_weight),
-            ("target_mode", a.target_mode),
-            ("fit_domain", "full_2d_model_aperture"),
-            ("fit_point_count", self.model_points.shape[0]),
-            ("horizontal_fit_basis", self.horizontal_fit_basis),
-            ("vertical_fit_basis", self.vertical_fit_basis),
-            ("normalized_horizontal_weight", self.normalized_horizontal_weight),
-            ("normalized_vertical_weight", self.normalized_vertical_weight),
-            ("strip_layout", g.layout),
-            ("strip_currents_representative_planes_file", f"{a.out_prefix.name}_strip_currents_one_plane.png"),
-            ("horizontal_strip_half_span_mm", g.horizontal_half_span_m * 1.0e3),
-            ("vertical_strip_half_span_mm", g.vertical_half_span_m * 1.0e3),
-            ("horizontal_strip_pitch_mm", g.horizontal_pitch_m * 1.0e3),
-            ("vertical_strip_pitch_mm", g.vertical_pitch_m * 1.0e3),
-            ("horizontal_strips_per_plane", g.horizontal_count_per_plane),
-            ("vertical_strips_per_plane", g.vertical_count_per_plane),
-            ("top_bottom_clear_gap_mm", g.top_bottom_clear_gap_m * 1.0e3),
-            ("left_right_clear_gap_mm", g.left_right_clear_gap_m * 1.0e3),
-            ("raw_kickmaps_file", f"{a.out_prefix.name}_raw_kickmaps_3d.png"),
-            ("corrected_kickmaps_file", f"{a.out_prefix.name}_corrected_kickmaps_3d.png"),
-            ("plot_elevation_deg", a.elevation_deg),
-            ("plot_azimuth_deg", a.azimuth_deg),
+        x, y = self.components
+        return dict([
+                ("release_id", RELEASE_ID),
+                ("acceptance_status", self.acceptance_status),
+                ("model_x_half_span_m", a.x_range),
+                ("model_y_half_span_m", self.model_y_half_span_m),
+                ("model_x_point_count", self.model_x_m.size),
+                ("model_y_point_count", self.model_y_m.size),
+                ("export_grid_scope", "complete_input_grid"),
+                ("input_kick_units", a.units),
+                ("beam_energy_eV", a.beam_energy_ev),
+                ("beam_rigidity_Tm", self.beam_rigidity_tm),
+                ("input_to_urad_scale", self.input_to_urad_scale),
+                ("kick_scale", a.kick_scale),
+                ("horizontal_weight", a.horizontal_weight),
+                ("vertical_weight", a.vertical_weight),
+                ("target_mode", a.target_mode),
+                ("fit_domain", "full_2d_model_aperture"),
+                ("fit_point_count", self.model_points.shape[0]),
+                ("horizontal_fit_basis", x.fit_basis),
+                ("vertical_fit_basis", y.fit_basis),
+                ("normalized_horizontal_weight", x.normalized_weight),
+                ("normalized_vertical_weight", y.normalized_weight),
+                ("strip_layout", g.layout),
+                (
+                    "strip_currents_representative_planes_file",
+                    f"{a.out_prefix.name}_strip_currents_one_plane.png",
+                ),
+                ("horizontal_strip_half_span_m", g.horizontal_half_span_m),
+                ("vertical_strip_half_span_m", g.vertical_half_span_m),
+                ("horizontal_strip_pitch_m", g.horizontal_pitch_m),
+                ("vertical_strip_pitch_m", g.vertical_pitch_m),
+                ("horizontal_strips_per_plane", g.horizontal_count_per_plane),
+                ("vertical_strips_per_plane", g.vertical_count_per_plane),
+                ("top_bottom_clear_gap_m", g.top_bottom_clear_gap_m),
+                ("left_right_clear_gap_m", g.left_right_clear_gap_m),
+                ("raw_kickmaps_file", f"{a.out_prefix.name}_raw_kickmaps_3d.png"),
+                (
+                    "corrected_kickmaps_file",
+                    f"{a.out_prefix.name}_corrected_kickmaps_3d.png",
+                ),
+                ("plot_elevation_deg", a.elevation_deg),
+                ("plot_azimuth_deg", a.azimuth_deg),
         ])
-
 
 def main() -> None:
     CurrentStripWorkflow(parse_command_line()).run()
