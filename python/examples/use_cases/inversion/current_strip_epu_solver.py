@@ -5,7 +5,8 @@ This refactor preserves the V12 numerical model while separating configuration,
 geometry, solving, diagnostics, acceptance, and output publication into small
 testable units. It supports both standard ``--help`` and a dedicated
 ``help [OPTION]`` command. All command-line range and geometry lengths are
-expressed in metres.
+expressed in metres. ``--x-range`` and ``--y-range`` each control both
+the corresponding fitted model half-aperture and strip-centre half-span.
 """
 from __future__ import annotations
 
@@ -30,7 +31,7 @@ from scipy.optimize import lsq_linear
 MU0 = 4.0e-7 * np.pi
 SPEED_OF_LIGHT_M_S = 299_792_458.0
 ELECTRON_REST_ENERGY_EV = 510_998.95
-RELEASE_ID = "CURRENT-STRIP-SOLVER-27-COMPONENT-REFACTOR"
+RELEASE_ID = "CURRENT-STRIP-SOLVER-28-CONSOLIDATED-RANGES"
 PLOT_ELEVATION_DEG = 20.0
 PLOT_AZIMUTH_DEG = -45.0
 
@@ -1286,7 +1287,7 @@ def build_parser() -> argparse.ArgumentParser:
             "input and output",
             "fit objective",
             "strip geometry",
-            "model aperture",
+            "model aperture and strip span",
             "acceptance",
             "plotting",
         )
@@ -1327,25 +1328,21 @@ def build_parser() -> argparse.ArgumentParser:
         (("--strips-per-plane", "--horizontal-strips-per-plane"), dict(
             dest="strips_per_plane", type=int, default=21, metavar="N",
         )),
-        (("--horizontal-strip-range",), dict(
-            type=float, default=0.020, metavar="M",
-            help="outermost horizontal strip-centre positions ±M in metres",
-        )),
         (("--vertical-strips-per-plane",), dict(type=int, default=None, metavar="N")),
-        (("--vertical-strip-range",), dict(
-            type=float, default=None, metavar="M",
-            help=("outermost vertical strip-centre positions ±M in metres; "
-                  "defaults to --horizontal-strip-range"),
-        )),
         (("--width",), dict(type=float, default=2.0e-3)),
         (("--thickness",), dict(type=float, default=0.3e-3)),
     ])
-    _add_arguments(groups["model aperture"], [
-        (("--x-range",), dict(type=float, default=0.020, metavar="M", help="model half-aperture |x| <= M in metres")),
+    _add_arguments(groups["model aperture and strip span"], [
+        (("--x-range",), dict(
+            type=float, default=0.020, metavar="M",
+            help=("horizontal half-range in metres for both the fitted model "
+                  "aperture and the horizontal strip-centre span"),
+        )),
         (("--y-range",), dict(
             type=float, default=None, metavar="M",
-            help=("model half-aperture |y| <= M in metres; "
-                  "default uses the full input grid"),
+            help=("vertical half-range in metres for both the fitted model "
+                  "aperture and the vertical strip-centre span; default uses "
+                  "the full input y extent"),
         )),
     ])
     _add_arguments(groups["acceptance"], [
@@ -1480,17 +1477,6 @@ def validate_arguments(args: argparse.Namespace) -> argparse.Namespace:
     )
     if args.effective_vertical_strips_per_plane < 1:
         raise ValueError("vertical-strips-per-plane must be positive")
-
-    _validate_fields(args, ("horizontal_strip_range",), positive=True)
-    args.effective_horizontal_strip_range = args.horizontal_strip_range
-    args.effective_vertical_strip_range = (
-        args.horizontal_strip_range
-        if args.vertical_strip_range is None
-        else args.vertical_strip_range
-    )
-    _require_finite(
-        "vertical-strip-range", args.effective_vertical_strip_range, positive=True
-    )
 
     _validate_fields(args, ("max_fit_relative_rms",), nonnegative=True, allow_none=True)
     args.effective_max_fit_relative_rms = (
@@ -1642,9 +1628,9 @@ class CurrentStripWorkflow:
         strip_length_m = self.kick_map.length_m if a.length is None else a.length
         self.strips, self.strip_geometry = make_strip_arrays(
             layout=a.strip_layout,
-            horizontal_half_span_m=a.effective_horizontal_strip_range,
+            horizontal_half_span_m=a.x_range,
             horizontal_count_per_plane=a.strips_per_plane,
-            vertical_half_span_m=a.effective_vertical_strip_range,
+            vertical_half_span_m=self.model_y_half_span_m,
             vertical_count_per_plane=a.effective_vertical_strips_per_plane,
             width_m=a.width,
             thickness_m=a.thickness,
@@ -2159,7 +2145,7 @@ class CurrentStripWorkflow:
             ("horizontal_array_enabled", int(self.horizontal_indices.size > 0)),
             ("vertical_array_enabled", int(self.vertical_indices.size > 0)),
             ("horizontal_strips_per_plane", g.horizontal_count_per_plane),
-            ("horizontal_strip_range_option_m", a.effective_horizontal_strip_range),
+            ("strip_span_source", "model_aperture_ranges"),
             ("vertical_strips_per_plane", g.vertical_count_per_plane),
             ("horizontal_strip_half_span_m", g.horizontal_half_span_m),
             ("vertical_strip_half_span_m", g.vertical_half_span_m),
@@ -2204,8 +2190,8 @@ class CurrentStripWorkflow:
                 self.strips,
                 self.currents_a,
                 paths["currents_plot"],
-                a.effective_horizontal_strip_range,
-                a.effective_vertical_strip_range,
+                a.x_range,
+                self.model_y_half_span_m,
                 keep_open=a.show,
             )
             write_corrected_kick_map(
