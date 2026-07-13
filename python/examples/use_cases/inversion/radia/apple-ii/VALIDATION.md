@@ -62,3 +62,17 @@ Version 0.2.4 mixed a byte-length column into `SHA256SUMS.txt`. Although the
 digests were correct, macOS `shasum -c` interpreted the size field as part of
 the filename. Version 0.2.5 separates sizes into `BYTES.txt` and restores the
 standard two-field checksum grammar.
+
+## Version 0.3.0 Daresbury prototype validation
+
+Environment-independent validation additionally covers:
+
+- explicit horizontal inter-array gap placement;
+- explicit end-block length override;
+- exact geometry and magnetization records;
+- per-row field analysis and combined-field superposition using a RADIA test double;
+- source-only CLI argument exposure for the new parameters.
+
+The refined HU56 prototype must still be executed against the user's real RADIA
+extension. Agreement with the published Daresbury field map is not established by
+the source tests or synthetic diagnostic smoke test.

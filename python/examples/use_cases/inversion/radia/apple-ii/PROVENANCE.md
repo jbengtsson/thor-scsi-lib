@@ -82,3 +82,25 @@ nonstandard three-column layout (`digest`, byte length, filename), so
 0.2.5 moves byte lengths to `BYTES.txt`, emits a standards-compatible checksum
 manifest, and adds an executable regression check. Scientific algorithms are
 unchanged from 0.2.4.
+
+
+## Version 0.3.0 refined Daresbury prototype
+
+Authoritative 0.2.5 base source artifact:
+
+- filename: `apple2_radia_toolkit_v0.2.5.zip`
+- SHA-256: `b22313dd7537747a841674b5b4b70539a707b85700f757a49e011ff2fbdc62d4`
+
+This v0.3.0 update was rebased onto the current `apple-ii` distribution and
+`python/apple_ii` source layout. The scientific changes originate from
+`daresbury_hu56_refined_patch_v0.3.0(1).zip` (SHA-256
+`4e9375e8675b17a4a9cce9bf327348bd5684dbbfef0cabdb6ce4fccf44234e5d`).
+
+The Daresbury prototype parameters are drawn from F.E. Hannon et al.,
+“Construction of an APPLE-II Type Undulator at Daresbury Laboratory for the
+SRS,” EPAC 2004, MOPKF058. The implementation includes only parameters whose
+placement is unambiguous in the current geometry: 56 mm period, 17 periods,
+21 mm nominal gap, 40 x 40 mm blocks, 0.5 mm maximum adjacent-array gap, and
+6.95 mm end-block length. The S1/S2/S3 end-spacing topology, 5 x 5 mm notches,
+and measured block-sorting data remain unimplemented. Full-remanence end blocks
+are a prototype assumption, not a published measurement.

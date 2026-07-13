@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "apple-ii"
-version = "0.2.5"
+version = "0.3.0"
 description = "Parameterized APPLE-II undulator geometry, field analysis, and phase optimization for RADIA"
 readme = "README.md"
 requires-python = ">=3.10"

@@ -46,7 +46,9 @@ def add_geometry_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--height", type=positive_float, default=12.0)
     parser.add_argument("--remanence", type=positive_float, default=1.2)
     parser.add_argument("--motion", choices=("elliptical", "opposite"), default="elliptical")
+    parser.add_argument("--inter-array-gap-x-mm", type=nonnegative_float, default=0.0)
     parser.add_argument("--end-block-fraction", type=nonnegative_float, default=0.5)
+    parser.add_argument("--end-block-length-mm", type=positive_float, default=None)
     parser.add_argument("--end-magnetization-fraction", type=nonnegative_float, default=0.5)
     parser.add_argument("--end-clearance-mm", type=nonnegative_float, default=0.0)
 
@@ -62,7 +64,9 @@ def parameters_from_args(args: argparse.Namespace, phase_mm: float) -> Apple2Par
         remanence_t=args.remanence,
         phase_mm=phase_mm,
         motion=motion,
+        inter_array_gap_x_mm=args.inter_array_gap_x_mm,
         end_block_fraction=args.end_block_fraction,
+        end_block_length_mm=args.end_block_length_mm,
         end_magnetization_fraction=args.end_magnetization_fraction,
         end_clearance_mm=args.end_clearance_mm,
     )

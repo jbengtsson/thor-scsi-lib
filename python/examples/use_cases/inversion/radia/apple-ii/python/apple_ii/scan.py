@@ -84,7 +84,10 @@ def main() -> None:
     )
     ordered = [all_evaluations[phase] for phase in sorted(all_evaluations)]
     records = [{"gap_mm": parameters.gap_mm, **evaluation.flat_record()} for evaluation in ordered]
-    with Path(args.csv).open("w", newline="", encoding="utf-8") as file:
+
+    csv_path = Path(args.csv)
+    csv_path.parent.mkdir(parents=True, exist_ok=True)
+    with csv_path.open("w", newline="", encoding="utf-8") as file:
         writer = csv.DictWriter(file, fieldnames=list(records[0]))
         writer.writeheader()
         writer.writerows(records)
@@ -97,7 +100,10 @@ def main() -> None:
         "coarse_count": len(result.coarse_scan),
         "refinement_evaluation_count": len(result.refinement_evaluations),
     }
-    Path(args.json).write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+
+    json_path = Path(args.json)
+    json_path.parent.mkdir(parents=True, exist_ok=True)
+    json_path.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
     print("best bounded point:")
     print(json.dumps(result.best.flat_record(), indent=2))
 

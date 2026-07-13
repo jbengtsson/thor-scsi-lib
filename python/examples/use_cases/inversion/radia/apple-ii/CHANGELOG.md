@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.3.0
+
+- Added an explicit horizontal inter-array gap parameter and CLI option.
+- Added an explicit end-block length parameter that overrides the fractional default.
+- Added exact per-block geometry and magnetization records.
+- Added optional per-row field and superposition diagnostics through `--diagnostics-json`.
+- Added a refined Daresbury HU56 phase-zero prototype script using the published
+  56 mm period, 17 periods, 21 mm gap, 40 x 40 mm blocks, 0.5 mm adjacent-array
+  gap, and 6.95 mm end-block length.
+- Kept S1/S2/S3 end spacing, mounting notches, and measured block errors explicitly
+  outside the prototype scope.
+
+
 ## 0.2.5
 
 - Corrected `SHA256SUMS.txt` to use the standard `digest  filename` format accepted by `shasum -c`.

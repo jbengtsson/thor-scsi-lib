@@ -1,10 +1,11 @@
-# APPLE-II RADIA toolkit v0.2.4
+# APPLE-II RADIA toolkit v0.3.0
 
-A parameterized APPLE-II reference model for RADIA. Version 0.2.4 preserves the
-v0.2.3 modeling and validation workflow and corrects a macOS-only test-harness
-PATH defect discovered during target-machine validation. It includes a persistent
-four-row device, bounded phase optimization, numerical quality gates, field
-integrals, higher-harmonic fitting, and reference-data comparison.
+A parameterized APPLE-II reference model for RADIA. Version 0.3.0 adds an
+explicit horizontal inter-array gap, an explicit end-block length, exact block
+geometry/magnetization records, and optional per-row field diagnostics. It
+retains the persistent four-row device, bounded phase optimization, numerical
+quality gates, field integrals, higher-harmonic fitting, and reference-data
+comparison.
 
 This remains a **generic reference model**, not a certified replica of a specific
 ESRF or MAX IV insertion device. Device-faithful conclusions require exact
@@ -26,14 +27,14 @@ field maps at the relevant gaps and phases.
   reconstructing the model.
 - Harmonic orders are configurable; first and second numerical field integrals
   are reported.
-- `apple2-reference-compare` compares calculated metrics with a user-supplied
+- `apple-ii-reference-compare` compares calculated metrics with a user-supplied
   CSV reference set.
 
 ## Install
 
 ```bash
 python -c "import radia; print(radia.__file__)"
-cd apple_ii
+cd apple-ii
 python -m pip install -e .
 ```
 
@@ -43,6 +44,36 @@ For tests:
 python -m pip install -e '.[test]'
 python -m pytest
 ```
+
+
+## Source-only command-line use
+
+Installation is optional. From the source root, run the module directly:
+
+```bash
+PYTHONPATH=python python3 -m apple_ii.cli --help
+```
+
+For the refined Daresbury HU56 prototype, run
+`epu_56/generate_epu_56_phase_0.sh` from the source tree. The script writes `field.csv`, `analysis.json`, and
+`diagnostics.json`.
+
+## Daresbury HU56 prototype controls
+
+The geometry now accepts:
+
+- `--inter-array-gap-x-mm` for the horizontal face-to-face gap between the left
+  and right arrays;
+- `--end-block-length-mm` for an explicit end-block length, overriding the
+  generic fractional length;
+- `--diagnostics-json` for exact block geometry/magnetization records and
+  per-row field contributions.
+
+The supplied HU56 prototype uses the published 56 mm period, 17 periods, 21 mm
+gap, 40 x 40 mm block cross-section, 0.5 mm adjacent-array gap, and 6.95 mm end
+blocks. It does not yet implement the published S1/S2/S3 end-spacing topology,
+5 x 5 mm mounting notches, or measured block-sorting data. Full-remanence end
+blocks are an explicit prototype assumption.
 
 ## Analyze one operating point
 
@@ -57,7 +88,7 @@ Outputs `apple2_field.csv` and `apple2_analysis.json`.
 ## Scan and optimize phase
 
 ```bash
-apple2-phase-scan --period 40 --gap 12 \
+apple-ii-phase-scan --period 40 --gap 12 \
   --phase-min -20 --phase-max 20 --phase-steps 41 \
   --refinement-levels 3 --refinement-steps 11
 ```
@@ -96,7 +127,7 @@ gap_mm,phase_mm,Bx1_T,By1_T,phase_deg,circularity
 Then run:
 
 ```bash
-apple2-reference-compare calculated.csv reference.csv
+apple-ii-reference-compare calculated.csv reference.csv
 ```
 
 The tool requires a unique calculated point at every reference `(gap, phase)`
@@ -116,7 +147,7 @@ The package must still be run with the user's installed macOS RADIA extension an
 compared with authoritative field data. This release contains no claimed ESRF or
 MAX IV agreement and no radiation calculation.
 
-## Version 0.2.4 test-harness correction
+## Historical v0.2.4 test-harness correction
 
 The failure-path regression test now preserves the host command-search path and
 overrides only `PYTHON_BIN`. The previous test replaced `PATH` with the directory
@@ -130,7 +161,7 @@ algorithm changed.
 On the Intel Mac where `import radia` succeeds, run:
 
 ```bash
-cd apple_ii
+cd apple-ii
 ./scripts/validate_macos_radia.sh
 ```
 

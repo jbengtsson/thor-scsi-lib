@@ -9,12 +9,20 @@ from .analysis import (
     evaluate_quality,
     polarization_metrics,
 )
-from .geometry import Apple2Device, Apple2Parameters, ArrayMotion, RowHandle, build_device
+from .geometry import (
+    Apple2Device,
+    Apple2Parameters,
+    ArrayMotion,
+    BlockRecord,
+    RowHandle,
+    build_device,
+)
 
 __all__ = [
     "Apple2Device",
     "Apple2Parameters",
     "ArrayMotion",
+    "BlockRecord",
     "HarmonicResult",
     "QualityAssessment",
     "QualityCriteria",
@@ -26,4 +34,4 @@ __all__ = [
     "polarization_metrics",
 ]
 
-__version__ = "0.2.5"
+__version__ = "0.3.0"

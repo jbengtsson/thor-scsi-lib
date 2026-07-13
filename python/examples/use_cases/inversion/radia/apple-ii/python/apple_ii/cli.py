@@ -21,6 +21,7 @@ from .cli_common import (
     quality_from_args,
 )
 from .field import field_integrals, sample_axis, write_csv
+from .diagnostics import row_field_diagnostics
 from .geometry import build_device
 from ._util import require_radia
 
@@ -36,6 +37,11 @@ def main() -> None:
     parser.add_argument("--max-relative-residual", type=nonnegative_float, default=0.10)
     parser.add_argument("--csv", default="apple2_field.csv")
     parser.add_argument("--json", default="apple2_analysis.json")
+    parser.add_argument(
+        "--diagnostics-json",
+        default=None,
+        help="optional geometry and per-row field diagnostic report",
+    )
     parser.add_argument("--draw", action="store_true")
     args = parser.parse_args()
 
@@ -69,6 +75,30 @@ def main() -> None:
         "field_integrals": asdict(integrals),
     }
     Path(args.json).write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+
+    if args.diagnostics_json:
+        diagnostics = {
+            "scope": (
+                "Prototype geometry and per-row magnetic-field diagnostics; "
+                "not a device-fidelity certification"
+            ),
+            "parameters": parameters_to_dict(parameters),
+            "geometry": device.geometry_report(),
+            "row_field_diagnostics": row_field_diagnostics(
+                device,
+                -half_length,
+                half_length,
+                args.samples,
+                period_mm=parameters.period_mm,
+                harmonic_orders=args.harmonics,
+                central_periods=args.central_periods,
+                combined_rows=rows,
+                radia_module=radia,
+            ),
+        }
+        Path(args.diagnostics_json).write_text(
+            json.dumps(diagnostics, indent=2) + "\n", encoding="utf-8"
+        )
 
     print(f"Bx1={bx1.amplitude:.6g} T")
     print(f"By1={by1.amplitude:.6g} T")

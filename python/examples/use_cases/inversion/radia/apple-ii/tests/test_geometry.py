@@ -58,3 +58,63 @@ def test_parameter_validation_rejects_nonfinite_and_invalid_values():
         Apple2Parameters(end_block_fraction=1.1).validate()
     with pytest.raises(ValueError, match="end_magnetization_fraction"):
         Apple2Parameters(end_magnetization_fraction=1.1).validate()
+    with pytest.raises(ValueError, match="inter_array_gap_x_mm"):
+        Apple2Parameters(inter_array_gap_x_mm=-0.1).validate()
+    with pytest.raises(ValueError, match="end_block_length_mm"):
+        Apple2Parameters(end_block_length_mm=0.0).validate()
+
+
+def test_inter_array_gap_sets_row_centres_and_face_gap():
+    radia = FakeRadia()
+    parameters = Apple2Parameters(
+        n_periods=1,
+        row_width_x_mm=40.0,
+        inter_array_gap_x_mm=0.5,
+    )
+    device = build_device(parameters, radia_module=radia)
+
+    ul_block_id = radia.containers[device.rows["UL"].object_id][0]
+    ur_block_id = radia.containers[device.rows["UR"].object_id][0]
+    ul = radia.blocks[ul_block_id]
+    ur = radia.blocks[ur_block_id]
+
+    assert ul["center"][0] == pytest.approx(-20.25)
+    assert ur["center"][0] == pytest.approx(+20.25)
+    face_gap = (
+        ur["center"][0] - ur["dimensions"][0] / 2
+        - (ul["center"][0] + ul["dimensions"][0] / 2)
+    )
+    assert face_gap == pytest.approx(0.5)
+
+
+def test_explicit_end_block_length_overrides_fraction():
+    radia = FakeRadia()
+    parameters = Apple2Parameters(
+        period_mm=56.0,
+        n_periods=1,
+        end_block_fraction=0.5,
+        end_block_length_mm=6.95,
+        end_magnetization_fraction=1.0,
+    )
+    device = build_device(parameters, radia_module=radia)
+    block_ids = radia.containers[device.rows["UL"].object_id]
+    end_dimensions = [radia.blocks[block_id]["dimensions"][2] for block_id in block_ids[-2:]]
+    assert end_dimensions == pytest.approx([6.95, 6.95])
+    assert device.parameters.end_block_length_z_mm == pytest.approx(6.95)
+
+
+def test_geometry_report_contains_current_centres_and_magnetization():
+    radia = FakeRadia()
+    device = build_device(
+        Apple2Parameters(n_periods=1, phase_mm=3.0),
+        radia_module=radia,
+    )
+    report = device.geometry_report()
+    ur = report["rows"]["UR"]
+    first = ur["blocks"][0]
+
+    assert ur["current_shift_mm"] == pytest.approx(3.0)
+    assert first["center_mm_current"][2] == pytest.approx(
+        first["center_mm_zero_phase"][2] + 3.0
+    )
+    assert len(first["magnetization_t"]) == 3
