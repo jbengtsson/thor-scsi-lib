@@ -1,0 +1,13 @@
+*~
+
+*.egg-info/
+build/
+dist/
+
+epu_40/runs/
+epu_56/runs/
+validation_macos_*/
+
+.pytest_cache/
+__pycache__/
+*.py[co]

@@ -48,7 +48,7 @@ hashed while the tee stream was still active, and subsequent status output
 changed the file. Version 0.2.3 changes only evidence finalization and release
 metadata. It closes the log before hashing, records the log digest externally,
 and anchors the output manifest with a separate digest. It also corrects the
-public `apple2.__version__`, which had remained at 0.2.0 despite later package
+public `apple_ii.__version__`, which had remained at 0.2.0 despite later package
 metadata. The APPLE-II geometry, analysis, optimization, and reference-comparison
 algorithms are unchanged from 0.2.2.
 

@@ -21,7 +21,7 @@
 - Added a post-log `SHA256SUMS.txt` covering outputs, the final log, and its sidecar.
 - Added `SHA256SUMS.txt.sha256` so the final manifest can be verified independently.
 - Preserved validation exit status while producing evidence for successful or failed runs.
-- Synchronized `apple2.__version__` with the 0.2.3 project metadata.
+- Synchronized `apple_ii.__version__` with the 0.2.3 project metadata.
 - Left all APPLE-II geometry, analysis, optimization, and reference algorithms unchanged.
 
 ## 0.2.2

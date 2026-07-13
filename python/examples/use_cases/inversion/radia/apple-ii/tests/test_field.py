@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from apple2.field import field_integrals
+from apple_ii.field import field_integrals
 
 
 def test_constant_field_integrals():

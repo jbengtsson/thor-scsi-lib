@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from apple2.reference import ReferencePoint, compare_points, load_points
+from apple_ii.reference import ReferencePoint, compare_points, load_points
 
 
 def test_reference_comparison_wraps_phase_and_reports_rmse():

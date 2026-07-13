@@ -33,7 +33,7 @@ field maps at the relevant gaps and phases.
 
 ```bash
 python -c "import radia; print(radia.__file__)"
-cd apple2_radia
+cd apple_ii
 python -m pip install -e .
 ```
 
@@ -47,7 +47,7 @@ python -m pytest
 ## Analyze one operating point
 
 ```bash
-apple2-radia --period 40 --periods 10 --gap 12 --phase-mm 10 \
+apple-ii --period 40 --periods 10 --gap 12 --phase-mm 10 \
   --harmonics 1 3 5 --min-total-amplitude 1e-4 \
   --max-relative-residual 0.10
 ```
@@ -130,7 +130,7 @@ algorithm changed.
 On the Intel Mac where `import radia` succeeds, run:
 
 ```bash
-cd apple2_radia
+cd apple_ii
 ./scripts/validate_macos_radia.sh
 ```
 

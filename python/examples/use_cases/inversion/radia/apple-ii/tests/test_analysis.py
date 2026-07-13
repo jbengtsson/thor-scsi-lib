@@ -3,7 +3,7 @@ import math
 import numpy as np
 import pytest
 
-from apple2.analysis import (
+from apple_ii.analysis import (
     HarmonicResult,
     QualityCriteria,
     analyze_fundamental,

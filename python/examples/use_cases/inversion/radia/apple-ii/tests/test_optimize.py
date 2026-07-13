@@ -2,9 +2,9 @@ import math
 
 import pytest
 
-from apple2.analysis import HarmonicResult, QualityAssessment
-from apple2.field import FieldIntegral
-from apple2.optimize import PhaseEvaluation, optimize_phase, scan_phase
+from apple_ii.analysis import HarmonicResult, QualityAssessment
+from apple_ii.field import FieldIntegral
+from apple_ii.optimize import PhaseEvaluation, optimize_phase, scan_phase
 
 
 def evaluation(phase):

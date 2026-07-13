@@ -3,7 +3,7 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "apple2-radia"
+name = "apple-ii"
 version = "0.2.5"
 description = "Parameterized APPLE-II undulator geometry, field analysis, and phase optimization for RADIA"
 readme = "README.md"
@@ -14,12 +14,16 @@ dependencies = ["numpy>=1.23"]
 test = ["pytest>=8"]
 
 [project.scripts]
-apple2-radia = "apple2.cli:main"
-apple2-phase-scan = "apple2.scan:main"
-apple2-reference-compare = "apple2.reference:main"
+apple-ii = "apple_ii.cli:main"
+apple-ii-phase-scan = "apple_ii.scan:main"
+apple-ii-reference-compare = "apple_ii.reference:main"
+
+[tool.setuptools]
+package-dir = {"" = "python"}
 
 [tool.setuptools.packages.find]
-include = ["apple2*"]
+where = ["python"]
+include = ["apple_ii", "apple_ii.*"]
 
 [tool.pytest.ini_options]
 addopts = "-ra"

@@ -1,6 +1,6 @@
 import pytest
 
-from apple2.geometry import Apple2Parameters, build_device
+from apple_ii.geometry import Apple2Parameters, build_device
 from fake_radia import FakeRadia
 
 

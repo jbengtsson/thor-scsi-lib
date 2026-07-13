@@ -145,7 +145,7 @@ if not timeout > 0:
 env = os.environ.copy()
 env["PYTEST_DISABLE_PLUGIN_AUTOLOAD"] = "1"
 env["PYTEST_ADDOPTS"] = ""
-env["PYTHONPATH"] = str(root) + (
+env["PYTHONPATH"] = str(root / "python") + (
     os.pathsep + env["PYTHONPATH"] if env.get("PYTHONPATH") else ""
 )
 command = [
@@ -175,13 +175,13 @@ raise SystemExit(result.returncode)
 PY
 
   printf '\n[3/4] Run real RADIA operating point\n'
-  PYTHONPATH="$ROOT${PYTHONPATH:+:$PYTHONPATH}" "$PYTHON_BIN" -m apple2.cli \
+  PYTHONPATH="$ROOT/python${PYTHONPATH:+:$PYTHONPATH}" "$PYTHON_BIN" -m apple_ii.cli \
     --period 40 --periods 10 --gap 12 --phase-mm 10 \
     --samples 1201 --central-periods 6 --harmonics 1 3 5 \
     --csv "$OUT/apple2_field.csv" --json "$OUT/apple2_analysis.json"
 
   printf '\n[4/4] Run real RADIA bounded phase optimization\n'
-  PYTHONPATH="$ROOT${PYTHONPATH:+:$PYTHONPATH}" "$PYTHON_BIN" -m apple2.scan \
+  PYTHONPATH="$ROOT/python${PYTHONPATH:+:$PYTHONPATH}" "$PYTHON_BIN" -m apple_ii.scan \
     --period 40 --periods 10 --gap 12 \
     --phase-min -20 --phase-max 20 --phase-steps 41 \
     --refinement-levels 3 --refinement-steps 11 \
@@ -190,7 +190,7 @@ PY
 
   if [[ -n "$REFERENCE_CSV" ]]; then
     printf '\n[optional] Compare against supplied reference CSV\n'
-    PYTHONPATH="$ROOT${PYTHONPATH:+:$PYTHONPATH}" "$PYTHON_BIN" -m apple2.reference \
+    PYTHONPATH="$ROOT/python${PYTHONPATH:+:$PYTHONPATH}" "$PYTHON_BIN" -m apple_ii.reference \
       "$OUT/apple2_phase_scan.csv" "$REFERENCE_CSV" \
       --json "$OUT/apple2_reference_comparison.json"
   fi
