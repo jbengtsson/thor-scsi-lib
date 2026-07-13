@@ -67,3 +67,18 @@ location of `shasum`), while macOS provides `bash` in `/bin`. Consequently
 the host `PATH` and overrides only the dummy `PYTHON_BIN` used by the test. The
 validation script and all APPLE-II geometry, analysis, optimization, field, and
 reference-comparison algorithms are byte-identical to version 0.2.3.
+
+
+## Version 0.2.5 correction
+
+Authoritative 0.2.4 base source artifact:
+
+- filename: `apple2_radia_toolkit_v0.2.4.zip`
+- SHA-256: `3cb4cb68d2092fec22a69241c080ccc5f881ee9ba2ffb561d64e2409d444f5f7`
+
+The target Intel Mac exposed an evidence-format defect: `SHA256SUMS.txt` used a
+nonstandard three-column layout (`digest`, byte length, filename), so
+`shasum -c` treated the byte-length text as part of each filename. Version
+0.2.5 moves byte lengths to `BYTES.txt`, emits a standards-compatible checksum
+manifest, and adds an executable regression check. Scientific algorithms are
+unchanged from 0.2.4.

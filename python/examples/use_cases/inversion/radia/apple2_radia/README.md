@@ -160,15 +160,18 @@ REFERENCE_CSV=/absolute/path/reference.csv ./scripts/validate_macos_radia.sh
 The final evidence chain avoids a self-referential log hash:
 
 - `validation.log.sha256` verifies the closed final log;
-- `SHA256SUMS.txt` records hashes and byte lengths for the scientific outputs,
-  `validation.log`, and `validation.log.sha256`;
-- `SHA256SUMS.txt.sha256` verifies that manifest.
+- `BYTES.txt` records byte lengths for the scientific outputs, `validation.log`,
+  and `validation.log.sha256`;
+- `SHA256SUMS.txt` uses the standard `digest  filename` format and verifies those
+  artifacts plus `BYTES.txt`;
+- `SHA256SUMS.txt.sha256` verifies that checksum manifest.
 
 From the generated output directory, verify the chain with:
 
 ```bash
 shasum -a 256 -c validation.log.sha256
 shasum -a 256 -c SHA256SUMS.txt.sha256
+shasum -a 256 -c SHA256SUMS.txt
 ```
 
 Successful script completion establishes only the checks recorded in its log;

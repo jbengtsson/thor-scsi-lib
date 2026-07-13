@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.5
+
+- Corrected `SHA256SUMS.txt` to use the standard `digest  filename` format accepted by `shasum -c`.
+- Moved byte lengths into a separate, checksummed `BYTES.txt` ledger.
+- Added a regression assertion that runs `shasum -a 256 -c SHA256SUMS.txt` directly.
+- Left all APPLE-II geometry, field, analysis, optimization, and reference algorithms unchanged.
+
 ## 0.2.4
 
 - Corrected the macOS failure-path regression test so it preserves the host `PATH`.

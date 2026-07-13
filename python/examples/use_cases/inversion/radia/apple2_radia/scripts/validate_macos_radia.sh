@@ -13,10 +13,11 @@ OUT=${1:-"$ROOT/validation_macos_$STAMP"}
 REFERENCE_CSV=${REFERENCE_CSV:-}
 LOG="$OUT/validation.log"
 LOG_SIDECAR="$OUT/validation.log.sha256"
+SIZE_MANIFEST="$OUT/BYTES.txt"
 MANIFEST="$OUT/SHA256SUMS.txt"
 MANIFEST_SIDECAR="$OUT/SHA256SUMS.txt.sha256"
 mkdir -p "$OUT"
-rm -f "$LOG" "$LOG_SIDECAR" "$MANIFEST" "$MANIFEST_SIDECAR"
+rm -f "$LOG" "$LOG_SIDECAR" "$SIZE_MANIFEST" "$MANIFEST" "$MANIFEST_SIDECAR"
 
 sha256_digest() {
   shasum -a 256 "$1" | awk '{print $1}'
@@ -30,6 +31,20 @@ write_sha256_sidecar() {
 
 write_output_manifest() {
   local path name size digest
+
+  # Keep byte lengths in a separate ledger. SHA256SUMS.txt must use the
+  # standard "digest  filename" grammar so `shasum -c` can parse it.
+  : > "$SIZE_MANIFEST"
+  for path in "$OUT"/*; do
+    [[ -f "$path" ]] || continue
+    name=$(basename "$path")
+    case "$name" in
+      BYTES.txt|SHA256SUMS.txt|SHA256SUMS.txt.sha256) continue ;;
+    esac
+    size=$(wc -c < "$path" | tr -d '[:space:]')
+    printf '%12d  %s\n' "$size" "$name" >> "$SIZE_MANIFEST"
+  done
+
   : > "$MANIFEST"
   for path in "$OUT"/*; do
     [[ -f "$path" ]] || continue
@@ -37,9 +52,8 @@ write_output_manifest() {
     case "$name" in
       SHA256SUMS.txt|SHA256SUMS.txt.sha256) continue ;;
     esac
-    size=$(wc -c < "$path" | tr -d '[:space:]')
     digest=$(sha256_digest "$path")
-    printf '%s  %12d  %s\n' "$digest" "$size" "$name" >> "$MANIFEST"
+    printf '%s  %s\n' "$digest" "$name" >> "$MANIFEST"
   done
   write_sha256_sidecar "$MANIFEST" "$MANIFEST_SIDECAR"
 }
@@ -210,10 +224,14 @@ write_sha256_sidecar "$LOG" "$LOG_SIDECAR"
 write_output_manifest
 
 printf '\nFinal exact-byte evidence (written after validation.log closed)\n'
+printf 'Byte lengths:\n'
+cat "$SIZE_MANIFEST"
+printf 'SHA-256 manifest:\n'
 cat "$MANIFEST"
 printf '%s\n' "$(cat "$MANIFEST_SIDECAR")"
 printf 'Verify from the output directory with:\n'
 printf '  shasum -a 256 -c validation.log.sha256\n'
 printf '  shasum -a 256 -c SHA256SUMS.txt.sha256\n'
+printf '  shasum -a 256 -c SHA256SUMS.txt\n' 
 
 exit "$validation_status"

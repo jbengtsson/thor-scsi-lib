@@ -38,9 +38,11 @@ itself. The validation body and its terminal status are first written through
 `tee`; the pipeline then closes. Only after closure does the parent shell write:
 
 1. `validation.log.sha256`, containing the exact-byte digest of the stable log;
-2. `SHA256SUMS.txt`, containing hashes and byte lengths for all output artifacts
-   except the manifest and its own sidecar;
-3. `SHA256SUMS.txt.sha256`, containing the exact-byte digest of the manifest.
+2. `BYTES.txt`, containing byte lengths for the output artifacts available when
+   evidence finalization begins;
+3. `SHA256SUMS.txt`, using the standard `digest  filename` syntax accepted by
+   `shasum -c`, and covering the outputs plus `BYTES.txt`;
+4. `SHA256SUMS.txt.sha256`, containing the exact-byte digest of the checksum manifest.
 
 The script returns the original validation status after producing this evidence,
 so evidence finalization does not turn a failed validation into a successful one.
@@ -52,3 +54,11 @@ Version 0.2.4 corrects the regression-test environment used to exercise missing
 can resolve the shell on macOS, and changes only `PYTHON_BIN` plus the explicit
 non-mutating `AUTO_INSTALL_TEST_DEPS=0` setting. This tests the intended exit-2
 preflight path without introducing an unrelated launcher failure.
+
+
+## Version 0.2.5 manifest-format correction
+
+Version 0.2.4 mixed a byte-length column into `SHA256SUMS.txt`. Although the
+digests were correct, macOS `shasum -c` interpreted the size field as part of
+the filename. Version 0.2.5 separates sizes into `BYTES.txt` and restores the
+standard two-field checksum grammar.
