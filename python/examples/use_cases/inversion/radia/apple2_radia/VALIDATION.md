@@ -1,0 +1,54 @@
+# Validation scope
+
+This source release is designed for two validation layers:
+
+1. **Environment-independent:** Python compilation, package build/install, unit tests,
+   synthetic harmonic recovery, geometry bookkeeping with a RADIA test double,
+   optimizer behavior, field-integral numerics, and reference comparison.
+2. **Environment-dependent:** import and execution against the user's real macOS RADIA
+   extension, actual field calculations, and comparison with authoritative device data.
+
+The first layer can be run in a standard Python environment. The second layer is not
+established until executed on the target Mac with the installed RADIA binary.
+
+
+## macOS pytest isolation
+
+The validation script executes the repository tests in a subprocess with
+`PYTEST_DISABLE_PLUGIN_AUTOLOAD=1` and an empty `PYTEST_ADDOPTS`. The project tests
+require no third-party pytest plugins. Per-test output is enabled, and the test
+subprocess is terminated with exit status 124 if it exceeds
+`PYTEST_TIMEOUT_SECONDS` (default: 120 seconds).
+
+## Test dependency preflight
+
+`pytest>=8` is declared in the `test` optional dependency group. The macOS
+validation script checks that `pytest` is importable by the selected
+`PYTHON_BIN` before importing it for version reporting. If it is absent, the
+script exits with status 2, prints `python -m pip install -e '.[test]'`, and does
+not begin a RADIA calculation. Environment mutation is opt-in only through
+`AUTO_INSTALL_TEST_DEPS=1`.
+
+
+
+## Post-log evidence finalization
+
+Version 0.2.3 does not place the final hash of `validation.log` inside the log
+itself. The validation body and its terminal status are first written through
+`tee`; the pipeline then closes. Only after closure does the parent shell write:
+
+1. `validation.log.sha256`, containing the exact-byte digest of the stable log;
+2. `SHA256SUMS.txt`, containing hashes and byte lengths for all output artifacts
+   except the manifest and its own sidecar;
+3. `SHA256SUMS.txt.sha256`, containing the exact-byte digest of the manifest.
+
+The script returns the original validation status after producing this evidence,
+so evidence finalization does not turn a failed validation into a successful one.
+
+## Failure-path test environment
+
+Version 0.2.4 corrects the regression-test environment used to exercise missing
+`pytest`. The test inherits the normal host `PATH`, ensuring `/usr/bin/env bash`
+can resolve the shell on macOS, and changes only `PYTHON_BIN` plus the explicit
+non-mutating `AUTO_INSTALL_TEST_DEPS=0` setting. This tests the intended exit-2
+preflight path without introducing an unrelated launcher failure.
