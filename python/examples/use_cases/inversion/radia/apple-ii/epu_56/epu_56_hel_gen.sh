@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Refined Daresbury HU56 prototype at minimum gap and zero phase.
+# Refined Daresbury HU56 prototype at minimum gap in helical mode.
 # This script resolves the apple_ii source package relative to its own location.
 # The RADIA extension must already be importable, for example through the user's
 # existing PYTHONPATH entry for Radia/env/radia_python.
@@ -19,7 +19,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd -- "$SCRIPT_DIR/.." && pwd)"
-OUT_DIR="${1:-$SCRIPT_DIR/runs/phase_0}"
+OUT_DIR="${1:-$SCRIPT_DIR/runs/hel_phase_18p16}"
 
 mkdir -p "$OUT_DIR"
 
@@ -32,7 +32,7 @@ PYTHONPATH="$ROOT/python${PYTHONPATH:+:$PYTHONPATH}" python3 -m apple_ii.cli \
   --remanence 1.25 \
   --inter-array-gap-x-mm 0.5 \
   --motion elliptical \
-  --phase-mm 0 \
+  --phase-mm 18.16 \
   --end-block-fraction 0 \
   --end-block-length-mm 6.95 \
   --end-magnetization-fraction 1.0 \

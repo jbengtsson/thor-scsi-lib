@@ -63,7 +63,7 @@ def integer_at_least(minimum: int):
 
 
 def build_parser(script_dir: Path) -> argparse.ArgumentParser:
-    output_dir = script_dir / "runs" / "phase_0_refined_prototype"
+    output_dir = script_dir / "runs" / "phase_0"
 
     parser = argparse.ArgumentParser(
         description="Sweep APPLE-II magnetic gap with RADIA at fixed phase"
