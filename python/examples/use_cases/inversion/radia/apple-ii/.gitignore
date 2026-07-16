@@ -1,13 +1,37 @@
-*~
-
+# Python environments and caches
+.venv/
+venv/
 *.egg-info/
-build/
-dist/
-
-epu_40/runs/
-epu_56/runs/
-validation_macos_*/
-
-.pytest_cache/
 __pycache__/
-*.py[co]
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Build artifacts
+build/
+_build/
+dist/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+compile_commands.json
+cmake-build-*/
+
+# Editor and temporary files
+*~
+\#*\#
+*.orig
+*.rej
+.DS_Store
+
+# Local bootstrap files
+get-pip.py
+
+# Generated RADIA outputs
+/epu_18/runs/
+/epu_40/runs/
+/epu_56/runs/
+
+# Local validation outputs
+validation_macos_*/
